@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -7,7 +7,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   Form,
@@ -33,11 +32,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { CalendarIcon, Edit } from 'lucide-react';
+import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useData } from '@/contexts/DataContext';
+import { Patient } from '@/types';
 
 const patientSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -53,54 +54,43 @@ const patientSchema = z.object({
   emergencyContact: z.string().min(10, 'Contato de emergência obrigatório'),
   medicalHistory: z.string().optional(),
   mainCondition: z.string().min(3, 'Condição principal é obrigatória'),
-  status: z.enum(['ativo', 'inativo', 'alta'], {
+  status: z.enum(['Em Tratamento', 'Recuperação', 'Inicial', 'Concluído'], {
     required_error: 'Status é obrigatório',
   }),
+  progress: z.number().min(0).max(100),
 });
 
 type PatientFormData = z.infer<typeof patientSchema>;
 
-interface Patient {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  birthDate: Date;
-  gender: 'masculino' | 'feminino' | 'outro';
-  address: string;
-  emergencyContact: string;
-  medicalHistory?: string;
-  mainCondition: string;
-  status: 'ativo' | 'inativo' | 'alta';
-}
-
 interface EditPatientModalProps {
   patient: Patient;
-  trigger?: React.ReactNode;
-  onUpdate?: (updatedPatient: Patient) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function EditPatientModal({ patient, trigger, onUpdate }: EditPatientModalProps) {
-  const [open, setOpen] = useState(false);
+export function EditPatientModal({ patient, open, onOpenChange }: EditPatientModalProps) {
   const { toast } = useToast();
+  const { updatePatient } = useData();
 
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
     defaultValues: {
-      name: '',
-      email: '',
-      phone: '',
-      address: '',
-      emergencyContact: '',
-      medicalHistory: '',
-      mainCondition: '',
-      status: 'ativo',
+      name: patient.name,
+      email: patient.email,
+      phone: patient.phone,
+      birthDate: patient.birthDate,
+      gender: patient.gender,
+      address: patient.address,
+      emergencyContact: patient.emergencyContact,
+      medicalHistory: patient.medicalHistory || '',
+      mainCondition: patient.mainCondition,
+      status: patient.status,
+      progress: patient.progress,
     },
   });
 
-  // Carregar dados do paciente quando o modal abrir
   useEffect(() => {
-    if (open && patient) {
+    if (open) {
       form.reset({
         name: patient.name,
         email: patient.email,
@@ -112,37 +102,24 @@ export function EditPatientModal({ patient, trigger, onUpdate }: EditPatientModa
         medicalHistory: patient.medicalHistory || '',
         mainCondition: patient.mainCondition,
         status: patient.status,
+        progress: patient.progress,
       });
     }
-  }, [open, patient, form]);
+  }, [patient, open, form]);
 
   const onSubmit = (data: PatientFormData) => {
-    const updatedPatient: Patient = {
-      ...patient,
-      ...data,
-    };
-    
-    console.log('Paciente atualizado:', updatedPatient);
+    updatePatient(patient.id, data);
     
     toast({
       title: 'Paciente atualizado!',
-      description: `Os dados de ${data.name} foram atualizados com sucesso.`,
+      description: `${data.name} foi atualizado com sucesso.`,
     });
     
-    onUpdate?.(updatedPatient);
-    setOpen(false);
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button variant="outline" size="sm">
-            <Edit className="w-4 h-4 mr-2" />
-            Editar
-          </Button>
-        )}
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-foreground">
@@ -241,7 +218,7 @@ export function EditPatientModal({ patient, trigger, onUpdate }: EditPatientModa
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="gender"
@@ -258,29 +235,6 @@ export function EditPatientModal({ patient, trigger, onUpdate }: EditPatientModa
                         <SelectItem value="masculino">Masculino</SelectItem>
                         <SelectItem value="feminino">Feminino</SelectItem>
                         <SelectItem value="outro">Outro</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="ativo">Ativo</SelectItem>
-                        <SelectItem value="inativo">Inativo</SelectItem>
-                        <SelectItem value="alta">Alta</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -331,6 +285,53 @@ export function EditPatientModal({ patient, trigger, onUpdate }: EditPatientModa
               )}
             />
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Em Tratamento">Em Tratamento</SelectItem>
+                        <SelectItem value="Recuperação">Recuperação</SelectItem>
+                        <SelectItem value="Inicial">Inicial</SelectItem>
+                        <SelectItem value="Concluído">Concluído</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="progress"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Progresso (%)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min="0" 
+                        max="100" 
+                        placeholder="0-100" 
+                        {...field}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
               name="medicalHistory"
@@ -354,7 +355,7 @@ export function EditPatientModal({ patient, trigger, onUpdate }: EditPatientModa
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setOpen(false)}
+                onClick={() => onOpenChange(false)}
               >
                 Cancelar
               </Button>

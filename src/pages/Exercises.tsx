@@ -19,7 +19,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Dumbbell, Search, PlusCircle, Info } from "lucide-react";
+import { NewExerciseModal } from "@/components/modals/NewExerciseModal";
+import { useData } from "@/contexts/DataContext";
+import { Dumbbell, Search, PlusCircle, Info, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 // Types
@@ -141,10 +143,10 @@ const MOCK_EXERCISES: Exercise[] = [
 
 const Exercises = () => {
   const [query, setQuery] = useState("");
-  const [area, setArea] = useState<string>("todas");
+  const [category, setCategory] = useState<string>("todas");
   const [difficulty, setDifficulty] = useState<string>("todas");
-  const [equipment, setEquipment] = useState<string>("todos");
-  const [plan, setPlan] = useState<Exercise[]>([]);
+  const [plan, setPlan] = useState<any[]>([]);
+  const { exercises } = useData();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -152,21 +154,19 @@ const Exercises = () => {
   }, []);
 
   const filtered = useMemo(() => {
-    return MOCK_EXERCISES.filter((ex) => {
+    return exercises.filter((ex) => {
       const q = query.trim().toLowerCase();
       const matchesQuery = q
-        ? ex.name.toLowerCase().includes(q) || ex.area.toLowerCase().includes(q)
+        ? ex.name.toLowerCase().includes(q) || ex.category.toLowerCase().includes(q)
         : true;
-      const matchesArea = area === "todas" ? true : ex.area === area;
+      const matchesCategory = category === "todas" ? true : ex.category === category;
       const matchesDifficulty =
         difficulty === "todas" ? true : ex.difficulty === difficulty;
-      const matchesEquipment =
-        equipment === "todos" ? true : ex.equipment === equipment;
-      return matchesQuery && matchesArea && matchesDifficulty && matchesEquipment;
+      return matchesQuery && matchesCategory && matchesDifficulty;
     });
-  }, [query, area, difficulty, equipment]);
+  }, [query, category, difficulty, exercises]);
 
-  function handleAddToPlan(ex: Exercise) {
+  function handleAddToPlan(ex: any) {
     setPlan((prev) => {
       if (prev.some((p) => p.id === ex.id)) return prev;
       return [...prev, ex];
@@ -193,10 +193,14 @@ const Exercises = () => {
             </div>
             <h1 className="text-2xl font-bold text-foreground">Exercícios</h1>
           </div>
-          <Button variant="medical">
-            <PlusCircle className="w-4 h-4" />
-            Novo Plano
-          </Button>
+          <NewExerciseModal
+            trigger={
+              <Button variant="medical">
+                <PlusCircle className="w-4 h-4" />
+                Novo Exercício
+              </Button>
+            }
+          />
         </section>
 
         {/* Filters */}
@@ -216,16 +220,18 @@ const Exercises = () => {
                   />
                 </div>
 
-                {/* Area */}
-                <Select value={area} onValueChange={setArea}>
-                  <SelectTrigger aria-label="Filtrar por área">
-                    <SelectValue placeholder="Área do corpo" />
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger aria-label="Filtrar por categoria">
+                    <SelectValue placeholder="Categoria" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="todas">Todas as áreas</SelectItem>
-                    {AREAS.map((a) => (
-                      <SelectItem key={a} value={a}>{a}</SelectItem>
-                    ))}
+                    <SelectItem value="todas">Todas as categorias</SelectItem>
+                    <SelectItem value="fortalecimento">Fortalecimento</SelectItem>
+                    <SelectItem value="alongamento">Alongamento</SelectItem>
+                    <SelectItem value="mobilidade">Mobilidade</SelectItem>
+                    <SelectItem value="cardio">Cardiovascular</SelectItem>
+                    <SelectItem value="equilibrio">Equilíbrio</SelectItem>
+                    <SelectItem value="respiratorio">Respiratório</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -236,22 +242,9 @@ const Exercises = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="todas">Todas as dificuldades</SelectItem>
-                    {DIFFICULTIES.map((d) => (
-                      <SelectItem key={d} value={d}>{d}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                {/* Equipment */}
-                <Select value={equipment} onValueChange={setEquipment}>
-                  <SelectTrigger aria-label="Filtrar por equipamento">
-                    <SelectValue placeholder="Equipamento" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos os equipamentos</SelectItem>
-                    {EQUIPMENTS.map((e) => (
-                      <SelectItem key={e} value={e}>{e}</SelectItem>
-                    ))}
+                    <SelectItem value="iniciante">Iniciante</SelectItem>
+                    <SelectItem value="intermediario">Intermediário</SelectItem>
+                    <SelectItem value="avancado">Avançado</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -288,9 +281,11 @@ const Exercises = () => {
                     <div>
                       <CardTitle className="text-xl text-foreground">{ex.name}</CardTitle>
                       <div className="mt-2 flex flex-wrap gap-2">
-                        <Badge>{ex.area}</Badge>
+                        <Badge>{ex.category}</Badge>
                         <Badge variant="secondary">{ex.difficulty}</Badge>
-                        <Badge variant="outline">{ex.equipment}</Badge>
+                        {ex.equipment && ex.equipment.length > 0 && (
+                          <Badge variant="outline">{ex.equipment[0]}</Badge>
+                        )}
                       </div>
                     </div>
                     <Dumbbell className="w-5 h-5 text-muted-foreground" />
@@ -299,8 +294,7 @@ const Exercises = () => {
                 <CardContent className="space-y-4">
                   <p className="text-sm text-muted-foreground">{ex.description}</p>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span>Séries: <strong className="text-foreground">{ex.sets}</strong></span>
-                    <span>Reps: <strong className="text-foreground">{ex.reps}</strong></span>
+                    <span>Duração: <strong className="text-foreground">{ex.duration}</strong></span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Dialog>
@@ -317,25 +311,30 @@ const Exercises = () => {
                             Detalhes do exercício e instruções de execução.
                           </DialogDescription>
                         </DialogHeader>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <img
-                              src="/placeholder.svg"
-                              alt={`Demonstração do exercício ${ex.name}`}
-                              loading="lazy"
-                              className="w-full h-40 object-contain rounded-md border border-border bg-muted"
-                            />
-                          </div>
+                        <div className="space-y-4">
                           <div className="space-y-3 text-sm">
                             <p className="text-muted-foreground">{ex.description}</p>
                             <div className="flex flex-wrap gap-2">
-                              <Badge>{ex.area}</Badge>
+                              <Badge>{ex.category}</Badge>
                               <Badge variant="secondary">{ex.difficulty}</Badge>
-                              <Badge variant="outline">{ex.equipment}</Badge>
+                              {ex.equipment && ex.equipment.length > 0 && (
+                                <Badge variant="outline">{ex.equipment.join(', ')}</Badge>
+                              )}
                             </div>
-                            <p>
-                              Séries x Repetições: <strong className="text-foreground">{ex.sets} x {ex.reps}</strong>
-                            </p>
+                            <div>
+                              <h4 className="font-medium text-foreground mb-2">Instruções:</h4>
+                              <p className="text-muted-foreground">{ex.instructions}</p>
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-foreground mb-2">Músculos Alvo:</h4>
+                              <div className="flex flex-wrap gap-1">
+                                {ex.targetMuscles.map((muscle) => (
+                                  <Badge key={muscle} variant="outline" className="text-xs">
+                                    {muscle}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
                             <Button variant="medical" onClick={() => handleAddToPlan(ex)}>
                               <PlusCircle className="w-4 h-4" />
                               Adicionar ao plano

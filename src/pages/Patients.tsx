@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { NewPatientModal } from '@/components/modals/NewPatientModal';
+import { EditPatientModal } from '@/components/modals/EditPatientModal';
+import { useData } from '@/contexts/DataContext';
 import { 
   Plus, 
   Search, 
@@ -16,65 +19,34 @@ import {
   Activity
 } from 'lucide-react';
 
-const mockPatients = [
-  {
-    id: 1,
-    name: 'Maria Silva',
-    email: 'maria.silva@email.com',
-    phone: '(11) 99999-9999',
-    condition: 'Lombalgia',
-    lastVisit: '2024-01-10',
-    nextAppointment: '2024-01-15',
-    status: 'Em Tratamento',
-    progress: 85,
-    age: 45
-  },
-  {
-    id: 2,
-    name: 'João Santos',
-    email: 'joao.santos@email.com',
-    phone: '(11) 88888-8888',
-    condition: 'Tendinite',
-    lastVisit: '2024-01-09',
-    nextAppointment: '2024-01-16',
-    status: 'Recuperação',
-    progress: 60,
-    age: 32
-  },
-  {
-    id: 3,
-    name: 'Ana Costa',
-    email: 'ana.costa@email.com',
-    phone: '(11) 77777-7777',
-    condition: 'Escoliose',
-    lastVisit: '2024-01-08',
-    nextAppointment: '2024-01-17',
-    status: 'Em Tratamento',
-    progress: 40,
-    age: 28
-  },
-  {
-    id: 4,
-    name: 'Pedro Lima',
-    email: 'pedro.lima@email.com',
-    phone: '(11) 66666-6666',
-    condition: 'Artrose',
-    lastVisit: '2024-01-07',
-    nextAppointment: '2024-01-18',
-    status: 'Inicial',
-    progress: 20,
-    age: 67
-  },
-];
-
 const Patients = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedPatient, setSelectedPatient] = useState<number | null>(null);
+  const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
+  const [editingPatient, setEditingPatient] = useState<string | null>(null);
+  const { patients, appointments } = useData();
 
-  const filteredPatients = mockPatients.filter(patient =>
+  const filteredPatients = patients.filter(patient =>
     patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.condition.toLowerCase().includes(searchTerm.toLowerCase())
+    patient.mainCondition.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const getPatientAge = (birthDate: Date) => {
+    const today = new Date();
+    const age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      return age - 1;
+    }
+    return age;
+  };
+
+  const getNextAppointment = (patientId: string) => {
+    const patientAppointments = appointments.filter(apt => 
+      apt.patientId === patientId && apt.date >= new Date()
+    );
+    const nextApt = patientAppointments.sort((a, b) => a.date.getTime() - b.date.getTime())[0];
+    return nextApt ? nextApt.date.toLocaleDateString('pt-BR') : 'Não agendado';
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -98,10 +70,14 @@ const Patients = () => {
             <h1 className="text-2xl font-bold text-foreground">Pacientes</h1>
             <p className="text-muted-foreground">Gerencie seus pacientes e acompanhe o progresso</p>
           </div>
-          <Button className="bg-gradient-primary text-primary-foreground hover:shadow-medical">
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Paciente
-          </Button>
+          <NewPatientModal
+            trigger={
+              <Button className="bg-gradient-primary text-primary-foreground hover:shadow-medical">
+                <Plus className="w-4 h-4 mr-2" />
+                Novo Paciente
+              </Button>
+            }
+          />
         </div>
 
         {/* Search and Filters */}
@@ -142,7 +118,7 @@ const Patients = () => {
                     </Avatar>
                     <div>
                       <CardTitle className="text-lg text-foreground">{patient.name}</CardTitle>
-                      <p className="text-sm text-muted-foreground">{patient.age} anos</p>
+                      <p className="text-sm text-muted-foreground">{getPatientAge(patient.birthDate)} anos</p>
                     </div>
                   </div>
                   <Badge className={getStatusColor(patient.status)}>
@@ -155,7 +131,7 @@ const Patients = () => {
                 <div>
                   <p className="font-medium text-foreground mb-2">Condição Principal</p>
                   <p className="text-sm text-muted-foreground bg-accent/50 p-2 rounded">
-                    {patient.condition}
+                    {patient.mainCondition}
                   </p>
                 </div>
 
@@ -170,7 +146,7 @@ const Patients = () => {
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Próxima: {patient.nextAppointment}</span>
+                    <span className="text-muted-foreground">Próxima: {getNextAppointment(patient.id)}</span>
                   </div>
                 </div>
 
@@ -192,7 +168,15 @@ const Patients = () => {
                     <Eye className="w-4 h-4 mr-2" />
                     Ver
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingPatient(patient.id);
+                    }}
+                  >
                     <Edit className="w-4 h-4 mr-2" />
                     Editar
                   </Button>
@@ -207,30 +191,39 @@ const Patients = () => {
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
               <div>
-                <p className="text-2xl font-bold text-foreground">{mockPatients.length}</p>
+                <p className="text-2xl font-bold text-foreground">{patients.length}</p>
                 <p className="text-sm text-muted-foreground">Total de Pacientes</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-secondary">
-                  {mockPatients.filter(p => p.status === 'Em Tratamento').length}
+                  {patients.filter(p => p.status === 'Em Tratamento').length}
                 </p>
                 <p className="text-sm text-muted-foreground">Em Tratamento</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-primary">
-                  {mockPatients.filter(p => p.status === 'Recuperação').length}
+                  {patients.filter(p => p.status === 'Recuperação').length}
                 </p>
                 <p className="text-sm text-muted-foreground">Em Recuperação</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-foreground">
-                  {Math.round(mockPatients.reduce((acc, p) => acc + p.progress, 0) / mockPatients.length)}%
+                  {patients.length > 0 ? Math.round(patients.reduce((acc, p) => acc + p.progress, 0) / patients.length) : 0}%
                 </p>
                 <p className="text-sm text-muted-foreground">Progresso Médio</p>
               </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* Edit Patient Modal */}
+        {editingPatient && (
+          <EditPatientModal
+            patient={patients.find(p => p.id === editingPatient)!}
+            open={!!editingPatient}
+            onOpenChange={(open) => !open && setEditingPatient(null)}
+          />
+        )}
       </div>
     </MainLayout>
   );
