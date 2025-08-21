@@ -56,6 +56,10 @@ type AppointmentFormData = z.infer<typeof appointmentSchema>;
 
 interface NewAppointmentModalProps {
   trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  defaultTime?: string;
+  defaultDate?: Date;
 }
 
 // Mock data para pacientes - em um app real viria do backend
@@ -73,15 +77,25 @@ const timeSlots = [
   '15:00', '15:30', '16:00', '16:30', '17:00', '17:30',
 ];
 
-export function NewAppointmentModal({ trigger }: NewAppointmentModalProps) {
-  const [open, setOpen] = useState(false);
+export function NewAppointmentModal({ 
+  trigger, 
+  open: externalOpen, 
+  onOpenChange: externalOnOpenChange,
+  defaultTime,
+  defaultDate 
+}: NewAppointmentModalProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const { toast } = useToast();
+
+  const open = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setOpen = externalOnOpenChange || setInternalOpen;
 
   const form = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
       patientName: '',
-      time: '',
+      date: defaultDate,
+      time: defaultTime || '',
       duration: '60',
       notes: '',
     },
