@@ -1,9 +1,12 @@
 import { useState, useMemo } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { NewAppointmentModal } from '@/components/modals/NewAppointmentModal';
+import { EditAppointmentModal } from '@/components/modals/EditAppointmentModal';
+import { WeekNavigation } from '@/components/schedule/WeekNavigation';
+import { ScheduleGrid } from '@/components/schedule/ScheduleGrid';
 import { useData } from '@/contexts/DataContext';
 import { 
   Plus, 
@@ -20,6 +23,7 @@ import { ptBR } from 'date-fns/locale';
 const Schedule = () => {
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ date: Date; time: string } | null>(null);
+  const [selectedAppointment, setSelectedAppointment] = useState<any | null>(null);
   const { appointments } = useData();
   
   // Generate time slots (7:00 to 18:00, every 30 minutes)
@@ -89,6 +93,10 @@ const Schedule = () => {
     setCurrentWeek(addWeeks(currentWeek, 1));
   };
 
+  const goToToday = () => {
+    setCurrentWeek(new Date());
+  };
+
   const getAppointmentForSlot = (date: Date, timeSlot: string) => {
     return weekAppointments.find(apt => 
       isSameDay(new Date(apt.date), date) && apt.time === timeSlot
@@ -130,28 +138,13 @@ const Schedule = () => {
         </div>
 
         {/* Week Navigation */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <Button variant="outline" onClick={previousWeek}>
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              
-              <div className="text-center">
-                <p className="text-xl font-semibold text-foreground">
-                  {format(weekStart, 'dd/MM', { locale: ptBR })} - {format(addDays(weekStart, 5), 'dd/MM/yyyy', { locale: ptBR })}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {getTotalAppointments()} agendamentos esta semana
-                </p>
-              </div>
-              
-              <Button variant="outline" onClick={nextWeek}>
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <WeekNavigation
+          currentWeek={currentWeek}
+          onPreviousWeek={previousWeek}
+          onNextWeek={nextWeek}
+          onToday={goToToday}
+          totalAppointments={getTotalAppointments()}
+        />
 
         {/* Weekly Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -194,123 +187,14 @@ const Schedule = () => {
         </div>
 
         {/* Weekly Calendar Grid */}
-        <Card className="overflow-hidden bg-gradient-card border-border shadow-card">
-          <CardHeader className="bg-muted/30 border-b border-border">
-            <CardTitle className="text-foreground flex items-center gap-2">
-              <CalendarIcon className="w-5 h-5" />
-              Agenda da Semana
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <div className="min-w-[900px]">
-                {/* Header with days */}
-                <div className="grid grid-cols-7 bg-muted/50 border-b border-border">
-                  <div className="p-4 text-center text-sm font-semibold text-muted-foreground border-r border-border bg-muted/70">
-                    Horário
-                  </div>
-                  {weekDays.map((day) => {
-                    const { dayName, dayNumber } = formatDayHeader(day);
-                    const dayAppointments = weekAppointments.filter(apt => 
-                      isSameDay(new Date(apt.date), day)
-                    );
-                    const isToday = isSameDay(day, new Date());
-                    
-                    return (
-                      <div key={day.toISOString()} 
-                        className={`p-4 text-center border-r border-border last:border-r-0 transition-colors ${
-                          isToday ? 'bg-primary/10 border-primary/20' : 'bg-background'
-                        }`}
-                      >
-                        <div className={`text-sm font-semibold capitalize ${
-                          isToday ? 'text-primary' : 'text-foreground'
-                        }`}>
-                          {dayName}
-                        </div>
-                        <div className={`text-xs mt-1 ${
-                          isToday ? 'text-primary/80' : 'text-muted-foreground'
-                        }`}>
-                          {dayNumber}
-                        </div>
-                        <div className={`text-xs mt-2 px-2 py-1 rounded-full ${
-                          dayAppointments.length > 0 
-                            ? 'bg-primary/20 text-primary font-medium' 
-                            : 'text-muted-foreground/70'
-                        }`}>
-                          {dayAppointments.length} agend.
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Time slots grid */}
-                <div className="bg-background">
-                  {timeSlots.map((timeSlot, index) => (
-                    <div key={timeSlot} 
-                      className={`grid grid-cols-7 border-b border-border last:border-b-0 min-h-[60px] ${
-                        index % 2 === 0 ? 'bg-background' : 'bg-muted/10'
-                      }`}
-                    >
-                      {/* Time column */}
-                      <div className="p-3 text-sm font-medium text-muted-foreground border-r border-border bg-muted/30 flex items-center justify-center">
-                        <span className="text-xs bg-muted px-2 py-1 rounded">
-                          {timeSlot}
-                        </span>
-                      </div>
-                      
-                      {/* Day columns */}
-                      {weekDays.map((day) => {
-                        const appointment = getAppointmentForSlot(day, timeSlot);
-                        const isOccupied = !!appointment;
-                        const isToday = isSameDay(day, new Date());
-                        
-                        return (
-                          <div
-                            key={`${day.toISOString()}-${timeSlot}`}
-                            className={`
-                              border-r border-border last:border-r-0 p-2 cursor-pointer transition-all duration-300 group relative
-                              ${isOccupied 
-                                ? 'bg-transparent' 
-                                : `hover:bg-primary/10 hover:border-primary/30 ${
-                                    isToday ? 'bg-primary/5' : ''
-                                  }`
-                              }
-                            `}
-                            onClick={() => handleTimeSlotClick(day, timeSlot)}
-                          >
-                            {isOccupied && appointment ? (
-                              <div className={`
-                                ${getTypeColor(appointment.type)} text-white text-xs p-3 rounded-lg h-full
-                                flex flex-col justify-center shadow-md border-l-4 border-white/20 
-                                hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200
-                              `}>
-                                <div className="font-semibold truncate mb-1">
-                                  {appointment.patientName}
-                                </div>
-                                <div className="opacity-90 truncate text-xs">
-                                  {appointment.type}
-                                </div>
-                                <div className="opacity-75 text-xs mt-1 flex items-center gap-1">
-                                  <Clock className="w-3 h-3" />
-                                  {appointment.duration}min
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="h-full flex items-center justify-center text-muted-foreground/40 group-hover:text-primary/70 transition-colors">
-                                <Plus className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <ScheduleGrid
+          weekDays={weekDays}
+          timeSlots={timeSlots}
+          weekAppointments={weekAppointments}
+          onTimeSlotClick={handleTimeSlotClick}
+          onAppointmentClick={setSelectedAppointment}
+          getTypeColor={getTypeColor}
+        />
 
         {/* Modal for new appointment with pre-filled time and date */}
         {selectedTimeSlot && (
@@ -319,6 +203,15 @@ const Schedule = () => {
             onOpenChange={(open) => !open && setSelectedTimeSlot(null)}
             defaultTime={selectedTimeSlot.time}
             defaultDate={selectedTimeSlot.date}
+          />
+        )}
+
+        {/* Modal for editing existing appointment */}
+        {selectedAppointment && (
+          <EditAppointmentModal
+            open={!!selectedAppointment}
+            onOpenChange={(open) => !open && setSelectedAppointment(null)}
+            appointment={selectedAppointment}
           />
         )}
       </div>
