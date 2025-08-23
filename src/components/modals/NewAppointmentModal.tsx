@@ -38,6 +38,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useData } from '@/contexts/DataContext';
 
 const appointmentSchema = z.object({
   patientName: z.string().min(2, 'Nome do paciente é obrigatório'),
@@ -62,19 +63,11 @@ interface NewAppointmentModalProps {
   defaultDate?: Date;
 }
 
-// Mock data para pacientes - em um app real viria do backend
-const mockPatients = [
-  'Ana Silva Santos',
-  'Carlos Eduardo Lima',
-  'Maria Fernanda Costa',
-  'João Pedro Almeida',
-  'Beatriz Oliveira',
-];
 
 const timeSlots = [
-  '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
-  '11:00', '11:30', '13:00', '13:30', '14:00', '14:30',
-  '15:00', '15:30', '16:00', '16:30', '17:00', '17:30',
+  '07:00', '07:30', '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+  '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30',
+  '15:00', '15:30', '16:00', '16:30', '17:00', '17:30'
 ];
 
 export function NewAppointmentModal({ 
@@ -86,6 +79,7 @@ export function NewAppointmentModal({
 }: NewAppointmentModalProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const { toast } = useToast();
+  const { addAppointment, patients } = useData();
 
   const open = externalOpen !== undefined ? externalOpen : internalOpen;
   const setOpen = externalOnOpenChange || setInternalOpen;
@@ -102,7 +96,36 @@ export function NewAppointmentModal({
   });
 
   const onSubmit = (data: AppointmentFormData) => {
-    console.log('Novo agendamento:', data);
+    const selectedPatient = patients.find(p => p.name === data.patientName);
+    
+    const getAppointmentType = (type: string): 'Consulta Inicial' | 'Fisioterapia' | 'Reavaliação' | 'Consulta de Retorno' => {
+      switch (type) {
+        case 'avaliacao':
+          return 'Consulta Inicial';
+        case 'consulta':
+          return 'Consulta Inicial';
+        case 'sessao':
+          return 'Fisioterapia';
+        case 'retorno':
+          return 'Consulta de Retorno';
+        default:
+          return 'Fisioterapia';
+      }
+    };
+    
+    const newAppointment = {
+      patientId: selectedPatient?.id || '',
+      patientName: data.patientName,
+      date: data.date,
+      time: data.time,
+      duration: parseInt(data.duration),
+      type: getAppointmentType(data.type),
+      status: 'Confirmado' as const,
+      notes: data.notes || '',
+      phone: selectedPatient?.phone || '',
+    };
+    
+    addAppointment(newAppointment);
     
     toast({
       title: 'Agendamento criado!',
@@ -145,9 +168,9 @@ export function NewAppointmentModal({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {mockPatients.map((patient) => (
-                        <SelectItem key={patient} value={patient}>
-                          {patient}
+                      {patients.map((patient) => (
+                        <SelectItem key={patient.id} value={patient.name}>
+                          {patient.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
