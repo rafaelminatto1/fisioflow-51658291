@@ -14,6 +14,7 @@ import { ptBR } from 'date-fns/locale';
 import { Appointment } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { checkAppointmentConflict } from '@/utils/appointmentValidation';
 
 interface EditAppointmentModalProps {
   open: boolean;
@@ -26,7 +27,7 @@ export const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({
   onOpenChange,
   appointment
 }) => {
-  const { patients, updateAppointment, deleteAppointment } = useData();
+  const { patients, updateAppointment, deleteAppointment, appointments } = useData();
   const { toast } = useToast();
   
   const [date, setDate] = useState<Date>(new Date(appointment.date));
@@ -74,6 +75,25 @@ export const EditAppointmentModal: React.FC<EditAppointmentModalProps> = ({
         title: "Erro",
         description: "Paciente não encontrado.",
         variant: "destructive"
+      });
+      return;
+    }
+
+    // Check for appointment conflicts (excluding current appointment)
+    const conflictCheck = checkAppointmentConflict({
+      date,
+      time,
+      duration,
+      excludeId: appointment.id,
+      appointments
+    });
+
+    if (conflictCheck.hasConflict && conflictCheck.conflictingAppointment) {
+      const endTime = new Date(new Date(`2000-01-01T${conflictCheck.conflictingAppointment.time}`).getTime() + conflictCheck.conflictingAppointment.duration * 60000);
+      toast({
+        title: 'Conflito de Horário',
+        description: `Já existe uma consulta agendada com ${conflictCheck.conflictingAppointment.patientName} das ${conflictCheck.conflictingAppointment.time} às ${endTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.`,
+        variant: 'destructive',
       });
       return;
     }

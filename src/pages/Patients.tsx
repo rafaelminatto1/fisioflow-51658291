@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { NewPatientModal } from '@/components/modals/NewPatientModal';
 import { EditPatientModal } from '@/components/modals/EditPatientModal';
+import { ViewPatientModal } from '@/components/modals/ViewPatientModal';
 import { useData } from '@/contexts/DataContext';
 import { 
   Plus, 
@@ -23,6 +24,7 @@ const Patients = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
   const [editingPatient, setEditingPatient] = useState<string | null>(null);
+  const [viewingPatient, setViewingPatient] = useState<string | null>(null);
   const { patients, appointments } = useData();
 
   const filteredPatients = patients.filter(patient =>
@@ -164,7 +166,15 @@ const Patients = () => {
                 </div>
 
                 <div className="flex gap-2 pt-2">
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setViewingPatient(patient.id);
+                    }}
+                  >
                     <Eye className="w-4 h-4 mr-2" />
                     Ver
                   </Button>
@@ -215,6 +225,19 @@ const Patients = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* View Patient Modal */}
+        {viewingPatient && (
+          <ViewPatientModal
+            patient={patients.find(p => p.id === viewingPatient)!}
+            open={!!viewingPatient}
+            onOpenChange={(open) => !open && setViewingPatient(null)}
+            onEdit={() => {
+              setEditingPatient(viewingPatient);
+              setViewingPatient(null);
+            }}
+          />
+        )}
 
         {/* Edit Patient Modal */}
         {editingPatient && (

@@ -30,6 +30,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Plus, X, Dumbbell } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useData } from '@/contexts/DataContext';
 
 const exerciseSchema = z.object({
   name: z.string().min(2, 'Nome do exercício é obrigatório'),
@@ -71,6 +72,7 @@ export function NewExerciseModal({ trigger }: NewExerciseModalProps) {
   const [muscleInput, setMuscleInput] = useState('');
   const [equipmentInput, setEquipmentInput] = useState('');
   const { toast } = useToast();
+  const { addExercise } = useData();
 
   const form = useForm<ExerciseFormData>({
     resolver: zodResolver(exerciseSchema),
@@ -116,7 +118,7 @@ export function NewExerciseModal({ trigger }: NewExerciseModalProps) {
   };
 
   const onSubmit = (data: ExerciseFormData) => {
-    console.log('Novo exercício:', data);
+    addExercise(data as any);
     
     toast({
       title: 'Exercício criado!',

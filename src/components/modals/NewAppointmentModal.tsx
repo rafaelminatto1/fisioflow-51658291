@@ -39,6 +39,7 @@ import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useData } from '@/contexts/DataContext';
+import { checkAppointmentConflict } from '@/utils/appointmentValidation';
 
 const appointmentSchema = z.object({
   patientName: z.string().min(2, 'Nome do paciente é obrigatório'),
@@ -79,7 +80,7 @@ export function NewAppointmentModal({
 }: NewAppointmentModalProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const { toast } = useToast();
-  const { addAppointment, patients } = useData();
+  const { addAppointment, patients, appointments } = useData();
 
   const open = externalOpen !== undefined ? externalOpen : internalOpen;
   const setOpen = externalOnOpenChange || setInternalOpen;
@@ -113,6 +114,24 @@ export function NewAppointmentModal({
       }
     };
     
+    // Check for appointment conflicts
+    const conflictCheck = checkAppointmentConflict({
+      date: data.date,
+      time: data.time,
+      duration: parseInt(data.duration),
+      appointments
+    });
+
+    if (conflictCheck.hasConflict && conflictCheck.conflictingAppointment) {
+      const endTime = new Date(new Date(`2000-01-01T${conflictCheck.conflictingAppointment.time}`).getTime() + conflictCheck.conflictingAppointment.duration * 60000);
+      toast({
+        title: 'Conflito de Horário',
+        description: `Já existe uma consulta agendada com ${conflictCheck.conflictingAppointment.patientName} das ${conflictCheck.conflictingAppointment.time} às ${endTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const newAppointment = {
       patientId: selectedPatient?.id || '',
       patientName: data.patientName,
