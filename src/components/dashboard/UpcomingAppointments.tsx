@@ -2,39 +2,46 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, Calendar, Phone } from 'lucide-react';
-
-const appointments = [
-  {
-    id: 1,
-    patient: 'Carlos Mendes',
-    time: '09:00',
-    type: 'Consulta Inicial',
-    status: 'Confirmado'
-  },
-  {
-    id: 2,
-    patient: 'Fernanda Oliveira',
-    time: '10:30',
-    type: 'Fisioterapia',
-    status: 'Pendente'
-  },
-  {
-    id: 3,
-    patient: 'Roberto Silva',
-    time: '14:00',
-    type: 'Reavaliação',
-    status: 'Confirmado'
-  },
-  {
-    id: 4,
-    patient: 'Lucia Santos',
-    time: '15:30',
-    type: 'Fisioterapia',
-    status: 'Confirmado'
-  },
-];
+import { useData } from '@/contexts/DataContext';
+import { format, isToday, isTomorrow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export function UpcomingAppointments() {
+  const { appointments } = useData();
+  
+  // Get upcoming appointments (next 5, sorted by date and time)
+  const upcomingAppointments = appointments
+    .filter(apt => apt.date >= new Date())
+    .sort((a, b) => {
+      const dateCompare = a.date.getTime() - b.date.getTime();
+      if (dateCompare === 0) {
+        return a.time.localeCompare(b.time);
+      }
+      return dateCompare;
+    })
+    .slice(0, 5);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Confirmado':
+        return 'bg-primary/10 text-primary border-primary/20';
+      case 'Pendente':
+        return 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20';
+      case 'Reagendado':
+        return 'bg-blue-500/10 text-blue-600 border-blue-500/20';
+      case 'Cancelado':
+        return 'bg-destructive/10 text-destructive border-destructive/20';
+      default:
+        return 'bg-muted text-muted-foreground border-border';
+    }
+  };
+
+  const formatAppointmentDate = (date: Date) => {
+    if (isToday(date)) return 'Hoje';
+    if (isTomorrow(date)) return 'Amanhã';
+    return format(date, 'dd/MM', { locale: ptBR });
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -44,34 +51,37 @@ export function UpcomingAppointments() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {appointments.map((appointment) => (
-          <div key={appointment.id} className="flex items-center justify-between p-3 bg-gradient-card rounded-lg border border-border hover:shadow-card transition-all">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-12 h-12 bg-primary/10 rounded-lg">
-                <Clock className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="font-medium text-foreground">{appointment.patient}</p>
-                <p className="text-sm text-muted-foreground">{appointment.type}</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <Badge 
-                    variant={appointment.status === 'Confirmado' ? 'default' : 'outline'}
-                    className="text-xs"
-                  >
-                    {appointment.status}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {appointment.time}
-                  </span>
+        {upcomingAppointments.length === 0 ? (
+          <div className="text-center py-6">
+            <p className="text-muted-foreground">Nenhum agendamento próximo</p>
+          </div>
+        ) : (
+          upcomingAppointments.map((appointment) => (
+            <div key={appointment.id} className="flex items-center justify-between p-3 bg-gradient-card rounded-lg border border-border hover:shadow-card transition-all">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-12 h-12 bg-primary/10 rounded-lg">
+                  <Clock className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">{appointment.patientName}</p>
+                  <p className="text-sm text-muted-foreground">{appointment.type}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge className={`text-xs ${getStatusColor(appointment.status)}`}>
+                      {appointment.status}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {formatAppointmentDate(appointment.date)} - {appointment.time}
+                    </span>
+                  </div>
                 </div>
               </div>
+              <Button variant="ghost" size="icon">
+                <Phone className="w-4 h-4" />
+              </Button>
             </div>
-            <Button variant="ghost" size="icon">
-              <Phone className="w-4 h-4" />
-            </Button>
-          </div>
-        ))}
+          ))
+        )}
       </CardContent>
     </Card>
   );
