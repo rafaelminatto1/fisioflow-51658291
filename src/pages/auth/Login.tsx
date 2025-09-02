@@ -47,10 +47,23 @@ export function Login() {
   const navigate = useNavigate();
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
 
+  // Generate consistent UUID for demo users
+  const generateDemoUUID = (role: string): string => {
+    // Create a simple but consistent UUID based on role
+    const hash = role.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    
+    const hex = Math.abs(hash).toString(16).padStart(8, '0');
+    return `${hex.slice(0,8)}-${hex.slice(0,4)}-4${hex.slice(1,4)}-8${hex.slice(0,3)}-${hex.slice(0,12).padEnd(12, '0')}`;
+  };
+
   const handleRoleSelect = (role: UserRole) => {
     // Simular login temporário baseado no papel
+    const demoId = generateDemoUUID(role);
     localStorage.setItem('demo_user_role', role);
-    localStorage.setItem('demo_user_id', 'demo-user-' + role);
+    localStorage.setItem('demo_user_id', demoId);
     localStorage.setItem('demo_user_name', `Usuário Demo ${userTypes.find(t => t.value === role)?.title}`);
     
     // Redirecionar para a página principal
