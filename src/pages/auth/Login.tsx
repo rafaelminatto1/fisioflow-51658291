@@ -1,153 +1,119 @@
 import { useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Eye, EyeOff, LogIn, Loader2 } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import { LoginFormData, loginSchema } from '@/lib/validations/auth';
+import { useNavigate } from 'react-router-dom';
+import { Users, UserCheck, Stethoscope, Heart, Star } from 'lucide-react';
+import { UserRole } from '@/types/auth';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+
+const userTypes = [
+  {
+    value: 'admin' as UserRole,
+    title: 'Administrador',
+    description: 'Acesso completo ao sistema',
+    icon: Star,
+    color: 'bg-purple-500'
+  },
+  {
+    value: 'fisioterapeuta' as UserRole,
+    title: 'Fisioterapeuta',
+    description: 'Profissional de fisioterapia',
+    icon: Stethoscope,
+    color: 'bg-blue-500'
+  },
+  {
+    value: 'estagiario' as UserRole,
+    title: 'Estagiário',
+    description: 'Estudante em formação',
+    icon: UserCheck,
+    color: 'bg-green-500'
+  },
+  {
+    value: 'paciente' as UserRole,
+    title: 'Paciente',
+    description: 'Usuário em tratamento',
+    icon: Heart,
+    color: 'bg-red-500'
+  },
+  {
+    value: 'parceiro' as UserRole,
+    title: 'Educador Físico',
+    description: 'Parceiro educador físico',
+    icon: Users,
+    color: 'bg-orange-500'
+  }
+];
 
 export function Login() {
-  const { user, signIn, loading } = useAuth();
-  const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
+  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    setValue,
-    watch
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      remember: false
-    }
-  });
-
-  // Redirecionar se já estiver logado
-  if (user && !loading) {
-    return <Navigate to="/" replace />;
-  }
-
-  const onSubmit = async (data: LoginFormData) => {
-    setIsSubmitting(true);
-    await signIn(data.email, data.password, data.remember);
-    setIsSubmitting(false);
+  const handleRoleSelect = (role: UserRole) => {
+    // Simular login temporário baseado no papel
+    localStorage.setItem('demo_user_role', role);
+    localStorage.setItem('demo_user_id', 'demo-user-' + role);
+    localStorage.setItem('demo_user_name', `Usuário Demo ${userTypes.find(t => t.value === role)?.title}`);
+    
+    // Redirecionar para a página principal
+    navigate('/');
+    window.location.reload(); // Força atualização para carregar o novo estado
   };
-
-  const remember = watch('remember');
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/20 p-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-2xl">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 w-16 h-16 bg-primary rounded-full flex items-center justify-center">
-            <LogIn className="w-8 h-8 text-primary-foreground" />
-          </div>
-          <CardTitle className="text-2xl font-bold">Bem-vindo de volta</CardTitle>
-          <CardDescription>
-            Entre com suas credenciais para acessar o FisioFlow
+          <CardTitle className="text-3xl font-bold">FisioFlow</CardTitle>
+          <CardDescription className="text-lg">
+            Selecione seu perfil para acessar o sistema (Modo Teste)
           </CardDescription>
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                {...register('email')}
-                className={errors.email ? 'border-destructive' : ''}
-              />
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  {...register('password')}
-                  className={errors.password ? 'border-destructive pr-10' : 'pr-10'}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {userTypes.map((userType) => {
+              const Icon = userType.icon;
+              return (
+                <Card
+                  key={userType.value}
+                  className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
+                    selectedRole === userType.value 
+                      ? 'ring-2 ring-primary shadow-lg' 
+                      : 'hover:shadow-md'
+                  }`}
+                  onClick={() => setSelectedRole(userType.value)}
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-              {errors.password && (
-                <p className="text-sm text-destructive">{errors.password.message}</p>
-              )}
-            </div>
+                  <CardContent className="p-6 text-center">
+                    <div className={`w-16 h-16 rounded-full ${userType.color} flex items-center justify-center mx-auto mb-4`}>
+                      <Icon className="w-8 h-8 text-white" />
+                    </div>
+                    <h3 className="text-xl font-semibold mb-2">{userType.title}</h3>
+                    <p className="text-muted-foreground text-sm mb-4">
+                      {userType.description}
+                    </p>
+                    <Button
+                      variant={selectedRole === userType.value ? "default" : "outline"}
+                      className="w-full"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRoleSelect(userType.value);
+                      }}
+                    >
+                      Entrar como {userType.title}
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="remember"
-                  checked={remember}
-                  onCheckedChange={(checked) => setValue('remember', !!checked)}
-                />
-                <Label htmlFor="remember" className="text-sm">
-                  Lembrar de mim
-                </Label>
-              </div>
-
-              <Link
-                to="/auth/forgot-password"
-                className="text-sm text-primary hover:underline"
-              >
-                Esqueci minha senha
-              </Link>
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isSubmitting || loading}
-            >
-              {isSubmitting || loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Entrando...
-                </>
-              ) : (
-                'Entrar'
-              )}
-            </Button>
-
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">
-                Não tem uma conta?{' '}
-                <Link
-                  to="/auth/register"
-                  className="text-primary hover:underline font-medium"
-                >
-                  Cadastre-se
-                </Link>
+          <div className="mt-8 text-center">
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <p className="text-amber-800 text-sm">
+                <strong>Modo de Teste:</strong> Este é um ambiente de demonstração. 
+                Não é necessário login ou senha para testar as funcionalidades.
               </p>
             </div>
-          </form>
+          </div>
         </CardContent>
       </Card>
     </div>
