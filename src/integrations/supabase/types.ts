@@ -632,55 +632,79 @@ export type Database = {
       profiles: {
         Row: {
           address: string | null
+          available_hours: Json | null
           avatar_url: string | null
+          bio: string | null
           birth_date: string | null
+          consultation_fee: number | null
           cpf: string | null
           created_at: string
           crefito: string | null
           emergency_contact: Json | null
+          experience_years: number | null
           full_name: string
           id: string
           is_active: boolean | null
+          last_login_at: string | null
           license_expiry: string | null
+          notification_preferences: Json | null
+          onboarding_completed: boolean | null
           phone: string | null
-          role: string
+          role: Database["public"]["Enums"]["user_role"]
           specialties: string[] | null
+          timezone: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           address?: string | null
+          available_hours?: Json | null
           avatar_url?: string | null
+          bio?: string | null
           birth_date?: string | null
+          consultation_fee?: number | null
           cpf?: string | null
           created_at?: string
           crefito?: string | null
           emergency_contact?: Json | null
+          experience_years?: number | null
           full_name: string
           id?: string
           is_active?: boolean | null
+          last_login_at?: string | null
           license_expiry?: string | null
+          notification_preferences?: Json | null
+          onboarding_completed?: boolean | null
           phone?: string | null
-          role?: string
+          role?: Database["public"]["Enums"]["user_role"]
           specialties?: string[] | null
+          timezone?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           address?: string | null
+          available_hours?: Json | null
           avatar_url?: string | null
+          bio?: string | null
           birth_date?: string | null
+          consultation_fee?: number | null
           cpf?: string | null
           created_at?: string
           crefito?: string | null
           emergency_contact?: Json | null
+          experience_years?: number | null
           full_name?: string
           id?: string
           is_active?: boolean | null
+          last_login_at?: string | null
           license_expiry?: string | null
+          notification_preferences?: Json | null
+          onboarding_completed?: boolean | null
           phone?: string | null
-          role?: string
+          role?: Database["public"]["Enums"]["user_role"]
           specialties?: string[] | null
+          timezone?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -793,7 +817,12 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      user_role:
+        | "admin"
+        | "fisioterapeuta"
+        | "estagiario"
+        | "paciente"
+        | "parceiro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -920,6 +949,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: [
+        "admin",
+        "fisioterapeuta",
+        "estagiario",
+        "paciente",
+        "parceiro",
+      ],
+    },
   },
 } as const
