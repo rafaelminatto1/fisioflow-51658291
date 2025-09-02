@@ -1,186 +1,41 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NewExerciseModal } from "@/components/modals/NewExerciseModal";
-import { useData } from "@/contexts/DataContext";
-import { Dumbbell, Search, PlusCircle, Info, Plus } from "lucide-react";
+import { ExerciseLibrary } from "@/components/exercises/ExerciseLibrary";
+import { ExercisePlayer } from "@/components/exercises/ExercisePlayer";
+import { useExercises } from "@/hooks/useExercises";
+import { useExerciseFavorites } from "@/hooks/useExerciseFavorites";
+import { useExerciseProtocols } from "@/hooks/useExerciseProtocols";
+import { Dumbbell, PlusCircle, Heart, BookOpen, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-// Types
- type Exercise = {
-  id: string;
-  name: string;
-  area: "Ombro" | "Joelho" | "Coluna" | "Quadril" | "Tornozelo" | "Punho";
-  difficulty: "Iniciante" | "Intermediário" | "Avançado";
-  equipment: "Nenhum" | "Elástico" | "Halteres" | "Bola" | "Faixa" | "Máquina";
-  description: string;
-  sets: number;
-  reps: number;
-};
-
-const AREAS: Exercise["area"][] = [
-  "Ombro",
-  "Joelho",
-  "Coluna",
-  "Quadril",
-  "Tornozelo",
-  "Punho",
-];
-const DIFFICULTIES: Exercise["difficulty"][] = [
-  "Iniciante",
-  "Intermediário",
-  "Avançado",
-];
-const EQUIPMENTS: Exercise["equipment"][] = [
-  "Nenhum",
-  "Elástico",
-  "Halteres",
-  "Bola",
-  "Faixa",
-  "Máquina",
-];
-
-const MOCK_EXERCISES: Exercise[] = [
-  {
-    id: "ex1",
-    name: "Elevação Lateral",
-    area: "Ombro",
-    difficulty: "Intermediário",
-    equipment: "Halteres",
-    description: "Fortalece deltóides laterais, mantendo cotovelos levemente flexionados.",
-    sets: 3,
-    reps: 12,
-  },
-  {
-    id: "ex2",
-    name: "Agachamento com Bola",
-    area: "Joelho",
-    difficulty: "Iniciante",
-    equipment: "Bola",
-    description: "Agachamento assistido com bola na parede para estabilidade do joelho.",
-    sets: 3,
-    reps: 10,
-  },
-  {
-    id: "ex3",
-    name: "Prancha Ventral",
-    area: "Coluna",
-    difficulty: "Intermediário",
-    equipment: "Nenhum",
-    description: "Ativa core e estabilizadores da coluna. Mantenha alinhamento neutro.",
-    sets: 4,
-    reps: 30,
-  },
-  {
-    id: "ex4",
-    name: "Elevação de Quadril",
-    area: "Quadril",
-    difficulty: "Iniciante",
-    equipment: "Nenhum",
-    description: "Fortalece glúteos e cadeia posterior, focando na extensão do quadril.",
-    sets: 3,
-    reps: 15,
-  },
-  {
-    id: "ex5",
-    name: "Flexão Plantar com Faixa",
-    area: "Tornozelo",
-    difficulty: "Iniciante",
-    equipment: "Faixa",
-    description: "Fortalece panturrilha e melhora estabilidade do tornozelo.",
-    sets: 3,
-    reps: 15,
-  },
-  {
-    id: "ex6",
-    name: "Extensão de Punho",
-    area: "Punho",
-    difficulty: "Intermediário",
-    equipment: "Elástico",
-    description: "Reforço para extensores do punho com elástico de resistência.",
-    sets: 3,
-    reps: 12,
-  },
-  {
-    id: "ex7",
-    name: "Good Morning",
-    area: "Coluna",
-    difficulty: "Avançado",
-    equipment: "Halteres",
-    description: "Fortalece eretores da espinha e isquiotibiais. Técnica é essencial.",
-    sets: 4,
-    reps: 8,
-  },
-  {
-    id: "ex8",
-    name: "Abdução de Ombro com Faixa",
-    area: "Ombro",
-    difficulty: "Iniciante",
-    equipment: "Faixa",
-    description: "Ativa manguito rotador e deltoide médio com baixa carga.",
-    sets: 3,
-    reps: 15,
-  },
-];
 
 const Exercises = () => {
-  const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<string>("todas");
-  const [difficulty, setDifficulty] = useState<string>("todas");
-  const [plan, setPlan] = useState<any[]>([]);
-  const { exercises } = useData();
+  const [selectedExercise, setSelectedExercise] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("library");
+  const { exercises, loading } = useExercises();
+  const { favorites } = useExerciseFavorites();
+  const { protocols } = useExerciseProtocols();
   const { toast } = useToast();
 
   useEffect(() => {
     document.title = "Exercícios | FisioFlow";
   }, []);
 
-  const filtered = useMemo(() => {
-    return exercises.filter((ex) => {
-      const q = query.trim().toLowerCase();
-      const matchesQuery = q
-        ? ex.name.toLowerCase().includes(q) || ex.category.toLowerCase().includes(q)
-        : true;
-      const matchesCategory = category === "todas" ? true : ex.category === category;
-      const matchesDifficulty =
-        difficulty === "todas" ? true : ex.difficulty === difficulty;
-      return matchesQuery && matchesCategory && matchesDifficulty;
-    });
-  }, [query, category, difficulty, exercises]);
+  const handleViewExercise = (exercise: any) => {
+    setSelectedExercise(exercise);
+    setActiveTab("player");
+  };
 
-  function handleAddToPlan(ex: any) {
-    setPlan((prev) => {
-      if (prev.some((p) => p.id === ex.id)) return prev;
-      return [...prev, ex];
-    });
+  const handleAddToPlan = (exercise: any) => {
     toast({
-      title: "Adicionado ao plano",
-      description: `${ex.name} foi incluído no plano atual`,
+      title: "Funcionalidade em desenvolvimento",
+      description: "A criação de planos será implementada na próxima fase"
     });
-  }
-
-  function handleClearPlan() {
-    setPlan([]);
-    toast({ title: "Plano limpo", description: "Todos os exercícios foram removidos." });
-  }
+  };
 
   return (
     <MainLayout>
@@ -191,176 +46,142 @@ const Exercises = () => {
             <div className="w-10 h-10 rounded-lg bg-gradient-primary grid place-items-center shadow-medical">
               <Dumbbell className="w-5 h-5 text-primary-foreground" />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">Exercícios</h1>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Biblioteca de Exercícios</h1>
+              <p className="text-muted-foreground">
+                Gerencie exercícios, crie protocolos e prescreva programas personalizados
+              </p>
+            </div>
           </div>
           <NewExerciseModal
             trigger={
-              <Button variant="medical">
-                <PlusCircle className="w-4 h-4" />
+              <Button className="bg-gradient-primary hover:opacity-90">
+                <PlusCircle className="w-4 h-4 mr-2" />
                 Novo Exercício
               </Button>
             }
           />
         </section>
 
-        {/* Filters */}
-        <section>
+        {/* Estatísticas rápidas */}
+        <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="bg-gradient-card border border-border">
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {/* Search */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar por nome ou área"
-                    className="pl-9"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    aria-label="Buscar exercícios"
-                  />
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <Dumbbell className="w-5 h-5 text-primary" />
                 </div>
+                <div>
+                  <p className="text-2xl font-bold">{exercises.length}</p>
+                  <p className="text-sm text-muted-foreground">Total de Exercícios</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-                <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger aria-label="Filtrar por categoria">
-                    <SelectValue placeholder="Categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todas">Todas as categorias</SelectItem>
-                    <SelectItem value="fortalecimento">Fortalecimento</SelectItem>
-                    <SelectItem value="alongamento">Alongamento</SelectItem>
-                    <SelectItem value="mobilidade">Mobilidade</SelectItem>
-                    <SelectItem value="cardio">Cardiovascular</SelectItem>
-                    <SelectItem value="equilibrio">Equilíbrio</SelectItem>
-                    <SelectItem value="respiratorio">Respiratório</SelectItem>
-                  </SelectContent>
-                </Select>
+          <Card className="bg-gradient-card border border-border">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-red-500/10 rounded-lg flex items-center justify-center">
+                  <Heart className="w-5 h-5 text-red-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{favorites.length}</p>
+                  <p className="text-sm text-muted-foreground">Favoritos</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-                {/* Difficulty */}
-                <Select value={difficulty} onValueChange={setDifficulty}>
-                  <SelectTrigger aria-label="Filtrar por dificuldade">
-                    <SelectValue placeholder="Dificuldade" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todas">Todas as dificuldades</SelectItem>
-                    <SelectItem value="iniciante">Iniciante</SelectItem>
-                    <SelectItem value="intermediario">Intermediário</SelectItem>
-                    <SelectItem value="avancado">Avançado</SelectItem>
-                  </SelectContent>
-                </Select>
+          <Card className="bg-gradient-card border border-border">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                  <BookOpen className="w-5 h-5 text-blue-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{protocols.length}</p>
+                  <p className="text-sm text-muted-foreground">Protocolos</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-card border border-border">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
+                  <Settings className="w-5 h-5 text-green-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">
+                    {new Set(exercises.map(ex => ex.category)).size}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Categorias</p>
+                </div>
               </div>
             </CardContent>
           </Card>
         </section>
 
-        {/* Current Plan Summary */}
-        {plan.length > 0 && (
-          <section>
-            <Card className="bg-gradient-card border border-border">
-              <CardHeader className="flex-row items-center justify-between">
-                <CardTitle className="text-lg">Plano atual ({plan.length})</CardTitle>
-                <Button variant="outline" size="sm" onClick={handleClearPlan}>Limpar</Button>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {plan.map((p) => (
-                    <Badge key={p.id} className="">{p.name}</Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </section>
-        )}
-
-        {/* Grid */}
+        {/* Conteúdo principal com tabs */}
         <section>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map((ex) => (
-              <Card key={ex.id} className="bg-gradient-card border border-border hover:shadow-medical transition-shadow">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="library">Biblioteca</TabsTrigger>
+              <TabsTrigger value="protocols">Protocolos</TabsTrigger>
+              <TabsTrigger value="player" disabled={!selectedExercise}>
+                Player {selectedExercise && `- ${selectedExercise.name}`}
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="library" className="mt-6">
+              <ExerciseLibrary
+                onExerciseSelect={handleViewExercise}
+                className="border-0 shadow-none bg-transparent"
+              />
+            </TabsContent>
+
+            <TabsContent value="protocols" className="mt-6">
+              <Card>
                 <CardHeader>
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <CardTitle className="text-xl text-foreground">{ex.name}</CardTitle>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        <Badge>{ex.category}</Badge>
-                        <Badge variant="secondary">{ex.difficulty}</Badge>
-                        {ex.equipment && ex.equipment.length > 0 && (
-                          <Badge variant="outline">{ex.equipment[0]}</Badge>
-                        )}
-                      </div>
-                    </div>
-                    <Dumbbell className="w-5 h-5 text-muted-foreground" />
-                  </div>
+                  <CardTitle>Protocolos de Exercícios</CardTitle>
+                  <p className="text-muted-foreground">
+                    Templates de exercícios organizados por condição ou objetivo terapêutico
+                  </p>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground">{ex.description}</p>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span>Duração: <strong className="text-foreground">{ex.duration}</strong></span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="soft">
-                          <Info className="w-4 h-4" />
-                          Visualizar
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>{ex.name}</DialogTitle>
-                          <DialogDescription>
-                            Detalhes do exercício e instruções de execução.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div className="space-y-3 text-sm">
-                            <p className="text-muted-foreground">{ex.description}</p>
-                            <div className="flex flex-wrap gap-2">
-                              <Badge>{ex.category}</Badge>
-                              <Badge variant="secondary">{ex.difficulty}</Badge>
-                              {ex.equipment && ex.equipment.length > 0 && (
-                                <Badge variant="outline">{ex.equipment.join(', ')}</Badge>
-                              )}
-                            </div>
-                            <div>
-                              <h4 className="font-medium text-foreground mb-2">Instruções:</h4>
-                              <p className="text-muted-foreground">{ex.instructions}</p>
-                            </div>
-                            <div>
-                              <h4 className="font-medium text-foreground mb-2">Músculos Alvo:</h4>
-                              <div className="flex flex-wrap gap-1">
-                                {ex.targetMuscles.map((muscle) => (
-                                  <Badge key={muscle} variant="outline" className="text-xs">
-                                    {muscle}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                            <Button variant="medical" onClick={() => handleAddToPlan(ex)}>
-                              <PlusCircle className="w-4 h-4" />
-                              Adicionar ao plano
-                            </Button>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-
-                    <Button variant="medical" onClick={() => handleAddToPlan(ex)}>
-                      <PlusCircle className="w-4 h-4" />
-                      Adicionar
-                    </Button>
+                <CardContent>
+                  <div className="text-center py-12">
+                    <BookOpen className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">Protocolos em desenvolvimento</h3>
+                    <p className="text-muted-foreground">
+                      O gerenciamento de protocolos será implementado na próxima atualização
+                    </p>
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            </TabsContent>
 
-            {filtered.length === 0 && (
-              <Card className="bg-gradient-card border border-border">
-                <CardContent className="py-10 text-center">
-                  <p className="text-muted-foreground">Nenhum exercício encontrado com os filtros atuais.</p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+            <TabsContent value="player" className="mt-6">
+              {selectedExercise ? (
+                <ExercisePlayer
+                  exercise={selectedExercise}
+                  onClose={() => {
+                    setSelectedExercise(null);
+                    setActiveTab("library");
+                  }}
+                />
+              ) : (
+                <Card>
+                  <CardContent className="p-12 text-center">
+                    <p className="text-muted-foreground">
+                      Selecione um exercício da biblioteca para visualizar
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+          </Tabs>
         </section>
       </main>
     </MainLayout>
