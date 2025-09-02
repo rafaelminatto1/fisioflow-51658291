@@ -91,13 +91,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "appointments_therapist_id_fkey"
-            columns: ["therapist_id"]
-            isOneToOne: false
-            referencedRelation: "therapist_stats"
-            referencedColumns: ["therapist_id"]
-          },
         ]
       }
       audit_log: {
@@ -428,13 +421,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "medical_records_therapist_id_fkey"
-            columns: ["therapist_id"]
-            isOneToOne: false
-            referencedRelation: "therapist_stats"
-            referencedColumns: ["therapist_id"]
-          },
         ]
       }
       notifications: {
@@ -487,13 +473,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "notifications_recipient_id_fkey"
-            columns: ["recipient_id"]
-            isOneToOne: false
-            referencedRelation: "therapist_stats"
-            referencedColumns: ["therapist_id"]
           },
         ]
       }
@@ -648,13 +627,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "patients_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "therapist_stats"
-            referencedColumns: ["therapist_id"]
-          },
         ]
       }
       profiles: {
@@ -784,13 +756,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "treatment_sessions_appointment_id_fkey"
-            columns: ["appointment_id"]
-            isOneToOne: false
-            referencedRelation: "appointments_full"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "treatment_sessions_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
@@ -815,74 +780,7 @@ export type Database = {
       }
     }
     Views: {
-      appointments_full: {
-        Row: {
-          appointment_date: string | null
-          appointment_time: string | null
-          cancellation_reason: string | null
-          created_at: string | null
-          created_by: string | null
-          duration: number | null
-          end_time: string | null
-          full_datetime: string | null
-          id: string | null
-          notes: string | null
-          patient_email: string | null
-          patient_id: string | null
-          patient_name: string | null
-          patient_phone: string | null
-          reminder_sent: boolean | null
-          room: string | null
-          status: string | null
-          therapist_crefito: string | null
-          therapist_id: string | null
-          therapist_name: string | null
-          type: string | null
-          updated_at: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "appointments_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "appointments_patient_id_fkey"
-            columns: ["patient_id"]
-            isOneToOne: false
-            referencedRelation: "patients"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "appointments_therapist_id_fkey"
-            columns: ["therapist_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "appointments_therapist_id_fkey"
-            columns: ["therapist_id"]
-            isOneToOne: false
-            referencedRelation: "therapist_stats"
-            referencedColumns: ["therapist_id"]
-          },
-        ]
-      }
-      therapist_stats: {
-        Row: {
-          completed_appointments: number | null
-          completion_rate: number | null
-          missed_appointments: number | null
-          therapist_id: string | null
-          therapist_name: string | null
-          total_appointments: number | null
-          total_patients: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       get_patient_full_info: {
