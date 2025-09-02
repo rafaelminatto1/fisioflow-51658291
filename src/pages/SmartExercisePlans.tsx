@@ -11,98 +11,32 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useData } from '@/contexts/DataContext';
 import { useToast } from '@/hooks/use-toast';
+import { NewExercisePlanModal } from '@/components/modals/NewExercisePlanModal';
+import { ProgressChart } from '@/components/charts/ProgressChart';
+import { PainLevelChart } from '@/components/charts/PainLevelChart';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { 
   Brain,
   Target,
   TrendingUp,
   Play,
-  Pause,
-  RotateCcw,
   Plus,
   Search,
   Users,
   Dumbbell,
-  Clock,
   Award,
   AlertTriangle,
   CheckCircle,
-  ArrowUp,
-  ArrowRight,
-  Video,
   BookOpen
 } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-
-// Mock data for smart exercise plans
-const mockSmartPlans = [
-  {
-    id: '1',
-    name: 'Plano Lombalgia - Maria Silva',
-    description: 'Protocolo para fortalecimento e estabilização lombar',
-    patientId: '1',
-    condition: 'Lombalgia crônica',
-    objectives: ['Reduzir dor', 'Fortalecer core', 'Melhorar postura'],
-    status: 'Ativo' as const,
-    exercises: [
-      {
-        exerciseId: '1',
-        currentSets: 3,
-        currentReps: 15,
-        restTime: 60,
-        progressionLevel: 3,
-        notes: 'Paciente consegue executar com boa técnica',
-        videoUrl: 'https://example.com/video1.mp4'
-      }
-    ],
-    progressionRules: [
-      {
-        id: '1',
-        triggerCondition: 'sessions_completed' as const,
-        triggerValue: 3,
-        action: 'increase_reps' as const,
-        actionValue: 2,
-        description: 'Aumentar 2 repetições após 3 sessões consecutivas'
-      }
-    ],
-    createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-02-15'),
-    lastProgressionDate: new Date('2024-02-10')
-  }
-];
-
-const mockProgressData = [
-  {
-    id: '1',
-    patientId: '1',
-    date: new Date('2024-02-15'),
-    painLevel: 4,
-    functionalScore: 75,
-    exerciseCompliance: 85,
-    notes: 'Boa evolução, paciente motivado',
-    measurements: [
-      { location: 'Flexão lombar', value: 45, unit: 'degrees' as const },
-      { location: 'Força abdominal', value: 7, unit: 'score' as const }
-    ],
-    createdAt: new Date('2024-02-15')
-  }
-];
 
 export function SmartExercisePlans() {
   const { patients, exercises, exercisePlans, addExercisePlan, patientProgress, addPatientProgress } = useData();
   const { toast } = useToast();
   const [selectedPatient, setSelectedPatient] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [isNewPlanOpen, setIsNewPlanOpen] = useState(false);
   const [isProgressOpen, setIsProgressOpen] = useState(false);
-
-  const [newPlan, setNewPlan] = useState({
-    name: '',
-    description: '',
-    patientId: '',
-    condition: '',
-    objectives: ['']
-  });
 
   const [progressEntry, setProgressEntry] = useState({
     painLevel: 5,
@@ -121,32 +55,7 @@ export function SmartExercisePlans() {
     return matchesPatient && matchesSearch;
   });
 
-  const handleCreatePlan = () => {
-    if (!newPlan.name || !newPlan.patientId || !newPlan.condition) {
-      toast({
-        title: "Erro",
-        description: "Preencha todos os campos obrigatórios.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    toast({
-      title: "Sucesso",
-      description: "Plano inteligente criado com sucesso!",
-    });
-
-    setNewPlan({
-      name: '',
-      description: '',
-      patientId: '',
-      condition: '',
-      objectives: ['']
-    });
-    setIsNewPlanOpen(false);
-  };
-
-  const handleProgressEntry = () => {
+  const handleProgressEntry = async () => {
     if (!selectedPatient) {
       toast({
         title: "Erro",
@@ -156,18 +65,35 @@ export function SmartExercisePlans() {
       return;
     }
 
-    toast({
-      title: "Sucesso",
-      description: "Progresso registrado com sucesso!",
-    });
+    try {
+      await addPatientProgress({
+        patient_id: selectedPatient,
+        progress_date: new Date().toISOString().split('T')[0],
+        pain_level: progressEntry.painLevel,
+        functional_score: progressEntry.functionalScore,
+        exercise_compliance: progressEntry.exerciseCompliance,
+        notes: progressEntry.notes
+      });
 
-    setProgressEntry({
-      painLevel: 5,
-      functionalScore: 50,
-      exerciseCompliance: 100,
-      notes: ''
-    });
-    setIsProgressOpen(false);
+      toast({
+        title: "Sucesso",
+        description: "Progresso registrado com sucesso!",
+      });
+
+      setProgressEntry({
+        painLevel: 5,
+        functionalScore: 50,
+        exerciseCompliance: 100,
+        notes: ''
+      });
+      setIsProgressOpen(false);
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao registrar progresso.",
+        variant: "destructive",
+      });
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -185,6 +111,31 @@ export function SmartExercisePlans() {
     return 'text-red-600';
   };
 
+  // Prepare chart data for progress visualization
+  const getProgressChartData = (patientId: string) => {
+    const progressData = patientProgress
+      .filter(p => p.patient_id === patientId)
+      .sort((a, b) => new Date(a.progress_date).getTime() - new Date(b.progress_date).getTime())
+      .map(p => ({
+        date: format(new Date(p.progress_date), 'dd/MM', { locale: ptBR }),
+        painLevel: p.pain_level,
+        functionalScore: p.functional_score,
+        exerciseCompliance: p.exercise_compliance
+      }));
+    
+    return progressData;
+  };
+
+  const getPainChartData = (patientId: string) => {
+    return patientProgress
+      .filter(p => p.patient_id === patientId)
+      .sort((a, b) => new Date(a.progress_date).getTime() - new Date(b.progress_date).getTime())
+      .map(p => ({
+        date: format(new Date(p.progress_date), 'dd/MM', { locale: ptBR }),
+        painLevel: p.pain_level
+      }));
+  };
+
   return (
     <MainLayout>
       <div className="space-y-6">
@@ -194,97 +145,14 @@ export function SmartExercisePlans() {
             <p className="text-muted-foreground">Exercícios personalizados com progressão automática</p>
           </div>
           <div className="flex gap-2">
-            <Dialog open={isNewPlanOpen} onOpenChange={setIsNewPlanOpen}>
-              <DialogTrigger asChild>
+            <NewExercisePlanModal
+              trigger={
                 <Button className="bg-primary hover:bg-primary/90">
                   <Brain className="w-4 h-4 mr-2" />
                   Criar Plano IA
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Novo Plano Inteligente</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium">Paciente</label>
-                      <Select value={newPlan.patientId} onValueChange={(value) => setNewPlan(prev => ({ ...prev, patientId: value }))}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o paciente" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {patients.map((patient) => (
-                            <SelectItem key={patient.id} value={patient.id}>
-                              {patient.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Condição Principal</label>
-                      <Input 
-                        value={newPlan.condition}
-                        onChange={(e) => setNewPlan(prev => ({ ...prev, condition: e.target.value }))}
-                        placeholder="Ex: Lombalgia crônica"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Nome do Plano</label>
-                    <Input 
-                      value={newPlan.name}
-                      onChange={(e) => setNewPlan(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="Ex: Protocolo Lombalgia - João Silva"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Descrição</label>
-                    <Textarea 
-                      value={newPlan.description}
-                      onChange={(e) => setNewPlan(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Descreva os objetivos e metodologia do plano..."
-                      rows={3}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Objetivos do Tratamento</label>
-                    <div className="space-y-2">
-                      {newPlan.objectives.map((objective, index) => (
-                        <Input 
-                          key={index}
-                          value={objective}
-                          onChange={(e) => {
-                            const newObjectives = [...newPlan.objectives];
-                            newObjectives[index] = e.target.value;
-                            setNewPlan(prev => ({ ...prev, objectives: newObjectives }));
-                          }}
-                          placeholder="Ex: Reduzir dor lombar"
-                        />
-                      ))}
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setNewPlan(prev => ({ ...prev, objectives: [...prev.objectives, ''] }))}
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Adicionar Objetivo
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setIsNewPlanOpen(false)}>
-                      Cancelar
-                    </Button>
-                    <Button onClick={handleCreatePlan}>
-                      Criar Plano
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+              }
+            />
 
             <Dialog open={isProgressOpen} onOpenChange={setIsProgressOpen}>
               <DialogTrigger asChild>
@@ -421,8 +289,8 @@ export function SmartExercisePlans() {
             ) : (
               <div className="grid gap-6">
                 {filteredPlans.map((plan) => {
-                  const patient = patients.find(p => p.id === plan.patientId);
-                  const progressData = mockProgressData.find(p => p.patientId === plan.patientId);
+                  const patient = patients.find(p => p.id === plan.patient_id);
+                  const progressData = patientProgress.find(p => p.patient_id === plan.patient_id);
                   
                   return (
                     <Card key={plan.id} className="hover:shadow-lg transition-shadow">
@@ -441,7 +309,7 @@ export function SmartExercisePlans() {
                                 </span>
                                 <span className="flex items-center gap-1">
                                   <Target className="w-4 h-4" />
-                                  {plan.condition}
+                                  {plan.description || 'Plano personalizado'}
                                 </span>
                               </CardDescription>
                             </div>
@@ -459,39 +327,24 @@ export function SmartExercisePlans() {
                       <CardContent className="space-y-6">
                         <p className="text-sm text-muted-foreground">{plan.description}</p>
                         
-                        {/* Objectives */}
-                        <div>
-                          <h4 className="font-medium mb-2 flex items-center gap-2">
-                            <Target className="w-4 h-4" />
-                            Objetivos
-                          </h4>
-                          <div className="flex flex-wrap gap-2">
-                            {plan.objectives.map((objective, index) => (
-                              <Badge key={index} variant="outline">
-                                {objective}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-
                         {/* Current Progress */}
                         {progressData && (
                           <div className="grid grid-cols-3 gap-4">
                             <div className="text-center p-3 bg-muted rounded-lg">
-                              <div className={`text-2xl font-bold ${getPainLevelColor(progressData.painLevel)}`}>
-                                {progressData.painLevel}/10
+                              <div className={`text-2xl font-bold ${getPainLevelColor(progressData.pain_level)}`}>
+                                {progressData.pain_level}/10
                               </div>
                               <div className="text-xs text-muted-foreground">Nível de Dor</div>
                             </div>
                             <div className="text-center p-3 bg-muted rounded-lg">
                               <div className="text-2xl font-bold text-blue-600">
-                                {progressData.functionalScore}%
+                                {progressData.functional_score}%
                               </div>
                               <div className="text-xs text-muted-foreground">Score Funcional</div>
                             </div>
                             <div className="text-center p-3 bg-muted rounded-lg">
                               <div className="text-2xl font-bold text-green-600">
-                                {progressData.exerciseCompliance}%
+                                {progressData.exercise_compliance}%
                               </div>
                               <div className="text-xs text-muted-foreground">Aderência</div>
                             </div>
@@ -502,49 +355,13 @@ export function SmartExercisePlans() {
                         <div>
                           <h4 className="font-medium mb-2 flex items-center gap-2">
                             <Dumbbell className="w-4 h-4" />
-                            Exercícios ({plan.exercises.length})
+                            Exercícios do Plano
                           </h4>
-                          <div className="space-y-2">
-                            {plan.exercises.slice(0, 3).map((exercise, index) => {
-                              const exerciseData = exercises.find(e => e.id === exercise.exerciseId);
-                              return (
-                                <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-sm font-medium">
-                                      {exerciseData?.name || 'Exercício não encontrado'}
-                                    </span>
-                                    <Badge variant="outline" className="text-xs">
-                                      Nível {exercise.progressionLevel}
-                                    </Badge>
-                                  </div>
-                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                    <span>{exercise.currentSets}x{exercise.currentReps}</span>
-                                    {exercise.videoUrl && <Video className="w-3 h-3" />}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                            {plan.exercises.length > 3 && (
-                              <div className="text-xs text-muted-foreground text-center">
-                                +{plan.exercises.length - 3} exercícios adicionais
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* AI Progression Rules */}
-                        <div>
-                          <h4 className="font-medium mb-2 flex items-center gap-2">
-                            <TrendingUp className="w-4 h-4" />
-                            Regras de Progressão IA
-                          </h4>
-                          <div className="space-y-2">
-                            {plan.progressionRules.map((rule, index) => (
-                              <div key={index} className="flex items-center gap-2 text-xs p-2 bg-blue-50 rounded">
-                                <ArrowUp className="w-3 h-3 text-blue-600" />
-                                <span>{rule.description}</span>
-                              </div>
-                            ))}
+                          <div className="bg-muted/50 rounded-lg p-4 text-center">
+                            <Dumbbell className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                            <p className="text-sm text-muted-foreground">
+                              Exercícios serão configurados em breve
+                            </p>
                           </div>
                         </div>
 
@@ -555,11 +372,7 @@ export function SmartExercisePlans() {
                             Ver Detalhes
                           </Button>
                           <Button variant="outline" size="sm">
-                            <Video className="w-4 h-4 mr-2" />
-                            Demonstrações
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <RotateCcw className="w-4 h-4 mr-2" />
+                            <TrendingUp className="w-4 h-4 mr-2" />
                             Ajustar IA
                           </Button>
                         </div>
@@ -572,67 +385,28 @@ export function SmartExercisePlans() {
           </TabsContent>
 
           <TabsContent value="progress" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mockProgressData.map((progress) => {
-                const patient = patients.find(p => p.id === progress.patientId);
-                return (
-                  <Card key={progress.id}>
-                    <CardHeader>
-                      <CardTitle className="text-lg">{patient?.name}</CardTitle>
-                      <CardDescription>
-                        {format(progress.date, 'dd/MM/yyyy', { locale: ptBR })}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>Nível de Dor</span>
-                          <span className={getPainLevelColor(progress.painLevel)}>
-                            {progress.painLevel}/10
-                          </span>
-                        </div>
-                        <Progress value={progress.painLevel * 10} className="h-2" />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>Score Funcional</span>
-                          <span className="text-blue-600">{progress.functionalScore}%</span>
-                        </div>
-                        <Progress value={progress.functionalScore} className="h-2" />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>Aderência</span>
-                          <span className="text-green-600">{progress.exerciseCompliance}%</span>
-                        </div>
-                        <Progress value={progress.exerciseCompliance} className="h-2" />
-                      </div>
-
-                      {progress.measurements && progress.measurements.length > 0 && (
-                        <div className="space-y-2">
-                          <h5 className="text-sm font-medium">Medições</h5>
-                          {progress.measurements.map((measurement, index) => (
-                            <div key={index} className="flex justify-between text-xs">
-                              <span>{measurement.location}</span>
-                              <span>{measurement.value} {measurement.unit}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {progress.notes && (
-                        <div>
-                          <h5 className="text-sm font-medium mb-1">Observações</h5>
-                          <p className="text-xs text-muted-foreground">{progress.notes}</p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+            {selectedPatient ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <ProgressChart 
+                  data={getProgressChartData(selectedPatient)}
+                  patientName={patients.find(p => p.id === selectedPatient)?.name}
+                />
+                <PainLevelChart 
+                  data={getPainChartData(selectedPatient)}
+                  patientName={patients.find(p => p.id === selectedPatient)?.name}
+                />
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <TrendingUp className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">Selecione um paciente</h3>
+                  <p className="text-muted-foreground">
+                    Escolha um paciente para visualizar seus gráficos de progresso.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-4">
@@ -669,15 +443,9 @@ export function SmartExercisePlans() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="p-2 bg-purple-50 rounded">
-                    <p className="text-xs font-medium">Maria Silva</p>
+                    <p className="text-xs font-medium">Desenvolvimento em andamento</p>
                     <p className="text-xs text-muted-foreground">
-                      Sugerido: Adicionar exercícios de estabilização
-                    </p>
-                  </div>
-                  <div className="p-2 bg-purple-50 rounded">
-                    <p className="text-xs font-medium">João Santos</p>
-                    <p className="text-xs text-muted-foreground">
-                      Sugerido: Reduzir intensidade por 1 semana
+                      Sistema de IA será implementado em breve
                     </p>
                   </div>
                 </CardContent>
@@ -692,12 +460,12 @@ export function SmartExercisePlans() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">12/15</div>
-                    <div className="text-xs text-muted-foreground">Objetivos este mês</div>
+                    <div className="text-2xl font-bold text-green-600">{exercisePlans.length}</div>
+                    <div className="text-xs text-muted-foreground">Planos ativos</div>
                   </div>
-                  <Progress value={80} className="h-2" />
+                  <Progress value={75} className="h-2" />
                   <p className="text-xs text-muted-foreground text-center">
-                    80% das metas mensais alcançadas
+                    Sistema funcionando perfeitamente
                   </p>
                 </CardContent>
               </Card>
