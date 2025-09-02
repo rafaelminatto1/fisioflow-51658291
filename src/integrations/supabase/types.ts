@@ -2101,6 +2101,45 @@ export type Database = {
       }
     }
     Functions: {
+      get_clinical_metrics: {
+        Args: { start_date?: string }
+        Returns: {
+          avg_pain_level: number
+          avg_session_duration: number
+          month: string
+          total_sessions: number
+          treated_patients: number
+        }[]
+      }
+      get_financial_metrics: {
+        Args: { start_date?: string }
+        Returns: {
+          avg_ticket: number
+          month: string
+          total_purchases: number
+          total_revenue: number
+          unique_customers: number
+        }[]
+      }
+      get_monthly_metrics: {
+        Args: { start_date?: string }
+        Returns: {
+          attendance_rate: number
+          cancelled_appointments: number
+          confirmed_appointments: number
+          month: string
+          total_appointments: number
+          unique_patients: number
+        }[]
+      }
+      get_patient_analytics: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avg_age: number
+          count: number
+          status: string
+        }[]
+      }
       get_patient_full_info: {
         Args: { patient_uuid: string }
         Returns: Json
