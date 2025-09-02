@@ -18,39 +18,54 @@ export type Database = {
         Row: {
           appointment_date: string
           appointment_time: string
+          cancellation_reason: string | null
           created_at: string
           created_by: string | null
           duration: number
+          end_time: string | null
           id: string
           notes: string | null
           patient_id: string
+          reminder_sent: boolean | null
+          room: string | null
           status: string
+          therapist_id: string | null
           type: string
           updated_at: string
         }
         Insert: {
           appointment_date: string
           appointment_time: string
+          cancellation_reason?: string | null
           created_at?: string
           created_by?: string | null
           duration?: number
+          end_time?: string | null
           id?: string
           notes?: string | null
           patient_id: string
+          reminder_sent?: boolean | null
+          room?: string | null
           status?: string
+          therapist_id?: string | null
           type: string
           updated_at?: string
         }
         Update: {
           appointment_date?: string
           appointment_time?: string
+          cancellation_reason?: string | null
           created_at?: string
           created_by?: string | null
           duration?: number
+          end_time?: string | null
           id?: string
           notes?: string | null
           patient_id?: string
+          reminder_sent?: boolean | null
+          room?: string | null
           status?: string
+          therapist_id?: string | null
           type?: string
           updated_at?: string
         }
@@ -69,7 +84,111 @@ export type Database = {
             referencedRelation: "patients"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "appointments_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapist_stats"
+            referencedColumns: ["therapist_id"]
+          },
         ]
+      }
+      audit_log: {
+        Row: {
+          action: string
+          id: string
+          ip_address: unknown | null
+          new_values: Json | null
+          old_values: Json | null
+          record_id: string
+          table_name: string
+          timestamp: string | null
+          user_agent: string | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id: string
+          table_name: string
+          timestamp?: string | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string
+          table_name?: string
+          timestamp?: string | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      clinic_settings: {
+        Row: {
+          address: Json | null
+          appointment_duration: number | null
+          cnpj: string | null
+          created_at: string | null
+          email: string | null
+          holiday_dates: string[] | null
+          id: string
+          logo_url: string | null
+          max_appointments_per_day: number | null
+          name: string
+          phone: string | null
+          updated_at: string | null
+          working_hours: Json | null
+        }
+        Insert: {
+          address?: Json | null
+          appointment_duration?: number | null
+          cnpj?: string | null
+          created_at?: string | null
+          email?: string | null
+          holiday_dates?: string[] | null
+          id?: string
+          logo_url?: string | null
+          max_appointments_per_day?: number | null
+          name: string
+          phone?: string | null
+          updated_at?: string | null
+          working_hours?: Json | null
+        }
+        Update: {
+          address?: Json | null
+          appointment_duration?: number | null
+          cnpj?: string | null
+          created_at?: string | null
+          email?: string | null
+          holiday_dates?: string[] | null
+          id?: string
+          logo_url?: string | null
+          max_appointments_per_day?: number | null
+          name?: string
+          phone?: string | null
+          updated_at?: string | null
+          working_hours?: Json | null
+        }
+        Relationships: []
       }
       exercise_plan_items: {
         Row: {
@@ -225,34 +344,67 @@ export type Database = {
       }
       medical_records: {
         Row: {
+          chief_complaint: string | null
+          coffito_code: string | null
           content: string
           created_at: string
           created_by: string
+          current_history: string | null
+          diagnosis: string | null
+          functional_assessment: Json | null
+          icd10: string | null
           id: string
           patient_id: string
+          physical_exam: Json | null
+          session_number: number | null
+          therapist_id: string | null
           title: string
+          treatment_plan: Json | null
           type: string
           updated_at: string
+          vital_signs: Json | null
         }
         Insert: {
+          chief_complaint?: string | null
+          coffito_code?: string | null
           content: string
           created_at?: string
           created_by: string
+          current_history?: string | null
+          diagnosis?: string | null
+          functional_assessment?: Json | null
+          icd10?: string | null
           id?: string
           patient_id: string
+          physical_exam?: Json | null
+          session_number?: number | null
+          therapist_id?: string | null
           title: string
+          treatment_plan?: Json | null
           type: string
           updated_at?: string
+          vital_signs?: Json | null
         }
         Update: {
+          chief_complaint?: string | null
+          coffito_code?: string | null
           content?: string
           created_at?: string
           created_by?: string
+          current_history?: string | null
+          diagnosis?: string | null
+          functional_assessment?: Json | null
+          icd10?: string | null
           id?: string
           patient_id?: string
+          physical_exam?: Json | null
+          session_number?: number | null
+          therapist_id?: string | null
           title?: string
+          treatment_plan?: Json | null
           type?: string
           updated_at?: string
+          vital_signs?: Json | null
         }
         Relationships: [
           {
@@ -268,6 +420,80 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "patients"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_records_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_records_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapist_stats"
+            referencedColumns: ["therapist_id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          created_at: string | null
+          delivery_method: string | null
+          id: string
+          message: string
+          metadata: Json | null
+          read: boolean | null
+          recipient_id: string | null
+          scheduled_for: string | null
+          sent_at: string | null
+          status: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          delivery_method?: string | null
+          id?: string
+          message: string
+          metadata?: Json | null
+          read?: boolean | null
+          recipient_id?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          created_at?: string | null
+          delivery_method?: string | null
+          id?: string
+          message?: string
+          metadata?: Json | null
+          read?: boolean | null
+          recipient_id?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "therapist_stats"
+            referencedColumns: ["therapist_id"]
           },
         ]
       }
@@ -325,54 +551,87 @@ export type Database = {
       patients: {
         Row: {
           address: string | null
+          allergies: string | null
           birth_date: string
+          blood_type: string | null
+          consent_data: boolean | null
+          consent_image: boolean | null
           created_at: string
           created_by: string | null
           email: string | null
           emergency_contact: string | null
           gender: string
+          height_cm: number | null
           id: string
+          insurance_info: Json | null
           main_condition: string
           medical_history: string | null
+          medications: string | null
           name: string
+          occupation: string | null
           phone: string | null
+          profile_id: string | null
           progress: number
+          referral_source: string | null
           status: string
           updated_at: string
+          weight_kg: number | null
         }
         Insert: {
           address?: string | null
+          allergies?: string | null
           birth_date: string
+          blood_type?: string | null
+          consent_data?: boolean | null
+          consent_image?: boolean | null
           created_at?: string
           created_by?: string | null
           email?: string | null
           emergency_contact?: string | null
           gender: string
+          height_cm?: number | null
           id?: string
+          insurance_info?: Json | null
           main_condition: string
           medical_history?: string | null
+          medications?: string | null
           name: string
+          occupation?: string | null
           phone?: string | null
+          profile_id?: string | null
           progress?: number
+          referral_source?: string | null
           status?: string
           updated_at?: string
+          weight_kg?: number | null
         }
         Update: {
           address?: string | null
+          allergies?: string | null
           birth_date?: string
+          blood_type?: string | null
+          consent_data?: boolean | null
+          consent_image?: boolean | null
           created_at?: string
           created_by?: string | null
           email?: string | null
           emergency_contact?: string | null
           gender?: string
+          height_cm?: number | null
           id?: string
+          insurance_info?: Json | null
           main_condition?: string
           medical_history?: string | null
+          medications?: string | null
           name?: string
+          occupation?: string | null
           phone?: string | null
+          profile_id?: string | null
           progress?: number
+          referral_source?: string | null
           status?: string
           updated_at?: string
+          weight_kg?: number | null
         }
         Relationships: [
           {
@@ -382,15 +641,35 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
           },
+          {
+            foreignKeyName: "patients_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patients_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "therapist_stats"
+            referencedColumns: ["therapist_id"]
+          },
         ]
       }
       profiles: {
         Row: {
+          address: string | null
           avatar_url: string | null
+          birth_date: string | null
+          cpf: string | null
           created_at: string
           crefito: string | null
+          emergency_contact: Json | null
           full_name: string
           id: string
+          is_active: boolean | null
+          license_expiry: string | null
           phone: string | null
           role: string
           specialties: string[] | null
@@ -398,11 +677,17 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          address?: string | null
           avatar_url?: string | null
+          birth_date?: string | null
+          cpf?: string | null
           created_at?: string
           crefito?: string | null
+          emergency_contact?: Json | null
           full_name: string
           id?: string
+          is_active?: boolean | null
+          license_expiry?: string | null
           phone?: string | null
           role?: string
           specialties?: string[] | null
@@ -410,11 +695,17 @@ export type Database = {
           user_id: string
         }
         Update: {
+          address?: string | null
           avatar_url?: string | null
+          birth_date?: string | null
+          cpf?: string | null
           created_at?: string
           crefito?: string | null
+          emergency_contact?: Json | null
           full_name?: string
           id?: string
+          is_active?: boolean | null
+          license_expiry?: string | null
           phone?: string | null
           role?: string
           specialties?: string[] | null
@@ -426,41 +717,62 @@ export type Database = {
       treatment_sessions: {
         Row: {
           appointment_id: string | null
+          attachments: Json | null
           created_at: string
           created_by: string
+          duration_minutes: number | null
+          equipment_used: string[] | null
           evolution_notes: string
           exercise_plan_id: string | null
+          homework_assigned: string | null
           id: string
           next_session_goals: string | null
           observations: string
           pain_level: number
           patient_id: string
+          patient_response: string | null
+          session_number: number | null
+          techniques_used: string[] | null
           updated_at: string
         }
         Insert: {
           appointment_id?: string | null
+          attachments?: Json | null
           created_at?: string
           created_by: string
+          duration_minutes?: number | null
+          equipment_used?: string[] | null
           evolution_notes: string
           exercise_plan_id?: string | null
+          homework_assigned?: string | null
           id?: string
           next_session_goals?: string | null
           observations: string
           pain_level: number
           patient_id: string
+          patient_response?: string | null
+          session_number?: number | null
+          techniques_used?: string[] | null
           updated_at?: string
         }
         Update: {
           appointment_id?: string | null
+          attachments?: Json | null
           created_at?: string
           created_by?: string
+          duration_minutes?: number | null
+          equipment_used?: string[] | null
           evolution_notes?: string
           exercise_plan_id?: string | null
+          homework_assigned?: string | null
           id?: string
           next_session_goals?: string | null
           observations?: string
           pain_level?: number
           patient_id?: string
+          patient_response?: string | null
+          session_number?: number | null
+          techniques_used?: string[] | null
           updated_at?: string
         }
         Relationships: [
@@ -469,6 +781,13 @@ export type Database = {
             columns: ["appointment_id"]
             isOneToOne: false
             referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_sessions_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments_full"
             referencedColumns: ["id"]
           },
           {
@@ -496,10 +815,84 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      appointments_full: {
+        Row: {
+          appointment_date: string | null
+          appointment_time: string | null
+          cancellation_reason: string | null
+          created_at: string | null
+          created_by: string | null
+          duration: number | null
+          end_time: string | null
+          full_datetime: string | null
+          id: string | null
+          notes: string | null
+          patient_email: string | null
+          patient_id: string | null
+          patient_name: string | null
+          patient_phone: string | null
+          reminder_sent: boolean | null
+          room: string | null
+          status: string | null
+          therapist_crefito: string | null
+          therapist_id: string | null
+          therapist_name: string | null
+          type: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "appointments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "therapist_stats"
+            referencedColumns: ["therapist_id"]
+          },
+        ]
+      }
+      therapist_stats: {
+        Row: {
+          completed_appointments: number | null
+          completion_rate: number | null
+          missed_appointments: number | null
+          therapist_id: string | null
+          therapist_name: string | null
+          total_appointments: number | null
+          total_patients: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      get_patient_full_info: {
+        Args: { patient_uuid: string }
+        Returns: Json
+      }
+      validate_cpf: {
+        Args: { cpf_input: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
