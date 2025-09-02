@@ -117,12 +117,12 @@ export function RegisterWizard({ onComplete }: RegisterWizardProps) {
 
     try {
       // Garantir que todos os campos obrigatórios estejam definidos
-      const completeData: RegisterFormData = {
-        userType: formData.userType!,
-        email: formData.email!,
-        password: formData.password!,
-        confirmPassword: formData.confirmPassword!,
-        full_name: formData.full_name!,
+      const completeData = {
+        userType: formData.userType as UserRole,
+        email: formData.email as string,
+        password: formData.password as string,
+        confirmPassword: formData.confirmPassword as string,
+        full_name: formData.full_name as string,
         cpf: formData.cpf,
         phone: formData.phone,
         birth_date: formData.birth_date,
@@ -133,7 +133,7 @@ export function RegisterWizard({ onComplete }: RegisterWizardProps) {
         consultation_fee: formData.consultation_fee,
         terms_accepted: data.terms_accepted,
         privacy_accepted: data.privacy_accepted
-      };
+      } satisfies RegisterFormData;
       
       const { error } = await signUp(completeData);
       
