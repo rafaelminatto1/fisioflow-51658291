@@ -9,20 +9,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Bell, Search, User, LogOut, Settings } from 'lucide-react';
-import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
 
 export function Header() {
-  const { user, signOut } = useAuth();
-  const { toast } = useToast();
-
-  const handleSignOut = async () => {
-    await signOut();
-    toast({
-      title: "Logout realizado",
-      description: "Até logo!",
-    });
-  };
   return (
     <header className="bg-card border-b border-border px-6 py-4 sticky top-0 z-10 backdrop-blur-sm bg-card/95">
       <div className="flex items-center justify-between">
@@ -54,15 +42,15 @@ export function Header() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="" alt="@user" />
-                  <AvatarFallback>{user?.email?.charAt(0).toUpperCase()}</AvatarFallback>
+                  <AvatarImage src="" alt="@admin" />
+                  <AvatarFallback>A</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user?.email}</p>
+                  <p className="text-sm font-medium leading-none">Administrador</p>
                   <p className="text-xs leading-none text-muted-foreground">
                     Fisioterapeuta
                   </p>
@@ -78,7 +66,7 @@ export function Header() {
                 <span>Configurações</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut}>
+              <DropdownMenuItem>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Sair</span>
               </DropdownMenuItem>
