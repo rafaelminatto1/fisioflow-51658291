@@ -25,7 +25,7 @@ const menuItems = [
   { icon: Calendar, label: 'Agenda', href: '/schedule' },
   { icon: Activity, label: 'Exercícios', href: '/exercises' },
   { icon: FileText, label: 'Prontuário', href: '/medical-record' },
-  { icon: Brain, label: 'Planos IA', href: '/smart-plans' },
+  { icon: Brain, label: 'Planos IA', href: '/smart-ai' },
   { icon: MessageSquare, label: 'Comunicação', href: '/communications' },
   { icon: ShoppingCart, label: 'Treinos', href: '/vouchers' },
   { icon: DollarSign, label: 'Financeiro', href: '/financial' },

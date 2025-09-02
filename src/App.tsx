@@ -27,6 +27,7 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import { Profile } from "./pages/Profile";
 import { MedicalRecord } from "./pages/MedicalRecord";
+import SmartAI from "./pages/SmartAI";
 import { SmartExercisePlans } from "./pages/SmartExercisePlans";
 import { Communications } from "./pages/Communications";
 import Partner from "./pages/Partner";
@@ -66,6 +67,7 @@ const App = () => (
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/medical-record" element={<ProtectedRoute><MedicalRecord /></ProtectedRoute>} />
+              <Route path="/smart-ai" element={<ProtectedRoute><SmartAI /></ProtectedRoute>} />
               <Route path="/smart-plans" element={<ProtectedRoute><SmartExercisePlans /></ProtectedRoute>} />
               <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
               <Route path="/partner" element={<ProtectedRoute><Partner /></ProtectedRoute>} />
