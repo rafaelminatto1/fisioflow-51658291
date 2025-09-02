@@ -3,6 +3,10 @@ import { Patient, Appointment, Exercise } from '@/types';
 import { usePatients } from '@/hooks/usePatients';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useExercises } from '@/hooks/useExercises';
+import { useExercisePlans, ExercisePlan } from '@/hooks/useExercisePlans';
+import { useMedicalRecords, MedicalRecord } from '@/hooks/useMedicalRecords';
+import { useTreatmentSessions, TreatmentSession } from '@/hooks/useTreatmentSessions';
+import { usePatientProgress, PatientProgress } from '@/hooks/usePatientProgress';
 
 interface DataContextType {
   // Patients
@@ -28,6 +32,40 @@ interface DataContextType {
   deleteExercise: (id: string) => Promise<void>;
   getExercise: (id: string) => Exercise | undefined;
   exercisesLoading: boolean;
+
+  // Exercise Plans
+  exercisePlans: ExercisePlan[];
+  addExercisePlan: (plan: Omit<ExercisePlan, 'id' | 'created_at' | 'updated_at' | 'created_by'>) => Promise<any>;
+  updateExercisePlan: (id: string, plan: Partial<ExercisePlan>) => Promise<void>;
+  deleteExercisePlan: (id: string) => Promise<void>;
+  getExercisePlan: (id: string) => ExercisePlan | undefined;
+  exercisePlansLoading: boolean;
+
+  // Medical Records
+  medicalRecords: MedicalRecord[];
+  addMedicalRecord: (record: Omit<MedicalRecord, 'id' | 'created_at' | 'updated_at' | 'created_by'>) => Promise<any>;
+  updateMedicalRecord: (id: string, record: Partial<MedicalRecord>) => Promise<void>;
+  deleteMedicalRecord: (id: string) => Promise<void>;
+  getMedicalRecord: (id: string) => MedicalRecord | undefined;
+  medicalRecordsLoading: boolean;
+
+  // Treatment Sessions
+  treatmentSessions: TreatmentSession[];
+  addTreatmentSession: (session: Omit<TreatmentSession, 'id' | 'created_at' | 'updated_at' | 'created_by'>) => Promise<any>;
+  updateTreatmentSession: (id: string, session: Partial<TreatmentSession>) => Promise<void>;
+  deleteTreatmentSession: (id: string) => Promise<void>;
+  getTreatmentSession: (id: string) => TreatmentSession | undefined;
+  getSessionsByPatient: (patientId: string) => TreatmentSession[];
+  treatmentSessionsLoading: boolean;
+
+  // Patient Progress
+  patientProgress: PatientProgress[];
+  addPatientProgress: (progress: Omit<PatientProgress, 'id' | 'created_at' | 'created_by'>) => Promise<any>;
+  updatePatientProgress: (id: string, progress: Partial<PatientProgress>) => Promise<void>;
+  deletePatientProgress: (id: string) => Promise<void>;
+  getProgressByPatient: (patientId: string) => PatientProgress[];
+  getLatestProgress: (patientId: string) => PatientProgress | null;
+  patientProgressLoading: boolean;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -60,6 +98,44 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     getExercise,
   } = useExercises();
 
+  const {
+    exercisePlans,
+    loading: exercisePlansLoading,
+    addExercisePlan,
+    updateExercisePlan,
+    deleteExercisePlan,
+    getExercisePlan,
+  } = useExercisePlans();
+
+  const {
+    medicalRecords,
+    loading: medicalRecordsLoading,
+    addMedicalRecord,
+    updateMedicalRecord,
+    deleteMedicalRecord,
+    getMedicalRecord,
+  } = useMedicalRecords();
+
+  const {
+    treatmentSessions,
+    loading: treatmentSessionsLoading,
+    addTreatmentSession,
+    updateTreatmentSession,
+    deleteTreatmentSession,
+    getTreatmentSession,
+    getSessionsByPatient,
+  } = useTreatmentSessions();
+
+  const {
+    patientProgress,
+    loading: patientProgressLoading,
+    addPatientProgress,
+    updatePatientProgress,
+    deletePatientProgress,
+    getProgressByPatient,
+    getLatestProgress,
+  } = usePatientProgress();
+
   const value: DataContextType = {
     patients,
     addPatient,
@@ -79,6 +155,32 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     deleteExercise,
     getExercise,
     exercisesLoading,
+    exercisePlans,
+    addExercisePlan,
+    updateExercisePlan,
+    deleteExercisePlan,
+    getExercisePlan,
+    exercisePlansLoading,
+    medicalRecords,
+    addMedicalRecord,
+    updateMedicalRecord,
+    deleteMedicalRecord,
+    getMedicalRecord,
+    medicalRecordsLoading,
+    treatmentSessions,
+    addTreatmentSession,
+    updateTreatmentSession,
+    deleteTreatmentSession,
+    getTreatmentSession,
+    getSessionsByPatient,
+    treatmentSessionsLoading,
+    patientProgress,
+    addPatientProgress,
+    updatePatientProgress,
+    deletePatientProgress,
+    getProgressByPatient,
+    getLatestProgress,
+    patientProgressLoading,
   };
 
   return (

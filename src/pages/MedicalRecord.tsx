@@ -28,56 +28,10 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
-// Mock data for medical records
-const mockMedicalRecords = [
-  {
-    id: '1',
-    patientId: '1',
-    type: 'Anamnese' as const,
-    title: 'Anamnese Inicial - Lombalgia',
-    content: 'Paciente relata dor lombar há 2 anos, intensidade 7/10. Dor piora com movimento, melhora com repouso. Histórico de trabalho em escritório.',
-    createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-01'),
-    createdBy: 'Dr. João Silva'
-  },
-  {
-    id: '2',
-    patientId: '1',
-    type: 'Evolução' as const,
-    title: 'Evolução - Sessão 5',
-    content: 'Paciente apresenta melhora significativa. Dor reduzida para 4/10. Exercícios sendo executados corretamente.',
-    createdAt: new Date('2024-02-15'),
-    updatedAt: new Date('2024-02-15'),
-    createdBy: 'Dr. João Silva'
-  }
-];
-
-const mockTreatmentSessions = [
-  {
-    id: '1',
-    patientId: '1',
-    appointmentId: '1',
-    observations: 'Paciente cooperativo, realizou todos os exercícios propostos',
-    painLevel: 4,
-    evolutionNotes: 'Melhora significativa na amplitude de movimento',
-    exercisesPerformed: [
-      {
-        exerciseId: '1',
-        exerciseName: 'Agachamento Livre',
-        setsCompleted: 3,
-        repsCompleted: 15,
-        difficulty: 'adequado' as const
-      }
-    ],
-    nextSessionGoals: 'Aumentar carga e trabalhar estabilização',
-    createdAt: new Date('2024-02-15'),
-    updatedAt: new Date('2024-02-15')
-  }
-];
+import { TreatmentSessionModal } from '@/components/modals/TreatmentSessionModal';
 
 export function MedicalRecord() {
-  const { patients } = useData();
+  const { patients, medicalRecords, addMedicalRecord, treatmentSessions, addTreatmentSession } = useData();
   const { toast } = useToast();
   const [selectedPatient, setSelectedPatient] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -88,18 +42,12 @@ export function MedicalRecord() {
   const [newRecord, setNewRecord] = useState({
     type: 'Evolução' as const,
     title: '',
-    content: ''
+    content: '',
+    patient_id: ''
   });
 
-  const [newSession, setNewSession] = useState({
-    observations: '',
-    painLevel: 5,
-    evolutionNotes: '',
-    nextSessionGoals: ''
-  });
-
-  const filteredRecords = mockMedicalRecords.filter(record => {
-    const matchesPatient = !selectedPatient || selectedPatient === 'all' || record.patientId === selectedPatient;
+  const filteredRecords = medicalRecords.filter(record => {
+    const matchesPatient = !selectedPatient || selectedPatient === 'all' || record.patient_id === selectedPatient;
     const matchesSearch = !searchTerm || 
       record.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.content.toLowerCase().includes(searchTerm.toLowerCase());
@@ -108,7 +56,7 @@ export function MedicalRecord() {
     return matchesPatient && matchesSearch && matchesType;
   });
 
-  const handleCreateRecord = () => {
+  const handleCreateRecord = async () => {
     if (!selectedPatient || !newRecord.title || !newRecord.content) {
       toast({
         title: "Erro",
@@ -118,37 +66,28 @@ export function MedicalRecord() {
       return;
     }
 
-    toast({
-      title: "Sucesso",
-      description: "Registro médico criado com sucesso!",
-    });
+    try {
+      await addMedicalRecord({
+        patient_id: selectedPatient,
+        type: newRecord.type,
+        title: newRecord.title,
+        content: newRecord.content
+      });
 
-    setNewRecord({ type: 'Evolução', title: '', content: '' });
-    setIsNewRecordOpen(false);
-  };
+      toast({
+        title: "Sucesso",
+        description: "Registro médico criado com sucesso!",
+      });
 
-  const handleCreateSession = () => {
-    if (!selectedPatient || !newSession.observations) {
+      setNewRecord({ type: 'Evolução', title: '', content: '', patient_id: '' });
+      setIsNewRecordOpen(false);
+    } catch (error) {
       toast({
         title: "Erro",
-        description: "Preencha todos os campos obrigatórios.",
+        description: "Erro ao criar registro médico.",
         variant: "destructive",
       });
-      return;
     }
-
-    toast({
-      title: "Sucesso",
-      description: "Registro de sessão criado com sucesso!",
-    });
-
-    setNewSession({
-      observations: '',
-      painLevel: 5,
-      evolutionNotes: '',
-      nextSessionGoals: ''
-    });
-    setIsNewSessionOpen(false);
   };
 
   const getTypeColor = (type: string) => {
@@ -244,81 +183,15 @@ export function MedicalRecord() {
               </DialogContent>
             </Dialog>
 
-            <Dialog open={isNewSessionOpen} onOpenChange={setIsNewSessionOpen}>
-              <DialogTrigger asChild>
+            <TreatmentSessionModal
+              trigger={
                 <Button variant="outline">
                   <Activity className="w-4 h-4 mr-2" />
                   Nova Sessão
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Registro de Sessão</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium">Paciente</label>
-                    <Select value={selectedPatient} onValueChange={setSelectedPatient}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o paciente" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {patients.map((patient) => (
-                          <SelectItem key={patient.id} value={patient.id}>
-                            {patient.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Nível de Dor (0-10)</label>
-                    <Input 
-                      type="number"
-                      min="0"
-                      max="10"
-                      value={newSession.painLevel}
-                      onChange={(e) => setNewSession(prev => ({ ...prev, painLevel: parseInt(e.target.value) }))}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Observações da Sessão</label>
-                    <Textarea 
-                      value={newSession.observations}
-                      onChange={(e) => setNewSession(prev => ({ ...prev, observations: e.target.value }))}
-                      placeholder="Descreva como foi a sessão, exercícios realizados..."
-                      rows={3}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Notas de Evolução</label>
-                    <Textarea 
-                      value={newSession.evolutionNotes}
-                      onChange={(e) => setNewSession(prev => ({ ...prev, evolutionNotes: e.target.value }))}
-                      placeholder="Progresso observado, melhorias..."
-                      rows={3}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Objetivos para Próxima Sessão</label>
-                    <Textarea 
-                      value={newSession.nextSessionGoals}
-                      onChange={(e) => setNewSession(prev => ({ ...prev, nextSessionGoals: e.target.value }))}
-                      placeholder="Metas e focos para a próxima sessão..."
-                      rows={2}
-                    />
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setIsNewSessionOpen(false)}>
-                      Cancelar
-                    </Button>
-                    <Button onClick={handleCreateSession}>
-                      Salvar Sessão
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+              }
+              patientId={selectedPatient}
+            />
           </div>
         </div>
 
@@ -388,7 +261,7 @@ export function MedicalRecord() {
             ) : (
               <div className="space-y-4">
                 {filteredRecords.map((record) => {
-                  const patient = patients.find(p => p.id === record.patientId);
+                  const patient = patients.find(p => p.id === record.patient_id);
                   return (
                     <Card key={record.id} className="hover:shadow-md transition-shadow">
                       <CardHeader className="pb-3">
@@ -403,9 +276,9 @@ export function MedicalRecord() {
                                 <User className="w-4 h-4" />
                                 {patient?.name}
                                 <Calendar className="w-4 h-4 ml-2" />
-                                {format(record.createdAt, 'dd/MM/yyyy', { locale: ptBR })}
+                                {format(new Date(record.created_at), 'dd/MM/yyyy', { locale: ptBR })}
                                 <span className="text-xs text-muted-foreground ml-2">
-                                  por {record.createdBy}
+                                  por {record.created_by}
                                 </span>
                               </CardDescription>
                             </div>
@@ -438,7 +311,7 @@ export function MedicalRecord() {
           </TabsContent>
 
           <TabsContent value="sessions" className="space-y-4">
-            {mockTreatmentSessions.length === 0 ? (
+            {treatmentSessions.length === 0 ? (
               <Card>
                 <CardContent className="p-8 text-center">
                   <Activity className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
@@ -450,8 +323,8 @@ export function MedicalRecord() {
               </Card>
             ) : (
               <div className="space-y-4">
-                {mockTreatmentSessions.map((session) => {
-                  const patient = patients.find(p => p.id === session.patientId);
+                {treatmentSessions.map((session) => {
+                  const patient = patients.find(p => p.id === session.patient_id);
                   return (
                     <Card key={session.id}>
                       <CardHeader>
@@ -465,11 +338,11 @@ export function MedicalRecord() {
                               </span>
                               <span className="flex items-center gap-1">
                                 <Calendar className="w-4 h-4" />
-                                {format(session.createdAt, 'dd/MM/yyyy', { locale: ptBR })}
+                                {format(new Date(session.created_at), 'dd/MM/yyyy', { locale: ptBR })}
                               </span>
                               <span className="flex items-center gap-1">
                                 <AlertCircle className="w-4 h-4" />
-                                Dor: {session.painLevel}/10
+                                Dor: {session.pain_level}/10
                               </span>
                             </CardDescription>
                           </div>
@@ -480,31 +353,16 @@ export function MedicalRecord() {
                           <h4 className="font-medium mb-2">Observações</h4>
                           <p className="text-sm text-muted-foreground">{session.observations}</p>
                         </div>
-                        {session.evolutionNotes && (
+                        {session.evolution_notes && (
                           <div>
                             <h4 className="font-medium mb-2">Evolução</h4>
-                            <p className="text-sm text-muted-foreground">{session.evolutionNotes}</p>
+                            <p className="text-sm text-muted-foreground">{session.evolution_notes}</p>
                           </div>
                         )}
-                        {session.exercisesPerformed.length > 0 && (
-                          <div>
-                            <h4 className="font-medium mb-2">Exercícios Realizados</h4>
-                            <div className="space-y-2">
-                              {session.exercisesPerformed.map((exercise, index) => (
-                                <div key={index} className="flex justify-between items-center p-2 bg-muted rounded">
-                                  <span className="text-sm">{exercise.exerciseName}</span>
-                                  <span className="text-sm text-muted-foreground">
-                                    {exercise.setsCompleted}x{exercise.repsCompleted} • {exercise.difficulty}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        {session.nextSessionGoals && (
+                        {session.next_session_goals && (
                           <div>
                             <h4 className="font-medium mb-2">Objetivos Próxima Sessão</h4>
-                            <p className="text-sm text-muted-foreground">{session.nextSessionGoals}</p>
+                            <p className="text-sm text-muted-foreground">{session.next_session_goals}</p>
                           </div>
                         )}
                       </CardContent>

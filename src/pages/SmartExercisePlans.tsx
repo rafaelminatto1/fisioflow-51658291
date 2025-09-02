@@ -89,7 +89,7 @@ const mockProgressData = [
 ];
 
 export function SmartExercisePlans() {
-  const { patients, exercises } = useData();
+  const { patients, exercises, exercisePlans, addExercisePlan, patientProgress, addPatientProgress } = useData();
   const { toast } = useToast();
   const [selectedPatient, setSelectedPatient] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -111,9 +111,9 @@ export function SmartExercisePlans() {
     notes: ''
   });
 
-  const filteredPlans = mockSmartPlans.filter(plan => {
-    const patient = patients.find(p => p.id === plan.patientId);
-    const matchesPatient = !selectedPatient || plan.patientId === selectedPatient;
+  const filteredPlans = exercisePlans.filter(plan => {
+    const patient = patients.find(p => p.id === plan.patient_id);
+    const matchesPatient = !selectedPatient || plan.patient_id === selectedPatient;
     const matchesSearch = !searchTerm || 
       plan.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       patient?.name.toLowerCase().includes(searchTerm.toLowerCase());
