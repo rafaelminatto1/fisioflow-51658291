@@ -29,6 +29,8 @@ import { Profile } from "./pages/Profile";
 import { MedicalRecord } from "./pages/MedicalRecord";
 import { SmartExercisePlans } from "./pages/SmartExercisePlans";
 import { Communications } from "./pages/Communications";
+import Partner from "./pages/Partner";
+import Vouchers from "./pages/Vouchers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,6 +68,8 @@ const App = () => (
               <Route path="/medical-record" element={<ProtectedRoute><MedicalRecord /></ProtectedRoute>} />
               <Route path="/smart-plans" element={<ProtectedRoute><SmartExercisePlans /></ProtectedRoute>} />
               <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
+              <Route path="/partner" element={<ProtectedRoute><Partner /></ProtectedRoute>} />
+              <Route path="/vouchers" element={<ProtectedRoute><Vouchers /></ProtectedRoute>} />
               
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />

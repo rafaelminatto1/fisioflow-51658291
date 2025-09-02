@@ -610,6 +610,149 @@ export type Database = {
           },
         ]
       }
+      partner_commissions: {
+        Row: {
+          commission_amount: number
+          commission_rate: number | null
+          created_at: string
+          gross_amount: number
+          id: string
+          partner_id: string | null
+          payment_date: string | null
+          platform_fee: number
+          status: string
+          voucher_purchase_id: string | null
+        }
+        Insert: {
+          commission_amount: number
+          commission_rate?: number | null
+          created_at?: string
+          gross_amount: number
+          id?: string
+          partner_id?: string | null
+          payment_date?: string | null
+          platform_fee: number
+          status?: string
+          voucher_purchase_id?: string | null
+        }
+        Update: {
+          commission_amount?: number
+          commission_rate?: number | null
+          created_at?: string
+          gross_amount?: number
+          id?: string
+          partner_id?: string | null
+          payment_date?: string | null
+          platform_fee?: number
+          status?: string
+          voucher_purchase_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_commissions_voucher_purchase_id_fkey"
+            columns: ["voucher_purchase_id"]
+            isOneToOne: false
+            referencedRelation: "voucher_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_sessions: {
+        Row: {
+          created_at: string
+          duration_minutes: number | null
+          id: string
+          notes: string | null
+          partner_id: string | null
+          patient_id: string | null
+          photos: Json | null
+          physio_notes: string | null
+          session_date: string
+          session_type: string
+          shared_with_physio: boolean | null
+          updated_at: string
+          voucher_purchase_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          notes?: string | null
+          partner_id?: string | null
+          patient_id?: string | null
+          photos?: Json | null
+          physio_notes?: string | null
+          session_date: string
+          session_type: string
+          shared_with_physio?: boolean | null
+          updated_at?: string
+          voucher_purchase_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          notes?: string | null
+          partner_id?: string | null
+          patient_id?: string | null
+          photos?: Json | null
+          physio_notes?: string | null
+          session_date?: string
+          session_type?: string
+          shared_with_physio?: boolean | null
+          updated_at?: string
+          voucher_purchase_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_sessions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_sessions_voucher_purchase_id_fkey"
+            columns: ["voucher_purchase_id"]
+            isOneToOne: false
+            referencedRelation: "voucher_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_withdrawals: {
+        Row: {
+          amount: number
+          id: string
+          notes: string | null
+          partner_id: string | null
+          pix_key: string
+          processed_at: string | null
+          requested_at: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          id?: string
+          notes?: string | null
+          partner_id?: string | null
+          pix_key: string
+          processed_at?: string | null
+          requested_at?: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          id?: string
+          notes?: string | null
+          partner_id?: string | null
+          pix_key?: string
+          processed_at?: string | null
+          requested_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       patient_consents: {
         Row: {
           consent_type: string
@@ -1021,6 +1164,47 @@ export type Database = {
           },
         ]
       }
+      professional_chats: {
+        Row: {
+          attachments: Json | null
+          created_at: string
+          id: string
+          message: string
+          partner_id: string | null
+          patient_id: string | null
+          physio_id: string | null
+          sender_id: string
+        }
+        Insert: {
+          attachments?: Json | null
+          created_at?: string
+          id?: string
+          message: string
+          partner_id?: string | null
+          patient_id?: string | null
+          physio_id?: string | null
+          sender_id: string
+        }
+        Update: {
+          attachments?: Json | null
+          created_at?: string
+          id?: string
+          message?: string
+          partner_id?: string | null
+          patient_id?: string | null
+          physio_id?: string | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_chats_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address: string | null
@@ -1041,6 +1225,10 @@ export type Database = {
           license_expiry: string | null
           notification_preferences: Json | null
           onboarding_completed: boolean | null
+          partner_bio: string | null
+          partner_commission_rate: number | null
+          partner_pix_key: string | null
+          partner_specialties: string[] | null
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
           specialties: string[] | null
@@ -1067,6 +1255,10 @@ export type Database = {
           license_expiry?: string | null
           notification_preferences?: Json | null
           onboarding_completed?: boolean | null
+          partner_bio?: string | null
+          partner_commission_rate?: number | null
+          partner_pix_key?: string | null
+          partner_specialties?: string[] | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           specialties?: string[] | null
@@ -1093,6 +1285,10 @@ export type Database = {
           license_expiry?: string | null
           notification_preferences?: Json | null
           onboarding_completed?: boolean | null
+          partner_bio?: string | null
+          partner_commission_rate?: number | null
+          partner_pix_key?: string | null
+          partner_specialties?: string[] | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           specialties?: string[] | null
@@ -1353,6 +1549,108 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      voucher_purchases: {
+        Row: {
+          amount_paid: number
+          created_at: string
+          expiry_date: string
+          id: string
+          patient_id: string | null
+          payment_id: string | null
+          payment_method: string | null
+          purchase_date: string
+          purchased_by: string | null
+          sessions_remaining: number | null
+          status: string
+          updated_at: string
+          voucher_id: string | null
+        }
+        Insert: {
+          amount_paid: number
+          created_at?: string
+          expiry_date: string
+          id?: string
+          patient_id?: string | null
+          payment_id?: string | null
+          payment_method?: string | null
+          purchase_date?: string
+          purchased_by?: string | null
+          sessions_remaining?: number | null
+          status?: string
+          updated_at?: string
+          voucher_id?: string | null
+        }
+        Update: {
+          amount_paid?: number
+          created_at?: string
+          expiry_date?: string
+          id?: string
+          patient_id?: string | null
+          payment_id?: string | null
+          payment_method?: string | null
+          purchase_date?: string
+          purchased_by?: string | null
+          sessions_remaining?: number | null
+          status?: string
+          updated_at?: string
+          voucher_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voucher_purchases_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voucher_purchases_voucher_id_fkey"
+            columns: ["voucher_id"]
+            isOneToOne: false
+            referencedRelation: "vouchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vouchers: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_unlimited: boolean | null
+          name: string
+          price: number
+          sessions_included: number | null
+          updated_at: string
+          validity_days: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_unlimited?: boolean | null
+          name: string
+          price: number
+          sessions_included?: number | null
+          updated_at?: string
+          validity_days?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_unlimited?: boolean | null
+          name?: string
+          price?: number
+          sessions_included?: number | null
+          updated_at?: string
+          validity_days?: number
+        }
+        Relationships: []
       }
       waiting_list: {
         Row: {

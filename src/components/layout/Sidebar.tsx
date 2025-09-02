@@ -15,7 +15,8 @@ import {
   Stethoscope,
   FileText,
   Brain,
-  MessageSquare
+  MessageSquare,
+  ShoppingCart
 } from 'lucide-react';
 
 const menuItems = [
@@ -26,6 +27,7 @@ const menuItems = [
   { icon: FileText, label: 'Prontuário', href: '/medical-record' },
   { icon: Brain, label: 'Planos IA', href: '/smart-plans' },
   { icon: MessageSquare, label: 'Comunicação', href: '/communications' },
+  { icon: ShoppingCart, label: 'Treinos', href: '/vouchers' },
   { icon: DollarSign, label: 'Financeiro', href: '/financial' },
   { icon: BarChart3, label: 'Relatórios', href: '/reports' },
   { icon: Settings, label: 'Configurações', href: '/settings' },
