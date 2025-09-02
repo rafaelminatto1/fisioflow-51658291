@@ -199,6 +199,33 @@ export type Database = {
           },
         ]
       }
+      analytics_snapshots: {
+        Row: {
+          created_at: string
+          id: string
+          metadata: Json | null
+          metric_type: string
+          metric_value: number
+          snapshot_date: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          metric_type: string
+          metric_value: number
+          snapshot_date: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          metric_type?: string
+          metric_value?: number
+          snapshot_date?: string
+        }
+        Relationships: []
+      }
       appointment_series: {
         Row: {
           active: boolean | null
@@ -1543,6 +1570,89 @@ export type Database = {
         }
         Relationships: []
       }
+      report_executions: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          executed_by: string | null
+          execution_params: Json | null
+          file_url: string | null
+          id: string
+          report_id: string | null
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          executed_by?: string | null
+          execution_params?: Json | null
+          file_url?: string | null
+          id?: string
+          report_id?: string | null
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          executed_by?: string | null
+          execution_params?: Json | null
+          file_url?: string | null
+          id?: string
+          report_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_executions_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reports: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_public: boolean | null
+          name: string
+          query_config: Json
+          schedule_config: Json | null
+          template_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name: string
+          query_config: Json
+          schedule_config?: Json | null
+          template_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name?: string
+          query_config?: Json
+          schedule_config?: Json | null
+          template_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       schedule_blocks: {
         Row: {
           block_type: string | null
@@ -1950,12 +2060,54 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      clinical_metrics: {
+        Row: {
+          avg_pain_level: number | null
+          avg_session_duration: number | null
+          month: string | null
+          total_sessions: number | null
+          treated_patients: number | null
+        }
+        Relationships: []
+      }
+      financial_metrics: {
+        Row: {
+          avg_ticket: number | null
+          month: string | null
+          total_purchases: number | null
+          total_revenue: number | null
+          unique_customers: number | null
+        }
+        Relationships: []
+      }
+      monthly_metrics: {
+        Row: {
+          attendance_rate: number | null
+          cancelled_appointments: number | null
+          confirmed_appointments: number | null
+          month: string | null
+          total_appointments: number | null
+          unique_patients: number | null
+        }
+        Relationships: []
+      }
+      patient_analytics: {
+        Row: {
+          avg_age: number | null
+          count: number | null
+          status: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_patient_full_info: {
         Args: { patient_uuid: string }
         Returns: Json
+      }
+      refresh_analytics_views: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       validate_cpf: {
         Args: { cpf_input: string }
