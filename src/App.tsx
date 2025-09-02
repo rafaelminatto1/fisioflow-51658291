@@ -17,6 +17,9 @@ import { ResetPassword } from "./pages/auth/ResetPassword";
 // Protected pages
 import Index from "./pages/Index";
 import Patients from "./pages/Patients";
+import PatientNew from "./pages/patients/PatientNew";
+import PatientProfile from "./pages/patients/PatientProfile";
+import PatientRecords from "./pages/patients/PatientRecords";
 import Schedule from "./pages/Schedule";
 import Exercises from "./pages/Exercises";
 import Financial from "./pages/Financial";
@@ -51,6 +54,9 @@ const App = () => (
               {/* Protected routes */}
               <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
               <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
+              <Route path="/patients/new" element={<ProtectedRoute><PatientNew /></ProtectedRoute>} />
+              <Route path="/patients/:id" element={<ProtectedRoute><PatientProfile /></ProtectedRoute>} />
+              <Route path="/patients/:id/records" element={<ProtectedRoute><PatientRecords /></ProtectedRoute>} />
               <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
               <Route path="/exercises" element={<ProtectedRoute><Exercises /></ProtectedRoute>} />
               <Route path="/financial" element={<ProtectedRoute><Financial /></ProtectedRoute>} />

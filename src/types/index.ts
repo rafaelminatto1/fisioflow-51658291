@@ -3,18 +3,75 @@
 export interface Patient {
   id: string;
   name: string;
-  email: string;
-  phone: string;
+  email?: string;
+  phone?: string;
+  cpf?: string;
+  rg?: string;
   birthDate: Date;
   gender: 'masculino' | 'feminino' | 'outro';
-  address: string;
-  emergencyContact: string;
+  address?: string;
+  emergencyContact?: string;
+  emergencyContactRelationship?: string;
   medicalHistory?: string;
   mainCondition: string;
   status: 'Em Tratamento' | 'Recuperação' | 'Inicial' | 'Concluído';
   progress: number;
+  insurancePlan?: string;
+  insuranceNumber?: string;
+  insuranceValidity?: Date;
+  maritalStatus?: string;
+  profession?: string;
+  educationLevel?: string;
+  bloodType?: string;
+  allergies?: string;
+  medications?: string;
+  weight?: number;
+  height?: number;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface PatientDocument {
+  id: string;
+  patientId: string;
+  name: string;
+  type: 'identity' | 'medical_exam' | 'insurance' | 'consent' | 'prescription' | 'other';
+  fileUrl: string;
+  fileSize?: number;
+  mimeType?: string;
+  uploadedBy?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface PatientConsent {
+  id: string;
+  patientId: string;
+  consentType: 'data_processing' | 'image_usage' | 'treatment_terms' | 'communication';
+  granted: boolean;
+  grantedAt?: Date;
+  grantedBy?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  createdAt: Date;
+}
+
+export interface SOAPRecord {
+  id: string;
+  patientId: string;
+  appointmentId?: string;
+  sessionNumber: number;
+  subjective?: string; // Queixa do paciente
+  objective?: any; // Exame físico estruturado (JSON)
+  assessment?: string; // Avaliação/Diagnóstico
+  plan?: any; // Plano de tratamento (JSON)
+  vitalSigns?: any; // Sinais vitais (JSON)
+  functionalTests?: any; // Testes funcionais (JSON)
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  signedAt?: Date;
+  signatureHash?: string;
 }
 
 export interface Appointment {

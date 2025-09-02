@@ -476,6 +476,97 @@ export type Database = {
           },
         ]
       }
+      patient_consents: {
+        Row: {
+          consent_type: string
+          created_at: string
+          granted: boolean
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          ip_address: unknown | null
+          patient_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          consent_type: string
+          created_at?: string
+          granted?: boolean
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          ip_address?: unknown | null
+          patient_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          consent_type?: string
+          created_at?: string
+          granted?: boolean
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          ip_address?: unknown | null
+          patient_id?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_consents_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_documents: {
+        Row: {
+          created_at: string
+          file_size: number | null
+          file_url: string
+          id: string
+          mime_type: string | null
+          name: string
+          patient_id: string
+          type: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_size?: number | null
+          file_url: string
+          id?: string
+          mime_type?: string | null
+          name: string
+          patient_id: string
+          type: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          mime_type?: string | null
+          name?: string
+          patient_id?: string
+          type?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_documents_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_progress: {
         Row: {
           created_at: string
@@ -535,23 +626,32 @@ export type Database = {
           blood_type: string | null
           consent_data: boolean | null
           consent_image: boolean | null
+          cpf: string | null
           created_at: string
           created_by: string | null
+          education_level: string | null
           email: string | null
           emergency_contact: string | null
+          emergency_contact_relationship: string | null
           gender: string
           height_cm: number | null
           id: string
           insurance_info: Json | null
+          insurance_number: string | null
+          insurance_plan: string | null
+          insurance_validity: string | null
           main_condition: string
+          marital_status: string | null
           medical_history: string | null
           medications: string | null
           name: string
           occupation: string | null
           phone: string | null
+          profession: string | null
           profile_id: string | null
           progress: number
           referral_source: string | null
+          rg: string | null
           status: string
           updated_at: string
           weight_kg: number | null
@@ -563,23 +663,32 @@ export type Database = {
           blood_type?: string | null
           consent_data?: boolean | null
           consent_image?: boolean | null
+          cpf?: string | null
           created_at?: string
           created_by?: string | null
+          education_level?: string | null
           email?: string | null
           emergency_contact?: string | null
+          emergency_contact_relationship?: string | null
           gender: string
           height_cm?: number | null
           id?: string
           insurance_info?: Json | null
+          insurance_number?: string | null
+          insurance_plan?: string | null
+          insurance_validity?: string | null
           main_condition: string
+          marital_status?: string | null
           medical_history?: string | null
           medications?: string | null
           name: string
           occupation?: string | null
           phone?: string | null
+          profession?: string | null
           profile_id?: string | null
           progress?: number
           referral_source?: string | null
+          rg?: string | null
           status?: string
           updated_at?: string
           weight_kg?: number | null
@@ -591,23 +700,32 @@ export type Database = {
           blood_type?: string | null
           consent_data?: boolean | null
           consent_image?: boolean | null
+          cpf?: string | null
           created_at?: string
           created_by?: string | null
+          education_level?: string | null
           email?: string | null
           emergency_contact?: string | null
+          emergency_contact_relationship?: string | null
           gender?: string
           height_cm?: number | null
           id?: string
           insurance_info?: Json | null
+          insurance_number?: string | null
+          insurance_plan?: string | null
+          insurance_validity?: string | null
           main_condition?: string
+          marital_status?: string | null
           medical_history?: string | null
           medications?: string | null
           name?: string
           occupation?: string | null
           phone?: string | null
+          profession?: string | null
           profile_id?: string | null
           progress?: number
           referral_source?: string | null
+          rg?: string | null
           status?: string
           updated_at?: string
           weight_kg?: number | null
@@ -709,6 +827,75 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      soap_records: {
+        Row: {
+          appointment_id: string | null
+          assessment: string | null
+          created_at: string
+          created_by: string
+          functional_tests: Json | null
+          id: string
+          objective: Json | null
+          patient_id: string
+          plan: Json | null
+          session_number: number | null
+          signature_hash: string | null
+          signed_at: string | null
+          subjective: string | null
+          updated_at: string
+          vital_signs: Json | null
+        }
+        Insert: {
+          appointment_id?: string | null
+          assessment?: string | null
+          created_at?: string
+          created_by: string
+          functional_tests?: Json | null
+          id?: string
+          objective?: Json | null
+          patient_id: string
+          plan?: Json | null
+          session_number?: number | null
+          signature_hash?: string | null
+          signed_at?: string | null
+          subjective?: string | null
+          updated_at?: string
+          vital_signs?: Json | null
+        }
+        Update: {
+          appointment_id?: string | null
+          assessment?: string | null
+          created_at?: string
+          created_by?: string
+          functional_tests?: Json | null
+          id?: string
+          objective?: Json | null
+          patient_id?: string
+          plan?: Json | null
+          session_number?: number | null
+          signature_hash?: string | null
+          signed_at?: string | null
+          subjective?: string | null
+          updated_at?: string
+          vital_signs?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "soap_records_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "soap_records_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       treatment_sessions: {
         Row: {
