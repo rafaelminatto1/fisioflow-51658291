@@ -99,7 +99,7 @@ export function MedicalRecord() {
   });
 
   const filteredRecords = mockMedicalRecords.filter(record => {
-    const matchesPatient = !selectedPatient || record.patientId === selectedPatient;
+    const matchesPatient = !selectedPatient || selectedPatient === 'all' || record.patientId === selectedPatient;
     const matchesSearch = !searchTerm || 
       record.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.content.toLowerCase().includes(searchTerm.toLowerCase());
@@ -342,7 +342,7 @@ export function MedicalRecord() {
                   <SelectValue placeholder="Todos os pacientes" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os pacientes</SelectItem>
+                  <SelectItem value="all">Todos os pacientes</SelectItem>
                   {patients.map((patient) => (
                     <SelectItem key={patient.id} value={patient.id}>
                       {patient.name}
