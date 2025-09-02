@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -33,7 +33,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { CalendarIcon, CalendarPlus } from 'lucide-react';
+import { 
+  CalendarIcon, 
+  CalendarPlus, 
+  Plus, 
+  User, 
+  Send,
+  Check,
+  AlertCircle
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -64,7 +72,6 @@ interface NewAppointmentModalProps {
   defaultDate?: Date;
 }
 
-
 const timeSlots = [
   '07:00', '07:30', '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
   '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30',
@@ -79,11 +86,28 @@ export function NewAppointmentModal({
   defaultDate 
 }: NewAppointmentModalProps) {
   const [internalOpen, setInternalOpen] = useState(false);
+  const [patientSearchTerm, setPatientSearchTerm] = useState('');
+  const [showPatientDropdown, setShowPatientDropdown] = useState(false);
+  const [showQuickRegister, setShowQuickRegister] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [selectedPatientId, setSelectedPatientId] = useState<string>('');
+  const inputRef = useRef<HTMLInputElement>(null);
+  
   const { toast } = useToast();
-  const { addAppointment, patients, appointments } = useData();
+  const { addAppointment, patients, appointments, addPatient } = useData();
 
   const open = externalOpen !== undefined ? externalOpen : internalOpen;
   const setOpen = externalOnOpenChange || setInternalOpen;
+
+  // Filter patients based on search term
+  const filteredPatients = patients.filter(patient =>
+    patient.name.toLowerCase().includes(patientSearchTerm.toLowerCase())
+  );
+
+  // Check if the search term matches any existing patient exactly
+  const exactMatch = patients.find(patient => 
+    patient.name.toLowerCase() === patientSearchTerm.toLowerCase()
+  );
 
   const form = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema),
@@ -96,8 +120,145 @@ export function NewAppointmentModal({
     },
   });
 
-  const onSubmit = (data: AppointmentFormData) => {
-    const selectedPatient = patients.find(p => p.name === data.patientName);
+  // Handle patient selection from dropdown
+  const handleSelectPatient = (patient: any) => {
+    setPatientSearchTerm(patient.name);
+    setSelectedPatientId(patient.id);
+    form.setValue('patientName', patient.name);
+    setShowPatientDropdown(false);
+    setShowQuickRegister(false);
+  };
+
+  // Handle quick patient registration
+  const handleQuickRegister = async () => {
+    if (!patientSearchTerm.trim()) return;
+    
+    setIsRegistering(true);
+    try {
+      const newPatient = await addPatient({
+        name: patientSearchTerm.trim(),
+        email: '',
+        phone: '',
+        birthDate: new Date('1990-01-01'), // Default date
+        gender: 'outro',
+        address: '',
+        emergencyContact: '',
+        mainCondition: 'A preencher',
+        medicalHistory: ''
+      });
+
+      setSelectedPatientId(newPatient.id);
+      form.setValue('patientName', patientSearchTerm.trim());
+      setShowQuickRegister(false);
+      setShowPatientDropdown(false);
+
+      // Show notification about completing data
+      toast({
+        title: "Paciente cadastrado!",
+        description: (
+          <div className="space-y-2">
+            <p>Paciente {patientSearchTerm} foi cadastrado com sucesso.</p>
+            <div className="flex items-center gap-2 text-amber-600">
+              <AlertCircle className="w-4 h-4" />
+              <span className="text-sm">Lembre-se de completar os dados posteriormente</span>
+            </div>
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="mt-2"
+              onClick={() => generatePatientLink(newPatient.id)}
+            >
+              <Send className="w-3 h-3 mr-1" />
+              Enviar Link para Paciente
+            </Button>
+          </div>
+        ),
+        duration: 8000,
+      });
+
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao cadastrar paciente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRegistering(false);
+    }
+  };
+
+  // Generate link for patient to fill their own data
+  const generatePatientLink = (patientId: string) => {
+    const link = `${window.location.origin}/patient-form/${patientId}`;
+    navigator.clipboard.writeText(link);
+    
+    toast({
+      title: "Link copiado!",
+      description: (
+        <div className="space-y-2">
+          <p>Link copiado para a área de transferência:</p>
+          <div className="bg-muted p-2 rounded text-xs font-mono break-all">
+            {link}
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Envie este link para o paciente preencher seus dados
+          </p>
+        </div>
+      ),
+      duration: 10000,
+    });
+  };
+
+  // Handle input change for patient search
+  const handlePatientInputChange = (value: string) => {
+    setPatientSearchTerm(value);
+    form.setValue('patientName', value);
+    setShowPatientDropdown(value.length > 0);
+    
+    // Check if we should show quick register option
+    if (value.length > 2 && !exactMatch && filteredPatients.length === 0) {
+      setShowQuickRegister(true);
+    } else {
+      setShowQuickRegister(false);
+    }
+  };
+
+  const onSubmit = async (data: AppointmentFormData) => {
+    // If no patient is selected and we have a search term, try to find or create
+    let patientId = selectedPatientId;
+    
+    if (!patientId && patientSearchTerm) {
+      const existingPatient = patients.find(p => 
+        p.name.toLowerCase() === patientSearchTerm.toLowerCase()
+      );
+      
+      if (existingPatient) {
+        patientId = existingPatient.id;
+      } else {
+        // Quick register the patient
+        try {
+          const newPatient = await addPatient({
+            name: patientSearchTerm.trim(),
+            email: '',
+            phone: '',
+            birthDate: new Date('1990-01-01'),
+            gender: 'outro',
+            address: '',
+            emergencyContact: '',
+            mainCondition: 'A preencher',
+            medicalHistory: ''
+          });
+          patientId = newPatient.id;
+        } catch (error) {
+          toast({
+            title: "Erro",
+            description: "Erro ao cadastrar paciente.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+    }
     
     const getAppointmentType = (type: string): 'Consulta Inicial' | 'Fisioterapia' | 'Reavaliação' | 'Consulta de Retorno' => {
       switch (type) {
@@ -132,28 +293,54 @@ export function NewAppointmentModal({
       return;
     }
 
+    const selectedPatient = patients.find(p => p.id === patientId);
+
     const newAppointment = {
-      patientId: selectedPatient?.id || '',
-      patientName: data.patientName,
+      patientId: patientId,
       date: data.date,
       time: data.time,
       duration: parseInt(data.duration),
       type: getAppointmentType(data.type),
       status: 'Confirmado' as const,
       notes: data.notes || '',
-      phone: selectedPatient?.phone || '',
     };
     
-    addAppointment(newAppointment);
-    
-    toast({
-      title: 'Agendamento criado!',
-      description: `Consulta de ${data.patientName} agendada para ${format(data.date, "dd/MM/yyyy", { locale: ptBR })} às ${data.time}.`,
-    });
-    
-    form.reset();
-    setOpen(false);
+    try {
+      await addAppointment(newAppointment);
+      
+      toast({
+        title: 'Agendamento criado!',
+        description: `Consulta de ${data.patientName} agendada para ${format(data.date, "dd/MM/yyyy", { locale: ptBR })} às ${data.time}.`,
+      });
+      
+      form.reset();
+      setPatientSearchTerm('');
+      setSelectedPatientId('');
+      setShowPatientDropdown(false);
+      setShowQuickRegister(false);
+      setOpen(false);
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao criar agendamento.",
+        variant: "destructive",
+      });
+    }
   };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (inputRef.current && !inputRef.current.contains(event.target as Node)) {
+        setShowPatientDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -174,26 +361,80 @@ export function NewAppointmentModal({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Autocomplete Patient Field */}
             <FormField
               control={form.control}
               name="patientName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Paciente</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <div className="relative" ref={inputRef}>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o paciente" />
-                      </SelectTrigger>
+                      <Input
+                        placeholder="Digite o nome do paciente..."
+                        value={patientSearchTerm}
+                        onChange={(e) => handlePatientInputChange(e.target.value)}
+                        onFocus={() => setShowPatientDropdown(patientSearchTerm.length > 0)}
+                        className="w-full"
+                      />
                     </FormControl>
-                    <SelectContent>
-                      {patients.map((patient) => (
-                        <SelectItem key={patient.id} value={patient.name}>
-                          {patient.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    
+                    {/* Dropdown with patient suggestions */}
+                    {showPatientDropdown && (
+                      <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg max-h-60 overflow-auto">
+                        {filteredPatients.length > 0 ? (
+                          <>
+                            {filteredPatients.map((patient) => (
+                              <button
+                                key={patient.id}
+                                type="button"
+                                className="w-full px-4 py-2 text-left hover:bg-accent hover:text-accent-foreground flex items-center gap-2"
+                                onClick={() => handleSelectPatient(patient)}
+                              >
+                                <User className="w-4 h-4" />
+                                <div>
+                                  <div className="font-medium">{patient.name}</div>
+                                  {patient.phone && (
+                                    <div className="text-sm text-muted-foreground">{patient.phone}</div>
+                                  )}
+                                </div>
+                              </button>
+                            ))}
+                          </>
+                        ) : (
+                          <div className="px-4 py-2 text-sm text-muted-foreground">
+                            Nenhum paciente encontrado
+                          </div>
+                        )}
+                        
+                        {/* Quick register option */}
+                        {showQuickRegister && patientSearchTerm.length > 2 && (
+                          <div className="border-t">
+                            <button
+                              type="button"
+                              className="w-full px-4 py-3 text-left hover:bg-accent hover:text-accent-foreground flex items-center gap-2 text-primary"
+                              onClick={handleQuickRegister}
+                              disabled={isRegistering}
+                            >
+                              {isRegistering ? (
+                                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                <Plus className="w-4 h-4" />
+                              )}
+                              <div>
+                                <div className="font-medium">
+                                  Cadastrar "{patientSearchTerm}"
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  Cadastro rápido - dados completos depois
+                                </div>
+                              </div>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
