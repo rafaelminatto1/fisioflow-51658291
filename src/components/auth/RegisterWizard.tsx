@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { ChevronLeft, ChevronRight, Check, Eye, EyeOff } from 'lucide-react';
 import { UserTypeSelector } from './UserTypeSelector';
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from '@/hooks/use-toast';
 import { 
   RegisterFormData, 
   userTypeSchema,
@@ -104,28 +105,48 @@ export function RegisterWizard({ onComplete }: RegisterWizardProps) {
   };
 
   const onStep4Submit = async (data: ConfirmationFormData) => {
-    const completeData: RegisterFormData = {
-      userType: formData.userType as any,
-      email: formData.email!,
-      password: formData.password!,
-      confirmPassword: formData.confirmPassword!,
-      full_name: formData.full_name!,
-      cpf: formData.cpf,
-      phone: formData.phone,
-      birth_date: formData.birth_date,
-      crefito: formData.crefito,
-      specialties: formData.specialties,
-      experience_years: formData.experience_years,
-      bio: formData.bio,
-      consultation_fee: formData.consultation_fee,
-      terms_accepted: data.terms_accepted,
-      privacy_accepted: data.privacy_accepted
-    };
-    
-    const { error } = await signUp(completeData);
-    
-    if (!error) {
-      onComplete();
+    // Validar se todos os campos obrigatórios estão presentes
+    if (!formData.userType || !formData.email || !formData.password || !formData.confirmPassword || !formData.full_name) {
+      toast({
+        title: "Erro nos dados",
+        description: "Alguns campos obrigatórios estão faltando. Por favor, volte e preencha todos os campos.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Garantir que todos os campos obrigatórios estejam definidos
+      const completeData: RegisterFormData = {
+        userType: formData.userType!,
+        email: formData.email!,
+        password: formData.password!,
+        confirmPassword: formData.confirmPassword!,
+        full_name: formData.full_name!,
+        cpf: formData.cpf,
+        phone: formData.phone,
+        birth_date: formData.birth_date,
+        crefito: formData.crefito,
+        specialties: formData.specialties,
+        experience_years: formData.experience_years,
+        bio: formData.bio,
+        consultation_fee: formData.consultation_fee,
+        terms_accepted: data.terms_accepted,
+        privacy_accepted: data.privacy_accepted
+      };
+      
+      const { error } = await signUp(completeData);
+      
+      if (!error) {
+        onComplete();
+      }
+    } catch (error) {
+      console.error('Erro no registro:', error);
+      toast({
+        title: "Erro no cadastro",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
+        variant: "destructive"
+      });
     }
   };
 

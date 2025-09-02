@@ -4,11 +4,13 @@ import { z } from "zod";
 const cpfSchema = z.string()
   .min(11, "CPF deve ter 11 dígitos")
   .max(14, "CPF inválido")
-  .regex(/^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/, "Formato de CPF inválido");
+  .regex(/^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/, "Formato de CPF inválido")
+  .optional();
 
 // Validação para CREFITO
 const crefitoSchema = z.string()
-  .regex(/^CREFITO\d{1,2}-\d{6}-[A-Z]$/, "Formato de CREFITO inválido (ex: CREFITO1-123456-F)");
+  .regex(/^CREFITO\d{1,2}-\d{6}-[A-Z]$/, "Formato de CREFITO inválido (ex: CREFITO1-123456-F)")
+  .optional();
 
 // Schema para Step 1 - Seleção do tipo de usuário
 export const userTypeSchema = z.object({
@@ -29,7 +31,7 @@ export const personalDataSchema = z.object({
   full_name: z.string()
     .min(2, "Nome deve ter pelo menos 2 caracteres")
     .max(100, "Nome muito longo"),
-  cpf: cpfSchema.optional(),
+  cpf: cpfSchema,
   phone: z.string()
     .regex(/^\(\d{2}\)\s\d{4,5}-\d{4}$/, "Formato: (11) 99999-9999")
     .optional(),
@@ -49,7 +51,7 @@ export const personalDataSchema = z.object({
 
 // Schema para Step 3 - Dados profissionais
 export const professionalDataSchema = z.object({
-  crefito: crefitoSchema.optional(),
+  crefito: crefitoSchema,
   specialties: z.array(z.string()).optional(),
   experience_years: z.number()
     .min(0, "Anos de experiência não pode ser negativo")
@@ -74,23 +76,23 @@ export const confirmationSchema = z.object({
   })
 });
 
-// Schema completo para registro
+// Schema completo para registro - todos os campos necessários
 export const registerSchema = z.object({
   userType: z.enum(['paciente', 'fisioterapeuta', 'estagiario', 'admin', 'parceiro']),
-  email: z.string().email("Digite um email válido"),
+  email: z.string().email("Digite um email válido").min(1, "Email é obrigatório"),
   password: z.string().min(8, "Senha deve ter pelo menos 8 caracteres"),
   confirmPassword: z.string(),
   full_name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  cpf: cpfSchema.optional(),
+  cpf: z.string().optional(),
   phone: z.string().optional(),
   birth_date: z.string().optional(),
-  crefito: crefitoSchema.optional(),
+  crefito: z.string().optional(),
   specialties: z.array(z.string()).optional(),
   experience_years: z.number().optional(),
   bio: z.string().optional(),
   consultation_fee: z.number().optional(),
-  terms_accepted: z.boolean().refine(val => val === true),
-  privacy_accepted: z.boolean().refine(val => val === true)
+  terms_accepted: z.boolean(),
+  privacy_accepted: z.boolean()
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Senhas não coincidem",
   path: ["confirmPassword"]
@@ -137,7 +139,7 @@ export const profileUpdateSchema = z.object({
     .optional(),
   birth_date: z.string().optional(),
   address: z.string().optional(),
-  crefito: crefitoSchema.optional(),
+  crefito: crefitoSchema,
   specialties: z.array(z.string()).optional(),
   experience_years: z.number()
     .min(0, "Anos de experiência não pode ser negativo")
