@@ -65,8 +65,22 @@ export function usePatients() {
       await fetchPatients();
       return data;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao adicionar paciente');
-      throw err;
+      let errorMessage = 'Erro ao adicionar paciente';
+      
+      if (err instanceof Error) {
+        if (err.message.includes('row-level security')) {
+          errorMessage = 'Erro de permissão: É necessário estar autenticado para cadastrar pacientes. Entre na sua conta primeiro.';
+        } else if (err.message.includes('unique')) {
+          errorMessage = 'Já existe um paciente com essas informações. Verifique os dados e tente novamente.';
+        } else if (err.message.includes('not-null')) {
+          errorMessage = 'Alguns campos obrigatórios não foram preenchidos. Verifique os dados e tente novamente.';
+        } else {
+          errorMessage = `Erro: ${err.message}`;
+        }
+      }
+      
+      setError(errorMessage);
+      throw new Error(errorMessage);
     }
   };
 
