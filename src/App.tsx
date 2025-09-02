@@ -24,6 +24,8 @@ import Schedule from "./pages/Schedule";
 import Exercises from "./pages/Exercises";
 import Financial from "./pages/Financial";
 import Reports from "./pages/Reports";
+import AnalyticsDashboard from "./pages/analytics/AnalyticsDashboard";
+import ReportsLibrary from "./pages/reports/ReportsLibrary";
 import Settings from "./pages/Settings";
 import { Profile } from "./pages/Profile";
 import { MedicalRecord } from "./pages/MedicalRecord";
@@ -63,7 +65,9 @@ const App = () => (
               <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
               <Route path="/exercises" element={<ProtectedRoute><Exercises /></ProtectedRoute>} />
               <Route path="/financial" element={<ProtectedRoute><Financial /></ProtectedRoute>} />
-              <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+              <Route path="/analytics" element={<ProtectedRoute><AnalyticsDashboard /></ProtectedRoute>} />
+              <Route path="/reports" element={<ProtectedRoute><ReportsLibrary /></ProtectedRoute>} />
+              <Route path="/reports/old" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/medical-record" element={<ProtectedRoute><MedicalRecord /></ProtectedRoute>} />

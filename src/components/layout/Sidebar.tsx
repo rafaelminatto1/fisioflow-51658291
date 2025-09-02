@@ -29,6 +29,7 @@ const menuItems = [
   { icon: MessageSquare, label: 'Comunicação', href: '/communications' },
   { icon: ShoppingCart, label: 'Treinos', href: '/vouchers' },
   { icon: DollarSign, label: 'Financeiro', href: '/financial' },
+  { icon: BarChart3, label: 'Analytics', href: '/analytics' },
   { icon: BarChart3, label: 'Relatórios', href: '/reports' },
   { icon: Settings, label: 'Configurações', href: '/settings' },
 ];
