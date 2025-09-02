@@ -14,6 +14,191 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_cache: {
+        Row: {
+          cache_type: string
+          confidence_score: number | null
+          created_at: string | null
+          expires_at: string
+          id: string
+          query_hash: string
+          query_text: string
+          response: string
+          source: string
+          usage_count: number | null
+        }
+        Insert: {
+          cache_type?: string
+          confidence_score?: number | null
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          query_hash: string
+          query_text: string
+          response: string
+          source: string
+          usage_count?: number | null
+        }
+        Update: {
+          cache_type?: string
+          confidence_score?: number | null
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          query_hash?: string
+          query_text?: string
+          response?: string
+          source?: string
+          usage_count?: number | null
+        }
+        Relationships: []
+      }
+      ai_prompts: {
+        Row: {
+          category: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          success_rate: number | null
+          template: string
+          updated_at: string | null
+          usage_count: number | null
+          variables: Json | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          success_rate?: number | null
+          template: string
+          updated_at?: string | null
+          usage_count?: number | null
+          variables?: Json | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          success_rate?: number | null
+          template?: string
+          updated_at?: string | null
+          usage_count?: number | null
+          variables?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_prompts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_provider_accounts: {
+        Row: {
+          account_name: string
+          created_at: string | null
+          credentials_encrypted: string | null
+          daily_limit: number | null
+          daily_usage_count: number | null
+          id: string
+          is_active: boolean | null
+          last_used_at: string | null
+          provider: string
+          reset_time: string | null
+        }
+        Insert: {
+          account_name: string
+          created_at?: string | null
+          credentials_encrypted?: string | null
+          daily_limit?: number | null
+          daily_usage_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          provider: string
+          reset_time?: string | null
+        }
+        Update: {
+          account_name?: string
+          created_at?: string | null
+          credentials_encrypted?: string | null
+          daily_limit?: number | null
+          daily_usage_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          provider?: string
+          reset_time?: string | null
+        }
+        Relationships: []
+      }
+      ai_queries: {
+        Row: {
+          context_data: Json | null
+          created_at: string | null
+          feedback: string | null
+          id: string
+          patient_id: string | null
+          processing_time_ms: number | null
+          query_text: string
+          rating: number | null
+          response_text: string
+          source: string
+          user_id: string | null
+        }
+        Insert: {
+          context_data?: Json | null
+          created_at?: string | null
+          feedback?: string | null
+          id?: string
+          patient_id?: string | null
+          processing_time_ms?: number | null
+          query_text: string
+          rating?: number | null
+          response_text: string
+          source: string
+          user_id?: string | null
+        }
+        Update: {
+          context_data?: Json | null
+          created_at?: string | null
+          feedback?: string | null
+          id?: string
+          patient_id?: string | null
+          processing_time_ms?: number | null
+          query_text?: string
+          rating?: number | null
+          response_text?: string
+          source?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_queries_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_queries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointment_series: {
         Row: {
           active: boolean | null
@@ -466,6 +651,66 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      knowledge_base: {
+        Row: {
+          author_id: string | null
+          confidence_score: number | null
+          content: string
+          created_at: string | null
+          id: string
+          tags: string[] | null
+          title: string
+          type: string
+          updated_at: string | null
+          usage_count: number | null
+          validated_at: string | null
+          validated_by: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          confidence_score?: number | null
+          content: string
+          created_at?: string | null
+          id?: string
+          tags?: string[] | null
+          title: string
+          type: string
+          updated_at?: string | null
+          usage_count?: number | null
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          confidence_score?: number | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          tags?: string[] | null
+          title?: string
+          type?: string
+          updated_at?: string | null
+          usage_count?: number | null
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_base_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_base_validated_by_fkey"
+            columns: ["validated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
