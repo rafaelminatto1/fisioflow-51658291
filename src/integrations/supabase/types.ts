@@ -14,11 +14,64 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointment_series: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          id: string
+          patient_id: string
+          recurrence_pattern: Json
+          sessions_completed: number | null
+          therapist_id: string | null
+          total_sessions: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          patient_id: string
+          recurrence_pattern: Json
+          sessions_completed?: number | null
+          therapist_id?: string | null
+          total_sessions?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          patient_id?: string
+          recurrence_pattern?: Json
+          sessions_completed?: number | null
+          therapist_id?: string | null
+          total_sessions?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_series_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_series_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           appointment_date: string
           appointment_time: string
           cancellation_reason: string | null
+          confirmation_sent_at: string | null
+          confirmed_at: string | null
           created_at: string
           created_by: string | null
           duration: number
@@ -28,6 +81,7 @@ export type Database = {
           patient_id: string
           reminder_sent: boolean | null
           room: string | null
+          series_id: string | null
           status: string
           therapist_id: string | null
           type: string
@@ -37,6 +91,8 @@ export type Database = {
           appointment_date: string
           appointment_time: string
           cancellation_reason?: string | null
+          confirmation_sent_at?: string | null
+          confirmed_at?: string | null
           created_at?: string
           created_by?: string | null
           duration?: number
@@ -46,6 +102,7 @@ export type Database = {
           patient_id: string
           reminder_sent?: boolean | null
           room?: string | null
+          series_id?: string | null
           status?: string
           therapist_id?: string | null
           type: string
@@ -55,6 +112,8 @@ export type Database = {
           appointment_date?: string
           appointment_time?: string
           cancellation_reason?: string | null
+          confirmation_sent_at?: string | null
+          confirmed_at?: string | null
           created_at?: string
           created_by?: string | null
           duration?: number
@@ -64,6 +123,7 @@ export type Database = {
           patient_id?: string
           reminder_sent?: boolean | null
           room?: string | null
+          series_id?: string | null
           status?: string
           therapist_id?: string | null
           type?: string
@@ -828,6 +888,97 @@ export type Database = {
         }
         Relationships: []
       }
+      schedule_blocks: {
+        Row: {
+          block_type: string | null
+          created_at: string | null
+          end_datetime: string
+          id: string
+          reason: string | null
+          start_datetime: string
+          therapist_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          block_type?: string | null
+          created_at?: string | null
+          end_datetime: string
+          id?: string
+          reason?: string | null
+          start_datetime: string
+          therapist_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          block_type?: string | null
+          created_at?: string | null
+          end_datetime?: string
+          id?: string
+          reason?: string | null
+          start_datetime?: string
+          therapist_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_blocks_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedule_settings: {
+        Row: {
+          active: boolean | null
+          break_end: string | null
+          break_start: string | null
+          consultation_duration: number | null
+          created_at: string | null
+          day_of_week: number | null
+          end_time: string | null
+          id: string
+          start_time: string | null
+          therapist_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          break_end?: string | null
+          break_start?: string | null
+          consultation_duration?: number | null
+          created_at?: string | null
+          day_of_week?: number | null
+          end_time?: string | null
+          id?: string
+          start_time?: string | null
+          therapist_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          break_end?: string | null
+          break_start?: string | null
+          consultation_duration?: number | null
+          created_at?: string | null
+          day_of_week?: number | null
+          end_time?: string | null
+          id?: string
+          start_time?: string | null
+          therapist_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_settings_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       soap_records: {
         Row: {
           appointment_id: string | null
@@ -985,6 +1136,57 @@ export type Database = {
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      waiting_list: {
+        Row: {
+          created_at: string | null
+          id: string
+          notes: string | null
+          patient_id: string
+          preferred_therapist_id: string | null
+          preferred_times: Json | null
+          status: string | null
+          updated_at: string | null
+          urgency_level: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          patient_id: string
+          preferred_therapist_id?: string | null
+          preferred_times?: Json | null
+          status?: string | null
+          updated_at?: string | null
+          urgency_level?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          preferred_therapist_id?: string | null
+          preferred_times?: Json | null
+          status?: string | null
+          updated_at?: string | null
+          urgency_level?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waiting_list_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "waiting_list_preferred_therapist_id_fkey"
+            columns: ["preferred_therapist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
