@@ -12,7 +12,10 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Stethoscope
+  Stethoscope,
+  FileText,
+  Brain,
+  MessageSquare
 } from 'lucide-react';
 
 const menuItems = [
@@ -20,6 +23,9 @@ const menuItems = [
   { icon: Users, label: 'Pacientes', href: '/patients' },
   { icon: Calendar, label: 'Agenda', href: '/schedule' },
   { icon: Activity, label: 'Exercícios', href: '/exercises' },
+  { icon: FileText, label: 'Prontuário', href: '/medical-record' },
+  { icon: Brain, label: 'Planos IA', href: '/smart-plans' },
+  { icon: MessageSquare, label: 'Comunicação', href: '/communications' },
   { icon: DollarSign, label: 'Financeiro', href: '/financial' },
   { icon: BarChart3, label: 'Relatórios', href: '/reports' },
   { icon: Settings, label: 'Configurações', href: '/settings' },
