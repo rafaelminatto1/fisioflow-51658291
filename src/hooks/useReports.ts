@@ -76,7 +76,8 @@ export function useReportExecutions(reportId?: string) {
 
       const { data, error } = await query;
 
-      return data || [];
+      if (error) throw error;
+      return (data || []) as ReportExecution[];
     },
   });
 }
