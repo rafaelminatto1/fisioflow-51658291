@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Save, User, Bell, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { ProfileUpdateFormData, profileUpdateSchema, newPasswordSchema, NewPasswordFormData } from '@/lib/validations/auth';
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { Button } from '@/components/ui/button';
@@ -69,20 +70,21 @@ export function Profile() {
   const isProfessional = ['fisioterapeuta', 'estagiario'].includes(profile.role);
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold">Meu Perfil</h1>
-        <p className="text-muted-foreground">
-          Gerencie suas informações pessoais e configurações
-        </p>
-      </div>
+    <MainLayout>
+      <div className="max-w-4xl mx-auto p-6 space-y-6">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold">Meu Perfil</h1>
+          <p className="text-muted-foreground">
+            Gerencie suas informações pessoais e configurações
+          </p>
+        </div>
 
-      <Tabs defaultValue="personal" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="personal">
-            <User className="w-4 h-4 mr-2" />
-            Pessoais
-          </TabsTrigger>
+        <Tabs defaultValue="personal" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="personal">
+              <User className="w-4 h-4 mr-2" />
+              Pessoais
+            </TabsTrigger>
           <TabsTrigger value="notifications">
             <Bell className="w-4 h-4 mr-2" />
             Notificações
@@ -441,6 +443,7 @@ export function Profile() {
           </TabsContent>
         )}
       </Tabs>
-    </div>
+      </div>
+    </MainLayout>
   );
 }

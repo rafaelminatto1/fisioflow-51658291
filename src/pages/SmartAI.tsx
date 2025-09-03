@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { KnowledgeContributor } from '@/components/ai/KnowledgeContributor';
 import { AIAssistant } from '@/components/ai/AIAssistant';
+import { AIChat } from '@/components/ai/AIChat';
 import { useAI } from '@/hooks/useAI';
 import { supabase } from '@/integrations/supabase/client';
 import { aiOrchestrator } from '@/services/ai/AIOrchestrator';
@@ -191,13 +192,18 @@ export default function SmartAI() {
           </Card>
         </div>
 
-        <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+        <Tabs defaultValue="chat" className="w-full">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="chat">Chat IA</TabsTrigger>
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="providers">Provedores</TabsTrigger>
             <TabsTrigger value="knowledge">Conhecimento</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="chat" className="space-y-4">
+            <AIChat />
+          </TabsContent>
 
           <TabsContent value="dashboard" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
