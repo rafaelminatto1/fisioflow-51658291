@@ -33,7 +33,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true);
   const [demoUser, setDemoUser] = useState<{ id: string; name: string; role: UserRole } | null>(null);
 
-  // Verificar se há usuário demo no localStorage
+  // Verificar se há usuário demo no localStorage ou criar um perfil demo
   useEffect(() => {
     const demoRole = localStorage.getItem('demo_user_role') as UserRole;
     const demoId = localStorage.getItem('demo_user_id');
@@ -52,6 +52,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       } as Profile);
+    } else {
+      // Criar um usuário demo admin se não houver nenhum usuário logado
+      const adminId = 'demo-admin-123';
+      setDemoUser({ id: adminId, name: 'Admin Demo', role: 'admin' });
+      setProfile({
+        id: adminId,
+        user_id: adminId,
+        full_name: 'Admin Demo',
+        role: 'admin',
+        onboarding_completed: true,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      } as Profile);
+      
+      // Salvar no localStorage para persistir
+      localStorage.setItem('demo_user_role', 'admin');
+      localStorage.setItem('demo_user_id', adminId);
+      localStorage.setItem('demo_user_name', 'Admin Demo');
     }
     setLoading(false);
   }, []);
