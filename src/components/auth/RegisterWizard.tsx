@@ -115,20 +115,29 @@ export function RegisterWizard({ onComplete }: RegisterWizardProps) {
     }
 
     try {
-      // Garantir que todos os campos obrigatórios estejam definidos
-      const completeData = {
-        email: formData.email as string,
-        password: formData.password as string,
-        confirmPassword: formData.confirmPassword as string,
+      const signUpData: RegisterFormData = {
+        email: formData.email!,
+        password: formData.password!,
+        confirmPassword: formData.confirmPassword!,
         firstName: (formData.full_name as string).split(' ')[0] || '',
         lastName: (formData.full_name as string).split(' ').slice(1).join(' ') || '',
-        phone: formData.phone || '',
+        phone: formData.phone!,
         profession: 'Fisioterapeuta',
         crefito: formData.crefito,
-        acceptTerms: data.acceptTerms || false
-      } satisfies RegisterFormData;
-      
-      await signUp(completeData);
+        acceptTerms: data.acceptTerms!,
+        // Additional fields for the wizard
+        full_name: formData.full_name!,
+        userType: formData.userType === 'estagiario' ? 'fisioterapeuta' : formData.userType!,
+        cpf: formData.cpf,
+        birth_date: formData.birth_date,
+        specialties: formData.specialties,
+        experience_years: formData.experience_years,
+        bio: formData.bio,
+        consultation_fee: formData.consultation_fee,
+        terms_accepted: data.acceptTerms!
+      };
+
+      await signUp(signUpData);
       onComplete();
     } catch (error) {
       console.error('Erro no registro:', error);

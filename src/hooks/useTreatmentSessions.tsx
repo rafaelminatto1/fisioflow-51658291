@@ -297,6 +297,13 @@ export function useTreatmentSessions() {
     deleteSession,
     calculateSessionMetrics,
     getPatientTimeline,
-    getUpcomingSessions
+    getUpcomingSessions,
+    // Legacy aliases
+    treatmentSessions: sessions,
+    addTreatmentSession: createSession,
+    updateTreatmentSession: updateSession,
+    deleteTreatmentSession: deleteSession,
+    getTreatmentSession: (id: string) => sessions.find(s => s.id === id),
+    getSessionsByPatient: fetchSessionsByPatient
   };
 }

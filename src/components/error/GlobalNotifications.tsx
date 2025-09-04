@@ -234,7 +234,6 @@ export const systemNotifications = {
       'Sessão expirada',
       'Faça login novamente para continuar',
       {
-        persistent: true,
         action: {
           label: 'Fazer Login',
           onClick: () => window.location.href = '/auth/login'

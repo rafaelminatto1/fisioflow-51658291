@@ -59,14 +59,20 @@ export const registerSchema = z.object({
     .max(100, 'Profissão muito longa'),
   crefito: z
     .string()
-    .optional()
-    .refine(
-      (val) => !val || /^\d{5,6}-F$/.test(val),
-      'CREFITO deve estar no formato 12345-F'
-    ),
+    .optional(),
   acceptTerms: z
     .boolean()
-    .refine(val => val === true, 'Você deve aceitar os termos de uso')
+    .refine(val => val === true, 'Você deve aceitar os termos de uso'),
+  // Additional wizard fields
+  full_name: z.string().optional(),
+  userType: z.enum(['fisioterapeuta', 'paciente', 'admin', 'estagiario', 'parceiro']).optional(),
+  cpf: z.string().optional(),
+  birth_date: z.string().optional(),
+  specialties: z.array(z.string()).optional(),
+  experience_years: z.number().optional(),
+  bio: z.string().optional(),
+  consultation_fee: z.number().optional(),
+  terms_accepted: z.boolean().optional()
 }).refine(
   (data) => data.password === data.confirmPassword,
   {
@@ -198,7 +204,7 @@ export const profileUpdateSchema = z.object({
 
 // Wizard schemas
 export const userTypeSchema = z.object({
-  userType: z.enum(['fisioterapeuta', 'paciente', 'admin']).default('fisioterapeuta')
+  userType: z.enum(['fisioterapeuta', 'paciente', 'admin', 'estagiario', 'parceiro']).default('fisioterapeuta')
 });
 
 export const personalDataSchema = z.object({

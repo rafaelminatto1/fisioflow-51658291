@@ -119,8 +119,11 @@ export function usePatientProgress() {
     addPatientProgress,
     updatePatientProgress,
     deletePatientProgress,
+    getPatientProgress: getProgressByPatient,
     getProgressByPatient,
     getLatestProgress,
     refetch: fetchPatientProgress,
+    // Legacy alias
+    fetchPatientProgress
   };
 }
