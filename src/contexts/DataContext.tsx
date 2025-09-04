@@ -172,7 +172,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     updateTreatmentSession,
     deleteTreatmentSession,
     getTreatmentSession,
-    getSessionsByPatient,
+    getSessionsByPatient: (patientId: string) => treatmentSessions.filter(session => session.patient_id === patientId),
     treatmentSessionsLoading,
     patientProgress,
     addPatientProgress,

@@ -55,12 +55,18 @@ export function TreatmentSessionModal({ trigger, open, onOpenChange, appointment
     try {
       await addTreatmentSession({
         patient_id: formData.patient_id,
-        appointment_id: formData.appointment_id || undefined,
-        exercise_plan_id: formData.exercise_plan_id || undefined,
+        therapist_id: 'temp_therapist_id',
+        session_type: 'treatment',
+        session_date: new Date().toISOString(),
+        duration_minutes: 60,
+        pain_level_before: formData.pain_level,
+        pain_level_after: formData.pain_level,
+        functional_score_before: 50,
+        functional_score_after: 50,
+        exercises_performed: [],
         observations: formData.observations,
-        pain_level: formData.pain_level,
-        evolution_notes: formData.evolution_notes,
-        next_session_goals: formData.next_session_goals || undefined
+        next_session_date: undefined,
+        status: 'completed'
       });
       
       toast({

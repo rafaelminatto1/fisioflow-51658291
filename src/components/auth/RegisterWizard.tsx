@@ -115,21 +115,16 @@ export function RegisterWizard({ onComplete }: RegisterWizardProps) {
     }
 
     try {
-      const signUpData: RegisterFormData = {
+      const signUpData = {
+        userType: formData.userType === 'estagiario' ? 'fisioterapeuta' : formData.userType!,
         email: formData.email!,
         password: formData.password!,
         confirmPassword: formData.confirmPassword!,
-        firstName: (formData.full_name as string).split(' ')[0] || '',
-        lastName: (formData.full_name as string).split(' ').slice(1).join(' ') || '',
-        phone: formData.phone!,
-        profession: 'Fisioterapeuta',
-        crefito: formData.crefito,
-        acceptTerms: data.acceptTerms!,
-        // Additional fields for the wizard
         full_name: formData.full_name!,
-        userType: formData.userType === 'estagiario' ? 'fisioterapeuta' : formData.userType!,
         cpf: formData.cpf,
+        phone: formData.phone,
         birth_date: formData.birth_date,
+        crefito: formData.crefito,
         specialties: formData.specialties,
         experience_years: formData.experience_years,
         bio: formData.bio,
