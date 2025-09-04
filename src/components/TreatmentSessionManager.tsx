@@ -39,6 +39,19 @@ interface TreatmentSessionManagerProps {
   selectedPatientId?: string;
 }
 
+interface NewSessionForm {
+  patient_id?: string;
+  observations: string;
+  pain_level: number;
+  evolution_notes: string;
+  duration_minutes: number;
+  techniques_used: string[];
+  equipment_used: string[];
+  patient_response: string;
+  homework_assigned: string;
+  next_session_goals: string;
+}
+
 export default function TreatmentSessionManager({ selectedPatientId }: TreatmentSessionManagerProps) {
   const {
     sessions,
@@ -60,18 +73,17 @@ export default function TreatmentSessionManager({ selectedPatientId }: Treatment
   const [activeTab, setActiveTab] = useState('sessions');
 
   // New session form state
-  const [newSession, setNewSession] = useState({
+  const [newSession, setNewSession] = useState<NewSessionForm>({
     patient_id: selectedPatientId || '',
-    session_date: new Date(),
-    session_type: 'treatment' as const,
-    duration_minutes: 60,
-    pain_level_before: 5,
-    pain_level_after: 5,
-    functional_score_before: 50,
-    functional_score_after: 50,
     observations: '',
-    next_session_date: undefined as Date | undefined,
-    exercises: [] as SessionExercise[]
+    pain_level: 5,
+    evolution_notes: '',
+    duration_minutes: 60,
+    techniques_used: [],
+    equipment_used: [],
+    patient_response: '',
+    homework_assigned: '',
+    next_session_goals: ''
   });
 
   // Load patient sessions when patient is selected
@@ -103,12 +115,12 @@ export default function TreatmentSessionManager({ selectedPatientId }: Treatment
   const handleCreateSession = async () => {
     try {
       const sessionData = {
-        ...newSession,
-        therapist_id: 'current-user-id', // TODO: Get from auth context
-        session_date: newSession.session_date.toISOString(),
-        next_session_date: newSession.next_session_date?.toISOString(),
-        exercises_performed: newSession.exercises,
-        status: 'completed' as const
+        patient_id: selectedPatient!,
+        observations: newSession.observations || '',
+        pain_level: newSession.pain_level || 5,
+        evolution_notes: newSession.evolution_notes || '',
+        duration_minutes: newSession.duration_minutes || 60,
+        created_by: 'current-user-id' // TODO: Get from auth context
       };
 
       await createSession(sessionData);
@@ -125,16 +137,15 @@ export default function TreatmentSessionManager({ selectedPatientId }: Treatment
   const resetNewSessionForm = () => {
     setNewSession({
       patient_id: selectedPatient,
-      session_date: new Date(),
-      session_type: 'treatment',
-      duration_minutes: 60,
-      pain_level_before: 5,
-      pain_level_after: 5,
-      functional_score_before: 50,
-      functional_score_after: 50,
       observations: '',
-      next_session_date: undefined,
-      exercises: []
+      pain_level: 5,
+      evolution_notes: '',
+      duration_minutes: 60,
+      techniques_used: [],
+      equipment_used: [],
+      patient_response: '',
+      homework_assigned: '',
+      next_session_goals: ''
     });
   };
 

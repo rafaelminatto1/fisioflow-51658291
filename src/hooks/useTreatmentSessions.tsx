@@ -5,20 +5,22 @@ import { toast } from 'sonner';
 export interface TreatmentSession {
   id: string;
   patient_id: string;
-  therapist_id: string;
-  session_date: string;
-  session_type: 'consultation' | 'treatment' | 'evaluation' | 'follow_up';
-  duration_minutes: number;
-  pain_level_before: number;
-  pain_level_after: number;
-  functional_score_before: number;
-  functional_score_after: number;
-  exercises_performed: SessionExercise[];
+  appointment_id?: string | null;
+  exercise_plan_id?: string | null;
   observations: string;
-  next_session_date?: string;
-  status: 'scheduled' | 'completed' | 'cancelled' | 'no_show';
+  pain_level: number;
+  evolution_notes: string;
+  next_session_goals?: string | null;
+  created_by: string;
   created_at: string;
   updated_at: string;
+  session_number?: number | null;
+  duration_minutes?: number | null;
+  techniques_used?: string[] | null;
+  equipment_used?: string[] | null;
+  patient_response?: string | null;
+  homework_assigned?: string | null;
+  attachments?: any | null;
 }
 
 export interface SessionExercise {
@@ -192,14 +194,12 @@ export function useTreatmentSessions() {
 
   // Calculate session metrics
   const calculateSessionMetrics = (session: TreatmentSession): SessionMetrics => {
-    const painImprovement = session.pain_level_before - session.pain_level_after;
-    const functionalImprovement = session.functional_score_after - session.functional_score_before;
+    const painImprovement = session.pain_level || 0;
+    const functionalImprovement = 0; // Não disponível no novo schema
     
-    const totalExercises = session.exercises_performed.length;
-    const completedExercises = session.exercises_performed.filter(
-      ex => ex.sets_completed >= ex.sets_planned * 0.8
-    ).length;
-    const exerciseCompliance = totalExercises > 0 ? (completedExercises / totalExercises) * 100 : 0;
+    const totalExercises = 0; // Será calculado de outra forma
+    const completedExercises = 0;
+    const exerciseCompliance = 0;
     
     const sessionEffectiveness = (
       (painImprovement > 0 ? 25 : 0) +
