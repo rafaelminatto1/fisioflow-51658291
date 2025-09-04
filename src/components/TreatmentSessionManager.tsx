@@ -541,3 +541,202 @@ export default function TreatmentSessionManager({ selectedPatientId }: Treatment
                           {metrics.pain_improvement !== 0 && (
                             <div className={`text-xs flex items-center justify-center gap-1 ${
                               metrics.pain_improvement > 0 ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {metrics.pain_improvement > 0 ? (
+                                <TrendingDown className="h-3 w-3" />
+                              ) : (
+                                <TrendingUp className="h-3 w-3" />
+                              )}
+                              {Math.abs(metrics.pain_improvement)}
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-blue-600">
+                            {session.functional_score_after}%
+                          </div>
+                          <div className="text-sm text-muted-foreground">Funcionalidade</div>
+                          {metrics.functional_improvement !== 0 && (
+                            <div className={`text-xs flex items-center justify-center gap-1 ${
+                              metrics.functional_improvement > 0 ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {metrics.functional_improvement > 0 ? (
+                                <TrendingUp className="h-3 w-3" />
+                              ) : (
+                                <TrendingDown className="h-3 w-3" />
+                              )}
+                              {Math.abs(metrics.functional_improvement)}%
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="text-center">
+                          <div className="text-2xl font-bold">
+                            {session.exercises_performed?.length || 0}
+                          </div>
+                          <div className="text-sm text-muted-foreground">Exercícios</div>
+                        </div>
+                        
+                        <div className="text-center">
+                          <div className="text-2xl font-bold">
+                            {metrics.completion_rate}%
+                          </div>
+                          <div className="text-sm text-muted-foreground">Taxa de Conclusão</div>
+                        </div>
+                      </div>
+                      
+                      {session.observations && (
+                        <div className="mt-4">
+                          <h4 className="font-medium mb-2">Observações:</h4>
+                          <p className="text-sm text-muted-foreground">{session.observations}</p>
+                        </div>
+                      )}
+                      
+                      {session.exercises_performed && session.exercises_performed.length > 0 && (
+                        <div className="mt-4">
+                          <h4 className="font-medium mb-2">Exercícios Realizados:</h4>
+                          <div className="space-y-2">
+                            {session.exercises_performed.map((exercise, index) => (
+                              <div key={index} className="bg-muted p-3 rounded-lg">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <h5 className="font-medium">{exercise.exercise_name}</h5>
+                                    <p className="text-sm text-muted-foreground">
+                                      {exercise.sets_completed}/{exercise.sets_planned} séries × {exercise.reps_completed}/{exercise.reps_planned} repetições
+                                    </p>
+                                  </div>
+                                  <Badge variant="outline">
+                                    Dificuldade {exercise.difficulty_level}/10
+                                  </Badge>
+                                </div>
+                                {exercise.patient_feedback && (
+                                  <p className="text-sm mt-2">
+                                    <strong>Feedback:</strong> {exercise.patient_feedback}
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="timeline" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5" />
+                  Timeline de Progresso
+                </CardTitle>
+                <CardDescription>
+                  Evolução do paciente ao longo do tempo
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {chartData.length > 0 ? (
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" />
+                        <YAxis />
+                        <Tooltip />
+                        <Line 
+                          type="monotone" 
+                          dataKey="dor" 
+                          stroke="#ef4444" 
+                          strokeWidth={2}
+                          name="Nível de Dor"
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="funcionalidade" 
+                          stroke="#3b82f6" 
+                          strokeWidth={2}
+                          name="Funcionalidade"
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Nenhuma sessão registrada ainda.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="analytics" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Analytics do Paciente
+                </CardTitle>
+                <CardDescription>
+                  Métricas e estatísticas detalhadas
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {patientSessions.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="text-center">
+                          <div className="text-3xl font-bold text-primary">
+                            {patientSessions.length}
+                          </div>
+                          <div className="text-sm text-muted-foreground">Total de Sessões</div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="text-center">
+                          <div className="text-3xl font-bold text-green-600">
+                            {patientSessions.reduce((acc, session) => 
+                              acc + (session.duration_minutes || 0), 0
+                            )} min
+                          </div>
+                          <div className="text-sm text-muted-foreground">Tempo Total</div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="text-center">
+                          <div className="text-3xl font-bold text-blue-600">
+                            {Math.round(
+                              patientSessions.reduce((acc, session) => {
+                                const metrics = calculateSessionMetrics(session);
+                                return acc + metrics.completion_rate;
+                              }, 0) / patientSessions.length
+                            )}%
+                          </div>
+                          <div className="text-sm text-muted-foreground">Taxa Média de Conclusão</div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Nenhuma sessão para analisar.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      )}
+    </div>
+  );
+}

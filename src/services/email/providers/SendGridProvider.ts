@@ -240,3 +240,4 @@ export class SendGridProvider implements EmailProvider {
       return [];
     }
   }
+}
