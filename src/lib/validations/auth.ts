@@ -196,6 +196,37 @@ export const profileUpdateSchema = z.object({
     )
 });
 
+// Wizard schemas
+export const userTypeSchema = z.object({
+  userType: z.enum(['fisioterapeuta', 'paciente', 'admin']).default('fisioterapeuta')
+});
+
+export const personalDataSchema = z.object({
+  full_name: z.string().min(2, 'Nome completo é obrigatório'),
+  cpf: z.string().min(11, 'CPF é obrigatório'),
+  email: z.string().email('Email inválido'),
+  phone: z.string().min(10, 'Telefone é obrigatório'),
+  birth_date: z.string().min(1, 'Data de nascimento é obrigatória'),
+  password: z.string().min(8, 'Senha deve ter pelo menos 8 caracteres'),
+  confirmPassword: z.string().min(1, 'Confirmação de senha é obrigatória')
+}).refine(data => data.password === data.confirmPassword, {
+  message: 'Senhas não coincidem',
+  path: ['confirmPassword']
+});
+
+export const professionalDataSchema = z.object({
+  specialties: z.array(z.string()).min(1, 'Pelo menos uma especialidade é obrigatória'),
+  experience_years: z.number().min(0, 'Anos de experiência é obrigatório'),
+  bio: z.string().optional(),
+  consultation_fee: z.number().min(0, 'Valor da consulta é obrigatório'),
+  profession: z.string().min(1, 'Profissão é obrigatória'),
+  crefito: z.string().optional()
+});
+
+export const confirmationSchema = z.object({
+  acceptTerms: z.boolean().refine(val => val === true, 'Você deve aceitar os termos')
+});
+
 // Tipos TypeScript derivados dos schemas
 export type LoginFormData = z.infer<typeof loginSchema>;
 export type RegisterFormData = z.infer<typeof registerSchema>;
@@ -204,3 +235,9 @@ export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 export type NewPasswordFormData = z.infer<typeof newPasswordSchema>;
 export type ProfileUpdateFormData = z.infer<typeof profileUpdateSchema>;
+
+// Wizard types
+export type UserTypeFormData = z.infer<typeof userTypeSchema>;
+export type PersonalDataFormData = z.infer<typeof personalDataSchema>;
+export type ProfessionalDataFormData = z.infer<typeof professionalDataSchema>;
+export type ConfirmationFormData = z.infer<typeof confirmationSchema>;

@@ -146,6 +146,7 @@ export function usePatients() {
     updatePatient,
     deletePatient,
     getPatient,
+    fetchPatients,
     refetch: fetchPatients,
   };
 }

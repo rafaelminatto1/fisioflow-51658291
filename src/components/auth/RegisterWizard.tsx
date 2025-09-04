@@ -31,7 +31,7 @@ interface RegisterWizardProps {
 
 export function RegisterWizard({ onComplete }: RegisterWizardProps) {
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<Partial<RegisterFormData>>({});
+  const [formData, setFormData] = useState<Partial<UserTypeFormData & PersonalDataFormData & ProfessionalDataFormData & ConfirmationFormData>>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { signUp, loading } = useAuth();
@@ -72,8 +72,7 @@ export function RegisterWizard({ onComplete }: RegisterWizardProps) {
   const step4Form = useForm<ConfirmationFormData>({
     resolver: zodResolver(confirmationSchema),
     defaultValues: {
-      terms_accepted: false,
-      privacy_accepted: false
+      acceptTerms: formData.acceptTerms || false
     }
   });
 
@@ -118,28 +117,19 @@ export function RegisterWizard({ onComplete }: RegisterWizardProps) {
     try {
       // Garantir que todos os campos obrigatórios estejam definidos
       const completeData = {
-        userType: formData.userType as UserRole,
         email: formData.email as string,
         password: formData.password as string,
         confirmPassword: formData.confirmPassword as string,
-        full_name: formData.full_name as string,
-        cpf: formData.cpf,
-        phone: formData.phone,
-        birth_date: formData.birth_date,
+        firstName: (formData.full_name as string).split(' ')[0] || '',
+        lastName: (formData.full_name as string).split(' ').slice(1).join(' ') || '',
+        phone: formData.phone || '',
+        profession: 'Fisioterapeuta',
         crefito: formData.crefito,
-        specialties: formData.specialties,
-        experience_years: formData.experience_years,
-        bio: formData.bio,
-        consultation_fee: formData.consultation_fee,
-        terms_accepted: data.terms_accepted,
-        privacy_accepted: data.privacy_accepted
+        acceptTerms: data.acceptTerms || false
       } satisfies RegisterFormData;
       
-      const { error } = await signUp(completeData);
-      
-      if (!error) {
-        onComplete();
-      }
+      await signUp(completeData);
+      onComplete();
     } catch (error) {
       console.error('Erro no registro:', error);
       toast({
@@ -448,45 +438,25 @@ export function RegisterWizard({ onComplete }: RegisterWizardProps) {
               <div className="space-y-4">
                 <div className="flex items-start space-x-2">
                   <Checkbox
-                    id="terms_accepted"
-                    checked={step4Form.watch('terms_accepted')}
+                    id="acceptTerms"
+                    checked={step4Form.watch('acceptTerms')}
                     onCheckedChange={(checked) => 
-                      step4Form.setValue('terms_accepted', !!checked)
+                      step4Form.setValue('acceptTerms', !!checked)
                     }
                   />
-                  <Label htmlFor="terms_accepted" className="text-sm">
+                  <Label htmlFor="acceptTerms" className="text-sm">
                     Li e aceito os{' '}
                     <a href="#" className="text-primary hover:underline">
                       Termos de Uso
                     </a>
                   </Label>
                 </div>
-                {step4Form.formState.errors.terms_accepted && (
+                {step4Form.formState.errors.acceptTerms && (
                   <p className="text-sm text-destructive">
-                    {step4Form.formState.errors.terms_accepted.message}
+                    {step4Form.formState.errors.acceptTerms.message}
                   </p>
                 )}
 
-                <div className="flex items-start space-x-2">
-                  <Checkbox
-                    id="privacy_accepted"
-                    checked={step4Form.watch('privacy_accepted')}
-                    onCheckedChange={(checked) => 
-                      step4Form.setValue('privacy_accepted', !!checked)
-                    }
-                  />
-                  <Label htmlFor="privacy_accepted" className="text-sm">
-                    Li e aceito a{' '}
-                    <a href="#" className="text-primary hover:underline">
-                      Política de Privacidade
-                    </a>
-                  </Label>
-                </div>
-                {step4Form.formState.errors.privacy_accepted && (
-                  <p className="text-sm text-destructive">
-                    {step4Form.formState.errors.privacy_accepted.message}
-                  </p>
-                )}
               </div>
 
               <div className="flex justify-between pt-4">

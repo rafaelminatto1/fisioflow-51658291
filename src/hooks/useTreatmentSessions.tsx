@@ -40,6 +40,7 @@ export interface SessionMetrics {
   functional_improvement: number;
   exercise_compliance: number;
   session_effectiveness: number;
+  completion_rate: number;
 }
 
 export interface PatientTimeline {
@@ -210,7 +211,8 @@ export function useTreatmentSessions() {
       pain_improvement: painImprovement,
       functional_improvement: functionalImprovement,
       exercise_compliance: exerciseCompliance,
-      session_effectiveness: Math.min(sessionEffectiveness, 100)
+      session_effectiveness: Math.min(sessionEffectiveness, 100),
+      completion_rate: exerciseCompliance
     };
   };
 

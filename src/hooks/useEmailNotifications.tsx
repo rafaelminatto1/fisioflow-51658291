@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { createEmailService, defaultEmailConfig } from '@/services/email/EmailService';
 import type { EmailService } from '@/services/email/EmailService';
-import type { EmailConfig } from '@/services/email/types';
+import type { EmailConfig as EmailServiceConfig } from '@/services/email/types';
 
 export interface EmailTemplate {
   id: string;
@@ -35,10 +35,10 @@ export interface EmailNotification {
 
 export interface EmailConfig {
   provider: 'resend' | 'sendgrid';
-  api_key: string;
-  from_email: string;
-  from_name: string;
-  reply_to?: string;
+  apiKey: string;
+  fromEmail: string;
+  fromName: string;
+  replyTo?: string;
 }
 
 export function useEmailNotifications() {
@@ -213,10 +213,10 @@ export function useEmailNotifications() {
         try {
           const result = await emailService.sendEmail({
             to: { email: recipientEmail },
-            from: {
-              email: config?.from_email || 'noreply@fisioflow.com',
-              name: config?.from_name || 'FisioFlow'
-            },
+              from: {
+                email: config?.fromEmail || 'noreply@fisioflow.com',
+                name: config?.fromName || 'FisioFlow'
+              },
             subject,
             html: content
           });

@@ -45,21 +45,28 @@ export function EmailNotificationManager({ patientId }: EmailNotificationManager
   const [stats, setStats] = useState<any>(null);
 
   // Form states
-  const [templateForm, setTemplateForm] = useState({
+  const [templateForm, setTemplateForm] = useState<{
+    name: string;
+    subject: string;
+    html_content: string;
+    text_content: string;
+    type: 'appointment_reminder' | 'appointment_confirmation' | 'exercise_reminder' | 'progress_report' | 'custom';
+    variables: string[];
+  }>({
     name: '',
     subject: '',
     html_content: '',
     text_content: '',
-    type: 'custom' as const,
-    variables: [] as string[]
+    type: 'custom',
+    variables: []
   });
 
   const [configForm, setConfigForm] = useState({
-    provider: 'resend' as const,
-    api_key: '',
-    from_email: '',
-    from_name: '',
-    reply_to: ''
+    provider: 'resend' as 'resend' | 'sendgrid',
+    apiKey: '',
+    fromEmail: '',
+    fromName: '',
+    replyTo: ''
   });
 
   const [sendForm, setSendForm] = useState({
@@ -81,10 +88,10 @@ export function EmailNotificationManager({ patientId }: EmailNotificationManager
     if (config) {
       setConfigForm({
         provider: config.provider,
-        api_key: config.api_key,
-        from_email: config.from_email,
-        from_name: config.from_name,
-        reply_to: config.reply_to || ''
+        apiKey: config.apiKey,
+        fromEmail: config.fromEmail,
+        fromName: config.fromName || '',
+        replyTo: config.replyTo || ''
       });
     }
   }, [config]);
@@ -449,7 +456,7 @@ export function EmailNotificationManager({ patientId }: EmailNotificationManager
                     </div>
                     <div>
                       <Label htmlFor="type">Tipo</Label>
-                      <Select value={templateForm.type} onValueChange={(value: any) => setTemplateForm(prev => ({ ...prev, type: value }))}>
+                      <Select value={templateForm.type} onValueChange={(value: 'appointment_reminder' | 'appointment_confirmation' | 'exercise_reminder' | 'progress_report' | 'custom') => setTemplateForm(prev => ({ ...prev, type: value }))}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -568,8 +575,8 @@ export function EmailNotificationManager({ patientId }: EmailNotificationManager
                   <Input
                     id="api_key"
                     type="password"
-                    value={configForm.api_key}
-                    onChange={(e) => setConfigForm(prev => ({ ...prev, api_key: e.target.value }))}
+                    value={configForm.apiKey}
+                    onChange={(e) => setConfigForm(prev => ({ ...prev, apiKey: e.target.value }))}
                     placeholder="Sua API key"
                   />
                 </div>
@@ -581,8 +588,8 @@ export function EmailNotificationManager({ patientId }: EmailNotificationManager
                   <Input
                     id="from_email"
                     type="email"
-                    value={configForm.from_email}
-                    onChange={(e) => setConfigForm(prev => ({ ...prev, from_email: e.target.value }))}
+                    value={configForm.fromEmail}
+                    onChange={(e) => setConfigForm(prev => ({ ...prev, fromEmail: e.target.value }))}
                     placeholder="noreply@exemplo.com"
                   />
                 </div>
@@ -591,8 +598,8 @@ export function EmailNotificationManager({ patientId }: EmailNotificationManager
                   <Label htmlFor="from_name">Nome Remetente</Label>
                   <Input
                     id="from_name"
-                    value={configForm.from_name}
-                    onChange={(e) => setConfigForm(prev => ({ ...prev, from_name: e.target.value }))}
+                    value={configForm.fromName}
+                    onChange={(e) => setConfigForm(prev => ({ ...prev, fromName: e.target.value }))}
                     placeholder="FisioFlow"
                   />
                 </div>
@@ -603,8 +610,8 @@ export function EmailNotificationManager({ patientId }: EmailNotificationManager
                 <Input
                   id="reply_to"
                   type="email"
-                  value={configForm.reply_to}
-                  onChange={(e) => setConfigForm(prev => ({ ...prev, reply_to: e.target.value }))}
+                  value={configForm.replyTo}
+                  onChange={(e) => setConfigForm(prev => ({ ...prev, replyTo: e.target.value }))}
                   placeholder="contato@exemplo.com"
                 />
               </div>
