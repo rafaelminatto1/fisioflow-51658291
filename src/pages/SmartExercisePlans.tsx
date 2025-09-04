@@ -30,6 +30,10 @@ import {
   CheckCircle,
   BookOpen
 } from 'lucide-react';
+import { SmartProgressionManager } from '@/components/exercise/SmartProgressionManager';
+import SmartAdaptationManager from '@/components/SmartAdaptationManager';
+import SmartReportsManager from '@/components/SmartReportsManager';
+import TreatmentSessionManager from '@/components/TreatmentSessionManager';
 
 export function SmartExercisePlans() {
   const { patients, exercises, exercisePlans, addExercisePlan, patientProgress, addPatientProgress } = useData();
@@ -269,10 +273,13 @@ export function SmartExercisePlans() {
         </Card>
 
         <Tabs defaultValue="plans" className="space-y-4">
-          <TabsList>
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="plans">Planos Ativos</TabsTrigger>
             <TabsTrigger value="progress">Progresso</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics IA</TabsTrigger>
+            <TabsTrigger value="ai-analytics">AI Analytics</TabsTrigger>
+            <TabsTrigger value="smart-progression">Progressão IA</TabsTrigger>
+            <TabsTrigger value="smart-reports">Relatórios IA</TabsTrigger>
+            <TabsTrigger value="treatment-sessions">Sessões</TabsTrigger>
           </TabsList>
 
           <TabsContent value="plans" className="space-y-4">
@@ -409,7 +416,51 @@ export function SmartExercisePlans() {
             )}
           </TabsContent>
 
-          <TabsContent value="analytics" className="space-y-4">
+          <TabsContent value="smart-progression" className="space-y-4">
+            {selectedPatient ? (
+              <SmartProgressionManager 
+                patientId={selectedPatient}
+                planId={filteredPlans.find(p => p.patient_id === selectedPatient)?.id}
+              />
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Brain className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">Selecione um paciente</h3>
+                  <p className="text-muted-foreground">
+                    Escolha um paciente para gerenciar sua progressão inteligente.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="smart-reports">
+            <SmartReportsManager 
+              selectedPatientId={selectedPatient}
+              selectedPlanId={filteredPlans.find(p => p.patient_id === selectedPatient)?.id}
+            />
+          </TabsContent>
+
+          <TabsContent value="treatment-sessions" className="space-y-4">
+            {selectedPatient ? (
+              <TreatmentSessionManager 
+                patientId={selectedPatient}
+              />
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">Selecione um paciente</h3>
+                  <p className="text-muted-foreground">
+                    Escolha um paciente para gerenciar suas sessões de tratamento.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="ai-analytics" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <Card>
                 <CardHeader>

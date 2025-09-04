@@ -17,7 +17,6 @@ interface AuthContextType {
   updatePassword: (password: string) => Promise<{ error?: any }>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error?: any }>;
   refreshProfile: () => Promise<void>;
-  demoUser: { id: string; name: string; role: UserRole } | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,49 +30,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [demoUser, setDemoUser] = useState<{ id: string; name: string; role: UserRole } | null>(null);
 
-  // Verificar se há usuário demo no localStorage ou criar um perfil demo
-  useEffect(() => {
-    const demoRole = localStorage.getItem('demo_user_role') as UserRole;
-    const demoId = localStorage.getItem('demo_user_id');
-    const demoName = localStorage.getItem('demo_user_name');
-    
-    if (demoRole && demoId && demoName) {
-      setDemoUser({ id: demoId, name: demoName, role: demoRole });
-      // Criar um perfil mock para o usuário demo
-      setProfile({
-        id: demoId,
-        user_id: demoId,
-        full_name: demoName,
-        role: demoRole,
-        onboarding_completed: true,
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      } as Profile);
-    } else {
-      // Criar um usuário demo admin se não houver nenhum usuário logado
-      const adminId = 'demo-admin-123';
-      setDemoUser({ id: adminId, name: 'Admin Demo', role: 'admin' });
-      setProfile({
-        id: adminId,
-        user_id: adminId,
-        full_name: 'Admin Demo',
-        role: 'admin',
-        onboarding_completed: true,
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      } as Profile);
-      
-      // Salvar no localStorage para persistir
-      localStorage.setItem('demo_user_role', 'admin');
-      localStorage.setItem('demo_user_id', adminId);
-      localStorage.setItem('demo_user_name', 'Admin Demo');
-    }
-    setLoading(false);
-  }, []);
+
 
   // Função para buscar perfil do usuário
   const fetchProfile = async (userId: string) => {
@@ -234,13 +192,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
+      setUser(null);
       setProfile(null);
-      
-      // Limpar dados do usuário demo
-      localStorage.removeItem('demo_user_role');
-      localStorage.removeItem('demo_user_id');
-      localStorage.removeItem('demo_user_name');
-      setDemoUser(null);
+      setSession(null);
       
       toast({
         title: "Logout realizado",
@@ -360,7 +314,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const value = {
-    user: demoUser ? ({ id: demoUser.id } as User) : user,
+    user,
     profile,
     session,
     loading,
@@ -372,7 +326,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     updatePassword,
     updateProfile,
     refreshProfile,
-    demoUser,
   };
 
   return (

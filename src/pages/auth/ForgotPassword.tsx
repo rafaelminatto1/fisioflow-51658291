@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeft, Mail, Send } from 'lucide-react';
+import { Mail, ArrowLeft, Loader2, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { ResetPasswordFormData, resetPasswordSchema } from '@/lib/validations/auth';
+import { ForgotPasswordFormData, forgotPasswordSchema } from '@/lib/validations/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export function ForgotPassword() {
-  const { resetPassword } = useAuth();
+  const { user, resetPassword, loading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
@@ -20,66 +20,104 @@ export function ForgotPassword() {
     register,
     handleSubmit,
     formState: { errors },
+    setError,
     getValues
-  } = useForm<ResetPasswordFormData>({
-    resolver: zodResolver(resetPasswordSchema)
+  } = useForm<ForgotPasswordFormData>({
+    resolver: zodResolver(forgotPasswordSchema)
   });
 
-  const onSubmit = async (data: ResetPasswordFormData) => {
+  // Redirecionar se já estiver logado
+  if (user && !loading) {
+    return <Navigate to="/" replace />;
+  }
+
+  const onSubmit = async (data: ForgotPasswordFormData) => {
     setIsSubmitting(true);
+    
     const { error } = await resetPassword(data.email);
     
-    if (!error) {
+    if (error) {
+      if (error.message.includes('not found')) {
+        setError('email', {
+          message: 'Email não encontrado. Verifique se o email está correto.'
+        });
+      } else {
+        setError('root', {
+          message: 'Erro ao enviar email de recuperação. Tente novamente.'
+        });
+      }
+    } else {
       setEmailSent(true);
     }
     
     setIsSubmitting(false);
   };
 
+  const handleResendEmail = async () => {
+    const email = getValues('email');
+    if (email) {
+      setIsSubmitting(true);
+      await resetPassword(email);
+      setIsSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
   if (emailSent) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/20 p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-4 w-16 h-16 bg-green-500 rounded-full flex items-center justify-center">
-              <Send className="w-8 h-8 text-white" />
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+              <CheckCircle className="h-6 w-6 text-green-600" />
             </div>
-            <CardTitle className="text-2xl font-bold text-green-600">
-              Email enviado!
-            </CardTitle>
+            <CardTitle className="text-2xl font-bold">Email Enviado!</CardTitle>
             <CardDescription>
-              Instruções de redefinição de senha foram enviadas
+              Enviamos um link de recuperação para seu email
             </CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-4">
-            <Alert>
-              <AlertDescription>
-                Enviamos um link de redefinição de senha para{' '}
-                <strong>{getValues('email')}</strong>. 
-                Verifique sua caixa de entrada e clique no link para criar uma nova senha.
-              </AlertDescription>
-            </Alert>
-
             <div className="text-center space-y-2">
               <p className="text-sm text-muted-foreground">
-                Não recebeu o email? Verifique sua pasta de spam ou tente novamente.
+                Verifique sua caixa de entrada e clique no link para redefinir sua senha.
               </p>
-              
-              <Button
-                variant="outline"
-                onClick={() => setEmailSent(false)}
-                className="w-full"
-              >
-                Tentar novamente
-              </Button>
+              <p className="text-sm text-muted-foreground">
+                Não esquece de verificar a pasta de spam!
+              </p>
             </div>
 
-            <div className="text-center">
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={handleResendEmail}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Reenviando...
+                  </>
+                ) : (
+                  <>
+                    <Mail className="mr-2 h-4 w-4" />
+                    Reenviar Email
+                  </>
+                )}
+              </Button>
+
               <Link to="/auth/login">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Voltar para login
+                <Button variant="ghost" className="w-full">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Voltar ao Login
                 </Button>
               </Link>
             </div>
@@ -93,17 +131,20 @@ export function ForgotPassword() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/20 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 w-16 h-16 bg-primary rounded-full flex items-center justify-center">
-            <Mail className="w-8 h-8 text-primary-foreground" />
-          </div>
           <CardTitle className="text-2xl font-bold">Esqueceu sua senha?</CardTitle>
           <CardDescription>
-            Digite seu email para receber instruções de redefinição
+            Digite seu email para receber um link de recuperação
           </CardDescription>
         </CardHeader>
 
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {errors.root && (
+              <Alert variant="destructive">
+                <AlertDescription>{errors.root.message}</AlertDescription>
+              </Alert>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -124,36 +165,28 @@ export function ForgotPassword() {
               disabled={isSubmitting}
             >
               {isSubmitting ? (
-                'Enviando...'
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Enviando...
+                </>
               ) : (
                 <>
-                  <Send className="w-4 h-4 mr-2" />
-                  Enviar instruções
+                  <Mail className="mr-2 h-4 w-4" />
+                  Enviar Link de Recuperação
                 </>
               )}
             </Button>
-
-            <div className="text-center">
-              <Link to="/auth/login">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Voltar para login
-                </Button>
-              </Link>
-            </div>
-
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">
-                Não tem uma conta?{' '}
-                <Link
-                  to="/auth/register"
-                  className="text-primary hover:underline font-medium"
-                >
-                  Cadastre-se
-                </Link>
-              </p>
-            </div>
           </form>
+
+          <div className="mt-6 text-center">
+            <Link
+              to="/auth/login"
+              className="inline-flex items-center text-sm text-primary hover:underline"
+            >
+              <ArrowLeft className="mr-1 h-4 w-4" />
+              Voltar ao login
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>

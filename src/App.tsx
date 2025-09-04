@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { DataProvider } from "@/contexts/DataContext";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 
 // Auth pages
 import Welcome from "./pages/Welcome";
@@ -34,17 +35,19 @@ import { SmartExercisePlans } from "./pages/SmartExercisePlans";
 import { Communications } from "./pages/Communications";
 import Partner from "./pages/Partner";
 import Vouchers from "./pages/Vouchers";
+import FileUploadTest from "./pages/FileUploadTest";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <DataProvider>
-          <Toaster />
-          <Sonner />
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <AuthProvider>
+          <DataProvider>
+            <Toaster />
+            <Sonner />
           <BrowserRouter>
             <Routes>
               {/* Welcome page - public */}
@@ -76,15 +79,17 @@ const App = () => (
               <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
               <Route path="/partner" element={<ProtectedRoute><Partner /></ProtectedRoute>} />
               <Route path="/vouchers" element={<ProtectedRoute><Vouchers /></ProtectedRoute>} />
+              <Route path="/file-upload-test" element={<ProtectedRoute><FileUploadTest /></ProtectedRoute>} />
               
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-        </DataProvider>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+          </DataProvider>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

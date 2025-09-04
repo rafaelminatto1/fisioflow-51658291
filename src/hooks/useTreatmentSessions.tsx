@@ -1,129 +1,300 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 
 export interface TreatmentSession {
   id: string;
   patient_id: string;
-  appointment_id?: string;
-  exercise_plan_id?: string;
+  therapist_id: string;
+  session_date: string;
+  session_type: 'consultation' | 'treatment' | 'evaluation' | 'follow_up';
+  duration_minutes: number;
+  pain_level_before: number;
+  pain_level_after: number;
+  functional_score_before: number;
+  functional_score_after: number;
+  exercises_performed: SessionExercise[];
   observations: string;
-  pain_level: number;
-  evolution_notes: string;
-  next_session_goals?: string;
+  next_session_date?: string;
+  status: 'scheduled' | 'completed' | 'cancelled' | 'no_show';
   created_at: string;
   updated_at: string;
-  created_by: string;
+}
+
+export interface SessionExercise {
+  id: string;
+  exercise_name: string;
+  sets_planned: number;
+  sets_completed: number;
+  reps_planned: number;
+  reps_completed: number;
+  weight_kg?: number;
+  duration_seconds?: number;
+  difficulty_level: number;
+  patient_feedback: string;
+  therapist_notes: string;
+}
+
+export interface SessionMetrics {
+  pain_improvement: number;
+  functional_improvement: number;
+  exercise_compliance: number;
+  session_effectiveness: number;
+}
+
+export interface PatientTimeline {
+  session_id: string;
+  session_date: string;
+  session_type: string;
+  pain_level: number;
+  functional_score: number;
+  key_achievements: string[];
+  concerns: string[];
 }
 
 export function useTreatmentSessions() {
-  const [treatmentSessions, setTreatmentSessions] = useState<TreatmentSession[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [sessions, setSessions] = useState<TreatmentSession[]>([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTreatmentSessions = async () => {
+  // Fetch all sessions
+  const fetchSessions = async () => {
     try {
       setLoading(true);
+      setError(null);
+
       const { data, error } = await supabase
         .from('treatment_sessions')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select(`
+          *,
+          patients(name),
+          profiles(full_name)
+        `)
+        .order('session_date', { ascending: false });
 
       if (error) throw error;
-      setTreatmentSessions(data || []);
+      setSessions(data || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao carregar sessões de tratamento');
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar sessões';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  const addTreatmentSession = async (sessionData: Omit<TreatmentSession, 'id' | 'created_at' | 'updated_at' | 'created_by'>) => {
+  // Fetch sessions by patient
+  const fetchSessionsByPatient = async (patientId: string) => {
     try {
+      setLoading(true);
+      setError(null);
+
       const { data, error } = await supabase
         .from('treatment_sessions')
-        .insert({
-          patient_id: sessionData.patient_id,
-          appointment_id: sessionData.appointment_id || null,
-          exercise_plan_id: sessionData.exercise_plan_id || null,
-          observations: sessionData.observations,
-          pain_level: sessionData.pain_level,
-          evolution_notes: sessionData.evolution_notes,
-          next_session_goals: sessionData.next_session_goals || null,
-          created_by: 'current_user' // TODO: Replace with actual user ID
-        })
+        .select('*')
+        .eq('patient_id', patientId)
+        .order('session_date', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar sessões do paciente';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Create new session
+  const createSession = async (sessionData: Omit<TreatmentSession, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const { data, error } = await supabase
+        .from('treatment_sessions')
+        .insert([sessionData])
         .select()
         .single();
 
       if (error) throw error;
-      await fetchTreatmentSessions();
+
+      setSessions(prev => [data, ...prev]);
+      toast.success('Sessão criada com sucesso!');
       return data;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao criar sessão de tratamento');
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao criar sessão';
+      setError(errorMessage);
+      toast.error(errorMessage);
       throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const updateTreatmentSession = async (id: string, updates: Partial<TreatmentSession>) => {
+  // Update session
+  const updateSession = async (sessionId: string, updates: Partial<TreatmentSession>) => {
     try {
-      const updateData: any = {};
-      
-      if (updates.patient_id) updateData.patient_id = updates.patient_id;
-      if (updates.appointment_id !== undefined) updateData.appointment_id = updates.appointment_id || null;
-      if (updates.exercise_plan_id !== undefined) updateData.exercise_plan_id = updates.exercise_plan_id || null;
-      if (updates.observations) updateData.observations = updates.observations;
-      if (updates.pain_level !== undefined) updateData.pain_level = updates.pain_level;
-      if (updates.evolution_notes) updateData.evolution_notes = updates.evolution_notes;
-      if (updates.next_session_goals !== undefined) updateData.next_session_goals = updates.next_session_goals || null;
+      setLoading(true);
+      setError(null);
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('treatment_sessions')
-        .update(updateData)
-        .eq('id', id);
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq('id', sessionId)
+        .select()
+        .single();
 
       if (error) throw error;
-      await fetchTreatmentSessions();
+
+      setSessions(prev => prev.map(session => 
+        session.id === sessionId ? data : session
+      ));
+      toast.success('Sessão atualizada com sucesso!');
+      return data;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao atualizar sessão de tratamento');
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao atualizar sessão';
+      setError(errorMessage);
+      toast.error(errorMessage);
       throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const deleteTreatmentSession = async (id: string) => {
+  // Delete session
+  const deleteSession = async (sessionId: string) => {
     try {
+      setLoading(true);
+      setError(null);
+
       const { error } = await supabase
         .from('treatment_sessions')
         .delete()
-        .eq('id', id);
+        .eq('id', sessionId);
 
       if (error) throw error;
-      await fetchTreatmentSessions();
+
+      setSessions(prev => prev.filter(session => session.id !== sessionId));
+      toast.success('Sessão excluída com sucesso!');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao excluir sessão de tratamento');
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao excluir sessão';
+      setError(errorMessage);
+      toast.error(errorMessage);
       throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getTreatmentSession = (id: string) => {
-    return treatmentSessions.find(session => session.id === id);
+  // Calculate session metrics
+  const calculateSessionMetrics = (session: TreatmentSession): SessionMetrics => {
+    const painImprovement = session.pain_level_before - session.pain_level_after;
+    const functionalImprovement = session.functional_score_after - session.functional_score_before;
+    
+    const totalExercises = session.exercises_performed.length;
+    const completedExercises = session.exercises_performed.filter(
+      ex => ex.sets_completed >= ex.sets_planned * 0.8
+    ).length;
+    const exerciseCompliance = totalExercises > 0 ? (completedExercises / totalExercises) * 100 : 0;
+    
+    const sessionEffectiveness = (
+      (painImprovement > 0 ? 25 : 0) +
+      (functionalImprovement > 0 ? 25 : 0) +
+      (exerciseCompliance * 0.5)
+    );
+
+    return {
+      pain_improvement: painImprovement,
+      functional_improvement: functionalImprovement,
+      exercise_compliance: exerciseCompliance,
+      session_effectiveness: Math.min(sessionEffectiveness, 100)
+    };
   };
 
-  const getSessionsByPatient = (patientId: string) => {
-    return treatmentSessions.filter(session => session.patient_id === patientId);
+  // Get patient timeline
+  const getPatientTimeline = async (patientId: string): Promise<PatientTimeline[]> => {
+    try {
+      const sessions = await fetchSessionsByPatient(patientId);
+      
+      return sessions.map(session => {
+        const metrics = calculateSessionMetrics(session);
+        const achievements: string[] = [];
+        const concerns: string[] = [];
+
+        if (metrics.pain_improvement > 0) {
+          achievements.push(`Redução da dor em ${metrics.pain_improvement} pontos`);
+        }
+        if (metrics.functional_improvement > 0) {
+          achievements.push(`Melhora funcional de ${metrics.functional_improvement} pontos`);
+        }
+        if (metrics.exercise_compliance > 80) {
+          achievements.push('Excelente aderência aos exercícios');
+        }
+
+        if (metrics.pain_improvement < 0) {
+          concerns.push('Aumento do nível de dor');
+        }
+        if (metrics.exercise_compliance < 50) {
+          concerns.push('Baixa aderência aos exercícios');
+        }
+
+        return {
+          session_id: session.id,
+          session_date: session.session_date,
+          session_type: session.session_type,
+          pain_level: session.pain_level_after,
+          functional_score: session.functional_score_after,
+          key_achievements: achievements,
+          concerns: concerns
+        };
+      });
+    } catch (err) {
+      console.error('Erro ao gerar timeline do paciente:', err);
+      return [];
+    }
+  };
+
+  // Get upcoming sessions
+  const getUpcomingSessions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('treatment_sessions')
+        .select(`
+          *,
+          patients(name),
+          profiles(full_name)
+        `)
+        .eq('status', 'scheduled')
+        .gte('session_date', new Date().toISOString().split('T')[0])
+        .order('session_date', { ascending: true })
+        .limit(10);
+
+      if (error) throw error;
+      return data || [];
+    } catch (err) {
+      console.error('Erro ao carregar próximas sessões:', err);
+      return [];
+    }
   };
 
   useEffect(() => {
-    fetchTreatmentSessions();
+    fetchSessions();
   }, []);
 
   return {
-    treatmentSessions,
+    sessions,
     loading,
     error,
-    addTreatmentSession,
-    updateTreatmentSession,
-    deleteTreatmentSession,
-    getTreatmentSession,
-    getSessionsByPatient,
-    refetch: fetchTreatmentSessions,
+    fetchSessions,
+    fetchSessionsByPatient,
+    createSession,
+    updateSession,
+    deleteSession,
+    calculateSessionMetrics,
+    getPatientTimeline,
+    getUpcomingSessions
   };
 }

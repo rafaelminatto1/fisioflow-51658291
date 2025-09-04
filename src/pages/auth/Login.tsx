@@ -1,130 +1,163 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Users, UserCheck, Stethoscope, Heart, Star } from 'lucide-react';
-import { UserRole } from '@/types/auth';
+import { Link, Navigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Eye, EyeOff, LogIn, Loader2 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { LoginFormData, loginSchema } from '@/lib/validations/auth';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
-const userTypes = [
-  {
-    value: 'admin' as UserRole,
-    title: 'Administrador',
-    description: 'Acesso completo ao sistema',
-    icon: Star,
-    color: 'bg-purple-500'
-  },
-  {
-    value: 'fisioterapeuta' as UserRole,
-    title: 'Fisioterapeuta',
-    description: 'Profissional de fisioterapia',
-    icon: Stethoscope,
-    color: 'bg-blue-500'
-  },
-  {
-    value: 'estagiario' as UserRole,
-    title: 'Estagiário',
-    description: 'Estudante em formação',
-    icon: UserCheck,
-    color: 'bg-green-500'
-  },
-  {
-    value: 'paciente' as UserRole,
-    title: 'Paciente',
-    description: 'Usuário em tratamento',
-    icon: Heart,
-    color: 'bg-red-500'
-  },
-  {
-    value: 'parceiro' as UserRole,
-    title: 'Educador Físico',
-    description: 'Parceiro educador físico',
-    icon: Users,
-    color: 'bg-orange-500'
-  }
-];
+
 
 export function Login() {
-  const navigate = useNavigate();
-  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
+  const { user, signIn, loading } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Generate consistent UUID for demo users
-  const generateDemoUUID = (role: string): string => {
-    // Create a simple but consistent UUID based on role
-    const hash = role.split('').reduce((a, b) => {
-      a = ((a << 5) - a) + b.charCodeAt(0);
-      return a & a;
-    }, 0);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema)
+  });
+
+  // Redirecionar se já estiver logado
+  if (user && !loading) {
+    return <Navigate to="/" replace />;
+  }
+
+  const onSubmit = async (data: LoginFormData) => {
+    setIsSubmitting(true);
     
-    const hex = Math.abs(hash).toString(16).padStart(8, '0');
-    return `${hex.slice(0,8)}-${hex.slice(0,4)}-4${hex.slice(1,4)}-8${hex.slice(0,3)}-${hex.slice(0,12).padEnd(12, '0')}`;
+    const { error } = await signIn(data.email, data.password, data.remember);
+    
+    if (error) {
+      setError('root', {
+        message: 'Email ou senha incorretos. Verifique suas credenciais e tente novamente.'
+      });
+    }
+    
+    setIsSubmitting(false);
   };
 
-  const handleRoleSelect = (role: UserRole) => {
-    // Simular login temporário baseado no papel
-    const demoId = generateDemoUUID(role);
-    localStorage.setItem('demo_user_role', role);
-    localStorage.setItem('demo_user_id', demoId);
-    localStorage.setItem('demo_user_name', `Usuário Demo ${userTypes.find(t => t.value === role)?.title}`);
-    
-    // Redirecionar para a página principal
-    navigate('/');
-    window.location.reload(); // Força atualização para carregar o novo estado
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/20 p-4">
-      <Card className="w-full max-w-2xl">
+      <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold">FisioFlow</CardTitle>
-          <CardDescription className="text-lg">
-            Selecione seu perfil para acessar o sistema (Modo Teste)
+          <CardDescription>
+            Entre com suas credenciais para acessar o sistema
           </CardDescription>
         </CardHeader>
 
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {userTypes.map((userType) => {
-              const Icon = userType.icon;
-              return (
-                <Card
-                  key={userType.value}
-                  className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
-                    selectedRole === userType.value 
-                      ? 'ring-2 ring-primary shadow-lg' 
-                      : 'hover:shadow-md'
-                  }`}
-                  onClick={() => setSelectedRole(userType.value)}
-                >
-                  <CardContent className="p-6 text-center">
-                    <div className={`w-16 h-16 rounded-full ${userType.color} flex items-center justify-center mx-auto mb-4`}>
-                      <Icon className="w-8 h-8 text-white" />
-                    </div>
-                    <h3 className="text-xl font-semibold mb-2">{userType.title}</h3>
-                    <p className="text-muted-foreground text-sm mb-4">
-                      {userType.description}
-                    </p>
-                    <Button
-                      variant={selectedRole === userType.value ? "default" : "outline"}
-                      className="w-full"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRoleSelect(userType.value);
-                      }}
-                    >
-                      Entrar como {userType.title}
-                    </Button>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {errors.root && (
+              <Alert variant="destructive">
+                <AlertDescription>{errors.root.message}</AlertDescription>
+              </Alert>
+            )}
 
-          <div className="mt-8 text-center">
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <p className="text-amber-800 text-sm">
-                <strong>Modo de Teste:</strong> Este é um ambiente de demonstração. 
-                Não é necessário login ou senha para testar as funcionalidades.
-              </p>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="seu@email.com"
+                {...register('email')}
+                className={errors.email ? 'border-destructive' : ''}
+              />
+              {errors.email && (
+                <p className="text-sm text-destructive">{errors.email.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Senha</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Sua senha"
+                  {...register('password')}
+                  className={errors.password ? 'border-destructive pr-10' : 'pr-10'}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+              {errors.password && (
+                <p className="text-sm text-destructive">{errors.password.message}</p>
+              )}
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="remember"
+                {...register('remember')}
+                className="rounded border-gray-300"
+              />
+              <Label htmlFor="remember" className="text-sm">
+                Lembrar de mim
+              </Label>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Entrando...
+                </>
+              ) : (
+                <>
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Entrar
+                </>
+              )}
+            </Button>
+          </form>
+
+          <div className="mt-6 text-center space-y-2">
+            <Link
+              to="/auth/forgot-password"
+              className="text-sm text-primary hover:underline"
+            >
+              Esqueceu sua senha?
+            </Link>
+            <div className="text-sm text-muted-foreground">
+              Não tem uma conta?{' '}
+              <Link to="/auth/register" className="text-primary hover:underline">
+                Cadastre-se
+              </Link>
             </div>
           </div>
         </CardContent>
