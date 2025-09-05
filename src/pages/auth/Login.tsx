@@ -65,6 +65,33 @@ export function Login() {
         </CardHeader>
 
         <CardContent>
+          {/* Dados de teste */}
+          <div className="mb-6 p-4 bg-muted/50 rounded-lg">
+            <h4 className="text-sm font-medium mb-3">Usuários para teste:</h4>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="font-medium">Admin:</span>
+                <span>admin@fisioflow.com.br / senha123</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Fisioterapeuta:</span>
+                <span>joao@fisioflow.com.br / senha123</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Estagiário:</span>
+                <span>maria@fisioflow.com.br / senha123</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Paciente:</span>
+                <span>ana@email.com / senha123</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Parceiro:</span>
+                <span>carlos@parceiro.com / senha123</span>
+              </div>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {errors.root && (
               <Alert variant="destructive">

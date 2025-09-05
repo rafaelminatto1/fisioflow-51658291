@@ -455,6 +455,179 @@ export type Database = {
         }
         Relationships: []
       }
+      email_config: {
+        Row: {
+          api_key: string
+          created_at: string | null
+          from_email: string
+          from_name: string
+          id: string
+          provider: string
+          reply_to: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          api_key: string
+          created_at?: string | null
+          from_email: string
+          from_name: string
+          id?: string
+          provider: string
+          reply_to?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          api_key?: string
+          created_at?: string | null
+          from_email?: string
+          from_name?: string
+          id?: string
+          provider?: string
+          reply_to?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      email_notifications: {
+        Row: {
+          content: string
+          created_at: string | null
+          error_message: string | null
+          id: string
+          patient_id: string | null
+          recipient_email: string
+          recipient_name: string
+          scheduled_for: string | null
+          sent_at: string | null
+          status: string | null
+          subject: string
+          template_id: string | null
+          updated_at: string | null
+          variables: Json | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          patient_id?: string | null
+          recipient_email: string
+          recipient_name: string
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string | null
+          subject: string
+          template_id?: string | null
+          updated_at?: string | null
+          variables?: Json | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          patient_id?: string | null
+          recipient_email?: string
+          recipient_name?: string
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string | null
+          subject?: string
+          template_id?: string | null
+          updated_at?: string | null
+          variables?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_notifications_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_notifications_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "email_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_queue: {
+        Row: {
+          attempts: number | null
+          created_at: string | null
+          id: string
+          max_attempts: number | null
+          next_attempt: string | null
+          notification_id: string | null
+          priority: number | null
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string | null
+          id?: string
+          max_attempts?: number | null
+          next_attempt?: string | null
+          notification_id?: string | null
+          priority?: number | null
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string | null
+          id?: string
+          max_attempts?: number | null
+          next_attempt?: string | null
+          notification_id?: string | null
+          priority?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_queue_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "email_notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_templates: {
+        Row: {
+          created_at: string | null
+          html_content: string
+          id: string
+          name: string
+          subject: string
+          text_content: string | null
+          type: string
+          updated_at: string | null
+          variables: string[] | null
+        }
+        Insert: {
+          created_at?: string | null
+          html_content: string
+          id?: string
+          name: string
+          subject: string
+          text_content?: string | null
+          type: string
+          updated_at?: string | null
+          variables?: string[] | null
+        }
+        Update: {
+          created_at?: string | null
+          html_content?: string
+          id?: string
+          name?: string
+          subject?: string
+          text_content?: string | null
+          type?: string
+          updated_at?: string | null
+          variables?: string[] | null
+        }
+        Relationships: []
+      }
       exercise_favorites: {
         Row: {
           created_at: string | null
@@ -2111,6 +2284,16 @@ export type Database = {
           treated_patients: number
         }[]
       }
+      get_email_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          success_rate: number
+          total_failed: number
+          total_pending: number
+          total_scheduled: number
+          total_sent: number
+        }[]
+      }
       get_financial_metrics: {
         Args: { start_date?: string }
         Returns: {
@@ -2144,8 +2327,25 @@ export type Database = {
         Args: { patient_uuid: string }
         Returns: Json
       }
+      process_email_queue: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          content: string
+          notification_id: string
+          recipient_email: string
+          subject: string
+        }[]
+      }
       refresh_analytics_views: {
         Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      update_notification_status: {
+        Args: {
+          p_error_message?: string
+          p_notification_id: string
+          p_status: string
+        }
         Returns: undefined
       }
       validate_cpf: {
