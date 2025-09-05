@@ -64,18 +64,27 @@ export interface ReportConfig {
   };
 }
 
+interface ChartOptions {
+  showLegend?: boolean;
+  showGrid?: boolean;
+  colors?: string[];
+  height?: number;
+  width?: number;
+  [key: string]: unknown;
+}
+
 interface ChartConfig {
   id: string;
   type: 'line' | 'bar' | 'pie' | 'table';
   title: string;
   metric: string;
-  options?: any;
+  options?: ChartOptions;
 }
 
 interface FilterConfig {
   field: string;
   operator: string;
-  value: any;
+  value: string | number | Date | [string | number | Date, string | number | Date];
   label: string;
 }
 
@@ -124,11 +133,11 @@ export function ReportBuilder({ onSave, onPreview, initialConfig }: ReportBuilde
     config.query_config.metrics || []
   );
 
-  const updateConfig = (path: string, value: any) => {
+  const updateConfig = (path: string, value: unknown) => {
     const keys = path.split('.');
     const newConfig = { ...config };
     
-    let current = newConfig as any;
+    let current: Record<string, unknown> = newConfig as Record<string, unknown>;
     for (let i = 0; i < keys.length - 1; i++) {
       current = current[keys[i]];
     }
@@ -352,7 +361,7 @@ export function ReportBuilder({ onSave, onPreview, initialConfig }: ReportBuilde
                         key={chartType.value}
                         variant="outline"
                         size="sm"
-                        onClick={() => addChart(chartType.value as any)}
+                        onClick={() => addChart(chartType.value as ChartConfig['type'])}
                         className="gap-2"
                       >
                         <Icon className="w-4 h-4" />

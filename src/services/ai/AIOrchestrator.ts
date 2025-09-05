@@ -123,7 +123,7 @@ export class AIOrchestrator {
         response_text: response,
         source: provider ? `${source}:${provider}` : source,
         processing_time_ms: processingTime,
-        context_data: context as any
+        context_data: context as Record<string, unknown>
       });
     } catch (error) {
       console.error('Error logging query:', error);
@@ -181,7 +181,13 @@ export class AIOrchestrator {
     }
   }
 
-  async getUsageStats(): Promise<any> {
+  async getUsageStats(): Promise<{
+    totalQueries: number;
+    averageResponseTime: number;
+    sourceDistribution: Record<string, number>;
+    averageRating: number;
+    cacheHitRate: number;
+  } | null> {
     try {
       const { data } = await supabase
         .from('ai_queries')

@@ -16,8 +16,8 @@ export interface AdaptationSuggestion {
   patient_id: string;
   rule_id: string;
   suggestion_type: 'exercise_modification' | 'plan_adjustment' | 'frequency_change';
-  current_value: any;
-  suggested_value: any;
+  current_value: string | number | boolean | object;
+  suggested_value: string | number | boolean | object;
   confidence_score: number;
   reasoning: string;
   status: 'pending' | 'accepted' | 'rejected' | 'applied';

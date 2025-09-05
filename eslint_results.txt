@@ -1,0 +1,66 @@
+
+C:\Users\rafal\cursor\fisioflow\fisioflow-51658291\src\components\analytics\InsightCard.tsx
+  159:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\rafal\cursor\fisioflow\fisioflow-51658291\src\components\error\ErrorBoundary.tsx
+  193:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  255:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\rafal\cursor\fisioflow\fisioflow-51658291\src\components\error\GlobalNotifications.tsx
+  106:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components                                                                                                                                             react-refresh/only-export-components
+  216:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components                                                                                                                                             react-refresh/only-export-components
+  219:29  error    React Hook "useGlobalNotifications" is called in function "loginSuccess" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"           react-hooks/rules-of-hooks
+  227:29  error    React Hook "useGlobalNotifications" is called in function "logoutSuccess" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"          react-hooks/rules-of-hooks
+  232:29  error    React Hook "useGlobalNotifications" is called in function "sessionExpired" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"         react-hooks/rules-of-hooks
+  247:29  error    React Hook "useGlobalNotifications" is called in function "createSuccess" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"          react-hooks/rules-of-hooks
+  252:29  error    React Hook "useGlobalNotifications" is called in function "updateSuccess" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"          react-hooks/rules-of-hooks
+  257:29  error    React Hook "useGlobalNotifications" is called in function "deleteSuccess" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"          react-hooks/rules-of-hooks
+  263:27  error    React Hook "useGlobalNotifications" is called in function "networkError" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"           react-hooks/rules-of-hooks
+  277:27  error    React Hook "useGlobalNotifications" is called in function "serverError" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"            react-hooks/rules-of-hooks
+  291:27  error    React Hook "useGlobalNotifications" is called in function "validationError" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"        react-hooks/rules-of-hooks
+  296:27  error    React Hook "useGlobalNotifications" is called in function "permissionDenied" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"       react-hooks/rules-of-hooks
+  305:29  error    React Hook "useGlobalNotifications" is called in function "uploadSuccess" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"          react-hooks/rules-of-hooks
+  310:27  error    React Hook "useGlobalNotifications" is called in function "uploadError" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"            react-hooks/rules-of-hooks
+  319:29  error    React Hook "useGlobalNotifications" is called in function "batchOperationSuccess" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"  react-hooks/rules-of-hooks
+  327:29  error    React Hook "useGlobalNotifications" is called in function "batchOperationPartial" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"  react-hooks/rules-of-hooks
+  336:29  error    React Hook "useGlobalNotifications" is called in function "syncSuccess" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"            react-hooks/rules-of-hooks
+  341:27  error    React Hook "useGlobalNotifications" is called in function "syncError" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"              react-hooks/rules-of-hooks
+  359:29  error    React Hook "useGlobalNotifications" is called in function "backupSuccess" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"          react-hooks/rules-of-hooks
+  364:29  error    React Hook "useGlobalNotifications" is called in function "backupRestored" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word "use"         react-hooks/rules-of-hooks
+  370:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components                                                                                                                                             react-refresh/only-export-components
+
+C:\Users\rafal\cursor\fisioflow\fisioflow-51658291\src\components\exercise\SmartProgressionManager.tsx
+  100:6  warning  React Hook useEffect has a missing dependency: 'analyzeProgress'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\rafal\cursor\fisioflow\fisioflow-51658291\src\components\ui\badge.tsx
+  36:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\rafal\cursor\fisioflow\fisioflow-51658291\src\components\ui\button.tsx
+  58:18  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\rafal\cursor\fisioflow\fisioflow-51658291\src\components\ui\form.tsx
+  168:3  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\rafal\cursor\fisioflow\fisioflow-51658291\src\components\ui\navigation-menu.tsx
+  119:3  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\rafal\cursor\fisioflow\fisioflow-51658291\src\components\ui\sidebar.tsx
+  760:3  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\rafal\cursor\fisioflow\fisioflow-51658291\src\components\ui\sonner.tsx
+  29:19  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\rafal\cursor\fisioflow\fisioflow-51658291\src\components\ui\textarea.tsx
+  5:18  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+C:\Users\rafal\cursor\fisioflow\fisioflow-51658291\src\components\ui\toggle.tsx
+  43:18  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\rafal\cursor\fisioflow\fisioflow-51658291\src\contexts\DataContext.tsx
+  193:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\rafal\cursor\fisioflow\fisioflow-51658291\src\hooks\useAuth.tsx
+  349:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+Ô£û 35 problems (19 errors, 16 warnings)
+

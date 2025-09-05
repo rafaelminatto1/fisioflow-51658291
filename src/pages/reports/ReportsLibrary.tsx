@@ -52,7 +52,14 @@ export default function ReportsLibrary() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [showBuilder, setShowBuilder] = useState(false);
-  const [editingReport, setEditingReport] = useState<any>(null);
+  const [editingReport, setEditingReport] = useState<{
+    name: string;
+    description?: string;
+    template_type: string;
+    query_config: Record<string, unknown>;
+    schedule_config?: Record<string, unknown>;
+    is_public: boolean;
+  } | null>(null);
 
   // Hooks
   const { data: reports = [], isLoading: reportsLoading } = useReports();

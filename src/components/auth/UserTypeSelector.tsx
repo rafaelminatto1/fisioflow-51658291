@@ -1,7 +1,7 @@
 import { UserRole } from '@/types/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Stethoscope, GraduationCap, Shield, Building } from 'lucide-react';
+import { Users, Stethoscope, GraduationCap, Building } from 'lucide-react';
 
 interface UserTypeSelectorProps {
   selectedType?: UserRole;

@@ -6,11 +6,11 @@ export interface Report {
   id: string;
   name: string;
   description?: string;
-  query_config: any;
+  query_config: Record<string, unknown>;
   template_type: string;
   created_by?: string;
   is_public: boolean;
-  schedule_config?: any;
+  schedule_config?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -19,7 +19,7 @@ export interface ReportExecution {
   id: string;
   report_id: string;
   executed_by?: string;
-  execution_params: any;
+  execution_params: Record<string, unknown>;
   status: 'pending' | 'running' | 'completed' | 'failed';
   file_url?: string;
   error_message?: string;
@@ -185,7 +185,7 @@ export function useExecuteReport() {
   return useMutation({
     mutationFn: async (params: {
       report_id: string;
-      execution_params?: any;
+      execution_params?: Record<string, unknown>;
       format?: 'pdf' | 'excel' | 'csv';
     }) => {
       const { data, error } = await supabase

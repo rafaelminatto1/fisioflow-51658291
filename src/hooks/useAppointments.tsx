@@ -81,7 +81,7 @@ export function useAppointments() {
 
   const updateAppointment = async (id: string, updates: Partial<Appointment>) => {
     try {
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
       
       if (updates.patientId) updateData.patient_id = updates.patientId;
       if (updates.date) updateData.appointment_date = updates.date.toISOString().split('T')[0];

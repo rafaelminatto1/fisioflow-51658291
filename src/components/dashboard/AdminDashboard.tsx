@@ -13,11 +13,10 @@ import {
   DollarSign, 
   TrendingUp,
   Activity,
-  Clock,
   CheckCircle,
   AlertTriangle
 } from 'lucide-react';
-import { format, isToday, parseISO, subMonths } from 'date-fns';
+import { format, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface AdminDashboardProps {

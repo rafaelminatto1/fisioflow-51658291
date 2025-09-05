@@ -121,7 +121,7 @@ export function NewAppointmentModal({
   });
 
   // Handle patient selection from dropdown
-  const handleSelectPatient = (patient: any) => {
+  const handleSelectPatient = (patient: { id: string; name: string }) => {
     setPatientSearchTerm(patient.name);
     setSelectedPatientId(patient.id);
     form.setValue('patientName', patient.name);

@@ -160,13 +160,13 @@ export const validationUtils = {
     for (let i = 0; i < 12; i++) {
       sum += parseInt(numbers[i]) * weights1[i];
     }
-    let digit1 = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+    const digit1 = sum % 11 < 2 ? 0 : 11 - (sum % 11);
     
     sum = 0;
     for (let i = 0; i < 13; i++) {
       sum += parseInt(numbers[i]) * weights2[i];
     }
-    let digit2 = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+    const digit2 = sum % 11 < 2 ? 0 : 11 - (sum % 11);
     
     return parseInt(numbers[12]) === digit1 && parseInt(numbers[13]) === digit2;
   },

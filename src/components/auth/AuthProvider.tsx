@@ -1,25 +1,9 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { Profile, UserRole, RegisterFormData } from '@/types/auth';
+import { Profile, RegisterFormData } from '@/types/auth';
 import { toast } from '@/hooks/use-toast';
-
-interface AuthContextType {
-  user: User | null;
-  profile: Profile | null;
-  session: Session | null;
-  loading: boolean;
-  role?: UserRole;
-  signIn: (email: string, password: string, remember?: boolean) => Promise<{ error?: any }>;
-  signUp: (data: RegisterFormData) => Promise<{ error?: any }>;
-  signOut: () => Promise<void>;
-  resetPassword: (email: string) => Promise<{ error?: any }>;
-  updatePassword: (password: string) => Promise<{ error?: any }>;
-  updateProfile: (updates: Partial<Profile>) => Promise<{ error?: any }>;
-  refreshProfile: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { AuthContext, AuthError } from '@/contexts/AuthContext';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -122,13 +106,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       });
 
       return { error: null };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const authError = error as AuthError;
       toast({
         title: "Erro no login",
-        description: error.message,
+        description: authError.message,
         variant: "destructive"
       });
-      return { error };
+      return { error: authError };
     } finally {
       setLoading(false);
     }
@@ -176,13 +161,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       });
 
       return { error: null };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const authError = error as AuthError;
       toast({
         title: "Erro no cadastro",
-        description: error.message,
+        description: authError.message,
         variant: "destructive"
       });
-      return { error };
+      return { error: authError };
     } finally {
       setLoading(false);
     }
@@ -200,10 +186,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso."
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const authError = error as AuthError;
       toast({
         title: "Erro no logout",
-        description: error.message,
+        description: authError.message,
         variant: "destructive"
       });
     }
@@ -233,13 +220,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       });
 
       return { error: null };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const authError = error as AuthError;
       toast({
         title: "Erro ao enviar email",
-        description: error.message,
+        description: authError.message,
         variant: "destructive"
       });
-      return { error };
+      return { error: authError };
     }
   };
 
@@ -265,13 +253,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       });
 
       return { error: null };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const authError = error as AuthError;
       toast({
         title: "Erro ao atualizar senha",
-        description: error.message,
+        description: authError.message,
         variant: "destructive"
       });
-      return { error };
+      return { error: authError };
     }
   };
 
@@ -303,13 +292,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       });
 
       return { error: null };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const authError = error as AuthError;
       toast({
         title: "Erro ao atualizar perfil",
-        description: error.message,
+        description: authError.message,
         variant: "destructive"
       });
-      return { error };
+      return { error: authError };
     }
   };
 
@@ -333,12 +323,4 @@ export function AuthProvider({ children }: AuthProviderProps) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 }

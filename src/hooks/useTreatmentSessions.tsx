@@ -20,7 +20,7 @@ export interface TreatmentSession {
   equipment_used?: string[] | null;
   patient_response?: string | null;
   homework_assigned?: string | null;
-  attachments?: any | null;
+  attachments?: { name: string; url: string; type: string; size?: number }[] | null;
 }
 
 export interface SessionExercise {

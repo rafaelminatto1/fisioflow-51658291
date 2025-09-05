@@ -97,7 +97,7 @@ export function NewExercisePlanModal({ trigger, open, onOpenChange }: NewExercis
             </div>
             <div>
               <label className="text-sm font-medium">Status</label>
-              <Select value={formData.status} onValueChange={(value: any) => setFormData(prev => ({ ...prev, status: value }))}>
+              <Select value={formData.status} onValueChange={(value: 'Ativo' | 'Inativo' | 'Concluído') => setFormData(prev => ({ ...prev, status: value }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

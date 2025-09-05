@@ -4,19 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  BarChart3, 
   DollarSign, 
   Users, 
   Calendar,
   Heart,
-  TrendingUp,
   Clock,
-  Target,
   AlertCircle,
   Download
 } from 'lucide-react';
 import { subDays } from 'date-fns';
-import { DateRange } from 'react-day-picker';
+
 
 import { MainLayout } from '@/components/layout/MainLayout';
 import { MetricCard } from '@/components/analytics/MetricCard';

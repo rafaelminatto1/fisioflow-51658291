@@ -81,9 +81,11 @@ export const WaitingListWidget = () => {
     }
   };
 
+  type WaitingListStatus = 'waiting' | 'contacted' | 'scheduled' | 'cancelled';
+
   const handleStatusChange = async (id: string, status: string) => {
     try {
-      await updateWaitingListEntry(id, { status: status as any });
+      await updateWaitingListEntry(id, { status: status as WaitingListStatus });
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
     }

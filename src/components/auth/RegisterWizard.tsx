@@ -314,7 +314,7 @@ export function RegisterWizard({ onComplete }: RegisterWizardProps) {
           </div>
         );
 
-      case 3:
+      case 3: {
         const isProfessional = ['fisioterapeuta', 'estagiario'].includes(formData.userType || '');
         
         if (!isProfessional) {
@@ -414,6 +414,7 @@ export function RegisterWizard({ onComplete }: RegisterWizardProps) {
             </form>
           </div>
         );
+      }
 
       case 4:
         return (

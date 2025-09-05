@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -9,7 +9,7 @@ export function useExerciseFavorites() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const fetchFavorites = async () => {
+  const fetchFavorites = useCallback(async () => {
     if (!user) {
       setFavorites(new Set());
       setLoading(false);
@@ -31,7 +31,7 @@ export function useExerciseFavorites() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   const toggleFavorite = async (exerciseId: string) => {
     if (!user) {
@@ -115,7 +115,7 @@ export function useExerciseFavorites() {
 
   useEffect(() => {
     fetchFavorites();
-  }, [user]);
+  }, [fetchFavorites]);
 
   return {
     favorites: Array.from(favorites),

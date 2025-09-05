@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { StatCard } from './StatCard';
 import { AppointmentWidget } from './AppointmentWidget';
 import { ChartWidget } from './ChartWidget';
@@ -43,7 +43,7 @@ export function PatientDashboard({ lastUpdate, profile }: PatientDashboardProps)
   const [messages, setMessages] = useState([]);
   const [documents, setDocuments] = useState([]);
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -190,7 +190,7 @@ export function PatientDashboard({ lastUpdate, profile }: PatientDashboardProps)
     } finally {
       setLoading(false);
     }
-  };
+  }, [profile.id, profile.full_name, profile.user_id, profile.birth_date]);
 
   useEffect(() => {
     loadDashboardData();
@@ -207,7 +207,7 @@ export function PatientDashboard({ lastUpdate, profile }: PatientDashboardProps)
     return () => {
       supabase.removeChannel(appointmentsSubscription);
     };
-  }, [lastUpdate, profile.id]);
+  }, [lastUpdate, loadDashboardData]);
 
   return (
     <div className="space-y-6 animate-fade-in">

@@ -5,8 +5,8 @@ import { ptBR } from 'date-fns/locale';
 
 export interface ExportConfig {
   title: string;
-  data: any[];
-  columns: { key: string; label: string; format?: (value: any) => string }[];
+  data: Record<string, unknown>[];
+  columns: { key: string; label: string; format?: () => string }[];
   summary?: { label: string; value: string }[];
   filters?: { label: string; value: string }[];
 }
@@ -81,7 +81,7 @@ export class ExportService {
       // Data rows (first 20 rows to fit on page)
       config.data.slice(0, 20).forEach(row => {
         config.columns.forEach((col, index) => {
-          const value = col.format ? col.format(row[col.key]) : row[col.key];
+          const value = col.format ? col.format() : row[col.key];
           pdf.text(String(value || ''), startX + (index * colWidth), yPosition);
         });
         yPosition += 6;
@@ -109,7 +109,7 @@ export class ExportService {
       ...config.data.map(row => 
         config.columns.map(col => {
           const value = row[col.key];
-          return col.format ? col.format(value) : value;
+          return col.format ? col.format() : value;
         })
       )
     ];
@@ -146,7 +146,7 @@ export class ExportService {
     config.data.forEach(row => {
       const values = config.columns.map(col => {
         const value = row[col.key];
-        const formattedValue = col.format ? col.format(value) : value;
+        const formattedValue = col.format ? col.format() : value;
         // Escape quotes and wrap in quotes if contains comma
         const stringValue = String(formattedValue || '');
         return stringValue.includes(',') ? `"${stringValue.replace(/"/g, '""')}"` : stringValue;

@@ -28,7 +28,7 @@ export class ProviderRotator {
   
   async query(question: string, context: AIQueryContext): Promise<ProviderResponse | null> {
     try {
-      const availableProvider = await this.getAvailableProvider(context.priority);
+      const availableProvider = await this.getAvailableProvider();
       
       if (!availableProvider) {
         console.warn('No available providers for AI query');
@@ -53,7 +53,7 @@ export class ProviderRotator {
     }
   }
 
-  private async getAvailableProvider(priority: string = 'medium'): Promise<ProviderAccount | null> {
+  private async getAvailableProvider(): Promise<ProviderAccount | null> {
     try {
       const { data: providers } = await supabase
         .from('ai_provider_accounts')
@@ -105,13 +105,13 @@ export class ProviderRotator {
       // Em produção, aqui seria implementada a integração real com cada provedor
       switch (provider.provider) {
         case 'chatgpt':
-          return await this.queryChatGPT(question, context);
+          return await this.queryChatGPT(question);
         case 'claude':
-          return await this.queryClaude(question, context);
+          return await this.queryClaude(question);
         case 'gemini':
-          return await this.queryGemini(question, context);
+          return await this.queryGemini(question);
         case 'perplexity':
-          return await this.queryPerplexity(question, context);
+          return await this.queryPerplexity(question);
         default:
           return null;
       }
@@ -121,7 +121,7 @@ export class ProviderRotator {
     }
   }
 
-  private async queryChatGPT(question: string, context: AIQueryContext): Promise<{ text: string; confidence: number } | null> {
+  private async queryChatGPT(question: string): Promise<{ text: string; confidence: number } | null> {
     // Simulação - em produção seria integração real com ChatGPT Plus
     await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
     
@@ -131,7 +131,7 @@ export class ProviderRotator {
     };
   }
 
-  private async queryClaude(question: string, context: AIQueryContext): Promise<{ text: string; confidence: number } | null> {
+  private async queryClaude(question: string): Promise<{ text: string; confidence: number } | null> {
     // Simulação - em produção seria integração real com Claude Pro
     await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 800));
     
@@ -141,7 +141,7 @@ export class ProviderRotator {
     };
   }
 
-  private async queryGemini(question: string, context: AIQueryContext): Promise<{ text: string; confidence: number } | null> {
+  private async queryGemini(question: string): Promise<{ text: string; confidence: number } | null> {
     // Simulação - em produção seria integração real com Gemini Pro
     await new Promise(resolve => setTimeout(resolve, 1200 + Math.random() * 600));
     
@@ -151,7 +151,7 @@ export class ProviderRotator {
     };
   }
 
-  private async queryPerplexity(question: string, context: AIQueryContext): Promise<{ text: string; confidence: number } | null> {
+  private async queryPerplexity(question: string): Promise<{ text: string; confidence: number } | null> {
     // Simulação - em produção seria integração real com Perplexity Pro
     await new Promise(resolve => setTimeout(resolve, 900 + Math.random() * 700));
     
@@ -194,7 +194,15 @@ export class ProviderRotator {
     }
   }
 
-  async getProviderStats(): Promise<any> {
+  async getProviderStats(): Promise<{
+    provider: string;
+    account: string;
+    isActive: boolean;
+    usage: number;
+    limit: number;
+    utilizationRate: number;
+    lastUsed: string | null;
+  }[]> {
     try {
       const { data: providers } = await supabase
         .from('ai_provider_accounts')

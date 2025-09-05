@@ -394,7 +394,7 @@ describe('Error Handlers', () => {
           throw new ValidationError('Initial validation error', {
             field: 'Invalid field'
           });
-        } catch (error) {
+        } catch {
           throw new AppError('Wrapped error', 'WRAPPED_ERROR', 500);
         }
       };

@@ -97,7 +97,7 @@ export function SmartProgressionManager({ patientId, exercisePlanId }: SmartProg
     if (autoProgressionEnabled && patientProgress.length >= 2) {
       analyzeProgress();
     }
-  }, [patientProgress.length, autoProgressionEnabled]);
+  }, [patientProgress.length, autoProgressionEnabled, analyzeProgress]);
 
   const getActionIcon = (action: string) => {
     switch (action) {

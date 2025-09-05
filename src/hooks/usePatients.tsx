@@ -86,7 +86,7 @@ export function usePatients() {
 
   const updatePatient = async (id: string, updates: Partial<Patient>) => {
     try {
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
       
       if (updates.name) updateData.name = updates.name;
       if (updates.email !== undefined) updateData.email = updates.email || null;

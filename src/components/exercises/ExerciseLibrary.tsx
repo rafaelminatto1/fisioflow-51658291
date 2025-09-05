@@ -15,9 +15,19 @@ import { useExercises } from '@/hooks/useExercises';
 import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';
 import { Search, Filter, Heart, Grid, List } from 'lucide-react';
 
+interface Exercise {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  difficulty: string;
+  targetMuscles: string[];
+  equipment?: string[];
+}
+
 interface ExerciseLibraryProps {
-  onExerciseSelect?: (exercise: any) => void;
-  selectedExercises?: any[];
+  onExerciseSelect?: (exercise: Exercise) => void;
+  selectedExercises?: Exercise[];
   showSelectionMode?: boolean;
   className?: string;
 }
@@ -97,7 +107,7 @@ export function ExerciseLibrary({
     return selectedExercises.some(ex => ex.id === exerciseId);
   };
 
-  const handleExerciseAction = (exercise: any) => {
+  const handleExerciseAction = (exercise: Exercise) => {
     if (showSelectionMode && onExerciseSelect) {
       onExerciseSelect(exercise);
     }

@@ -62,11 +62,35 @@ export interface SOAPRecord {
   appointmentId?: string;
   sessionNumber: number;
   subjective?: string; // Queixa do paciente
-  objective?: any; // Exame físico estruturado (JSON)
+  objective?: {
+    inspection?: string;
+    palpation?: string;
+    movement_tests?: Record<string, string>;
+    special_tests?: Record<string, boolean>;
+    posture_analysis?: string;
+  }; // Exame físico estruturado (JSON)
   assessment?: string; // Avaliação/Diagnóstico
-  plan?: any; // Plano de tratamento (JSON)
-  vitalSigns?: any; // Sinais vitais (JSON)
-  functionalTests?: any; // Testes funcionais (JSON)
+  plan?: {
+    short_term_goals?: string[];
+    long_term_goals?: string[];
+    interventions?: string[];
+    frequency?: string;
+    duration?: string;
+    home_exercises?: string[];
+  }; // Plano de tratamento (JSON)
+  vitalSigns?: {
+    blood_pressure?: string;
+    heart_rate?: number;
+    temperature?: number;
+    respiratory_rate?: number;
+    oxygen_saturation?: number;
+  }; // Sinais vitais (JSON)
+  functionalTests?: {
+    range_of_motion?: Record<string, number>;
+    muscle_strength?: Record<string, number>;
+    balance_tests?: Record<string, string>;
+    functional_scales?: Record<string, number>;
+  }; // Testes funcionais (JSON)
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;

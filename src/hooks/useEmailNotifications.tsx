@@ -20,7 +20,7 @@ export interface EmailNotification {
   template_id: string;
   subject: string;
   content: string;
-  variables: Record<string, any>;
+  variables: Record<string, unknown>;
   status: 'pending' | 'sent' | 'failed' | 'scheduled';
   scheduled_for?: string;
   sent_at?: string;
@@ -71,7 +71,7 @@ export function useEmailNotifications() {
     recipientEmail: string,
     recipientName: string,
     templateId: string,
-    variables: Record<string, any> = {},
+    variables: Record<string, unknown> = {},
     scheduledFor?: string
   ) => {
     toast.info('Email functionality not yet implemented');

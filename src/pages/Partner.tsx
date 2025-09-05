@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -42,13 +42,7 @@ export default function Partner() {
   const [patients, setPatients] = useState<PatientWithVoucher[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (profile?.role === 'parceiro') {
-      loadPartnerData();
-    }
-  }, [profile]);
-
-  const loadPartnerData = async () => {
+  const loadPartnerData = useCallback(async () => {
     try {
       // Load partner stats
       const { data: commissions } = await supabase
@@ -105,7 +99,13 @@ export default function Partner() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [profile?.user_id]);
+
+  useEffect(() => {
+    if (profile?.role === 'parceiro') {
+      loadPartnerData();
+    }
+  }, [profile?.role, loadPartnerData]);
 
   if (profile?.role !== 'parceiro') {
     return (

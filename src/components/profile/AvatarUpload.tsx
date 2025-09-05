@@ -79,11 +79,12 @@ export function AvatarUpload({ currentAvatar, onAvatarUpdate }: AvatarUploadProp
         description: "Sua foto de perfil foi alterada com sucesso."
       });
 
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido no upload';
       console.error('Erro no upload:', error);
       toast({
         title: "Erro no upload",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -130,11 +131,12 @@ export function AvatarUpload({ currentAvatar, onAvatarUpdate }: AvatarUploadProp
         description: "Sua foto de perfil foi removida."
       });
 
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao remover avatar';
       console.error('Erro ao remover avatar:', error);
       toast({
         title: "Erro ao remover avatar",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {

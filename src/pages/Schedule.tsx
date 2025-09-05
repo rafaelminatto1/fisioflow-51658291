@@ -11,16 +11,12 @@ import { ScheduleViewToggle, ScheduleView } from '@/components/appointments/Sche
 import { MonthlyCalendarView } from '@/components/appointments/MonthlyCalendarView';
 import { DailyScheduleView } from '@/components/appointments/DailyScheduleView';
 import { AppointmentListView } from '@/components/appointments/AppointmentListView';
-import { useData } from '@/contexts/DataContext';
+
 import { useAppointments } from '@/hooks/useAppointments';
 import { 
   Plus, 
   Calendar as CalendarIcon, 
-  Clock, 
-  User,
-  Phone,
-  ChevronLeft,
-  ChevronRight
+  Clock
 } from 'lucide-react';
 import { format, startOfWeek, addDays, addWeeks, subWeeks, isSameDay, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -31,7 +27,7 @@ const Schedule = () => {
   });
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<{ date: Date; time: string } | null>(null);
-  const [selectedAppointment, setSelectedAppointment] = useState<any | null>(null);
+  const [selectedAppointment, setSelectedAppointment] = useState<{ id: string; patient_id: string; date: string; time: string; duration: number; type: string; status: string; notes?: string } | null>(null);
   const { appointments, updateAppointment } = useAppointments();
   
   // Save view preference to localStorage
@@ -151,7 +147,7 @@ const Schedule = () => {
 
   const handleStatusChange = async (appointmentId: string, status: string) => {
     try {
-      await updateAppointment(appointmentId, { status: status as any });
+      await updateAppointment(appointmentId, { status });
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
     }

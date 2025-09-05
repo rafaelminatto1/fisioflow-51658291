@@ -18,21 +18,44 @@ export interface Profile {
   bio?: string;
   experience_years?: number;
   consultation_fee?: number;
-  available_hours?: any;
-  notification_preferences?: any;
+  available_hours?: Record<string, string[]>;
+  notification_preferences?: {
+    email: boolean;
+    sms: boolean;
+    push: boolean;
+    appointment_reminders: boolean;
+    marketing: boolean;
+  };
   onboarding_completed: boolean;
   last_login_at?: string;
   timezone?: string;
   is_active: boolean;
-  emergency_contact?: any;
+  emergency_contact?: {
+    name: string;
+    phone: string;
+    relationship: string;
+  };
   created_at: string;
   updated_at: string;
 }
 
 export interface AuthState {
-  user: any | null;
+  user: {
+    id: string;
+    email: string;
+    created_at: string;
+    updated_at: string;
+  } | null;
   profile: Profile | null;
-  session: any | null;
+  session: {
+    access_token: string;
+    refresh_token: string;
+    expires_at: number;
+    user: {
+      id: string;
+      email: string;
+    };
+  } | null;
   loading: boolean;
   role?: UserRole;
 }

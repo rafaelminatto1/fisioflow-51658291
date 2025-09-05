@@ -14,9 +14,27 @@ import { supabase } from '@/integrations/supabase/client';
 import { aiOrchestrator } from '@/services/ai/AIOrchestrator';
 
 export default function SmartAI() {
-  const [usageStats, setUsageStats] = useState<any>(null);
-  const [knowledgeStats, setKnowledgeStats] = useState<any>(null);
-  const [providerStats, setProviderStats] = useState<any[]>([]);
+  const [usageStats, setUsageStats] = useState<{
+    totalRequests: number;
+    successRate: number;
+    averageResponseTime: number;
+    sourceDistribution: Record<string, number>;
+    cacheHitRate: number;
+  } | null>(null);
+  const [knowledgeStats, setKnowledgeStats] = useState<{
+    totalEntries: number;
+    byType: Record<string, number>;
+    averageConfidence: number;
+  } | null>(null);
+  const [providerStats, setProviderStats] = useState<{
+    provider: string;
+    account: string;
+    isActive: boolean;
+    usage: number;
+    limit: number;
+    utilizationRate: number;
+    lastUsed?: string;
+  }[]>([]);
   const [showContributor, setShowContributor] = useState(false);
   const { isLoading } = useAI();
 
@@ -213,7 +231,7 @@ export default function SmartAI() {
                   <CardTitle>Distribuição por Fonte</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {usageStats?.sourceDistribution && Object.entries(usageStats.sourceDistribution).map(([source, count]: [string, any]) => (
+                  {usageStats?.sourceDistribution && Object.entries(usageStats.sourceDistribution).map(([source, count]: [string, number]) => (
                     <div key={source} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className={`w-3 h-3 rounded-full ${getSourceColor(source)}`} />
@@ -341,7 +359,7 @@ export default function SmartAI() {
                   </div>
                   
                   <div className="space-y-2">
-                    {knowledgeStats?.byType && Object.entries(knowledgeStats.byType).map(([type, count]: [string, any]) => (
+                    {knowledgeStats?.byType && Object.entries(knowledgeStats.byType).map(([type, count]: [string, number]) => (
                       <div key={type} className="flex justify-between items-center">
                         <span className="capitalize">{type.replace('_', ' ')}</span>
                         <Badge variant="outline">{count}</Badge>

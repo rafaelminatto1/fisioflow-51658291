@@ -91,7 +91,7 @@ describe('Patient Validations', () => {
         email: 'maria@example.com',
         phone: '(11) 99999-9999',
         birthDate: '1990-05-15',
-        gender: 'invalid' as any,
+        gender: 'invalid' as 'male' | 'female' | 'other',
         cpf: '111.444.777-35',
          street: 'Rua Test',
          number: '123',
@@ -270,7 +270,7 @@ describe('Patient Validations', () => {
     it('should reject invalid sort field', () => {
       const invalidSearch = {
         query: 'Silva',
-        sortBy: 'invalid_field' as any
+        sortBy: 'invalid_field' as 'firstName' | 'lastName' | 'createdAt'
       };
       
       const result = searchPatientSchema.safeParse(invalidSearch);

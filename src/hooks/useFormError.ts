@@ -20,7 +20,7 @@ export const useFormError = <T extends FieldValues>() => {
         fieldErrors[path] = {
           type: 'validation',
           message: err.message
-        } as any;
+        } as FieldError;
       }
     });
     
@@ -40,7 +40,7 @@ export const useFormError = <T extends FieldValues>() => {
           fieldErrors[field as Path<T>] = {
             type: 'server',
             message: Array.isArray(messages) ? messages[0] : messages
-          } as any;
+          } as FieldError;
         });
         
         return fieldErrors;
@@ -70,8 +70,8 @@ export const useFormError = <T extends FieldValues>() => {
       Object.entries(fieldErrors).forEach(([field, error]) => {
         if (error && typeof error === 'object' && 'message' in error) {
         setError(field as Path<T>, {
-          type: (error as any).type || 'server',
-          message: String((error as any).message)
+          type: (error as Record<string, unknown>).type as string || 'server',
+          message: String((error as Record<string, unknown>).message)
         });
         }
       });

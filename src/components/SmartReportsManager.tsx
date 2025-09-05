@@ -86,7 +86,7 @@ const SmartReportsManager: React.FC<SmartReportsManagerProps> = ({
     if (filters.report_type === 'progress' || filters.report_type === 'both') {
       fetchProgressReports(filters);
     }
-  }, [filters]);
+  }, [filters, fetchAdherenceReports, fetchProgressReports]);
 
   const handleGenerateAdherenceReport = async () => {
     if (!filters.patient_id || !filters.plan_id) return;

@@ -163,7 +163,7 @@ export function useSmartProgression() {
 
       // Aplicar ajustes a cada item
       const updatePromises = planItems?.map(async (item) => {
-        const updates: any = {};
+        const updates: Partial<Pick<ExercisePlanItem, 'sets' | 'reps' | 'rest_time'>> = {};
         
         if (adjustments.sets) {
           updates.sets = Math.max(1, item.sets + adjustments.sets);

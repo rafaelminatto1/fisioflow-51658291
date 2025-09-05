@@ -65,7 +65,7 @@ export function useMedicalRecords() {
 
   const updateMedicalRecord = async (id: string, updates: Partial<MedicalRecord>) => {
     try {
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
       
       if (updates.patient_id) updateData.patient_id = updates.patient_id;
       if (updates.type) updateData.type = updates.type;

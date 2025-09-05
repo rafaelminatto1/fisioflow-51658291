@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useData } from '@/contexts/DataContext';
 import { useTreatmentSessions, TreatmentSession } from '@/hooks/useTreatmentSessions';
-import { useExercisePlans } from '@/hooks/useExercisePlans';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -16,16 +15,14 @@ import { Slider } from '@/components/ui/slider';
 import { Separator } from '@/components/ui/separator';
 import { 
   Plus, 
-  Activity, 
-  TrendingUp, 
-  Target, 
   Clock, 
-  User, 
-  Calendar,
   CheckCircle,
-  AlertCircle,
   XCircle,
-  BarChart3
+  User,
+  Activity,
+  TrendingUp,
+  Target,
+  Calendar
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -51,30 +48,39 @@ interface NewSessionForm {
   pain_level_after: number;
   functional_score_before: number;
   functional_score_after: number;
-  exercises: any[];
+  exercises: {
+    id: number;
+    name: string;
+    sets: number;
+    reps: number;
+    duration: number;
+    notes: string;
+  }[];
 }
 
 export default function TreatmentSessionManager({ selectedPatientId }: TreatmentSessionManagerProps) {
   const {
-    sessions,
-    loading,
     createSession,
-    updateSession,
-    deleteSession,
     fetchSessionsByPatient,
     getPatientTimeline
   } = useTreatmentSessions();
 
   const { patients } = useData();
-  const { exercisePlans } = useExercisePlans();
+
   const { toast } = useToast();
 
   const [selectedPatient, setSelectedPatient] = useState<string>('');
   const [patientSessions, setPatientSessions] = useState<TreatmentSession[]>([]);
-  const [patientTimeline, setPatientTimeline] = useState<any[]>([]);
+  const [patientTimeline, setPatientTimeline] = useState<{
+    session_date: string;
+    pain_level: number;
+    functional_score: number;
+  }[]>([]);
   const [isNewSessionOpen, setIsNewSessionOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('sessions');
+
+
 
   const [newSessionForm, setNewSessionForm] = useState<NewSessionForm>({
     patient_id: selectedPatientId || '',
@@ -101,7 +107,7 @@ export default function TreatmentSessionManager({ selectedPatientId }: Treatment
     if (selectedPatient) {
       loadPatientData(selectedPatient);
     }
-  }, [selectedPatient]);
+  }, [selectedPatient, loadPatientData]);
 
   // Set initial patient if provided via props
   useEffect(() => {
@@ -111,7 +117,7 @@ export default function TreatmentSessionManager({ selectedPatientId }: Treatment
     }
   }, [selectedPatientId]);
 
-  const loadPatientData = async (patientId: string) => {
+  const loadPatientData = useCallback(async (patientId: string) => {
     try {
       const [sessionsData, timelineData] = await Promise.all([
         fetchSessionsByPatient(patientId),
@@ -127,7 +133,7 @@ export default function TreatmentSessionManager({ selectedPatientId }: Treatment
         variant: "destructive",
       });
     }
-  };
+  }, [fetchSessionsByPatient, getPatientTimeline, toast]);
 
   const handleCreateSession = async () => {
     try {
@@ -212,7 +218,7 @@ export default function TreatmentSessionManager({ selectedPatientId }: Treatment
     }));
   };
 
-  const updateExercise = (index: number, field: string, value: any) => {
+  const updateExercise = (index: number, field: string, value: string | number) => {
     setNewSessionForm(prev => ({
       ...prev,
       exercises: prev.exercises.map((ex, i) => 

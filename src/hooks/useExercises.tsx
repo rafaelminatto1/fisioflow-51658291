@@ -70,7 +70,7 @@ export function useExercises() {
 
   const updateExercise = async (id: string, updates: Partial<Exercise>) => {
     try {
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
       
       if (updates.name) updateData.name = updates.name;
       if (updates.category) updateData.category = updates.category;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { useData } from '@/contexts/DataContext';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -23,8 +23,7 @@ import {
   AlertCircle,
   Download,
   Eye,
-  Edit2,
-  Trash2
+  Edit2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -140,7 +139,7 @@ export function MedicalRecord() {
                     </div>
                     <div>
                       <label className="text-sm font-medium">Tipo</label>
-                      <Select value={newRecord.type} onValueChange={(value: any) => setNewRecord(prev => ({ ...prev, type: value }))}>
+                      <Select value={newRecord.type} onValueChange={(value: string) => setNewRecord(prev => ({ ...prev, type: value }))}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>

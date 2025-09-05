@@ -75,7 +75,7 @@ export function useSOAPRecords() {
 
   const updateRecord = async (id: string, updates: Partial<SOAPRecord>) => {
     try {
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
       
       if (updates.subjective !== undefined) updateData.subjective = updates.subjective;
       if (updates.objective !== undefined) updateData.objective = updates.objective;

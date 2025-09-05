@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { StatCard } from './StatCard';
 import { AppointmentWidget } from './AppointmentWidget';
 import { ChartWidget } from './ChartWidget';
@@ -12,15 +12,13 @@ import {
   Users, 
   Calendar, 
   Activity, 
-  Clock,
-  TrendingUp,
   Star,
   CheckCircle,
   Target,
   Brain,
   MessageSquare
 } from 'lucide-react';
-import { format, isToday } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -42,7 +40,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
   const [progressData, setProgressData] = useState([]);
   const [tasks, setTasks] = useState([]);
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -129,7 +127,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
     } finally {
       setLoading(false);
     }
-  };
+  }, [profile.user_id]);
 
   useEffect(() => {
     loadDashboardData();
@@ -146,7 +144,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
     return () => {
       supabase.removeChannel(appointmentsSubscription);
     };
-  }, [lastUpdate, profile.user_id]);
+  }, [lastUpdate, loadDashboardData]);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {

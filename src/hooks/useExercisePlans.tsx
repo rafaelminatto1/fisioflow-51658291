@@ -75,7 +75,7 @@ export function useExercisePlans() {
 
   const updateExercisePlan = async (id: string, updates: Partial<ExercisePlan>) => {
     try {
-      const updateData: any = {};
+      const updateData: Partial<Pick<ExercisePlan, 'name' | 'description' | 'patient_id' | 'status'>> = {};
       
       if (updates.name) updateData.name = updates.name;
       if (updates.description !== undefined) updateData.description = updates.description;

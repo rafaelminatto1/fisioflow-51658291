@@ -118,7 +118,11 @@ export function NewExerciseModal({ trigger }: NewExerciseModalProps) {
   };
 
   const onSubmit = (data: ExerciseFormData) => {
-    addExercise(data as any);
+    const exerciseData = {
+      ...data,
+      equipment: data.equipment || []
+    };
+    addExercise(exerciseData);
     
     toast({
       title: 'Exercício criado!',

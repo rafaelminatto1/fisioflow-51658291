@@ -50,7 +50,7 @@ export default function Auth() {
         });
         navigate('/');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('Erro inesperado. Tente novamente.');
     } finally {
       setLoading(false);
@@ -89,7 +89,7 @@ export default function Auth() {
           description: "Verifique seu email para confirmar a conta",
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('Erro inesperado. Tente novamente.');
     } finally {
       setLoading(false);

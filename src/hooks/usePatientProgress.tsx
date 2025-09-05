@@ -62,7 +62,7 @@ export function usePatientProgress() {
 
   const updatePatientProgress = async (id: string, updates: Partial<PatientProgress>) => {
     try {
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
       
       if (updates.patient_id) updateData.patient_id = updates.patient_id;
       if (updates.progress_date) updateData.progress_date = updates.progress_date;

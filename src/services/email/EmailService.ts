@@ -6,10 +6,7 @@ import type {
   EmailResult,
   EmailConfig,
   EmailServiceConfig,
-  RetryConfig,
-  EmailQueueItem,
-  EmailAddress,
-  EmailStats
+  EmailAddress
 } from './types';
 import { supabase } from '@/lib/supabase';
 
@@ -35,7 +32,7 @@ export class EmailService {
       case 'sendgrid':
         return new SendGridProvider(config);
       default:
-        throw new Error(`Unsupported email provider: ${(config as any).provider}`);
+        throw new Error(`Unsupported email provider: ${(config as EmailServiceConfig).provider}`);
     }
   }
 
@@ -85,7 +82,7 @@ export class EmailService {
   async sendTemplate(
     templateId: string,
     to: EmailAddress | EmailAddress[],
-    variables?: Record<string, any>
+    variables?: Record<string, string | number | boolean>
   ): Promise<EmailResult> {
     const startTime = Date.now();
     
@@ -190,7 +187,7 @@ export class EmailService {
   private async sendTemplateWithRetry(
     templateId: string,
     to: EmailAddress | EmailAddress[],
-    variables?: Record<string, any>
+    variables?: Record<string, string | number | boolean>
   ): Promise<EmailResult> {
     const { maxAttempts, backoffMultiplier, initialDelay, maxDelay } = this.config.retry;
     
@@ -282,7 +279,7 @@ export class EmailService {
     }
   }
 
-  private async processQueueItem(item: any): Promise<void> {
+  private async processQueueItem(item: { notification_id: string; recipient_email: string; subject: string; content: string }): Promise<void> {
     const emailOptions: EmailOptions = {
       to: { email: item.recipient_email },
       from: {
@@ -351,19 +348,10 @@ export class EmailService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  private log(level: 'info' | 'warn' | 'error', message: string, meta?: any): void {
+  private log(level: 'info' | 'warn' | 'error', message: string, meta?: Record<string, unknown>): void {
     if (!this.config.enableLogging) {
       return;
     }
-
-    const logEntry = {
-      timestamp: new Date().toISOString(),
-      level,
-      message,
-      service: 'EmailService',
-      provider: this.provider.name,
-      ...meta
-    };
 
     console.log(`[${level.toUpperCase()}] ${message}`, meta || '');
     

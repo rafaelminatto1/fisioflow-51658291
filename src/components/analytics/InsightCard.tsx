@@ -26,7 +26,7 @@ interface InsightCardProps {
   };
   onDismiss?: () => void;
   timestamp?: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, string | number>;
 }
 
 const INSIGHT_CONFIG = {
@@ -156,7 +156,11 @@ export function InsightCard({
 }
 
 // Automated insight generation
-export function generateInsights(data: any): InsightCardProps[] {
+export function generateInsights(data: {
+  revenue?: Array<{ value: number }>;
+  occupancyRate?: number;
+  noShowRate?: number;
+}): InsightCardProps[] {
   const insights: InsightCardProps[] = [];
   
   // Revenue trend analysis

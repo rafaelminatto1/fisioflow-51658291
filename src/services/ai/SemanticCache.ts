@@ -97,7 +97,13 @@ export class SemanticCache {
     return simpleHash(normalized);
   }
 
-  private async findSemanticMatch(query: string): Promise<any> {
+  private async findSemanticMatch(query: string): Promise<{
+    id: string;
+    query_text: string;
+    response: string;
+    confidence_score: number;
+    similarity: number;
+  } | null> {
     try {
       // Busca por palavras-chave em comum
       const keywords = this.extractKeywords(query);

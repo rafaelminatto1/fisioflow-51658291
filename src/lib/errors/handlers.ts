@@ -7,14 +7,14 @@ export class AppError extends Error {
   public readonly statusCode: number;
   public readonly isOperational: boolean;
   public readonly context?: string;
-  public readonly metadata?: Record<string, any>;
+  public readonly metadata?: Record<string, unknown>;
 
   constructor(
     message: string,
     statusCode: number = 500,
     isOperational: boolean = true,
     context?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ) {
     super(message);
     this.name = 'AppError';
@@ -35,7 +35,7 @@ export class ValidationError extends AppError {
     message: string,
     field?: string,
     validationErrors?: Record<string, string[]>,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ) {
     super(message, 400, true, 'ValidationError', metadata);
     this.name = 'ValidationError';
@@ -51,7 +51,7 @@ export class AuthError extends AppError {
     message: string,
     statusCode: number = 401,
     authAction?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ) {
     super(message, statusCode, true, 'AuthError', metadata);
     this.name = 'AuthError';
@@ -68,7 +68,7 @@ export class NetworkError extends AppError {
     statusCode: number = 0,
     endpoint?: string,
     method?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ) {
     super(message, statusCode, true, 'NetworkError', metadata);
     this.name = 'NetworkError';
@@ -85,7 +85,7 @@ export class FileUploadError extends AppError {
     message: string,
     fileName?: string,
     fileSize?: number,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ) {
     super(message, 400, true, 'FileUploadError', metadata);
     this.name = 'FileUploadError';
@@ -97,7 +97,7 @@ export class FileUploadError extends AppError {
 // Handler principal de erros
 export class ErrorHandler {
   // Tratar erro de API
-  static handleApiError(error: any, endpoint?: string, method?: string): AppError {
+  static handleApiError(error: unknown, endpoint?: string, method?: string): AppError {
     let appError: AppError;
 
     if (error.response) {
@@ -166,7 +166,7 @@ export class ErrorHandler {
   }
 
   // Tratar erro de autenticação
-  static handleAuthError(error: any, action?: string): AuthError {
+  static handleAuthError(error: unknown, action?: string): AuthError {
     let message = 'Erro de autenticação';
     let statusCode = 401;
 
@@ -202,7 +202,7 @@ export class ErrorHandler {
   }
 
   // Tratar erro de upload de arquivo
-  static handleFileUploadError(error: any, fileName?: string, fileSize?: number): FileUploadError {
+  static handleFileUploadError(error: unknown, fileName?: string, fileSize?: number): FileUploadError {
     let message = 'Erro no upload do arquivo';
 
     // Mensagens específicas baseadas no tipo de erro
@@ -306,8 +306,8 @@ export class ErrorHandler {
   }
 
   // Serializar erro para envio
-  static serializeError(error: Error): Record<string, any> {
-    const serialized: Record<string, any> = {
+  static serializeError(error: Error): Record<string, unknown> {
+    const serialized: Record<string, unknown> = {
       name: error.name,
       message: error.message,
       stack: error.stack
@@ -344,8 +344,8 @@ export class ErrorHandler {
 }
 
 // Utilitários para tratamento de erros específicos
-export const handleAsyncError = (fn: Function) => {
-  return async (...args: any[]) => {
+export const handleAsyncError = (fn: (...args: unknown[]) => Promise<unknown>) => {
+  return async (...args: unknown[]) => {
     try {
       return await fn(...args);
     } catch (error) {
@@ -369,10 +369,10 @@ export const handleAsyncError = (fn: Function) => {
 };
 
 // Decorator para métodos de classe
-export const catchErrors = (target: any, propertyName: string, descriptor: PropertyDescriptor) => {
+export const catchErrors = (target: unknown, propertyName: string, descriptor: PropertyDescriptor) => {
   const method = descriptor.value;
   
-  descriptor.value = async function (...args: any[]) {
+  descriptor.value = async function (...args: unknown[]) {
     try {
       return await method.apply(this, args);
     } catch (error) {
@@ -398,7 +398,7 @@ export const catchErrors = (target: any, propertyName: string, descriptor: Prope
 import { useCallback } from 'react';
 
 export const useErrorHandler = () => {
-  const handleError = useCallback((error: any, context?: string) => {
+  const handleError = useCallback((error: unknown, context?: string) => {
     let appError: AppError;
 
     if (error instanceof AppError) {
@@ -420,7 +420,7 @@ export const useErrorHandler = () => {
     return appError;
   }, []);
 
-  const handleApiError = useCallback((error: any, endpoint?: string, method?: string) => {
+  const handleApiError = useCallback((error: unknown, endpoint?: string, method?: string) => {
     const appError = ErrorHandler.handleApiError(error, endpoint, method);
     ErrorHandler.showError(appError);
     return appError;

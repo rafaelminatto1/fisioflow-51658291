@@ -11,7 +11,7 @@ import { usePatientProgress, PatientProgress } from '@/hooks/usePatientProgress'
 interface DataContextType {
   // Patients
   patients: Patient[];
-  addPatient: (patient: Omit<Patient, 'id' | 'status' | 'progress' | 'createdAt' | 'updatedAt'>) => Promise<any>;
+  addPatient: (patient: Omit<Patient, 'id' | 'status' | 'progress' | 'createdAt' | 'updatedAt'>) => Promise<Patient>;
   updatePatient: (id: string, patient: Partial<Patient>) => Promise<void>;
   deletePatient: (id: string) => Promise<void>;
   getPatient: (id: string) => Patient | undefined;
@@ -19,7 +19,7 @@ interface DataContextType {
 
   // Appointments
   appointments: Appointment[];
-  addAppointment: (appointment: Omit<Appointment, 'id' | 'patientName' | 'phone' | 'createdAt' | 'updatedAt'>) => Promise<any>;
+  addAppointment: (appointment: Omit<Appointment, 'id' | 'patientName' | 'phone' | 'createdAt' | 'updatedAt'>) => Promise<Appointment>;
   updateAppointment: (id: string, appointment: Partial<Appointment>) => Promise<void>;
   deleteAppointment: (id: string) => Promise<void>;
   getAppointment: (id: string) => Appointment | undefined;
@@ -27,7 +27,7 @@ interface DataContextType {
 
   // Exercises
   exercises: Exercise[];
-  addExercise: (exercise: Omit<Exercise, 'id' | 'createdAt' | 'updatedAt'>) => Promise<any>;
+  addExercise: (exercise: Omit<Exercise, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Exercise>;
   updateExercise: (id: string, exercise: Partial<Exercise>) => Promise<void>;
   deleteExercise: (id: string) => Promise<void>;
   getExercise: (id: string) => Exercise | undefined;
@@ -35,7 +35,7 @@ interface DataContextType {
 
   // Exercise Plans
   exercisePlans: ExercisePlan[];
-  addExercisePlan: (plan: Omit<ExercisePlan, 'id' | 'created_at' | 'updated_at' | 'created_by'>) => Promise<any>;
+  addExercisePlan: (plan: Omit<ExercisePlan, 'id' | 'created_at' | 'updated_at' | 'created_by'>) => Promise<ExercisePlan>;
   updateExercisePlan: (id: string, plan: Partial<ExercisePlan>) => Promise<void>;
   deleteExercisePlan: (id: string) => Promise<void>;
   getExercisePlan: (id: string) => ExercisePlan | undefined;
@@ -43,7 +43,7 @@ interface DataContextType {
 
   // Medical Records
   medicalRecords: MedicalRecord[];
-  addMedicalRecord: (record: Omit<MedicalRecord, 'id' | 'created_at' | 'updated_at' | 'created_by'>) => Promise<any>;
+  addMedicalRecord: (record: Omit<MedicalRecord, 'id' | 'created_at' | 'updated_at' | 'created_by'>) => Promise<MedicalRecord>;
   updateMedicalRecord: (id: string, record: Partial<MedicalRecord>) => Promise<void>;
   deleteMedicalRecord: (id: string) => Promise<void>;
   getMedicalRecord: (id: string) => MedicalRecord | undefined;
@@ -51,7 +51,7 @@ interface DataContextType {
 
   // Treatment Sessions
   treatmentSessions: TreatmentSession[];
-  addTreatmentSession: (session: Omit<TreatmentSession, 'id' | 'created_at' | 'updated_at' | 'created_by'>) => Promise<any>;
+  addTreatmentSession: (session: Omit<TreatmentSession, 'id' | 'created_at' | 'updated_at' | 'created_by'>) => Promise<TreatmentSession>;
   updateTreatmentSession: (id: string, session: Partial<TreatmentSession>) => Promise<void>;
   deleteTreatmentSession: (id: string) => Promise<void>;
   getTreatmentSession: (id: string) => TreatmentSession | undefined;
@@ -60,7 +60,7 @@ interface DataContextType {
 
   // Patient Progress
   patientProgress: PatientProgress[];
-  addPatientProgress: (progress: Omit<PatientProgress, 'id' | 'created_at' | 'created_by'>) => Promise<any>;
+  addPatientProgress: (progress: Omit<PatientProgress, 'id' | 'created_at' | 'created_by'>) => Promise<PatientProgress>;
   updatePatientProgress: (id: string, progress: Partial<PatientProgress>) => Promise<void>;
   deletePatientProgress: (id: string) => Promise<void>;
   getProgressByPatient: (patientId: string) => PatientProgress[];

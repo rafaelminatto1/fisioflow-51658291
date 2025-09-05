@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,9 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { useEmailNotifications, EmailTemplate, EmailNotification } from '@/hooks/useEmailNotifications';
+import { useEmailNotifications, EmailTemplate } from '@/hooks/useEmailNotifications';
 import { usePatients } from '@/hooks/usePatients';
-import { Mail, Send, Calendar, Settings, Plus, Edit, Trash2, Eye, Clock, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { Mail, Send, Calendar, Plus, Edit, Trash2, Clock, CheckCircle, XCircle, AlertTriangle, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -25,7 +25,6 @@ export function EmailNotificationManager({ patientId }: EmailNotificationManager
     templates,
     notifications,
     config,
-    loading,
     fetchTemplates,
     fetchNotifications,
     fetchConfig,
@@ -42,7 +41,12 @@ export function EmailNotificationManager({ patientId }: EmailNotificationManager
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
   const [isConfigDialogOpen, setIsConfigDialogOpen] = useState(false);
   const [isSendDialogOpen, setIsSendDialogOpen] = useState(false);
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<{
+    total_sent: number;
+    total_failed: number;
+    total_scheduled: number;
+    total_templates: number;
+  } | null>(null);
 
   // Form states
   const [templateForm, setTemplateForm] = useState<{
@@ -82,7 +86,7 @@ export function EmailNotificationManager({ patientId }: EmailNotificationManager
     fetchConfig();
     fetchPatients();
     loadStats();
-  }, [patientId]);
+  }, [patientId, fetchTemplates, fetchNotifications, fetchConfig, fetchPatients, loadStats]);
 
   useEffect(() => {
     if (config) {
@@ -96,17 +100,17 @@ export function EmailNotificationManager({ patientId }: EmailNotificationManager
     }
   }, [config]);
 
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     const data = await getStats();
     setStats(data);
-  };
+  }, [getStats]);
 
   const handleCreateTemplate = async () => {
     try {
       await createTemplate(templateForm);
       setIsTemplateDialogOpen(false);
       resetTemplateForm();
-    } catch (error) {
+    } catch {
       // Error handled in hook
     }
   };
@@ -119,7 +123,7 @@ export function EmailNotificationManager({ patientId }: EmailNotificationManager
       setIsTemplateDialogOpen(false);
       setSelectedTemplate(null);
       resetTemplateForm();
-    } catch (error) {
+    } catch {
       // Error handled in hook
     }
   };
@@ -144,7 +148,7 @@ export function EmailNotificationManager({ patientId }: EmailNotificationManager
       resetSendForm();
       fetchNotifications(patientId);
       loadStats();
-    } catch (error) {
+    } catch {
       // Error handled in hook
     }
   };
@@ -153,7 +157,7 @@ export function EmailNotificationManager({ patientId }: EmailNotificationManager
     try {
       await updateConfig(configForm);
       setIsConfigDialogOpen(false);
-    } catch (error) {
+    } catch {
       // Error handled in hook
     }
   };
@@ -559,7 +563,7 @@ export function EmailNotificationManager({ patientId }: EmailNotificationManager
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="provider">Provedor</Label>
-                  <Select value={configForm.provider} onValueChange={(value: any) => setConfigForm(prev => ({ ...prev, provider: value }))}>
+                  <Select value={configForm.provider} onValueChange={(value: 'resend' | 'sendgrid') => setConfigForm(prev => ({ ...prev, provider: value }))}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>

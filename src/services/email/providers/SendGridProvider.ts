@@ -33,7 +33,7 @@ export class SendGridProvider implements EmailProvider {
         return formatAddress(addresses);
       };
 
-      const emailData: any = {
+      const emailData: Record<string, unknown> = {
         from: formatAddress(from),
         to: formatAddresses(to),
         subject,
@@ -77,11 +77,11 @@ export class SendGridProvider implements EmailProvider {
         messageId: result[0]?.headers?.['x-message-id'] || 'unknown',
         provider: this.name
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       let errorMessage = 'Unknown error occurred';
       
       if (error.response?.body?.errors) {
-        errorMessage = error.response.body.errors.map((e: any) => e.message).join(', ');
+        errorMessage = error.response.body.errors.map((e: { message: string }) => e.message).join(', ');
       } else if (error.message) {
         errorMessage = error.message;
       }
@@ -97,7 +97,7 @@ export class SendGridProvider implements EmailProvider {
   async sendTemplate(
     templateId: string, 
     to: EmailAddress | EmailAddress[], 
-    variables?: Record<string, any>
+    variables?: Record<string, string | number | boolean>
   ): Promise<EmailResult> {
     try {
       const formatAddresses = (addresses: EmailAddress | EmailAddress[]) => {
@@ -107,7 +107,7 @@ export class SendGridProvider implements EmailProvider {
         return { email: addresses.email, name: addresses.name };
       };
 
-      const emailData: any = {
+      const emailData: Record<string, unknown> = {
         from: {
           email: this.config.fromEmail,
           name: this.config.fromName
@@ -134,11 +134,11 @@ export class SendGridProvider implements EmailProvider {
         messageId: result[0]?.headers?.['x-message-id'] || 'unknown',
         provider: this.name
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       let errorMessage = 'Unknown error occurred';
       
       if (error.response?.body?.errors) {
-        errorMessage = error.response.body.errors.map((e: any) => e.message).join(', ');
+        errorMessage = error.response.body.errors.map((e: { message: string }) => e.message).join(', ');
       } else if (error.message) {
         errorMessage = error.message;
       }
@@ -205,7 +205,7 @@ export class SendGridProvider implements EmailProvider {
   }
 
   // Helper method to get sending statistics
-  async getStats(startDate?: string, endDate?: string): Promise<any> {
+  async getStats(startDate?: string, endDate?: string): Promise<Record<string, unknown> | null> {
     try {
       const params = new URLSearchParams();
       if (startDate) params.append('start_date', startDate);
@@ -226,7 +226,7 @@ export class SendGridProvider implements EmailProvider {
   }
 
   // Helper method to list templates
-  async listTemplates(): Promise<any[]> {
+  async listTemplates(): Promise<Record<string, unknown>[]> {
     try {
       const request = {
         url: '/v3/templates?generations=dynamic',

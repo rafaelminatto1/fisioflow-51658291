@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 
 
 const Exercises = () => {
-  const [selectedExercise, setSelectedExercise] = useState<any>(null);
+  const [selectedExercise, setSelectedExercise] = useState<{ id: string; name: string; category: string; description?: string; instructions?: string; video_url?: string } | null>(null);
   const [activeTab, setActiveTab] = useState("library");
   const { exercises, loading } = useExercises();
   const { favorites } = useExerciseFavorites();
@@ -25,12 +25,12 @@ const Exercises = () => {
     document.title = "Exercícios | FisioFlow";
   }, []);
 
-  const handleViewExercise = (exercise: any) => {
+  const handleViewExercise = (exercise: { id: string; name: string; category: string; description?: string; instructions?: string; video_url?: string }) => {
     setSelectedExercise(exercise);
     setActiveTab("player");
   };
 
-  const handleAddToPlan = (exercise: any) => {
+  const handleAddToPlan = (exercise: { id: string; name: string; category: string; description?: string; instructions?: string; video_url?: string }) => {
     toast({
       title: "Funcionalidade em desenvolvimento",
       description: "A criação de planos será implementada na próxima fase"

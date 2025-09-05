@@ -46,7 +46,7 @@ export const createError = {
   fileUpload: (message: string, fileName?: string, fileSize?: number) => 
     new FileUploadError(message, fileName, fileSize),
   
-  app: (message: string, statusCode?: number, context?: string, metadata?: Record<string, any>) => 
+  app: (message: string, statusCode?: number, context?: string, metadata?: Record<string, unknown>) => 
     new AppError(message, statusCode, true, context, metadata)
 };
 

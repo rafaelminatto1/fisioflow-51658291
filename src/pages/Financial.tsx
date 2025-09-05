@@ -11,17 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  DollarSign,
-  TrendingUp,
-  TrendingDown,
-  Calendar,
-  CreditCard,
-  AlertCircle,
-  Plus,
-  Download,
-  Filter
-} from 'lucide-react';
+import { DollarSign, TrendingUp, Calendar, CreditCard, AlertCircle, Plus, Download, Filter } from 'lucide-react';
 
 const Financial = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('month');

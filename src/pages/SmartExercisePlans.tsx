@@ -1,4 +1,23 @@
 import React, { useState } from 'react';
+
+// External libraries
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { 
+  Brain,
+  Target,
+  TrendingUp,
+  Play,
+  Search,
+  Users,
+  Dumbbell,
+  Award,
+  AlertTriangle,
+  CheckCircle,
+  BookOpen
+} from 'lucide-react';
+
+// UI Components
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,31 +28,21 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { useData } from '@/contexts/DataContext';
-import { useToast } from '@/hooks/use-toast';
+import { Separator } from '@/components/ui/separator';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Label } from '@/components/ui/label';
+
+// Local components
 import { NewExercisePlanModal } from '@/components/modals/NewExercisePlanModal';
 import { ProgressChart } from '@/components/charts/ProgressChart';
 import { PainLevelChart } from '@/components/charts/PainLevelChart';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { 
-  Brain,
-  Target,
-  TrendingUp,
-  Play,
-  Plus,
-  Search,
-  Users,
-  Dumbbell,
-  Award,
-  AlertTriangle,
-  CheckCircle,
-  BookOpen
-} from 'lucide-react';
 import { SmartProgressionManager } from '@/components/exercise/SmartProgressionManager';
-import SmartAdaptationManager from '@/components/SmartAdaptationManager';
 import SmartReportsManager from '@/components/SmartReportsManager';
 import TreatmentSessionManager from '@/components/TreatmentSessionManager';
+
+// Hooks and contexts
+import { useData } from '@/contexts/DataContext';
+import { useToast } from '@/hooks/use-toast';
 
 export function SmartExercisePlans() {
   const { patients, exercises, exercisePlans, addExercisePlan, patientProgress, addPatientProgress } = useData();

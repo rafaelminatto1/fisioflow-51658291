@@ -32,7 +32,7 @@ export class ResendProvider implements EmailProvider {
         return formatAddress(addresses);
       };
 
-      const emailData: any = {
+      const emailData: Record<string, unknown> = {
         from: formatAddress(from),
         to: formatAddresses(to),
         subject,
@@ -88,7 +88,7 @@ export class ResendProvider implements EmailProvider {
   async sendTemplate(
     templateId: string, 
     to: EmailAddress | EmailAddress[], 
-    variables?: Record<string, any>
+    variables?: Record<string, string | number | boolean>
   ): Promise<EmailResult> {
     try {
       const formatAddresses = (addresses: EmailAddress | EmailAddress[]) => {
@@ -98,7 +98,7 @@ export class ResendProvider implements EmailProvider {
         return addresses.name ? `${addresses.name} <${addresses.email}>` : addresses.email;
       };
 
-      const emailData: any = {
+      const emailData: Record<string, unknown> = {
         from: this.config.fromName 
           ? `${this.config.fromName} <${this.config.fromEmail}>`
           : this.config.fromEmail,
@@ -150,7 +150,7 @@ export class ResendProvider implements EmailProvider {
   }
 
   // Helper method to create email templates in Resend
-  async createTemplate(name: string, subject: string, html: string): Promise<string | null> {
+  async createTemplate(): Promise<string | null> {
     try {
       // Note: Resend doesn't have a direct template API like SendGrid
       // This is a placeholder for future implementation
@@ -163,7 +163,7 @@ export class ResendProvider implements EmailProvider {
   }
 
   // Helper method to get sending statistics
-  async getStats(): Promise<any> {
+  async getStats(): Promise<Record<string, unknown> | null> {
     try {
       // Note: Resend doesn't provide detailed stats API
       // This would need to be tracked separately

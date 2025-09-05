@@ -80,10 +80,11 @@ export function SessionLogger({ patientId, onSessionLogged }: SessionLoggerProps
       });
 
       onSessionLogged?.();
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Não foi possível registrar a sessão.";
       toast({
         title: "Erro",
-        description: error.message || "Não foi possível registrar a sessão.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -111,10 +112,11 @@ export function SessionLogger({ patientId, onSessionLogged }: SessionLoggerProps
         title: "Foto enviada!",
         description: "A foto foi anexada à sessão.",
       });
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Não foi possível enviar a foto.";
       toast({
         title: "Erro no upload",
-        description: error.message || "Não foi possível enviar a foto.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {

@@ -14,7 +14,7 @@ export interface EmailTemplate {
   subject: string;
   html?: string;
   text?: string;
-  variables?: Record<string, any>;
+  variables?: Record<string, string | number | boolean>;
 }
 
 export interface EmailOptions {
@@ -28,7 +28,7 @@ export interface EmailOptions {
   replyTo?: EmailAddress;
   attachments?: EmailAttachment[];
   templateId?: string;
-  templateVariables?: Record<string, any>;
+  templateVariables?: Record<string, string | number | boolean>;
 }
 
 export interface EmailResult {
@@ -58,7 +58,7 @@ export type EmailConfig = ResendConfig | SendGridConfig;
 export interface EmailProvider {
   name: string;
   sendEmail(options: EmailOptions): Promise<EmailResult>;
-  sendTemplate(templateId: string, to: EmailAddress | EmailAddress[], variables?: Record<string, any>): Promise<EmailResult>;
+  sendTemplate(): Promise<EmailResult>;
   validateConfig(): Promise<boolean>;
 }
 
@@ -69,7 +69,7 @@ export interface EmailQueueItem {
   subject: string;
   content: string;
   templateId?: string;
-  templateVariables?: Record<string, any>;
+  templateVariables?: Record<string, string | number | boolean>;
   scheduledFor?: Date;
   attempts: number;
   maxAttempts: number;
@@ -111,7 +111,7 @@ export enum EmailStatus {
   SCHEDULED = 'scheduled'
 }
 
-export enum EmailProvider {
+export enum EmailProviderType {
   RESEND = 'resend',
   SENDGRID = 'sendgrid'
 }

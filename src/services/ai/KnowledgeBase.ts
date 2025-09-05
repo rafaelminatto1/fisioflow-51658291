@@ -67,7 +67,7 @@ export class KnowledgeBase {
       await this.incrementUsage(bestMatch.id);
 
       return {
-        response: this.formatResponse(bestMatch, query),
+        response: this.formatResponse(bestMatch),
         confidence: bestMatch.confidence_score,
         source: 'knowledge_base',
         metadata: {
@@ -108,7 +108,7 @@ export class KnowledgeBase {
       await this.incrementUsage(bestMatch.id);
 
       return {
-        response: this.formatResponse(bestMatch, query),
+        response: this.formatResponse(bestMatch),
         confidence: bestMatch.confidence_score * 0.8, // Reduz confiança para busca por conteúdo
         source: 'knowledge_base',
         metadata: {
@@ -205,7 +205,12 @@ export class KnowledgeBase {
     return null;
   }
 
-  private formatResponse(entry: any, originalQuery: string): string {
+  private formatResponse(entry: {
+    title: string;
+    type: string;
+    content: string;
+    author_profile?: { full_name: string };
+  }): string {
     const header = `**${entry.title}** (${entry.type})\n\n`;
     const content = entry.content;
     const footer = entry.author_profile?.full_name 
@@ -279,7 +284,14 @@ export class KnowledgeBase {
     }
   }
 
-  async getPopularEntries(limit: number = 10): Promise<any[]> {
+  async getPopularEntries(limit: number = 10): Promise<{
+    id: string;
+    type: string;
+    title: string;
+    usage_count: number;
+    confidence_score: number;
+    author_profile?: { full_name: string };
+  }[]> {
     try {
       const { data } = await supabase
         .from('knowledge_base')

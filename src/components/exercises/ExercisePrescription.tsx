@@ -31,9 +31,20 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+interface Exercise {
+  id: string;
+  name: string;
+  description?: string;
+  category?: string;
+  muscle_groups?: string[];
+  equipment?: string;
+  difficulty_level?: string;
+  instructions?: string;
+}
+
 interface PrescribedExercise {
   id: string;
-  exercise: any;
+  exercise: Exercise;
   sets: number;
   reps: number;
   weight?: number;
@@ -76,7 +87,7 @@ export function ExercisePrescription({
   const [endDate, setEndDate] = useState('');
   const { toast } = useToast();
 
-  const addExercise = useCallback((exercise: any) => {
+  const addExercise = useCallback((exercise: Exercise) => {
     const newPrescribedExercise: PrescribedExercise = {
       id: `${exercise.id}-${Date.now()}`,
       exercise,

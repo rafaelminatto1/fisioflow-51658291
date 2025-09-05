@@ -16,8 +16,7 @@ import {
   Edit, 
   Phone,
   Mail,
-  Calendar,
-  Activity
+  Calendar
 } from 'lucide-react';
 
 const Patients = () => {

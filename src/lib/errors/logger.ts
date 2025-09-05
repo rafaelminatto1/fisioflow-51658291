@@ -10,7 +10,7 @@ export interface ErrorLogEntry {
   context?: string;
   userId?: string;
   sessionId?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   stack?: string;
   userAgent?: string;
   url?: string;
@@ -23,8 +23,8 @@ export interface ErrorContext {
   sessionId?: string;
   component?: string;
   action?: string;
-  metadata?: Record<string, any>;
-  [key: string]: any;
+  metadata?: Record<string, unknown>;
+  [key: string]: unknown;
 }
 
 class ErrorLogger {
@@ -285,8 +285,8 @@ class ErrorLogger {
 
   // Método para integração com Sentry (se disponível)
   integrateSentry() {
-    if (typeof window !== 'undefined' && (window as any).Sentry) {
-      const Sentry = (window as any).Sentry;
+    if (typeof window !== 'undefined' && (window as Record<string, unknown>).Sentry) {
+      const Sentry = (window as Record<string, unknown>).Sentry;
       
       // Configurar contexto da sessão
       Sentry.setContext('session', {

@@ -135,10 +135,11 @@ export function useVouchers() {
       });
 
       return { data, error: null };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Não foi possível processar a compra.";
       toast({
         title: "Erro",
-        description: error.message || "Não foi possível processar a compra.",
+        description: errorMessage,
         variant: "destructive"
       });
       return { data: null, error };
@@ -160,10 +161,11 @@ export function useVouchers() {
         title: "Status atualizado",
         description: "O status do voucher foi atualizado com sucesso.",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Não foi possível atualizar o status.";
       toast({
         title: "Erro",
-        description: error.message || "Não foi possível atualizar o status.",
+        description: errorMessage,
         variant: "destructive"
       });
     }
@@ -186,10 +188,11 @@ export function useVouchers() {
         if (error) throw error;
         await loadPurchases();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Não foi possível usar a sessão.";
       toast({
         title: "Erro",
-        description: error.message || "Não foi possível usar a sessão.",
+        description: errorMessage,
         variant: "destructive"
       });
     }

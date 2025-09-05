@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { useData } from '@/contexts/DataContext';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -19,7 +19,6 @@ import {
   Phone,
   Bell,
   Send,
-  Calendar,
   Clock,
   Users,
   Settings,
@@ -32,11 +31,10 @@ import {
   Plus,
   Search,
   Filter,
-  Zap,
   Eye,
   Trash2
 } from 'lucide-react';
-import { format, addDays } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 // Mock data for notifications
@@ -241,7 +239,7 @@ export function Communications() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium">Tipo</label>
-                      <Select value={newNotification.type} onValueChange={(value: any) => setNewNotification(prev => ({ ...prev, type: value }))}>
+                      <Select value={newNotification.type} onValueChange={(value: string) => setNewNotification(prev => ({ ...prev, type: value }))}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -255,7 +253,7 @@ export function Communications() {
                     </div>
                     <div>
                       <label className="text-sm font-medium">Método de Envio</label>
-                      <Select value={newNotification.method} onValueChange={(value: any) => setNewNotification(prev => ({ ...prev, method: value }))}>
+                      <Select value={newNotification.method} onValueChange={(value: string) => setNewNotification(prev => ({ ...prev, method: value }))}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>

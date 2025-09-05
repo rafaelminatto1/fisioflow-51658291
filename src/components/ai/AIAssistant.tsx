@@ -1,11 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, Send, X, ThumbsUp, ThumbsDown, Loader2, Brain } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Send, X, ThumbsUp, ThumbsDown, Loader2, Brain } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
+
 import { useToast } from '@/hooks/use-toast';
 import { aiOrchestrator } from '@/services/ai/AIOrchestrator';
 import { useAuth } from '@/hooks/useAuth';
@@ -61,15 +61,15 @@ export function AIAssistant({ patientId, context }: AIAssistantProps) {
         confidence: 1
       }]);
     }
-  }, [isOpen]);
+  }, [isOpen, messages.length, getWelcomeMessage]);
 
-  const getWelcomeMessage = () => {
+  const getWelcomeMessage = useCallback(() => {
     if (patientId && context?.patientName) {
       return `👋 Olá! Sou seu assistente de IA para fisioterapia.\n\nEstou aqui para ajudar com **${context.patientName}**.\n\nPosso auxiliar com:\n• Sugestões de protocolos\n• Diagnóstico diferencial\n• Progressão de exercícios\n• Interpretação de sintomas\n• Orientações clínicas\n\nComo posso ajudar você hoje?`;
     }
 
     return `🧠 **Assistente de IA FisioFlow**\n\nOlá! Sou seu assistente inteligente especializado em fisioterapia.\n\n**Minhas especialidades:**\n• Protocolos de tratamento\n• Exercícios terapêuticos\n• Diagnóstico diferencial\n• Orientações clínicas\n• Casos complexos\n\nFaça sua pergunta e eu te ajudo com base na melhor evidência científica disponível!`;
-  };
+  }, [patientId, context?.patientName]);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;

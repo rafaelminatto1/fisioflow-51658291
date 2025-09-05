@@ -8,7 +8,7 @@ interface ExerciseProtocol {
   name: string;
   condition: string;
   description?: string;
-  exercises: any[];
+  exercises: Record<string, unknown>[];
   created_by?: string;
   created_at: string;
   updated_at: string;
@@ -18,7 +18,7 @@ interface CreateProtocolData {
   name: string;
   condition: string;
   description?: string;
-  exercises: any[];
+  exercises: Record<string, unknown>[];
 }
 
 export function useExerciseProtocols() {

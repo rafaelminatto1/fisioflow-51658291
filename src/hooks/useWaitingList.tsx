@@ -5,7 +5,7 @@ export interface WaitingListEntry {
   id: string;
   patient_id: string;
   preferred_therapist_id?: string;
-  preferred_times?: any; // JSONB
+  preferred_times?: { day: string; time: string }[]; // JSONB
   urgency_level: number; // 1-5
   notes?: string;
   status: 'waiting' | 'contacted' | 'scheduled' | 'cancelled';

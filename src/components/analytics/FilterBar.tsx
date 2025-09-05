@@ -107,7 +107,7 @@ export function FilterBar({
 }: FilterBarProps) {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
-  const updateFilter = (key: keyof FilterConfig, value: any) => {
+  const updateFilter = (key: keyof FilterConfig, value: string | DateRange | undefined) => {
     onFiltersChange({
       ...filters,
       [key]: value
