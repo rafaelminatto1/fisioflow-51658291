@@ -1,57 +1,51 @@
 import React, { useState, useEffect } from 'react';
+import { useSmartAdaptation, AdaptationSuggestion } from '@/hooks/useSmartAdaptation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Brain, 
   TrendingUp, 
-  TrendingDown, 
-  Minus, 
+  Target, 
   CheckCircle, 
   XCircle, 
-  Clock,
-  Target,
   Activity,
   AlertTriangle,
-  Lightbulb,
   Settings
 } from 'lucide-react';
-import { useSmartAdaptation, AdaptationSuggestion } from '@/hooks/useSmartAdaptation';
-import { usePatientProgress } from '@/hooks/usePatientProgress';
 import { toast } from 'sonner';
 
 interface SmartAdaptationManagerProps {
   patientId: string;
+  exercisePlanId?: string;
 }
 
-export function SmartAdaptationManager({ patientId }: SmartAdaptationManagerProps) {
+export default function SmartAdaptationManager({ 
+  patientId, 
+  exercisePlanId 
+}: SmartAdaptationManagerProps) {
   const {
-    adaptationRules,
+    rules,
     suggestions,
     loading,
     error,
+    fetchRules,
+    createRule,
+    updateRule,
+    deleteRule,
     analyzePatientMetrics,
     applySuggestion,
     rejectSuggestion
   } = useSmartAdaptation();
 
-  const { patientProgress, fetchPatientProgress } = usePatientProgress();
   const [analyzing, setAnalyzing] = useState(false);
   const [activeTab, setActiveTab] = useState('suggestions');
 
-  const patientSuggestions = suggestions.filter(s => s.patient_id === patientId);
-  const pendingSuggestions = patientSuggestions.filter(s => s.status === 'pending');
-  const recentProgress = patientProgress.filter(p => p.patient_id === patientId).slice(0, 5);
-
   useEffect(() => {
-    if (patientId) {
-      fetchPatientProgress();
-    }
-  }, [patientId, fetchPatientProgress]);
+    fetchRules();
+  }, [fetchRules]);
 
   const handleAnalyzeMetrics = async () => {
     try {
@@ -89,9 +83,9 @@ export function SmartAdaptationManager({ patientId }: SmartAdaptationManagerProp
   };
 
   const getConfidenceColor = (score: number) => {
-    if (score >= 0.8) return 'text-green-600 bg-green-50';
-    if (score >= 0.6) return 'text-yellow-600 bg-yellow-50';
-    return 'text-red-600 bg-red-50';
+    if (score >= 0.8) return 'bg-green-100 text-green-800';
+    if (score >= 0.6) return 'bg-yellow-100 text-yellow-800';
+    return 'bg-red-100 text-red-800';
   };
 
   const getConfidenceText = (score: number) => {
@@ -100,36 +94,29 @@ export function SmartAdaptationManager({ patientId }: SmartAdaptationManagerProp
     return 'Baixa';
   };
 
-  const getTrendIcon = (trend: string) => {
-    switch (trend) {
-      case 'increasing':
-      case 'improving':
-        return <TrendingUp className="w-4 h-4 text-green-600" />;
-      case 'decreasing':
-      case 'declining':
-        return <TrendingDown className="w-4 h-4 text-red-600" />;
+  const getSuggestionIcon = (type: string) => {
+    switch (type) {
+      case 'exercise_modification':
+        return <Target className="h-5 w-5 text-blue-600" />;
+      case 'plan_adjustment':
+        return <TrendingUp className="h-5 w-5 text-green-600" />;
+      case 'frequency_change':
+        return <Activity className="h-5 w-5 text-orange-600" />;
       default:
-        return <Minus className="w-4 h-4 text-gray-600" />;
+        return <Settings className="h-5 w-5 text-gray-600" />;
     }
   };
 
-  const calculateTrends = () => {
-    if (recentProgress.length < 2) return null;
-
-    const latest = recentProgress[0];
-    const previous = recentProgress[1];
-
-    return {
-      pain: latest.pain_level > previous.pain_level + 1 ? 'increasing' :
-            latest.pain_level < previous.pain_level - 1 ? 'decreasing' : 'stable',
-      functional: latest.functional_score > previous.functional_score + 5 ? 'improving' :
-                 latest.functional_score < previous.functional_score - 5 ? 'declining' : 'stable',
-      compliance: latest.exercise_compliance > previous.exercise_compliance + 10 ? 'improving' :
-                 latest.exercise_compliance < previous.exercise_compliance - 10 ? 'declining' : 'stable'
-    };
-  };
-
-  const trends = calculateTrends();
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Carregando adaptações inteligentes...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (
@@ -142,233 +129,182 @@ export function SmartAdaptationManager({ patientId }: SmartAdaptationManagerProp
 
   return (
     <div className="space-y-6">
-      {/* Header com análise rápida */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Brain className="w-5 h-5 text-purple-600" />
-                Adaptação Inteligente
-              </CardTitle>
-              <CardDescription>
-                Sistema de ajuste automático baseado em métricas do paciente
-              </CardDescription>
-            </div>
-            <Button 
-              onClick={handleAnalyzeMetrics} 
-              disabled={analyzing || loading}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              {analyzing ? (
-                <>
-                  <Settings className="w-4 h-4 mr-2 animate-spin" />
-                  Analisando...
-                </>
-              ) : (
-                <>
-                  <Brain className="w-4 h-4 mr-2" />
-                  Analisar Métricas
-                </>
-              )}
-            </Button>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Brain className="h-6 w-6 text-primary" />
+          <div>
+            <h2 className="text-2xl font-bold">Adaptação Inteligente</h2>
+            <p className="text-muted-foreground">
+              Sistema de ajuste automático baseado em IA
+            </p>
           </div>
-        </CardHeader>
+        </div>
         
-        {trends && (
-          <CardContent>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-                {getTrendIcon(trends.pain)}
-                <div>
-                  <div className="text-sm font-medium">Dor</div>
-                  <div className="text-xs text-muted-foreground capitalize">
-                    {trends.pain === 'increasing' ? 'Aumentando' :
-                     trends.pain === 'decreasing' ? 'Diminuindo' : 'Estável'}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-                {getTrendIcon(trends.functional)}
-                <div>
-                  <div className="text-sm font-medium">Funcionalidade</div>
-                  <div className="text-xs text-muted-foreground capitalize">
-                    {trends.functional === 'improving' ? 'Melhorando' :
-                     trends.functional === 'declining' ? 'Piorando' : 'Estável'}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-                {getTrendIcon(trends.compliance)}
-                <div>
-                  <div className="text-sm font-medium">Aderência</div>
-                  <div className="text-xs text-muted-foreground capitalize">
-                    {trends.compliance === 'improving' ? 'Melhorando' :
-                     trends.compliance === 'declining' ? 'Piorando' : 'Estável'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        )}
-      </Card>
+        <Button 
+          onClick={handleAnalyzeMetrics}
+          disabled={analyzing}
+          className="flex items-center gap-2"
+        >
+          {analyzing ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              Analisando...
+            </>
+          ) : (
+            <>
+              <Brain className="h-4 w-4" />
+              Analisar Métricas
+            </>
+          )}
+        </Button>
+      </div>
 
-      {/* Tabs para diferentes seções */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="suggestions">Sugestões ({pendingSuggestions.length})</TabsTrigger>
-          <TabsTrigger value="rules">Regras ({adaptationRules.length})</TabsTrigger>
-          <TabsTrigger value="history">Histórico</TabsTrigger>
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="suggestions">Sugestões Ativas</TabsTrigger>
+          <TabsTrigger value="rules">Regras de Adaptação</TabsTrigger>
         </TabsList>
 
         <TabsContent value="suggestions" className="space-y-4">
-          {pendingSuggestions.length === 0 ? (
+          {suggestions.length === 0 ? (
             <Card>
-              <CardContent className="p-8 text-center">
-                <Lightbulb className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-foreground mb-2">Nenhuma sugestão pendente</h3>
-                <p className="text-muted-foreground mb-4">
-                  Execute uma análise para gerar novas sugestões de adaptação.
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <Brain className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">Nenhuma sugestão disponível</h3>
+                <p className="text-muted-foreground text-center mb-4">
+                  Execute uma análise de métricas para gerar sugestões inteligentes
                 </p>
                 <Button onClick={handleAnalyzeMetrics} disabled={analyzing}>
-                  <Brain className="w-4 h-4 mr-2" />
-                  Analisar Agora
+                  {analyzing ? 'Analisando...' : 'Analisar Agora'}
                 </Button>
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-4">
-              {pendingSuggestions.map((suggestion) => (
-                <Card key={suggestion.id} className="border-l-4 border-l-purple-500">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-purple-100 rounded-lg">
-                          <Target className="w-5 h-5 text-purple-600" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-lg">Adaptação Sugerida</CardTitle>
-                          <CardDescription>
-                            {suggestion.suggested_changes.action_description}
-                          </CardDescription>
+            suggestions.map((suggestion) => (
+              <Card key={suggestion.id} className="border-l-4 border-l-blue-500">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      {getSuggestionIcon(suggestion.suggestion_type)}
+                      <div>
+                        <CardTitle className="text-lg">Adaptação Sugerida</CardTitle>
+                        <CardDescription>
+                          {suggestion.reasoning}
+                        </CardDescription>
+                      </div>
+                    </div>
+                    <Badge className={getConfidenceColor(suggestion.confidence_score)}>
+                      Confiança: {getConfidenceText(suggestion.confidence_score)}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="space-y-4">
+                  {/* Métricas atuais */}
+                  <div>
+                    <h4 className="font-medium mb-2">Valores Atuais</h4>
+                    <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div className="text-center p-2 bg-muted rounded">
+                        <div className="font-medium">Valor Atual</div>
+                        <div className="text-blue-600">
+                          {suggestion.current_value}
                         </div>
                       </div>
-                      <Badge className={getConfidenceColor(suggestion.confidence_score)}>
-                        Confiança: {getConfidenceText(suggestion.confidence_score)}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent className="space-y-4">
-                    {/* Métricas atuais */}
-                    <div>
-                      <h4 className="font-medium mb-2">Métricas Atuais</h4>
-                      <div className="grid grid-cols-3 gap-4 text-sm">
-                        <div className="text-center p-2 bg-muted rounded">
-                          <div className="font-medium">Dor</div>
-                          <div className="text-red-600">
-                            {suggestion.current_metrics.pain_level}/10
-                          </div>
+                      <div className="text-center p-2 bg-muted rounded">
+                        <div className="font-medium">Valor Sugerido</div>
+                        <div className="text-green-600">
+                          {suggestion.suggested_value}
                         </div>
-                        <div className="text-center p-2 bg-muted rounded">
-                          <div className="font-medium">Funcional</div>
-                          <div className="text-blue-600">
-                            {suggestion.current_metrics.functional_score}%
-                          </div>
-                        </div>
-                        <div className="text-center p-2 bg-muted rounded">
-                          <div className="font-medium">Aderência</div>
-                          <div className="text-green-600">
-                            {Math.round(suggestion.current_metrics.compliance)}%
-                          </div>
+                      </div>
+                      <div className="text-center p-2 bg-muted rounded">
+                        <div className="font-medium">Confiança</div>
+                        <div className="text-purple-600">
+                          {Math.round(suggestion.confidence_score * 100)}%
                         </div>
                       </div>
                     </div>
+                  </div>
 
-                    {/* Mudanças propostas */}
-                    <div>
-                      <h4 className="font-medium mb-2">Mudanças Propostas</h4>
-                      <div className="bg-muted/50 p-3 rounded-lg">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Activity className="w-4 h-4" />
-                          <span>{suggestion.suggested_changes.action_description}</span>
-                        </div>
-                        {suggestion.suggested_changes.new_intensity && (
-                          <div className="mt-2 text-sm text-muted-foreground">
-                            Nova intensidade: {suggestion.suggested_changes.new_intensity}
-                          </div>
-                        )}
-                        {suggestion.suggested_changes.new_duration && (
-                          <div className="mt-1 text-sm text-muted-foreground">
-                            Nova duração: {suggestion.suggested_changes.new_duration} min
-                          </div>
-                        )}
-                      </div>
+                  {/* Justificativa */}
+                  <div>
+                    <h4 className="font-medium mb-2">Justificativa</h4>
+                    <div className="bg-muted/50 p-3 rounded-lg">
+                      <p className="text-sm text-muted-foreground">
+                        {suggestion.reasoning}
+                      </p>
                     </div>
+                  </div>
 
-                    <Separator />
-
-                    {/* Ações */}
-                    <div className="flex gap-2">
-                      <Button 
-                        onClick={() => handleApplySuggestion(suggestion.id)}
-                        disabled={loading}
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Aplicar
-                      </Button>
-                      <Button 
-                        variant="outline"
-                        onClick={() => handleRejectSuggestion(suggestion.id)}
-                        disabled={loading}
-                      >
-                        <XCircle className="w-4 h-4 mr-2" />
-                        Rejeitar
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                  {/* Actions */}
+                  <div className="flex gap-2 pt-4">
+                    <Button
+                      onClick={() => handleApplySuggestion(suggestion.id)}
+                      className="flex items-center gap-2"
+                      disabled={suggestion.status !== 'pending'}
+                    >
+                      <CheckCircle className="h-4 w-4" />
+                      Aplicar Adaptação
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      onClick={() => handleRejectSuggestion(suggestion.id)}
+                      className="flex items-center gap-2"
+                      disabled={suggestion.status !== 'pending'}
+                    >
+                      <XCircle className="h-4 w-4" />
+                      Rejeitar
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
           )}
         </TabsContent>
 
         <TabsContent value="rules" className="space-y-4">
-          <div className="grid gap-4">
-            {adaptationRules.map((rule) => (
-              <Card key={rule.id}>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">{rule.description}</h4>
+          <Card>
+            <CardHeader>
+              <CardTitle>Regras de Adaptação</CardTitle>
+              <CardDescription>
+                Configure regras automáticas para adaptação de exercícios
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {rules.length === 0 ? (
+                <div className="text-center py-8">
+                  <Settings className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium mb-2">Nenhuma regra configurada</h3>
+                  <p className="text-muted-foreground mb-4">
+                    As regras de adaptação permitem ajustes automáticos baseados no progresso do paciente
+                  </p>
+                  <Button>
+                    <Settings className="h-4 w-4 mr-2" />
+                    Criar Primeira Regra
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {rules.map((rule) => (
+                    <div key={rule.id} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium">{rule.description}</h4>
+                        <Badge variant={rule.is_active ? 'default' : 'secondary'}>
+                          {rule.is_active ? 'Ativa' : 'Inativa'}
+                        </Badge>
+                      </div>
                       <p className="text-sm text-muted-foreground">
-                        Condição: {rule.condition_type} | Ação: {rule.action_type}
+                        Condição: {rule.condition_type} {rule.threshold_value}
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        Ajuste: {rule.adjustment_percentage}%
+                      <p className="text-sm text-muted-foreground">
+                        Ação: {rule.action_type} ({rule.adjustment_percentage}%)
                       </p>
                     </div>
-                    <Badge variant="outline">
-                      Ativa
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="history" className="space-y-4">
-          <Card>
-            <CardContent className="p-8 text-center">
-              <Clock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-foreground mb-2">Histórico em Desenvolvimento</h3>
-              <p className="text-muted-foreground">
-                O histórico de adaptações será implementado em breve.
-              </p>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

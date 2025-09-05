@@ -63,8 +63,8 @@ export const useSmartAdaptation = () => {
     updateRule,
     deleteRule,
     adaptationRules: rules,
-    analyzePatientMetrics: async () => {},
-    applySuggestion: async () => {},
-    rejectSuggestion: async () => {}
+    analyzePatientMetrics: async (patientId: string) => [],
+    applySuggestion: async (id: string) => {},
+    rejectSuggestion: async (id: string) => {}
   };
 };

@@ -37,20 +37,12 @@ export function useSmartProgression() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Buscar regras de progressão
+  // Buscar regras de progressão (mock implementation)
   const fetchProgressionRules = async (exercisePlanId?: string) => {
     try {
       setLoading(true);
-      let query = supabase.from('progression_rules').select('*');
-      
-      if (exercisePlanId) {
-        query = query.eq('exercise_plan_id', exercisePlanId);
-      }
-      
-      const { data, error } = await query.order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      setProgressionRules(data || []);
+      // Mock implementation - no database table exists yet
+      setProgressionRules([]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar regras de progressão');
     } finally {
@@ -58,18 +50,16 @@ export function useSmartProgression() {
     }
   };
 
-  // Criar regra de progressão
+  // Criar regra de progressão (mock implementation)
   const createProgressionRule = async (ruleData: Omit<ProgressionRule, 'id' | 'created_at'>) => {
     try {
-      const { data, error } = await supabase
-        .from('progression_rules')
-        .insert(ruleData)
-        .select()
-        .single();
-
-      if (error) throw error;
-      await fetchProgressionRules();
-      return data;
+      // Mock implementation - no database table exists yet
+      const mockRule: ProgressionRule = {
+        ...ruleData,
+        id: Math.random().toString(),
+        created_at: new Date().toISOString()
+      };
+      return mockRule;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao criar regra de progressão');
       throw err;
@@ -195,14 +185,6 @@ export function useSmartProgression() {
 
       await Promise.all(updatePromises);
       
-      // Registrar o ajuste no histórico
-      await supabase.from('progression_history').insert({
-        exercise_plan_id: exercisePlanId,
-        adjustment_type: 'automatic',
-        adjustments: adjustments,
-        applied_at: new Date().toISOString(),
-      });
-
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao aplicar ajustes automáticos');
