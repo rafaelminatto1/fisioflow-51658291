@@ -84,6 +84,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Função de login
   const signIn = async (email: string, password: string, remember = false) => {
     try {
+      console.log('🔑 AuthProvider: Iniciando login para:', email);
       setLoading(true);
       
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -91,7 +92,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         password,
       });
 
+      console.log('📊 AuthProvider: Resposta do Supabase:', { data: data?.user?.email, error });
+
       if (error) {
+        console.error('❌ AuthProvider: Erro do Supabase:', error);
         toast({
           title: "Erro no login",
           description: error.message,
@@ -100,6 +104,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return { error };
       }
 
+      console.log('✅ AuthProvider: Login bem-sucedido para:', data?.user?.email);
       toast({
         title: "Login realizado com sucesso!",
         description: "Bem-vindo(a) de volta."
@@ -108,6 +113,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return { error: null };
     } catch (error: unknown) {
       const authError = error as AuthError;
+      console.error('💥 AuthProvider: Exceção durante login:', authError);
       toast({
         title: "Erro no login",
         description: authError.message,

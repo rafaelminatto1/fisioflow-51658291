@@ -35,12 +35,21 @@ export function Login() {
   const onSubmit = async (data: LoginFormData) => {
     setIsSubmitting(true);
     
+    console.log('🔐 Tentando fazer login com:', data.email);
+    console.log('📊 Estado atual do usuário:', user);
+    console.log('⏳ Loading:', loading);
+    
     const { error } = await signIn(data.email, data.password, data.remember);
     
+    console.log('📝 Resultado do login:', { error });
+    
     if (error) {
+      console.error('❌ Erro no login:', error);
       setError('root', {
         message: 'Email ou senha incorretos. Verifique suas credenciais e tente novamente.'
       });
+    } else {
+      console.log('✅ Login bem-sucedido!');
     }
     
     setIsSubmitting(false);
