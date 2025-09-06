@@ -18,23 +18,13 @@ export interface Profile {
   bio?: string;
   experience_years?: number;
   consultation_fee?: number;
-  available_hours?: Record<string, string[]>;
-  notification_preferences?: {
-    email: boolean;
-    sms: boolean;
-    push: boolean;
-    appointment_reminders: boolean;
-    marketing: boolean;
-  };
+  available_hours?: any;
+  notification_preferences?: any;
   onboarding_completed: boolean;
   last_login_at?: string;
   timezone?: string;
   is_active: boolean;
-  emergency_contact?: {
-    name: string;
-    phone: string;
-    relationship: string;
-  };
+  emergency_contact?: any;
   created_at: string;
   updated_at: string;
 }

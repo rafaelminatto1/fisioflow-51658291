@@ -43,6 +43,12 @@ export interface OutcomeReport {
   created_at: string;
 }
 
+export interface ReportFilters {
+  period?: string;
+  patientId?: string;
+  reportType?: string;
+}
+
 export function useSmartReports() {
   const [adherenceReports, setAdherenceReports] = useState<AdherenceReport[]>([]);
   const [progressReports, setProgressReports] = useState<ProgressReport[]>([]);
@@ -119,6 +125,9 @@ export function useSmartReports() {
     fetchProgressReports: async () => {},
     fetchOutcomeReports: async () => {},
     autoGenerateReports: async () => true,
-    calculateInsights: () => null
+    calculateInsights: () => null,
+    exportReport: async (reportId: string, format: string) => {
+      console.log('Exporting report:', reportId, format);
+    }
   };
 }
