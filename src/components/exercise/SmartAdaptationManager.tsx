@@ -208,15 +208,15 @@ export default function SmartAdaptationManager({
                     <div className="grid grid-cols-3 gap-4 text-sm">
                       <div className="text-center p-2 bg-muted rounded">
                         <div className="font-medium">Valor Atual</div>
-                        <div className="text-blue-600">
-                          {suggestion.current_value}
-                        </div>
+                         <div className="text-blue-600">
+                           {typeof suggestion.current_value === 'object' ? JSON.stringify(suggestion.current_value) : String(suggestion.current_value)}
+                         </div>
                       </div>
                       <div className="text-center p-2 bg-muted rounded">
                         <div className="font-medium">Valor Sugerido</div>
-                        <div className="text-green-600">
-                          {suggestion.suggested_value}
-                        </div>
+                         <div className="text-green-600">
+                           {typeof suggestion.suggested_value === 'object' ? JSON.stringify(suggestion.suggested_value) : String(suggestion.suggested_value)}
+                         </div>
                       </div>
                       <div className="text-center p-2 bg-muted rounded">
                         <div className="font-medium">Confiança</div>

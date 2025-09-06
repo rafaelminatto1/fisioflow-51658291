@@ -117,12 +117,19 @@ export function NewExerciseModal({ trigger }: NewExerciseModalProps) {
     form.setValue('equipment', newEquipment);
   };
 
-  const onSubmit = (data: ExerciseFormData) => {
-    const exerciseData = {
-      ...data,
-      equipment: data.equipment || []
-    };
-    addExercise(exerciseData);
+   const onSubmit = (data: ExerciseFormData) => {
+     const exerciseData = {
+       name: data.name!,
+       description: data.description!,
+       instructions: data.instructions!,
+       category: data.category || 'fortalecimento',
+       difficulty: data.difficulty || 'iniciante',
+       duration: data.duration || '10',
+       equipment: data.equipment || [],
+       targetMuscles: data.targetMuscles || [],
+       contraindications: data.contraindications,
+     };
+     addExercise(exerciseData);
     
     toast({
       title: 'Exercício criado!',

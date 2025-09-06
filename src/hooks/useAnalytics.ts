@@ -126,7 +126,7 @@ export function useFinancialAnalytics(months = 12) {
       if (error) throw error;
 
       return data?.map((item: Record<string, unknown>) => ({
-        name: format(new Date(item.month), 'MMM/yyyy'),
+         name: format(new Date(String(item.month)), 'MMM/yyyy'),
         value: Number(item.total_revenue) || 0,
         revenue: Number(item.total_revenue) || 0,
         purchases: Number(item.total_purchases) || 0,
@@ -149,7 +149,7 @@ export function useClinicalAnalytics(months = 12) {
       if (error) throw error;
 
       return data?.map((item: Record<string, unknown>) => ({
-        name: format(new Date(item.month), 'MMM/yyyy'),
+        name: format(new Date(String(item.month)), 'MMM/yyyy'),
         value: Number(item.total_sessions) || 0,
         sessions: Number(item.total_sessions) || 0,
         avgPainLevel: Number(item.avg_pain_level) || 0,
@@ -213,7 +213,7 @@ export function usePatientDistribution() {
       if (error) throw error;
 
       return data?.map((item: Record<string, unknown>) => ({
-        name: item.status,
+        name: String(item.status),
         value: Number(item.count) || 0,
         avgAge: Number(item.avg_age) || 0
       })) || [];

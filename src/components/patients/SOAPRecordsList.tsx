@@ -113,7 +113,7 @@ export function SOAPRecordsList({ patientId }: SOAPRecordsListProps) {
                   <p className="text-sm text-muted-foreground line-clamp-3">
                     {typeof record.objective === 'string' 
                       ? record.objective 
-                      : record.objective?.findings || 'Dados do exame físico registrados'
+                      : record.objective?.inspection || 'Dados do exame físico registrados'
                     }
                   </p>
                 </div>
@@ -134,7 +134,7 @@ export function SOAPRecordsList({ patientId }: SOAPRecordsListProps) {
                   <p className="text-sm text-muted-foreground line-clamp-3">
                     {typeof record.plan === 'string' 
                       ? record.plan 
-                      : record.plan?.treatment || 'Plano de tratamento definido'
+                      : record.plan?.interventions?.[0] || 'Plano de tratamento definido'
                     }
                   </p>
                 </div>
@@ -145,14 +145,14 @@ export function SOAPRecordsList({ patientId }: SOAPRecordsListProps) {
               <div className="mt-4 pt-4 border-t">
                 <h4 className="text-sm font-medium text-muted-foreground mb-2">Sinais Vitais</h4>
                 <div className="flex gap-4 text-sm">
-                  {record.vitalSigns.bloodPressure && (
-                    <span>PA: {record.vitalSigns.bloodPressure}</span>
-                  )}
-                  {record.vitalSigns.heartRate && (
-                    <span>FC: {record.vitalSigns.heartRate}</span>
-                  )}
-                  {record.vitalSigns.temperature && (
-                    <span>Temp: {record.vitalSigns.temperature}</span>
+                   {record.vitalSigns.blood_pressure && (
+                     <span>PA: {record.vitalSigns.blood_pressure}</span>
+                   )}
+                   {record.vitalSigns.heart_rate && (
+                     <span>FC: {record.vitalSigns.heart_rate}</span>
+                   )}
+                   {record.vitalSigns.temperature && (
+                     <span>Temp: {record.vitalSigns.temperature}</span>
                   )}
                 </div>
               </div>

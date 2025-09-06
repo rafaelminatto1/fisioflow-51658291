@@ -137,10 +137,10 @@ export function ReportBuilder({ onSave, onPreview, initialConfig }: ReportBuilde
     const keys = path.split('.');
     const newConfig = { ...config };
     
-    let current: Record<string, unknown> = newConfig as Record<string, unknown>;
-    for (let i = 0; i < keys.length - 1; i++) {
-      current = current[keys[i]];
-    }
+     let current: Record<string, unknown> = newConfig as Record<string, unknown>;
+     for (let i = 0; i < keys.length - 1; i++) {
+       current = current[keys[i]] as Record<string, unknown>;
+     }
     current[keys[keys.length - 1]] = value;
     
     setConfig(newConfig);
@@ -526,7 +526,7 @@ export function ReportBuilder({ onSave, onPreview, initialConfig }: ReportBuilde
                     <div>
                       <Label>Valor</Label>
                       <Input
-                        value={filter.value}
+                        value={String(filter.value)}
                         onChange={(e) => {
                           const newFilters = [...config.query_config.filters];
                           newFilters[index] = { ...filter, value: e.target.value };

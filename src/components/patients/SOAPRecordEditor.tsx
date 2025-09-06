@@ -53,20 +53,22 @@ export function SOAPRecordEditor({ patientId, onClose, recordId }: SOAPRecordEdi
         patientId,
         sessionNumber: data.sessionNumber,
         subjective: data.subjective,
-        objective: {
-          findings: data.objectiveFindings,
-          vitalSigns: {
-            bloodPressure: data.bloodPressure,
-            heartRate: data.heartRate,
-            temperature: data.temperature,
-          }
-        },
+         objective: {
+           inspection: data.objectiveFindings,
+           palpation: '',
+           movement_tests: {},
+           special_tests: {},
+           posture_analysis: '',
+         },
         assessment: data.assessment,
-        plan: {
-          treatment: data.treatmentPlan,
-          goals: data.goals,
-          observations: data.observations,
-        },
+         plan: {
+           short_term_goals: [data.goals],
+           long_term_goals: [],
+           interventions: [data.treatmentPlan],
+           frequency: '',
+           duration: '',
+           home_exercises: [],
+         },
         createdBy: 'current-user-id', // Implementar com auth real
       };
 

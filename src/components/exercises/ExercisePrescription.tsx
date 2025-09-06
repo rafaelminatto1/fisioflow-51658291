@@ -341,9 +341,9 @@ export function ExercisePrescription({
                                         <Badge variant="outline" className="text-xs">
                                           {prescribedEx.exercise.category}
                                         </Badge>
-                                        <Badge variant="secondary" className="text-xs">
-                                          {prescribedEx.exercise.difficulty}
-                                        </Badge>
+                                         <Badge variant="secondary" className="text-xs">
+                                           Dificuldade Padrão
+                                         </Badge>
                                       </div>
                                     </div>
                                     
