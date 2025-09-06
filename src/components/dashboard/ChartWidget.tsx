@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { 
   ResponsiveContainer, 
   LineChart, 
@@ -15,9 +14,8 @@ import {
   Pie,
   Cell 
 } from 'recharts';
-import { Calendar, TrendingUp, Filter } from 'lucide-react';
+import { TrendingUp, Filter } from 'lucide-react';
 import { useState } from 'react';
-import { cn } from '@/lib/utils';
 
 type ChartType = 'line' | 'bar' | 'pie';
 type TimePeriod = 'week' | 'month' | '3months' | '6months' | 'year';

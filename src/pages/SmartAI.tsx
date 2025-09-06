@@ -7,7 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { KnowledgeContributor } from '@/components/ai/KnowledgeContributor';
-import { AIAssistant } from '@/components/ai/AIAssistant';
 import { AIChat } from '@/components/ai/AIChat';
 import { useAI } from '@/hooks/useAI';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,6 +40,16 @@ export default function SmartAI() {
   useEffect(() => {
     loadStats();
   }, []);
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="p-6">
+          <div className="text-center">Carregando...</div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   const loadStats = async () => {
     try {

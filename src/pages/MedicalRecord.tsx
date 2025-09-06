@@ -19,7 +19,7 @@ import {
   Calendar,
   User,
   Activity,
-  TrendingUp,
+
   AlertCircle,
   Download,
   Eye,
@@ -30,13 +30,13 @@ import { ptBR } from 'date-fns/locale';
 import { TreatmentSessionModal } from '@/components/modals/TreatmentSessionModal';
 
 export function MedicalRecord() {
-  const { patients, medicalRecords, addMedicalRecord, treatmentSessions, addTreatmentSession } = useData();
+  const { patients, medicalRecords, addMedicalRecord, treatmentSessions } = useData();
   const { toast } = useToast();
   const [selectedPatient, setSelectedPatient] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [recordType, setRecordType] = useState<string>('all');
   const [isNewRecordOpen, setIsNewRecordOpen] = useState(false);
-  const [isNewSessionOpen, setIsNewSessionOpen] = useState(false);
+
 
   const [newRecord, setNewRecord] = useState({
     type: 'Evolução' as const,
@@ -81,6 +81,7 @@ export function MedicalRecord() {
       setNewRecord({ type: 'Evolução', title: '', content: '', patient_id: '' });
       setIsNewRecordOpen(false);
     } catch (error) {
+      console.error('Error creating medical record:', error);
       toast({
         title: "Erro",
         description: "Erro ao criar registro médico.",

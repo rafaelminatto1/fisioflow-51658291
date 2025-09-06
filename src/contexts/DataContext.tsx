@@ -14,89 +14,146 @@ interface Patient {
   updatedAt: string;
 }
 
+interface Appointment {
+  id: string;
+  patientId: string;
+  date: string;
+  time: string;
+  type: string;
+  status: string;
+  notes?: string;
+}
+
+interface Exercise {
+  id: string;
+  name: string;
+  category: string;
+  difficulty: string;
+  description: string;
+}
+
+interface ExercisePlan {
+  id: string;
+  name: string;
+  patientId: string;
+  exercises: Record<string, unknown>[];
+}
+
+interface MedicalRecord {
+  id: string;
+  patientId: string;
+  type: string;
+  title: string;
+  content: string;
+}
+
+interface TreatmentSession {
+  id: string;
+  patientId: string;
+  observations: string;
+  painLevel: number;
+  evolutionNotes: string;
+}
+
+interface SOAPRecord {
+  id: string;
+  patientId: string;
+  subjective?: string;
+  objective?: Record<string, unknown>;
+  assessment?: string;
+  plan?: Record<string, unknown>;
+}
+
 interface DataContextType {
   // Dados mockados
-  patients: any[];
-  appointments: any[];
+  patients: Patient[];
+  appointments: Appointment[];
   
   // Funções mockadas para evitar erros de tipo
-  addPatient: (patient: any) => Promise<any>;
-  updatePatient: (id: string, patient: any) => Promise<any>;
+  addPatient: (patient: Omit<Patient, 'id' | 'progress' | 'createdAt' | 'updatedAt'>) => Promise<Patient>;
+  updatePatient: (id: string, patient: Partial<Patient>) => Promise<Patient>;
   deletePatient: (id: string) => Promise<void>;
-  addAppointment: (appointment: any) => Promise<any>;
-  updateAppointment: (id: string, appointment: any) => Promise<any>;
+  addAppointment: (appointment: Omit<Appointment, 'id'>) => Promise<Appointment>;
+  updateAppointment: (id: string, appointment: Partial<Appointment>) => Promise<Appointment>;
   deleteAppointment: (id: string) => Promise<void>;
-  addExercise: (exercise: any) => Promise<any>;
-  addExercisePlan: (plan: any) => Promise<any>;
-  addMedicalRecord: (record: any) => Promise<any>;
-  addTreatmentSession: (session: any) => Promise<any>;
-  updateTreatmentSession: (id: string, session: any) => Promise<void>;
-  addSOAPRecord: (record: any) => Promise<any>;
-  updateSOAPRecord: (id: string, record: any) => Promise<void>;
+  addExercise: (exercise: Omit<Exercise, 'id'>) => Promise<Exercise>;
+  addExercisePlan: (plan: Omit<ExercisePlan, 'id'>) => Promise<ExercisePlan>;
+  addMedicalRecord: (record: Omit<MedicalRecord, 'id'>) => Promise<MedicalRecord>;
+  addTreatmentSession: (session: Omit<TreatmentSession, 'id'>) => Promise<TreatmentSession>;
+  updateTreatmentSession: (id: string, session: Partial<TreatmentSession>) => Promise<void>;
+  addSOAPRecord: (record: Omit<SOAPRecord, 'id'>) => Promise<SOAPRecord>;
+  updateSOAPRecord: (id: string, record: Partial<SOAPRecord>) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | null>(null);
 
 export function DataProvider({ children }: { children: ReactNode }) {
   // Implementações mockadas para evitar erros
-  const addPatient = async (patientData: any) => {
+  const addPatient = async (patientData: Omit<Patient, 'id' | 'progress' | 'createdAt' | 'updatedAt'>) => {
     console.log('Mock addPatient called with:', patientData);
-    return { id: 'mock-id', ...patientData, status: 'active', progress: 0 };
+    return { 
+      id: 'mock-id', 
+      ...patientData, 
+      status: 'active', 
+      progress: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
   };
 
-  const addAppointment = async (appointmentData: any) => {
+  const addAppointment = async (appointmentData: Omit<Appointment, 'id'>) => {
     console.log('Mock addAppointment called with:', appointmentData);
     return { id: 'mock-id', ...appointmentData };
   };
 
-  const addExercise = async (exerciseData: any) => {
+  const addExercise = async (exerciseData: Omit<Exercise, 'id'>) => {
     console.log('Mock addExercise called with:', exerciseData);
     return { id: 'mock-id', ...exerciseData };
   };
 
-  const addExercisePlan = async (planData: any) => {
+  const addExercisePlan = async (planData: Omit<ExercisePlan, 'id'>) => {
     console.log('Mock addExercisePlan called with:', planData);
     return { id: 'mock-id', ...planData };
   };
 
-  const addMedicalRecord = async (recordData: any) => {
+  const addMedicalRecord = async (recordData: Omit<MedicalRecord, 'id'>) => {
     console.log('Mock addMedicalRecord called with:', recordData);
     return { id: 'mock-id', ...recordData };
   };
 
-  const addTreatmentSession = async (sessionData: any) => {
+  const addTreatmentSession = async (sessionData: Omit<TreatmentSession, 'id'>) => {
     console.log('Mock addTreatmentSession called with:', sessionData);
     return { id: 'mock-id', ...sessionData };
   };
 
-  const updateTreatmentSession = async (id: string, updates: any) => {
+  const updateTreatmentSession = async (id: string, updates: Partial<TreatmentSession>) => {
     console.log('Mock updateTreatmentSession called with:', id, updates);
   };
 
-  const addSOAPRecord = async (recordData: any) => {
+  const addSOAPRecord = async (recordData: Omit<SOAPRecord, 'id'>) => {
     console.log('Mock addSOAPRecord called with:', recordData);
     return { id: 'mock-id', ...recordData };
   };
 
-  const updatePatient = async (id: string, patientData: any) => {
+  const updatePatient = async (id: string, patientData: Partial<Patient>) => {
     console.log('Mock updatePatient called with:', id, patientData);
-    return { id, ...patientData };
+    return { id, ...patientData } as Patient;
   };
 
   const deletePatient = async (id: string) => {
     console.log('Mock deletePatient called with:', id);
   };
 
-  const updateAppointment = async (id: string, appointmentData: any) => {
+  const updateAppointment = async (id: string, appointmentData: Partial<Appointment>) => {
     console.log('Mock updateAppointment called with:', id, appointmentData);
-    return { id, ...appointmentData };
+    return { id, ...appointmentData } as Appointment;
   };
 
   const deleteAppointment = async (id: string) => {
     console.log('Mock deleteAppointment called with:', id);
   };
 
-  const updateSOAPRecord = async (id: string, updates: any) => {
+  const updateSOAPRecord = async (id: string, updates: Partial<SOAPRecord>) => {
     console.log('Mock updateSOAPRecord called with:', id, updates);
   };
 

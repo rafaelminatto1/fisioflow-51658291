@@ -1,16 +1,26 @@
 import { useState } from 'react';
-import { toast } from 'sonner';
+
+interface SOAPRecord {
+  id?: string;
+  patient_id: string;
+  subjective: string;
+  objective: string;
+  assessment: string;
+  plan: string;
+  created_at?: string;
+  updated_at?: string;
+}
 
 export function useSOAPRecords() {
-  const [records, setRecords] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [records] = useState<SOAPRecord[]>([]);
+  const [loading] = useState(false);
 
-  const addRecord = async (recordData: any) => {
+  const addRecord = async (recordData: Omit<SOAPRecord, 'id'>) => {
     console.log('Adding SOAP record:', recordData);
     return { id: 'mock-id', ...recordData };
   };
 
-  const updateRecord = async (id: string, updates: any) => {
+  const updateRecord = async (id: string, updates: Partial<SOAPRecord>) => {
     console.log('Updating SOAP record:', id, updates);
   };
 
@@ -18,10 +28,10 @@ export function useSOAPRecords() {
     records,
     loading,
     fetchRecords: async () => {},
-    getRecordsByPatient: async (id: string) => [],
+    getRecordsByPatient: async (_id: string) => [],
     addRecord,
     updateRecord,
-    signRecord: async (id: string) => {},
-    deleteRecord: async (id: string) => {},
+    signRecord: async (_id: string) => {},
+    deleteRecord: async (_id: string) => {},
   };
 }

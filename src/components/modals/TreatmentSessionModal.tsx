@@ -77,7 +77,7 @@ export function TreatmentSessionModal({ trigger, open, onOpenChange, appointment
         next_session_goals: ''
       });
       setModalOpen(false);
-    } catch (error) {
+    } catch {
       toast({
         title: "Erro",
         description: "Erro ao registrar sessão de tratamento.",

@@ -2,6 +2,28 @@
 
 export type UserRole = 'admin' | 'fisioterapeuta' | 'estagiario' | 'paciente' | 'parceiro';
 
+interface AvailableHours {
+  [day: string]: {
+    start: string;
+    end: string;
+    available: boolean;
+  };
+}
+
+interface NotificationPreferences {
+  email: boolean;
+  sms: boolean;
+  push: boolean;
+  appointment_reminders: boolean;
+  marketing: boolean;
+}
+
+interface EmergencyContact {
+  name: string;
+  phone: string;
+  relationship: string;
+}
+
 export interface Profile {
   id: string;
   user_id: string;
@@ -18,13 +40,13 @@ export interface Profile {
   bio?: string;
   experience_years?: number;
   consultation_fee?: number;
-  available_hours?: any;
-  notification_preferences?: any;
+  available_hours?: AvailableHours;
+  notification_preferences?: NotificationPreferences;
   onboarding_completed: boolean;
   last_login_at?: string;
   timezone?: string;
   is_active: boolean;
-  emergency_contact?: any;
+  emergency_contact?: EmergencyContact;
   created_at: string;
   updated_at: string;
 }

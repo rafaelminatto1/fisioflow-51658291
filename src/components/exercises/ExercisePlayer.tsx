@@ -44,7 +44,7 @@ interface ExercisePlayerProps {
 
 const playbackSpeeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
-export function ExercisePlayer({ exercise, onClose, className = '' }: ExercisePlayerProps) {
+export function ExercisePlayer({ exercise, className = '' }: ExercisePlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);

@@ -14,7 +14,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -39,18 +38,16 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { ReportBuilder, ReportConfig } from '@/components/reports/ReportBuilder';
 import { 
   useReports, 
-  useReportTemplates, 
   useCreateReport, 
   useDeleteReport, 
   useExecuteReport,
   useReportExecutions,
   REPORT_TEMPLATES
 } from '@/hooks/useReports';
-import { ExportService } from '@/services/analytics/exportService';
 
 export default function ReportsLibrary() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
+  // const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [showBuilder, setShowBuilder] = useState(false);
   const [editingReport, setEditingReport] = useState<{
     name: string;
@@ -62,8 +59,8 @@ export default function ReportsLibrary() {
   } | null>(null);
 
   // Hooks
-  const { data: reports = [], isLoading: reportsLoading } = useReports();
-  const { data: templates = [] } = useReportTemplates();
+  const { data: reports = [] } = useReports();
+  // const { data: templates = [] } = useReportTemplates();
   const { data: executions = [] } = useReportExecutions();
   const createReport = useCreateReport();
   const deleteReport = useDeleteReport();

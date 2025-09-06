@@ -150,6 +150,7 @@ export default function Vouchers() {
 
     setPurchasing(true);
     try {
+      console.log('Purchasing voucher:', voucherId);
       // Por enquanto, apenas mostra mensagem de sucesso
       // A integração com Stripe será implementada posteriormente
       toast({

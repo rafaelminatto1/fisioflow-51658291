@@ -39,7 +39,7 @@ export function ExerciseLibrary({
   className = '' 
 }: ExerciseLibraryProps) {
   const { exercises, loading } = useExercises();
-  const { favorites, isFavorite, toggleFavorite } = useExerciseFavorites();
+  const { isFavorite } = useExerciseFavorites();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');

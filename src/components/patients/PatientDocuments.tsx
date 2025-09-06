@@ -22,7 +22,7 @@ interface PatientDocumentsProps {
 
 export function PatientDocuments({ patientId }: PatientDocumentsProps) {
   const [uploadingFiles, setUploadingFiles] = useState<boolean>(false);
-  const { documents, loading, uploadDocument, deleteDocument, getDocumentsByPatient } = usePatientDocuments();
+  const { loading, uploadDocument, deleteDocument, getDocumentsByPatient } = usePatientDocuments();
   
   const patientDocs = getDocumentsByPatient(patientId);
 
@@ -37,7 +37,7 @@ export function PatientDocuments({ patientId }: PatientDocumentsProps) {
         await uploadDocument(patientId, file, 'other');
       }
       toast.success('Documentos enviados com sucesso!');
-    } catch (error) {
+    } catch {
       toast.error('Erro ao enviar documentos');
     } finally {
       setUploadingFiles(false);
@@ -49,7 +49,7 @@ export function PatientDocuments({ patientId }: PatientDocumentsProps) {
     try {
       await deleteDocument(doc.id, doc.fileUrl);
       toast.success('Documento excluído com sucesso!');
-    } catch (error) {
+    } catch {
       toast.error('Erro ao excluir documento');
     }
   };

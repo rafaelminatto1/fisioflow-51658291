@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSmartAdaptation, AdaptationSuggestion } from '@/hooks/useSmartAdaptation';
+import { useSmartAdaptation } from '@/hooks/useSmartAdaptation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,8 +23,7 @@ interface SmartAdaptationManagerProps {
 }
 
 export default function SmartAdaptationManager({ 
-  patientId, 
-  exercisePlanId 
+  patientId
 }: SmartAdaptationManagerProps) {
   const {
     rules,
@@ -32,9 +31,6 @@ export default function SmartAdaptationManager({
     loading,
     error,
     fetchRules,
-    createRule,
-    updateRule,
-    deleteRule,
     analyzePatientMetrics,
     applySuggestion,
     rejectSuggestion
@@ -57,7 +53,7 @@ export default function SmartAdaptationManager({
       } else {
         toast.info('Nenhuma adaptação necessária no momento');
       }
-    } catch (error) {
+    } catch {
       toast.error('Erro ao analisar métricas do paciente');
     } finally {
       setAnalyzing(false);
@@ -68,7 +64,7 @@ export default function SmartAdaptationManager({
     try {
       await applySuggestion(suggestionId);
       toast.success('Adaptação aplicada com sucesso');
-    } catch (error) {
+    } catch {
       toast.error('Erro ao aplicar adaptação');
     }
   };
@@ -77,7 +73,7 @@ export default function SmartAdaptationManager({
     try {
       await rejectSuggestion(suggestionId);
       toast.success('Sugestão rejeitada');
-    } catch (error) {
+    } catch {
       toast.error('Erro ao rejeitar sugestão');
     }
   };

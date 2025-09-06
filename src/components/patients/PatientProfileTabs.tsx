@@ -8,7 +8,6 @@ import { PatientDocuments } from './PatientDocuments';
 import { 
   User, 
   Heart, 
-  FileText, 
   Calendar, 
   CreditCard,
   Activity,

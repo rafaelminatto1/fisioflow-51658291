@@ -22,6 +22,7 @@ import {
 const Patients = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
+  console.log('Selected patient:', selectedPatient);
   const [editingPatient, setEditingPatient] = useState<string | null>(null);
   const [viewingPatient, setViewingPatient] = useState<string | null>(null);
   const { patients, appointments } = useData();

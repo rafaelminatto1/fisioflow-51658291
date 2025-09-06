@@ -10,15 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Calendar, 
   Clock, 
-  User, 
-  FileText, 
   Plus, 
   Edit, 
   Trash2,
   CheckCircle,
-  AlertCircle,
-  Activity,
-  Target,
   TrendingUp,
   Stethoscope,
   ClipboardList
@@ -56,8 +51,6 @@ const TreatmentSessionManager: React.FC<TreatmentSessionManagerProps> = ({ patie
   const { toast } = useToast();
   const [sessions, setSessions] = useState<TreatmentSession[]>([]);
   const [isNewSessionOpen, setIsNewSessionOpen] = useState(false);
-  const [selectedSession, setSelectedSession] = useState<TreatmentSession | null>(null);
-  const [isEditSessionOpen, setIsEditSessionOpen] = useState(false);
   
   const [newSession, setNewSession] = useState({
     session_date: new Date().toISOString().split('T')[0],
@@ -109,20 +102,6 @@ const TreatmentSessionManager: React.FC<TreatmentSessionManagerProps> = ({ patie
     });
   };
 
-  const handleUpdateSession = () => {
-    if (!selectedSession) return;
-
-    setSessions(prev => prev.map(session => 
-      session.id === selectedSession.id ? selectedSession : session
-    ));
-    setIsEditSessionOpen(false);
-    setSelectedSession(null);
-    
-    toast({
-      title: "Sucesso",
-      description: "Sessão atualizada com sucesso!",
-    });
-  };
 
   const handleDeleteSession = (sessionId: string) => {
     setSessions(prev => prev.filter(session => session.id !== sessionId));
@@ -203,7 +182,7 @@ const TreatmentSessionManager: React.FC<TreatmentSessionManagerProps> = ({ patie
                   <label className="text-sm font-medium mb-2 block">Tipo de Sessão</label>
                   <Select 
                     value={newSession.session_type} 
-                    onValueChange={(value: any) => setNewSession(prev => ({ ...prev, session_type: value }))}
+                    onValueChange={(value: string) => setNewSession(prev => ({ ...prev, session_type: value }))}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -449,10 +428,8 @@ const TreatmentSessionManager: React.FC<TreatmentSessionManagerProps> = ({ patie
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => {
-                          setSelectedSession(session);
-                          setIsEditSessionOpen(true);
-                        }}
+                        disabled
+                        title="Funcionalidade em desenvolvimento"
                       >
                         <Edit className="w-4 h-4" />
                       </Button>

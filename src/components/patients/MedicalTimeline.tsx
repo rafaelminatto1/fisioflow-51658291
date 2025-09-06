@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
   Calendar, 
@@ -21,11 +21,7 @@ interface TimelineEvent {
   professional?: string;
 }
 
-interface MedicalTimelineProps {
-  patientId: string;
-}
-
-export function MedicalTimeline({ patientId }: MedicalTimelineProps) {
+export function MedicalTimeline() {
   // Mock data - implementar integração real com dados
   const events: TimelineEvent[] = [
     {
@@ -111,7 +107,7 @@ export function MedicalTimeline({ patientId }: MedicalTimelineProps) {
           {/* Timeline line */}
           <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
           
-          {sortedEvents.map((event, index) => (
+          {sortedEvents.map((event) => (
             <div key={event.id} className="relative flex items-start gap-4 pb-4">
               {/* Timeline dot */}
               <div className="relative z-10 flex h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-card shadow-sm">

@@ -13,7 +13,6 @@ import {
   Calendar, 
   Activity, 
   TrendingUp,
-  Clock,
   FileText,
   MessageSquare,
   Download,
@@ -21,8 +20,7 @@ import {
   CheckCircle,
   Target
 } from 'lucide-react';
-import { format, addDays, isAfter } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { format } from 'date-fns';
 
 interface PatientDashboardProps {
   lastUpdate: Date;

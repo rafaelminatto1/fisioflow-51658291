@@ -14,7 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from '@/hooks/use-toast';
+
 
 export function Profile() {
   const { user, profile, updateProfile, updatePassword } = useAuth();
@@ -110,6 +110,7 @@ export function Profile() {
               <AvatarUpload 
                 currentAvatar={profile.avatar_url || ''}
                 onAvatarUpdate={(url) => {
+                  console.log('Avatar updated:', url);
                   // Atualização já é feita internamente no componente
                 }}
               />

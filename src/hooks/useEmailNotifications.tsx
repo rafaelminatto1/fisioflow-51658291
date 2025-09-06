@@ -38,18 +38,18 @@ export interface EmailConfig {
 }
 
 export function useEmailNotifications() {
-  const [templates, setTemplates] = useState<EmailTemplate[]>([]);
-  const [notifications, setNotifications] = useState<EmailNotification[]>([]);
-  const [config, setConfig] = useState<EmailConfig | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [templates] = useState<EmailTemplate[]>([]);
+  const [notifications] = useState<EmailNotification[]>([]);
+  const [config] = useState<EmailConfig | null>(null);
+  const [loading] = useState(false);
+  const [error] = useState<string | null>(null);
 
   // Placeholder functions for now
   const fetchTemplates = useCallback(async () => {
     toast.info('Email functionality not yet implemented');
   }, []);
 
-  const fetchNotifications = useCallback(async (patientId?: string) => {
+  const fetchNotifications = useCallback(async (_patientId?: string) => {
     toast.info('Email functionality not yet implemented');
   }, []);
 
@@ -57,33 +57,33 @@ export function useEmailNotifications() {
     toast.info('Email functionality not yet implemented');
   }, []);
 
-  const createTemplate = useCallback(async (template: Omit<EmailTemplate, 'id' | 'created_at' | 'updated_at'>) => {
+  const createTemplate = useCallback(async (_template: Omit<EmailTemplate, 'id' | 'created_at' | 'updated_at'>) => {
     toast.info('Email functionality not yet implemented');
     throw new Error('Not implemented');
   }, []);
 
-  const updateTemplate = useCallback(async (id: string, updates: Partial<EmailTemplate>) => {
+  const updateTemplate = useCallback(async (_id: string, _updates: Partial<EmailTemplate>) => {
     toast.info('Email functionality not yet implemented');
     throw new Error('Not implemented');
   }, []);
 
   const sendNotification = useCallback(async (
-    recipientEmail: string,
-    recipientName: string,
-    templateId: string,
-    variables: Record<string, unknown> = {},
-    scheduledFor?: string
+    _recipientEmail: string,
+    _recipientName: string,
+    _templateId: string,
+    _variables: Record<string, unknown> = {},
+    _scheduledFor?: string
   ) => {
     toast.info('Email functionality not yet implemented');
     throw new Error('Not implemented');
   }, []);
 
-  const updateConfig = useCallback(async (newConfig: EmailConfig) => {
+  const updateConfig = useCallback(async (_newConfig: EmailConfig) => {
     toast.info('Email functionality not yet implemented');
     throw new Error('Not implemented');
   }, []);
 
-  const cancelNotification = useCallback(async (id: string) => {
+  const cancelNotification = useCallback(async (_id: string) => {
     toast.info('Email functionality not yet implemented');
     throw new Error('Not implemented');
   }, []);

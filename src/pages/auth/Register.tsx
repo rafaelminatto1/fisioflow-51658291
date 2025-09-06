@@ -32,13 +32,12 @@ export function Register() {
     handleSubmit,
     formState: { errors },
     setError,
-    setValue,
-    watch
+    setValue
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema)
   });
 
-  const selectedRole = watch('role');
+
 
   // Redirecionar se já estiver logado
   if (user && !loading) {

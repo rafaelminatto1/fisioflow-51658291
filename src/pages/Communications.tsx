@@ -20,17 +20,12 @@ import {
   Bell,
   Send,
   Clock,
-  Users,
   Settings,
   CheckCircle,
   XCircle,
-  AlertCircle,
   MessageCircle,
-  Smartphone,
-  Globe,
   Plus,
   Search,
-  Filter,
   Eye,
   Trash2
 } from 'lucide-react';
@@ -82,9 +77,8 @@ const mockTemplates = [
 ];
 
 export function Communications() {
-  const { patients, appointments } = useData();
+  const { patients } = useData();
   const { toast } = useToast();
-  const [selectedPatients, setSelectedPatients] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [isNewNotificationOpen, setIsNewNotificationOpen] = useState(false);

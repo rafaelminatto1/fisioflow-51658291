@@ -45,11 +45,11 @@ export const useSmartAdaptation = () => {
     return newRule;
   }, []);
 
-  const updateRule = useCallback(async (id: string, updates: Partial<AdaptationRule>) => {
+  const updateRule = useCallback(async (id: string, _updates: Partial<AdaptationRule>) => {
     return rules.find(r => r.id === id);
   }, [rules]);
 
-  const deleteRule = useCallback(async (id: string) => {
+  const deleteRule = useCallback(async (_id: string) => {
     // No operation
   }, []);
 
@@ -63,8 +63,8 @@ export const useSmartAdaptation = () => {
     updateRule,
     deleteRule,
     adaptationRules: rules,
-    analyzePatientMetrics: async (patientId: string) => [],
-    applySuggestion: async (id: string) => {},
-    rejectSuggestion: async (id: string) => {}
+    analyzePatientMetrics: async (_patientId: string) => [],
+    applySuggestion: async (_id: string) => {},
+    rejectSuggestion: async (_id: string) => {}
   };
 };

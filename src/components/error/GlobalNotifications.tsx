@@ -200,9 +200,7 @@ interface GlobalNotificationsProviderProps {
 }
 
 export const GlobalNotificationsProvider: React.FC<GlobalNotificationsProviderProps> = ({
-  children,
-  position = 'top-right',
-  maxNotifications = 5
+  children
 }) => {
   return (
     <>

@@ -24,4 +24,8 @@ async function testUsers() {
     });
     
   } catch (err) {
-    console.log('Erro:', err.
+    console.log('Erro:', err.message);
+  }
+}
+
+testUsers();

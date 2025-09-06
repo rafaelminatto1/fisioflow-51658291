@@ -19,8 +19,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface TherapistDashboardProps {
   lastUpdate: Date;

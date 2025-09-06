@@ -101,6 +101,7 @@ export class ProviderRotator {
     context: AIQueryContext
   ): Promise<{ text: string; confidence: number } | null> {
     try {
+      console.log('Query context:', context);
       // Simulação de diferentes provedores
       // Em produção, aqui seria implementada a integração real com cada provedor
       switch (provider.provider) {

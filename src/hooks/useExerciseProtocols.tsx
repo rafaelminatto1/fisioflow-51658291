@@ -38,7 +38,7 @@ export function useExerciseProtocols() {
 
       if (error) throw error;
 
-      setProtocols(data as any || []);
+      setProtocols(data as ExerciseProtocol[] || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar protocolos');
       console.error('Erro ao carregar protocolos:', err);
@@ -62,7 +62,7 @@ export function useExerciseProtocols() {
         .from('exercise_protocols')
         .insert({
           ...protocolData,
-          exercises: protocolData.exercises as any,
+          exercises: protocolData.exercises,
           created_by: user.id
         })
         .select()
@@ -93,7 +93,7 @@ export function useExerciseProtocols() {
     try {
       const { data, error } = await supabase
         .from('exercise_protocols')
-        .update(updates as any)
+        .update(updates)
         .eq('id', id)
         .select()
         .single();
@@ -180,7 +180,7 @@ export function useExerciseProtocols() {
       if (planError) throw planError;
 
       // Adicionar exercícios do protocolo ao plano
-      const exerciseItems = protocol.exercises.map((exercise: any) => ({
+      const exerciseItems = protocol.exercises.map((exercise: Record<string, unknown>) => ({
         exercise_plan_id: planData.id,
         exercise_id: String(exercise.id),
         sets: Number(exercise.sets) || 3,

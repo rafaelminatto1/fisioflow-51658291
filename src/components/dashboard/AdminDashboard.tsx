@@ -149,7 +149,7 @@ export function AdminDashboard({ lastUpdate }: AdminDashboardProps) {
         title: "Sucesso",
         description: "Consulta confirmada com sucesso!"
       });
-    } catch (error) {
+    } catch {
       toast({
         title: "Erro",
         description: "Não foi possível confirmar a consulta.",
@@ -171,7 +171,7 @@ export function AdminDashboard({ lastUpdate }: AdminDashboardProps) {
         title: "Sucesso",
         description: "Consulta cancelada com sucesso!"
       });
-    } catch (error) {
+    } catch {
       toast({
         title: "Erro",
         description: "Não foi possível cancelar a consulta.",

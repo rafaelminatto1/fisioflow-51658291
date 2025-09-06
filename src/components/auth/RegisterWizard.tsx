@@ -6,7 +6,6 @@ import { UserTypeSelector } from './UserTypeSelector';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { 
-  RegisterFormData, 
   userTypeSchema,
   personalDataSchema,
   professionalDataSchema,
@@ -16,13 +15,12 @@ import {
   ProfessionalDataFormData,
   ConfirmationFormData
 } from '@/lib/validations/auth';
-import { UserRole } from '@/types/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 
 interface RegisterWizardProps {

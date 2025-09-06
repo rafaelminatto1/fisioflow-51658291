@@ -5,7 +5,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar, RotateCcw, X } from 'lucide-react';
 import { format, addWeeks, addDays, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';

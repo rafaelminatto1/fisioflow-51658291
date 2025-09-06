@@ -51,6 +51,7 @@ export default function Auth() {
         navigate('/');
       }
     } catch (err: unknown) {
+      console.error('Sign in error:', err);
       setError('Erro inesperado. Tente novamente.');
     } finally {
       setLoading(false);
@@ -90,6 +91,7 @@ export default function Auth() {
         });
       }
     } catch (err: unknown) {
+      console.error('Sign up error:', err);
       setError('Erro inesperado. Tente novamente.');
     } finally {
       setLoading(false);

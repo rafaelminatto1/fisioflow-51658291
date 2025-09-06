@@ -58,7 +58,7 @@ export function NewExercisePlanModal({ trigger, open, onOpenChange }: NewExercis
         status: 'Ativo'
       });
       setModalOpen(false);
-    } catch (error) {
+    } catch {
       toast({
         title: "Erro",
         description: "Erro ao criar plano de exercícios.",

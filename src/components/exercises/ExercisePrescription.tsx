@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,10 +21,7 @@ import {
 import { 
   X, 
   GripVertical, 
-  Plus, 
-  Clock, 
   Dumbbell,
-  Calendar,
   Save,
   Printer,
   Share
@@ -56,7 +53,6 @@ interface PrescribedExercise {
 }
 
 interface ExercisePrescriptionProps {
-  patientId: string;
   patientName: string;
   onSave?: (prescription: PrescribedExercise[]) => void;
   initialExercises?: PrescribedExercise[];
@@ -74,7 +70,6 @@ const frequencyOptions = [
 ];
 
 export function ExercisePrescription({ 
-  patientId, 
   patientName,
   onSave,
   initialExercises = [],
@@ -87,24 +82,6 @@ export function ExercisePrescription({
   const [endDate, setEndDate] = useState('');
   const { toast } = useToast();
 
-  const addExercise = useCallback((exercise: Exercise) => {
-    const newPrescribedExercise: PrescribedExercise = {
-      id: `${exercise.id}-${Date.now()}`,
-      exercise,
-      sets: 3,
-      reps: 10,
-      restTime: 60,
-      frequency: 3,
-      order: prescribedExercises.length,
-      notes: ''
-    };
-
-    setPrescribedExercises(prev => [...prev, newPrescribedExercise]);
-    toast({
-      title: 'Exercício adicionado',
-      description: `${exercise.name} foi adicionado ao programa`
-    });
-  }, [prescribedExercises.length, toast]);
 
   const removeExercise = (id: string) => {
     setPrescribedExercises(prev => prev.filter(ex => ex.id !== id));

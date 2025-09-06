@@ -40,7 +40,6 @@ export default function Partner() {
     pendingCommissions: 0
   });
   const [patients, setPatients] = useState<PatientWithVoucher[]>([]);
-  const [loading, setLoading] = useState(true);
 
   const loadPartnerData = useCallback(async () => {
     try {
@@ -96,8 +95,6 @@ export default function Partner() {
       setPatients(patientsData);
     } catch (error) {
       console.error('Error loading partner data:', error);
-    } finally {
-      setLoading(false);
     }
   }, [profile?.user_id]);
 

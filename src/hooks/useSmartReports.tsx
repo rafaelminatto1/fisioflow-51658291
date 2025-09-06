@@ -53,8 +53,8 @@ export function useSmartReports() {
   const [adherenceReports, setAdherenceReports] = useState<AdherenceReport[]>([]);
   const [progressReports, setProgressReports] = useState<ProgressReport[]>([]);
   const [outcomeReports, setOutcomeReports] = useState<OutcomeReport[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loading] = useState(false);
+  const [error] = useState<string | null>(null);
 
   // Mock implementations - database tables don't exist yet
   const generateAdherenceReport = async (patientId: string, planId: string, startDate: string, endDate: string) => {

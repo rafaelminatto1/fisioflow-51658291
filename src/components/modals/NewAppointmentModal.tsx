@@ -39,7 +39,6 @@ import {
   Plus, 
   User, 
   Send,
-  Check,
   AlertCircle
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -176,7 +175,7 @@ export function NewAppointmentModal({
         duration: 8000,
       });
 
-    } catch (error) {
+    } catch {
       toast({
         title: "Erro",
         description: "Erro ao cadastrar paciente.",
@@ -249,7 +248,7 @@ export function NewAppointmentModal({
             medicalHistory: ''
           });
           patientId = newPatient.id;
-        } catch (error) {
+        } catch {
           toast({
             title: "Erro",
             description: "Erro ao cadastrar paciente.",
@@ -293,7 +292,6 @@ export function NewAppointmentModal({
       return;
     }
 
-    const selectedPatient = patients.find(p => p.id === patientId);
 
     const newAppointment = {
       patientId: patientId,
@@ -319,7 +317,7 @@ export function NewAppointmentModal({
       setShowPatientDropdown(false);
       setShowQuickRegister(false);
       setOpen(false);
-    } catch (error) {
+    } catch {
       toast({
         title: "Erro",
         description: "Erro ao criar agendamento.",
@@ -365,7 +363,7 @@ export function NewAppointmentModal({
             <FormField
               control={form.control}
               name="patientName"
-              render={({ field }) => (
+              render={() => (
                 <FormItem>
                   <FormLabel>Paciente</FormLabel>
                   <div className="relative" ref={inputRef}>

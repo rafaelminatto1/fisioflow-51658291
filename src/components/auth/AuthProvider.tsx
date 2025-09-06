@@ -82,7 +82,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   // Função de login
-  const signIn = async (email: string, password: string, remember = false) => {
+  const signIn = async (email: string, password: string) => {
     try {
       console.log('🔑 AuthProvider: Iniciando login para:', email);
       setLoading(true);
@@ -132,7 +132,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       const redirectUrl = `${window.location.origin}/`;
       
-      const { data: authData, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {

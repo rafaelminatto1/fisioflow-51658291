@@ -4,8 +4,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Eye } from 'lucide-react';
 import { useData } from '@/contexts/DataContext';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 export function RecentPatients() {
   const { patients } = useData();

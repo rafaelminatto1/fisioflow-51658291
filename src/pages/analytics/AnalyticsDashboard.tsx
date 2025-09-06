@@ -69,7 +69,7 @@ export default function AnalyticsDashboard() {
   const { data: kpiMetrics, isLoading: kpiLoading } = useKPIMetrics(dateRangeForKPI);
   const { data: financialData, isLoading: financialLoading } = useFinancialAnalytics(12);
   const { data: clinicalData, isLoading: clinicalLoading } = useClinicalAnalytics(12);
-  const { data: operationalData, isLoading: operationalLoading } = useOperationalAnalytics();
+  const { data: operationalData } = useOperationalAnalytics();
   const { data: patientDistribution, isLoading: patientLoading } = usePatientDistribution();
   const { data: realtimeData } = useRealtimeMetrics();
 

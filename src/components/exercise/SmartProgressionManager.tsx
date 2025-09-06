@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -34,8 +34,7 @@ export function SmartProgressionManager({ patientId, exercisePlanId }: SmartProg
   const { 
     analyzeProgressAndSuggest, 
     applyAutomaticAdjustments, 
-    calculateAdherence,
-    loading: progressionLoading 
+    calculateAdherence
   } = useSmartProgression();
   
   const { getProgressByPatient } = usePatientProgress();
@@ -45,7 +44,7 @@ export function SmartProgressionManager({ patientId, exercisePlanId }: SmartProg
   const patientProgress = getProgressByPatient(patientId);
 
   // Analisar progresso e gerar sugestões
-  const analyzeProgress = async () => {
+  const analyzeProgress = useCallback(async () => {
     if (!exercisePlan) return;
     
     setIsAnalyzing(true);
@@ -68,7 +67,7 @@ export function SmartProgressionManager({ patientId, exercisePlanId }: SmartProg
     } finally {
       setIsAnalyzing(false);
     }
-  };
+  }, [exercisePlan, patientProgress, analyzeProgressAndSuggest]);
 
   // Aplicar sugestão automaticamente
   const applySuggestion = async () => {

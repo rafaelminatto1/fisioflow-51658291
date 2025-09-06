@@ -28,9 +28,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Label } from '@/components/ui/label';
+
 
 // Local components
 import { NewExercisePlanModal } from '@/components/modals/NewExercisePlanModal';
@@ -45,7 +43,7 @@ import { useData } from '@/contexts/DataContext';
 import { useToast } from '@/hooks/use-toast';
 
 export function SmartExercisePlans() {
-  const { patients, exercises, exercisePlans, addExercisePlan, patientProgress, addPatientProgress } = useData();
+  const { patients, exercisePlans, patientProgress, addPatientProgress } = useData();
   const { toast } = useToast();
   const [selectedPatient, setSelectedPatient] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -101,6 +99,7 @@ export function SmartExercisePlans() {
       });
       setIsProgressOpen(false);
     } catch (error) {
+      console.error('Erro ao registrar progresso:', error);
       toast({
         title: "Erro",
         description: "Erro ao registrar progresso.",

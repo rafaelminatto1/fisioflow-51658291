@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { PatientProgress } from './usePatientProgress';
 import { ExercisePlan, ExercisePlanItem } from './useExercisePlans';
@@ -38,7 +38,7 @@ export function useSmartProgression() {
   const [error, setError] = useState<string | null>(null);
 
   // Buscar regras de progressão (mock implementation)
-  const fetchProgressionRules = async (exercisePlanId?: string) => {
+  const fetchProgressionRules = async (_exercisePlanId?: string) => {
     try {
       setLoading(true);
       // Mock implementation - no database table exists yet
@@ -85,7 +85,7 @@ export function useSmartProgression() {
       ? latestProgress.functional_score - previousProgress.functional_score
       : 0;
 
-    const complianceTrend = previousProgress
+    const _complianceTrend = previousProgress
       ? latestProgress.exercise_compliance - previousProgress.exercise_compliance
       : 0;
 

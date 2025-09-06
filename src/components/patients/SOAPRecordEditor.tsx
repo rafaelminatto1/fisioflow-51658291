@@ -99,7 +99,7 @@ export function SOAPRecordEditor({ patientId, onClose, recordId }: SOAPRecordEdi
       await signRecord(recordId);
       toast.success('Prontuário assinado digitalmente!');
       onClose();
-    } catch (error) {
+    } catch {
       toast.error('Erro ao assinar prontuário');
     }
   };

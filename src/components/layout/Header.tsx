@@ -28,7 +28,7 @@ export function Header() {
         title: "Logout realizado",
         description: "Você foi desconectado com sucesso."
       });
-    } catch (error) {
+    } catch {
       toast({
         title: "Erro ao sair",
         description: "Não foi possível realizar o logout.",

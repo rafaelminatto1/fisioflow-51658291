@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
+
 import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 import { User, Building, Clock, Bell, Shield, Download, Upload, Palette } from 'lucide-react';
@@ -102,6 +102,7 @@ export default function Settings() {
             description: "Dados restaurados com sucesso. Recarregue a página para ver as alterações.",
           });
         } catch (error) {
+          console.error('Import error:', error);
           toast({
             title: "Erro na importação",
             description: "Arquivo inválido ou corrompido.",

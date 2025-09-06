@@ -102,6 +102,10 @@ const Schedule = () => {
     }
   };
 
+  // Log functions for debugging
+  console.log('formatDayHeader:', formatDayHeader);
+  console.log('getStatusColor:', getStatusColor);
+
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'Consulta Inicial':

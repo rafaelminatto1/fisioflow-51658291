@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 const Exercises = () => {
   const [selectedExercise, setSelectedExercise] = useState<{ id: string; name: string; category: string; description?: string; instructions?: string; video_url?: string } | null>(null);
   const [activeTab, setActiveTab] = useState("library");
-  const { exercises, loading } = useExercises();
+  const { exercises } = useExercises();
   const { favorites } = useExerciseFavorites();
   const { protocols } = useExerciseProtocols();
   const { toast } = useToast();
@@ -30,7 +30,8 @@ const Exercises = () => {
     setActiveTab("player");
   };
 
-  const handleAddToPlan = (exercise: { id: string; name: string; category: string; description?: string; instructions?: string; video_url?: string }) => {
+  const handleAddToPlan = (exerciseData: { id: string; name: string; category: string; description?: string; instructions?: string; video_url?: string }) => {
+    console.log('Adding exercise to plan:', exerciseData);
     toast({
       title: "Funcionalidade em desenvolvimento",
       description: "A criação de planos será implementada na próxima fase"
@@ -138,6 +139,7 @@ const Exercises = () => {
             <TabsContent value="library" className="mt-6">
               <ExerciseLibrary
                 onExerciseSelect={handleViewExercise}
+                onAddToPlan={handleAddToPlan}
                 className="border-0 shadow-none bg-transparent"
               />
             </TabsContent>
