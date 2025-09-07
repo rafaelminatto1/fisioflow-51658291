@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Eye } from 'lucide-react';
-import { useData } from '@/contexts/DataContext';
+import { useData } from '@/hooks/useData';
 
 export function RecentPatients() {
   const { patients } = useData();

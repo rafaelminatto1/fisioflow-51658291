@@ -14,8 +14,7 @@ import {
   Award,
   AlertTriangle,
   CheckCircle,
-  BookOpen,
-  Calendar
+  BookOpen
 } from 'lucide-react';
 
 // UI Components
@@ -38,7 +37,7 @@ import { PainLevelChart } from '@/components/charts/PainLevelChart';
 import { SmartProgressionManager } from '@/components/exercise/SmartProgressionManager';
 
 // Hooks and contexts
-import { useData } from '@/contexts/DataContext';
+import { useData } from '@/hooks/useData';
 import { useToast } from '@/hooks/use-toast';
 
 export function SmartExercisePlans() {

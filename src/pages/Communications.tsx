@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 
-import { useData } from '@/contexts/DataContext';
+import { useData } from '@/hooks/useData';
 import { useToast } from '@/hooks/use-toast';
 import { 
   MessageSquare,

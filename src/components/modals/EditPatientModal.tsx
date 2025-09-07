@@ -37,7 +37,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { useData } from '@/contexts/DataContext';
+import { useData } from '@/hooks/useData';
 import { Patient } from '@/types';
 
 const patientSchema = z.object({

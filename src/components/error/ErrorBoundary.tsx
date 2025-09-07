@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { errorLogger } from '@/lib/errors/logger';
 
-interface Props {
+export interface Props {
   children: ReactNode;
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
@@ -189,27 +189,6 @@ class ErrorBoundary extends Component<Props, State> {
 export default ErrorBoundary;
 export { ErrorBoundary };
 
-// Hook para usar o ErrorBoundary de forma mais simples
-export const useErrorBoundary = () => {
-  const [error, setError] = React.useState<Error | null>(null);
-
-  const resetError = React.useCallback(() => {
-    setError(null);
-  }, []);
-
-  const captureError = React.useCallback((error: Error) => {
-    setError(error);
-  }, []);
-
-  React.useEffect(() => {
-    if (error) {
-      throw error;
-    }
-  }, [error]);
-
-  return { captureError, resetError };
-};
-
 // Componente funcional para casos específicos
 export const ErrorFallback: React.FC<{
   error: Error;
@@ -249,20 +228,4 @@ export const ErrorFallback: React.FC<{
       </Card>
     </div>
   );
-};
-
-// HOC para envolver componentes com ErrorBoundary
-export const withErrorBoundary = <P extends object>(
-  Component: React.ComponentType<P>,
-  errorBoundaryProps?: Omit<Props, 'children'>
-) => {
-  const WrappedComponent = (props: P) => (
-    <ErrorBoundary {...errorBoundaryProps}>
-      <Component {...props} />
-    </ErrorBoundary>
-  );
-  
-  WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`;
-  
-  return WrappedComponent;
 };

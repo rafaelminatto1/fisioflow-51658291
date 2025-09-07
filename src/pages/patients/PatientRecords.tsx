@@ -2,7 +2,7 @@ import { useParams } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { SOAPRecordEditor } from '@/components/patients/SOAPRecordEditor';
 import { SOAPRecordsList } from '@/components/patients/SOAPRecordsList';
-import { useData } from '@/contexts/DataContext';
+import { useData } from '@/hooks/useData';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertCircle, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';

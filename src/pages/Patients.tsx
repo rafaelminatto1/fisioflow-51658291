@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { NewPatientModal } from '@/components/modals/NewPatientModal';
 import { EditPatientModal } from '@/components/modals/EditPatientModal';
 import { ViewPatientModal } from '@/components/modals/ViewPatientModal';
-import { useData } from '@/contexts/DataContext';
+import { useData } from '@/hooks/useData';
 import { 
   Plus, 
   Search, 
@@ -16,13 +16,11 @@ import {
   Edit, 
   Phone,
   Mail,
-  Calendar,
   Users
 } from 'lucide-react';
 
 const Patients = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
   const [editingPatient, setEditingPatient] = useState<string | null>(null);
   const [viewingPatient, setViewingPatient] = useState<string | null>(null);
   const { patients } = useData();

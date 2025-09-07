@@ -18,7 +18,8 @@ import { subDays } from 'date-fns';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { MetricCard } from '@/components/analytics/MetricCard';
 import { ChartContainer } from '@/components/analytics/ChartContainer';
-import { InsightCard, generateInsights } from '@/components/analytics/InsightCard';
+import { InsightCard } from '@/components/analytics/InsightCard';
+import { generateInsights } from '@/lib/insights';
 import { FilterBar, FilterConfig } from '@/components/analytics/FilterBar';
 import { 
   useKPIMetrics, 

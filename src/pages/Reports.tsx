@@ -2,7 +2,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useData } from '@/contexts/DataContext';
+import { useData } from '@/hooks/useData';
 import { Download, FileText, TrendingUp, Users, Calendar, Activity } from 'lucide-react';
 import { format, subDays, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';

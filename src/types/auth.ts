@@ -2,7 +2,7 @@
 
 export type UserRole = 'admin' | 'fisioterapeuta' | 'estagiario' | 'paciente' | 'parceiro';
 
-interface AvailableHours {
+export interface AvailableHours {
   [day: string]: {
     start: string;
     end: string;
@@ -10,7 +10,7 @@ interface AvailableHours {
   };
 }
 
-interface NotificationPreferences {
+export interface NotificationPreferences {
   email: boolean;
   sms: boolean;
   push: boolean;
@@ -18,7 +18,7 @@ interface NotificationPreferences {
   marketing: boolean;
 }
 
-interface EmergencyContact {
+export interface EmergencyContact {
   name: string;
   phone: string;
   relationship: string;
@@ -40,16 +40,15 @@ export interface Profile {
   bio?: string;
   experience_years?: number;
   consultation_fee?: number;
-  available_hours?: any; // Simplified to avoid type conflicts
-  notification_preferences?: any; // Simplified to avoid type conflicts
+  available_hours?: AvailableHours;
+  notification_preferences?: NotificationPreferences;
   onboarding_completed: boolean;
   last_login_at?: string;
   timezone?: string;
   is_active: boolean;
-  emergency_contact?: any; // Simplified to avoid type conflicts
+  emergency_contact?: EmergencyContact;
   created_at: string;
   updated_at: string;
-  [key: string]: any; // Allow additional Supabase properties
 }
 
 export interface AuthState {

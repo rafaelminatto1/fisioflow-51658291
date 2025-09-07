@@ -2,7 +2,7 @@ import { useParams } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PatientProfileHeader } from '@/components/patients/PatientProfileHeader';
 import { PatientProfileTabs } from '@/components/patients/PatientProfileTabs';
-import { useData } from '@/contexts/DataContext';
+import { useData } from '@/hooks/useData';
 import { Card, CardContent } from '@/components/ui/card';
 import { AlertCircle } from 'lucide-react';
 

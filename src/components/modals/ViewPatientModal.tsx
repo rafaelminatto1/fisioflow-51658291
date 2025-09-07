@@ -22,7 +22,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { Patient } from '@/types';
-import { useData } from '@/contexts/DataContext';
+import { useData } from '@/hooks/useData';
 
 interface ViewPatientModalProps {
   patient: Patient;

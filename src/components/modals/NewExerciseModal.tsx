@@ -30,7 +30,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Plus, X, Dumbbell } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useData } from '@/contexts/DataContext';
+import { useData } from '@/hooks/useData';
 
 const exerciseSchema = z.object({
   name: z.string().min(2, 'Nome do exercício é obrigatório'),

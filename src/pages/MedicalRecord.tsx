@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
-import { useData } from '@/contexts/DataContext';
+import { useData } from '@/hooks/useData';
 import { useToast } from '@/hooks/use-toast';
 import { 
   FileText, 
