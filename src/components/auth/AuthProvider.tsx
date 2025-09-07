@@ -96,9 +96,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       if (error) {
         console.error('❌ AuthProvider: Erro do Supabase:', error);
+        
+        // Mensagem mais amigável para email não confirmado
+        let errorMessage = error.message;
+        if (error.message === "Email not confirmed") {
+          errorMessage = "Email não confirmado. Verifique sua caixa de entrada ou contate o administrador.";
+        }
+        
         toast({
           title: "Erro no login",
-          description: error.message,
+          description: errorMessage,
           variant: "destructive"
         });
         return { error };
