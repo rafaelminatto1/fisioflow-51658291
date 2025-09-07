@@ -16,65 +16,58 @@ import {
   Edit, 
   Phone,
   Mail,
-  Calendar
+  Calendar,
+  Users
 } from 'lucide-react';
 
 const Patients = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
-  console.log('Selected patient:', selectedPatient);
   const [editingPatient, setEditingPatient] = useState<string | null>(null);
   const [viewingPatient, setViewingPatient] = useState<string | null>(null);
-  const { patients, appointments } = useData();
+  const { patients } = useData();
 
   const filteredPatients = patients.filter(patient =>
     patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.mainCondition.toLowerCase().includes(searchTerm.toLowerCase())
+    (patient.main_condition || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getPatientAge = (birthDate: Date) => {
-    const today = new Date();
-    const age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      return age - 1;
+  const getPatientAge = (birthDate: string) => {
+    try {
+      const today = new Date();
+      const birth = new Date(birthDate);
+      const age = today.getFullYear() - birth.getFullYear();
+      const monthDiff = today.getMonth() - birth.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        return age - 1;
+      }
+      return age;
+    } catch {
+      return 0;
     }
-    return age;
-  };
-
-  const getNextAppointment = (patientId: string) => {
-    const patientAppointments = appointments.filter(apt => 
-      apt.patientId === patientId && apt.date >= new Date()
-    );
-    const nextApt = patientAppointments.sort((a, b) => a.date.getTime() - b.date.getTime())[0];
-    return nextApt ? nextApt.date.toLocaleDateString('pt-BR') : 'Não agendado';
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Em Tratamento':
-        return 'bg-primary/10 text-primary';
-      case 'Recuperação':
-        return 'bg-secondary/10 text-secondary';
-      case 'Inicial':
-        return 'bg-muted text-muted-foreground';
-      default:
-        return 'bg-muted text-muted-foreground';
-    }
+    const colors = {
+      'Inicial': 'bg-blue-100 text-blue-800',
+      'Em Tratamento': 'bg-green-100 text-green-800',
+      'Recuperação': 'bg-yellow-100 text-yellow-800',
+      'Concluído': 'bg-gray-100 text-gray-800'
+    };
+    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
   return (
     <MainLayout>
-      <div className="space-y-6 animate-fade-in">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Pacientes</h1>
-            <p className="text-muted-foreground">Gerencie seus pacientes e acompanhe o progresso</p>
+            <h1 className="text-3xl font-bold text-foreground">Pacientes</h1>
+            <p className="text-muted-foreground">Gerencie seus pacientes e acompanhe o tratamento</p>
           </div>
-          <NewPatientModal
+          <NewPatientModal 
             trigger={
-              <Button className="bg-gradient-primary text-primary-foreground hover:shadow-medical">
+              <Button className="bg-primary hover:bg-primary/90">
                 <Plus className="w-4 h-4 mr-2" />
                 Novo Paciente
               </Button>
@@ -82,172 +75,148 @@ const Patients = () => {
           />
         </div>
 
-        {/* Search and Filters */}
+        {/* Search */}
         <Card>
-          <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por nome ou condição..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+          <CardContent className="p-4">
+            <div className="flex gap-4 items-center">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Input
+                    placeholder="Buscar pacientes..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
               </div>
-              <Button variant="outline">
-                Filtros
-              </Button>
             </div>
           </CardContent>
         </Card>
 
-        {/* Patients Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPatients.map((patient) => (
-            <Card 
-              key={patient.id} 
-              className="hover:shadow-card transition-all duration-300 cursor-pointer"
-              onClick={() => setSelectedPatient(patient.id)}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="w-12 h-12">
-                      <AvatarFallback className="bg-gradient-primary text-primary-foreground font-semibold">
-                        {patient.name.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <CardTitle className="text-lg text-foreground">{patient.name}</CardTitle>
-                      <p className="text-sm text-muted-foreground">{getPatientAge(patient.birthDate)} anos</p>
+        {/* Patients List */}
+        {filteredPatients.length === 0 ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">
+                {searchTerm ? 'Nenhum paciente encontrado' : 'Nenhum paciente cadastrado'}
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                {searchTerm 
+                  ? 'Tente ajustar os filtros de busca.' 
+                  : 'Comece adicionando seu primeiro paciente.'
+                }
+              </p>
+              {!searchTerm && (
+                <NewPatientModal 
+                  trigger={
+                    <Button>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Novo Paciente
+                    </Button>
+                  }
+                />
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-6">
+            {filteredPatients.map((patient) => (
+              <Card key={patient.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <Avatar className="h-12 w-12">
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          {patient.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <CardTitle className="text-xl">{patient.name}</CardTitle>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <span>{getPatientAge(patient.birth_date)} anos</span>
+                          <span>{patient.gender}</span>
+                          {patient.main_condition && (
+                            <span className="font-medium">{patient.main_condition}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge className={getStatusColor(patient.status)}>
+                        {patient.status}
+                      </Badge>
                     </div>
                   </div>
-                  <Badge className={getStatusColor(patient.status)}>
-                    {patient.status}
-                  </Badge>
-                </div>
-              </CardHeader>
-              
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="font-medium text-foreground mb-2">Condição Principal</p>
-                  <p className="text-sm text-muted-foreground bg-accent/50 p-2 rounded">
-                    {patient.mainCondition}
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Phone className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">{patient.phone}</span>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Contact Info */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {patient.email && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mail className="w-4 h-4 text-muted-foreground" />
+                        <span>{patient.email}</span>
+                      </div>
+                    )}
+                    {patient.phone && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Phone className="w-4 h-4 text-muted-foreground" />
+                        <span>{patient.phone}</span>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">{patient.email}</span>
+
+                  {/* Progress */}
+                  <div className="text-center p-3 bg-muted rounded-lg">
+                    <div className="text-2xl font-bold text-primary">
+                      {patient.progress || 0}%
+                    </div>
+                    <div className="text-xs text-muted-foreground">Progresso do Tratamento</div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Próxima: {getNextAppointment(patient.id)}</span>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2 pt-4 border-t">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setViewingPatient(patient.id)}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Ver Detalhes
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setEditingPatient(patient.id)}
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Editar
+                    </Button>
                   </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-foreground">Progresso</span>
-                    <span className="text-sm text-muted-foreground">{patient.progress}%</span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div 
-                      className="bg-gradient-primary h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${patient.progress}%` }}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-2 pt-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setViewingPatient(patient.id);
-                    }}
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    Ver
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setEditingPatient(patient.id);
-                    }}
-                  >
-                    <Edit className="w-4 h-4 mr-2" />
-                    Editar
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Statistics Footer */}
-        <Card className="bg-gradient-card">
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
-              <div>
-                <p className="text-2xl font-bold text-foreground">{patients.length}</p>
-                <p className="text-sm text-muted-foreground">Total de Pacientes</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-secondary">
-                  {patients.filter(p => p.status === 'Em Tratamento').length}
-                </p>
-                <p className="text-sm text-muted-foreground">Em Tratamento</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-primary">
-                  {patients.filter(p => p.status === 'Recuperação').length}
-                </p>
-                <p className="text-sm text-muted-foreground">Em Recuperação</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">
-                  {patients.length > 0 ? Math.round(patients.reduce((acc, p) => acc + p.progress, 0) / patients.length) : 0}%
-                </p>
-                <p className="text-sm text-muted-foreground">Progresso Médio</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* View Patient Modal */}
-        {viewingPatient && (
-          <ViewPatientModal
-            patient={patients.find(p => p.id === viewingPatient)!}
-            open={!!viewingPatient}
-            onOpenChange={(open) => !open && setViewingPatient(null)}
-            onEdit={() => {
-              setEditingPatient(viewingPatient);
-              setViewingPatient(null);
-            }}
-          />
-        )}
-
-        {/* Edit Patient Modal */}
-        {editingPatient && (
-          <EditPatientModal
-            patient={patients.find(p => p.id === editingPatient)!}
-            open={!!editingPatient}
-            onOpenChange={(open) => !open && setEditingPatient(null)}
-          />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         )}
       </div>
+
+      {/* Modals */}
+      {editingPatient && (
+        <EditPatientModal
+          patientId={editingPatient}
+          isOpen={true}
+          onClose={() => setEditingPatient(null)}
+        />
+      )}
+
+      {viewingPatient && (
+        <ViewPatientModal
+          patientId={viewingPatient}
+          isOpen={true}
+          onClose={() => setViewingPatient(null)}
+        />
+      )}
     </MainLayout>
   );
 };

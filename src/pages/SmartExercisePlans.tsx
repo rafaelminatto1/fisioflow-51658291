@@ -14,7 +14,8 @@ import {
   Award,
   AlertTriangle,
   CheckCircle,
-  BookOpen
+  BookOpen,
+  Calendar
 } from 'lucide-react';
 
 // UI Components
@@ -35,8 +36,6 @@ import { NewExercisePlanModal } from '@/components/modals/NewExercisePlanModal';
 import { ProgressChart } from '@/components/charts/ProgressChart';
 import { PainLevelChart } from '@/components/charts/PainLevelChart';
 import { SmartProgressionManager } from '@/components/exercise/SmartProgressionManager';
-import SmartReportsManager from '@/components/SmartReportsManager';
-import TreatmentSessionManager from '@/components/TreatmentSessionManager';
 
 // Hooks and contexts
 import { useData } from '@/contexts/DataContext';
@@ -444,28 +443,27 @@ export function SmartExercisePlans() {
           </TabsContent>
 
           <TabsContent value="smart-reports">
-            <SmartReportsManager 
-              selectedPatientId={selectedPatient}
-              selectedPlanId={filteredPlans.find(p => p.patient_id === selectedPatient)?.id}
-            />
+            <Card>
+              <CardContent className="p-8 text-center">
+                <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-foreground mb-2">Relatórios Inteligentes</h3>
+                <p className="text-muted-foreground">
+                  Em breve: relatórios automáticos gerados por IA baseados no progresso dos pacientes.
+                </p>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="treatment-sessions" className="space-y-4">
-            {selectedPatient ? (
-              <TreatmentSessionManager 
-                patientId={selectedPatient}
-              />
-            ) : (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-foreground mb-2">Selecione um paciente</h3>
-                  <p className="text-muted-foreground">
-                    Escolha um paciente para gerenciar suas sessões de tratamento.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
+            <Card>
+              <CardContent className="p-8 text-center">
+                <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-foreground mb-2">Sessões de Tratamento</h3>
+                <p className="text-muted-foreground">
+                  Em breve: gerenciamento completo de sessões de tratamento com registro SOAP.
+                </p>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="ai-analytics" className="space-y-4">
