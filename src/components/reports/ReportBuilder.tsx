@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { 
   DragDropContext, 
   Droppable, 
@@ -30,9 +29,6 @@ import {
   PieChart,
   LineChart,
   Calendar,
-  Users,
-  DollarSign,
-  Activity,
   Save,
   Play
 } from 'lucide-react';

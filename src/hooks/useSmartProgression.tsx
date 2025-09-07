@@ -85,9 +85,6 @@ export function useSmartProgression() {
       ? latestProgress.functional_score - previousProgress.functional_score
       : 0;
 
-    const _complianceTrend = previousProgress
-      ? latestProgress.exercise_compliance - previousProgress.exercise_compliance
-      : 0;
 
     // Lógica de análise inteligente
     let suggestedAction = 'maintain';

@@ -1,6 +1,5 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { CalendarIcon, Clock, Plus } from 'lucide-react';
 import { format, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -36,9 +35,6 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     );
   };
 
-  const isSlotOccupied = (date: Date, timeSlot: string) => {
-    return !!getAppointmentForSlot(date, timeSlot);
-  };
 
   return (
     <Card className="overflow-hidden bg-gradient-card border-border shadow-card">

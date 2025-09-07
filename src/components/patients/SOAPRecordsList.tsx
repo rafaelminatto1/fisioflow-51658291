@@ -20,7 +20,7 @@ interface SOAPRecordsListProps {
 }
 
 export function SOAPRecordsList({ patientId }: SOAPRecordsListProps) {
-  const { records, loading, getRecordsByPatient } = useSOAPRecords();
+  const { loading, getRecordsByPatient } = useSOAPRecords();
   
   const patientRecords = getRecordsByPatient(patientId);
 

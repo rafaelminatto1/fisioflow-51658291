@@ -50,7 +50,7 @@ export function AvatarUpload({ currentAvatar, onAvatarUpdate }: AvatarUploadProp
       }
 
       // Upload do novo arquivo
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('avatars')
         .upload(fileName, file, {
           cacheControl: '3600',
