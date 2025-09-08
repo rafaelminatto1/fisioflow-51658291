@@ -111,6 +111,7 @@ describe('Patient Validations', () => {
       const minimalData = {
         firstName: 'João',
         lastName: 'Silva',
+        email: 'joao.silva@example.com',
         phone: '(11) 99999-9999',
         birthDate: '1985-03-20',
         gender: 'male' as const,

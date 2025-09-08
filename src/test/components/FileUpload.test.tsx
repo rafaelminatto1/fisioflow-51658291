@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { FileUpload } from '@/components/ui/file-upload';
-import { createMockFile, createMockDragEvent } from '../setup';
+import { createMockFile, createDragEvent as createMockDragEvent } from '../setup';
 
 // Mock do Supabase
 vi.mock('@/lib/supabase', () => ({

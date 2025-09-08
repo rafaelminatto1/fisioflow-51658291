@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { ErrorBoundary, useErrorBoundary, withErrorBoundary } from '@/components/error/ErrorBoundary';
+import { ErrorBoundary } from '@/components/error/ErrorBoundary';
+import { useErrorBoundary } from '@/hooks/useErrorBoundary';
+import { withErrorBoundary } from '@/components/error/withErrorBoundary';
 import React from 'react';
 
 // Mock do errorLogger
@@ -44,8 +46,9 @@ const ComponentWithErrorBoundary = () => {
 describe('ErrorBoundary', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Suprimir console.error durante os testes
+    // Suprimir console.error e warnings durante os testes
     vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
   
   describe('ErrorBoundary Component', () => {

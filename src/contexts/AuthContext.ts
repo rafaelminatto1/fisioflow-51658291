@@ -12,9 +12,11 @@ interface AuthContextType {
   profile: Profile | null;
   session: Session | null;
   loading: boolean;
+  initialized: boolean;
+  sessionCheckFailed: boolean;
   role?: UserRole;
   signIn: (email: string, password: string, remember?: boolean) => Promise<{ error?: AuthError | null }>;
-  signUp: (data: RegisterFormData) => Promise<{ error?: AuthError | null }>;
+  signUp: (data: RegisterFormData) => Promise<{ error?: AuthError | null; user?: any }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error?: AuthError | null }>;
   updatePassword: (password: string) => Promise<{ error?: AuthError | null }>;

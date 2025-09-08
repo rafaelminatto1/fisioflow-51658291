@@ -12,7 +12,7 @@ export const loginSchema = z.object({
     .min(1, 'Senha é obrigatória')
     .min(6, 'Senha deve ter pelo menos 6 caracteres')
     .max(100, 'Senha muito longa'),
-  rememberMe: z.boolean().optional()
+  remember: z.boolean().optional()
 });
 
 // Schema para registro

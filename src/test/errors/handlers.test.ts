@@ -39,60 +39,67 @@ describe('Error Handlers', () => {
   describe('Custom Error Classes', () => {
     describe('AppError', () => {
       it('should create AppError with correct properties', () => {
-        const error = new AppError('Test error', 'TEST_ERROR', 400);
+        const error = new AppError('Test error', 400, true, 'TEST_CONTEXT');
         
         expect(error.message).toBe('Test error');
-        expect(error.code).toBe('TEST_ERROR');
         expect(error.statusCode).toBe(400);
         expect(error.name).toBe('AppError');
+        expect(error.isOperational).toBe(true);
+        expect(error.context).toBe('TEST_CONTEXT');
         expect(error instanceof Error).toBe(true);
       });
       
       it('should have default status code 500', () => {
-        const error = new AppError('Test error', 'TEST_ERROR');
+        const error = new AppError('Test error');
         expect(error.statusCode).toBe(500);
+        expect(error.isOperational).toBe(true);
       });
     });
     
     describe('ValidationError', () => {
       it('should create ValidationError with field errors', () => {
-        const fieldErrors = { email: 'Invalid email', password: 'Too short' };
-        const error = new ValidationError('Validation failed', fieldErrors);
+        const validationErrors = { email: ['Invalid email'], password: ['Too short'] };
+        const error = new ValidationError('Validation failed', 'email', validationErrors);
         
         expect(error.message).toBe('Validation failed');
-        expect(error.fieldErrors).toEqual(fieldErrors);
-        expect(error.code).toBe('VALIDATION_ERROR');
+        expect(error.validationErrors).toEqual(validationErrors);
+        expect(error.field).toBe('email');
+        expect(error.context).toBe('ValidationError');
         expect(error.statusCode).toBe(400);
       });
     });
     
     describe('AuthError', () => {
       it('should create AuthError with correct properties', () => {
-        const error = new AuthError('Unauthorized access');
+        const error = new AuthError('Unauthorized access', 401, 'login');
         
         expect(error.message).toBe('Unauthorized access');
-        expect(error.code).toBe('AUTH_ERROR');
+        expect(error.context).toBe('AuthError');
         expect(error.statusCode).toBe(401);
+        expect(error.authAction).toBe('login');
       });
     });
     
     describe('NetworkError', () => {
       it('should create NetworkError with correct properties', () => {
-        const error = new NetworkError('Network timeout');
+        const error = new NetworkError('Network timeout', 500, '/api/users', 'GET');
         
         expect(error.message).toBe('Network timeout');
-        expect(error.code).toBe('NETWORK_ERROR');
+        expect(error.context).toBe('NetworkError');
         expect(error.statusCode).toBe(500);
+        expect(error.endpoint).toBe('/api/users');
+        expect(error.method).toBe('GET');
       });
     });
     
     describe('FileUploadError', () => {
       it('should create FileUploadError with file info', () => {
-        const error = new FileUploadError('Upload failed', 'document.pdf', 'FILE_TOO_LARGE');
+        const error = new FileUploadError('Upload failed', 'document.pdf', 5242880); // 5MB
         
         expect(error.message).toBe('Upload failed');
         expect(error.fileName).toBe('document.pdf');
-        expect(error.code).toBe('FILE_TOO_LARGE');
+        expect(error.fileSize).toBe(5242880);
+        expect(error.context).toBe('FileUploadError');
         expect(error.statusCode).toBe(400);
       });
     });

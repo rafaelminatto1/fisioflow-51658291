@@ -5,10 +5,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar, RotateCcw, X } from 'lucide-react';
-import { format, addWeeks, addDays, addMonths } from 'date-fns';
+import { format, addWeeks, addDays, addMonths, getDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { RecurrencePattern as AppointmentRecurrencePattern, DayOfWeek } from '@/types/appointment';
 
+// Legacy interface for backward compatibility
 export interface RecurrencePattern {
   type: 'none' | 'weekly' | 'biweekly' | 'monthly' | 'custom';
   interval: number;
@@ -18,23 +21,48 @@ export interface RecurrencePattern {
 }
 
 interface RecurrenceSelectorProps {
-  value: RecurrencePattern;
-  onChange: (pattern: RecurrencePattern) => void;
-  baseDate: Date;
-  baseTime: string;
+  value?: RecurrencePattern | AppointmentRecurrencePattern;
+  onChange: (pattern: RecurrencePattern | AppointmentRecurrencePattern) => void;
+  baseDate?: Date;
+  baseTime?: string;
 }
 
 export const RecurrenceSelector = ({ 
   value, 
   onChange, 
-  baseDate, 
-  baseTime 
+  baseDate = new Date(), 
+  baseTime = '09:00'
 }: RecurrenceSelectorProps) => {
   const [previewDates, setPreviewDates] = useState<Date[]>([]);
 
+  // Determine if we're using the new or legacy pattern format
+  const isNewPattern = value && 'type' in value && 
+    ['Daily', 'Weekly', 'Monthly', 'Custom'].includes(value.type as string);
+
+  // Convert to internal format for consistency
+  const currentPattern = value ? (isNewPattern ? {
+    type: value.type === 'Daily' ? 'custom' : 
+          value.type === 'Weekly' ? 'weekly' :
+          value.type === 'Monthly' ? 'monthly' : 'custom',
+    interval: (value as AppointmentRecurrencePattern).frequency || 1,
+    frequency: (value as AppointmentRecurrencePattern).maxOccurrences || 4,
+    endDate: (value as AppointmentRecurrencePattern).endDate,
+    daysOfWeek: (value as AppointmentRecurrencePattern).daysOfWeek?.map(day => {
+      const dayMap: Record<DayOfWeek, number> = {
+        'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3,
+        'Thursday': 4, 'Friday': 5, 'Saturday': 6
+      };
+      return dayMap[day];
+    }) || []
+  } as RecurrencePattern : value as RecurrencePattern) : {
+    type: 'none' as const,
+    interval: 0,
+    frequency: 0
+  };
+
   // Gerar preview das datas
   useEffect(() => {
-    if (value.type === 'none' || value.frequency === 0) {
+    if (!currentPattern || currentPattern.type === 'none' || currentPattern.frequency === 0) {
       setPreviewDates([]);
       return;
     }
@@ -42,11 +70,11 @@ export const RecurrenceSelector = ({
     const dates: Date[] = [];
     let currentDate = new Date(baseDate);
     
-    for (let i = 0; i < Math.min(value.frequency, 10); i++) { // Limitar preview a 10 datas
+    for (let i = 0; i < Math.min(currentPattern.frequency, 10); i++) { // Limitar preview a 10 datas
       if (i === 0) {
         dates.push(new Date(currentDate));
       } else {
-        switch (value.type) {
+        switch (currentPattern.type) {
           case 'weekly':
             currentDate = addWeeks(currentDate, 1);
             break;
@@ -57,7 +85,7 @@ export const RecurrenceSelector = ({
             currentDate = addMonths(currentDate, 1);
             break;
           case 'custom':
-            currentDate = addDays(currentDate, value.interval || 7);
+            currentDate = addDays(currentDate, currentPattern.interval || 7);
             break;
         }
         dates.push(new Date(currentDate));
@@ -65,11 +93,11 @@ export const RecurrenceSelector = ({
     }
     
     setPreviewDates(dates);
-  }, [value, baseDate]);
+  }, [currentPattern, baseDate]);
 
   const handleTypeChange = (type: RecurrencePattern['type']) => {
     let newPattern: RecurrencePattern = {
-      ...value,
+      ...currentPattern,
       type,
     };
 
@@ -80,47 +108,84 @@ export const RecurrenceSelector = ({
         break;
       case 'weekly':
         newPattern.interval = 1;
-        newPattern.frequency = value.frequency || 4;
+        newPattern.frequency = currentPattern.frequency || 4;
         break;
       case 'biweekly':
         newPattern.interval = 2;
-        newPattern.frequency = value.frequency || 6;
+        newPattern.frequency = currentPattern.frequency || 6;
         break;
       case 'monthly':
         newPattern.interval = 1;
-        newPattern.frequency = value.frequency || 3;
+        newPattern.frequency = currentPattern.frequency || 3;
         break;
       case 'custom':
-        newPattern.interval = value.interval || 7;
-        newPattern.frequency = value.frequency || 4;
+        newPattern.interval = currentPattern.interval || 7;
+        newPattern.frequency = currentPattern.frequency || 4;
         break;
     }
 
-    onChange(newPattern);
+    // Convert to new pattern format if needed
+    if (isNewPattern || type === 'none') {
+      const convertedPattern: AppointmentRecurrencePattern = {
+        type: type === 'weekly' ? 'Weekly' :
+              type === 'biweekly' ? 'Weekly' :
+              type === 'monthly' ? 'Monthly' :
+              type === 'custom' ? 'Custom' : 'Weekly',
+        frequency: type === 'biweekly' ? 2 : newPattern.interval,
+        maxOccurrences: newPattern.frequency,
+        endDate: newPattern.endDate,
+        daysOfWeek: newPattern.daysOfWeek ? newPattern.daysOfWeek.map(day => {
+          const dayNames: DayOfWeek[] = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+          return dayNames[day];
+        }) : undefined
+      };
+      
+      if (type === 'none') {
+        onChange(undefined as any);
+      } else {
+        onChange(convertedPattern);
+      }
+    } else {
+      onChange(newPattern);
+    }
   };
 
   const handleFrequencyChange = (frequency: number) => {
-    onChange({
-      ...value,
-      frequency,
-    });
+    if (isNewPattern) {
+      onChange({
+        ...(value as AppointmentRecurrencePattern),
+        maxOccurrences: frequency,
+      });
+    } else {
+      onChange({
+        ...currentPattern,
+        frequency,
+      });
+    }
   };
 
   const handleIntervalChange = (interval: number) => {
-    onChange({
-      ...value,
-      interval,
-    });
+    if (isNewPattern) {
+      onChange({
+        ...(value as AppointmentRecurrencePattern),
+        frequency: interval,
+      });
+    } else {
+      onChange({
+        ...currentPattern,
+        interval,
+      });
+    }
   };
 
-  if (value.type === 'none') {
+  if (currentPattern.type === 'none') {
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4" />
           <Label>Recorrência</Label>
         </div>
-        <Select value={value.type} onValueChange={handleTypeChange}>
+        <Select value={currentPattern.type} onValueChange={handleTypeChange}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -155,7 +220,7 @@ export const RecurrenceSelector = ({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label className="text-sm">Tipo</Label>
-          <Select value={value.type} onValueChange={handleTypeChange}>
+          <Select value={currentPattern.type} onValueChange={handleTypeChange}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -174,20 +239,20 @@ export const RecurrenceSelector = ({
             type="number"
             min="1"
             max="52"
-            value={value.frequency}
+            value={currentPattern.frequency}
             onChange={(e) => handleFrequencyChange(parseInt(e.target.value) || 1)}
           />
         </div>
       </div>
 
-      {value.type === 'custom' && (
+      {currentPattern.type === 'custom' && (
         <div>
           <Label className="text-sm">Intervalo (dias)</Label>
           <Input
             type="number"
             min="1"
             max="365"
-            value={value.interval}
+            value={currentPattern.interval}
             onChange={(e) => handleIntervalChange(parseInt(e.target.value) || 7)}
           />
         </div>

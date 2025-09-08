@@ -163,6 +163,32 @@ vi.stubGlobal('console', {
   error: vi.fn()
 });
 
+// Global error handler to suppress uncaught errors from React Error Boundaries during testing
+const originalOnError = window.onerror;
+const originalOnUnhandledRejection = window.onunhandledrejection;
+
+// Suppress React Error Boundary uncaught errors in tests
+window.onerror = function(message, source, lineno, colno, error) {
+  // Check if this is a React Error Boundary test error
+  if (error && error.message && (error.message.includes('Test error') || error.message.includes('Manual error'))) {
+    return true; // Suppress the error
+  }
+  // For other errors, use the original handler if it exists
+  return originalOnError ? originalOnError.call(this, message, source, lineno, colno, error) : false;
+};
+
+window.onunhandledrejection = function(event) {
+  // Check if this is a React Error Boundary test error
+  if (event.reason && event.reason.message && (event.reason.message.includes('Test error') || event.reason.message.includes('Manual error'))) {
+    event.preventDefault();
+    return;
+  }
+  // For other rejections, use the original handler if it exists
+  if (originalOnUnhandledRejection) {
+    originalOnUnhandledRejection.call(this, event);
+  }
+};
+
 // Helper para criar mocks de arquivos
 export const createMockFile = (name: string, size: number, type: string) => {
   const file = new File([''], name, { type });

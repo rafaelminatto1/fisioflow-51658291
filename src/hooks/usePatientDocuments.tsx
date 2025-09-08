@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { PatientDocument } from '@/types';
 
-export function usePatientDocuments() {
+export function usePatientDocuments(patientId?: string) {
   const [documents, setDocuments] = useState<PatientDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -10,10 +10,16 @@ export function usePatientDocuments() {
   const fetchDocuments = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from('patient_documents')
         .select('*')
         .order('created_at', { ascending: false });
+
+      if (patientId) {
+        query = query.eq('patient_id', patientId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -118,7 +124,7 @@ export function usePatientDocuments() {
 
   useEffect(() => {
     fetchDocuments();
-  }, []);
+  }, [patientId]);
 
   return {
     documents,

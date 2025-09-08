@@ -1,14 +1,21 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { NewPatientModal } from '@/components/modals/NewPatientModal';
 import { EditPatientModal } from '@/components/modals/EditPatientModal';
 import { ViewPatientModal } from '@/components/modals/ViewPatientModal';
-import { useData } from '@/hooks/useData';
+import { usePatients } from '@/hooks/usePatients';
 import { 
   Plus, 
   Search, 
@@ -16,27 +23,50 @@ import {
   Edit, 
   Phone,
   Mail,
-  Users
+  Users,
+  Filter,
+  Download,
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const Patients = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [conditionFilter, setConditionFilter] = useState<string>('all');
   const [editingPatient, setEditingPatient] = useState<string | null>(null);
   const [viewingPatient, setViewingPatient] = useState<string | null>(null);
-  const { patients } = useData();
+  const { patients, loading, error } = usePatients();
+  const { toast } = useToast();
 
-  const filteredPatients = patients.filter(patient =>
-    patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (patient.main_condition || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Get unique conditions and statuses for filters
+  const uniqueConditions = useMemo(() => {
+    const conditions = [...new Set(patients.map(p => p.mainCondition).filter(Boolean))];
+    return conditions.sort();
+  }, [patients]);
 
-  const getPatientAge = (birthDate: string) => {
+  const filteredPatients = useMemo(() => {
+    return patients.filter(patient => {
+      const matchesSearch = 
+        patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (patient.mainCondition || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (patient.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (patient.phone || '').toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = statusFilter === 'all' || patient.status === statusFilter;
+      const matchesCondition = conditionFilter === 'all' || patient.mainCondition === conditionFilter;
+      
+      return matchesSearch && matchesStatus && matchesCondition;
+    });
+  }, [patients, searchTerm, statusFilter, conditionFilter]);
+
+  const getPatientAge = (birthDate: Date) => {
     try {
       const today = new Date();
-      const birth = new Date(birthDate);
-      const age = today.getFullYear() - birth.getFullYear();
-      const monthDiff = today.getMonth() - birth.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      const age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
         return age - 1;
       }
       return age;
@@ -44,6 +74,78 @@ const Patients = () => {
       return 0;
     }
   };
+
+  const exportPatients = () => {
+    try {
+      const csvContent = [
+        'Nome,Email,Telefone,Idade,Gênero,Condição Principal,Status,Progresso',
+        ...filteredPatients.map(patient => [
+          patient.name,
+          patient.email || '',
+          patient.phone || '',
+          getPatientAge(patient.birthDate),
+          patient.gender,
+          patient.mainCondition,
+          patient.status,
+          patient.progress
+        ].join(','))
+      ].join('\n');
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'pacientes.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+      
+      toast({
+        title: 'Exportação concluída!',
+        description: 'Lista de pacientes exportada com sucesso.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Erro na exportação',
+        description: 'Não foi possível exportar a lista de pacientes.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="flex items-center gap-2">
+            <Loader2 className="w-6 h-6 animate-spin" />
+            <span>Carregando pacientes...</span>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center space-y-4">
+            <AlertCircle className="w-12 h-12 text-destructive mx-auto" />
+            <div>
+              <h3 className="text-lg font-medium text-foreground mb-2">Erro ao carregar pacientes</h3>
+              <p className="text-muted-foreground">{error}</p>
+            </div>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   const getStatusColor = (status: string) => {
     const colors = {
@@ -61,32 +163,93 @@ const Patients = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Pacientes</h1>
-            <p className="text-muted-foreground">Gerencie seus pacientes e acompanhe o tratamento</p>
+            <p className="text-muted-foreground">
+              {filteredPatients.length} de {patients.length} pacientes
+            </p>
           </div>
-          <NewPatientModal 
-            trigger={
-              <Button className="bg-primary hover:bg-primary/90">
-                <Plus className="w-4 h-4 mr-2" />
-                Novo Paciente
-              </Button>
-            }
-          />
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={exportPatients}
+              className="hidden sm:flex"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Exportar
+            </Button>
+            <NewPatientModal 
+              trigger={
+                <Button className="bg-primary hover:bg-primary/90">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo Paciente
+                </Button>
+              }
+            />
+          </div>
         </div>
 
-        {/* Search */}
+        {/* Search and Filters */}
         <Card>
           <CardContent className="p-4">
-            <div className="flex gap-4 items-center">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                  <Input
-                    placeholder="Buscar pacientes..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
+            <div className="flex flex-col gap-4">
+              <div className="flex gap-4 items-center">
+                <div className="flex-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                    <Input
+                      placeholder="Buscar por nome, condição, email ou telefone..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
                 </div>
+                <Filter className="w-4 h-4 text-muted-foreground" />
+              </div>
+              
+              <div className="flex gap-4 flex-wrap">
+                <div className="min-w-[150px]">
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os Status</SelectItem>
+                      <SelectItem value="Inicial">Inicial</SelectItem>
+                      <SelectItem value="Em Tratamento">Em Tratamento</SelectItem>
+                      <SelectItem value="Recuperação">Recuperação</SelectItem>
+                      <SelectItem value="Concluído">Concluído</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="min-w-[200px]">
+                  <Select value={conditionFilter} onValueChange={setConditionFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Condição" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas as Condições</SelectItem>
+                      {uniqueConditions.map((condition) => (
+                        <SelectItem key={condition} value={condition}>
+                          {condition}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {(statusFilter !== 'all' || conditionFilter !== 'all' || searchTerm) && (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSearchTerm('');
+                      setStatusFilter('all');
+                      setConditionFilter('all');
+                    }}
+                  >
+                    Limpar Filtros
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>
@@ -133,10 +296,10 @@ const Patients = () => {
                       <div>
                         <CardTitle className="text-xl">{patient.name}</CardTitle>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>{getPatientAge(patient.birth_date)} anos</span>
+                          <span>{getPatientAge(patient.birthDate)} anos</span>
                           <span>{patient.gender}</span>
-                          {patient.main_condition && (
-                            <span className="font-medium">{patient.main_condition}</span>
+                          {patient.mainCondition && (
+                            <span className="font-medium">{patient.mainCondition}</span>
                           )}
                         </div>
                       </div>
@@ -168,7 +331,7 @@ const Patients = () => {
                   {/* Progress */}
                   <div className="text-center p-3 bg-muted rounded-lg">
                     <div className="text-2xl font-bold text-primary">
-                      {patient.progress || 0}%
+                      {patient.progress}%
                     </div>
                     <div className="text-xs text-muted-foreground">Progresso do Tratamento</div>
                   </div>

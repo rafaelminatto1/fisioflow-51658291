@@ -25,12 +25,9 @@ export {
 } from './handlers';
 
 // Exportações do ErrorBoundary
-export {
-  default as ErrorBoundary,
-  useErrorBoundary,
-  ErrorFallback,
-  withErrorBoundary
-} from '../components/error/ErrorBoundary';
+export { ErrorBoundary } from '../../components/error/ErrorBoundary';
+export { useErrorBoundary } from '../../hooks/useErrorBoundary';
+export { withErrorBoundary } from '../../components/error/withErrorBoundary';
 
 // Utilitários de conveniência
 export const createError = {
