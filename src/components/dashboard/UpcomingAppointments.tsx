@@ -11,9 +11,9 @@ export function UpcomingAppointments() {
   
   // Get upcoming appointments (next 5, sorted by date and time)
   const upcomingAppointments = appointments
-    .filter(apt => apt.date >= new Date())
+    .filter(apt => new Date(apt.date) >= new Date())
     .sort((a, b) => {
-      const dateCompare = a.date.getTime() - b.date.getTime();
+      const dateCompare = new Date(a.date).getTime() - new Date(b.date).getTime();
       if (dateCompare === 0) {
         return a.time.localeCompare(b.time);
       }
@@ -63,7 +63,7 @@ export function UpcomingAppointments() {
                   <Clock className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium text-foreground">{appointment.patientName}</p>
+                  <p className="font-medium text-foreground">{appointment.patientName || 'Paciente'}</p>
                   <p className="text-sm text-muted-foreground">{appointment.type}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <Badge className={`text-xs ${getStatusColor(appointment.status)}`}>
@@ -71,7 +71,7 @@ export function UpcomingAppointments() {
                     </Badge>
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
                       <Clock className="w-3 h-3" />
-                      {formatAppointmentDate(appointment.date)} - {appointment.time}
+                      {formatAppointmentDate(new Date(appointment.date))} - {appointment.time}
                     </span>
                   </div>
                 </div>

@@ -10,7 +10,7 @@ export function RecentPatients() {
   
   // Get recent patients (last 5, sorted by updatedAt)
   const recentPatients = patients
-    .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
     .slice(0, 5);
 
   const getStatusColor = (status: string) => {

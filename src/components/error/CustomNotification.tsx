@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { AlertCircle, CheckCircle, Info, AlertTriangle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Notification } from './GlobalNotifications';
+import type { Notification } from './GlobalNotifications';
 
 // Configurações de ícones e estilos por tipo
 const notificationConfig = {
@@ -38,14 +38,14 @@ const CustomNotification: React.FC<CustomNotificationProps> = ({ notification, o
   const Icon = config.icon;
 
   useEffect(() => {
-    if (!notification.persistent && notification.duration !== 0) {
+    if (notification.duration !== 0) {
       const timer = setTimeout(() => {
         onDismiss(notification.id);
       }, notification.duration || 5000);
 
       return () => clearTimeout(timer);
     }
-  }, [notification.id, notification.duration, notification.persistent, onDismiss]);
+  }, [notification.id, notification.duration, onDismiss]);
 
   return (
     <div className={cn(
@@ -65,14 +65,6 @@ const CustomNotification: React.FC<CustomNotificationProps> = ({ notification, o
           </div>
         )}
         
-        {notification.action && (
-          <button
-            onClick={notification.action.onClick}
-            className="text-sm font-medium underline mt-2 hover:no-underline"
-          >
-            {notification.action.label}
-          </button>
-        )}
       </div>
       
       <button

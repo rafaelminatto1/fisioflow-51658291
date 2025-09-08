@@ -166,35 +166,38 @@ const Schedule = () => {
     <MainLayout>
       <div className="space-y-6 animate-fade-in">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">
-              {currentView === 'week' && 'Agenda Semanal'}
-              {currentView === 'month' && 'Agenda Mensal'}
-              {currentView === 'day' && 'Agenda do Dia'}
-              {currentView === 'list' && 'Lista de Agendamentos'}
-            </h1>
-            <p className="text-muted-foreground">
-              {currentView === 'list' 
-                ? 'Visualize e gerencie todos os agendamentos'
-                : 'Clique em um horário para agendar'
-              }
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <ScheduleViewToggle
-              currentView={currentView}
-              onViewChange={setCurrentView}
-              appointmentCounts={appointmentCounts}
-            />
-            <NewAppointmentModal
-              trigger={
-                <Button className="bg-gradient-primary text-primary-foreground hover:shadow-medical">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Novo Agendamento
-                </Button>
-              }
-            />
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+                {currentView === 'week' && 'Agenda Semanal'}
+                {currentView === 'month' && 'Agenda Mensal'}
+                {currentView === 'day' && 'Agenda do Dia'}
+                {currentView === 'list' && 'Lista de Agendamentos'}
+              </h1>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                {currentView === 'list' 
+                  ? 'Visualize e gerencie todos os agendamentos'
+                  : 'Clique em um horário para agendar'
+                }
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <ScheduleViewToggle
+                currentView={currentView}
+                onViewChange={setCurrentView}
+                appointmentCounts={appointmentCounts}
+              />
+              <NewAppointmentModal
+                trigger={
+                  <Button className="bg-gradient-primary text-primary-foreground hover:shadow-medical w-full sm:w-auto">
+                    <Plus className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">Novo Agendamento</span>
+                    <span className="sm:hidden">Novo</span>
+                  </Button>
+                }
+              />
+            </div>
           </div>
         </div>
 
@@ -211,41 +214,41 @@ const Schedule = () => {
 
         {/* View-specific stats */}
         {currentView !== 'list' && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <Card className="bg-gradient-card border-border shadow-card hover:shadow-medical transition-all duration-300">
-              <CardContent className="p-6 text-center">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <CalendarIcon className="w-6 h-6 text-primary" />
+              <CardContent className="p-4 sm:p-6 text-center">
+                <div className="w-8 h-8 sm:w-12 sm:h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                  <CalendarIcon className="w-4 h-4 sm:w-6 sm:h-6 text-primary" />
                 </div>
-                <p className="text-2xl font-bold text-foreground mb-1">{getTotalAppointments()}</p>
-                <p className="text-sm text-muted-foreground">Total de Agendamentos</p>
+                <p className="text-lg sm:text-2xl font-bold text-foreground mb-1">{getTotalAppointments()}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Total de Agendamentos</p>
               </CardContent>
             </Card>
             <Card className="bg-gradient-card border-border shadow-card hover:shadow-medical transition-all duration-300">
-              <CardContent className="p-6 text-center">
-                <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Badge className="w-6 h-6 text-emerald-600" />
+              <CardContent className="p-4 sm:p-6 text-center">
+                <div className="w-8 h-8 sm:w-12 sm:h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                  <Badge className="w-4 h-4 sm:w-6 sm:h-6 text-emerald-600" />
                 </div>
-                <p className="text-2xl font-bold text-emerald-600 mb-1">{getConfirmedAppointments()}</p>
-                <p className="text-sm text-muted-foreground">Confirmados</p>
+                <p className="text-lg sm:text-2xl font-bold text-emerald-600 mb-1">{getConfirmedAppointments()}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Confirmados</p>
               </CardContent>
             </Card>
             <Card className="bg-gradient-card border-border shadow-card hover:shadow-medical transition-all duration-300">
-              <CardContent className="p-6 text-center">
-                <div className="w-12 h-12 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Clock className="w-6 h-6 text-amber-600" />
+              <CardContent className="p-4 sm:p-6 text-center">
+                <div className="w-8 h-8 sm:w-12 sm:h-12 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                  <Clock className="w-4 h-4 sm:w-6 sm:h-6 text-amber-600" />
                 </div>
-                <p className="text-2xl font-bold text-amber-600 mb-1">{getPendingAppointments()}</p>
-                <p className="text-sm text-muted-foreground">Pendentes</p>
+                <p className="text-lg sm:text-2xl font-bold text-amber-600 mb-1">{getPendingAppointments()}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Pendentes</p>
               </CardContent>
             </Card>
             <Card className="bg-gradient-card border-border shadow-card hover:shadow-medical transition-all duration-300">
-              <CardContent className="p-6 text-center">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Clock className="w-6 h-6 text-primary" />
+              <CardContent className="p-4 sm:p-6 text-center">
+                <div className="w-8 h-8 sm:w-12 sm:h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3">
+                  <Clock className="w-4 h-4 sm:w-6 sm:h-6 text-primary" />
                 </div>
-                <p className="text-2xl font-bold text-primary mb-1">{getTotalDuration()}min</p>
-                <p className="text-sm text-muted-foreground">Duração Total</p>
+                <p className="text-lg sm:text-2xl font-bold text-primary mb-1">{getTotalDuration()}min</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Duração Total</p>
               </CardContent>
             </Card>
           </div>

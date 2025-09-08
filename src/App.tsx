@@ -32,7 +32,7 @@ import { Profile } from "./pages/Profile";
 import { MedicalRecord } from "./pages/MedicalRecord";
 import SmartAI from "./pages/SmartAI";
 import { SmartExercisePlans } from "./pages/SmartExercisePlans";
-import { Communications } from "./pages/Communications";
+import Communications from "./pages/Communications";
 import Partner from "./pages/Partner";
 import Vouchers from "./pages/Vouchers";
 import FileUploadTest from "./pages/FileUploadTest";

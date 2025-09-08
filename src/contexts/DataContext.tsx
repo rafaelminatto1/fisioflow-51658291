@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import type { DataContextType } from '@/types/context';
 import { DataContext } from './DataContextDefinition';
+import { Patient, Appointment, Exercise, ExercisePlan, MedicalRecord, TreatmentSession, SOAPRecord } from '@/types';
 
 export { DataContext };
 

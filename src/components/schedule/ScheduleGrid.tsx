@@ -46,10 +46,10 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
       </CardHeader>
       <CardContent className="p-0">
         <div className="overflow-x-auto">
-          <div className="min-w-[900px]">
+          <div className="min-w-[320px] sm:min-w-[640px] lg:min-w-[900px]">
             {/* Header with days */}
             <div className="grid grid-cols-7 bg-muted/50 border-b border-border">
-              <div className="p-4 text-center text-sm font-semibold text-muted-foreground border-r border-border bg-muted/70">
+              <div className="p-2 sm:p-4 text-center text-xs sm:text-sm font-semibold text-muted-foreground border-r border-border bg-muted/70">
                 Horário
               </div>
               {weekDays.map((day) => {
@@ -61,11 +61,11 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                 
                 return (
                   <div key={day.toISOString()} 
-                    className={`p-4 text-center border-r border-border last:border-r-0 transition-colors ${
+                    className={`p-2 sm:p-4 text-center border-r border-border last:border-r-0 transition-colors ${
                       isToday ? 'bg-primary/10 border-primary/20' : 'bg-background'
                     }`}
                   >
-                    <div className={`text-sm font-semibold capitalize ${
+                    <div className={`text-xs sm:text-sm font-semibold capitalize ${
                       isToday ? 'text-primary' : 'text-foreground'
                     }`}>
                       {dayName}
@@ -75,12 +75,13 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     }`}>
                       {dayNumber}
                     </div>
-                    <div className={`text-xs mt-2 px-2 py-1 rounded-full ${
+                    <div className={`text-xs mt-1 sm:mt-2 px-1 sm:px-2 py-1 rounded-full ${
                       dayAppointments.length > 0 
                         ? 'bg-primary/20 text-primary font-medium' 
                         : 'text-muted-foreground/70'
                     }`}>
-                      {dayAppointments.length} agend.
+                      <span className="hidden sm:inline">{dayAppointments.length} agend.</span>
+                      <span className="sm:hidden">{dayAppointments.length}</span>
                     </div>
                   </div>
                 );
@@ -96,8 +97,8 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                   }`}
                 >
                   {/* Time column */}
-                  <div className="p-3 text-sm font-medium text-muted-foreground border-r border-border bg-muted/30 flex items-center justify-center">
-                    <span className="text-xs bg-muted px-2 py-1 rounded">
+                  <div className="p-2 sm:p-3 text-xs sm:text-sm font-medium text-muted-foreground border-r border-border bg-muted/30 flex items-center justify-center">
+                    <span className="text-xs bg-muted px-1 sm:px-2 py-1 rounded">
                       {timeSlot}
                     </span>
                   </div>
@@ -130,20 +131,21 @@ export const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                       >
                         {isOccupied && appointment ? (
                           <div className={`
-                            ${getTypeColor(appointment.type)} text-white text-xs p-3 rounded-lg h-full
+                            ${getTypeColor(appointment.type)} text-white text-xs p-2 sm:p-3 rounded-lg h-full
                             flex flex-col justify-center shadow-md border-l-4 border-white/20 
                             hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200
                             cursor-pointer
                           `}>
-                            <div className="font-semibold truncate mb-1">
+                            <div className="font-semibold truncate mb-1 text-xs sm:text-sm">
                               {appointment.patientName}
                             </div>
-                            <div className="opacity-90 truncate text-xs">
+                            <div className="opacity-90 truncate text-xs hidden sm:block">
                               {appointment.type}
                             </div>
                             <div className="opacity-75 text-xs mt-1 flex items-center gap-1">
                               <Clock className="w-3 h-3" />
-                              {appointment.duration}min
+                              <span className="hidden sm:inline">{appointment.duration}min</span>
+                              <span className="sm:hidden">{appointment.duration}m</span>
                             </div>
                           </div>
                         ) : (
