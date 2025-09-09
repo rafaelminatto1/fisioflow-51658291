@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 import { useData } from '@/hooks/useData';
+import { useSOAPRecords } from '@/hooks/useSOAPRecords';
 import { useToast } from '@/hooks/use-toast';
+import { SOAPWizard } from '@/components/soap/SOAPWizard';
 import { 
   FileText, 
   Upload, 
@@ -19,11 +21,14 @@ import {
   Calendar,
   User,
   Activity,
-
+  Stethoscope,
   AlertCircle,
   Download,
   Eye,
-  Edit2
+  Edit2,
+  PenTool,
+  Shield,
+  BarChart3
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -31,12 +36,24 @@ import { TreatmentSessionModal } from '@/components/modals/TreatmentSessionModal
 
 export function MedicalRecord() {
   const { patients, medicalRecords, addMedicalRecord, treatmentSessions } = useData();
+  const { getRecordsByPatient, exportToPDF } = useSOAPRecords();
   const { toast } = useToast();
   const [selectedPatient, setSelectedPatient] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [recordType, setRecordType] = useState<string>('all');
   const [isNewRecordOpen, setIsNewRecordOpen] = useState(false);
-
+  const [isSOAPWizardOpen, setIsSOAPWizardOpen] = useState(false);
+  const [editingSOAPRecord, setEditingSOAPRecord] = useState<string | undefined>();
+  const [patientSOAPRecords, setPatientSOAPRecords] = useState<{
+    id: string;
+    date: string;
+    subjective: string;
+    objective: string;
+    assessment: string;
+    plan: string;
+    professional_id: string;
+    session_type?: string;
+  }[]>([]);
 
   const [newRecord, setNewRecord] = useState({
     type: 'Evolução' as const,
@@ -44,6 +61,26 @@ export function MedicalRecord() {
     content: '',
     patient_id: ''
   });
+
+  const loadPatientSOAPRecords = useCallback(async () => {
+    if (!selectedPatient || selectedPatient === 'all') return;
+    
+    try {
+      const records = await getRecordsByPatient(selectedPatient);
+      setPatientSOAPRecords(records);
+    } catch (error) {
+      console.error('Error loading SOAP records:', error);
+    }
+  }, [selectedPatient, getRecordsByPatient]);
+
+  // Load SOAP records for selected patient
+  useEffect(() => {
+    if (selectedPatient && selectedPatient !== 'all') {
+      loadPatientSOAPRecords();
+    } else {
+      setPatientSOAPRecords([]);
+    }
+  }, [selectedPatient, loadPatientSOAPRecords]);
 
   const filteredRecords = medicalRecords.filter(record => {
     const matchesPatient = !selectedPatient || selectedPatient === 'all' || record.patient_id === selectedPatient;
@@ -110,11 +147,20 @@ export function MedicalRecord() {
             <p className="text-muted-foreground">Histórico médico e evolução dos pacientes</p>
           </div>
           <div className="flex gap-2">
+            <Button
+              onClick={() => setIsSOAPWizardOpen(true)}
+              className="bg-primary hover:bg-primary/90"
+              disabled={!selectedPatient || selectedPatient === 'all'}
+            >
+              <Stethoscope className="w-4 h-4 mr-2" />
+              Novo SOAP
+            </Button>
+            
             <Dialog open={isNewRecordOpen} onOpenChange={setIsNewRecordOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-primary hover:bg-primary/90">
+                <Button variant="outline">
                   <Plus className="w-4 h-4 mr-2" />
-                  Novo Registro
+                  Registro Geral
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
@@ -240,12 +286,165 @@ export function MedicalRecord() {
           </CardContent>
         </Card>
 
-        <Tabs defaultValue="records" className="space-y-4">
+        <Tabs defaultValue="soap" className="space-y-4">
           <TabsList>
+            <TabsTrigger value="soap">Registros SOAP</TabsTrigger>
             <TabsTrigger value="records">Registros Médicos</TabsTrigger>
             <TabsTrigger value="sessions">Sessões de Tratamento</TabsTrigger>
             <TabsTrigger value="attachments">Anexos</TabsTrigger>
           </TabsList>
+
+          {/* SOAP Records Tab */}
+          <TabsContent value="soap" className="space-y-4">
+            {patientSOAPRecords.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Stethoscope className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">Nenhum registro SOAP encontrado</h3>
+                  <p className="text-muted-foreground mb-4">
+                    {selectedPatient && selectedPatient !== 'all'
+                      ? 'Este paciente ainda não possui registros SOAP. Crie um novo registro para começar.'
+                      : 'Selecione um paciente para visualizar os registros SOAP.'
+                    }
+                  </p>
+                  {selectedPatient && selectedPatient !== 'all' && (
+                    <Button onClick={() => setIsSOAPWizardOpen(true)}>
+                      <Stethoscope className="w-4 h-4 mr-2" />
+                      Criar Primeiro Registro SOAP
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {patientSOAPRecords.map((record) => (
+                  <Card key={record.id} className="hover:shadow-md transition-shadow border-l-4 border-l-primary">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            <Badge className="bg-primary/10 text-primary">
+                              SOAP #{record.session_number}
+                            </Badge>
+                            {record.signature_hash && (
+                              <Badge className="bg-green-100 text-green-800">
+                                <Shield className="w-3 h-3 mr-1" />
+                                Assinado
+                              </Badge>
+                            )}
+                          </div>
+                          <div>
+                            <CardTitle className="text-lg flex items-center gap-2">
+                              <Stethoscope className="w-4 h-4" />
+                              Registro SOAP - Sessão {record.session_number}
+                            </CardTitle>
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <User className="w-4 h-4" />
+                                {record.patient?.name}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-4 h-4" />
+                                {format(new Date(record.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                              </span>
+                              {record.signed_at && (
+                                <span className="flex items-center gap-1 text-green-600">
+                                  <PenTool className="w-4 h-4" />
+                                  Assinado em {format(new Date(record.signed_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              setEditingSOAPRecord(record.id);
+                              setIsSOAPWizardOpen(true);
+                            }}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              setEditingSOAPRecord(record.id);
+                              setIsSOAPWizardOpen(true);
+                            }}
+                            disabled={!!record.signature_hash}
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => exportToPDF(record.id)}
+                          >
+                            <Download className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                          <h5 className="font-medium text-sm text-muted-foreground mb-1">Subjetivo</h5>
+                          <p className="text-sm">
+                            {record.subjective ? 
+                              (record.subjective.length > 100 ? `${record.subjective.substring(0, 100)}...` : record.subjective)
+                              : 'Não preenchido'
+                            }
+                          </p>
+                        </div>
+                        <div>
+                          <h5 className="font-medium text-sm text-muted-foreground mb-1">Objetivo</h5>
+                          <p className="text-sm">
+                            {record.objective ? 
+                              'Exame físico registrado'
+                              : 'Não preenchido'
+                            }
+                          </p>
+                        </div>
+                        <div>
+                          <h5 className="font-medium text-sm text-muted-foreground mb-1">Avaliação</h5>
+                          <p className="text-sm">
+                            {record.assessment ? 
+                              (record.assessment.length > 100 ? `${record.assessment.substring(0, 100)}...` : record.assessment)
+                              : 'Não preenchido'
+                            }
+                          </p>
+                        </div>
+                        <div>
+                          <h5 className="font-medium text-sm text-muted-foreground mb-1">Plano</h5>
+                          <p className="text-sm">
+                            {record.plan ? 
+                              'Plano terapêutico definido'
+                              : 'Não preenchido'
+                            }
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Progress Indicator */}
+                      {record.session_number > 1 && (
+                        <div className="mt-4 pt-4 border-t">
+                          <div className="flex items-center gap-2">
+                            <BarChart3 className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">
+                              Sessão {record.session_number} - Evolução do tratamento
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
 
           <TabsContent value="records" className="space-y-4">
             {filteredRecords.length === 0 ? (
@@ -389,6 +588,24 @@ export function MedicalRecord() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* SOAP Wizard Modal */}
+        <SOAPWizard
+          open={isSOAPWizardOpen}
+          onOpenChange={(open) => {
+            setIsSOAPWizardOpen(open);
+            if (!open) {
+              setEditingSOAPRecord(undefined);
+            }
+          }}
+          patientId={selectedPatient}
+          existingRecordId={editingSOAPRecord}
+          onSave={() => {
+            loadPatientSOAPRecords();
+            setIsSOAPWizardOpen(false);
+            setEditingSOAPRecord(undefined);
+          }}
+        />
       </div>
     </MainLayout>
   );

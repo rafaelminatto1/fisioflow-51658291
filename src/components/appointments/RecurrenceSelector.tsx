@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -40,7 +40,7 @@ export const RecurrenceSelector = ({
     ['Daily', 'Weekly', 'Monthly', 'Custom'].includes(value.type as string);
 
   // Convert to internal format for consistency
-  const currentPattern = value ? (isNewPattern ? {
+  const currentPattern = useMemo(() => value ? (isNewPattern ? {
     type: value.type === 'Daily' ? 'custom' : 
           value.type === 'Weekly' ? 'weekly' :
           value.type === 'Monthly' ? 'monthly' : 'custom',
@@ -58,7 +58,7 @@ export const RecurrenceSelector = ({
     type: 'none' as const,
     interval: 0,
     frequency: 0
-  };
+  }, [value, isNewPattern]);
 
   // Gerar preview das datas
   useEffect(() => {
@@ -141,7 +141,7 @@ export const RecurrenceSelector = ({
       };
       
       if (type === 'none') {
-        onChange(undefined as any);
+        onChange(undefined);
       } else {
         onChange(convertedPattern);
       }

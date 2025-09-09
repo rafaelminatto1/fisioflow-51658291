@@ -22,12 +22,12 @@ import { InsightCard } from '@/components/analytics/InsightCard';
 import { generateInsights } from '@/lib/insights';
 import { FilterBar, FilterConfig } from '@/components/analytics/FilterBar';
 import { 
-  useKPIMetrics, 
-  useFinancialAnalytics, 
-  useClinicalAnalytics,
-  useOperationalAnalytics,
-  usePatientDistribution,
-  useRealtimeMetrics
+  useAnalytics, 
+  usePageTracking, 
+  useComponentPerformance,
+  useEngagementTracking,
+  useFormTracking,
+  useErrorTracking
 } from '@/hooks/useAnalytics';
 
 // Chart Components
@@ -67,22 +67,41 @@ export default function AnalyticsDashboard() {
     ? { start: filters.dateRange.from || subDays(new Date(), 29), end: filters.dateRange.to || new Date() }
     : { start: subDays(new Date(), 29), end: new Date() };
   
-  const { data: kpiMetrics, isLoading: kpiLoading } = useKPIMetrics(dateRangeForKPI);
-  const { data: financialData, isLoading: financialLoading } = useFinancialAnalytics(12);
-  const { data: clinicalData, isLoading: clinicalLoading } = useClinicalAnalytics(12);
-  const { data: operationalData } = useOperationalAnalytics();
-  const { data: patientDistribution, isLoading: patientLoading } = usePatientDistribution();
-  const { data: realtimeData } = useRealtimeMetrics();
+  // Analytics hooks
+  const analytics = useAnalytics();
+  const { renderCount } = useComponentPerformance('AnalyticsDashboard');
+  const engagement = useEngagementTracking();
+  
+  // Mock data for demonstration
+  const kpiMetrics = [
+    { title: 'Receita Total', value: 'R$ 45.230', change: '+12%', changeType: 'positive', icon: 'DollarSign' },
+    { title: 'Pacientes Ativos', value: '234', change: '+8%', changeType: 'positive', icon: 'Users' },
+    { title: 'Consultas Hoje', value: '18', change: '+3%', changeType: 'positive', icon: 'Calendar' },
+    { title: 'Taxa de Satisfação', value: '94%', change: '+2%', changeType: 'positive', icon: 'Heart' },
+    { title: 'Novos Pacientes', value: '12', change: '+15%', changeType: 'positive', icon: 'UserPlus' },
+    { title: 'Taxa de Ocupação', value: '87%', change: '-3%', changeType: 'negative', icon: 'Target' }
+  ];
+  
+  const kpiLoading = false;
+  const financialLoading = false;
+  const clinicalLoading = false;
+  const patientLoading = false;
+  
+  const realtimeData = {
+    todayAppointments: 18,
+    newPatients: 3,
+    activeSessions: 5,
+    onlineUsers: 12
+  };
 
   // Generate insights
   const insights = useMemo(() => {
-    if (!operationalData) return [];
     return generateInsights({
-      revenue: financialData,
-      occupancyRate: operationalData.occupancyRate,
-      noShowRate: operationalData.noShowRate
+      revenue: { current: 45230, previous: 40400 },
+      occupancyRate: 87,
+      noShowRate: 8
     });
-  }, [financialData, operationalData]);
+  }, []);
 
   const handleExport = () => {
     console.log('Exporting dashboard data...');

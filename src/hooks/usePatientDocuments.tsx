@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { PatientDocument } from '@/types';
 
@@ -7,7 +7,7 @@ export function usePatientDocuments(patientId?: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchDocuments = async () => {
+  const fetchDocuments = useCallback(async () => {
     try {
       setLoading(true);
       let query = supabase
@@ -42,7 +42,7 @@ export function usePatientDocuments(patientId?: string) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [patientId]);
 
   const uploadDocument = async (
     patientId: string,
@@ -124,7 +124,7 @@ export function usePatientDocuments(patientId?: string) {
 
   useEffect(() => {
     fetchDocuments();
-  }, [patientId]);
+  }, [patientId, fetchDocuments]);
 
   return {
     documents,

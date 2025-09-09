@@ -8,7 +8,7 @@ import type {
   EmailServiceConfig,
   EmailAddress
 } from './types';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 export class EmailService {
   private provider: EmailProvider;

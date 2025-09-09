@@ -1,260 +1,276 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { subDays, format } from 'date-fns';
+/**
+ * Hook personalizado para Analytics - FisioFlow
+ * Integração simplificada do sistema de analytics com componentes React
+ */
 
-export interface KPIMetric {
-  title: string;
-  value: string | number;
-  change?: number;
-  changeType?: 'positive' | 'negative' | 'neutral';
-  icon: string;
-}
+import { useEffect, useCallback, useRef } from 'react';
+import { analytics } from '@/utils/analytics';
+import type { AnalyticsEvent, UserMetrics, PerformanceMetrics } from '@/utils/analytics';
 
-export interface ChartDataPoint {
-  name: string;
-  value: number;
-  date?: string;
-  [key: string]: unknown;
-}
+// Hook principal para analytics
+export const useAnalytics = () => {
+  const pageStartTime = useRef<number>(Date.now());
+  const interactionCount = useRef<number>(0);
 
-export function useKPIMetrics(dateRange: { start: Date; end: Date }) {
-  return useQuery({
-    queryKey: ['kpi-metrics', dateRange],
-    queryFn: async (): Promise<KPIMetric[]> => {
-      // Get current month metrics
-      const currentMonth = format(new Date(), 'yyyy-MM-01');
-      const previousMonth = format(subDays(new Date(), 30), 'yyyy-MM-01');
+  // Track page view
+  const trackPageView = useCallback((pageName: string, additionalData?: Record<string, any>) => {
+    analytics.track('page_view', {
+      page: pageName,
+      timestamp: Date.now(),
+      referrer: document.referrer,
+      ...additionalData
+    });
+  }, []);
 
-      // Fetch patients count
-      const { data: patients } = await supabase
-        .from('patients')
-        .select('*')
-        .gte('created_at', currentMonth);
+  // Track user interaction
+  const trackInteraction = useCallback((action: string, element: string, additionalData?: Record<string, any>) => {
+    interactionCount.current += 1;
+    
+    analytics.track('user_interaction', {
+      action,
+      element,
+      interactionCount: interactionCount.current,
+      timestamp: Date.now(),
+      ...additionalData
+    });
+  }, []);
 
-      const { data: previousPatients } = await supabase
-        .from('patients')
-        .select('*')
-        .gte('created_at', previousMonth)
-        .lt('created_at', currentMonth);
+  // Track business event
+  const trackBusiness = useCallback((event: string, data?: Record<string, any>) => {
+    analytics.trackBusiness(event, data);
+  }, []);
 
-      // Fetch appointments
-      const { data: appointments } = await supabase
-        .from('appointments')
-        .select('*')
-        .gte('appointment_date', currentMonth);
+  // Track performance metric
+  const trackPerformance = useCallback((metric: string, value: number, additionalData?: Record<string, any>) => {
+    analytics.trackPerformance({
+      metric,
+      value,
+      timestamp: Date.now(),
+      ...additionalData
+    });
+  }, []);
 
-      // Fetch revenue
-      const { data: revenue } = await supabase
-        .from('voucher_purchases')
-        .select('amount_paid')
-        .eq('status', 'active')
-        .gte('purchase_date', currentMonth);
+  // Track error
+  const trackError = useCallback((error: Error, context?: string) => {
+    analytics.track('error', {
+      message: error.message,
+      stack: error.stack,
+      context,
+      timestamp: Date.now(),
+      url: window.location.href
+    });
+  }, []);
 
-      // Calculate metrics
-      const totalPatients = patients?.length || 0;
-      const previousTotalPatients = previousPatients?.length || 0;
-      const patientGrowth = previousTotalPatients > 0 
-        ? ((totalPatients - previousTotalPatients) / previousTotalPatients) * 100 
-        : 0;
+  // Track form submission
+  const trackFormSubmission = useCallback((formName: string, success: boolean, data?: Record<string, any>) => {
+    analytics.track('form_submission', {
+      formName,
+      success,
+      timestamp: Date.now(),
+      ...data
+    });
+  }, []);
 
-      const totalAppointments = appointments?.length || 0;
-      const confirmedAppointments = appointments?.filter(a => a.status === 'Confirmado').length || 0;
-      const occupancyRate = totalAppointments > 0 ? (confirmedAppointments / totalAppointments) * 100 : 0;
+  // Track search
+  const trackSearch = useCallback((query: string, results: number, filters?: Record<string, any>) => {
+    analytics.track('search', {
+      query,
+      results,
+      filters,
+      timestamp: Date.now()
+    });
+  }, []);
 
-      const monthlyRevenue = revenue?.reduce((sum, r) => sum + Number(r.amount_paid), 0) || 0;
+  return {
+    trackPageView,
+    trackInteraction,
+    trackBusiness,
+    trackPerformance,
+    trackError,
+    trackFormSubmission,
+    trackSearch
+  };
+};
 
-      return [
-        {
-          title: 'Faturamento do Mês',
-          value: new Intl.NumberFormat('pt-BR', { 
-            style: 'currency', 
-            currency: 'BRL' 
-          }).format(monthlyRevenue),
-          change: 15.2,
-          changeType: 'positive',
-          icon: 'DollarSign'
-        },
-        {
-          title: 'Pacientes Ativos',
-          value: totalPatients,
-          change: patientGrowth,
-          changeType: patientGrowth >= 0 ? 'positive' : 'negative',
-          icon: 'Users'
-        },
-        {
-          title: 'Taxa de Ocupação',
-          value: `${occupancyRate.toFixed(1)}%`,
-          change: 8.5,
-          changeType: 'positive',
-          icon: 'Calendar'
-        },
-        {
-          title: 'Satisfação (NPS)',
-          value: '8.7',
-          change: -2.1,
-          changeType: 'negative',
-          icon: 'Heart'
-        },
-        {
-          title: 'Novos Pacientes',
-          value: totalPatients,
-          change: patientGrowth,
-          changeType: patientGrowth >= 0 ? 'positive' : 'negative',
-          icon: 'UserPlus'
-        },
-        {
-          title: 'Taxa de Conclusão',
-          value: '84.3%',
-          change: 3.2,
-          changeType: 'positive',
-          icon: 'CheckCircle'
+// Hook para tracking automático de página
+export const usePageTracking = (pageName: string, additionalData?: Record<string, any>) => {
+  const { trackPageView, trackPerformance } = useAnalytics();
+  const startTime = useRef<number>(Date.now());
+
+  useEffect(() => {
+    // Track page view on mount
+    trackPageView(pageName, additionalData);
+
+    // Track page load time
+    const loadTime = Date.now() - startTime.current;
+    trackPerformance('page_load_time', loadTime, { page: pageName });
+
+    // Track time on page on unmount
+    return () => {
+      const timeOnPage = Date.now() - startTime.current;
+      trackPerformance('time_on_page', timeOnPage, { page: pageName });
+    };
+  }, [pageName, trackPageView, trackPerformance, additionalData]);
+};
+
+// Hook para tracking de formulários
+export const useFormTracking = (formName: string) => {
+  const { trackFormSubmission, trackInteraction } = useAnalytics();
+  const startTime = useRef<number>(Date.now());
+  const fieldInteractions = useRef<Record<string, number>>({});
+
+  const trackFieldInteraction = useCallback((fieldName: string) => {
+    fieldInteractions.current[fieldName] = (fieldInteractions.current[fieldName] || 0) + 1;
+    trackInteraction('field_focus', fieldName, { formName });
+  }, [formName, trackInteraction]);
+
+  const trackSubmission = useCallback((success: boolean, data?: Record<string, any>) => {
+    const completionTime = Date.now() - startTime.current;
+    
+    trackFormSubmission(formName, success, {
+      completionTime,
+      fieldInteractions: fieldInteractions.current,
+      ...data
+    });
+  }, [formName, trackFormSubmission]);
+
+  return {
+    trackFieldInteraction,
+    trackSubmission
+  };
+};
+
+// Hook para tracking de performance de componentes
+export const useComponentPerformance = (componentName: string) => {
+  const { trackPerformance } = useAnalytics();
+  const renderCount = useRef<number>(0);
+  const mountTime = useRef<number>(Date.now());
+
+  useEffect(() => {
+    renderCount.current += 1;
+    
+    // Track component mount time
+    if (renderCount.current === 1) {
+      const mountDuration = Date.now() - mountTime.current;
+      trackPerformance('component_mount_time', mountDuration, { component: componentName });
+    }
+
+    // Track render count
+    trackPerformance('component_render_count', renderCount.current, { component: componentName });
+  });
+
+  const trackCustomMetric = useCallback((metric: string, value: number) => {
+    trackPerformance(metric, value, { component: componentName });
+  }, [componentName, trackPerformance]);
+
+  return {
+    trackCustomMetric,
+    renderCount: renderCount.current
+  };
+};
+
+// Hook para tracking de erros de componente
+export const useErrorTracking = (componentName: string) => {
+  const { trackError } = useAnalytics();
+
+  const trackComponentError = useCallback((error: Error, errorInfo?: any) => {
+    trackError(error, `Component: ${componentName}`);
+    
+    // Track additional error info if available
+    if (errorInfo) {
+      analytics.track('component_error_details', {
+        component: componentName,
+        errorInfo: JSON.stringify(errorInfo),
+        timestamp: Date.now()
+      });
+    }
+  }, [componentName, trackError]);
+
+  return {
+    trackComponentError
+  };
+};
+
+// Hook para tracking de user engagement
+export const useEngagementTracking = () => {
+  const { trackInteraction, trackPerformance } = useAnalytics();
+  const sessionStart = useRef<number>(Date.now());
+  const lastActivity = useRef<number>(Date.now());
+  const clickCount = useRef<number>(0);
+  const scrollDepth = useRef<number>(0);
+
+  useEffect(() => {
+    const handleActivity = () => {
+      lastActivity.current = Date.now();
+    };
+
+    const handleClick = () => {
+      clickCount.current += 1;
+      handleActivity();
+    };
+
+    const handleScroll = () => {
+      const scrollPercent = Math.round(
+        (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100
+      );
+      
+      if (scrollPercent > scrollDepth.current) {
+        scrollDepth.current = scrollPercent;
+        
+        // Track scroll milestones
+        if (scrollPercent >= 25 && scrollPercent < 50) {
+          trackInteraction('scroll', '25%');
+        } else if (scrollPercent >= 50 && scrollPercent < 75) {
+          trackInteraction('scroll', '50%');
+        } else if (scrollPercent >= 75 && scrollPercent < 100) {
+          trackInteraction('scroll', '75%');
+        } else if (scrollPercent >= 100) {
+          trackInteraction('scroll', '100%');
         }
-      ];
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-}
-
-export function useFinancialAnalytics(months = 12) {
-  return useQuery({
-    queryKey: ['financial-analytics', months],
-    queryFn: async (): Promise<ChartDataPoint[]> => {
-      const { data, error } = await supabase.rpc('get_financial_metrics', {
-        start_date: format(subDays(new Date(), months * 30), 'yyyy-MM-dd')
-      });
-
-      if (error) throw error;
-
-      return data?.map((item: Record<string, unknown>) => ({
-         name: format(new Date(String(item.month)), 'MMM/yyyy'),
-        value: Number(item.total_revenue) || 0,
-        revenue: Number(item.total_revenue) || 0,
-        purchases: Number(item.total_purchases) || 0,
-        avgTicket: Number(item.avg_ticket) || 0,
-        customers: Number(item.unique_customers) || 0
-      })) || [];
-    },
-    staleTime: 10 * 60 * 1000, // 10 minutes
-  });
-}
-
-export function useClinicalAnalytics(months = 12) {
-  return useQuery({
-    queryKey: ['clinical-analytics', months],
-    queryFn: async (): Promise<ChartDataPoint[]> => {
-      const { data, error } = await supabase.rpc('get_clinical_metrics', {
-        start_date: format(subDays(new Date(), months * 30), 'yyyy-MM-dd')
-      });
-
-      if (error) throw error;
-
-      return data?.map((item: Record<string, unknown>) => ({
-        name: format(new Date(String(item.month)), 'MMM/yyyy'),
-        value: Number(item.total_sessions) || 0,
-        sessions: Number(item.total_sessions) || 0,
-        avgPainLevel: Number(item.avg_pain_level) || 0,
-        patients: Number(item.treated_patients) || 0,
-        avgDuration: Number(item.avg_session_duration) || 0
-      })) || [];
-    },
-    staleTime: 10 * 60 * 1000,
-  });
-}
-
-export function useOperationalAnalytics() {
-  return useQuery({
-    queryKey: ['operational-analytics'],
-    queryFn: async () => {
-      // Get appointment data for operational metrics
-      const { data: appointments } = await supabase
-        .from('appointments')
-        .select('*')
-        .gte('appointment_date', format(subDays(new Date(), 30), 'yyyy-MM-dd'));
-
-      // Calculate operational metrics
-      const totalAppointments = appointments?.length || 0;
-      const confirmedAppointments = appointments?.filter(a => a.status === 'Confirmado').length || 0;
-      const cancelledAppointments = appointments?.filter(a => a.status === 'Cancelado').length || 0;
+      }
       
-      const occupancyRate = totalAppointments > 0 ? (confirmedAppointments / totalAppointments) * 100 : 0;
-      const noShowRate = totalAppointments > 0 ? (cancelledAppointments / totalAppointments) * 100 : 0;
+      handleActivity();
+    };
 
-      // Calculate peak hours
-      const hourlyDistribution = appointments?.reduce((acc, apt) => {
-        const hour = apt.appointment_time?.split(':')[0] || '00';
-        acc[hour] = (acc[hour] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+    // Add event listeners
+    document.addEventListener('click', handleClick);
+    document.addEventListener('scroll', handleScroll, { passive: true });
+    document.addEventListener('keydown', handleActivity);
+    document.addEventListener('mousemove', handleActivity);
 
-      const peakHour = Object.entries(hourlyDistribution || {})
-        .sort(([,a], [,b]) => b - a)[0]?.[0] || '09';
-
-      return {
-        occupancyRate: Number(occupancyRate.toFixed(1)),
-        noShowRate: Number(noShowRate.toFixed(1)),
-        avgSessionDuration: 60, // Default value
-        peakHour: `${peakHour}:00`,
-        totalAppointments,
-        confirmedAppointments,
-        cancelledAppointments,
-        hourlyDistribution
-      };
-    },
-    staleTime: 15 * 60 * 1000, // 15 minutes
-  });
-}
-
-export function usePatientDistribution() {
-  return useQuery({
-    queryKey: ['patient-distribution'],
-    queryFn: async (): Promise<ChartDataPoint[]> => {
-      const { data, error } = await supabase.rpc('get_patient_analytics');
-
-      if (error) throw error;
-
-      return data?.map((item: Record<string, unknown>) => ({
-        name: String(item.status),
-        value: Number(item.count) || 0,
-        avgAge: Number(item.avg_age) || 0
-      })) || [];
-    },
-    staleTime: 30 * 60 * 1000, // 30 minutes
-  });
-}
-
-export function useRealtimeMetrics() {
-  return useQuery({
-    queryKey: ['realtime-metrics'],
-    queryFn: async () => {
-      const today = format(new Date(), 'yyyy-MM-dd');
+    // Track engagement metrics periodically
+    const engagementInterval = setInterval(() => {
+      const sessionDuration = Date.now() - sessionStart.current;
+      const timeSinceLastActivity = Date.now() - lastActivity.current;
       
-      // Today's appointments
-      const { data: todayAppointments } = await supabase
-        .from('appointments')
-        .select('*')
-        .eq('appointment_date', today);
+      trackPerformance('session_duration', sessionDuration);
+      trackPerformance('clicks_per_session', clickCount.current);
+      trackPerformance('max_scroll_depth', scrollDepth.current);
+      
+      // Track if user is idle (no activity for 30 seconds)
+      if (timeSinceLastActivity > 30000) {
+        trackInteraction('user_idle', 'session');
+      }
+    }, 60000); // Every minute
 
-      // Today's new patients
-      const { data: newPatients } = await supabase
-        .from('patients')
-        .select('*')
-        .gte('created_at', `${today}T00:00:00`)
-        .lt('created_at', `${today}T23:59:59`);
+    return () => {
+      document.removeEventListener('click', handleClick);
+      document.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('keydown', handleActivity);
+      document.removeEventListener('mousemove', handleActivity);
+      clearInterval(engagementInterval);
+      
+      // Track final session metrics
+      const finalSessionDuration = Date.now() - sessionStart.current;
+      trackPerformance('final_session_duration', finalSessionDuration);
+      trackPerformance('final_click_count', clickCount.current);
+      trackPerformance('final_scroll_depth', scrollDepth.current);
+    };
+  }, [trackInteraction, trackPerformance]);
 
-      // Active treatment sessions
-      const { data: activeSessions } = await supabase
-        .from('treatment_sessions')
-        .select('*')
-        .gte('created_at', `${today}T00:00:00`);
-
-      return {
-        todayAppointments: todayAppointments?.length || 0,
-        newPatients: newPatients?.length || 0,
-        activeSessions: activeSessions?.length || 0,
-        onlineUsers: Math.floor(Math.random() * 15) + 5 // Mock real-time users
-      };
-    },
-    refetchInterval: 30 * 1000, // Refresh every 30 seconds
-    staleTime: 0,
-  });
-}
+  return {
+    sessionDuration: Date.now() - sessionStart.current,
+    clickCount: clickCount.current,
+    scrollDepth: scrollDepth.current
+  };
+};

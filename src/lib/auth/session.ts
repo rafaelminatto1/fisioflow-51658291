@@ -154,7 +154,6 @@ export function clearSessionData(): void {
  */
 export function setupAutoRefresh(onSessionExpired?: () => void): () => void {
   let timeoutId: NodeJS.Timeout;
-  let intervalId: NodeJS.Timeout;
 
   const scheduleRefresh = async () => {
     try {
@@ -201,7 +200,7 @@ export function setupAutoRefresh(onSessionExpired?: () => void): () => void {
   scheduleRefresh();
 
   // Check every 30 seconds if we need to update the schedule
-  intervalId = setInterval(() => {
+  const intervalId = setInterval(() => {
     scheduleRefresh();
   }, 30000);
 

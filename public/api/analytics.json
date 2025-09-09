@@ -1,0 +1,33 @@
+{
+  "status": "success",
+  "message": "Analytics endpoint active",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "version": "1.0.0",
+  "endpoints": {
+    "track": "/api/analytics/track",
+    "batch": "/api/analytics/batch",
+    "metrics": "/api/analytics/metrics",
+    "dashboard": "/api/analytics/dashboard"
+  },
+  "supported_events": [
+    "page_view",
+    "user_action",
+    "feature_usage",
+    "business_event",
+    "performance_metric",
+    "error",
+    "click",
+    "form_submit",
+    "scroll_depth"
+  ],
+  "data_retention": {
+    "raw_events": "90 days",
+    "aggregated_metrics": "2 years",
+    "user_sessions": "30 days"
+  },
+  "privacy": {
+    "anonymize_ip": true,
+    "gdpr_compliant": true,
+    "data_processing_consent": "required"
+  }
+}

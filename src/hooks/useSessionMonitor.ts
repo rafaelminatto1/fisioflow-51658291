@@ -3,8 +3,7 @@ import { useAuth } from './useAuth';
 import { 
   getSessionStatus, 
   refreshSession, 
-  forceLogout,
-  type SessionInfo 
+  forceLogout
 } from '@/lib/auth/session';
 import { errorLogger } from '@/lib/errors/logger';
 import { toast } from '@/hooks/use-toast';
@@ -30,7 +29,7 @@ interface UseSessionMonitorOptions {
 export function useSessionMonitor(options: UseSessionMonitorOptions = {}) {
   const {
     checkInterval = 60000, // Check every minute
-    warningThreshold = 300000, // Warn 5 minutes before expiry
+    // warningThreshold = 300000, // Warn 5 minutes before expiry
     autoRefresh = true,
     showToastWarnings = true
   } = options;

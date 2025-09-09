@@ -82,7 +82,7 @@ export function Register() {
   });
 
   const watchedUserType = watch('userType');
-  const watchedPassword = watch('password');
+  // const watchedPassword = watch('password');
 
   // Redirect if already logged in
   if (user && !loading) {
@@ -120,7 +120,7 @@ export function Register() {
     setIsSubmitting(true);
     
     try {
-      const { error, user: newUser } = await signUp(data);
+      const { error } = await signUp(data);
       
       if (error) {
         if (error.message.includes('User already registered') || error.message.includes('already registered')) {
@@ -328,7 +328,7 @@ export function Register() {
           </div>
         );
 
-      case 2:
+      case 2: {
         const isProfessional = watchedUserType === 'fisioterapeuta' || watchedUserType === 'estagiario';
         
         return (
@@ -476,6 +476,7 @@ export function Register() {
             </div>
           </div>
         );
+      }
 
       case 3:
         return (

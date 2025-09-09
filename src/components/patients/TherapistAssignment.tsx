@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -22,7 +22,6 @@ import {
   UserPlus,
   UserMinus,
   Stethoscope,
-  Clock,
   CalendarDays,
   Loader2,
   AlertCircle
@@ -71,9 +70,9 @@ export function TherapistAssignment({ patientId, patientName }: TherapistAssignm
       fetchTherapists();
       fetchAssignments();
     }
-  }, [open]);
+  }, [open, fetchTherapists]);
 
-  const fetchTherapists = async () => {
+  const fetchTherapists = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -106,7 +105,7 @@ export function TherapistAssignment({ patientId, patientName }: TherapistAssignm
         variant: 'destructive',
       });
     }
-  };
+  }, [toast]);
 
   const fetchAssignments = async () => {
     try {

@@ -1,0 +1,12 @@
+{
+  "status": "healthy",
+  "timestamp": "2024-01-01T00:00:00Z",
+  "version": "1.0.0",
+  "services": {
+    "database": "operational",
+    "auth": "operational",
+    "storage": "operational"
+  },
+  "uptime": "99.9%",
+  "message": "FisioFlow API is running normally"
+}

@@ -360,4 +360,4 @@ export interface AppointmentStatistics {
 }
 
 // Export the main Appointment interface for backward compatibility
-export interface Appointment extends AppointmentBase {}
+export type Appointment = AppointmentBase;

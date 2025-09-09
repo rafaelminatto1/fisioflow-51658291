@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { useNavPreload } from '@/hooks/useIntelligentPreload';
 import { 
   LayoutDashboard, 
   Users, 
@@ -37,6 +38,7 @@ const menuItems = [
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const { getLinkProps } = useNavPreload();
 
   return (
     <div className={cn(
@@ -75,7 +77,7 @@ export function Sidebar() {
           const isActive = location.pathname === item.href;
           
           return (
-            <Link key={item.href} to={item.href}>
+            <Link key={item.href} to={item.href} {...getLinkProps(item.href)}>
               <Button
                 variant={isActive ? "medical" : "ghost"}
                 className={cn(

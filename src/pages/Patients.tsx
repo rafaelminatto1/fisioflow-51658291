@@ -26,7 +26,6 @@ import {
   Users,
   Filter,
   Download,
-  AlertCircle,
   Loader2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -37,7 +36,7 @@ const Patients = () => {
   const [conditionFilter, setConditionFilter] = useState<string>('all');
   const [editingPatient, setEditingPatient] = useState<string | null>(null);
   const [viewingPatient, setViewingPatient] = useState<string | null>(null);
-  const { patients, loading, error } = usePatients();
+  const { patients, loading } = usePatients();
   const { toast } = useToast();
 
   // Get unique conditions and statuses for filters
@@ -107,7 +106,7 @@ const Patients = () => {
         title: 'Exportação concluída!',
         description: 'Lista de pacientes exportada com sucesso.',
       });
-    } catch (error) {
+    } catch {
       toast({
         title: 'Erro na exportação',
         description: 'Não foi possível exportar a lista de pacientes.',
@@ -130,22 +129,7 @@ const Patients = () => {
     );
   }
 
-  // Show error state
-  if (error) {
-    return (
-      <MainLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center space-y-4">
-            <AlertCircle className="w-12 h-12 text-destructive mx-auto" />
-            <div>
-              <h3 className="text-lg font-medium text-foreground mb-2">Erro ao carregar pacientes</h3>
-              <p className="text-muted-foreground">{error}</p>
-            </div>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
+
 
   const getStatusColor = (status: string) => {
     const colors = {

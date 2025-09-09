@@ -1,819 +1,510 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  Appointment, 
-  EnhancedAppointment, 
-  AppointmentConflict,
-  AppointmentFilters,
-  AlternativeSlot,
-  TimeSlot,
-  RecurrencePattern,
-  AppointmentStatistics
-} from '@/types/appointment';
-import { addDays, format, isAfter, isBefore, isEqual, parseISO, startOfDay, endOfDay } from 'date-fns';
+import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { errorLogger } from '@/lib/errors/logger';
 
-interface UseAppointmentsOptions {
-  dateRange?: { start: Date; end: Date };
-  enableRealTime?: boolean;
-  autoRefresh?: boolean;
-  refreshInterval?: number;
+export interface Appointment {
+  id: string;
+  patient_id: string;
+  therapist_id: string;
+  appointment_date: string;
+  start_time: string;
+  end_time: string;
+  duration: number;
+  type: 'consultation' | 'treatment' | 'evaluation' | 'follow_up' | 'group_session';
+  status: 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show' | 'rescheduled';
+  notes?: string;
+  room?: string;
+  recurring_pattern?: 'none' | 'daily' | 'weekly' | 'monthly';
+  recurring_end_date?: string;
+  parent_appointment_id?: string;
+  is_recurring: boolean;
+  patient?: {
+    id: string;
+    full_name: string;
+    email: string;
+    phone?: string;
+  };
+  therapist?: {
+    id: string;
+    full_name: string;
+    role: string;
+  };
+  created_at: string;
+  updated_at: string;
 }
 
-export function useAppointments(options: UseAppointmentsOptions = {}) {
-  const [appointments, setAppointments] = useState<EnhancedAppointment[]>([]);
+export interface CreateAppointmentData {
+  patient_id: string;
+  appointment_date: string;
+  start_time: string;
+  end_time: string;
+  duration: number;
+  type: Appointment['type'];
+  notes?: string;
+  room?: string;
+  recurring_pattern?: Appointment['recurring_pattern'];
+  recurring_end_date?: string;
+}
+
+export interface UpdateAppointmentData {
+  appointment_date?: string;
+  start_time?: string;
+  end_time?: string;
+  duration?: number;
+  type?: Appointment['type'];
+  status?: Appointment['status'];
+  notes?: string;
+  room?: string;
+}
+
+export function useAppointments() {
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [syncing, setSyncing] = useState(false);
-  const [conflicts, setConflicts] = useState<AppointmentConflict[]>([]);
-  
-  const { dateRange, enableRealTime = false, autoRefresh = false, refreshInterval = 30000 } = options;
+  const { profile } = useAuth();
 
-  const fetchAppointments = useCallback(async () => {
+  // Fetch appointments
+  const fetchAppointments = useCallback(async (startDate?: string, endDate?: string) => {
     try {
       setLoading(true);
-      
+      setError(null);
+
       let query = supabase
         .from('appointments')
         .select(`
           *,
-          patients!inner(id, name, phone, email),
-          therapists(id, name, specialties),
-          rooms(id, name, capacity)
-        `);
-      
-      // Apply date range filter if provided
-      if (dateRange) {
-        query = query
-          .gte('appointment_date', format(dateRange.start, 'yyyy-MM-dd'))
-          .lte('appointment_date', format(dateRange.end, 'yyyy-MM-dd'));
-      }
-      
-      query = query
+          patient:patients!inner(
+            id,
+            full_name,
+            email,
+            phone
+          ),
+          therapist:profiles!appointments_therapist_id_fkey(
+            id,
+            full_name,
+            role
+          )
+        `)
         .order('appointment_date', { ascending: true })
-        .order('appointment_time', { ascending: true });
+        .order('start_time', { ascending: true });
 
-      const { data: appointmentsData, error: appointmentsError } = await query;
+      // Filter by date range if provided
+      if (startDate && endDate) {
+        query = query
+          .gte('appointment_date', startDate)
+          .lte('appointment_date', endDate);
+      }
 
-      if (appointmentsError) throw appointmentsError;
+      // If user is therapist/student, filter by their appointments
+      if (profile && ['fisioterapeuta', 'estagiario'].includes(profile.role)) {
+        query = query.eq('therapist_id', profile.id);
+      }
 
-      const formattedAppointments: EnhancedAppointment[] = appointmentsData?.map(appointment => ({
-        id: appointment.id,
-        patientId: appointment.patient_id,
-        patientName: appointment.patients?.name || 'Paciente não encontrado',
-        date: new Date(appointment.appointment_date),
-        time: appointment.appointment_time,
-        duration: appointment.duration,
-        type: appointment.type,
-        status: appointment.status,
-        notes: appointment.notes || '',
-        phone: appointment.patients?.phone || '',
-        
-        // Enhanced fields
-        therapistId: appointment.therapist_id,
-        therapistName: appointment.therapists?.name,
-        roomId: appointment.room_id,
-        roomName: appointment.rooms?.name,
-        equipment: appointment.equipment || [],
-        recurrenceId: appointment.recurrence_id,
-        isRecurring: appointment.is_recurring || false,
-        recurrencePattern: appointment.recurrence_pattern ? 
-          JSON.parse(appointment.recurrence_pattern) : undefined,
-        priority: appointment.priority || 'Normal',
-        specialRequirements: appointment.special_requirements,
-        reminderSent: appointment.reminder_sent || false,
-        confirmationSent: appointment.confirmation_sent || false,
-        lastReminderSent: appointment.last_reminder_sent ? 
-          new Date(appointment.last_reminder_sent) : undefined,
-        previousAppointmentId: appointment.previous_appointment_id,
-        nextAppointmentId: appointment.next_appointment_id,
-        treatmentPhase: appointment.treatment_phase,
-        sessionNumber: appointment.session_number,
-        preferredTime: appointment.preferred_time,
-        preferredDays: appointment.preferred_days ? 
-          JSON.parse(appointment.preferred_days) : [],
-        cancellationReason: appointment.cancellation_reason,
-        rescheduledFromId: appointment.rescheduled_from_id,
-        rescheduledToId: appointment.rescheduled_to_id,
-        cancellationTimestamp: appointment.cancellation_timestamp ? 
-          new Date(appointment.cancellation_timestamp) : undefined,
-        color: appointment.color || getDefaultColor(appointment.type),
-        externalCalendarId: appointment.external_calendar_id,
-        syncedWithGoogle: appointment.synced_with_google || false,
-        syncedWithOutlook: appointment.synced_with_outlook || false,
-        
-        createdAt: new Date(appointment.created_at),
-        updatedAt: new Date(appointment.updated_at),
-      })) || [];
+      const { data, error: fetchError } = await query;
 
-      setAppointments(formattedAppointments);
-      
-      // Detect conflicts for newly loaded appointments
-      const detectedConflicts = await detectConflicts(formattedAppointments);
-      setConflicts(detectedConflicts);
-      
+      if (fetchError) {
+        throw fetchError;
+      }
+
+      setAppointments(data || []);
+      errorLogger.logInfo('Appointments fetched successfully', {
+        count: data?.length || 0,
+        dateRange: startDate && endDate ? `${startDate} to ${endDate}` : 'all'
+      });
+
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao carregar agendamentos');
+      const message = err instanceof Error ? err.message : 'Erro ao buscar agendamentos';
+      setError(message);
+      errorLogger.logError(err instanceof Error ? err : new Error(message), {
+        context: 'useAppointments.fetchAppointments',
+        startDate,
+        endDate
+      });
+      toast({
+        title: "Erro ao carregar agendamentos",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
-  }, [dateRange]);
+  }, [profile, checkAppointmentConflict, createRecurringAppointments]);
 
-  const addAppointment = useCallback(async (
-    appointmentData: Omit<EnhancedAppointment, 'id' | 'patientName' | 'phone' | 'createdAt' | 'updatedAt'>,
-    options: { skipConflictCheck?: boolean; createRecurring?: boolean } = {}
-  ) => {
+  // Create appointment
+  const createAppointment = useCallback(async (data: CreateAppointmentData) => {
+    if (!profile) {
+      throw new Error('Usuário não autenticado');
+    }
+
     try {
-      setSyncing(true);
-      
-      // Check for conflicts unless explicitly skipped
-      if (!options.skipConflictCheck) {
-        const conflicts = await checkAppointmentConflicts(appointmentData);
-        const blockingConflicts = conflicts.filter(c => c.severity === 'Error' && !c.canOverride);
-        
-        if (blockingConflicts.length > 0) {
-          throw new Error(`Conflitos detectados: ${blockingConflicts.map(c => c.description).join(', ')}`);
-        }
+      setError(null);
+
+      // Check for conflicts
+      const conflictCheck = await checkAppointmentConflict(
+        data.appointment_date,
+        data.start_time,
+        data.end_time,
+        profile.id
+      );
+
+      if (conflictCheck.hasConflict) {
+        throw new Error(`Conflito de horário detectado: ${conflictCheck.message}`);
       }
-      
-      const insertData = {
-        patient_id: appointmentData.patientId,
-        appointment_date: appointmentData.date.toISOString().split('T')[0],
-        appointment_time: appointmentData.time,
-        duration: appointmentData.duration,
-        type: appointmentData.type,
-        status: appointmentData.status,
-        notes: appointmentData.notes || null,
-        therapist_id: appointmentData.therapistId || null,
-        room_id: appointmentData.roomId || null,
-        equipment: appointmentData.equipment || [],
-        recurrence_id: appointmentData.recurrenceId || null,
-        is_recurring: appointmentData.isRecurring || false,
-        recurrence_pattern: appointmentData.recurrencePattern ? 
-          JSON.stringify(appointmentData.recurrencePattern) : null,
-        priority: appointmentData.priority || 'Normal',
-        special_requirements: appointmentData.specialRequirements || null,
-        preferred_time: appointmentData.preferredTime || null,
-        preferred_days: appointmentData.preferredDays ? 
-          JSON.stringify(appointmentData.preferredDays) : null,
-        color: appointmentData.color || getDefaultColor(appointmentData.type),
+
+      const appointmentData = {
+        ...data,
+        therapist_id: profile.id,
+        status: 'scheduled' as const,
+        is_recurring: data.recurring_pattern !== 'none',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
-      
-      const { data, error } = await supabase
+
+      const { data: newAppointment, error: createError } = await supabase
         .from('appointments')
-        .insert(insertData)
-        .select()
+        .insert([appointmentData])
+        .select(`
+          *,
+          patient:patients!inner(
+            id,
+            full_name,
+            email,
+            phone
+          ),
+          therapist:profiles!appointments_therapist_id_fkey(
+            id,
+            full_name,
+            role
+          )
+        `)
         .single();
 
-      if (error) throw error;
-      
-      // Create recurring appointments if requested
-      if (options.createRecurring && appointmentData.recurrencePattern) {
-        await createRecurringAppointments(data.id, appointmentData);
+      if (createError) {
+        throw createError;
       }
 
-      await fetchAppointments();
-      return data;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao adicionar agendamento');
-      throw err;
-    } finally {
-      setSyncing(false);
-    }
-  }, [fetchAppointments]);
+      // Handle recurring appointments
+      if (data.recurring_pattern !== 'none' && data.recurring_end_date) {
+        await createRecurringAppointments(newAppointment, data.recurring_pattern, data.recurring_end_date);
+      }
 
-  const updateAppointment = useCallback(async (
-    id: string, 
-    updates: Partial<EnhancedAppointment>,
-    options: { skipConflictCheck?: boolean; updateRecurring?: boolean } = {}
-  ) => {
+      setAppointments(prev => [...prev, newAppointment]);
+
+      errorLogger.logInfo('Appointment created successfully', {
+        appointmentId: newAppointment.id,
+        patientId: data.patient_id,
+        date: data.appointment_date,
+        time: data.start_time
+      });
+
+      toast({
+        title: "Agendamento criado",
+        description: "O agendamento foi criado com sucesso.",
+      });
+
+      return newAppointment;
+
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro ao criar agendamento';
+      setError(message);
+      errorLogger.logError(err instanceof Error ? err : new Error(message), {
+        context: 'useAppointments.createAppointment',
+        data
+      });
+      throw new Error(message);
+    }
+  }, [profile]);
+
+  // Update appointment
+  const updateAppointment = useCallback(async (id: string, data: UpdateAppointmentData) => {
     try {
-      setSyncing(true);
-      
-      // Check for conflicts if appointment time/date/therapist/room is being changed
-      if (!options.skipConflictCheck && (updates.date || updates.time || updates.therapistId || updates.roomId)) {
-        const currentAppointment = appointments.find(apt => apt.id === id);
-        if (currentAppointment) {
-          const updatedAppointment = { ...currentAppointment, ...updates };
-          const conflicts = await checkAppointmentConflicts(updatedAppointment, id);
-          const blockingConflicts = conflicts.filter(c => c.severity === 'Error' && !c.canOverride);
-          
-          if (blockingConflicts.length > 0) {
-            throw new Error(`Conflitos detectados: ${blockingConflicts.map(c => c.description).join(', ')}`);
+      setError(null);
+
+      // Check for conflicts if updating time/date
+      if (profile && (data.appointment_date || data.start_time || data.end_time)) {
+        const appointment = appointments.find(a => a.id === id);
+        if (appointment) {
+          const conflictCheck = await checkAppointmentConflict(
+            data.appointment_date || appointment.appointment_date,
+            data.start_time || appointment.start_time,
+            data.end_time || appointment.end_time,
+            profile.id,
+            id
+          );
+
+          if (conflictCheck.hasConflict) {
+            throw new Error(`Conflito de horário detectado: ${conflictCheck.message}`);
           }
         }
       }
-      
-      const updateData: Record<string, unknown> = {};
-      
-      if (updates.patientId) updateData.patient_id = updates.patientId;
-      if (updates.date) updateData.appointment_date = updates.date.toISOString().split('T')[0];
-      if (updates.time) updateData.appointment_time = updates.time;
-      if (updates.duration) updateData.duration = updates.duration;
-      if (updates.type) updateData.type = updates.type;
-      if (updates.status) updateData.status = updates.status;
-      if (updates.notes !== undefined) updateData.notes = updates.notes || null;
-      if (updates.therapistId !== undefined) updateData.therapist_id = updates.therapistId;
-      if (updates.roomId !== undefined) updateData.room_id = updates.roomId;
-      if (updates.equipment) updateData.equipment = updates.equipment;
-      if (updates.priority) updateData.priority = updates.priority;
-      if (updates.specialRequirements !== undefined) updateData.special_requirements = updates.specialRequirements;
-      if (updates.reminderSent !== undefined) updateData.reminder_sent = updates.reminderSent;
-      if (updates.confirmationSent !== undefined) updateData.confirmation_sent = updates.confirmationSent;
-      if (updates.lastReminderSent) updateData.last_reminder_sent = updates.lastReminderSent.toISOString();
-      if (updates.cancellationReason !== undefined) updateData.cancellation_reason = updates.cancellationReason;
-      if (updates.cancellationTimestamp) updateData.cancellation_timestamp = updates.cancellationTimestamp.toISOString();
-      if (updates.color) updateData.color = updates.color;
-      if (updates.recurrencePattern !== undefined) {
-        updateData.recurrence_pattern = updates.recurrencePattern ? 
-          JSON.stringify(updates.recurrencePattern) : null;
-      }
 
-      const { error } = await supabase
+      const updateData = {
+        ...data,
+        updated_at: new Date().toISOString()
+      };
+
+      const { data: updatedAppointment, error: updateError } = await supabase
         .from('appointments')
         .update(updateData)
+        .eq('id', id)
+        .select(`
+          *,
+          patient:patients!inner(
+            id,
+            full_name,
+            email,
+            phone
+          ),
+          therapist:profiles!appointments_therapist_id_fkey(
+            id,
+            full_name,
+            role
+          )
+        `)
+        .single();
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      setAppointments(prev => prev.map(apt => 
+        apt.id === id ? updatedAppointment : apt
+      ));
+
+      errorLogger.logInfo('Appointment updated successfully', {
+        appointmentId: id,
+        changes: Object.keys(data)
+      });
+
+      toast({
+        title: "Agendamento atualizado",
+        description: "As alterações foram salvas com sucesso.",
+      });
+
+      return updatedAppointment;
+
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro ao atualizar agendamento';
+      setError(message);
+      errorLogger.logError(err instanceof Error ? err : new Error(message), {
+        context: 'useAppointments.updateAppointment',
+        appointmentId: id,
+        data
+      });
+      throw new Error(message);
+    }
+  }, [appointments, profile, checkAppointmentConflict]);
+
+  // Delete appointment
+  const deleteAppointment = useCallback(async (id: string) => {
+    try {
+      setError(null);
+
+      const { error: deleteError } = await supabase
+        .from('appointments')
+        .delete()
         .eq('id', id);
 
-      if (error) throw error;
-      
-      // Update recurring appointments if requested
-      if (options.updateRecurring) {
-        const appointment = appointments.find(apt => apt.id === id);
-        if (appointment?.recurrenceId) {
-          await updateRecurringAppointments(appointment.recurrenceId, updates);
-        }
+      if (deleteError) {
+        throw deleteError;
       }
 
-      await fetchAppointments();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao atualizar agendamento');
-      throw err;
-    } finally {
-      setSyncing(false);
-    }
-  }, [appointments, fetchAppointments]);
+      setAppointments(prev => prev.filter(apt => apt.id !== id));
 
-  const deleteAppointment = useCallback(async (
-    id: string, 
-    options: { deleteRecurring?: boolean; reason?: string } = {}
+      errorLogger.logInfo('Appointment deleted successfully', {
+        appointmentId: id
+      });
+
+      toast({
+        title: "Agendamento cancelado",
+        description: "O agendamento foi cancelado com sucesso.",
+      });
+
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro ao cancelar agendamento';
+      setError(message);
+      errorLogger.logError(err instanceof Error ? err : new Error(message), {
+        context: 'useAppointments.deleteAppointment',
+        appointmentId: id
+      });
+      throw new Error(message);
+    }
+  }, []);
+
+  // Check appointment conflicts
+  const checkAppointmentConflict = useCallback(async (
+    date: string, 
+    startTime: string, 
+    endTime: string, 
+    therapistId: string, 
+    excludeId?: string
   ) => {
     try {
-      setSyncing(true);
-      
-      const appointment = appointments.find(apt => apt.id === id);
-      
-      // If deleting recurring appointments
-      if (options.deleteRecurring && appointment?.recurrenceId) {
-        const { error } = await supabase
-          .from('appointments')
-          .delete()
-          .eq('recurrence_id', appointment.recurrenceId);
-          
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('appointments')
-          .delete()
-          .eq('id', id);
+      let query = supabase
+        .from('appointments')
+        .select('id, start_time, end_time, patient(full_name)')
+        .eq('appointment_date', date)
+        .eq('therapist_id', therapistId)
+        .in('status', ['scheduled', 'confirmed', 'in_progress']);
 
-        if (error) throw error;
-      }
-      
-      // Log cancellation if reason provided
-      if (options.reason && appointment) {
-        await logAppointmentAction(appointment, 'cancelled', {
-          reason: options.reason,
-          timestamp: new Date()
-        });
+      if (excludeId) {
+        query = query.neq('id', excludeId);
       }
 
-      await fetchAppointments();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao excluir agendamento');
-      throw err;
-    } finally {
-      setSyncing(false);
-    }
-  }, [appointments, fetchAppointments]);
+      const { data: conflictingAppointments } = await query;
 
-  const getAppointment = useCallback((id: string) => {
-    return appointments.find(appointment => appointment.id === id);
-  }, [appointments]);
-  
-  const getAppointmentsByPatient = useCallback((patientId: string) => {
-    return appointments.filter(appointment => appointment.patientId === patientId);
-  }, [appointments]);
-  
-  const getAppointmentsByDate = useCallback((date: Date) => {
-    const targetDate = format(date, 'yyyy-MM-dd');
-    return appointments.filter(appointment => 
-      format(appointment.date, 'yyyy-MM-dd') === targetDate
-    );
-  }, [appointments]);
-  
-  const getAppointmentsByDateRange = useCallback((startDate: Date, endDate: Date) => {
-    return appointments.filter(appointment => {
-      const appointmentDate = startOfDay(appointment.date);
-      return appointmentDate >= startOfDay(startDate) && appointmentDate <= startOfDay(endDate);
-    });
-  }, [appointments]);
-  
-  const getAppointmentsByTherapist = useCallback((therapistId: string) => {
-    return appointments.filter(appointment => appointment.therapistId === therapistId);
-  }, [appointments]);
-  
-  const getAppointmentsByStatus = useCallback((status: EnhancedAppointment['status']) => {
-    return appointments.filter(appointment => appointment.status === status);
-  }, [appointments]);
-  
-  const getConflictingAppointments = useCallback((appointment: Partial<EnhancedAppointment>, excludeId?: string) => {
-    if (!appointment.date || !appointment.time || !appointment.duration) {
-      return [];
-    }
-    
-    const appointmentStart = new Date(`${format(appointment.date, 'yyyy-MM-dd')}T${appointment.time}`);
-    const appointmentEnd = new Date(appointmentStart.getTime() + (appointment.duration * 60000));
-    
-    return appointments.filter(existing => {
-      if (excludeId && existing.id === excludeId) return false;
-      
-      const existingStart = new Date(`${format(existing.date, 'yyyy-MM-dd')}T${existing.time}`);
-      const existingEnd = new Date(existingStart.getTime() + (existing.duration * 60000));
-      
-      // Check for time overlap
-      const timeOverlap = appointmentStart < existingEnd && appointmentEnd > existingStart;
-      if (!timeOverlap) return false;
-      
-      // Check for therapist conflict
-      if (appointment.therapistId && appointment.therapistId === existing.therapistId) {
-        return true;
+      if (!conflictingAppointments || conflictingAppointments.length === 0) {
+        return { hasConflict: false };
       }
-      
-      // Check for room conflict
-      if (appointment.roomId && appointment.roomId === existing.roomId) {
-        return true;
-      }
-      
-      return false;
-    });
-  }, [appointments]);
 
-  // Real-time subscription
-  useEffect(() => {
-    if (!enableRealTime) return;
-    
-    const subscription = supabase
-      .channel('appointments')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'appointments'
-      }, () => {
-        fetchAppointments();
-      })
-      .subscribe();
-      
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [enableRealTime, fetchAppointments]);
-  
-  // Auto refresh
-  useEffect(() => {
-    if (!autoRefresh) return;
-    
-    const interval = setInterval(fetchAppointments, refreshInterval);
-    return () => clearInterval(interval);
-  }, [autoRefresh, refreshInterval, fetchAppointments]);
-  
-  // Initial load
-  useEffect(() => {
-    fetchAppointments();
-  }, [fetchAppointments]);
+      // Check time overlap
+      for (const apt of conflictingAppointments) {
+        const aptStart = apt.start_time;
+        const aptEnd = apt.end_time;
 
-  // Helper functions
-  const getDefaultColor = (type: EnhancedAppointment['type']): string => {
-    const colorMap = {
-      'Consulta Inicial': '#10b981',
-      'Fisioterapia': '#3b82f6',
-      'Reavaliação': '#8b5cf6',
-      'Consulta de Retorno': '#f59e0b',
-      'Avaliação Funcional': '#ef4444',
-      'Terapia Manual': '#06b6d4',
-      'Pilates Clínico': '#84cc16',
-      'RPG': '#f97316',
-      'Dry Needling': '#ec4899',
-      'Liberação Miofascial': '#6366f1',
-    };
-    return colorMap[type] || '#6b7280';
-  };
-  
-  const detectConflicts = async (appointments: EnhancedAppointment[]): Promise<AppointmentConflict[]> => {
-    const conflicts: AppointmentConflict[] = [];
-    
-    for (let i = 0; i < appointments.length; i++) {
-      for (let j = i + 1; j < appointments.length; j++) {
-        const apt1 = appointments[i];
-        const apt2 = appointments[j];
-        
-        // Check if appointments overlap
-        const start1 = new Date(`${format(apt1.date, 'yyyy-MM-dd')}T${apt1.time}`);
-        const end1 = new Date(start1.getTime() + (apt1.duration * 60000));
-        const start2 = new Date(`${format(apt2.date, 'yyyy-MM-dd')}T${apt2.time}`);
-        const end2 = new Date(start2.getTime() + (apt2.duration * 60000));
-        
-        if (start1 < end2 && start2 < end1) {
-          // Time overlap detected
-          if (apt1.therapistId === apt2.therapistId) {
-            conflicts.push({
-              type: 'Double Booking',
-              description: `Therapist ${apt1.therapistName} has overlapping appointments`,
-              conflictingAppointment: apt2,
-              severity: 'Error',
-              suggestedAlternatives: [],
-              canOverride: false
-            });
-          }
-          
-          if (apt1.roomId === apt2.roomId) {
-            conflicts.push({
-              type: 'Room Unavailable',
-              description: `Room ${apt1.roomName} is double-booked`,
-              conflictingAppointment: apt2,
-              severity: 'Error',
-              suggestedAlternatives: [],
-              canOverride: false
-            });
-          }
+        // Check if times overlap
+        if (
+          (startTime < aptEnd && endTime > aptStart) ||
+          (aptStart < endTime && aptEnd > startTime)
+        ) {
+          return {
+            hasConflict: true,
+            message: `Conflito com agendamento das ${aptStart} às ${aptEnd}`,
+            conflictingAppointment: apt
+          };
         }
       }
+
+      return { hasConflict: false };
+
+    } catch (err) {
+      errorLogger.logError(err instanceof Error ? err : new Error('Erro ao verificar conflitos'), {
+        context: 'useAppointments.checkAppointmentConflict'
+      });
+      return { hasConflict: false }; // Allow creation if conflict check fails
     }
-    
-    return conflicts;
-  };
-  
-  const checkAppointmentConflicts = async (
-    appointment: Partial<EnhancedAppointment>,
-    excludeId?: string
-  ): Promise<AppointmentConflict[]> => {
-    const conflicts: AppointmentConflict[] = [];
-    const conflicting = getConflictingAppointments(appointment, excludeId);
-    
-    for (const conflictingApt of conflicting) {
-      if (appointment.therapistId === conflictingApt.therapistId) {
-        conflicts.push({
-          type: 'Double Booking',
-          description: `Therapist ${conflictingApt.therapistName} already has an appointment at this time`,
-          conflictingAppointment: conflictingApt,
-          severity: 'Error',
-          suggestedAlternatives: await findAlternativeSlots(appointment),
-          canOverride: false
-        });
-      }
-      
-      if (appointment.roomId === conflictingApt.roomId) {
-        conflicts.push({
-          type: 'Room Unavailable',
-          description: `Room ${conflictingApt.roomName} is already booked at this time`,
-          conflictingAppointment: conflictingApt,
-          severity: 'Error',
-          suggestedAlternatives: await findAlternativeSlots(appointment),
-          canOverride: false
-        });
-      }
-    }
-    
-    return conflicts;
-  };
-  
-  const findAlternativeSlots = async (
-    appointment: Partial<EnhancedAppointment>
-  ): Promise<AlternativeSlot[]> => {
-    // Implement logic to find alternative time slots
-    // This is a simplified version - in a real app, you'd consider working hours,
-    // therapist availability, room availability, etc.
-    const alternatives: AlternativeSlot[] = [];
-    
-    if (!appointment.date || !appointment.time || !appointment.duration) {
-      return alternatives;
-    }
-    
-    const baseDate = appointment.date;
-    const timeSlots = ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'];
-    
-    for (const time of timeSlots) {
-      if (time === appointment.time) continue;
-      
-      const testAppointment = { ...appointment, time };
-      const conflicts = getConflictingAppointments(testAppointment);
-      
-      if (conflicts.length === 0) {
-        alternatives.push({
-          date: baseDate,
-          startTime: time,
-          therapistId: appointment.therapistId,
-          therapistName: appointment.therapistName,
-          roomId: appointment.roomId,
-          roomName: appointment.roomName,
-          score: 90, // Base score, can be calculated based on patient preferences
-          reason: 'Same day alternative'
-        });
-      }
-    }
-    
-    return alternatives.slice(0, 3); // Return top 3 alternatives
-  };
-  
-  const createRecurringAppointments = async (
-    baseAppointmentId: string,
-    appointmentData: Partial<EnhancedAppointment>
+  }, []);
+
+  // Create recurring appointments
+  const createRecurringAppointments = useCallback(async (
+    parentAppointment: Appointment,
+    pattern: 'daily' | 'weekly' | 'monthly',
+    endDate: string
   ) => {
-    if (!appointmentData.recurrencePattern || !appointmentData.date) return;
-    
-    const pattern = appointmentData.recurrencePattern;
-    const appointments = [];
-    let currentDate = new Date(appointmentData.date);
-    let count = 0;
-    
-    while (count < (pattern.maxOccurrences || 52)) { // Default max 52 occurrences
-      if (pattern.endDate && currentDate > pattern.endDate) break;
-      
-      // Skip excluded dates
-      if (pattern.excludedDates?.some(excluded => 
-        format(excluded, 'yyyy-MM-dd') === format(currentDate, 'yyyy-MM-dd')
-      )) {
-        currentDate = getNextRecurrenceDate(currentDate, pattern);
-        continue;
-      }
-      
-      if (count > 0) { // Skip the first occurrence as it's already created
-        appointments.push({
-          ...appointmentData,
-          date: new Date(currentDate),
-          recurrence_id: baseAppointmentId,
-          is_recurring: true
-        });
-      }
-      
-      currentDate = getNextRecurrenceDate(currentDate, pattern);
-      count++;
-    }
-    
-    if (appointments.length > 0) {
-      await supabase.from('appointments').insert(appointments);
-    }
-  };
-  
-  const getNextRecurrenceDate = (date: Date, pattern: RecurrencePattern): Date => {
-    switch (pattern.type) {
-      case 'Daily':
-        return addDays(date, pattern.frequency);
-      case 'Weekly':
-        return addDays(date, pattern.frequency * 7);
-      case 'Monthly':
-        const nextMonth = new Date(date);
-        nextMonth.setMonth(nextMonth.getMonth() + pattern.frequency);
-        return nextMonth;
-      default:
-        return addDays(date, pattern.frequency);
-    }
-  };
-  
-  const updateRecurringAppointments = async (
-    recurrenceId: string,
-    updates: Partial<EnhancedAppointment>
-  ) => {
-    const updateData: Record<string, unknown> = {};
-    
-    // Only allow certain fields to be updated for recurring appointments
-    if (updates.status) updateData.status = updates.status;
-    if (updates.notes !== undefined) updateData.notes = updates.notes;
-    if (updates.therapistId !== undefined) updateData.therapist_id = updates.therapistId;
-    if (updates.roomId !== undefined) updateData.room_id = updates.roomId;
-    
-    await supabase
-      .from('appointments')
-      .update(updateData)
-      .eq('recurrence_id', recurrenceId);
-  };
-  
-  const logAppointmentAction = async (
-    appointment: EnhancedAppointment,
-    action: string,
-    metadata: Record<string, unknown>
-  ) => {
-    // Log important appointment actions for audit trail
-    await supabase.from('appointment_logs').insert({
-      appointment_id: appointment.id,
-      action,
-      metadata: JSON.stringify(metadata),
-      timestamp: new Date().toISOString()
-    });
-  };
-  
-  // Statistics
-  const statistics = useMemo((): AppointmentStatistics => {
-    const total = appointments.length;
-    const confirmed = appointments.filter(apt => apt.status === 'Confirmed').length;
-    const cancelled = appointments.filter(apt => apt.status === 'Cancelled').length;
-    const noShow = appointments.filter(apt => apt.status === 'No Show').length;
-    const completed = appointments.filter(apt => apt.status === 'Completed').length;
-    
-    const totalDuration = appointments.reduce((sum, apt) => sum + apt.duration, 0);
-    const averageDuration = total > 0 ? totalDuration / total : 0;
-    
-    const typeStats = appointments.reduce((acc, apt) => {
-      acc[apt.type] = (acc[apt.type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    
-    const mostCommonTypes = Object.entries(typeStats)
-      .map(([type, count]) => ({
-        type: type as EnhancedAppointment['type'],
-        count,
-        percentage: (count / total) * 100
-      }))
-      .sort((a, b) => b.count - a.count);
-    
-    const therapistStats = appointments.reduce((acc, apt) => {
-      if (apt.therapistId) {
-        const existing = acc.find(t => t.therapistId === apt.therapistId);
-        if (existing) {
-          existing.appointmentCount++;
-        } else {
-          acc.push({
-            therapistId: apt.therapistId,
-            therapistName: apt.therapistName || 'Unknown',
-            appointmentCount: 1,
-            utilizationRate: 0 // Would need working hours data to calculate properly
+    try {
+      const recurringAppointments = [];
+      const startDate = new Date(parentAppointment.appointment_date);
+      const end = new Date(endDate);
+      const currentDate = new Date(startDate);
+
+      // Generate recurring dates
+      while (currentDate <= end) {
+        switch (pattern) {
+          case 'daily':
+            currentDate.setDate(currentDate.getDate() + 1);
+            break;
+          case 'weekly':
+            currentDate.setDate(currentDate.getDate() + 7);
+            break;
+          case 'monthly':
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            break;
+        }
+
+        if (currentDate <= end) {
+          recurringAppointments.push({
+            ...parentAppointment,
+            id: undefined,
+            appointment_date: currentDate.toISOString().split('T')[0],
+            parent_appointment_id: parentAppointment.id,
+            is_recurring: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           });
         }
       }
-      return acc;
-    }, [] as AppointmentStatistics['therapistStats']);
-    
-    return {
-      totalAppointments: total,
-      confirmedAppointments: confirmed,
-      cancelledAppointments: cancelled,
-      noShowAppointments: noShow,
-      completedAppointments: completed,
-      averageDuration,
-      utilizationRate: total > 0 ? (completed / total) * 100 : 0,
-      mostCommonTypes,
-      therapistStats,
-      timeSlotStats: [] // Would need more complex calculation
-    };
-  }, [appointments]);
-  
-  const rescheduleAppointment = useCallback(async (
-    appointmentId: string,
-    newDate: Date,
-    newTime: string,
-    reason?: string
-  ) => {
-    const appointment = getAppointment(appointmentId);
-    if (!appointment) throw new Error('Appointment not found');
-    
-    // Create rescheduled appointment
-    const rescheduledData = {
-      ...appointment,
-      date: newDate,
-      time: newTime,
-      status: 'Scheduled' as const,
-      rescheduledFromId: appointmentId,
-      notes: `Reagendado de ${format(appointment.date, 'dd/MM/yyyy')} ${appointment.time}${reason ? ` - Motivo: ${reason}` : ''}`
-    };
-    
-    const newAppointment = await addAppointment(rescheduledData);
-    
-    // Update original appointment
-    await updateAppointment(appointmentId, {
-      status: 'Rescheduled',
-      rescheduledToId: newAppointment.id,
-      cancellationReason: reason,
-      cancellationTimestamp: new Date()
-    });
-    
-    return newAppointment;
-  }, [getAppointment, addAppointment, updateAppointment]);
-  
-  const cancelAppointment = useCallback(async (
-    appointmentId: string,
-    reason?: string,
-    notifyPatient: boolean = true
-  ) => {
-    await updateAppointment(appointmentId, {
-      status: 'Cancelled',
-      cancellationReason: reason,
-      cancellationTimestamp: new Date()
-    });
-    
-    if (notifyPatient) {
-      const appointment = getAppointment(appointmentId);
-      if (appointment) {
-        // Send cancellation notification
-        // This would integrate with your notification system
-      }
-    }
-  }, [updateAppointment, getAppointment]);
-  
-  const confirmAppointment = useCallback(async (appointmentId: string) => {
-    await updateAppointment(appointmentId, {
-      status: 'Confirmed',
-      confirmationSent: true
-    });
-  }, [updateAppointment]);
-  
-  const markAsCompleted = useCallback(async (appointmentId: string, notes?: string) => {
-    await updateAppointment(appointmentId, {
-      status: 'Completed',
-      notes: notes || undefined
-    });
-  }, [updateAppointment]);
-  
-  const markAsNoShow = useCallback(async (appointmentId: string, reason?: string) => {
-    await updateAppointment(appointmentId, {
-      status: 'No Show',
-      cancellationReason: reason
-    });
-  }, [updateAppointment]);
-  
-  const filterAppointments = useCallback((filters: AppointmentFilters) => {
-    return appointments.filter(appointment => {
-      if (filters.dateRange) {
-        const appointmentDate = startOfDay(appointment.date);
-        if (appointmentDate < startOfDay(filters.dateRange.start) || 
-            appointmentDate > startOfDay(filters.dateRange.end)) {
-          return false;
+
+      if (recurringAppointments.length > 0) {
+        const { error } = await supabase
+          .from('appointments')
+          .insert(recurringAppointments);
+
+        if (error) {
+          throw error;
         }
+
+        errorLogger.logInfo('Recurring appointments created', {
+          parentId: parentAppointment.id,
+          count: recurringAppointments.length,
+          pattern
+        });
       }
-      
-      if (filters.status && !filters.status.includes(appointment.status)) {
-        return false;
-      }
-      
-      if (filters.type && !filters.type.includes(appointment.type)) {
-        return false;
-      }
-      
-      if (filters.therapistId && !filters.therapistId.includes(appointment.therapistId || '')) {
-        return false;
-      }
-      
-      if (filters.patientId && !filters.patientId.includes(appointment.patientId)) {
-        return false;
-      }
-      
-      if (filters.priority && !filters.priority.includes(appointment.priority)) {
-        return false;
-      }
-      
-      if (filters.roomId && !filters.roomId.includes(appointment.roomId || '')) {
-        return false;
-      }
-      
-      return true;
-    });
+
+    } catch (err) {
+      errorLogger.logError(err instanceof Error ? err : new Error('Erro ao criar agendamentos recorrentes'), {
+        context: 'useAppointments.createRecurringAppointments',
+        parentId: parentAppointment.id
+      });
+      // Don't throw here, parent appointment was already created
+    }
+  }, []);
+
+  // Get appointments by date
+  const getAppointmentsByDate = useCallback((date: Date) => {
+    const dateString = date.toISOString().split('T')[0];
+    return appointments.filter(apt => apt.appointment_date === dateString);
   }, [appointments]);
-  
+
+  // Get appointments by week
+  const getAppointmentsByWeek = useCallback((weekStart: Date) => {
+    const start = new Date(weekStart);
+    const end = new Date(weekStart);
+    end.setDate(end.getDate() + 6);
+
+    const startString = start.toISOString().split('T')[0];
+    const endString = end.toISOString().split('T')[0];
+
+    return appointments.filter(apt => 
+      apt.appointment_date >= startString && apt.appointment_date <= endString
+    );
+  }, [appointments]);
+
+  // Subscribe to real-time changes
+  useEffect(() => {
+    fetchAppointments();
+
+    const subscription = supabase
+      .channel('appointments_changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'appointments' 
+        }, 
+        (_payload) => {
+          // Refetch appointments on any change
+          fetchAppointments();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [fetchAppointments]);
+
   return {
-    // Core data
     appointments,
     loading,
     error,
-    syncing,
-    conflicts,
-    statistics,
-    
-    // CRUD operations
-    addAppointment,
+    fetchAppointments,
+    createAppointment,
     updateAppointment,
     deleteAppointment,
-    
-    // Getters
-    getAppointment,
-    getAppointmentsByPatient,
+    checkAppointmentConflict,
     getAppointmentsByDate,
-    getAppointmentsByDateRange,
-    getAppointmentsByTherapist,
-    getAppointmentsByStatus,
-    getConflictingAppointments,
-    
-    // Advanced operations
-    rescheduleAppointment,
-    cancelAppointment,
-    confirmAppointment,
-    markAsCompleted,
-    markAsNoShow,
-    
-    // Conflict management
-    checkAppointmentConflicts,
-    findAlternativeSlots,
-    
-    // Filtering
-    filterAppointments,
-    
-    // Utilities
-    refetch: fetchAppointments,
+    getAppointmentsByWeek
   };
 }

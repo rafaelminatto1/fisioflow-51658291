@@ -1,73 +1,174 @@
-# Welcome to your Lovable project
+# 🏥 FisioFlow - Sistema de Gestão para Fisioterapia
 
-## Project info
+Sistema completo de gestão para clínicas de fisioterapia, desenvolvido com React + TypeScript + Supabase.
 
-**URL**: https://lovable.dev/projects/5aa177ed-5a71-4e0d-9acb-d82af5218253
+## 🚀 Funcionalidades Principais
 
-## How can I edit this code?
+### 👥 **Gestão de Pacientes**
+- Cadastro completo de pacientes com histórico médico
+- Upload de documentos e exames
+- Controle de acesso baseado em funções (RBAC)
+- Conformidade com LGPD
 
-There are several ways of editing your application.
+### 📅 **Agendamento de Consultas**
+- Calendário avançado com visualizações (semana/dia/mês)
+- Detecção automática de conflitos
+- Consultas recorrentes
+- Notificações automáticas
 
-**Use Lovable**
+### 📝 **Prontuários Eletrônicos (SOAP)**
+- Sistema completo de notas SOAP
+- Assinaturas digitais
+- Trilhas de auditoria
+- Integração com planos de tratamento
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/5aa177ed-5a71-4e0d-9acb-d82af5218253) and start prompting.
+### 💪 **Gestão de Exercícios**
+- Biblioteca completa de exercícios com filtros avançados
+- Prescrição personalizada de exercícios
+- Acompanhamento de progresso em tempo real
+- Protocolos baseados em evidências científicas
+- Integração com registros SOAP
 
-Changes made via Lovable will be committed automatically to this repo.
+### 📊 **Analytics e Relatórios**
+- Dashboard em tempo real
+- Métricas de adesão dos pacientes
+- Relatórios de progresso
+- Análises de tendências
 
-**Use your preferred IDE**
+## 🛠 Tecnologias Utilizadas
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- **Frontend**: React 18 + TypeScript + Vite
+- **UI Components**: shadcn/ui + Tailwind CSS
+- **Backend**: Supabase (PostgreSQL + Auth + Real-time)
+- **Autenticação**: Supabase Auth com RLS
+- **Deploy**: Vercel / Netlify ready
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 📋 Requisitos do Sistema
 
-Follow these steps:
+- Node.js 18+
+- npm ou yarn
+- Conta no Supabase
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## ⚡ Instalação e Configuração
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### 1. Clone o repositório
+```bash
+git clone https://github.com/seu-usuario/fisioflow.git
+cd fisioflow
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+### 2. Instale as dependências
+```bash
+npm install
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### 3. Configure as variáveis de ambiente
+Renomeie `.env.example` para `.env` e configure:
+
+```env
+VITE_SUPABASE_URL=sua_url_do_supabase
+VITE_SUPABASE_ANON_KEY=sua_chave_anonima
+```
+
+### 4. Configure o banco de dados
+Execute as migrações SQL no Supabase:
+- Importe o arquivo `supabase/schema.sql`
+- Configure as políticas RLS com `supabase-rls-policies.sql`
+
+### 5. Execute o projeto
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## 🚀 Deploy em Produção
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Vercel
+1. Fork este repositório
+2. Conecte ao Vercel
+3. Configure as variáveis de ambiente
+4. Deploy automático!
 
-**Use GitHub Codespaces**
+### Netlify
+1. Connect to Git
+2. Build command: `npm run build`
+3. Publish directory: `dist`
+4. Configure environment variables
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🔐 Segurança e Conformidade
 
-## What technologies are used for this project?
+- ✅ Autenticação segura com Supabase
+- ✅ Row Level Security (RLS) ativado
+- ✅ Criptografia de dados sensíveis
+- ✅ Conformidade com LGPD
+- ✅ Headers de segurança configurados
+- ✅ Assinaturas digitais para documentos
 
-This project is built with:
+## 👨‍⚕️ Perfis de Usuário
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### 🔴 **Administrador**
+- Acesso completo ao sistema
+- Gestão de usuários e permissões
+- Relatórios financeiros
 
-## How can I deploy this project?
+### 🟡 **Fisioterapeuta**
+- Gestão de pacientes
+- Prescrição de exercícios
+- Criação de registros SOAP
 
-Simply open [Lovable](https://lovable.dev/projects/5aa177ed-5a71-4e0d-9acb-d82af5218253) and click on Share -> Publish.
+### 🟢 **Estagiário**
+- Acompanhamento de pacientes
+- Visualização de protocolos
 
-## Can I connect a custom domain to my Lovable project?
+### 🔵 **Paciente**
+- Acesso aos próprios dados
+- Visualização de exercícios prescritos
+- Histórico de consultas
 
-Yes, you can!
+## 🧪 Testes e Qualidade
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+```bash
+# Lint
+npm run lint
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+# Build de produção
+npm run build
+
+# Preview da build
+npm run preview
+```
+
+## 📈 Roadmap
+
+### Próximas Funcionalidades
+- [ ] App Mobile (React Native)
+- [ ] Sistema de Notificações Push
+- [ ] Integração com WhatsApp
+- [ ] Relatórios PDF automáticos
+- [ ] Dashboard Financeiro
+- [ ] Sistema de Backup Automático
+
+### Melhorias Planejadas
+- [ ] Inteligência Artificial para sugestões de exercícios
+- [ ] Integração com equipamentos IoT
+- [ ] Telemedicina integrada
+- [ ] API pública para terceiros
+
+## 🤝 Contribuição
+
+1. Fork o projeto
+2. Crie uma branch (`git checkout -b feature/nova-funcionalidade`)
+3. Commit suas mudanças (`git commit -am 'Add nova funcionalidade'`)
+4. Push para a branch (`git push origin feature/nova-funcionalidade`)
+5. Abra um Pull Request
+
+## 📄 Licença
+
+Este projeto está sob licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+## 👏 Créditos
+
+Desenvolvido com ❤️ para modernizar a fisioterapia brasileira.
+
+---
+
+**FisioFlow** - Transformando o cuidado em saúde através da tecnologia.
