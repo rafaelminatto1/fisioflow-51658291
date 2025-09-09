@@ -294,17 +294,22 @@ class AnalyticsService {
       gtag('event', event.name, event.properties);
     }
 
-    // Custom analytics endpoint
-    try {
-      await fetch('/api/analytics', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(event)
-      });
-    } catch (error) {
-      console.warn('Failed to send analytics event:', error);
+    // Custom analytics endpoint - only in production
+    if (import.meta.env.PROD) {
+      try {
+        await fetch('/api/analytics', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(event)
+        });
+      } catch (error) {
+        console.warn('Failed to send analytics event:', error);
+      }
+    } else {
+      // Development mode - just log to console
+      console.log('📊 Analytics Event (dev):', event.name, event.properties);
     }
   }
 
@@ -334,16 +339,22 @@ class AnalyticsService {
   }
 
   private async sendBatchToProviders(events: AnalyticsEvent[]): Promise<void> {
-    try {
-      await fetch('/api/analytics/batch', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ events, sessionId: this.sessionId })
-      });
-    } catch (error) {
-      console.warn('Failed to send batch analytics:', error);
+    // Only send to server in production
+    if (import.meta.env.PROD) {
+      try {
+        await fetch('/api/analytics/batch', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ events, sessionId: this.sessionId })
+        });
+      } catch (error) {
+        console.warn('Failed to send batch analytics:', error);
+      }
+    } else {
+      // Development mode - just log to console
+      console.log('📊 Analytics Batch (dev):', events.length, 'events', events);
     }
   }
 
@@ -427,8 +438,8 @@ export function useAnalytics() {
 export const analyticsConfig = {
   // Google Analytics 4
   ga4: {
-    measurementId: process.env.REACT_APP_GA4_MEASUREMENT_ID || '',
-    enabled: process.env.NODE_ENV === 'production'
+    measurementId: import.meta.env.VITE_GA4_MEASUREMENT_ID || '',
+    enabled: import.meta.env.PROD
   },
   
   // Custom analytics
@@ -436,7 +447,7 @@ export const analyticsConfig = {
     endpoint: '/api/analytics',
     batchSize: 10,
     flushInterval: 30000, // 30 seconds
-    enabled: true
+    enabled: import.meta.env.PROD
   },
   
   // Privacy settings

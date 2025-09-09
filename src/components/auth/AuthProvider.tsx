@@ -137,9 +137,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
             setProfile(null);
           }
           
-          // Só definir loading como false se não foi inicializado ainda
+          // Sempre definir loading como false após mudança de estado
+          setLoading(false);
           if (!initialized) {
-            setLoading(false);
             setInitialized(true);
           }
         } catch (error) {

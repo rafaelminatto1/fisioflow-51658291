@@ -98,6 +98,13 @@ export const usePageTracking = (pageName: string, additionalData?: Record<string
   const startTime = useRef<number>(Date.now());
 
   useEffect(() => {
+    // Verificar se analytics está habilitado
+    const analyticsEnabled = import.meta.env.VITE_ANALYTICS_ENABLED === 'true' && import.meta.env.VITE_ENABLE_ANALYTICS === 'true';
+    if (!analyticsEnabled) {
+      console.debug('[Analytics] Page tracking disabled in development');
+      return;
+    }
+    
     // Track page view on mount
     trackPageView(pageName, additionalData);
 
@@ -147,6 +154,13 @@ export const useComponentPerformance = (componentName: string) => {
   const mountTime = useRef<number>(Date.now());
 
   useEffect(() => {
+    // Verificar se analytics está habilitado
+    const analyticsEnabled = import.meta.env.VITE_ANALYTICS_ENABLED === 'true' && import.meta.env.VITE_ENABLE_ANALYTICS === 'true';
+    if (!analyticsEnabled) {
+      console.debug('[Analytics] Component performance tracking disabled in development');
+      return;
+    }
+    
     renderCount.current += 1;
     
     // Track component mount time
@@ -200,6 +214,12 @@ export const useEngagementTracking = () => {
   const scrollDepth = useRef<number>(0);
 
   useEffect(() => {
+    // Verificar se analytics está habilitado
+    const analyticsEnabled = import.meta.env.VITE_ANALYTICS_ENABLED === 'true' && import.meta.env.VITE_ENABLE_ANALYTICS === 'true';
+    if (!analyticsEnabled) {
+      console.debug('[Analytics] Engagement tracking disabled in development');
+      return;
+    }
     const handleActivity = () => {
       lastActivity.current = Date.now();
     };
