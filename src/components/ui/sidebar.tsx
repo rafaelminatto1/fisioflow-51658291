@@ -42,7 +42,7 @@ const SidebarProvider = React.forwardRef<
     },
     ref
   ) => {
-    const contextValue = useSidebarProvider(defaultOpen, openProp, setOpenProp)
+    const contextValue = useSidebarProvider()
 
     return (
       <SidebarContext.Provider value={contextValue}>

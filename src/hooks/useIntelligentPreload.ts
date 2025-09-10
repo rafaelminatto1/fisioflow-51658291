@@ -1,1 +1,1 @@
-export { useIntelligentPreload } from './index';
+export { useIntelligentPreload, useNavPreload } from './index';

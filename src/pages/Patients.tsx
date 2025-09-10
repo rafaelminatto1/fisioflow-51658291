@@ -214,8 +214,8 @@ const Patients = () => {
                     <SelectContent>
                       <SelectItem value="all">Todas as Condições</SelectItem>
                       {uniqueConditions.map((condition) => (
-                        <SelectItem key={condition} value={condition}>
-                          {condition}
+                        <SelectItem key={String(condition)} value={String(condition)}>
+                          {String(condition)}
                         </SelectItem>
                       ))}
                     </SelectContent>

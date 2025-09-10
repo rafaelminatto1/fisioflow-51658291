@@ -1,1 +1,1 @@
-export { useSidebar } from './index';
+export { useSidebar, useSidebarProvider, SidebarContext } from './index';

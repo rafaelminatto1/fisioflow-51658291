@@ -38,7 +38,7 @@ const menuItems = [
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
-  const { getLinkProps } = useNavPreload();
+  useNavPreload();
 
   return (
     <div className={cn(
@@ -77,7 +77,7 @@ export function Sidebar() {
           const isActive = location.pathname === item.href;
           
           return (
-            <Link key={item.href} to={item.href} {...getLinkProps(item.href)}>
+            <Link key={item.href} to={item.href}>
               <Button
                 variant={isActive ? "medical" : "ghost"}
                 className={cn(

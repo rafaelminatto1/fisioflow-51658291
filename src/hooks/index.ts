@@ -68,7 +68,7 @@ export const useData = () => ({
 export const useNavPreload = () => ({});
 export const useIntelligentPreload = () => ({ useNavPreload: () => ({}) });
 
-export const UseFileUploadOptions = {};
+export interface UseFileUploadOptions {}
 export const useFileUpload = (options?: any) => ({
   isUploading: false,
   progress: 0,
