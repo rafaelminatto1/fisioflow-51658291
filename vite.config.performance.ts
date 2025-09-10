@@ -31,8 +31,7 @@ export const performanceConfig = {
             './src/pages/SmartExercisePlans.tsx'
           ],
           'communications': [
-            './src/pages/Communications.tsx',
-            './src/components/communications'
+            './src/pages/Communications.tsx'
           ]
         },
         // Nomes de arquivo com hash para cache busting
