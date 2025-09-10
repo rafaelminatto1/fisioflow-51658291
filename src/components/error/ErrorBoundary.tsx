@@ -39,7 +39,7 @@ class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log do erro
-    const errorId = errorLogger.logError(error, {
+    const errorId = errorLogger.logError(error.message, {
       context: 'ErrorBoundary',
       componentStack: errorInfo.componentStack,
       errorBoundary: true,
@@ -50,7 +50,7 @@ class ErrorBoundary extends Component<Props, State> {
 
     this.setState({
       errorInfo,
-      errorId
+      errorId: Date.now().toString()
     });
 
     // Callback personalizado

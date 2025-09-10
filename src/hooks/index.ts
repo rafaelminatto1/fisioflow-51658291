@@ -73,8 +73,8 @@ export const useFileUpload = (options?: any) => ({
   isUploading: false,
   progress: 0,
   uploadedFiles: [],
-  upload: () => Promise.resolve(),
-  removeFile: () => {},
+  upload: (files: File[]) => Promise.resolve(),
+  removeFile: (id: string) => {},
   UseFileUploadOptions: {}
 });
 

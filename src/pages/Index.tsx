@@ -14,9 +14,9 @@ const Index = () => {
       case 'admin':
         return <AdminDashboard />;
       case 'therapist':
-        return <TherapistDashboard />;
+        return <TherapistDashboard lastUpdate={new Date()} profile={{ id: '1', user_id: '1', role: 'admin' as const, full_name: 'Fisioterapeuta', avatar_url: '', onboarding_completed: true, is_active: true }} />;
       case 'patient':
-        return <PatientDashboard />;
+        return <PatientDashboard lastUpdate={new Date()} profile={{ id: '1', user_id: '1', role: 'admin' as const, full_name: 'Paciente', avatar_url: '', onboarding_completed: true, is_active: true }} />;
       default:
         return <AdminDashboard />;
     }

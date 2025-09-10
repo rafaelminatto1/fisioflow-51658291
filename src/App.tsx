@@ -29,7 +29,7 @@ import AnalyticsDashboard from "./pages/analytics/AnalyticsDashboard";
 import ReportsLibrary from "./pages/reports/ReportsLibrary";
 import Settings from "./pages/Settings";
 import { Profile } from "./pages/Profile";
-import { MedicalRecord } from "./pages/MedicalRecord";
+import MedicalRecord from "./pages/MedicalRecord";
 import SmartAI from "./pages/SmartAI";
 import { SmartExercisePlans } from "./pages/SmartExercisePlans";
 import Communications from "./pages/Communications";
