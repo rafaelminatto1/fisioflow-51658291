@@ -58,20 +58,7 @@ export const performanceConfig = {
     
     // Otimizações de build
     target: 'esnext',
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug']
-      },
-      mangle: {
-        safari10: true
-      },
-      format: {
-        safari10: true
-      }
-    },
+    minify: 'esbuild',
     
     // Chunk size warnings
     chunkSizeWarningLimit: 1000,
