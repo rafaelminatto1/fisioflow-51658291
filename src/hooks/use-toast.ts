@@ -1,5 +1,5 @@
 // Individual hook files
-export { useToast } from './index';
+export { useToast, toast } from './index';
 export { useAuth } from './index';
 export { useData } from './index';
 export { useAppointments } from './index';
