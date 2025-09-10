@@ -1,4 +1,3 @@
-export { default as Header } from './Header';
-export { default as MainLayout } from './MainLayout';
-export { default as Sidebar } from './Sidebar';
-
+export { Header } from './Header';
+export { MainLayout } from './MainLayout';
+export { Sidebar } from './Sidebar';

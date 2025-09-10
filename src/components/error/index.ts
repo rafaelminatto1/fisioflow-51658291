@@ -1,5 +1,3 @@
-export { default as CustomNotification } from './CustomNotification';
-export { default as ErrorBoundary } from './ErrorBoundary';
-export { default as GlobalNotifications } from './GlobalNotifications';
-export { default as withErrorBoundary } from './withErrorBoundary';
-
+export { ErrorBoundary } from './ErrorBoundary';
+export { CustomNotification } from './CustomNotification';
+export { GlobalNotifications } from './GlobalNotifications';

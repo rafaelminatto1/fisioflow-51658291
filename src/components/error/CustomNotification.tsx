@@ -1,80 +1,35 @@
-import React, { useEffect } from 'react';
-import { AlertCircle, CheckCircle, Info, AlertTriangle, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import type { Notification } from './GlobalNotifications';
+import React from 'react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 
-// Configurações de ícones e estilos por tipo
-const notificationConfig = {
-  success: {
-    icon: CheckCircle,
-    className: 'text-green-600 bg-green-50 border-green-200',
-    iconClassName: 'text-green-600'
-  },
-  error: {
-    icon: AlertCircle,
-    className: 'text-red-600 bg-red-50 border-red-200',
-    iconClassName: 'text-red-600'
-  },
-  warning: {
-    icon: AlertTriangle,
-    className: 'text-yellow-600 bg-yellow-50 border-yellow-200',
-    iconClassName: 'text-yellow-600'
-  },
-  info: {
-    icon: Info,
-    className: 'text-blue-600 bg-blue-50 border-blue-200',
-    iconClassName: 'text-blue-600'
-  }
-};
-
-// Componente de notificação customizada
 interface CustomNotificationProps {
-  notification: Notification;
-  onDismiss: (id: string) => void;
+  message: string;
+  type?: 'error' | 'warning' | 'info' | 'success';
+  onClose?: () => void;
 }
 
-const CustomNotification: React.FC<CustomNotificationProps> = ({ notification, onDismiss }) => {
-  const config = notificationConfig[notification.type];
-  const Icon = config.icon;
-
-  useEffect(() => {
-    if (notification.duration !== 0) {
-      const timer = setTimeout(() => {
-        onDismiss(notification.id);
-      }, notification.duration || 5000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [notification.id, notification.duration, onDismiss]);
-
+export const CustomNotification: React.FC<CustomNotificationProps> = ({
+  message,
+  type = 'info',
+  onClose
+}) => {
   return (
-    <div className={cn(
-      'flex items-start gap-3 p-4 rounded-lg border shadow-sm max-w-md',
-      config.className
-    )}>
-      <Icon className={cn('h-5 w-5 mt-0.5 flex-shrink-0', config.iconClassName)} />
-      
-      <div className="flex-1 min-w-0">
-        <div className="font-medium text-sm">
-          {notification.title}
-        </div>
-        
-        {notification.message && (
-          <div className="text-sm opacity-90 mt-1">
-            {notification.message}
-          </div>
-        )}
-        
-      </div>
-      
-      <button
-        onClick={() => onDismiss(notification.id)}
-        className="flex-shrink-0 p-1 rounded hover:bg-black/5 transition-colors"
-      >
-        <X className="h-4 w-4" />
-      </button>
-    </div>
+    <Alert className={`
+      ${type === 'error' ? 'border-red-500 bg-red-50 text-red-900' : ''}
+      ${type === 'warning' ? 'border-yellow-500 bg-yellow-50 text-yellow-900' : ''}
+      ${type === 'success' ? 'border-green-500 bg-green-50 text-green-900' : ''}
+      ${type === 'info' ? 'border-blue-500 bg-blue-50 text-blue-900' : ''}
+    `}>
+      <AlertTriangle className="h-4 w-4" />
+      <AlertDescription>{message}</AlertDescription>
+      {onClose && (
+        <button
+          onClick={onClose}
+          className="ml-auto text-sm hover:underline"
+        >
+          Fechar
+        </button>
+      )}
+    </Alert>
   );
 };
-
-export default CustomNotification;
