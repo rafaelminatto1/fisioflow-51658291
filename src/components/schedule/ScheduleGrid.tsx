@@ -3,14 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CalendarIcon, Clock, Plus } from 'lucide-react';
 import { format, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Appointment } from '@/types';
+import { AppointmentBase } from '@/types/appointment';
 
 interface ScheduleGridProps {
   weekDays: Date[];
   timeSlots: string[];
-  weekAppointments: Appointment[];
+  weekAppointments: AppointmentBase[];
   onTimeSlotClick: (date: Date, timeSlot: string) => void;
-  onAppointmentClick: (appointment: Appointment) => void;
+  onAppointmentClick: (appointment: AppointmentBase) => void;
   getTypeColor: (type: string) => string;
 }
 

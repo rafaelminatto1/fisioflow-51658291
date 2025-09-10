@@ -307,7 +307,7 @@ export interface CalendarSettings {
 }
 
 // Form data types
-export type AppointmentFormData = Omit<EnhancedAppointment, 'id' | 'patientName' | 'phone' | 'createdAt' | 'updatedAt'>;
+export type AppointmentFormData = Omit<EnhancedAppointment, 'id' | 'patientName' | 'phone' | 'createdAt' | 'updatedAt' | 'therapistName' | 'roomName' | 'equipment' | 'recurrenceId' | 'isRecurring' | 'recurrencePattern' | 'reminderSent' | 'confirmationSent' | 'lastReminderSent' | 'previousAppointmentId' | 'nextAppointmentId' | 'treatmentPhase' | 'sessionNumber' | 'preferredTime' | 'preferredDays' | 'cancellationReason' | 'rescheduledFromId' | 'rescheduledToId' | 'cancellationTimestamp' | 'color' | 'externalCalendarId' | 'syncedWithGoogle' | 'syncedWithOutlook'>;
 export type AppointmentTemplateFormData = Omit<AppointmentTemplate, 'id' | 'createdAt' | 'updatedAt'>;
 export type TherapistFormData = Omit<Therapist, 'id' | 'createdAt' | 'updatedAt'>;
 export type RoomFormData = Omit<Room, 'id' | 'createdAt' | 'updatedAt'>;

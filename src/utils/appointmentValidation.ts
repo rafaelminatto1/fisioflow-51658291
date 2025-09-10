@@ -1,11 +1,11 @@
-import { Appointment } from '@/types';
+import { AppointmentBase } from '@/types/appointment';
 
 interface ConflictCheckParams {
   date: Date;
   time: string;
   duration: number;
   excludeId?: string;
-  appointments: Appointment[];
+  appointments: AppointmentBase[];
 }
 
 export function checkAppointmentConflict({
@@ -14,7 +14,7 @@ export function checkAppointmentConflict({
   duration,
   excludeId,
   appointments
-}: ConflictCheckParams): { hasConflict: boolean; conflictingAppointment?: Appointment } {
+}: ConflictCheckParams): { hasConflict: boolean; conflictingAppointment?: AppointmentBase } {
   // Convert time to minutes for easier comparison
   const timeToMinutes = (timeStr: string): number => {
     const [hours, minutes] = timeStr.split(':').map(Number);
