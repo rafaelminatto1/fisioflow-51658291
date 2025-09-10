@@ -33,7 +33,7 @@
       ]
     },
     {
-      "source": "/(.*\\.(png|jpg|jpeg|gif|svg|ico|webp)$)",
+      "source": "/(.*)\\.(png|jpg|jpeg|gif|svg|ico|webp)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -96,11 +96,7 @@
     }
   ],
   
-  "functions": {
-    "app/api/**/*.js": {
-      "maxDuration": 30
-    }
-  },
+
   
   "regions": ["iad1"],
   
