@@ -35,14 +35,14 @@ export const performanceConfig = {
           ]
         },
         // Nomes de arquivo com hash para cache busting
-        chunkFileNames: (chunkInfo) => {
+        chunkFileNames: (chunkInfo: any) => {
           const facadeModuleId = chunkInfo.facadeModuleId
             ? chunkInfo.facadeModuleId.split('/').pop()?.replace('.tsx', '').replace('.ts', '')
             : 'chunk';
           return `assets/js/[name]-[hash].js`;
         },
         entryFileNames: 'assets/js/[name]-[hash].js',
-        assetFileNames: (assetInfo) => {
+        assetFileNames: (assetInfo: any) => {
           const info = assetInfo.name?.split('.') || [];
           const ext = info[info.length - 1];
           if (/\.(png|jpe?g|svg|gif|tiff|bmp|ico)$/i.test(assetInfo.name || '')) {

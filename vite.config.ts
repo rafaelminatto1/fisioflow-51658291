@@ -2,7 +2,6 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
-import { performanceConfig } from "./vite.config.performance";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -12,9 +11,7 @@ export default defineConfig(({ mode }) => {
     server: {
       host: "::",
       port: 8080,
-      open: true, // Abre o navegador automaticamente
-      // Configurações de performance para desenvolvimento
-      ...(!isProduction && performanceConfig.server)
+      open: true,
     },
     plugins: [
       react(),
@@ -27,13 +24,11 @@ export default defineConfig(({ mode }) => {
     },
     
     // Configurações de build otimizadas
-    build: isProduction ? {
-      ...performanceConfig.build,
-      // Manter configurações específicas do projeto
+    build: {
       outDir: 'dist',
       emptyOutDir: true,
-    } : {
-      // Build de desenvolvimento mais rápido
+      target: 'esnext',
+      minify: true,
       rollupOptions: {
         output: {
           manualChunks: {
@@ -48,37 +43,20 @@ export default defineConfig(({ mode }) => {
     
     // Otimizações de dependências
     optimizeDeps: {
-      ...performanceConfig.optimizeDeps,
-      // Forçar pre-bundling de dependências críticas
-      force: isProduction
+      include: [
+        'react',
+        'react-dom',
+        'react-router-dom',
+        '@supabase/supabase-js',
+        '@tanstack/react-query',
+        'date-fns',
+        'recharts'
+      ],
     },
-    
-    // Configurações de preview (produção local)
-    preview: isProduction ? performanceConfig.preview : undefined,
     
     // Configurações de esbuild
     esbuild: {
-      // Remove console.log em produção
       drop: isProduction ? ['console', 'debugger'] : [],
-      // Otimizações adicionais para produção
-      ...(isProduction && {
-        legalComments: 'none',
-        minifyIdentifiers: true,
-        minifySyntax: true,
-        minifyWhitespace: true
-      })
     },
-    
-    // Configurações de CSS
-    css: {
-      // Minificação de CSS em produção
-      ...(isProduction && {
-        postcss: {
-          plugins: [
-            // Plugins de otimização podem ser adicionados aqui
-          ]
-        }
-      })
-    }
   };
 });
