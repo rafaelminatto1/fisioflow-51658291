@@ -1,296 +1,201 @@
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { memo, useCallback } from 'react';
+import { Search, Filter, X, Calendar, Clock, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, X, CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
-import { AppointmentFilters as IAppointmentFilters, AppointmentStatus, AppointmentType } from '@/types/appointment';
+import { Separator } from '@/components/ui/separator';
 
-interface AppointmentFiltersProps {
-  filters: IAppointmentFilters;
-  onFiltersChange: (filters: IAppointmentFilters) => void;
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
-  className?: string;
+export interface AppointmentFilters {
+  search: string;
+  status: string;
+  dateFrom: string;
+  dateTo: string;
+  service: string;
 }
 
-const statusLabels: Record<AppointmentStatus, string> = {
-  'Scheduled': 'Agendado',
-  'Confirmed': 'Confirmado',
-  'In Progress': 'Em Andamento',
-  'Completed': 'Concluído',
-  'Cancelled': 'Cancelado',
-  'No Show': 'Faltou',
-  'Rescheduled': 'Reagendado',
-  'Pending': 'Pendente'
-};
+interface AppointmentFiltersProps {
+  filters: AppointmentFilters;
+  onFiltersChange: (filters: AppointmentFilters) => void;
+  onClearFilters: () => void;
+  services: string[];
+}
 
-const typeLabels: Record<AppointmentType, string> = {
-  'Consulta Inicial': 'Consulta Inicial',
-  'Fisioterapia': 'Fisioterapia',
-  'Reavaliação': 'Reavaliação',
-  'Consulta de Retorno': 'Consulta de Retorno',
-  'Avaliação Funcional': 'Avaliação Funcional',
-  'Terapia Manual': 'Terapia Manual',
-  'Pilates Clínico': 'Pilates Clínico',
-  'RPG': 'RPG',
-  'Dry Needling': 'Dry Needling',
-  'Liberação Miofascial': 'Liberação Miofascial'
-};
-
-export const AppointmentFilters: React.FC<AppointmentFiltersProps> = ({
+const AppointmentFiltersComponent: React.FC<AppointmentFiltersProps> = ({
   filters,
   onFiltersChange,
-  searchQuery,
-  onSearchChange,
-  className
+  onClearFilters,
+  services
 }) => {
-  const updateFilters = (key: keyof IAppointmentFilters, value: any) => {
-    onFiltersChange({
-      ...filters,
-      [key]: value
-    });
-  };
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    onFiltersChange({ ...filters, search: e.target.value });
+  }, [filters, onFiltersChange]);
 
-  const clearFilters = () => {
-    onFiltersChange({});
-    onSearchChange('');
-  };
+  const handleStatusChange = useCallback((value: string) => {
+    onFiltersChange({ ...filters, status: value });
+  }, [filters, onFiltersChange]);
 
-  const hasActiveFilters = Object.keys(filters).length > 0 || searchQuery.length > 0;
+  const handleServiceChange = useCallback((value: string) => {
+    onFiltersChange({ ...filters, service: value });
+  }, [filters, onFiltersChange]);
+
+  const handleDateFromChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    onFiltersChange({ ...filters, dateFrom: e.target.value });
+  }, [filters, onFiltersChange]);
+
+  const handleDateToChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    onFiltersChange({ ...filters, dateTo: e.target.value });
+  }, [filters, onFiltersChange]);
+
+  const hasActiveFilters = filters.search || filters.status || filters.service || filters.dateFrom || filters.dateTo;
 
   return (
-    <Card className={cn('border-border', className)}>
-      <CardContent className="p-4 space-y-4">
-        {/* Search and Clear */}
-        <div className="flex gap-3">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
-              placeholder="Buscar por paciente, tipo ou observações..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-10"
-            />
+    <Card className="border-0 shadow-lg bg-white">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <div className="p-1.5 bg-blue-100 rounded-lg">
+            <Filter className="h-4 w-4 text-blue-600" />
           </div>
-          
+          Filtros
           {hasActiveFilters && (
-            <Button
-              variant="outline"
-              onClick={clearFilters}
-              className="flex items-center gap-2"
-            >
-              <X className="w-4 h-4" />
-              Limpar
-            </Button>
+            <Badge variant="secondary" className="ml-2 bg-blue-100 text-blue-800">
+              Ativos
+            </Badge>
           )}
-        </div>
-
-        {/* Filter Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {/* Date Range */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Período</label>
-            <div className="flex gap-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      "flex-1 justify-start text-left font-normal",
-                      !filters.dateRange?.start && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {filters.dateRange?.start ? (
-                      format(filters.dateRange.start, 'dd/MM', { locale: ptBR })
-                    ) : (
-                      "Início"
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={filters.dateRange?.start}
-                    onSelect={(date) => updateFilters('dateRange', {
-                      ...filters.dateRange,
-                      start: date || new Date()
-                    })}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      "flex-1 justify-start text-left font-normal",
-                      !filters.dateRange?.end && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {filters.dateRange?.end ? (
-                      format(filters.dateRange.end, 'dd/MM', { locale: ptBR })
-                    ) : (
-                      "Fim"
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={filters.dateRange?.end}
-                    onSelect={(date) => updateFilters('dateRange', {
-                      ...filters.dateRange,
-                      end: date || new Date()
-                    })}
-                    disabled={(date) =>
-                      filters.dateRange?.start ? date < filters.dateRange.start : false
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+        </CardTitle>
+      </CardHeader>
+      <Separator />
+      <CardContent className="pt-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          {/* Search */}
+          <div className="lg:col-span-2">
+            <label className="text-sm font-medium text-gray-700 mb-2 block">
+              Buscar Paciente
+            </label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Nome do paciente..."
+                value={filters.search}
+                onChange={handleSearchChange}
+                className="pl-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+              />
             </div>
           </div>
 
           {/* Status Filter */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Status</label>
-            <Select
-              value={filters.status?.[0] || ''}
-              onValueChange={(value) => updateFilters('status', value ? [value as AppointmentStatus] : undefined)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Todos os status" />
+          <div>
+            <label className="text-sm font-medium text-gray-700 mb-2 block">
+              Status
+            </label>
+            <Select value={filters.status} onValueChange={handleStatusChange}>
+              <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-gray-400" />
+                  <SelectValue placeholder="Todos" />
+                </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os status</SelectItem>
-                {Object.entries(statusLabels).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>
-                    {label}
+                <SelectItem value="">Todos os Status</SelectItem>
+                <SelectItem value="scheduled">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    Agendado
+                  </div>
+                </SelectItem>
+                <SelectItem value="confirmed">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    Confirmado
+                  </div>
+                </SelectItem>
+                <SelectItem value="completed">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                    Concluído
+                  </div>
+                </SelectItem>
+                <SelectItem value="cancelled">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    Cancelado
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Service Filter */}
+          <div>
+            <label className="text-sm font-medium text-gray-700 mb-2 block">
+              Serviço
+            </label>
+            <Select value={filters.service} onValueChange={handleServiceChange}>
+              <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-gray-400" />
+                  <SelectValue placeholder="Todos" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todos os Serviços</SelectItem>
+                {services.map((service) => (
+                  <SelectItem key={service} value={service}>
+                    {service}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Type Filter */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Tipo</label>
-            <Select
-              value={filters.type?.[0] || ''}
-              onValueChange={(value) => updateFilters('type', value ? [value as AppointmentType] : undefined)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Todos os tipos" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Todos os tipos</SelectItem>
-                {Object.entries(typeLabels).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Quick Filters */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Filtros Rápidos</label>
-            <div className="flex flex-wrap gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => updateFilters('dateRange', {
-                  start: new Date(),
-                  end: new Date()
-                })}
-                className="text-xs"
-              >
-                Hoje
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const today = new Date();
-                  const weekStart = new Date(today);
-                  weekStart.setDate(today.getDate() - today.getDay() + 1);
-                  const weekEnd = new Date(weekStart);
-                  weekEnd.setDate(weekStart.getDate() + 6);
-                  updateFilters('dateRange', {
-                    start: weekStart,
-                    end: weekEnd
-                  });
-                }}
-                className="text-xs"
-              >
-                Esta Semana
-              </Button>
+          {/* Date Range */}
+          <div className="lg:col-span-1">
+            <label className="text-sm font-medium text-gray-700 mb-2 block">
+              Período
+            </label>
+            <div className="space-y-2">
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  type="date"
+                  value={filters.dateFrom}
+                  onChange={handleDateFromChange}
+                  className="pl-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500 text-sm"
+                  placeholder="Data inicial"
+                />
+              </div>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  type="date"
+                  value={filters.dateTo}
+                  onChange={handleDateToChange}
+                  className="pl-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500 text-sm"
+                  placeholder="Data final"
+                />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Active Filters Display */}
+        {/* Clear Filters Button */}
         {hasActiveFilters && (
-          <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
-            <span className="text-sm font-medium text-muted-foreground">Filtros ativos:</span>
-            
-            {searchQuery && (
-              <Badge variant="secondary" className="flex items-center gap-1">
-                Busca: "{searchQuery}"
-                <X
-                  className="w-3 h-3 cursor-pointer"
-                  onClick={() => onSearchChange('')}
-                />
-              </Badge>
-            )}
-            
-            {filters.dateRange && (
-              <Badge variant="secondary" className="flex items-center gap-1">
-                Período: {format(filters.dateRange.start, 'dd/MM', { locale: ptBR })} - {format(filters.dateRange.end, 'dd/MM', { locale: ptBR })}
-                <X
-                  className="w-3 h-3 cursor-pointer"
-                  onClick={() => updateFilters('dateRange', undefined)}
-                />
-              </Badge>
-            )}
-            
-            {filters.status?.[0] && (
-              <Badge variant="secondary" className="flex items-center gap-1">
-                Status: {statusLabels[filters.status[0]]}
-                <X
-                  className="w-3 h-3 cursor-pointer"
-                  onClick={() => updateFilters('status', undefined)}
-                />
-              </Badge>
-            )}
-            
-            {filters.type?.[0] && (
-              <Badge variant="secondary" className="flex items-center gap-1">
-                Tipo: {typeLabels[filters.type[0]]}
-                <X
-                  className="w-3 h-3 cursor-pointer"
-                  onClick={() => updateFilters('type', undefined)}
-                />
-              </Badge>
-            )}
+          <div className="mt-6 pt-4 border-t border-gray-100">
+            <Button 
+              variant="outline" 
+              onClick={onClearFilters}
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-800 border-gray-200 hover:border-gray-300"
+            >
+              <X className="h-4 w-4" />
+              Limpar Filtros
+            </Button>
           </div>
         )}
       </CardContent>
     </Card>
   );
 };
+
+export const AppointmentFilters = memo(AppointmentFiltersComponent);
+export default AppointmentFilters;
