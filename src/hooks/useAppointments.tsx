@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { AppointmentBase, AppointmentFormData, AppointmentFilters, AppointmentStatus, AppointmentType } from '@/types/appointment';
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
+import { logger } from '@/lib/errors/logger';
 
 interface UseAppointmentsReturn {
   appointments: AppointmentBase[];
@@ -48,6 +49,7 @@ export const useAppointments = (): UseAppointmentsReturn => {
   const [appointments, setAppointments] = useState<AppointmentBase[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [filters, setFiltersState] = useState<AppointmentFilters>({});
   const { toast } = useToast();
 
@@ -60,9 +62,13 @@ export const useAppointments = (): UseAppointmentsReturn => {
 
   // Fetch appointments from Supabase
   const fetchAppointments = useCallback(async () => {
+    const timer = logger.startTimer('fetchAppointments');
+    
     try {
       setLoading(true);
       setError(null);
+      
+      logger.info('Iniciando busca de agendamentos', {}, 'useAppointments');
       
       const { data, error: fetchError } = await supabase
         .from('appointments')
@@ -78,27 +84,38 @@ export const useAppointments = (): UseAppointmentsReturn => {
         .order('appointment_date', { ascending: true })
         .order('appointment_time', { ascending: true });
 
-      if (fetchError) throw fetchError;
+      if (fetchError) {
+        logger.error('Erro na consulta Supabase', fetchError, 'useAppointments');
+        throw fetchError;
+      }
 
       // Transform data to match AppointmentBase interface
-      const transformedAppointments = data?.map(apt => ({
-        id: apt.id,
-        patientId: apt.patient_id,
-        patientName: apt.patients.name,
-        phone: apt.patients.phone,
-        date: new Date(apt.appointment_date),
-        time: apt.appointment_time,
-        duration: apt.duration,
-        type: apt.type as AppointmentType,
-        status: apt.status as AppointmentStatus,
-        notes: apt.notes,
-        createdAt: new Date(apt.created_at),
-        updatedAt: new Date(apt.updated_at)
-      })) || [];
+      const transformedAppointments = data?.map(apt => {
+        try {
+          return {
+            id: apt.id,
+            patientId: apt.patient_id,
+            patientName: apt.patients?.name || 'Nome não disponível',
+            phone: apt.patients?.phone || '',
+            date: new Date(apt.appointment_date),
+            time: apt.appointment_time || '00:00',
+            duration: apt.duration || 60,
+            type: (apt.type as AppointmentType) || 'Consulta',
+            status: (apt.status as AppointmentStatus) || 'Scheduled',
+            notes: apt.notes || '',
+            createdAt: new Date(apt.created_at),
+            updatedAt: new Date(apt.updated_at)
+          };
+        } catch (transformError) {
+          logger.error('Erro ao transformar agendamento', { apt, error: transformError }, 'useAppointments');
+          return null;
+        }
+      }).filter(Boolean) || [];
 
+      logger.info(`Agendamentos carregados com sucesso: ${transformedAppointments.length} registros`, { count: transformedAppointments.length }, 'useAppointments');
       setAppointments(transformedAppointments);
     } catch (err) {
-      console.error('Error fetching appointments:', err);
+      logger.error('Erro ao carregar agendamentos', err, 'useAppointments');
       setError(err instanceof Error ? err.message : 'Erro ao carregar agendamentos');
       toast({
         title: "Erro",
@@ -107,12 +124,18 @@ export const useAppointments = (): UseAppointmentsReturn => {
       });
     } finally {
       setLoading(false);
+      setInitialLoad(false);
+      timer();
     }
   }, [toast]);
 
   // Create new appointment
   const createAppointment = useCallback(async (data: AppointmentFormData): Promise<AppointmentBase | null> => {
+    const timer = logger.startTimer('createAppointment');
+    
     try {
+      logger.info('Criando novo agendamento', { patientId: data.patientId, date: data.date }, 'useAppointments');
+
       // Check for conflicts
       const conflict = checkAppointmentConflict({
         date: data.date,
@@ -122,6 +145,7 @@ export const useAppointments = (): UseAppointmentsReturn => {
       });
 
       if (conflict.hasConflict) {
+        logger.warn('Conflito de horário detectado', { appointmentData: data }, 'useAppointments');
         toast({
           title: "Conflito de Horário",
           description: `Já existe um agendamento neste horário`,
@@ -152,7 +176,10 @@ export const useAppointments = (): UseAppointmentsReturn => {
         `)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        logger.error('Erro ao inserir agendamento no Supabase', error, 'useAppointments');
+        throw error;
+      }
 
       const appointment: AppointmentBase = {
         id: newAppointment.id,
@@ -169,6 +196,7 @@ export const useAppointments = (): UseAppointmentsReturn => {
         updatedAt: new Date(newAppointment.updated_at)
       };
 
+      logger.info('Agendamento criado com sucesso', { appointmentId: appointment.id }, 'useAppointments');
       setAppointments(prev => [...prev, appointment]);
       
       toast({
@@ -178,19 +206,25 @@ export const useAppointments = (): UseAppointmentsReturn => {
 
       return appointment;
     } catch (err) {
-      console.error('Error creating appointment:', err);
+      logger.error('Erro ao criar agendamento', err, 'useAppointments');
       toast({
         title: "Erro",
         description: "Não foi possível criar o agendamento",
         variant: "destructive"
       });
       return null;
+    } finally {
+      timer();
     }
   }, [appointments, toast]);
 
   // Update appointment
   const updateAppointment = useCallback(async (id: string, data: Partial<AppointmentFormData>): Promise<AppointmentBase | null> => {
+    const timer = logger.startTimer('updateAppointment');
+    
     try {
+      logger.info('Atualizando agendamento', { appointmentId: id, updates: data }, 'useAppointments');
+
       // Check for conflicts if date/time is being changed
       if (data.date || data.time || data.duration) {
         const existing = appointments.find(apt => apt.id === id);
@@ -238,7 +272,10 @@ export const useAppointments = (): UseAppointmentsReturn => {
         `)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        logger.error('Erro ao atualizar agendamento no Supabase', error, 'useAppointments');
+        throw error;
+      }
 
       const appointment: AppointmentBase = {
         id: updatedAppointment.id,
@@ -255,6 +292,7 @@ export const useAppointments = (): UseAppointmentsReturn => {
         updatedAt: new Date(updatedAppointment.updated_at)
       };
 
+      logger.info('Agendamento atualizado com sucesso', { appointmentId: id }, 'useAppointments');
       setAppointments(prev => prev.map(apt => apt.id === id ? appointment : apt));
       
       toast({
@@ -264,13 +302,15 @@ export const useAppointments = (): UseAppointmentsReturn => {
 
       return appointment;
     } catch (err) {
-      console.error('Error updating appointment:', err);
+      logger.error('Erro ao atualizar agendamento', err, 'useAppointments');
       toast({
         title: "Erro",
         description: "Não foi possível atualizar o agendamento",
         variant: "destructive"
       });
       return null;
+    } finally {
+      timer();
     }
   }, [appointments, toast]);
 
@@ -456,6 +496,7 @@ export const useAppointments = (): UseAppointmentsReturn => {
     appointments,
     loading,
     error,
+    initialLoad,
     
     // CRUD Operations
     createAppointment,

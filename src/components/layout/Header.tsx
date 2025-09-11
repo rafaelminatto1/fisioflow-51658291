@@ -8,7 +8,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bell, Search, User, LogOut, Settings, RefreshCw } from 'lucide-react';
+import { Search, User, LogOut, Settings, RefreshCw } from 'lucide-react';
+import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -131,12 +132,7 @@ export function Header() {
           </Button>
 
           {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full flex items-center justify-center">
-              <span className="w-1.5 h-1.5 bg-destructive-foreground rounded-full"></span>
-            </span>
-          </Button>
+          <NotificationCenter />
 
           {/* Profile */}
           <DropdownMenu>

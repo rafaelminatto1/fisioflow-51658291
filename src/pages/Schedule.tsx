@@ -1,371 +1,293 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { AppointmentFilters } from '@/components/schedule/AppointmentFilters';
 import { ScheduleGrid } from '@/components/schedule/ScheduleGrid';
-import { WeekNavigation } from '@/components/schedule/WeekNavigation';
 import { AppointmentModal } from '@/components/schedule/AppointmentModal';
 import { useAppointments } from '@/hooks/useAppointments';
-import { AppointmentBase, AppointmentStatus, AppointmentType } from '@/types/appointment';
-import { Calendar, Search, Filter, Plus, Users, Clock, CheckCircle, AlertCircle } from 'lucide-react';
-import { startOfWeek, addWeeks, addDays, format, isSameWeek } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { logger } from '@/lib/errors/logger';
+import { AlertTriangle, Calendar, Clock, Users, TrendingUp, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import type { Appointment, AppointmentFilters as FilterType } from '@/types/appointment';
+
+// Define FilterType interface
+interface FilterType {
+  search: string;
+  status: string;
+  dateFrom: string;
+  dateTo: string;
+  service: string;
+}
 
 const Schedule = () => {
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentWeek, setCurrentWeek] = useState(new Date());
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<AppointmentStatus | 'all'>('all');
-  const [typeFilter, setTypeFilter] = useState<AppointmentType | 'all'>('all');
-  const [modalState, setModalState] = useState<{
-    isOpen: boolean;
-    mode: 'create' | 'edit' | 'view';
-    appointment?: AppointmentBase;
-    defaultDate?: Date;
-    defaultTime?: string;
-  }>({
-    isOpen: false,
-    mode: 'create'
+  const [filters, setFilters] = useState<FilterType>({
+    search: '',
+    status: '',
+    dateFrom: '',
+    dateTo: '',
+    service: ''
   });
 
-  const {
-    appointments,
-    loading,
-    error,
-    getAppointmentStats,
-    searchAppointments,
-    filteredAppointments
-  } = useAppointments();
+  const { appointments, loading, error, initialLoad, createAppointment, updateAppointment } = useAppointments();
 
-  // Generate week days (Monday to Friday)
-  const weekDays = useMemo(() => {
-    const start = startOfWeek(currentWeek, { weekStartsOn: 1 });
-    return Array.from({ length: 5 }, (_, i) => addDays(start, i));
-  }, [currentWeek]);
+  useEffect(() => {
+    logger.info('Página Schedule carregada', { 
+      appointmentsCount: appointments.length,
+      loading,
+      initialLoad 
+    }, 'Schedule');
+  }, [appointments.length, loading, initialLoad]);
 
-  // Generate time slots (7:00 to 19:00, 30-minute intervals)
-  const timeSlots = useMemo(() => {
-    const slots = [];
-    for (let hour = 7; hour < 19; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        slots.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
-      }
-    }
-    return slots;
-  }, []);
-
-  // Filter appointments for current week
-  const weekAppointments = useMemo(() => {
-    let filtered = appointments.filter(apt => 
-      isSameWeek(apt.date, currentWeek, { weekStartsOn: 1 })
-    );
-
-    // Apply search filter
-    if (searchQuery) {
-      filtered = searchAppointments(searchQuery).filter(apt => 
-        isSameWeek(apt.date, currentWeek, { weekStartsOn: 1 })
-      );
-    }
-
-    // Apply status filter
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(apt => apt.status === statusFilter);
-    }
-
-    // Apply type filter
-    if (typeFilter !== 'all') {
-      filtered = filtered.filter(apt => apt.type === typeFilter);
-    }
-
-    return filtered;
-  }, [appointments, currentWeek, searchQuery, statusFilter, typeFilter, searchAppointments]);
-
-  // Get appointment type colors
-  const getTypeColor = (type: string): string => {
-    const colors: Record<string, string> = {
-      'Consulta Inicial': 'bg-blue-500',
-      'Fisioterapia': 'bg-green-500',
-      'Reavaliação': 'bg-orange-500',
-      'Consulta de Retorno': 'bg-purple-500',
-      'Avaliação Funcional': 'bg-cyan-500',
-      'Terapia Manual': 'bg-indigo-500',
-      'Pilates Clínico': 'bg-pink-500',
-      'RPG': 'bg-red-500',
-      'Dry Needling': 'bg-yellow-500',
-      'Liberação Miofascial': 'bg-teal-500'
+  // Memoized statistics calculation
+  const stats = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const todayAppointments = appointments.filter(apt => apt.date === today);
+    const confirmedToday = todayAppointments.filter(apt => apt.status === 'confirmed').length;
+    const totalToday = todayAppointments.length;
+    const completedToday = todayAppointments.filter(apt => apt.status === 'completed').length;
+    
+    return {
+      totalToday,
+      confirmedToday,
+      completedToday,
+      pendingToday: totalToday - completedToday
     };
-    return colors[type] || 'bg-gray-500';
+  }, [appointments]);
+
+  // Filter appointments based on current filters
+  const filteredAppointments = useMemo(() => {
+    return appointments.filter(appointment => {
+      if (filters.search && !appointment.patientName.toLowerCase().includes(filters.search.toLowerCase())) {
+        return false;
+      }
+      if (filters.status && appointment.status !== filters.status) {
+        return false;
+      }
+      if (filters.service && appointment.service !== filters.service) {
+        return false;
+      }
+      if (filters.dateFrom && appointment.date < filters.dateFrom) {
+        return false;
+      }
+      if (filters.dateTo && appointment.date > filters.dateTo) {
+        return false;
+      }
+      return true;
+    });
+  }, [appointments, filters]);
+
+  const services = useMemo(() => {
+    return Array.from(new Set(appointments.map(apt => apt.service)));
+  }, [appointments]);
+
+  const handleAppointmentClick = (appointment: Appointment) => {
+    setSelectedAppointment(appointment);
+    setIsModalOpen(true);
   };
 
-  // Navigation handlers
-  const handlePreviousWeek = () => {
-    setCurrentWeek(prev => addWeeks(prev, -1));
+  const handleCreateAppointment = () => {
+    setSelectedAppointment(null);
+    setIsModalOpen(true);
   };
 
-  const handleNextWeek = () => {
-    setCurrentWeek(prev => addWeeks(prev, 1));
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedAppointment(null);
   };
 
-  const handleToday = () => {
-    setCurrentWeek(new Date());
+  const handleFiltersChange = (newFilters: FilterType) => {
+    setFilters(newFilters);
   };
 
-  // Modal handlers
-  const handleTimeSlotClick = (date: Date, timeSlot: string) => {
-    setModalState({
-      isOpen: true,
-      mode: 'create',
-      defaultDate: date,
-      defaultTime: timeSlot
+  const handleClearFilters = () => {
+    setFilters({
+      search: '',
+      status: '',
+      dateFrom: '',
+      dateTo: '',
+      service: ''
     });
   };
-
-  const handleAppointmentClick = (appointment: AppointmentBase) => {
-    setModalState({
-      isOpen: true,
-      mode: 'view',
-      appointment
-    });
-  };
-
-  const handleCloseModal = () => {
-    setModalState({
-      isOpen: false,
-      mode: 'create'
-    });
-  };
-
-  const handleEditAppointment = (appointment: AppointmentBase) => {
-    setModalState({
-      isOpen: true,
-      mode: 'edit',
-      appointment
-    });
-  };
-
-  // Get appointment statistics
-  const stats = getAppointmentStats();
-
-  if (loading) {
-    return (
-      <MainLayout>
-        <div className="space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-primary grid place-items-center shadow-medical">
-              <Calendar className="w-5 h-5 text-primary-foreground animate-pulse" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Agenda</h1>
-              <p className="text-muted-foreground">Carregando agendamentos...</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map(i => (
-              <Card key={i} className="animate-pulse">
-                <CardContent className="p-4">
-                  <div className="h-4 bg-muted rounded mb-2" />
-                  <div className="h-8 bg-muted rounded" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
 
   if (error) {
+    logger.error('Erro na página Schedule', { error }, 'Schedule');
     return (
-      <MainLayout>
-        <div className="space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-primary grid place-items-center shadow-medical">
-              <Calendar className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Agenda</h1>
-              <p className="text-muted-foreground">Erro ao carregar agendamentos</p>
-            </div>
-          </div>
-          <Card>
-            <CardContent className="p-6 text-center">
-              <AlertCircle className="w-12 h-12 mx-auto text-destructive mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Erro ao Carregar</h3>
-              <p className="text-muted-foreground mb-4">{error}</p>
-              <Button onClick={() => window.location.reload()}>
-                Tentar Novamente
-              </Button>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4">
+        <div className="max-w-7xl mx-auto">
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="p-6">
+              <div className="text-center">
+                <div className="text-red-600 text-lg font-semibold mb-2">Erro ao carregar agendamentos</div>
+                <p className="text-red-500">{error}</p>
+              </div>
             </CardContent>
           </Card>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
   return (
-    <MainLayout>
-      <div className="space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      <div className="max-w-7xl mx-auto p-4 space-y-6">
         {/* Header */}
-        <section className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-primary grid place-items-center shadow-medical">
-              <Calendar className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Agenda</h1>
-              <p className="text-muted-foreground">
-                Gerenciar agendamentos e consultas
-              </p>
-            </div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <Calendar className="h-6 w-6 text-white" />
+              </div>
+              Agenda
+            </h1>
+            <p className="text-gray-600 mt-1">Gerencie seus agendamentos e consultas</p>
           </div>
-          
           <Button 
-            onClick={() => setModalState({ isOpen: true, mode: 'create' })}
-            className="flex items-center gap-2"
+            onClick={handleCreateAppointment}
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+            size="lg"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="h-5 w-5 mr-2" />
             Novo Agendamento
           </Button>
-        </section>
+        </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/20 grid place-items-center">
-                  <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total</p>
-                  <p className="text-2xl font-bold text-foreground">{stats.total}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {initialLoad ? (
+            Array.from({ length: 4 }).map((_, index) => (
+              <StatCardSkeleton key={index} />
+            ))
+          ) : (
+            <>
+              <Card className="border-0 shadow-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium opacity-90">Hoje</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <div className="text-2xl font-bold">{stats.totalToday}</div>
+                    <Calendar className="h-5 w-5 opacity-80" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-xs opacity-80">Total de agendamentos</p>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/20 grid place-items-center">
-                  <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Confirmados</p>
-                  <p className="text-2xl font-bold text-foreground">{stats.confirmed}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              <Card className="border-0 shadow-lg bg-gradient-to-r from-green-500 to-green-600 text-white">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium opacity-90">Confirmados</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <div className="text-2xl font-bold">{stats.confirmedToday}</div>
+                    <Users className="h-5 w-5 opacity-80" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-xs opacity-80">Pacientes confirmados</p>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900/20 grid place-items-center">
-                  <Clock className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Pendentes</p>
-                  <p className="text-2xl font-bold text-foreground">{stats.pending}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              <Card className="border-0 shadow-lg bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium opacity-90">Concluídos</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <div className="text-2xl font-bold">{stats.completedToday}</div>
+                    <TrendingUp className="h-5 w-5 opacity-80" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-xs opacity-80">Atendimentos finalizados</p>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/20 grid place-items-center">
-                  <Calendar className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Hoje</p>
-                  <p className="text-2xl font-bold text-foreground">{stats.today}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              <Card className="border-0 shadow-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium opacity-90">Pendentes</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <div className="text-2xl font-bold">{stats.pendingToday}</div>
+                    <Clock className="h-5 w-5 opacity-80" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-xs opacity-80">Aguardando atendimento</p>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
 
         {/* Filters */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              {/* Search */}
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input
-                  placeholder="Buscar por paciente, tipo ou observações..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
+        <AppointmentFilters
+          filters={filters}
+          onFiltersChange={handleFiltersChange}
+          onClearFilters={handleClearFilters}
+          services={services}
+        />
+
+        {/* Results Summary */}
+        {(filters.search || filters.status || filters.service || filters.dateFrom || filters.dateTo) && (
+          <Card className="border-blue-200 bg-blue-50">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                    {filteredAppointments.length} resultado{filteredAppointments.length !== 1 ? 's' : ''}
+                  </Badge>
+                  <span className="text-sm text-blue-700">encontrado{filteredAppointments.length !== 1 ? 's' : ''}</span>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleClearFilters}
+                  className="text-blue-600 hover:text-blue-800"
+                >
+                  Limpar filtros
+                </Button>
               </div>
-
-              {/* Status Filter */}
-              <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as AppointmentStatus | 'all')}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os Status</SelectItem>
-                  <SelectItem value="Scheduled">Agendado</SelectItem>
-                  <SelectItem value="Confirmed">Confirmado</SelectItem>
-                  <SelectItem value="Completed">Concluído</SelectItem>
-                  <SelectItem value="Cancelled">Cancelado</SelectItem>
-                  <SelectItem value="No Show">Faltou</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Type Filter */}
-              <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as AppointmentType | 'all')}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os Tipos</SelectItem>
-                  <SelectItem value="Consulta Inicial">Consulta Inicial</SelectItem>
-                  <SelectItem value="Fisioterapia">Fisioterapia</SelectItem>
-                  <SelectItem value="Reavaliação">Reavaliação</SelectItem>
-                  <SelectItem value="Consulta de Retorno">Consulta de Retorno</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Week Navigation */}
-        <WeekNavigation
+        <WeekNavigation 
           currentWeek={currentWeek}
-          onPreviousWeek={handlePreviousWeek}
-          onNextWeek={handleNextWeek}
-          onToday={handleToday}
-          totalAppointments={weekAppointments.length}
+          onWeekChange={setCurrentWeek}
         />
 
         {/* Schedule Grid */}
-        <ScheduleGrid
-          weekDays={weekDays}
-          timeSlots={timeSlots}
-          weekAppointments={weekAppointments}
-          onTimeSlotClick={handleTimeSlotClick}
-          onAppointmentClick={handleAppointmentClick}
-          getTypeColor={getTypeColor}
-        />
+        <Card className="border-0 shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Agendamentos
+            </CardTitle>
+            <CardDescription>
+              {filteredAppointments.length} agendamento{filteredAppointments.length !== 1 ? 's' : ''} 
+              {filters.search || filters.status || filters.service || filters.dateFrom || filters.dateTo ? ' (filtrados)' : ''}
+            </CardDescription>
+          </CardHeader>
+          <Separator />
+          <CardContent className="p-6">
+            <ScheduleGrid
+              appointments={filteredAppointments}
+              onAppointmentClick={handleAppointmentClick}
+              showSkeleton={initialLoad}
+            />
+          </CardContent>
+        </Card>
 
         {/* Appointment Modal */}
         <AppointmentModal
-          isOpen={modalState.isOpen}
-          onClose={handleCloseModal}
-          appointment={modalState.appointment}
-          defaultDate={modalState.defaultDate}
-          defaultTime={modalState.defaultTime}
-          mode={modalState.mode}
+          isOpen={isModalOpen}
+          onClose={handleModalClose}
+          appointment={selectedAppointment}
+          onSave={selectedAppointment ? updateAppointment : createAppointment}
         />
       </div>
-    </MainLayout>
+    </div>
   );
 };
 

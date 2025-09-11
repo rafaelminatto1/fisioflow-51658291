@@ -1,3 +1,4 @@
+import React, { Suspense, lazy } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,67 +8,116 @@ import { DataProvider } from "@/contexts/DataContext";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
+import { logger } from '@/lib/errors/logger';
 
-// Auth pages
-import Welcome from "./pages/Welcome";
+// Lazy load pages for better performance
+const Welcome = lazy(() => import("./pages/Welcome"));
+const Index = lazy(() => import("./pages/Index"));
+const Patients = lazy(() => import("./pages/Patients"));
+const Schedule = lazy(() => import("./pages/Schedule"));
+const Exercises = lazy(() => import("./pages/Exercises"));
+const Financial = lazy(() => import("./pages/Financial"));
+const Reports = lazy(() => import("./pages/Reports"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Profile = lazy(() => import("./pages/Profile").then(module => ({ default: module.Profile })));
+const MedicalRecord = lazy(() => import("./pages/MedicalRecord"));
+const SmartAI = lazy(() => import("./pages/SmartAI"));
+const Communications = lazy(() => import("./pages/Communications"));
+const Partner = lazy(() => import("./pages/Partner"));
+const Vouchers = lazy(() => import("./pages/Vouchers"));
+const FileUploadTest = lazy(() => import("./pages/FileUploadTest"));
+const PatientPWA = lazy(() => import("./components/patient/PatientPWA").then(module => ({ default: module.PatientPWA })));
+const AdvancedAnalytics = lazy(() => import("./components/analytics/AdvancedAnalytics"));
+const MedicalChatbot = lazy(() => import("./components/chatbot/MedicalChatbot"));
+const ComputerVisionExercise = lazy(() => import("./components/computer-vision/ComputerVisionExercise"));
+const IntelligentReports = lazy(() => import("./components/reports/IntelligentReports"));
+const AugmentedRealityExercise = lazy(() => import("./components/ar/AugmentedRealityExercise"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
-// Protected pages
-import Index from "./pages/Index";
-import Patients from "./pages/Patients";
-import Schedule from "./pages/Schedule";
-import Exercises from "./pages/Exercises";
-import Financial from "./pages/Financial";
-import Reports from "./pages/Reports";
-import Settings from "./pages/Settings";
-import { Profile } from "./pages/Profile";
-import MedicalRecord from "./pages/MedicalRecord";
-import SmartAI from "./pages/SmartAI";
-import Communications from "./pages/Communications";
-import Partner from "./pages/Partner";
-import Vouchers from "./pages/Vouchers";
-import FileUploadTest from "./pages/FileUploadTest";
-import NotFound from "./pages/NotFound";
+// Create a client with performance optimizations
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      cacheTime: 1000 * 60 * 10, // 10 minutes
+      retry: (failureCount, error) => {
+        logger.warn('Query retry', { failureCount, error }, 'QueryClient');
+        return failureCount < 3;
+      },
+      onError: (error) => {
+        logger.error('Query error', error, 'QueryClient');
+      }
+    },
+    mutations: {
+      onError: (error) => {
+        logger.error('Mutation error', error, 'QueryClient');
+      }
+    }
+  },
+});
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AuthProvider>
-          <DataProvider>
-            <Toaster />
-            <Sonner />
-          <BrowserRouter>
-            <Routes>
-              {/* Welcome page - public */}
-              <Route path="/welcome" element={<Welcome />} />
-              
-              {/* Protected routes */}
-              <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-              <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
-              <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
-              <Route path="/exercises" element={<ProtectedRoute><Exercises /></ProtectedRoute>} />
-              <Route path="/financial" element={<ProtectedRoute><Financial /></ProtectedRoute>} />
-              <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-              <Route path="/medical-record" element={<ProtectedRoute><MedicalRecord /></ProtectedRoute>} />
-              <Route path="/smart-ai" element={<ProtectedRoute><SmartAI /></ProtectedRoute>} />
-              <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
-              <Route path="/partner" element={<ProtectedRoute><Partner /></ProtectedRoute>} />
-              <Route path="/vouchers" element={<ProtectedRoute><Vouchers /></ProtectedRoute>} />
-              <Route path="/file-upload-test" element={<ProtectedRoute><FileUploadTest /></ProtectedRoute>} />
-              
-              {/* Catch-all route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-          </DataProvider>
-        </AuthProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </ErrorBoundary>
+// Loading fallback component
+const PageLoadingFallback = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="flex flex-col items-center space-y-4">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <p className="text-sm text-muted-foreground">Carregando...</p>
+    </div>
+  </div>
 );
+
+const App = () => {
+  React.useEffect(() => {
+    logger.info('Aplicação iniciada', { timestamp: new Date().toISOString() }, 'App');
+  }, []);
+
+  return (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <AuthProvider>
+            <DataProvider>
+              <Toaster />
+              <Sonner />
+            <BrowserRouter>
+              <Suspense fallback={<PageLoadingFallback />}>
+                <Routes>
+                  {/* Welcome page - public */}
+                  <Route path="/welcome" element={<Welcome />} />
+                  
+                  {/* Protected routes */}
+                  <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+                  <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
+                  <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
+                  <Route path="/exercises" element={<ProtectedRoute><Exercises /></ProtectedRoute>} />
+                  <Route path="/financial" element={<ProtectedRoute><Financial /></ProtectedRoute>} />
+                  <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+                  <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                  <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                  <Route path="/medical-record" element={<ProtectedRoute><MedicalRecord /></ProtectedRoute>} />
+                  <Route path="/smart-ai" element={<ProtectedRoute><SmartAI /></ProtectedRoute>} />
+                  <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
+                  <Route path="/partner" element={<ProtectedRoute><Partner /></ProtectedRoute>} />
+                  <Route path="/vouchers" element={<ProtectedRoute><Vouchers /></ProtectedRoute>} />
+                  <Route path="/file-upload-test" element={<ProtectedRoute><FileUploadTest /></ProtectedRoute>} />
+                  <Route path="/patient-pwa" element={<ProtectedRoute><PatientPWA /></ProtectedRoute>} />
+                  <Route path="/analytics" element={<ProtectedRoute><AdvancedAnalytics /></ProtectedRoute>} />
+                  <Route path="/chatbot" element={<ProtectedRoute><MedicalChatbot userId="current-user" /></ProtectedRoute>} />
+                  <Route path="/computer-vision" element={<ProtectedRoute><ComputerVisionExercise patientId="current-patient" /></ProtectedRoute>} />
+                  <Route path="/intelligent-reports" element={<ProtectedRoute><IntelligentReports userId="current-user" /></ProtectedRoute>} />
+                  <Route path="/augmented-reality" element={<ProtectedRoute><AugmentedRealityExercise patientId="current-patient" /></ProtectedRoute>} />
+                  
+                  {/* Catch-all route */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+            </DataProvider>
+          </AuthProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
+  );
+};
 
 export default App;

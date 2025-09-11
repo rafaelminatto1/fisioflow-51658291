@@ -1,181 +1,114 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { errorLogger } from '@/lib/errors/logger';
+import { trackError } from '../../lib/analytics';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { Button } from '../ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 
-export interface Props {
+interface Props {
   children: ReactNode;
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
-  showDetails?: boolean;
 }
 
 interface State {
   hasError: boolean;
-  error: Error | null;
-  errorInfo: ErrorInfo | null;
-  errorId: string | null;
+  error?: Error;
+  errorInfo?: ErrorInfo;
 }
 
 class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = {
-      hasError: false,
-      error: null,
-      errorInfo: null,
-      errorId: null
-    };
+    this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error: Error): Partial<State> {
+  static getDerivedStateFromError(error: Error): State {
     return {
       hasError: true,
-      error
+      error,
     };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log do erro
-    const errorId = errorLogger.logError(error.message, {
-      context: 'ErrorBoundary',
-      componentStack: errorInfo.componentStack,
-      errorBoundary: true,
-      timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent,
-      url: window.location.href
-    });
-
-    this.setState({
-      errorInfo,
-      errorId: Date.now().toString()
-    });
-
-    // Callback personalizado
+    // Rastrear erro no sistema de analytics
+    trackError(error, errorInfo);
+    
+    // Callback personalizado se fornecido
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
     }
 
-    // Log no console em desenvolvimento
-    if (process.env.NODE_ENV === 'development') {
-      console.error('ErrorBoundary caught an error:', error, errorInfo);
-    }
-  }
-
-  handleRetry = () => {
     this.setState({
-      hasError: false,
-      error: null,
-      errorInfo: null,
-      errorId: null
+      error,
+      errorInfo,
     });
-  };
 
-  handleGoHome = () => {
-    window.location.href = '/';
-  };
+    console.error('ErrorBoundary capturou um erro:', error, errorInfo);
+  }
 
   handleReload = () => {
     window.location.reload();
   };
 
+  handleReset = () => {
+    this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+  };
+
   render() {
     if (this.state.hasError) {
-      // Fallback personalizado
       if (this.props.fallback) {
         return this.props.fallback;
       }
 
-      // UI padrão de erro
       return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-2xl">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+          <Card className="w-full max-w-md">
             <CardHeader className="text-center">
-              <div className="mx-auto mb-4 w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-8 h-8 text-red-600" />
+              <div className="mx-auto mb-4 h-12 w-12 text-red-500">
+                <AlertTriangle className="h-full w-full" />
               </div>
-              <CardTitle className="text-2xl font-bold text-gray-900">
-                Oops! Algo deu errado
+              <CardTitle className="text-xl font-semibold text-gray-900">
+                Ops! Algo deu errado
               </CardTitle>
-              <CardDescription className="text-lg">
-                Encontramos um erro inesperado. Nossa equipe foi notificada.
+              <CardDescription className="text-gray-600">
+                Ocorreu um erro inesperado. Nossa equipe foi notificada automaticamente.
               </CardDescription>
             </CardHeader>
-            
-            <CardContent className="space-y-6">
-              {this.state.errorId && (
-                <Alert>
-                  <AlertDescription>
-                    <strong>ID do Erro:</strong> {this.state.errorId}
-                    <br />
-                    <span className="text-sm text-gray-600">
-                      Use este ID ao entrar em contato com o suporte.
-                    </span>
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {this.props.showDetails && this.state.error && (
-                <div className="bg-gray-100 p-4 rounded-lg">
-                  <h4 className="font-semibold mb-2">Detalhes técnicos:</h4>
-                  <pre className="text-sm text-gray-700 whitespace-pre-wrap break-words">
+            <CardContent className="space-y-4">
+              {process.env.NODE_ENV === 'development' && this.state.error && (
+                <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                  <h4 className="text-sm font-medium text-red-800 mb-2">Detalhes do erro (desenvolvimento):</h4>
+                  <pre className="text-xs text-red-700 whitespace-pre-wrap break-all">
                     {this.state.error.message}
                   </pre>
-                  {process.env.NODE_ENV === 'development' && this.state.error.stack && (
-                    <details className="mt-2">
-                      <summary className="cursor-pointer text-sm font-medium">
-                        Stack Trace
-                      </summary>
-                      <pre className="text-xs text-gray-600 mt-2 whitespace-pre-wrap break-words">
-                        {this.state.error.stack}
-                      </pre>
-                    </details>
+                  {this.state.errorInfo && (
+                    <pre className="text-xs text-red-600 whitespace-pre-wrap break-all mt-2">
+                      {this.state.errorInfo.componentStack}
+                    </pre>
                   )}
                 </div>
               )}
-
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button
-                  onClick={this.handleRetry}
-                  className="flex items-center gap-2"
+              
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button 
+                  onClick={this.handleReset}
+                  variant="outline"
+                  className="flex-1"
                 >
-                  <RefreshCw className="w-4 h-4" />
+                  <RefreshCw className="h-4 w-4 mr-2" />
                   Tentar Novamente
                 </Button>
-                
-                <Button
-                  variant="outline"
-                  onClick={this.handleGoHome}
-                  className="flex items-center gap-2"
-                >
-                  <Home className="w-4 h-4" />
-                  Ir para Início
-                </Button>
-                
-                <Button
-                  variant="outline"
+                <Button 
                   onClick={this.handleReload}
-                  className="flex items-center gap-2"
+                  className="flex-1"
                 >
-                  <RefreshCw className="w-4 h-4" />
                   Recarregar Página
                 </Button>
               </div>
-
-              <div className="text-center text-sm text-gray-600">
-                <p>
-                  Se o problema persistir, entre em contato com nosso{' '}
-                  <a 
-                    href="mailto:suporte@fisioflow.com" 
-                    className="text-blue-600 hover:underline"
-                  >
-                    suporte técnico
-                  </a>
-                  .
-                </p>
-              </div>
+              
+              <p className="text-xs text-gray-500 text-center">
+                Se o problema persistir, entre em contato com o suporte.
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -188,44 +121,3 @@ class ErrorBoundary extends Component<Props, State> {
 
 export default ErrorBoundary;
 export { ErrorBoundary };
-
-// Componente funcional para casos específicos
-export const ErrorFallback: React.FC<{
-  error: Error;
-  resetError: () => void;
-  errorId?: string;
-}> = ({ error, resetError, errorId }) => {
-  return (
-    <div className="min-h-[400px] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-            <AlertTriangle className="w-6 h-6 text-red-600" />
-          </div>
-          <CardTitle className="text-lg">Erro Encontrado</CardTitle>
-          <CardDescription>
-            {error.message || 'Algo deu errado'}
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent className="space-y-4">
-          {errorId && (
-            <Alert>
-              <AlertDescription className="text-sm">
-                <strong>ID:</strong> {errorId}
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          <Button 
-            onClick={resetError} 
-            className="w-full flex items-center gap-2"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Tentar Novamente
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
