@@ -1,474 +1,431 @@
-import { supabase } from '@/integrations/supabase/client';
-import { logger } from '@/lib/errors/logger';
-
-interface PerformanceMetrics {
-  deliveryRate: number;
-  averageDeliveryTime: number;
-  clickThroughRate: number;
-  errorRate: number;
-  batchSize: number;
-  queueLength: number;
-}
+import { supabase } from '@/integrations/supabase/client'
+import type { NotificationPayload, NotificationType } from '@/types/notifications'
 
 interface NotificationBatch {
-  id: string;
-  notifications: any[];
-  scheduledFor: Date;
-  priority: 'low' | 'normal' | 'high' | 'urgent';
-  status: 'pending' | 'processing' | 'completed' | 'failed';
+  id: string
+  notifications: NotificationPayload[]
+  scheduledFor: Date
+  priority: 'low' | 'normal' | 'high' | 'urgent'
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+}
+
+interface PerformanceMetrics {
+  deliveryRate: number
+  averageDeliveryTime: number
+  clickThroughRate: number
+  errorRate: number
+  batchEfficiency: number
+}
+
+interface SmartSchedulingConfig {
+  maxBatchSize: number
+  batchWindowMs: number
+  priorityWeights: Record<string, number>
+  quietHoursRespect: boolean
+  userTimezoneAware: boolean
 }
 
 export class NotificationPerformanceService {
-  private static instance: NotificationPerformanceService;
-  private metricsCache: Map<string, PerformanceMetrics> = new Map();
-  private batchQueue: NotificationBatch[] = [];
-  private isProcessing = false;
-
-  private constructor() {
-    this.startPerformanceMonitoring();
-    this.startBatchProcessor();
+  private batchQueue: Map<string, NotificationBatch> = new Map()
+  private performanceMetrics: PerformanceMetrics = {
+    deliveryRate: 0,
+    averageDeliveryTime: 0,
+    clickThroughRate: 0,
+    errorRate: 0,
+    batchEfficiency: 0
   }
-
-  public static getInstance(): NotificationPerformanceService {
-    if (!NotificationPerformanceService.instance) {
-      NotificationPerformanceService.instance = new NotificationPerformanceService();
-    }
-    return NotificationPerformanceService.instance;
+  
+  private config: SmartSchedulingConfig = {
+    maxBatchSize: 100,
+    batchWindowMs: 30000, // 30 seconds
+    priorityWeights: {
+      urgent: 1,
+      high: 0.8,
+      normal: 0.5,
+      low: 0.2
+    },
+    quietHoursRespect: true,
+    userTimezoneAware: true
   }
 
   /**
-   * Start performance monitoring with periodic metrics collection
+   * Add notification to smart batching queue
    */
-  private startPerformanceMonitoring(): void {
-    // Collect metrics every 5 minutes
-    setInterval(async () => {
-      try {
-        await this.collectMetrics();
-      } catch (error) {
-        logger.error('Failed to collect performance metrics', error);
+  async addToBatch(
+    userId: string,
+    notification: NotificationPayload,
+    priority: 'low' | 'normal' | 'high' | 'urgent' = 'normal'
+  ): Promise<void> {
+    const batchId = this.getBatchId(userId, priority)
+    
+    let batch = this.batchQueue.get(batchId)
+    if (!batch) {
+      batch = {
+        id: batchId,
+        notifications: [],
+        scheduledFor: this.calculateOptimalDeliveryTime(userId, priority),
+        priority,
+        status: 'pending'
       }
-    }, 5 * 60 * 1000);
+      this.batchQueue.set(batchId, batch)
+    }
+
+    batch.notifications.push(notification)
+
+    // Process batch if it reaches max size or is urgent
+    if (batch.notifications.length >= this.config.maxBatchSize || priority === 'urgent') {
+      await this.processBatch(batchId)
+    }
   }
 
   /**
-   * Collect comprehensive performance metrics
+   * Process notification batch with smart scheduling
    */
-  private async collectMetrics(): Promise<PerformanceMetrics> {
+  private async processBatch(batchId: string): Promise<void> {
+    const batch = this.batchQueue.get(batchId)
+    if (!batch || batch.status !== 'pending') return
+
+    batch.status = 'processing'
+    const startTime = Date.now()
+
     try {
-      const now = new Date();
-      const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+      // Group notifications by type for optimization
+      const groupedNotifications = this.groupNotificationsByType(batch.notifications)
+      
+      // Send notifications in optimized order
+      const results = await Promise.allSettled(
+        Object.entries(groupedNotifications).map(([type, notifications]) =>
+          this.sendNotificationGroup(type as NotificationType, notifications)
+        )
+      )
 
-      // Get notification statistics from the last hour
-      const { data: notifications, error } = await supabase
-        .from('notification_history')
-        .select('*')
-        .gte('sent_at', oneHourAgo.toISOString())
-        .lte('sent_at', now.toISOString());
+      // Calculate batch performance
+      const successCount = results.filter(r => r.status === 'fulfilled').length
+      const deliveryTime = Date.now() - startTime
 
-      if (error) {
-        throw error;
-      }
+      // Update performance metrics
+      await this.updatePerformanceMetrics({
+        batchId,
+        totalNotifications: batch.notifications.length,
+        successfulDeliveries: successCount,
+        deliveryTime,
+        errors: results.filter(r => r.status === 'rejected').length
+      })
 
-      const total = notifications?.length || 0;
-      const delivered = notifications?.filter(n => n.status === 'delivered').length || 0;
-      const clicked = notifications?.filter(n => n.clicked_at).length || 0;
-      const failed = notifications?.filter(n => n.status === 'failed').length || 0;
-
-      // Calculate delivery times
-      const deliveryTimes = notifications
-        ?.filter(n => n.delivered_at && n.sent_at)
-        .map(n => new Date(n.delivered_at).getTime() - new Date(n.sent_at).getTime()) || [];
-
-      const averageDeliveryTime = deliveryTimes.length > 0 
-        ? deliveryTimes.reduce((sum, time) => sum + time, 0) / deliveryTimes.length 
-        : 0;
-
-      const metrics: PerformanceMetrics = {
-        deliveryRate: total > 0 ? (delivered / total) * 100 : 0,
-        averageDeliveryTime: averageDeliveryTime / 1000, // Convert to seconds
-        clickThroughRate: delivered > 0 ? (clicked / delivered) * 100 : 0,
-        errorRate: total > 0 ? (failed / total) * 100 : 0,
-        batchSize: this.getOptimalBatchSize(),
-        queueLength: this.batchQueue.length
-      };
-
-      // Cache metrics
-      this.metricsCache.set('current', metrics);
-
-      // Store metrics in database for historical analysis
-      await this.storeMetrics(metrics);
-
-      return metrics;
+      batch.status = 'completed'
+      
+      // Log batch completion
+      await this.logBatchCompletion(batch, deliveryTime, successCount)
+      
     } catch (error) {
-      logger.error('Failed to collect metrics', error);
-      throw error;
+      batch.status = 'failed'
+      console.error('Batch processing failed:', error)
+      
+      // Implement retry logic for failed batches
+      await this.scheduleRetry(batchId, error as Error)
+    } finally {
+      // Clean up completed/failed batches after delay
+      setTimeout(() => this.batchQueue.delete(batchId), 60000)
     }
   }
 
   /**
-   * Store metrics in database for historical tracking
+   * Calculate optimal delivery time based on user preferences and system load
    */
-  private async storeMetrics(metrics: PerformanceMetrics): Promise<void> {
-    try {
-      const { error } = await supabase
-        .from('notification_performance_metrics')
-        .insert({
-          delivery_rate: metrics.deliveryRate,
-          average_delivery_time: metrics.averageDeliveryTime,
-          click_through_rate: metrics.clickThroughRate,
-          error_rate: metrics.errorRate,
-          batch_size: metrics.batchSize,
-          queue_length: metrics.queueLength,
-          recorded_at: new Date().toISOString()
-        });
-
-      if (error) {
-        throw error;
-      }
-    } catch (error) {
-      logger.error('Failed to store performance metrics', error);
+  private async calculateOptimalDeliveryTime(
+    userId: string,
+    priority: 'low' | 'normal' | 'high' | 'urgent'
+  ): Promise<Date> {
+    const now = new Date()
+    
+    // Urgent notifications are sent immediately
+    if (priority === 'urgent') {
+      return now
     }
+
+    // Get user preferences for optimal timing
+    const { data: preferences } = await supabase
+      .from('notification_preferences')
+      .select('quiet_hours_start, quiet_hours_end, weekend_notifications')
+      .eq('user_id', userId)
+      .single()
+
+    if (!preferences) {
+      return new Date(now.getTime() + this.config.batchWindowMs)
+    }
+
+    // Check if we're in quiet hours
+    if (this.config.quietHoursRespect && this.isInQuietHours(now, preferences)) {
+      return this.getNextActiveHour(preferences)
+    }
+
+    // Check weekend preferences
+    if (!preferences.weekend_notifications && this.isWeekend(now)) {
+      return this.getNextWeekday()
+    }
+
+    // Calculate delay based on priority and system load
+    const baseDelay = this.config.batchWindowMs * this.config.priorityWeights[priority]
+    const systemLoadFactor = await this.getSystemLoadFactor()
+    
+    return new Date(now.getTime() + baseDelay * systemLoadFactor)
+  }
+
+  /**
+   * Group notifications by type for batch optimization
+   */
+  private groupNotificationsByType(notifications: NotificationPayload[]): Record<string, NotificationPayload[]> {
+    return notifications.reduce((groups, notification) => {
+      const type = notification.type
+      if (!groups[type]) {
+        groups[type] = []
+      }
+      groups[type].push(notification)
+      return groups
+    }, {} as Record<string, NotificationPayload[]>)
+  }
+
+  /**
+   * Send a group of notifications of the same type
+   */
+  private async sendNotificationGroup(
+    type: NotificationType,
+    notifications: NotificationPayload[]
+  ): Promise<void> {
+    // Use Supabase Edge Function for batch sending
+    const { error } = await supabase.functions.invoke('send-notification', {
+      body: {
+        type: 'batch',
+        notificationType: type,
+        notifications,
+        timestamp: new Date().toISOString()
+      }
+    })
+
+    if (error) {
+      throw new Error(`Failed to send ${type} notifications: ${error.message}`)
+    }
+  }
+
+  /**
+   * Update performance metrics based on batch results
+   */
+  private async updatePerformanceMetrics(batchResult: {
+    batchId: string
+    totalNotifications: number
+    successfulDeliveries: number
+    deliveryTime: number
+    errors: number
+  }): Promise<void> {
+    const { totalNotifications, successfulDeliveries, deliveryTime, errors } = batchResult
+
+    // Calculate new metrics
+    const deliveryRate = successfulDeliveries / totalNotifications
+    const errorRate = errors / totalNotifications
+    const batchEfficiency = totalNotifications / (deliveryTime / 1000) // notifications per second
+
+    // Update running averages (simple exponential smoothing)
+    const alpha = 0.1 // smoothing factor
+    this.performanceMetrics.deliveryRate = 
+      alpha * deliveryRate + (1 - alpha) * this.performanceMetrics.deliveryRate
+    this.performanceMetrics.errorRate = 
+      alpha * errorRate + (1 - alpha) * this.performanceMetrics.errorRate
+    this.performanceMetrics.batchEfficiency = 
+      alpha * batchEfficiency + (1 - alpha) * this.performanceMetrics.batchEfficiency
+    this.performanceMetrics.averageDeliveryTime = 
+      alpha * deliveryTime + (1 - alpha) * this.performanceMetrics.averageDeliveryTime
+
+    // Store metrics in database for historical tracking
+    await supabase.from('notification_performance_metrics').insert({
+      batch_id: batchResult.batchId,
+      total_notifications: totalNotifications,
+      successful_deliveries: successfulDeliveries,
+      delivery_time_ms: deliveryTime,
+      error_count: errors,
+      delivery_rate: deliveryRate,
+      error_rate: errorRate,
+      batch_efficiency: batchEfficiency,
+      recorded_at: new Date().toISOString()
+    })
   }
 
   /**
    * Get current performance metrics
    */
-  public async getCurrentMetrics(): Promise<PerformanceMetrics> {
-    const cached = this.metricsCache.get('current');
-    if (cached) {
-      return cached;
-    }
-
-    return await this.collectMetrics();
+  getPerformanceMetrics(): PerformanceMetrics {
+    return { ...this.performanceMetrics }
   }
 
   /**
-   * Get historical performance metrics
+   * Get real-time system health status
    */
-  public async getHistoricalMetrics(hours: number = 24): Promise<PerformanceMetrics[]> {
-    try {
-      const since = new Date();
-      since.setHours(since.getHours() - hours);
-
-      const { data, error } = await supabase
-        .from('notification_performance_metrics')
-        .select('*')
-        .gte('recorded_at', since.toISOString())
-        .order('recorded_at', { ascending: true });
-
-      if (error) {
-        throw error;
-      }
-
-      return data?.map(row => ({
-        deliveryRate: row.delivery_rate,
-        averageDeliveryTime: row.average_delivery_time,
-        clickThroughRate: row.click_through_rate,
-        errorRate: row.error_rate,
-        batchSize: row.batch_size,
-        queueLength: row.queue_length
-      })) || [];
-    } catch (error) {
-      logger.error('Failed to get historical metrics', error);
-      return [];
-    }
-  }
-
-  /**
-   * Add notifications to batch queue for optimized delivery
-   */
-  public async addToBatch(
-    notifications: any[], 
-    priority: 'low' | 'normal' | 'high' | 'urgent' = 'normal',
-    scheduledFor?: Date
-  ): Promise<string> {
-    const batchId = `batch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    const batch: NotificationBatch = {
-      id: batchId,
-      notifications,
-      scheduledFor: scheduledFor || new Date(),
-      priority,
-      status: 'pending'
-    };
-
-    // Insert batch in priority order
-    const insertIndex = this.findInsertIndex(batch);
-    this.batchQueue.splice(insertIndex, 0, batch);
-
-    logger.info('Notifications added to batch', { 
-      batchId, 
-      count: notifications.length, 
-      priority 
-    });
-
-    return batchId;
-  }
-
-  /**
-   * Find the correct insertion index for priority-based queuing
-   */
-  private findInsertIndex(newBatch: NotificationBatch): number {
-    const priorityOrder = { urgent: 0, high: 1, normal: 2, low: 3 };
-    
-    for (let i = 0; i < this.batchQueue.length; i++) {
-      const currentBatch = this.batchQueue[i];
-      
-      // Higher priority (lower number) goes first
-      if (priorityOrder[newBatch.priority] < priorityOrder[currentBatch.priority]) {
-        return i;
-      }
-      
-      // Same priority, check scheduled time
-      if (priorityOrder[newBatch.priority] === priorityOrder[currentBatch.priority]) {
-        if (newBatch.scheduledFor < currentBatch.scheduledFor) {
-          return i;
-        }
-      }
-    }
-    
-    return this.batchQueue.length;
-  }
-
-  /**
-   * Start the batch processor
-   */
-  private startBatchProcessor(): void {
-    setInterval(async () => {
-      if (!this.isProcessing && this.batchQueue.length > 0) {
-        await this.processBatches();
-      }
-    }, 10000); // Process every 10 seconds
-  }
-
-  /**
-   * Process notification batches
-   */
-  private async processBatches(): Promise<void> {
-    if (this.isProcessing) {
-      return;
-    }
-
-    this.isProcessing = true;
-
-    try {
-      const now = new Date();
-      const batchesToProcess = this.batchQueue.filter(
-        batch => batch.status === 'pending' && batch.scheduledFor <= now
-      );
-
-      for (const batch of batchesToProcess) {
-        await this.processBatch(batch);
-      }
-
-      // Remove completed batches
-      this.batchQueue = this.batchQueue.filter(
-        batch => batch.status === 'pending'
-      );
-    } catch (error) {
-      logger.error('Failed to process notification batches', error);
-    } finally {
-      this.isProcessing = false;
-    }
-  }
-
-  /**
-   * Process a single notification batch
-   */
-  private async processBatch(batch: NotificationBatch): Promise<void> {
-    try {
-      batch.status = 'processing';
-      
-      const batchSize = this.getOptimalBatchSize();
-      const chunks = this.chunkArray(batch.notifications, batchSize);
-
-      for (const chunk of chunks) {
-        await this.sendNotificationChunk(chunk);
-        
-        // Add delay between chunks to avoid rate limiting
-        await this.delay(100);
-      }
-
-      batch.status = 'completed';
-      
-      logger.info('Batch processed successfully', { 
-        batchId: batch.id, 
-        totalNotifications: batch.notifications.length 
-      });
-    } catch (error) {
-      batch.status = 'failed';
-      logger.error('Failed to process batch', error, { batchId: batch.id });
-    }
-  }
-
-  /**
-   * Send a chunk of notifications
-   */
-  private async sendNotificationChunk(notifications: any[]): Promise<void> {
-    try {
-      // Call the Supabase Edge Function for batch sending
-      const { error } = await supabase.functions.invoke('send-notification', {
-        body: { notifications, batch: true }
-      });
-
-      if (error) {
-        throw error;
-      }
-    } catch (error) {
-      logger.error('Failed to send notification chunk', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get optimal batch size based on current performance
-   */
-  private getOptimalBatchSize(): number {
-    const metrics = this.metricsCache.get('current');
-    
-    if (!metrics) {
-      return 50; // Default batch size
-    }
-
-    // Adjust batch size based on error rate
-    if (metrics.errorRate > 10) {
-      return 25; // Smaller batches for high error rates
-    } else if (metrics.errorRate < 2) {
-      return 100; // Larger batches for low error rates
-    }
-
-    return 50; // Standard batch size
-  }
-
-  /**
-   * Chunk array into smaller arrays
-   */
-  private chunkArray<T>(array: T[], chunkSize: number): T[][] {
-    const chunks: T[][] = [];
-    for (let i = 0; i < array.length; i += chunkSize) {
-      chunks.push(array.slice(i, i + chunkSize));
-    }
-    return chunks;
-  }
-
-  /**
-   * Delay execution
-   */
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  /**
-   * Get system health status
-   */
-  public async getSystemHealth(): Promise<{
-    status: 'healthy' | 'degraded' | 'unhealthy';
-    metrics: PerformanceMetrics;
-    issues: string[];
+  async getSystemHealth(): Promise<{
+    status: 'healthy' | 'degraded' | 'critical'
+    metrics: PerformanceMetrics
+    queueSize: number
+    processingBatches: number
+    lastUpdate: Date
   }> {
-    try {
-      const metrics = await this.getCurrentMetrics();
-      const issues: string[] = [];
-      
-      // Check for performance issues
-      if (metrics.deliveryRate < 95) {
-        issues.push(`Low delivery rate: ${metrics.deliveryRate.toFixed(1)}%`);
-      }
-      
-      if (metrics.errorRate > 5) {
-        issues.push(`High error rate: ${metrics.errorRate.toFixed(1)}%`);
-      }
-      
-      if (metrics.averageDeliveryTime > 30) {
-        issues.push(`Slow delivery: ${metrics.averageDeliveryTime.toFixed(1)}s average`);
-      }
-      
-      if (metrics.queueLength > 100) {
-        issues.push(`Large queue: ${metrics.queueLength} batches pending`);
-      }
+    const queueSize = Array.from(this.batchQueue.values())
+      .filter(batch => batch.status === 'pending').length
+    
+    const processingBatches = Array.from(this.batchQueue.values())
+      .filter(batch => batch.status === 'processing').length
 
-      let status: 'healthy' | 'degraded' | 'unhealthy';
-      if (issues.length === 0) {
-        status = 'healthy';
-      } else if (issues.length <= 2) {
-        status = 'degraded';
-      } else {
-        status = 'unhealthy';
-      }
+    // Determine system status based on metrics
+    let status: 'healthy' | 'degraded' | 'critical' = 'healthy'
+    
+    if (this.performanceMetrics.errorRate > 0.1 || this.performanceMetrics.deliveryRate < 0.8) {
+      status = 'degraded'
+    }
+    
+    if (this.performanceMetrics.errorRate > 0.25 || this.performanceMetrics.deliveryRate < 0.5) {
+      status = 'critical'
+    }
 
-      return { status, metrics, issues };
-    } catch (error) {
-      logger.error('Failed to get system health', error);
-      return {
-        status: 'unhealthy',
-        metrics: {
-          deliveryRate: 0,
-          averageDeliveryTime: 0,
-          clickThroughRate: 0,
-          errorRate: 100,
-          batchSize: 0,
-          queueLength: 0
-        },
-        issues: ['Failed to collect metrics']
-      };
+    return {
+      status,
+      metrics: this.performanceMetrics,
+      queueSize,
+      processingBatches,
+      lastUpdate: new Date()
     }
   }
 
   /**
-   * Optimize notification scheduling based on user engagement patterns
+   * Optimize notification scheduling based on historical data
    */
-  public async getOptimalSendTime(userId: string): Promise<Date> {
-    try {
-      // Get user's historical engagement data
-      const { data: history, error } = await supabase
-        .from('notification_history')
-        .select('sent_at, clicked_at')
-        .eq('user_id', userId)
-        .not('clicked_at', 'is', null)
-        .order('sent_at', { ascending: false })
-        .limit(50);
+  async optimizeScheduling(): Promise<void> {
+    // Get historical performance data
+    const { data: historicalData } = await supabase
+      .from('notification_performance_metrics')
+      .select('*')
+      .gte('recorded_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+      .order('recorded_at', { ascending: false })
 
-      if (error || !history || history.length === 0) {
-        // Default to 9 AM if no data available
-        const defaultTime = new Date();
-        defaultTime.setHours(9, 0, 0, 0);
-        return defaultTime;
-      }
+    if (!historicalData || historicalData.length === 0) return
 
-      // Analyze click patterns by hour
-      const hourlyEngagement: { [hour: number]: number } = {};
-      
-      history.forEach(record => {
-        const hour = new Date(record.sent_at).getHours();
-        hourlyEngagement[hour] = (hourlyEngagement[hour] || 0) + 1;
-      });
+    // Analyze patterns and adjust configuration
+    const avgDeliveryTime = historicalData.reduce((sum, record) => 
+      sum + record.delivery_time_ms, 0) / historicalData.length
+    
+    const avgBatchSize = historicalData.reduce((sum, record) => 
+      sum + record.total_notifications, 0) / historicalData.length
 
-      // Find the hour with highest engagement
-      const bestHour = Object.entries(hourlyEngagement)
-        .sort(([, a], [, b]) => b - a)[0]?.[0] || '9';
-
-      const optimalTime = new Date();
-      optimalTime.setHours(parseInt(bestHour), 0, 0, 0);
-      
-      // If the optimal time is in the past today, schedule for tomorrow
-      if (optimalTime < new Date()) {
-        optimalTime.setDate(optimalTime.getDate() + 1);
-      }
-
-      return optimalTime;
-    } catch (error) {
-      logger.error('Failed to calculate optimal send time', error);
-      
-      // Fallback to 9 AM
-      const fallbackTime = new Date();
-      fallbackTime.setHours(9, 0, 0, 0);
-      if (fallbackTime < new Date()) {
-        fallbackTime.setDate(fallbackTime.getDate() + 1);
-      }
-      
-      return fallbackTime;
+    // Adjust batch window based on performance
+    if (avgDeliveryTime > 10000) { // If delivery takes more than 10 seconds
+      this.config.batchWindowMs = Math.min(this.config.batchWindowMs * 1.2, 60000)
+    } else if (avgDeliveryTime < 3000) { // If delivery is very fast
+      this.config.batchWindowMs = Math.max(this.config.batchWindowMs * 0.8, 10000)
     }
+
+    // Adjust batch size based on efficiency
+    if (avgBatchSize < this.config.maxBatchSize * 0.5) {
+      this.config.maxBatchSize = Math.max(this.config.maxBatchSize * 0.9, 20)
+    }
+
+    console.log('Notification scheduling optimized:', this.config)
+  }
+
+  // Helper methods
+  private getBatchId(userId: string, priority: string): string {
+    const timeWindow = Math.floor(Date.now() / this.config.batchWindowMs)
+    return `${userId}-${priority}-${timeWindow}`
+  }
+
+  private isInQuietHours(date: Date, preferences: any): boolean {
+    const hour = date.getHours()
+    const quietStart = parseInt(preferences.quiet_hours_start?.split(':')[0] || '22')
+    const quietEnd = parseInt(preferences.quiet_hours_end?.split(':')[0] || '8')
+    
+    if (quietStart > quietEnd) {
+      return hour >= quietStart || hour < quietEnd
+    }
+    return hour >= quietStart && hour < quietEnd
+  }
+
+  private getNextActiveHour(preferences: any): Date {
+    const now = new Date()
+    const quietEnd = parseInt(preferences.quiet_hours_end?.split(':')[0] || '8')
+    const nextActive = new Date(now)
+    nextActive.setHours(quietEnd, 0, 0, 0)
+    
+    if (nextActive <= now) {
+      nextActive.setDate(nextActive.getDate() + 1)
+    }
+    
+    return nextActive
+  }
+
+  private isWeekend(date: Date): boolean {
+    const day = date.getDay()
+    return day === 0 || day === 6
+  }
+
+  private getNextWeekday(): Date {
+    const now = new Date()
+    const nextWeekday = new Date(now)
+    
+    while (this.isWeekend(nextWeekday)) {
+      nextWeekday.setDate(nextWeekday.getDate() + 1)
+    }
+    
+    nextWeekday.setHours(9, 0, 0, 0) // Start at 9 AM on weekday
+    return nextWeekday
+  }
+
+  private async getSystemLoadFactor(): Promise<number> {
+    // Simple load factor based on queue size
+    const queueSize = this.batchQueue.size
+    return Math.max(1, Math.min(3, 1 + queueSize / 50))
+  }
+
+  private async logBatchCompletion(
+    batch: NotificationBatch,
+    deliveryTime: number,
+    successCount: number
+  ): Promise<void> {
+    await supabase.from('notification_batch_logs').insert({
+      batch_id: batch.id,
+      notification_count: batch.notifications.length,
+      successful_deliveries: successCount,
+      delivery_time_ms: deliveryTime,
+      priority: batch.priority,
+      completed_at: new Date().toISOString()
+    })
+  }
+
+  private async scheduleRetry(batchId: string, error: Error): Promise<void> {
+    // Implement exponential backoff retry
+    const retryDelay = Math.min(300000, 5000 * Math.pow(2, 3)) // Max 5 minutes
+    
+    setTimeout(async () => {
+      const batch = this.batchQueue.get(batchId)
+      if (batch && batch.status === 'failed') {
+        batch.status = 'pending'
+        await this.processBatch(batchId)
+      }
+    }, retryDelay)
+  }
+
+  /**
+   * Start automatic batch processing
+   */
+  startBatchProcessor(): void {
+    setInterval(async () => {
+      const pendingBatches = Array.from(this.batchQueue.entries())
+        .filter(([_, batch]) => batch.status === 'pending' && batch.scheduledFor <= new Date())
+
+      for (const [batchId] of pendingBatches) {
+        await this.processBatch(batchId)
+      }
+    }, 5000) // Check every 5 seconds
+
+    // Run optimization every hour
+    setInterval(() => {
+      this.optimizeScheduling()
+    }, 60 * 60 * 1000)
   }
 }
 
-export const notificationPerformanceService = NotificationPerformanceService.getInstance();
+export const notificationPerformanceService = new NotificationPerformanceService()

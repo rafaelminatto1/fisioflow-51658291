@@ -1,306 +1,345 @@
-import { useState, useEffect, useCallback } from 'react'
-import { 
-  notificationAnalyticsService, 
-  NotificationPerformanceReport,
-  NotificationMetrics,
-  NotificationTrends,
-  UserEngagementMetrics
-} from '@/lib/services/NotificationAnalyticsService'
-import { NotificationAnalytics } from '@/types/notifications'
-import { toast } from 'sonner'
-import { logger } from '@/lib/errors/logger'
+import { useState, useEffect } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { supabase } from '@/integrations/supabase/client'
+import { notificationPerformanceService } from '@/lib/services/NotificationPerformanceService'
 
-export interface AnalyticsFilters {
-  startDate?: Date
-  endDate?: Date
-  userId?: string
-  notificationType?: string
+interface AnalyticsData {
+  deliveryRate: number
+  clickThroughRate: number
+  errorRate: number
+  averageDeliveryTime: number
+  totalNotifications: number
+  engagementTrends: Array<{
+    date: string
+    sent: number
+    delivered: number
+    clicked: number
+    errors: number
+  }>
+  typePerformance: Array<{
+    type: string
+    sent: number
+    delivered: number
+    clicked: number
+    deliveryRate: number
+    clickRate: number
+  }>
+  hourlyDistribution: Array<{
+    hour: number
+    count: number
+    deliveryRate: number
+  }>
 }
 
-export const useNotificationAnalytics = (initialFilters?: AnalyticsFilters) => {
-  const [analytics, setAnalytics] = useState<NotificationAnalytics[]>([])
-  const [performanceReport, setPerformanceReport] = useState<NotificationPerformanceReport | null>(null)
-  const [trends, setTrends] = useState<NotificationTrends[]>([])
-  const [userMetrics, setUserMetrics] = useState<{
-    topEngaged: UserEngagementMetrics[]
-    lowEngagement: UserEngagementMetrics[]
-  }>({ topEngaged: [], lowEngagement: [] })
-  
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [filters, setFilters] = useState<AnalyticsFilters>(initialFilters || {
-    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
-    endDate: new Date()
+interface OptimizationSuggestion {
+  type: 'timing' | 'content' | 'frequency' | 'targeting'
+  priority: 'low' | 'medium' | 'high'
+  title: string
+  description: string
+  expectedImprovement: string
+  actionRequired: string
+}
+
+export function useNotificationAnalytics(dateRange: { from: Date; to: Date }) {
+  const queryClient = useQueryClient()
+  const [optimizationSuggestions, setOptimizationSuggestions] = useState<OptimizationSuggestion[]>([])
+
+  // Fetch analytics data
+  const { data: analyticsData, isLoading, error } = useQuery({
+    queryKey: ['notification-analytics', dateRange.from.toISOString(), dateRange.to.toISOString()],
+    queryFn: async (): Promise<AnalyticsData> => {
+      // Get notification history for the date range
+      const { data: notifications, error: notificationsError } = await supabase
+        .from('notification_history')
+        .select('*')
+        .gte('sent_at', dateRange.from.toISOString())
+        .lte('sent_at', dateRange.to.toISOString())
+        .order('sent_at', { ascending: true })
+
+      if (notificationsError) throw notificationsError
+
+      // Get performance metrics for the same period
+      const { data: metrics, error: metricsError } = await supabase
+        .from('notification_performance_metrics')
+        .select('*')
+        .gte('recorded_at', dateRange.from.toISOString())
+        .lte('recorded_at', dateRange.to.toISOString())
+        .order('recorded_at', { ascending: true })
+
+      if (metricsError) throw metricsError
+
+      return processAnalyticsData(notifications || [], metrics || [])
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 30 * 1000 // 30 seconds
   })
 
-  /**
-   * Load basic analytics data
-   */
-  const loadAnalytics = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      
-      const data = await notificationAnalyticsService.getNotificationAnalytics(
-        filters.startDate,
-        filters.endDate,
-        filters.userId
-      )
-      
-      setAnalytics(data)
-      logger.info('Analytics data loaded', { 
-        recordCount: data.length,
-        filters 
-      }, 'useNotificationAnalytics')
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar analytics'
-      setError(errorMessage)
-      logger.error('Failed to load analytics', err, 'useNotificationAnalytics')
-      toast.error('Erro ao carregar dados de analytics')
-    } finally {
-      setLoading(false)
+  // Generate optimization suggestions
+  useEffect(() => {
+    if (analyticsData) {
+      generateOptimizationSuggestions(analyticsData)
     }
-  }, [filters])
+  }, [analyticsData])
 
-  /**
-   * Load comprehensive performance report
-   */
-  const loadPerformanceReport = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
+  const processAnalyticsData = (notifications: any[], metrics: any[]): AnalyticsData => {
+    const totalNotifications = notifications.length
+    const deliveredNotifications = notifications.filter(n => n.status === 'delivered').length
+    const clickedNotifications = notifications.filter(n => n.clicked_at).length
+    const errorNotifications = notifications.filter(n => n.status === 'failed').length
+
+    // Calculate overall rates
+    const deliveryRate = totalNotifications > 0 ? deliveredNotifications / totalNotifications : 0
+    const clickThroughRate = deliveredNotifications > 0 ? clickedNotifications / deliveredNotifications : 0
+    const errorRate = totalNotifications > 0 ? errorNotifications / totalNotifications : 0
+
+    // Calculate average delivery time from metrics
+    const averageDeliveryTime = metrics.length > 0 
+      ? metrics.reduce((sum, m) => sum + m.delivery_time_ms, 0) / metrics.length 
+      : 0
+
+    // Generate engagement trends (daily aggregation)
+    const engagementTrends = generateEngagementTrends(notifications)
+
+    // Generate type performance analysis
+    const typePerformance = generateTypePerformance(notifications)
+
+    // Generate hourly distribution
+    const hourlyDistribution = generateHourlyDistribution(notifications)
+
+    return {
+      deliveryRate,
+      clickThroughRate,
+      errorRate,
+      averageDeliveryTime,
+      totalNotifications,
+      engagementTrends,
+      typePerformance,
+      hourlyDistribution
+    }
+  }
+
+  const generateEngagementTrends = (notifications: any[]) => {
+    const dailyData = new Map<string, { sent: number; delivered: number; clicked: number; errors: number }>()
+
+    notifications.forEach(notification => {
+      const date = new Date(notification.sent_at).toISOString().split('T')[0]
       
-      const report = await notificationAnalyticsService.getPerformanceReport(
-        filters.startDate,
-        filters.endDate
-      )
+      if (!dailyData.has(date)) {
+        dailyData.set(date, { sent: 0, delivered: 0, clicked: 0, errors: 0 })
+      }
+
+      const dayData = dailyData.get(date)!
+      dayData.sent++
       
-      setPerformanceReport(report)
-      setTrends(report.trends)
-      setUserMetrics({
-        topEngaged: report.topEngagedUsers,
-        lowEngagement: report.lowEngagementUsers
+      if (notification.status === 'delivered') dayData.delivered++
+      if (notification.clicked_at) dayData.clicked++
+      if (notification.status === 'failed') dayData.errors++
+    })
+
+    return Array.from(dailyData.entries()).map(([date, data]) => ({
+      date,
+      ...data
+    }))
+  }
+
+  const generateTypePerformance = (notifications: any[]) => {
+    const typeData = new Map<string, { sent: number; delivered: number; clicked: number }>()
+
+    notifications.forEach(notification => {
+      const type = notification.type
+      
+      if (!typeData.has(type)) {
+        typeData.set(type, { sent: 0, delivered: 0, clicked: 0 })
+      }
+
+      const data = typeData.get(type)!
+      data.sent++
+      
+      if (notification.status === 'delivered') data.delivered++
+      if (notification.clicked_at) data.clicked++
+    })
+
+    return Array.from(typeData.entries()).map(([type, data]) => ({
+      type,
+      ...data,
+      deliveryRate: data.sent > 0 ? data.delivered / data.sent : 0,
+      clickRate: data.delivered > 0 ? data.clicked / data.delivered : 0
+    }))
+  }
+
+  const generateHourlyDistribution = (notifications: any[]) => {
+    const hourlyData = Array.from({ length: 24 }, (_, hour) => ({
+      hour,
+      count: 0,
+      delivered: 0
+    }))
+
+    notifications.forEach(notification => {
+      const hour = new Date(notification.sent_at).getHours()
+      hourlyData[hour].count++
+      
+      if (notification.status === 'delivered') {
+        hourlyData[hour].delivered++
+      }
+    })
+
+    return hourlyData.map(data => ({
+      hour: data.hour,
+      count: data.count,
+      deliveryRate: data.count > 0 ? data.delivered / data.count : 0
+    }))
+  }
+
+  const generateOptimizationSuggestions = (data: AnalyticsData) => {
+    const suggestions: OptimizationSuggestion[] = []
+
+    // Delivery rate optimization
+    if (data.deliveryRate < 0.8) {
+      suggestions.push({
+        type: 'timing',
+        priority: 'high',
+        title: 'Melhorar Taxa de Entrega',
+        description: `Taxa de entrega atual: ${(data.deliveryRate * 100).toFixed(1)}%. Considere ajustar horários de envio.`,
+        expectedImprovement: 'Aumento de 15-25% na taxa de entrega',
+        actionRequired: 'Analisar horários de maior engajamento e ajustar cronograma'
       })
-      
-      logger.info('Performance report loaded', { 
-        totalSent: report.overview.totalSent,
-        engagementRate: report.overview.engagementRate
-      }, 'useNotificationAnalytics')
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao carregar relatório'
-      setError(errorMessage)
-      logger.error('Failed to load performance report', err, 'useNotificationAnalytics')
-      toast.error('Erro ao carregar relatório de performance')
-    } finally {
-      setLoading(false)
     }
-  }, [filters])
 
-  /**
-   * Update filters and reload data
-   */
-  const updateFilters = useCallback((newFilters: Partial<AnalyticsFilters>) => {
-    setFilters(prev => ({ ...prev, ...newFilters }))
-  }, [])
-
-  /**
-   * Set date range filter
-   */
-  const setDateRange = useCallback((days: number) => {
-    const endDate = new Date()
-    const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
-    
-    updateFilters({ startDate, endDate })
-  }, [updateFilters])
-
-  /**
-   * Track notification interaction
-   */
-  const trackInteraction = useCallback(async (
-    notificationId: string,
-    action: 'delivered' | 'clicked' | 'dismissed',
-    metadata?: Record<string, any>
-  ) => {
-    try {
-      await notificationAnalyticsService.trackNotificationInteraction(
-        notificationId,
-        action,
-        metadata
-      )
-      
-      logger.info('Interaction tracked', { notificationId, action }, 'useNotificationAnalytics')
-      
-      // Optionally reload data to reflect changes
-      // loadAnalytics()
-    } catch (error) {
-      logger.error('Failed to track interaction', error, 'useNotificationAnalytics')
+    // Click-through rate optimization
+    if (data.clickThroughRate < 0.1) {
+      suggestions.push({
+        type: 'content',
+        priority: 'medium',
+        title: 'Otimizar Conteúdo das Notificações',
+        description: `Taxa de clique atual: ${(data.clickThroughRate * 100).toFixed(1)}%. O conteúdo pode ser mais atrativo.`,
+        expectedImprovement: 'Aumento de 20-40% na taxa de clique',
+        actionRequired: 'Revisar templates e adicionar call-to-actions mais claros'
+      })
     }
-  }, [])
 
-  /**
-   * Export analytics data
-   */
-  const exportData = useCallback(async (includeUserData: boolean = false) => {
-    try {
-      const csvData = await notificationAnalyticsService.exportAnalyticsToCSV(
-        filters.startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-        filters.endDate || new Date(),
-        includeUserData
-      )
-      
-      // Create and download file
-      const blob = new Blob([csvData], { type: 'text/csv' })
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `notification-analytics-${new Date().toISOString().split('T')[0]}.csv`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      window.URL.revokeObjectURL(url)
-      
-      toast.success('Dados exportados com sucesso!')
-      logger.info('Analytics data exported', { includeUserData }, 'useNotificationAnalytics')
-    } catch (error) {
-      logger.error('Failed to export data', error, 'useNotificationAnalytics')
-      toast.error('Erro ao exportar dados')
+    // Error rate optimization
+    if (data.errorRate > 0.05) {
+      suggestions.push({
+        type: 'targeting',
+        priority: 'high',
+        title: 'Reduzir Taxa de Erro',
+        description: `Taxa de erro atual: ${(data.errorRate * 100).toFixed(1)}%. Muitas notificações estão falhando.`,
+        expectedImprovement: 'Redução de 50-70% na taxa de erro',
+        actionRequired: 'Verificar subscriptions inválidas e implementar limpeza automática'
+      })
     }
-  }, [filters])
 
-  /**
-   * Get metrics summary
-   */
-  const getMetricsSummary = useCallback((): NotificationMetrics | null => {
-    if (!performanceReport) return null
-    return performanceReport.overview
-  }, [performanceReport])
+    // Timing optimization based on hourly distribution
+    const bestHours = data.hourlyDistribution
+      .filter(h => h.count > 0)
+      .sort((a, b) => b.deliveryRate - a.deliveryRate)
+      .slice(0, 3)
 
-  /**
-   * Get top performing notification types
-   */
-  const getTopPerformingTypes = useCallback((limit: number = 3) => {
-    if (!performanceReport) return []
-    
-    return Object.entries(performanceReport.byType)
-      .sort(([, a], [, b]) => b.engagementRate - a.engagementRate)
-      .slice(0, limit)
-      .map(([type, metrics]) => ({ type, metrics }))
-  }, [performanceReport])
+    if (bestHours.length > 0 && bestHours[0].deliveryRate > data.deliveryRate + 0.1) {
+      suggestions.push({
+        type: 'timing',
+        priority: 'medium',
+        title: 'Otimizar Horários de Envio',
+        description: `Melhores horários: ${bestHours.map(h => `${h.hour}h`).join(', ')} com ${(bestHours[0].deliveryRate * 100).toFixed(1)}% de entrega.`,
+        expectedImprovement: 'Aumento de 10-20% na taxa de entrega',
+        actionRequired: 'Concentrar envios nos horários de maior engajamento'
+      })
+    }
 
-  /**
-   * Get low performing notification types
-   */
-  const getLowPerformingTypes = useCallback((limit: number = 3) => {
-    if (!performanceReport) return []
-    
-    return Object.entries(performanceReport.byType)
-      .filter(([, metrics]) => metrics.totalSent > 10) // Only consider types with significant volume
-      .sort(([, a], [, b]) => a.engagementRate - b.engagementRate)
-      .slice(0, limit)
-      .map(([type, metrics]) => ({ type, metrics }))
-  }, [performanceReport])
+    // Frequency optimization based on type performance
+    const underperformingTypes = data.typePerformance
+      .filter(t => t.deliveryRate < data.deliveryRate - 0.1)
 
-  /**
-   * Calculate period comparison
-   */
-  const getPeriodComparison = useCallback(async () => {
-    if (!filters.startDate || !filters.endDate) return null
-    
-    try {
-      const currentPeriodDays = Math.ceil(
-        (filters.endDate.getTime() - filters.startDate.getTime()) / (24 * 60 * 60 * 1000)
-      )
-      
-      const previousStartDate = new Date(
-        filters.startDate.getTime() - currentPeriodDays * 24 * 60 * 60 * 1000
-      )
-      const previousEndDate = new Date(filters.startDate.getTime())
-      
-      const [currentData, previousData] = await Promise.all([
-        notificationAnalyticsService.getNotificationAnalytics(
-          filters.startDate,
-          filters.endDate,
-          filters.userId
-        ),
-        notificationAnalyticsService.getNotificationAnalytics(
-          previousStartDate,
-          previousEndDate,
-          filters.userId
-        )
-      ])
-      
-      const currentMetrics = currentData.reduce(
-        (acc, item) => ({
-          totalSent: acc.totalSent + item.totalSent,
-          totalClicked: acc.totalClicked + item.totalClicked,
-          totalDelivered: acc.totalDelivered + item.totalDelivered
-        }),
-        { totalSent: 0, totalClicked: 0, totalDelivered: 0 }
-      )
-      
-      const previousMetrics = previousData.reduce(
-        (acc, item) => ({
-          totalSent: acc.totalSent + item.totalSent,
-          totalClicked: acc.totalClicked + item.totalClicked,
-          totalDelivered: acc.totalDelivered + item.totalDelivered
-        }),
-        { totalSent: 0, totalClicked: 0, totalDelivered: 0 }
-      )
-      
-      const calculateChange = (current: number, previous: number) => {
-        if (previous === 0) return current > 0 ? 100 : 0
-        return ((current - previous) / previous) * 100
+    if (underperformingTypes.length > 0) {
+      suggestions.push({
+        type: 'frequency',
+        priority: 'low',
+        title: 'Ajustar Frequência por Tipo',
+        description: `Tipos com baixa performance: ${underperformingTypes.map(t => t.type).join(', ')}.`,
+        expectedImprovement: 'Melhoria de 5-15% na performance geral',
+        actionRequired: 'Reduzir frequência ou melhorar conteúdo dos tipos com baixa performance'
+      })
+    }
+
+    setOptimizationSuggestions(suggestions)
+  }
+
+  // Export analytics data
+  const exportAnalytics = useMutation({
+    mutationFn: async (format: 'csv' | 'json') => {
+      if (!analyticsData) throw new Error('No data to export')
+
+      const data = {
+        summary: {
+          deliveryRate: analyticsData.deliveryRate,
+          clickThroughRate: analyticsData.clickThroughRate,
+          errorRate: analyticsData.errorRate,
+          averageDeliveryTime: analyticsData.averageDeliveryTime,
+          totalNotifications: analyticsData.totalNotifications
+        },
+        trends: analyticsData.engagementTrends,
+        typePerformance: analyticsData.typePerformance,
+        hourlyDistribution: analyticsData.hourlyDistribution,
+        optimizationSuggestions
       }
-      
-      return {
-        sentChange: calculateChange(currentMetrics.totalSent, previousMetrics.totalSent),
-        deliveredChange: calculateChange(currentMetrics.totalDelivered, previousMetrics.totalDelivered),
-        clickedChange: calculateChange(currentMetrics.totalClicked, previousMetrics.totalClicked)
+
+      if (format === 'json') {
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `notification-analytics-${new Date().toISOString().split('T')[0]}.json`
+        a.click()
+        URL.revokeObjectURL(url)
+      } else {
+        // Generate CSV
+        const csvData = [
+          'Date,Sent,Delivered,Clicked,Errors,Delivery Rate,Click Rate',
+          ...analyticsData.engagementTrends.map(trend => 
+            `${trend.date},${trend.sent},${trend.delivered},${trend.clicked},${trend.errors},${(trend.delivered/trend.sent*100).toFixed(2)}%,${(trend.clicked/trend.delivered*100).toFixed(2)}%`
+          )
+        ].join('\n')
+
+        const blob = new Blob([csvData], { type: 'text/csv' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `notification-analytics-${new Date().toISOString().split('T')[0]}.csv`
+        a.click()
+        URL.revokeObjectURL(url)
       }
-    } catch (error) {
-      logger.error('Failed to calculate period comparison', error, 'useNotificationAnalytics')
-      return null
     }
-  }, [filters])
+  })
 
-  // Load data when filters change
-  useEffect(() => {
-    if (filters.startDate && filters.endDate) {
-      loadPerformanceReport()
+  // Apply optimization suggestion
+  const applyOptimization = useMutation({
+    mutationFn: async (suggestion: OptimizationSuggestion) => {
+      // This would implement the actual optimization logic
+      // For now, we'll just mark it as applied
+      console.log('Applying optimization:', suggestion)
+      
+      // Remove the suggestion from the list
+      setOptimizationSuggestions(prev => 
+        prev.filter(s => s.title !== suggestion.title)
+      )
     }
-  }, [filters, loadPerformanceReport])
+  })
 
-  // Load basic analytics separately if needed
-  useEffect(() => {
-    if (filters.startDate && filters.endDate) {
-      loadAnalytics()
-    }
-  }, [filters, loadAnalytics])
+  // Get real-time performance metrics
+  const { data: realtimeMetrics } = useQuery({
+    queryKey: ['realtime-performance'],
+    queryFn: () => notificationPerformanceService.getSystemHealth(),
+    refetchInterval: 10 * 1000, // 10 seconds
+    staleTime: 5 * 1000 // 5 seconds
+  })
 
   return {
-    // State
-    analytics,
-    performanceReport,
-    trends,
-    userMetrics,
-    loading,
+    analyticsData,
+    optimizationSuggestions,
+    realtimeMetrics,
+    isLoading,
     error,
-    filters,
-    
-    // Actions
-    loadAnalytics,
-    loadPerformanceReport,
-    updateFilters,
-    setDateRange,
-    trackInteraction,
-    exportData,
-    
-    // Computed values
-    getMetricsSummary,
-    getTopPerformingTypes,
-    getLowPerformingTypes,
-    getPeriodComparison
+    exportAnalytics,
+    applyOptimization
   }
 }
-
-export default useNotificationAnalytics
