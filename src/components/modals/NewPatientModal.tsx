@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { usePatients } from '@/hooks/usePatients';
+import { useCreatePatient } from '@/hooks/usePatients';
 
 interface NewPatientModalProps {
   trigger: ReactNode;
@@ -13,7 +13,7 @@ interface NewPatientModalProps {
 export const NewPatientModal = ({ trigger }: NewPatientModalProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { addPatient } = usePatients();
+  const createPatient = useCreatePatient();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -22,7 +22,7 @@ export const NewPatientModal = ({ trigger }: NewPatientModalProps) => {
     
     try {
       const formData = new FormData(e.currentTarget);
-      await addPatient({
+      await createPatient.mutateAsync({
         name: formData.get('name') as string,
         email: formData.get('email') as string,
         phone: formData.get('phone') as string,

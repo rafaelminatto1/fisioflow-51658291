@@ -1,4 +1,4 @@
-import { format, startOfWeek, endOfWeek, addDays, isSameDay, parseISO, isWithinInterval } from "date-fns";
+import { format, startOfWeek, endOfWeek, addDays, isSameDay, parseISO, isWithinInterval, addWeeks } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { Appointment, WeeklyCalendarData } from "@/types/agenda";
 
@@ -38,6 +38,9 @@ export const getWeekRange = (date: Date): { start: Date; end: Date } => {
   const end = getWeekEnd(date);
   return { start, end };
 };
+
+// Week navigation
+export { addWeeks };
 
 // Appointment utilities
 export const getAppointmentsForDay = (appointments: Appointment[], date: Date): Appointment[] => {

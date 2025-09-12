@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { usePatients } from '@/hooks/usePatients';
+import { usePatient } from '@/hooks/usePatients';
 import { User, Mail, Phone, MapPin, AlertTriangle, Calendar } from 'lucide-react';
 
 interface ViewPatientModalProps {
@@ -12,8 +12,7 @@ interface ViewPatientModalProps {
 }
 
 export const ViewPatientModal = ({ patientId, isOpen, onClose }: ViewPatientModalProps) => {
-  const { getPatient } = usePatients();
-  const patient = getPatient(patientId);
+  const { data: patient } = usePatient(patientId);
 
   if (!patient) return null;
 
