@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,6 +9,7 @@ import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { logger } from '@/lib/errors/logger';
+import { notificationManager } from '@/lib/services/NotificationManager';
 
 // Lazy load pages for better performance
 const Welcome = lazy(() => import("./pages/Welcome"));
@@ -67,8 +68,20 @@ const PageLoadingFallback = () => (
 );
 
 const App = () => {
-  React.useEffect(() => {
+  useEffect(() => {
     logger.info('Aplicação iniciada', { timestamp: new Date().toISOString() }, 'App');
+    
+    // Initialize notification system
+    const initNotifications = async () => {
+      try {
+        await notificationManager.initialize();
+        logger.info('Sistema de notificações inicializado', {}, 'App');
+      } catch (error) {
+        logger.error('Falha ao inicializar sistema de notificações', error, 'App');
+      }
+    };
+    
+    initNotifications();
   }, []);
 
   return (

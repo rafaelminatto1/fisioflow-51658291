@@ -1,5 +1,8 @@
 // Core data types for the FisioFlow application
 
+// Re-export agenda types
+export * from './agenda';
+
 export interface Patient {
   id: string;
   name: string;

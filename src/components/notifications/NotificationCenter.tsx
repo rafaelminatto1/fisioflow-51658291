@@ -10,64 +10,34 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Bell, Check, X, AlertCircle, Info, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Bell, Check, X, AlertCircle, Info, CheckCircle, AlertTriangle, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { notificationManager } from '@/lib/services/NotificationManager';
+import { NotificationHistory, NotificationType } from '@/types/notifications';
+import { useNavigate } from 'react-router-dom';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
-// Tipos de notificação
-type NotificationType = 'info' | 'success' | 'warning' | 'error';
+// Legacy notification type for backward compatibility
+type LegacyNotificationType = 'info' | 'success' | 'warning' | 'error';
 
-// Interface para notificação
-interface Notification {
-  id: string;
-  type: NotificationType;
-  title: string;
-  message: string;
-  timestamp: Date;
-  read: boolean;
-  actionUrl?: string;
-}
-
-// Mock data para demonstração
-const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    type: 'info',
-    title: 'Nova consulta agendada',
-    message: 'João Silva agendou uma consulta para amanhã às 14:00',
-    timestamp: new Date(Date.now() - 5 * 60 * 1000), // 5 minutos atrás
-    read: false,
-    actionUrl: '/schedule'
-  },
-  {
-    id: '2',
-    type: 'warning',
-    title: 'Exercício em atraso',
-    message: 'Maria Santos não realizou os exercícios de hoje',
-    timestamp: new Date(Date.now() - 30 * 60 * 1000), // 30 minutos atrás
-    read: false,
-    actionUrl: '/patients'
-  },
-  {
-    id: '3',
-    type: 'success',
-    title: 'Pagamento recebido',
-    message: 'Pagamento de R$ 150,00 foi confirmado',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 horas atrás
-    read: true,
-    actionUrl: '/financial'
-  },
-  {
-    id: '4',
-    type: 'error',
-    title: 'Falha na sincronização',
-    message: 'Erro ao sincronizar dados com o servidor',
-    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 horas atrás
-    read: false
+// Convert NotificationType to legacy type for icon display
+const getNotificationLegacyType = (type: NotificationType): LegacyNotificationType => {
+  switch (type) {
+    case NotificationType.EXERCISE_MILESTONE:
+    case NotificationType.PROGRESS_UPDATE:
+      return 'success';
+    case NotificationType.SYSTEM_ALERT:
+      return 'error';
+    case NotificationType.EXERCISE_REMINDER:
+      return 'warning';
+    default:
+      return 'info';
   }
-];
+};
 
 // Componente para ícone da notificação
-const NotificationIcon: React.FC<{ type: NotificationType }> = ({ type }) => {
+const NotificationIcon: React.FC<{ type: LegacyNotificationType }> = ({ type }) => {
   const iconClass = "w-4 h-4";
   
   switch (type) {
@@ -99,55 +69,117 @@ const formatRelativeTime = (date: Date): string => {
 
 // Componente principal
 export const NotificationCenter: React.FC = () => {
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+  const [notifications, setNotifications] = useState<NotificationHistory[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  // Contar notificações não lidas
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  // Marcar notificação como lida
-  const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === id 
-          ? { ...notification, read: true }
-          : notification
-      )
-    );
-  };
-
-  // Marcar todas como lidas
-  const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(notification => ({ ...notification, read: true }))
-    );
-  };
-
-  // Remover notificação
-  const removeNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  };
-
-  // Simular novas notificações (para demonstração)
+  // Initialize notification manager and load notifications
   useEffect(() => {
-    const interval = setInterval(() => {
-      // Adicionar uma nova notificação aleatoriamente (muito raramente)
-      if (Math.random() < 0.1) { // 10% de chance a cada 30 segundos
-        const newNotification: Notification = {
-          id: Date.now().toString(),
-          type: 'info',
-          title: 'Nova atividade',
-          message: 'Algo interessante aconteceu no sistema',
-          timestamp: new Date(),
-          read: false
-        };
-        
-        setNotifications(prev => [newNotification, ...prev.slice(0, 9)]); // Manter apenas 10 notificações
+    initializeNotifications();
+    loadNotifications();
+    
+    // Listen for service worker messages
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
+    }
+    
+    return () => {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
       }
-    }, 30000); // A cada 30 segundos
-
-    return () => clearInterval(interval);
+    };
   }, []);
+
+  const initializeNotifications = async () => {
+    try {
+      await notificationManager.initialize();
+    } catch (error) {
+      console.error('Failed to initialize notification manager:', error);
+    }
+  };
+
+  const loadNotifications = async () => {
+    try {
+      const history = await notificationManager.getNotificationHistory(10, 0);
+      setNotifications(history);
+    } catch (error) {
+      console.error('Failed to load notifications:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleServiceWorkerMessage = (event: MessageEvent) => {
+    if (event.data?.type === 'NOTIFICATION_CLICKED') {
+      // Handle notification click from service worker
+      const { url, data } = event.data;
+      if (data?.notificationId) {
+        notificationManager.markNotificationClicked(data.notificationId);
+      }
+      if (url) {
+        navigate(url);
+      }
+      // Reload notifications to update status
+      loadNotifications();
+    }
+  };
+
+  // Count unread notifications (sent or delivered status)
+  const unreadCount = notifications.filter(n => 
+    n.status === 'sent' || n.status === 'delivered'
+  ).length;
+
+  // Mark notification as clicked
+  const markAsClicked = async (id: string) => {
+    try {
+      await notificationManager.markNotificationClicked(id);
+      // Update local state
+      setNotifications(prev => 
+        prev.map(notification => 
+          notification.id === id 
+            ? { ...notification, status: 'clicked', clickedAt: new Date() }
+            : notification
+        )
+      );
+    } catch (error) {
+      console.error('Failed to mark notification as clicked:', error);
+    }
+  };
+
+  // Handle notification click
+  const handleNotificationClick = (notification: NotificationHistory) => {
+    markAsClicked(notification.id);
+    
+    // Navigate based on notification type
+    let targetUrl = '/';
+    switch (notification.type) {
+      case NotificationType.APPOINTMENT_REMINDER:
+      case NotificationType.APPOINTMENT_CHANGE:
+        targetUrl = '/schedule';
+        break;
+      case NotificationType.EXERCISE_REMINDER:
+      case NotificationType.EXERCISE_MILESTONE:
+        targetUrl = '/exercises';
+        break;
+      case NotificationType.PROGRESS_UPDATE:
+        targetUrl = '/patients';
+        break;
+      case NotificationType.THERAPIST_MESSAGE:
+        targetUrl = '/communications';
+        break;
+      case NotificationType.PAYMENT_REMINDER:
+        targetUrl = '/financial';
+        break;
+      default:
+        targetUrl = '/';
+    }
+    
+    navigate(targetUrl);
+    setIsOpen(false);
+  };
+
+
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -168,21 +200,27 @@ export const NotificationCenter: React.FC = () => {
       <DropdownMenuContent className="w-80" align="end" forceMount>
         <DropdownMenuLabel className="flex items-center justify-between">
           <span>Notificações</span>
-          {unreadCount > 0 && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={markAllAsRead}
-              className="h-auto p-1 text-xs"
-            >
-              Marcar todas como lidas
-            </Button>
-          )}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => {
+              navigate('/settings?tab=notifications');
+              setIsOpen(false);
+            }}
+            className="h-auto p-1 text-xs"
+          >
+            <Settings className="w-3 h-3 mr-1" />
+            Configurar
+          </Button>
         </DropdownMenuLabel>
         
         <DropdownMenuSeparator />
         
-        {notifications.length === 0 ? (
+        {loading ? (
+          <div className="p-4 text-center">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
+          </div>
+        ) : notifications.length === 0 ? (
           <div className="p-4 text-center text-muted-foreground">
             <Bell className="w-8 h-8 mx-auto mb-2 opacity-50" />
             <p className="text-sm">Nenhuma notificação</p>
@@ -194,50 +232,33 @@ export const NotificationCenter: React.FC = () => {
                 key={notification.id}
                 className={cn(
                   "flex flex-col items-start p-3 cursor-pointer",
-                  !notification.read && "bg-muted/50"
+                  (notification.status === 'sent' || notification.status === 'delivered') && "bg-muted/50"
                 )}
-                onClick={() => {
-                  markAsRead(notification.id);
-                  if (notification.actionUrl) {
-                    // Aqui você pode navegar para a URL da ação
-                    // navigate(notification.actionUrl);
-                  }
-                }}
+                onClick={() => handleNotificationClick(notification)}
               >
                 <div className="flex items-start justify-between w-full">
                   <div className="flex items-start gap-2 flex-1">
-                    <NotificationIcon type={notification.type} />
+                    <NotificationIcon type={getNotificationLegacyType(notification.type)} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <p className={cn(
                           "text-sm font-medium truncate",
-                          !notification.read && "font-semibold"
+                          (notification.status === 'sent' || notification.status === 'delivered') && "font-semibold"
                         )}>
                           {notification.title}
                         </p>
-                        {!notification.read && (
+                        {(notification.status === 'sent' || notification.status === 'delivered') && (
                           <div className="w-2 h-2 bg-primary rounded-full ml-2 flex-shrink-0" />
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                        {notification.message}
+                        {notification.body}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {formatRelativeTime(notification.timestamp)}
+                        {formatDistanceToNow(notification.sentAt, { addSuffix: true, locale: ptBR })}
                       </p>
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 ml-2 flex-shrink-0"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeNotification(notification.id);
-                    }}
-                  >
-                    <X className="w-3 h-3" />
-                  </Button>
                 </div>
               </DropdownMenuItem>
             ))}
@@ -247,8 +268,14 @@ export const NotificationCenter: React.FC = () => {
         {notifications.length > 0 && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-center justify-center">
-              <span className="text-sm text-muted-foreground">Ver todas as notificações</span>
+            <DropdownMenuItem 
+              className="text-center justify-center"
+              onClick={() => {
+                navigate('/settings?tab=notifications');
+                setIsOpen(false);
+              }}
+            >
+              <span className="text-sm text-muted-foreground">Ver histórico completo</span>
             </DropdownMenuItem>
           </>
         )}
