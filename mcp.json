@@ -2,11 +2,149 @@
   "mcpServers": {
     "shadcn": {
       "command": "npx",
-      "args": ["@jpisnice/shadcn-ui-mcp-server"],
+      "args": [
+        "@jpisnice/shadcn-ui-mcp-server"
+      ],
       "env": {
         "FRAMEWORK": "react",
         "GITHUB_API_KEY": "${GITHUB_API_KEY}"
-      }
+      },
+      "disabled": false,
+      "autoApprove": [
+        "get_components",
+        "add_component"
+      ]
+    },
+    "supabase": {
+      "command": "uvx",
+      "args": [
+        "supabase-mcp-server"
+      ],
+      "env": {
+        "SUPABASE_URL": "${VITE_SUPABASE_URL}",
+        "SUPABASE_ANON_KEY": "${VITE_SUPABASE_ANON_KEY}"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "list_tables",
+        "describe_table",
+        "query"
+      ]
+    },
+    "postgres": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-postgres"
+      ],
+      "env": {
+        "POSTGRES_CONNECTION_STRING": "${DATABASE_URL}"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "list_schemas",
+        "describe_table"
+      ]
+    },
+    "web-search": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-brave-search"
+      ],
+      "env": {
+        "BRAVE_API_KEY": "${BRAVE_API_KEY}"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "search"
+      ]
+    },
+    "github": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_API_KEY}"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "search_repositories",
+        "get_file_contents"
+      ]
+    },
+    "filesystem": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-filesystem",
+        "--allowed-dirs",
+        "src",
+        "public",
+        "supabase",
+        ".kiro"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "read_file",
+        "list_directory"
+      ]
+    },
+    "npm": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-npm"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "search_packages",
+        "get_package_info"
+      ]
+    },
+    "docker": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-docker"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "list_containers",
+        "get_container_info"
+      ]
+    },
+    "memory": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-memory"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "store_memory",
+        "search_memory"
+      ]
+    },
+    "time": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-time"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "get_current_time",
+        "format_time"
+      ]
+    },
+    "aws-docs": {
+      "command": "uvx",
+      "args": [
+        "awslabs.aws-documentation-mcp-server@latest"
+      ],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "search_docs",
+        "get_documentation"
+      ]
     }
   }
 }
