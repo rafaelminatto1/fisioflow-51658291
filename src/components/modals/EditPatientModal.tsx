@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { usePatients } from '@/hooks/usePatients';
+import { usePatient, useUpdatePatient } from '@/hooks/usePatients';
 
 interface EditPatientModalProps {
   patientId: string;
@@ -14,9 +14,9 @@ interface EditPatientModalProps {
 
 export const EditPatientModal = ({ patientId, isOpen, onClose }: EditPatientModalProps) => {
   const [loading, setLoading] = useState(false);
-  const { getPatient, updatePatient } = usePatients();
+  const { data: patient } = usePatient(patientId);
+  const updatePatient = useUpdatePatient();
   const { toast } = useToast();
-  const patient = getPatient(patientId);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -24,14 +24,17 @@ export const EditPatientModal = ({ patientId, isOpen, onClose }: EditPatientModa
     
     try {
       const formData = new FormData(e.currentTarget);
-      await updatePatient(patientId, {
-        name: formData.get('name') as string,
-        email: formData.get('email') as string,
-        phone: formData.get('phone') as string,
-        mainCondition: formData.get('mainCondition') as string,
-        address: formData.get('address') as string,
-        emergencyContact: formData.get('emergencyContact') as string,
-        medicalHistory: formData.get('medicalHistory') as string
+      await updatePatient.mutateAsync({
+        patientId,
+        updates: {
+          name: formData.get('name') as string,
+          email: formData.get('email') as string,
+          phone: formData.get('phone') as string,
+          mainCondition: formData.get('mainCondition') as string,
+          address: formData.get('address') as string,
+          emergencyContact: formData.get('emergencyContact') as string,
+          medicalHistory: formData.get('medicalHistory') as string
+        }
       });
       
       onClose();

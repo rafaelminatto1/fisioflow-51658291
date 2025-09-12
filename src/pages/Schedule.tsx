@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { AppointmentFilters } from '@/components/schedule/AppointmentFilters';
 import { ScheduleGrid } from '@/components/schedule/ScheduleGrid';
 import { AppointmentModal } from '@/components/schedule/AppointmentModal';
-import { useAppointments } from '@/hooks/useAppointments';
+import { useAppointmentsFiltered, useCreateAppointment, useUpdateAppointment } from '@/hooks/useAppointments';
 import { logger } from '@/lib/errors/logger';
 import { AlertTriangle, Calendar, Clock, Users, TrendingUp, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import type { Appointment, AppointmentFilters as FilterType } from '@/types/appointment';
@@ -33,7 +33,10 @@ const Schedule = () => {
     service: ''
   });
 
-  const { appointments, loading, error, initialLoad, createAppointment, updateAppointment } = useAppointments();
+  const { data: appointments = [], isLoading: loading, error } = useAppointmentsFiltered(filters);
+  const createAppointmentMutation = useCreateAppointment();
+  const updateAppointmentMutation = useUpdateAppointment();
+  const initialLoad = loading;
 
   useEffect(() => {
     logger.info('Página Schedule carregada', { 

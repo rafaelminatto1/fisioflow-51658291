@@ -15,7 +15,7 @@ import {
 import { NewPatientModal } from '@/components/modals/NewPatientModal';
 import { EditPatientModal } from '@/components/modals/EditPatientModal';
 import { ViewPatientModal } from '@/components/modals/ViewPatientModal';
-import { usePatients } from '@/hooks/usePatients';
+import { useActivePatients } from '@/hooks/usePatients';
 import { 
   Plus, 
   Search, 
@@ -36,7 +36,7 @@ const Patients = () => {
   const [conditionFilter, setConditionFilter] = useState<string>('all');
   const [editingPatient, setEditingPatient] = useState<string | null>(null);
   const [viewingPatient, setViewingPatient] = useState<string | null>(null);
-  const { patients, loading } = usePatients();
+  const { data: patients = [], isLoading: loading } = useActivePatients();
   const { toast } = useToast();
 
   // Get unique conditions and statuses for filters
