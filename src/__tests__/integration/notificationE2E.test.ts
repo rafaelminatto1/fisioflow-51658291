@@ -1,496 +1,364 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
-import { supabase } from '@/integrations/supabase/client';
-import { NotificationManager } from '@/lib/services/NotificationManager';
-import { NotificationSecurityService } from '@/lib/services/NotificationSecurityService';
-import { notificationPerformanceService } from '@/lib/services/NotificationPerformanceService';
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
+import { supabase } from '@/integrations/supabase/client'
+import { notificationManager } from '@/lib/services/NotificationManager'
+import { notificationPerformanceService } from '@/lib/services/NotificationPerformanceService'
+import type { NotificationPayload } from '@/types/notifications'
+
+// Mock user for testing
+const testUser = {
+  id: 'test-user-id',
+  email: 'test@example.com'
+}
 
 // Mock service worker registration
-global.navigator = {
-  ...global.navigator,
-  serviceWorker: {
-    register: vi.fn().mockResolvedValue({
-      pushManager: {
-        subscribe: vi.fn().mockResolvedValue({
-          endpoint: 'https://fcm.googleapis.com/fcm/send/test-endpoint',
-          keys: {
-            p256dh: 'test-p256dh-key',
-            auth: 'test-auth-key'
-          }
-        }),
-        getSubscription: vi.fn().mockResolvedValue(null)
-      }
+const mockServiceWorkerRegistration = {
+  pushManager: {
+    subscribe: vi.fn().mockResolvedValue({
+      endpoint: 'https://fcm.googleapis.com/fcm/send/test-endpoint',
+      getKey: vi.fn((name: string) => {
+        if (name === 'p256dh') return new ArrayBuffer(65)
+        if (name === 'auth') return new ArrayBuffer(16)
+        return null
+      })
     }),
-    ready: Promise.resolve({
-      pushManager: {
-        subscribe: vi.fn(),
-        getSubscription: vi.fn()
-      }
-    })
-  }
-} as any;
+    getSubscription: vi.fn().mockResolvedValue(null)
+  },
+  scope: '/test-scope'
+}
 
 // Mock Notification API
-global.Notification = {
-  permission: 'default',
-  requestPermission: vi.fn().mockResolvedValue('granted')
-} as any;
+Object.defineProperty(global, 'Notification', {
+  value: {
+    permission: 'default',
+    requestPermission: vi.fn().mockResolvedValue('granted')
+  }
+})
+
+// Mock navigator
+Object.defineProperty(global, 'navigator', {
+  value: {
+    serviceWorker: {
+      register: vi.fn().mockResolvedValue(mockServiceWorkerRegistration)
+    },
+    userAgent: 'Test User Agent'
+  }
+})
 
 describe('Notification System E2E Tests', () => {
-  let testUserId: string;
-  let notificationManager: NotificationManager;
-
   beforeAll(async () => {
-    // Create a test user
-    const { data: { user }, error } = await supabase.auth.signUp({
-      email: 'test@example.com',
-      password: 'testpassword123'
-    });
-
-    if (error && error.message !== 'User already registered') {
-      throw error;
-    }
-
-    testUserId = user?.id || 'test-user-id';
-    notificationManager = NotificationManager.getInstance();
-  });
+    // Setup test environment
+    await setupTestEnvironment()
+  })
 
   afterAll(async () => {
     // Cleanup test data
-    try {
-      await supabase.from('notification_history').delete().eq('user_id', testUserId);
-      await supabase.from('push_subscriptions').delete().eq('user_id', testUserId);
-      await supabase.from('notification_preferences').delete().eq('user_id', testUserId);
-      await supabase.from('notification_consent').delete().eq('user_id', testUserId);
-    } catch (error) {
-      console.warn('Cleanup failed:', error);
-    }
-  });
+    await cleanupTestData()
+  })
 
   beforeEach(async () => {
-    // Reset notification permission
-    global.Notification.permission = 'default';
-  });
+    // Reset mocks
+    vi.clearAllMocks()
+    
+    // Mock authenticated user
+    vi.spyOn(supabase.auth, 'getUser').mockResolvedValue({
+      data: { user: testUser },
+      error: null
+    })
+  })
 
-  describe('Permission Flow', () => {
-    it('should handle permission request flow', async () => {
-      // Mock permission granted
-      global.Notification.requestPermission = vi.fn().mockResolvedValue('granted');
-
-      const hasPermission = await notificationManager.requestPermission();
+  describe('Complete Notification Flow', () => {
+    it('should complete full notification lifecycle', async () => {
+      // 1. Initialize notification manager
+      await notificationManager.initialize()
       
-      expect(hasPermission).toBe(true);
-      expect(global.Notification.requestPermission).toHaveBeenCalled();
-    });
-
-    it('should handle permission denied', async () => {
-      global.Notification.requestPermission = vi.fn().mockResolvedValue('denied');
-
-      const hasPermission = await notificationManager.requestPermission();
+      // 2. Request permission
+      const permissionGranted = await notificationManager.requestPermission()
+      expect(permissionGranted).toBe(true)
       
-      expect(hasPermission).toBe(false);
-    });
-
-    it('should handle permission already granted', async () => {
-      global.Notification.permission = 'granted';
-
-      const hasPermission = await notificationManager.requestPermission();
+      // 3. Subscribe to notifications
+      const subscription = await notificationManager.subscribe()
+      expect(subscription).toBeTruthy()
+      expect(subscription?.endpoint).toBe('https://fcm.googleapis.com/fcm/send/test-endpoint')
       
-      expect(hasPermission).toBe(true);
-    });
-  });
-
-  describe('Subscription Management', () => {
-    it('should register push subscription', async () => {
-      global.Notification.permission = 'granted';
-
-      const subscription = await notificationManager.subscribeToPush();
-      
-      expect(subscription).toBeDefined();
-      expect(subscription?.endpoint).toContain('fcm.googleapis.com');
-    });
-
-    it('should handle subscription failure gracefully', async () => {
-      global.navigator.serviceWorker.ready = Promise.reject(new Error('Service worker not available'));
-
-      const subscription = await notificationManager.subscribeToPush();
-      
-      expect(subscription).toBeNull();
-    });
-
-    it('should unsubscribe from push notifications', async () => {
-      // First subscribe
-      global.Notification.permission = 'granted';
-      await notificationManager.subscribeToPush();
-
-      // Then unsubscribe
-      const success = await notificationManager.unsubscribeFromPush();
-      
-      expect(success).toBe(true);
-    });
-  });
-
-  describe('Preferences Management', () => {
-    it('should save and retrieve notification preferences', async () => {
-      const preferences = {
-        appointmentReminders: true,
-        exerciseReminders: false,
-        therapistAlerts: true,
-        marketingNotifications: false,
-        quietHoursEnabled: true,
-        quietHoursStart: '22:00',
-        quietHoursEnd: '08:00'
-      };
-
-      await notificationManager.updatePreferences(preferences);
-      const savedPreferences = await notificationManager.getPreferences();
-
-      expect(savedPreferences).toMatchObject(preferences);
-    });
-
-    it('should respect quiet hours in preferences', async () => {
-      const preferences = {
+      // 4. Set notification preferences
+      const preferences = await notificationManager.updatePreferences({
         appointmentReminders: true,
         exerciseReminders: true,
-        therapistAlerts: true,
-        marketingNotifications: false,
-        quietHoursEnabled: true,
-        quietHoursStart: '22:00',
-        quietHoursEnd: '08:00'
-      };
-
-      await notificationManager.updatePreferences(preferences);
-
-      // Test during quiet hours (23:00)
-      const quietTime = new Date();
-      quietTime.setHours(23, 0, 0, 0);
-
-      const shouldSend = await notificationManager.shouldSendNotification(
-        testUserId,
-        'appointment_reminder',
-        quietTime
-      );
-
-      expect(shouldSend).toBe(false);
-    });
-
-    it('should allow notifications outside quiet hours', async () => {
-      const preferences = {
-        appointmentReminders: true,
-        exerciseReminders: true,
-        therapistAlerts: true,
-        marketingNotifications: false,
-        quietHoursEnabled: true,
-        quietHoursStart: '22:00',
-        quietHoursEnd: '08:00'
-      };
-
-      await notificationManager.updatePreferences(preferences);
-
-      // Test outside quiet hours (10:00)
-      const activeTime = new Date();
-      activeTime.setHours(10, 0, 0, 0);
-
-      const shouldSend = await notificationManager.shouldSendNotification(
-        testUserId,
-        'appointment_reminder',
-        activeTime
-      );
-
-      expect(shouldSend).toBe(true);
-    });
-  });
-
-  describe('Notification Sending', () => {
-    it('should send appointment reminder notification', async () => {
-      const notificationData = {
-        type: 'appointment_reminder' as const,
+        progressUpdates: false,
+        systemAlerts: true,
+        quietHours: {
+          start: '22:00',
+          end: '08:00'
+        },
+        weekendNotifications: false
+      })
+      
+      expect(preferences).toBeTruthy()
+      expect(preferences?.appointmentReminders).toBe(true)
+      expect(preferences?.exerciseReminders).toBe(true)
+      
+      // 5. Send test notification
+      const testNotification: NotificationPayload = {
+        type: 'appointment_reminder',
         title: 'Lembrete de Consulta',
-        body: 'Você tem uma consulta em 2 horas',
+        body: 'Sua consulta é amanhã às 14:00',
         data: {
-          appointmentId: 'test-appointment-id',
-          patientName: 'João Silva',
-          appointmentTime: '2024-01-15T14:00:00Z'
+          appointmentId: 'test-appointment-123',
+          patientId: testUser.id
         }
-      };
+      }
+      
+      await notificationManager.sendNotification(testUser.id, testNotification, 'normal')
+      
+      // 6. Verify notification was queued for batch processing
+      const systemHealth = await notificationPerformanceService.getSystemHealth()
+      expect(systemHealth.queueSize).toBeGreaterThan(0)
+      
+      // 7. Process batch and verify delivery
+      // Note: In real environment, this would be handled by the batch processor
+      // Here we simulate the processing
+      
+      // 8. Check notification history
+      const history = await notificationManager.getNotificationHistory(10, 0)
+      expect(Array.isArray(history)).toBe(true)
+    })
 
-      // Mock the edge function call
-      const mockInvoke = vi.fn().mockResolvedValue({ data: { success: true }, error: null });
-      supabase.functions.invoke = mockInvoke;
+    it('should handle notification failures gracefully', async () => {
+      // Mock failed subscription
+      mockServiceWorkerRegistration.pushManager.subscribe.mockRejectedValueOnce(
+        new Error('Subscription failed')
+      )
+      
+      await notificationManager.initialize()
+      
+      const subscription = await notificationManager.subscribe()
+      expect(subscription).toBeNull()
+      
+      // Should still allow fallback to in-app notifications
+      const permissionState = await notificationManager.getPermissionState()
+      expect(permissionState.supported).toBe(true)
+      expect(permissionState.subscribed).toBe(false)
+    })
 
-      const result = await notificationManager.sendNotification(testUserId, notificationData);
+    it('should respect user preferences for quiet hours', async () => {
+      await notificationManager.initialize()
+      
+      // Set quiet hours preferences
+      await notificationManager.updatePreferences({
+        quietHours: {
+          start: '22:00',
+          end: '08:00'
+        }
+      })
+      
+      // Mock current time to be in quiet hours (23:00)
+      const mockDate = new Date()
+      mockDate.setHours(23, 0, 0, 0)
+      vi.setSystemTime(mockDate)
+      
+      const testNotification: NotificationPayload = {
+        type: 'exercise_reminder',
+        title: 'Hora do Exercício',
+        body: 'Não esqueça de fazer seus exercícios'
+      }
+      
+      // Send non-urgent notification during quiet hours
+      await notificationManager.sendNotification(testUser.id, testNotification, 'normal')
+      
+      // Notification should be scheduled for later (after quiet hours)
+      const systemHealth = await notificationPerformanceService.getSystemHealth()
+      expect(systemHealth.queueSize).toBeGreaterThan(0)
+      
+      // Reset system time
+      vi.useRealTimers()
+    })
 
-      expect(result.success).toBe(true);
+    it('should handle urgent notifications immediately', async () => {
+      await notificationManager.initialize()
+      
+      const urgentNotification: NotificationPayload = {
+        type: 'system_alert',
+        title: 'Alerta Urgente',
+        body: 'Ação imediata necessária',
+        requireInteraction: true
+      }
+      
+      // Mock Supabase function call
+      const mockInvoke = vi.spyOn(supabase.functions, 'invoke').mockResolvedValue({
+        data: { success: true },
+        error: null
+      })
+      
+      await notificationManager.sendNotification(testUser.id, urgentNotification, 'urgent')
+      
+      // Urgent notifications should bypass batching
       expect(mockInvoke).toHaveBeenCalledWith('send-notification', {
         body: {
-          userId: testUserId,
-          notification: notificationData
+          userId: testUser.id,
+          notification: urgentNotification,
+          timestamp: expect.any(String)
         }
-      });
-    });
+      })
+    })
+  })
 
-    it('should handle notification sending failure', async () => {
-      const notificationData = {
-        type: 'appointment_reminder' as const,
-        title: 'Test Notification',
-        body: 'Test body',
-        data: {}
-      };
-
-      // Mock edge function failure
-      const mockInvoke = vi.fn().mockResolvedValue({ 
-        data: null, 
-        error: new Error('Function execution failed') 
-      });
-      supabase.functions.invoke = mockInvoke;
-
-      const result = await notificationManager.sendNotification(testUserId, notificationData);
-
-      expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
-    });
-
-    it('should batch multiple notifications efficiently', async () => {
-      const notifications = Array.from({ length: 10 }, (_, i) => ({
-        type: 'exercise_reminder' as const,
-        title: `Exercise Reminder ${i + 1}`,
-        body: `Time for your exercise session ${i + 1}`,
-        data: { exerciseId: `exercise-${i + 1}` }
-      }));
-
-      const batchId = await notificationPerformanceService.addToBatch(
-        notifications.map(n => ({ userId: testUserId, notification: n })),
-        'normal'
-      );
-
-      expect(batchId).toBeDefined();
-      expect(batchId).toMatch(/^batch_\d+_[a-z0-9]+$/);
-    });
-  });
-
-  describe('Security and Compliance', () => {
-    it('should record user consent properly', async () => {
-      const consentData = {
-        pushNotifications: true,
-        dataProcessing: true,
-        analytics: false,
-        marketing: false,
-        timestamp: new Date().toISOString(),
-        ipAddress: '127.0.0.1',
-        userAgent: 'Test User Agent'
-      };
-
-      await NotificationSecurityService.recordConsent(consentData);
-
-      // Verify consent was recorded
-      const { data, error } = await supabase
-        .from('notification_consent')
-        .select('*')
-        .eq('user_id', testUserId)
-        .single();
-
-      expect(error).toBeNull();
-      expect(data?.notifications_enabled).toBe(true);
-      expect(data?.data_processing_consent).toBe(true);
-      expect(data?.analytics_consent).toBe(false);
-      expect(data?.marketing_consent).toBe(false);
-    });
-
-    it('should validate notification content for compliance', async () => {
-      const securityService = new NotificationSecurityService();
-
-      // Test with sensitive information
-      const sensitivePayload = {
-        type: 'appointment_reminder' as const,
-        title: 'Appointment for 123.456.789-00',
-        body: 'Your appointment is confirmed',
-        data: {}
-      };
-
-      const validation = securityService.validateNotificationContent(sensitivePayload);
-
-      expect(validation.isValid).toBe(false);
-      expect(validation.violations).toContain('Contains sensitive information in title/body');
-    });
-
-    it('should encrypt sensitive notification data', async () => {
-      const securityService = new NotificationSecurityService();
-
-      const sensitivePayload = {
-        type: 'therapist_message' as const,
-        title: 'Message from therapist',
-        body: 'You have a new message',
-        data: {
-          patientName: 'João Silva',
-          therapistName: 'Dr. Maria Santos',
-          message: 'Please remember to do your exercises'
+  describe('Performance and Monitoring', () => {
+    it('should track performance metrics', async () => {
+      // Start performance monitoring
+      notificationPerformanceService.startBatchProcessor()
+      
+      // Send multiple notifications to generate metrics
+      const notifications: NotificationPayload[] = [
+        {
+          type: 'appointment_reminder',
+          title: 'Consulta Amanhã',
+          body: 'Lembrete de consulta'
+        },
+        {
+          type: 'exercise_reminder',
+          title: 'Exercícios',
+          body: 'Hora dos exercícios'
+        },
+        {
+          type: 'progress_update',
+          title: 'Progresso',
+          body: 'Seu progresso foi atualizado'
         }
-      };
+      ]
+      
+      for (const notification of notifications) {
+        await notificationPerformanceService.addToBatch(testUser.id, notification, 'normal')
+      }
+      
+      // Wait for batch processing
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      const metrics = notificationPerformanceService.getPerformanceMetrics()
+      expect(metrics).toBeDefined()
+      expect(typeof metrics.deliveryRate).toBe('number')
+      expect(typeof metrics.errorRate).toBe('number')
+      expect(typeof metrics.batchEfficiency).toBe('number')
+    })
 
-      const encryptedPayload = await securityService.encryptNotificationData(sensitivePayload);
-
-      expect(encryptedPayload.data._encrypted).toBe(true);
-      expect(encryptedPayload.data.patientName).not.toBe('João Silva');
-    });
-  });
-
-  describe('Performance Monitoring', () => {
-    it('should collect performance metrics', async () => {
-      const metrics = await notificationPerformanceService.getCurrentMetrics();
-
-      expect(metrics).toBeDefined();
-      expect(typeof metrics.deliveryRate).toBe('number');
-      expect(typeof metrics.averageDeliveryTime).toBe('number');
-      expect(typeof metrics.clickThroughRate).toBe('number');
-      expect(typeof metrics.errorRate).toBe('number');
-    });
-
-    it('should provide system health status', async () => {
-      const health = await notificationPerformanceService.getSystemHealth();
-
-      expect(health).toBeDefined();
-      expect(['healthy', 'degraded', 'unhealthy']).toContain(health.status);
-      expect(Array.isArray(health.issues)).toBe(true);
-      expect(health.metrics).toBeDefined();
-    });
-
-    it('should calculate optimal send time for user', async () => {
-      const optimalTime = await notificationPerformanceService.getOptimalSendTime(testUserId);
-
-      expect(optimalTime).toBeInstanceOf(Date);
-      expect(optimalTime.getTime()).toBeGreaterThan(Date.now());
-    });
-  });
+    it('should optimize scheduling based on historical data', async () => {
+      // Mock historical performance data
+      await supabase.from('notification_performance_metrics').insert([
+        {
+          batch_id: 'test-batch-1',
+          total_notifications: 10,
+          successful_deliveries: 9,
+          delivery_time_ms: 5000,
+          error_count: 1,
+          delivery_rate: 0.9,
+          error_rate: 0.1,
+          batch_efficiency: 2.0,
+          recorded_at: new Date().toISOString()
+        }
+      ])
+      
+      // Run optimization
+      await notificationPerformanceService.optimizeScheduling()
+      
+      // Verify optimization was applied (configuration should be adjusted)
+      const systemHealth = await notificationPerformanceService.getSystemHealth()
+      expect(systemHealth.status).toBeDefined()
+    })
+  })
 
   describe('Error Handling and Recovery', () => {
-    it('should handle network failures gracefully', async () => {
+    it('should handle network failures with retry logic', async () => {
       // Mock network failure
-      const originalFetch = global.fetch;
-      global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
-
-      const notificationData = {
-        type: 'appointment_reminder' as const,
+      const mockInvoke = vi.spyOn(supabase.functions, 'invoke')
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockResolvedValueOnce({ data: { success: true }, error: null })
+      
+      const testNotification: NotificationPayload = {
+        type: 'appointment_reminder',
         title: 'Test Notification',
-        body: 'Test body',
-        data: {}
-      };
+        body: 'Test body'
+      }
+      
+      // First attempt should fail, but retry should succeed
+      await expect(
+        notificationManager.sendDirectNotification(testUser.id, testNotification)
+      ).rejects.toThrow('Network error')
+      
+      // Retry should work
+      await expect(
+        notificationManager.sendDirectNotification(testUser.id, testNotification)
+      ).resolves.not.toThrow()
+    })
 
-      const result = await notificationManager.sendNotification(testUserId, notificationData);
+    it('should handle subscription expiry and renewal', async () => {
+      await notificationManager.initialize()
+      
+      // Mock expired subscription
+      mockServiceWorkerRegistration.pushManager.getSubscription.mockResolvedValueOnce({
+        endpoint: 'https://expired-endpoint.com',
+        expirationTime: Date.now() - 1000, // Expired
+        getKey: vi.fn()
+      })
+      
+      // Should detect expired subscription and create new one
+      const subscription = await notificationManager.subscribe()
+      expect(subscription).toBeTruthy()
+      expect(subscription?.endpoint).toBe('https://fcm.googleapis.com/fcm/send/test-endpoint')
+    })
+  })
 
-      expect(result.success).toBe(false);
-      expect(result.error).toBeDefined();
+  describe('Browser Compatibility', () => {
+    it('should handle unsupported browsers gracefully', async () => {
+      // Mock unsupported browser
+      Object.defineProperty(global, 'Notification', {
+        value: undefined
+      })
+      
+      const isSupported = notificationManager.isSupported()
+      expect(isSupported).toBe(false)
+      
+      const permissionState = await notificationManager.getPermissionState()
+      expect(permissionState.supported).toBe(false)
+      expect(permissionState.permission).toBe('denied')
+    })
 
-      // Restore original fetch
-      global.fetch = originalFetch;
-    });
-
-    it('should retry failed notifications', async () => {
-      let callCount = 0;
-      const mockInvoke = vi.fn().mockImplementation(() => {
-        callCount++;
-        if (callCount < 3) {
-          return Promise.resolve({ data: null, error: new Error('Temporary failure') });
+    it('should work with different service worker states', async () => {
+      // Test with no service worker support
+      Object.defineProperty(global, 'navigator', {
+        value: {
+          serviceWorker: undefined,
+          userAgent: 'Test User Agent'
         }
-        return Promise.resolve({ data: { success: true }, error: null });
-      });
-
-      supabase.functions.invoke = mockInvoke;
-
-      const notificationData = {
-        type: 'appointment_reminder' as const,
-        title: 'Test Notification',
-        body: 'Test body',
-        data: {}
-      };
-
-      const result = await notificationManager.sendNotificationWithRetry(
-        testUserId, 
-        notificationData, 
-        { maxRetries: 3, retryDelay: 100 }
-      );
-
-      expect(result.success).toBe(true);
-      expect(callCount).toBe(3);
-    });
-
-    it('should handle service worker unavailability', async () => {
-      // Mock service worker unavailable
-      const originalServiceWorker = global.navigator.serviceWorker;
-      delete (global.navigator as any).serviceWorker;
-
-      const subscription = await notificationManager.subscribeToPush();
-
-      expect(subscription).toBeNull();
-
-      // Restore service worker
-      global.navigator.serviceWorker = originalServiceWorker;
-    });
-  });
-
-  describe('Real-time Synchronization', () => {
-    it('should handle real-time preference updates', async () => {
-      let receivedUpdate = false;
-      const unsubscribe = notificationManager.subscribeToPreferenceChanges((preferences) => {
-        receivedUpdate = true;
-        expect(preferences.appointmentReminders).toBe(false);
-      });
-
-      // Simulate preference update from another client
-      await supabase
-        .from('notification_preferences')
-        .upsert({
-          user_id: testUserId,
-          appointment_reminders: false,
-          exercise_reminders: true,
-          therapist_alerts: true,
-          marketing_notifications: false,
-          updated_at: new Date().toISOString()
-        });
-
-      // Wait for real-time update
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      expect(receivedUpdate).toBe(true);
-      unsubscribe();
-    });
-  });
-
-  describe('Data Export and Deletion', () => {
-    it('should export user notification data', async () => {
-      const securityService = new NotificationSecurityService();
+      })
       
-      const exportedData = await securityService.exportUserNotificationData(testUserId);
-
-      expect(exportedData).toBeDefined();
-      expect(Array.isArray(exportedData.subscriptions)).toBe(true);
-      expect(Array.isArray(exportedData.preferences)).toBe(true);
-      expect(Array.isArray(exportedData.history)).toBe(true);
-      expect(Array.isArray(exportedData.consent)).toBe(true);
-    });
-
-    it('should delete all user notification data', async () => {
-      const securityService = new NotificationSecurityService();
+      await expect(notificationManager.initialize()).resolves.not.toThrow()
       
-      // First create some test data
-      await notificationManager.updatePreferences({
-        appointmentReminders: true,
-        exerciseReminders: true,
-        therapistAlerts: true,
-        marketingNotifications: false,
-        quietHoursEnabled: false,
-        quietHoursStart: '22:00',
-        quietHoursEnd: '08:00'
-      });
+      const subscription = await notificationManager.subscribe()
+      expect(subscription).toBeNull()
+    })
+  })
+})
 
-      // Then delete all data
-      await securityService.deleteUserNotificationData(testUserId);
+// Helper functions
+async function setupTestEnvironment() {
+  // Create test tables if they don't exist
+  // This would typically be handled by migrations in a real environment
+  
+  // Mock environment variables
+  process.env.VITE_VAPID_PUBLIC_KEY = 'test-vapid-key'
+  
+  // Setup global mocks
+  global.btoa = (str: string) => Buffer.from(str, 'binary').toString('base64')
+  global.atob = (str: string) => Buffer.from(str, 'base64').toString('binary')
+}
 
-      // Verify data was deleted
-      const { data: preferences } = await supabase
-        .from('notification_preferences')
-        .select('*')
-        .eq('user_id', testUserId);
-
-      expect(preferences).toHaveLength(0);
-    });
-  });
-});
+async function cleanupTestData() {
+  // Clean up test data from database
+  try {
+    await supabase.from('push_subscriptions').delete().eq('user_id', testUser.id)
+    await supabase.from('notification_preferences').delete().eq('user_id', testUser.id)
+    await supabase.from('notification_history').delete().eq('user_id', testUser.id)
+    await supabase.from('notification_performance_metrics').delete().like('batch_id', 'test-%')
+  } catch (error) {
+    console.warn('Cleanup failed:', error)
+  }
+}

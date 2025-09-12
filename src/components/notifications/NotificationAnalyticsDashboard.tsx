@@ -1,479 +1,481 @@
-import React, { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell
-} from 'recharts'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Calendar } from '@/components/ui/calendar'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { 
   TrendingUp, 
   TrendingDown, 
-  Users, 
-  Bell, 
-  MousePointer, 
+  Download, 
+  Calendar as CalendarIcon,
+  Lightbulb,
+  CheckCircle,
   AlertTriangle,
-  Download,
-  Calendar,
-  Target,
-  Activity
+  BarChart3,
+  PieChart,
+  Clock
 } from 'lucide-react'
-import { 
-  notificationAnalyticsService, 
-  NotificationPerformanceReport,
-  NotificationMetrics 
-} from '@/lib/services/NotificationAnalyticsService'
-import { NotificationType } from '@/types/notifications'
-import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
+import { useNotificationAnalytics } from '@/hooks/useNotificationAnalytics'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPieChart, Cell } from 'recharts'
+import { format, subDays } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658', '#FF7C7C']
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D']
 
-interface MetricCardProps {
-  title: string
-  value: string | number
-  change?: number
-  icon: React.ReactNode
-  description?: string
-}
+export function NotificationAnalyticsDashboard() {
+  const [dateRange, setDateRange] = useState({
+    from: subDays(new Date(), 30),
+    to: new Date()
+  })
 
-const MetricCard: React.FC<MetricCardProps> = ({ title, value, change, icon, description }) => (
-  <Card>
-    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-      <CardTitle className="text-sm font-medium">{title}</CardTitle>
-      {icon}
-    </CardHeader>
-    <CardContent>
-      <div className="text-2xl font-bold">{value}</div>
-      {change !== undefined && (
-        <div className={cn(
-          "flex items-center text-xs",
-          change >= 0 ? "text-green-600" : "text-red-600"
-        )}>
-          {change >= 0 ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
-          {Math.abs(change).toFixed(1)}% vs período anterior
-        </div>
-      )}
-      {description && (
-        <p className="text-xs text-muted-foreground mt-1">{description}</p>
-      )}
-    </CardContent>
-  </Card>
-)
+  const { 
+    analyticsData, 
+    optimizationSuggestions, 
+    realtimeMetrics,
+    isLoading, 
+    exportAnalytics, 
+    applyOptimization 
+  } = useNotificationAnalytics(dateRange)
 
-export const NotificationAnalyticsDashboard: React.FC = () => {
-  const [report, setReport] = useState<NotificationPerformanceReport | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [dateRange, setDateRange] = useState<'7d' | '30d' | '90d'>('30d')
-  const [exporting, setExporting] = useState(false)
-
-  useEffect(() => {
-    loadAnalytics()
-  }, [dateRange])
-
-  const loadAnalytics = async () => {
-    try {
-      setLoading(true)
-      
-      const days = dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : 90
-      const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
-      const endDate = new Date()
-      
-      const performanceReport = await notificationAnalyticsService.getPerformanceReport(startDate, endDate)
-      setReport(performanceReport)
-    } catch (error) {
-      console.error('Failed to load analytics:', error)
-      toast.error('Erro ao carregar analytics')
-    } finally {
-      setLoading(false)
-    }
+  const handleDateRangeChange = (range: { from: Date; to: Date }) => {
+    setDateRange(range)
   }
 
-  const exportData = async () => {
-    try {
-      setExporting(true)
-      
-      const days = dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : 90
-      const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
-      const endDate = new Date()
-      
-      const csvData = await notificationAnalyticsService.exportAnalyticsToCSV(startDate, endDate, true)
-      
-      // Create and download file
-      const blob = new Blob([csvData], { type: 'text/csv' })
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `notification-analytics-${dateRange}.csv`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      window.URL.revokeObjectURL(url)
-      
-      toast.success('Dados exportados com sucesso!')
-    } catch (error) {
-      console.error('Failed to export data:', error)
-      toast.error('Erro ao exportar dados')
-    } finally {
-      setExporting(false)
-    }
-  }
+  const formatPercentage = (value: number) => `${(value * 100).toFixed(1)}%`
+  const formatTime = (ms: number) => `${(ms / 1000).toFixed(1)}s`
 
-  const formatPercentage = (value: number) => `${value.toFixed(1)}%`
-  const formatNumber = (value: number) => value.toLocaleString('pt-BR')
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
     )
   }
-
-  if (!report) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <p className="text-center text-muted-foreground">Nenhum dado disponível</p>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  // Prepare chart data
-  const typeChartData = Object.entries(report.byType).map(([type, metrics]) => ({
-    type: type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
-    sent: metrics.totalSent,
-    delivered: metrics.totalDelivered,
-    clicked: metrics.totalClicked,
-    engagementRate: metrics.engagementRate
-  }))
-
-  const trendsChartData = report.trends.map(trend => ({
-    date: new Date(trend.date).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' }),
-    sent: trend.sent,
-    delivered: trend.delivered,
-    clicked: trend.clicked
-  }))
-
-  const engagementPieData = Object.entries(report.byType).map(([type, metrics], index) => ({
-    name: type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
-    value: metrics.totalClicked,
-    color: COLORS[index % COLORS.length]
-  }))
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Analytics de Notificações</h2>
+          <h1 className="text-3xl font-bold">Analytics de Notificações</h1>
           <p className="text-muted-foreground">
-            Acompanhe o desempenho e engajamento das notificações
+            Análise detalhada de performance e engajamento
           </p>
         </div>
         
         <div className="flex items-center gap-2">
-          <Tabs value={dateRange} onValueChange={(value) => setDateRange(value as any)}>
-            <TabsList>
-              <TabsTrigger value="7d">7 dias</TabsTrigger>
-              <TabsTrigger value="30d">30 dias</TabsTrigger>
-              <TabsTrigger value="90d">90 dias</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm">
+                <CalendarIcon className="h-4 w-4 mr-2" />
+                {format(dateRange.from, 'dd/MM', { locale: ptBR })} - {format(dateRange.to, 'dd/MM', { locale: ptBR })}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <div className="p-4 space-y-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleDateRangeChange({
+                      from: subDays(new Date(), 7),
+                      to: new Date()
+                    })}
+                  >
+                    Últimos 7 dias
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleDateRangeChange({
+                      from: subDays(new Date(), 30),
+                      to: new Date()
+                    })}
+                  >
+                    Últimos 30 dias
+                  </Button>
+                </div>
+                <Calendar
+                  mode="range"
+                  selected={{ from: dateRange.from, to: dateRange.to }}
+                  onSelect={(range) => {
+                    if (range?.from && range?.to) {
+                      handleDateRangeChange({ from: range.from, to: range.to })
+                    }
+                  }}
+                />
+              </div>
+            </PopoverContent>
+          </Popover>
           
           <Button 
             variant="outline" 
-            onClick={exportData}
-            disabled={exporting}
+            size="sm" 
+            onClick={() => exportAnalytics.mutate('csv')}
+            disabled={exportAnalytics.isPending}
           >
-            <Download className="w-4 h-4 mr-2" />
-            {exporting ? 'Exportando...' : 'Exportar'}
+            <Download className="h-4 w-4 mr-2" />
+            Exportar CSV
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => exportAnalytics.mutate('json')}
+            disabled={exportAnalytics.isPending}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Exportar JSON
           </Button>
         </div>
       </div>
 
-      {/* Overview Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
-          title="Total Enviadas"
-          value={formatNumber(report.overview.totalSent)}
-          icon={<Bell className="w-4 h-4 text-blue-500" />}
-          description="Notificações enviadas no período"
-        />
-        
-        <MetricCard
-          title="Taxa de Entrega"
-          value={formatPercentage(report.overview.deliveryRate)}
-          icon={<Target className="w-4 h-4 text-green-500" />}
-          description="Notificações entregues com sucesso"
-        />
-        
-        <MetricCard
-          title="Taxa de Cliques"
-          value={formatPercentage(report.overview.clickRate)}
-          icon={<MousePointer className="w-4 h-4 text-purple-500" />}
-          description="Usuários que clicaram nas notificações"
-        />
-        
-        <MetricCard
-          title="Engajamento Geral"
-          value={formatPercentage(report.overview.engagementRate)}
-          icon={<Activity className="w-4 h-4 text-orange-500" />}
-          description="Taxa de engajamento total"
-        />
-      </div>
+      {/* Optimization Suggestions */}
+      {optimizationSuggestions.length > 0 && (
+        <Alert>
+          <Lightbulb className="h-4 w-4" />
+          <AlertDescription>
+            <div className="space-y-2">
+              <p className="font-medium">Sugestões de Otimização Disponíveis</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {optimizationSuggestions.slice(0, 2).map((suggestion, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{suggestion.title}</p>
+                      <p className="text-xs text-muted-foreground">{suggestion.expectedImprovement}</p>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => applyOptimization.mutate(suggestion)}
+                    >
+                      Aplicar
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
 
-      {/* Charts and Details */}
-      <Tabs defaultValue="performance" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="performance">Performance</TabsTrigger>
+      {/* Key Metrics */}
+      {analyticsData && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Enviadas</CardTitle>
+              <BarChart3 className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{analyticsData.totalNotifications}</div>
+              <p className="text-xs text-muted-foreground">
+                Período selecionado
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Taxa de Entrega</CardTitle>
+              <TrendingUp className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatPercentage(analyticsData.deliveryRate)}</div>
+              <p className="text-xs text-muted-foreground">
+                {analyticsData.deliveryRate > 0.9 ? 'Excelente' : analyticsData.deliveryRate > 0.8 ? 'Bom' : 'Precisa melhorar'}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Taxa de Clique</CardTitle>
+              <PieChart className="h-4 w-4 text-purple-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatPercentage(analyticsData.clickThroughRate)}</div>
+              <p className="text-xs text-muted-foreground">
+                {analyticsData.clickThroughRate > 0.15 ? 'Excelente' : analyticsData.clickThroughRate > 0.1 ? 'Bom' : 'Precisa melhorar'}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Taxa de Erro</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-red-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatPercentage(analyticsData.errorRate)}</div>
+              <p className="text-xs text-muted-foreground">
+                {analyticsData.errorRate < 0.05 ? 'Excelente' : analyticsData.errorRate < 0.1 ? 'Aceitável' : 'Alto'}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Tempo Médio</CardTitle>
+              <Clock className="h-4 w-4 text-orange-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatTime(analyticsData.averageDeliveryTime)}</div>
+              <p className="text-xs text-muted-foreground">
+                Tempo de entrega
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Detailed Analytics */}
+      <Tabs defaultValue="trends" className="space-y-4">
+        <TabsList>
           <TabsTrigger value="trends">Tendências</TabsTrigger>
-          <TabsTrigger value="users">Usuários</TabsTrigger>
-          <TabsTrigger value="recommendations">Recomendações</TabsTrigger>
+          <TabsTrigger value="types">Por Tipo</TabsTrigger>
+          <TabsTrigger value="timing">Horários</TabsTrigger>
+          <TabsTrigger value="optimization">Otimização</TabsTrigger>
         </TabsList>
 
-        {/* Performance Tab */}
-        <TabsContent value="performance" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Performance by Type */}
+        <TabsContent value="trends" className="space-y-4">
+          {analyticsData && (
             <Card>
               <CardHeader>
-                <CardTitle>Performance por Tipo</CardTitle>
-                <CardDescription>
-                  Comparação de engajamento entre tipos de notificação
-                </CardDescription>
+                <CardTitle>Tendências de Engajamento</CardTitle>
+                <CardDescription>Evolução das métricas ao longo do tempo</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={typeChartData}>
+                <ResponsiveContainer width="100%" height={400}>
+                  <LineChart data={analyticsData.engagementTrends}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="type" 
-                      angle={-45}
-                      textAnchor="end"
-                      height={80}
-                      fontSize={12}
-                    />
+                    <XAxis dataKey="date" />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="sent" fill="#8884d8" name="Enviadas" />
-                    <Bar dataKey="clicked" fill="#82ca9d" name="Clicadas" />
+                    <Line 
+                      type="monotone" 
+                      dataKey="sent" 
+                      stroke="#8884d8" 
+                      name="Enviadas"
+                      strokeWidth={2}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="delivered" 
+                      stroke="#82ca9d" 
+                      name="Entregues"
+                      strokeWidth={2}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="clicked" 
+                      stroke="#ffc658" 
+                      name="Clicadas"
+                      strokeWidth={2}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="errors" 
+                      stroke="#ff7300" 
+                      name="Erros"
+                      strokeWidth={2}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="types" className="space-y-4">
+          {analyticsData && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Performance por Tipo</CardTitle>
+                  <CardDescription>Taxa de entrega e clique por categoria</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {analyticsData.typePerformance.map((type, index) => (
+                      <div key={type.type} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium capitalize">
+                            {type.type.replace('_', ' ')}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary">{type.sent} enviadas</Badge>
+                            <Badge variant={type.deliveryRate > 0.8 ? 'default' : 'destructive'}>
+                              {formatPercentage(type.deliveryRate)} entrega
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                          <div>Entregues: {type.delivered}</div>
+                          <div>Clicadas: {type.clicked}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Distribuição por Tipo</CardTitle>
+                  <CardDescription>Volume de notificações por categoria</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <RechartsPieChart>
+                      <Tooltip />
+                      <RechartsPieChart
+                        data={analyticsData.typePerformance}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        dataKey="sent"
+                      >
+                        {analyticsData.typePerformance.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </RechartsPieChart>
+                    </RechartsPieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="timing" className="space-y-4">
+          {analyticsData && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Distribuição por Horário</CardTitle>
+                <CardDescription>Volume e taxa de entrega ao longo do dia</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart data={analyticsData.hourlyDistribution}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="hour" />
+                    <YAxis yAxisId="left" />
+                    <YAxis yAxisId="right" orientation="right" />
+                    <Tooltip />
+                    <Bar yAxisId="left" dataKey="count" fill="#8884d8" name="Volume" />
+                    <Line 
+                      yAxisId="right" 
+                      type="monotone" 
+                      dataKey="deliveryRate" 
+                      stroke="#ff7300" 
+                      name="Taxa de Entrega"
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
-
-            {/* Engagement Distribution */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Distribuição de Cliques</CardTitle>
-                <CardDescription>
-                  Cliques por tipo de notificação
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={engagementPieData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {engagementPieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Detailed Metrics Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Métricas Detalhadas por Tipo</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-2">Tipo</th>
-                      <th className="text-right p-2">Enviadas</th>
-                      <th className="text-right p-2">Entregues</th>
-                      <th className="text-right p-2">Clicadas</th>
-                      <th className="text-right p-2">Taxa Entrega</th>
-                      <th className="text-right p-2">Taxa Cliques</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Object.entries(report.byType).map(([type, metrics]) => (
-                      <tr key={type} className="border-b">
-                        <td className="p-2 font-medium">
-                          {type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                        </td>
-                        <td className="text-right p-2">{formatNumber(metrics.totalSent)}</td>
-                        <td className="text-right p-2">{formatNumber(metrics.totalDelivered)}</td>
-                        <td className="text-right p-2">{formatNumber(metrics.totalClicked)}</td>
-                        <td className="text-right p-2">
-                          <Badge variant={metrics.deliveryRate >= 85 ? 'default' : 'destructive'}>
-                            {formatPercentage(metrics.deliveryRate)}
-                          </Badge>
-                        </td>
-                        <td className="text-right p-2">
-                          <Badge variant={metrics.clickRate >= 15 ? 'default' : 'secondary'}>
-                            {formatPercentage(metrics.clickRate)}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
+          )}
         </TabsContent>
 
-        {/* Trends Tab */}
-        <TabsContent value="trends" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Tendências ao Longo do Tempo</CardTitle>
-              <CardDescription>
-                Evolução das notificações nos últimos {dateRange}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <LineChart data={trendsChartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="sent" stroke="#8884d8" name="Enviadas" />
-                  <Line type="monotone" dataKey="delivered" stroke="#82ca9d" name="Entregues" />
-                  <Line type="monotone" dataKey="clicked" stroke="#ffc658" name="Clicadas" />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Users Tab */}
-        <TabsContent value="users" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Top Engaged Users */}
+        <TabsContent value="optimization" className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="w-4 h-4" />
-                  Usuários Mais Engajados
-                </CardTitle>
+                <CardTitle>Sugestões de Otimização</CardTitle>
+                <CardDescription>Recomendações baseadas nos dados</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {report.topEngagedUsers.slice(0, 5).map((user, index) => (
-                    <div key={user.userId} className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">{user.userName || 'Usuário Anônimo'}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {user.clickedNotifications}/{user.totalNotifications} cliques
-                        </p>
+                <div className="space-y-4">
+                  {optimizationSuggestions.map((suggestion, index) => (
+                    <div key={index} className="border rounded-lg p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium">{suggestion.title}</h4>
+                        <Badge variant={
+                          suggestion.priority === 'high' ? 'destructive' :
+                          suggestion.priority === 'medium' ? 'default' : 'secondary'
+                        }>
+                          {suggestion.priority}
+                        </Badge>
                       </div>
-                      <Badge variant="default">
-                        {formatPercentage(user.engagementRate)}
-                      </Badge>
+                      <p className="text-sm text-muted-foreground">{suggestion.description}</p>
+                      <div className="text-xs space-y-1">
+                        <p><strong>Melhoria esperada:</strong> {suggestion.expectedImprovement}</p>
+                        <p><strong>Ação necessária:</strong> {suggestion.actionRequired}</p>
+                      </div>
+                      <Button 
+                        size="sm" 
+                        className="w-full"
+                        onClick={() => applyOptimization.mutate(suggestion)}
+                        disabled={applyOptimization.isPending}
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Aplicar Otimização
+                      </Button>
                     </div>
                   ))}
+                  
+                  {optimizationSuggestions.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <CheckCircle className="h-8 w-8 mx-auto mb-2" />
+                      <p>Nenhuma otimização necessária no momento</p>
+                      <p className="text-sm">Seu sistema está funcionando bem!</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Low Engagement Users */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4" />
-                  Usuários com Baixo Engajamento
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {report.lowEngagementUsers.slice(0, 5).map((user, index) => (
-                    <div key={user.userId} className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">{user.userName || 'Usuário Anônimo'}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {user.clickedNotifications}/{user.totalNotifications} cliques
-                        </p>
-                      </div>
-                      <Badge variant="destructive">
-                        {formatPercentage(user.engagementRate)}
+            {realtimeMetrics && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Métricas em Tempo Real</CardTitle>
+                  <CardDescription>Status atual do sistema</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span>Status do Sistema</span>
+                      <Badge className={
+                        realtimeMetrics.status === 'healthy' ? 'bg-green-500' :
+                        realtimeMetrics.status === 'degraded' ? 'bg-yellow-500' : 'bg-red-500'
+                      }>
+                        {realtimeMetrics.status.toUpperCase()}
                       </Badge>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* Recommendations Tab */}
-        <TabsContent value="recommendations" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recomendações de Otimização</CardTitle>
-              <CardDescription>
-                Sugestões baseadas nos dados de performance
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {report.recommendations.map((recommendation, index) => (
-                  <div key={index} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-xs font-medium text-primary">{index + 1}</span>
+                    
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-muted-foreground">Fila</p>
+                        <p className="font-medium">{realtimeMetrics.queueSize}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Processando</p>
+                        <p className="font-medium">{realtimeMetrics.processingBatches}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Taxa Atual</p>
+                        <p className="font-medium">{formatPercentage(realtimeMetrics.metrics.deliveryRate)}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Eficiência</p>
+                        <p className="font-medium">{realtimeMetrics.metrics.batchEfficiency.toFixed(1)} not/s</p>
+                      </div>
                     </div>
-                    <p className="text-sm">{recommendation}</p>
+                    
+                    <div className="text-xs text-muted-foreground">
+                      Última atualização: {realtimeMetrics.lastUpdate.toLocaleTimeString()}
+                    </div>
                   </div>
-                ))}
-                
-                {report.recommendations.length === 0 && (
-                  <p className="text-center text-muted-foreground py-8">
-                    Parabéns! Suas notificações estão performando bem. Continue assim!
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
     </div>
   )
 }
-
-export default NotificationAnalyticsDashboard

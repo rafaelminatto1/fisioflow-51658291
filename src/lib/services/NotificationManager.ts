@@ -1,11 +1,14 @@
 import { supabase } from '@/integrations/supabase/client'
+import { notificationPerformanceService } from './NotificationPerformanceService'
 import { 
   NotificationPreferences, 
   PushSubscription, 
   NotificationPermissionState,
   CreatePushSubscriptionRequest,
   UpdateNotificationPreferencesRequest,
-  NotificationHistory
+  NotificationHistory,
+  NotificationPayload,
+  NotificationType
 } from '@/types/notifications'
 import { 
   createPushSubscriptionSchema, 
@@ -470,6 +473,79 @@ export class NotificationManager {
    */
   getCurrentSubscription(): PushSubscription | null {
     return this.subscription
+  }
+
+  /**
+   * Send notification through performance-optimized batching system
+   */
+  async sendNotification(
+    userId: string,
+    notification: NotificationPayload,
+    priority: 'low' | 'normal' | 'high' | 'urgent' = 'normal'
+  ): Promise<void> {
+    try {
+      // Add to performance service batch queue
+      await notificationPerformanceService.addToBatch(userId, notification, priority)
+      
+      logger.info('Notification added to batch queue', { 
+        userId, 
+        type: notification.type, 
+        priority 
+      }, 'NotificationManager')
+    } catch (error) {
+      logger.error('Failed to add notification to batch', error, 'NotificationManager')
+      
+      // Fallback to direct sending for urgent notifications
+      if (priority === 'urgent') {
+        await this.sendDirectNotification(userId, notification)
+      }
+    }
+  }
+
+  /**
+   * Send notification directly (bypass batching)
+   */
+  async sendDirectNotification(userId: string, notification: NotificationPayload): Promise<void> {
+    try {
+      const { error } = await supabase.functions.invoke('send-notification', {
+        body: {
+          userId,
+          notification,
+          timestamp: new Date().toISOString()
+        }
+      })
+
+      if (error) {
+        throw error
+      }
+
+      logger.info('Direct notification sent', { userId, type: notification.type }, 'NotificationManager')
+    } catch (error) {
+      logger.error('Failed to send direct notification', error, 'NotificationManager')
+      throw error
+    }
+  }
+
+  /**
+   * Get system performance metrics
+   */
+  async getPerformanceMetrics() {
+    return notificationPerformanceService.getPerformanceMetrics()
+  }
+
+  /**
+   * Get system health status
+   */
+  async getSystemHealth() {
+    return notificationPerformanceService.getSystemHealth()
+  }
+
+  /**
+   * Start the performance optimization services
+   */
+  startPerformanceOptimization(): void {
+    notificationPerformanceService.startBatchProcessor()
+    logger.info('Notification performance optimization started', {}, 'NotificationManager')
   }
 }
 
