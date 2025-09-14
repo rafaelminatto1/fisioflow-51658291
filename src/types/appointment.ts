@@ -182,6 +182,7 @@ export interface BookingRules {
 export interface AppointmentConflict {
   type: ConflictType;
   description: string;
+  reason: string;
   conflictingAppointment?: EnhancedAppointment;
   severity: ConflictSeverity;
   suggestedAlternatives?: AlternativeSlot[];
