@@ -7,7 +7,8 @@ import { Separator } from '@/components/ui/separator';
 import { AppointmentFilters } from '@/components/schedule/AppointmentFilters';
 import { ScheduleGrid } from '@/components/schedule/ScheduleGrid';
 import { AppointmentModal } from '@/components/schedule/AppointmentModal';
-import { useAppointmentsFiltered, useCreateAppointment, useUpdateAppointment } from '@/hooks/useAppointments';
+import { useAppointments } from '@/hooks/useAppointments';
+import { WeekNavigation } from '@/components/schedule/WeekNavigation';
 import { logger } from '@/lib/errors/logger';
 import { AlertTriangle, Calendar, Clock, Users, TrendingUp, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import type { Appointment, AppointmentFilters as FilterType } from '@/types/appointment';
@@ -33,10 +34,7 @@ const Schedule = () => {
     service: ''
   });
 
-  const { data: appointments = [], isLoading: loading, error } = useAppointmentsFiltered(filters);
-  const createAppointmentMutation = useCreateAppointment();
-  const updateAppointmentMutation = useUpdateAppointment();
-  const initialLoad = loading;
+const { appointments = [], loading, error, initialLoad } = useAppointments();
 
   useEffect(() => {
     logger.info('Página Schedule carregada', { 
@@ -71,7 +69,7 @@ const Schedule = () => {
       if (filters.status && appointment.status !== filters.status) {
         return false;
       }
-      if (filters.service && appointment.service !== filters.service) {
+      if (filters.service && appointment.type !== filters.service) {
         return false;
       }
       if (filters.dateFrom && appointment.date < filters.dateFrom) {
@@ -85,7 +83,7 @@ const Schedule = () => {
   }, [appointments, filters]);
 
   const services = useMemo(() => {
-    return Array.from(new Set(appointments.map(apt => apt.service)));
+    return Array.from(new Set(appointments.map(apt => apt.type)));
   }, [appointments]);
 
   const handleAppointmentClick = (appointment: Appointment) => {
@@ -161,10 +159,13 @@ const Schedule = () => {
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {initialLoad ? (
-            Array.from({ length: 4 }).map((_, index) => (
-              <StatCardSkeleton key={index} />
-            ))
+{initialLoad ? (
+            <>
+              <Card className="border-0 shadow-lg animate-pulse h-28" />
+              <Card className="border-0 shadow-lg animate-pulse h-28" />
+              <Card className="border-0 shadow-lg animate-pulse h-28" />
+              <Card className="border-0 shadow-lg animate-pulse h-28" />
+            </>
           ) : (
             <>
               <Card className="border-0 shadow-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white">
@@ -282,12 +283,11 @@ const Schedule = () => {
           </CardContent>
         </Card>
 
-        {/* Appointment Modal */}
+{/* Appointment Modal */}
         <AppointmentModal
           isOpen={isModalOpen}
           onClose={handleModalClose}
           appointment={selectedAppointment}
-          onSave={selectedAppointment ? updateAppointment : createAppointment}
         />
       </div>
     </div>
