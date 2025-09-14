@@ -47,12 +47,12 @@ export function AppointmentActions({
   const updatePaymentMutation = useUpdatePaymentStatus();
   const deleteMutation = useDeleteAppointment();
 
-  const handleStatusUpdate = async (status: Appointment['status']) => {
+  const handleStatusUpdate = async (status: string) => {
     setIsUpdating(true);
     try {
       await updateStatusMutation.mutateAsync({
         appointmentId: appointment.id,
-        status
+        status: status as any
       });
     } catch (error) {
       console.error('Failed to update status:', error);

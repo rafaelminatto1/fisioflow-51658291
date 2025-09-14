@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 const Exercises = () => {
   const [selectedExercise, setSelectedExercise] = useState<{ id: string; name: string; category: string; description?: string; instructions?: string; video_url?: string } | null>(null);
   const [activeTab, setActiveTab] = useState("library");
+  const [isNewExerciseModalOpen, setIsNewExerciseModalOpen] = useState(false);
   const { exercises } = useExercises();
   const { favorites } = useExerciseFavorites();
   const { protocols } = useExerciseProtocols();
@@ -54,14 +55,13 @@ const Exercises = () => {
               </p>
             </div>
           </div>
-          <NewExerciseModal
-            trigger={
-              <Button className="bg-gradient-primary hover:opacity-90">
-                <PlusCircle className="w-4 h-4 mr-2" />
-                Novo Exercício
-              </Button>
-            }
-          />
+          <Button 
+            className="bg-gradient-primary hover:opacity-90"
+            onClick={() => setIsNewExerciseModalOpen(true)}
+          >
+            <PlusCircle className="w-4 h-4 mr-2" />
+            Novo Exercício
+          </Button>
         </section>
 
         {/* Estatísticas rápidas */}
@@ -185,6 +185,11 @@ const Exercises = () => {
             </TabsContent>
           </Tabs>
         </section>
+        
+        <NewExerciseModal
+          open={isNewExerciseModalOpen}
+          onOpenChange={setIsNewExerciseModalOpen}
+        />
       </main>
     </MainLayout>
   );

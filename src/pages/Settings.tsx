@@ -16,8 +16,8 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import NotificationPreferences from '@/components/notifications/NotificationPreferences';
-import NotificationHistory from '@/components/notifications/NotificationHistory';
+import { NotificationPreferences } from '@/components/notifications/NotificationPreferences';
+import { NotificationHistory } from '@/components/notifications/NotificationHistory';
 
 const Settings = () => {
   const [searchParams] = useSearchParams();
