@@ -11,7 +11,7 @@ import { useAppointments } from '@/hooks/useAppointments';
 import { WeekNavigation } from '@/components/schedule/WeekNavigation';
 import { logger } from '@/lib/errors/logger';
 import { AlertTriangle, Calendar, Clock, Users, TrendingUp, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
-import type { Appointment, AppointmentFilters as FilterType } from '@/types/appointment';
+import type { Appointment } from '@/types/appointment';
 
 // Define FilterType interface
 interface FilterType {
@@ -47,10 +47,12 @@ const { appointments = [], loading, error, initialLoad } = useAppointments();
   // Memoized statistics calculation
   const stats = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
-    const todayAppointments = appointments.filter(apt => apt.date === today);
-    const confirmedToday = todayAppointments.filter(apt => apt.status === 'confirmed').length;
+    const todayAppointments = appointments.filter(apt => 
+      apt.date instanceof Date ? apt.date.toISOString().split('T')[0] === today : apt.date === today
+    );
+    const confirmedToday = todayAppointments.filter(apt => apt.status === 'Confirmed').length;
     const totalToday = todayAppointments.length;
-    const completedToday = todayAppointments.filter(apt => apt.status === 'completed').length;
+    const completedToday = todayAppointments.filter(apt => apt.status === 'Completed').length;
     
     return {
       totalToday,
@@ -72,11 +74,21 @@ const { appointments = [], loading, error, initialLoad } = useAppointments();
       if (filters.service && appointment.type !== filters.service) {
         return false;
       }
-      if (filters.dateFrom && appointment.date < filters.dateFrom) {
-        return false;
+      if (filters.dateFrom) {
+        const appointmentDate = appointment.date instanceof Date ? 
+          appointment.date.toISOString().split('T')[0] : 
+          appointment.date;
+        if (appointmentDate < filters.dateFrom) {
+          return false;
+        }
       }
-      if (filters.dateTo && appointment.date > filters.dateTo) {
-        return false;
+      if (filters.dateTo) {
+        const appointmentDate = appointment.date instanceof Date ? 
+          appointment.date.toISOString().split('T')[0] : 
+          appointment.date;
+        if (appointmentDate > filters.dateTo) {
+          return false;
+        }
       }
       return true;
     });
@@ -258,7 +270,10 @@ const { appointments = [], loading, error, initialLoad } = useAppointments();
         {/* Week Navigation */}
         <WeekNavigation 
           currentWeek={currentWeek}
-          onWeekChange={setCurrentWeek}
+          onPreviousWeek={() => setCurrentWeek(prev => new Date(prev.getTime() - 7 * 24 * 60 * 60 * 1000))}
+          onNextWeek={() => setCurrentWeek(prev => new Date(prev.getTime() + 7 * 24 * 60 * 60 * 1000))}
+          onToday={() => setCurrentWeek(new Date())}
+          totalAppointments={filteredAppointments.length}
         />
 
         {/* Schedule Grid */}

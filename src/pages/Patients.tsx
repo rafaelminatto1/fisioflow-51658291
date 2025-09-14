@@ -36,6 +36,7 @@ const Patients = () => {
   const [conditionFilter, setConditionFilter] = useState<string>('all');
   const [editingPatient, setEditingPatient] = useState<string | null>(null);
   const [viewingPatient, setViewingPatient] = useState<string | null>(null);
+  const [isNewPatientModalOpen, setIsNewPatientModalOpen] = useState(false);
   const { data: patients = [], isLoading: loading } = useActivePatients();
   const { toast } = useToast();
 
@@ -82,7 +83,7 @@ const Patients = () => {
           patient.name,
           patient.email || '',
           patient.phone || '',
-          getPatientAge(patient.birthDate),
+          getPatientAge(new Date(patient.birthDate)),
           patient.gender,
           patient.mainCondition,
           patient.status,
@@ -160,14 +161,13 @@ const Patients = () => {
               <Download className="w-4 h-4 mr-2" />
               Exportar
             </Button>
-            <NewPatientModal 
-              trigger={
-                <Button className="bg-primary hover:bg-primary/90">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Novo Paciente
-                </Button>
-              }
-            />
+        <Button 
+          className="bg-primary hover:bg-primary/90"
+          onClick={() => setIsNewPatientModalOpen(true)}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Novo Paciente
+        </Button>
           </div>
         </div>
 
@@ -254,14 +254,10 @@ const Patients = () => {
                 }
               </p>
               {!searchTerm && (
-                <NewPatientModal 
-                  trigger={
-                    <Button>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Novo Paciente
-                    </Button>
-                  }
-                />
+                <Button onClick={() => setIsNewPatientModalOpen(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo Paciente
+                </Button>
               )}
             </CardContent>
           </Card>
@@ -280,7 +276,7 @@ const Patients = () => {
                       <div>
                         <CardTitle className="text-xl">{patient.name}</CardTitle>
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>{getPatientAge(patient.birthDate)} anos</span>
+                          <span>{getPatientAge(new Date(patient.birthDate))} anos</span>
                           <span>{patient.gender}</span>
                           {patient.mainCondition && (
                             <span className="font-medium">{patient.mainCondition}</span>
@@ -347,19 +343,24 @@ const Patients = () => {
       </div>
 
       {/* Modals */}
+      <NewPatientModal
+        open={isNewPatientModalOpen}
+        onOpenChange={setIsNewPatientModalOpen}
+      />
+      
       {editingPatient && (
         <EditPatientModal
           patientId={editingPatient}
-          isOpen={true}
-          onClose={() => setEditingPatient(null)}
+          open={true}
+          onOpenChange={() => setEditingPatient(null)}
         />
       )}
 
       {viewingPatient && (
         <ViewPatientModal
           patientId={viewingPatient}
-          isOpen={true}
-          onClose={() => setViewingPatient(null)}
+          open={true}
+          onOpenChange={() => setViewingPatient(null)}
         />
       )}
     </MainLayout>
