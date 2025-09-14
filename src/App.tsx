@@ -27,7 +27,7 @@ const Communications = lazy(() => import("./pages/Communications"));
 const Partner = lazy(() => import("./pages/Partner"));
 const Vouchers = lazy(() => import("./pages/Vouchers"));
 const FileUploadTest = lazy(() => import("./pages/FileUploadTest"));
-const PatientPWA = lazy(() => import("./components/patient/PatientPWA").then(module => ({ default: module.PatientPWA })));
+
 const AdvancedAnalytics = lazy(() => import("./components/analytics/AdvancedAnalytics"));
 const MedicalChatbot = lazy(() => import("./components/chatbot/MedicalChatbot"));
 const ComputerVisionExercise = lazy(() => import("./components/computer-vision/ComputerVisionExercise"));
@@ -40,20 +40,12 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
-      cacheTime: 1000 * 60 * 10, // 10 minutes
+      gcTime: 1000 * 60 * 10, // 10 minutes
       retry: (failureCount, error) => {
         logger.warn('Query retry', { failureCount, error }, 'QueryClient');
         return failureCount < 3;
       },
-      onError: (error) => {
-        logger.error('Query error', error, 'QueryClient');
-      }
     },
-    mutations: {
-      onError: (error) => {
-        logger.error('Mutation error', error, 'QueryClient');
-      }
-    }
   },
 });
 
@@ -113,7 +105,7 @@ const App = () => {
                   <Route path="/partner" element={<ProtectedRoute><Partner /></ProtectedRoute>} />
                   <Route path="/vouchers" element={<ProtectedRoute><Vouchers /></ProtectedRoute>} />
                   <Route path="/file-upload-test" element={<ProtectedRoute><FileUploadTest /></ProtectedRoute>} />
-                  <Route path="/patient-pwa" element={<ProtectedRoute><PatientPWA /></ProtectedRoute>} />
+                  
                   <Route path="/analytics" element={<ProtectedRoute><AdvancedAnalytics /></ProtectedRoute>} />
                   <Route path="/chatbot" element={<ProtectedRoute><MedicalChatbot userId="current-user" /></ProtectedRoute>} />
                   <Route path="/computer-vision" element={<ProtectedRoute><ComputerVisionExercise patientId="current-patient" /></ProtectedRoute>} />

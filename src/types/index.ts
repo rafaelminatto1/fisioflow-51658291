@@ -2,6 +2,7 @@
 
 // Re-export agenda types
 export * from './agenda';
+export type { EnhancedAppointment } from './appointment';
 
 export interface Patient {
   id: string;
@@ -10,7 +11,7 @@ export interface Patient {
   phone?: string;
   cpf?: string;
   rg?: string;
-  birthDate: Date;
+  birthDate: string;
   gender: 'masculino' | 'feminino' | 'outro';
   address?: string;
   emergencyContact?: string;
@@ -21,7 +22,7 @@ export interface Patient {
   progress: number;
   insurancePlan?: string;
   insuranceNumber?: string;
-  insuranceValidity?: Date;
+  insuranceValidity?: string;
   maritalStatus?: string;
   profession?: string;
   educationLevel?: string;
@@ -30,8 +31,8 @@ export interface Patient {
   medications?: string;
   weight?: number;
   height?: number;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface PatientDocument {
@@ -105,15 +106,15 @@ export interface Appointment {
   id: string;
   patientId: string;
   patientName: string;
-  date: Date;
+  date: string;
   time: string;
   duration: number;
   type: 'Consulta Inicial' | 'Fisioterapia' | 'Reavaliação' | 'Consulta de Retorno';
   status: 'Confirmado' | 'Pendente' | 'Reagendado' | 'Cancelado' | 'Realizado';
   notes?: string;
   phone?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Exercise {
