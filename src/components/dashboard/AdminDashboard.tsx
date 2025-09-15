@@ -32,56 +32,64 @@ export const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-fade-in">
       {/* Cards de Estatísticas */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="bg-gradient-card border-border/50 hover:shadow-medical transition-all duration-300 group">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Pacientes</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Total de Pacientes</CardTitle>
+            <div className="p-2 bg-gradient-primary/10 rounded-lg group-hover:bg-gradient-primary/20 transition-colors">
+              <Users className="h-5 w-5 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalPacientes}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">{stats.totalPacientes}</div>
+            <p className="text-sm text-secondary font-medium mt-1">
               +{stats.pacientesNovos} novos este mês
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gradient-card border-border/50 hover:shadow-medical transition-all duration-300 group">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Agendamentos Hoje</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Agendamentos Hoje</CardTitle>
+            <div className="p-2 bg-gradient-secondary/10 rounded-lg group-hover:bg-gradient-secondary/20 transition-colors">
+              <Calendar className="h-5 w-5 text-secondary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.agendamentosHoje}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-3xl font-bold text-foreground">{stats.agendamentosHoje}</div>
+            <p className="text-sm text-muted-foreground mt-1">
               {stats.agendamentosRestantes} restantes
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gradient-card border-border/50 hover:shadow-medical transition-all duration-300 group">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Receita Mensal</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Receita Mensal</CardTitle>
+            <div className="p-2 bg-gradient-to-br from-primary to-secondary rounded-lg opacity-80 group-hover:opacity-100 transition-opacity">
+              <DollarSign className="h-5 w-5 text-white" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">R$ {stats.receitaMensal.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">R$ {stats.receitaMensal.toLocaleString()}</div>
+            <p className="text-sm text-secondary font-medium mt-1">
               +12% em relação ao mês anterior
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gradient-card border-border/50 hover:shadow-medical transition-all duration-300 group">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Fisioterapeutas Ativos</CardTitle>
-            <UserCheck className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Fisioterapeutas Ativos</CardTitle>
+            <div className="p-2 bg-gradient-primary/10 rounded-lg group-hover:bg-gradient-primary/20 transition-colors">
+              <UserCheck className="h-5 w-5 text-primary-glow" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.fisioterapeutasAtivos}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-3xl font-bold text-foreground">{stats.fisioterapeutasAtivos}</div>
+            <p className="text-sm text-muted-foreground mt-1">
               Todos disponíveis hoje
             </p>
           </CardContent>
@@ -89,34 +97,39 @@ export const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Seção de Agendamentos e Ações Rápidas */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
         {/* Agendamentos Próximos */}
-        <Card className="col-span-4">
+        <Card className="col-span-4 bg-gradient-card border-border/50 shadow-card">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-primary/10 rounded-lg">
+                <Clock className="h-5 w-5 text-primary" />
+              </div>
               Próximos Agendamentos
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {agendamentosProximos.map((agendamento) => (
-                <div key={agendamento.id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div key={agendamento.id} className="flex items-center justify-between p-4 border border-border/50 rounded-xl hover:bg-accent/50 transition-colors">
                   <div className="flex items-center space-x-4">
-                    <div className="text-sm font-medium">{agendamento.horario}</div>
+                    <div className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-lg">{agendamento.horario}</div>
                     <div>
-                      <p className="text-sm font-medium">{agendamento.paciente}</p>
+                      <p className="text-sm font-medium text-foreground">{agendamento.paciente}</p>
                       <p className="text-xs text-muted-foreground">{agendamento.fisioterapeuta}</p>
                     </div>
                   </div>
-                  <Badge variant={statusBadgeVariant(agendamento.status)}>
+                  <Badge 
+                    variant={statusBadgeVariant(agendamento.status)}
+                    className={agendamento.status === 'confirmado' ? 'bg-gradient-secondary text-secondary-foreground' : ''}
+                  >
                     {agendamento.status}
                   </Badge>
                 </div>
               ))}
             </div>
-            <div className="mt-4">
-              <Button variant="outline" className="w-full">
+            <div className="mt-6">
+              <Button variant="outline" className="w-full hover:bg-accent/80 border-border/50">
                 Ver Todos os Agendamentos
               </Button>
             </div>
@@ -124,29 +137,29 @@ export const AdminDashboard: React.FC = () => {
         </Card>
 
         {/* Ações Rápidas */}
-        <Card className="col-span-3">
+        <Card className="col-span-3 bg-gradient-card border-border/50 shadow-card">
           <CardHeader>
-            <CardTitle>Ações Rápidas</CardTitle>
+            <CardTitle className="text-foreground">Ações Rápidas</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button className="w-full justify-start" variant="outline">
-              <Users className="mr-2 h-4 w-4" />
+            <Button className="w-full justify-start bg-gradient-primary text-primary-foreground hover:bg-gradient-primary/90 shadow-sm">
+              <Users className="mr-3 h-4 w-4" />
               Novo Paciente
             </Button>
             <Button className="w-full justify-start" variant="outline">
-              <Calendar className="mr-2 h-4 w-4" />
+              <Calendar className="mr-3 h-4 w-4 text-primary" />
               Agendar Consulta
             </Button>
             <Button className="w-full justify-start" variant="outline">
-              <Activity className="mr-2 h-4 w-4" />
+              <Activity className="mr-3 h-4 w-4 text-secondary" />
               Registrar Evolução
             </Button>
             <Button className="w-full justify-start" variant="outline">
-              <TrendingUp className="mr-2 h-4 w-4" />
+              <TrendingUp className="mr-3 h-4 w-4 text-primary-glow" />
               Relatórios
             </Button>
             <Button className="w-full justify-start" variant="outline">
-              <DollarSign className="mr-2 h-4 w-4" />
+              <DollarSign className="mr-3 h-4 w-4 text-secondary" />
               Financeiro
             </Button>
           </CardContent>

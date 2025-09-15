@@ -63,24 +63,27 @@ export function StatCard({
   return (
     <Card 
       className={cn(
-        "border-border transition-all duration-200 hover:shadow-lg cursor-pointer",
-        gradient ? "bg-gradient-card" : "bg-card",
-        onClick && "hover:scale-105"
+        "border-border/50 transition-all duration-300 hover:shadow-medical cursor-pointer group overflow-hidden relative",
+        gradient ? "bg-gradient-card" : "bg-card/80 backdrop-blur-sm",
+        onClick && "hover:scale-[1.02] hover:-translate-y-1"
       )}
       onClick={onClick}
     >
-      <CardContent className="p-6">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <CardContent className="p-6 relative">
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              {icon}
-              <p className="text-sm font-medium text-muted-foreground">{title}</p>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 rounded-xl bg-gradient-primary/10 group-hover:bg-gradient-primary/20 transition-colors">
+                {icon}
+              </div>
+              <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">{title}</p>
             </div>
-            <div className="flex items-baseline gap-2">
-              <h3 className="text-2xl font-bold text-foreground">{value}</h3>
+            <div className="flex items-baseline gap-2 mb-2">
+              <h3 className="text-3xl font-bold text-foreground bg-gradient-to-r from-foreground to-primary/80 bg-clip-text">{value}</h3>
             </div>
             {change && (
-              <div className={cn("flex items-center gap-1 mt-2 text-xs", getTrendColor())}>
+              <div className={cn("flex items-center gap-1 text-sm font-medium", getTrendColor())}>
                 {getTrendIcon()}
                 <span>{change}</span>
               </div>
