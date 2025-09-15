@@ -1,99 +1,87 @@
 import React from 'react';
+import { Sidebar } from './Sidebar';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { 
-  Calendar, 
-  Users, 
-  DollarSign, 
-  FileText, 
+  Bell, 
+  ChevronDown, 
+  User, 
   Settings, 
   LogOut,
-  Menu,
-  Activity,
   Stethoscope
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
-export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+interface MainLayoutProps {
+  children: React.ReactNode;
+}
 
-  const menuItems = [
-    { icon: Activity, label: 'Dashboard', path: '/' },
-    { icon: Users, label: 'Pacientes', path: '/patients' },
-    { icon: Calendar, label: 'Agenda', path: '/schedule' },
-    { icon: Stethoscope, label: 'Exercícios', path: '/exercises' },
-    { icon: DollarSign, label: 'Financeiro', path: '/financial' },
-    { icon: FileText, label: 'Relatórios', path: '/reports' },
-    { icon: Settings, label: 'Configurações', path: '/settings' }
-  ];
-
+export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center px-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="mr-4 md:hidden"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-          
-          <div className="flex items-center space-x-2">
-            <Activity className="h-6 w-6 text-primary" />
-            <h1 className="text-lg font-semibold">FisioFlow</h1>
+    <div className="min-h-screen flex w-full bg-gradient-to-br from-background via-accent/5 to-background">
+      <Sidebar />
+      
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <header className="h-16 bg-gradient-card border-b border-border/50 flex items-center justify-between px-6 shadow-card backdrop-blur-sm">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-primary rounded-xl flex items-center justify-center shadow-medical">
+                <Stethoscope className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <h2 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                FisioFlow
+              </h2>
+            </div>
           </div>
           
-          <div className="flex flex-1 items-center justify-end space-x-4">
-            <Button variant="ghost" size="sm">
-              <LogOut className="h-4 w-4 mr-2" />
-              Sair
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" className="hover:bg-accent/80 transition-colors">
+              <Bell className="w-5 h-5" />
             </Button>
-          </div>
-        </div>
-      </header>
-
-      <div className="flex">
-        {/* Sidebar */}
-        <aside className={`
-          fixed inset-y-0 left-0 z-40 w-64 transform border-r bg-background transition-transform duration-200 ease-in-out
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-          md:relative md:translate-x-0 md:block top-14
-        `}>
-          <nav className="h-full p-4 space-y-2">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Button
-                  key={item.path}
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => {
-                    navigate(item.path);
-                    setSidebarOpen(false);
-                  }}
-                >
-                  <Icon className="mr-2 h-4 w-4" />
-                  {item.label}
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-2 h-9 hover:bg-accent/80 transition-colors">
+                  <Avatar className="w-8 h-8 ring-2 ring-primary/20">
+                    <AvatarImage src="/placeholder-avatar.jpg" />
+                    <AvatarFallback className="bg-gradient-primary text-primary-foreground font-medium">JS</AvatarFallback>
+                  </Avatar>
+                  <span className="hidden md:block font-medium">Dr. João Silva</span>
+                  <ChevronDown className="w-4 h-4" />
                 </Button>
-              );
-            })}
-          </nav>
-        </aside>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 bg-card/95 backdrop-blur-sm border-border/50">
+                <DropdownMenuLabel className="text-foreground">Minha Conta</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="hover:bg-accent/80">
+                  <User className="w-4 h-4 mr-2 text-primary" />
+                  Perfil
+                </DropdownMenuItem>
+                <DropdownMenuItem className="hover:bg-accent/80">
+                  <Settings className="w-4 h-4 mr-2 text-primary" />
+                  Configurações
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="hover:bg-destructive/10 text-destructive">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </header>
 
-        {/* Overlay para mobile */}
-        {sidebarOpen && (
-          <div 
-            className="fixed inset-0 z-30 bg-black/50 md:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-
-        {/* Main content */}
-        <main className="flex-1 min-h-screen pt-4">
-          <div className="container mx-auto p-4 md:ml-0">
+        {/* Main Content */}
+        <main className="flex-1 p-6 overflow-auto bg-gradient-to-b from-transparent to-accent/5">
+          <div className="max-w-7xl mx-auto">
             {children}
           </div>
         </main>
