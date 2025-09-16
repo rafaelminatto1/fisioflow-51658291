@@ -1,16 +1,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { AppointmentFilters } from '@/components/schedule/AppointmentFilters';
-import { ScheduleGrid } from '@/components/schedule/ScheduleGrid';
+import { CalendarView, CalendarViewType } from '@/components/schedule/CalendarView';
 import { AppointmentModal } from '@/components/schedule/AppointmentModal';
 import { useAppointments } from '@/hooks/useAppointments';
-import { WeekNavigation } from '@/components/schedule/WeekNavigation';
 import { logger } from '@/lib/errors/logger';
-import { AlertTriangle, Calendar, Clock, Users, TrendingUp, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { AlertTriangle, Calendar, Clock, Users, TrendingUp, Plus } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 
 // Define FilterType interface
@@ -25,7 +23,8 @@ interface FilterType {
 const Schedule = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentWeek, setCurrentWeek] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [viewType, setViewType] = useState<CalendarViewType>('week');
   const [filters, setFilters] = useState<FilterType>({
     search: '',
     status: '',
@@ -267,36 +266,17 @@ const { appointments = [], loading, error, initialLoad } = useAppointments();
           </Card>
         )}
 
-        {/* Week Navigation */}
-        <WeekNavigation 
-          currentWeek={currentWeek}
-          onPreviousWeek={() => setCurrentWeek(prev => new Date(prev.getTime() - 7 * 24 * 60 * 60 * 1000))}
-          onNextWeek={() => setCurrentWeek(prev => new Date(prev.getTime() + 7 * 24 * 60 * 60 * 1000))}
-          onToday={() => setCurrentWeek(new Date())}
-          totalAppointments={filteredAppointments.length}
-        />
-
-        {/* Schedule Grid */}
-        <Card className="border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Agendamentos
-            </CardTitle>
-            <CardDescription>
-              {filteredAppointments.length} agendamento{filteredAppointments.length !== 1 ? 's' : ''} 
-              {filters.search || filters.status || filters.service || filters.dateFrom || filters.dateTo ? ' (filtrados)' : ''}
-            </CardDescription>
-          </CardHeader>
-          <Separator />
-          <CardContent className="p-6">
-            <ScheduleGrid
-              appointments={filteredAppointments}
-              onAppointmentClick={handleAppointmentClick}
-              showSkeleton={initialLoad}
-            />
-          </CardContent>
-        </Card>
+        {/* Calendar View */}
+        <div className="h-[600px]">
+          <CalendarView
+            appointments={filteredAppointments}
+            currentDate={currentDate}
+            onDateChange={setCurrentDate}
+            viewType={viewType}
+            onViewTypeChange={setViewType}
+            onAppointmentClick={handleAppointmentClick}
+          />
+        </div>
 
 {/* Appointment Modal */}
         <AppointmentModal
