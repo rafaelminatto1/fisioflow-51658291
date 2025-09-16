@@ -33,11 +33,11 @@ const AppointmentFiltersComponent: React.FC<AppointmentFiltersProps> = ({
   }, [filters, onFiltersChange]);
 
   const handleStatusChange = useCallback((value: string) => {
-    onFiltersChange({ ...filters, status: value });
+    onFiltersChange({ ...filters, status: value === 'all' ? '' : value });
   }, [filters, onFiltersChange]);
 
   const handleServiceChange = useCallback((value: string) => {
-    onFiltersChange({ ...filters, service: value });
+    onFiltersChange({ ...filters, service: value === 'all' ? '' : value });
   }, [filters, onFiltersChange]);
 
   const handleDateFromChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,7 +97,7 @@ const AppointmentFiltersComponent: React.FC<AppointmentFiltersProps> = ({
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os Status</SelectItem>
+                <SelectItem value="all">Todos os Status</SelectItem>
                 <SelectItem value="scheduled">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
@@ -139,7 +139,7 @@ const AppointmentFiltersComponent: React.FC<AppointmentFiltersProps> = ({
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os Serviços</SelectItem>
+                <SelectItem value="all">Todos os Serviços</SelectItem>
                 {services.map((service) => (
                   <SelectItem key={service} value={service}>
                     {service}
