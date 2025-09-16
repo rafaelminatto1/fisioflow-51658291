@@ -23,6 +23,8 @@ interface FilterType {
 const Schedule = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalDefaultDate, setModalDefaultDate] = useState<Date | undefined>();
+  const [modalDefaultTime, setModalDefaultTime] = useState<string | undefined>();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewType, setViewType] = useState<CalendarViewType>('week');
   const [filters, setFilters] = useState<FilterType>({
@@ -104,12 +106,23 @@ const { appointments = [], loading, error, initialLoad } = useAppointments();
 
   const handleCreateAppointment = () => {
     setSelectedAppointment(null);
+    setModalDefaultDate(undefined);
+    setModalDefaultTime(undefined);
+    setIsModalOpen(true);
+  };
+
+  const handleTimeSlotClick = (date: Date, time: string) => {
+    setSelectedAppointment(null);
+    setModalDefaultDate(date);
+    setModalDefaultTime(time);
     setIsModalOpen(true);
   };
 
   const handleModalClose = () => {
     setIsModalOpen(false);
     setSelectedAppointment(null);
+    setModalDefaultDate(undefined);
+    setModalDefaultTime(undefined);
   };
 
   const handleFiltersChange = (newFilters: FilterType) => {
@@ -275,6 +288,7 @@ const { appointments = [], loading, error, initialLoad } = useAppointments();
             viewType={viewType}
             onViewTypeChange={setViewType}
             onAppointmentClick={handleAppointmentClick}
+            onTimeSlotClick={handleTimeSlotClick}
           />
         </div>
 
@@ -283,6 +297,9 @@ const { appointments = [], loading, error, initialLoad } = useAppointments();
           isOpen={isModalOpen}
           onClose={handleModalClose}
           appointment={selectedAppointment}
+          defaultDate={modalDefaultDate}
+          defaultTime={modalDefaultTime}
+          mode={selectedAppointment ? 'view' : 'create'}
         />
       </div>
     </div>

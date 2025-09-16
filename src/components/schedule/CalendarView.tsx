@@ -17,6 +17,7 @@ interface CalendarViewProps {
   viewType: CalendarViewType;
   onViewTypeChange: (type: CalendarViewType) => void;
   onAppointmentClick: (appointment: Appointment) => void;
+  onTimeSlotClick: (date: Date, time: string) => void;
 }
 
 const TIME_SLOTS = Array.from({ length: 24 }, (_, i) => {
@@ -30,7 +31,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   onDateChange,
   viewType,
   onViewTypeChange,
-  onAppointmentClick
+  onAppointmentClick,
+  onTimeSlotClick
 }) => {
   const navigateCalendar = (direction: 'prev' | 'next') => {
     switch (viewType) {
@@ -106,7 +108,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           {/* Time slots */}
           <div className="relative">
             {TIME_SLOTS.map(time => (
-              <div key={time} className="h-16 border-b border-gray-100"></div>
+              <div 
+                key={time} 
+                className="h-16 border-b border-gray-100 cursor-pointer hover:bg-blue-50 transition-colors"
+                onClick={() => onTimeSlotClick(currentDate, time)}
+              ></div>
             ))}
             
             {/* Appointments overlay */}
@@ -176,7 +182,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 {/* Time slots */}
                 <div className="relative">
                   {TIME_SLOTS.map(time => (
-                    <div key={time} className="h-16 border-b border-gray-100"></div>
+                    <div 
+                      key={time} 
+                      className="h-16 border-b border-gray-100 cursor-pointer hover:bg-blue-50 transition-colors"
+                      onClick={() => onTimeSlotClick(day, time)}
+                    ></div>
                   ))}
                   
                   {/* Appointments overlay */}
