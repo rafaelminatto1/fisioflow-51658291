@@ -1,7 +1,8 @@
 import { usePrestadores } from '@/hooks/usePrestadores';
 import { useChecklist } from '@/hooks/useChecklist';
+import { usePagamentos } from '@/hooks/usePagamentos';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, TrendingDown, TrendingUp, AlertCircle } from 'lucide-react';
+import { DollarSign, TrendingDown, AlertCircle } from 'lucide-react';
 
 interface FinanceiroTabProps {
   eventoId: string;
@@ -11,12 +12,14 @@ interface FinanceiroTabProps {
 export function FinanceiroTab({ eventoId, evento }: FinanceiroTabProps) {
   const { data: prestadores } = usePrestadores(eventoId);
   const { data: checklistItems } = useChecklist(eventoId);
+  const { data: pagamentos } = usePagamentos(eventoId);
 
   const custoPrestadores = prestadores?.reduce((sum, p) => sum + Number(p.valor_acordado), 0) || 0;
   const custoInsumos = checklistItems?.reduce((sum, item) => 
     sum + (Number(item.custo_unitario) * item.quantidade), 0) || 0;
+  const custoOutros = pagamentos?.reduce((sum, p) => sum + Number(p.valor), 0) || 0;
   
-  const custoTotal = custoPrestadores + custoInsumos;
+  const custoTotal = custoPrestadores + custoInsumos + custoOutros;
   
   const prestadoresPagos = prestadores?.filter(p => p.status_pagamento === 'PAGO')
     .reduce((sum, p) => sum + Number(p.valor_acordado), 0) || 0;
@@ -102,6 +105,21 @@ export function FinanceiroTab({ eventoId, evento }: FinanceiroTabProps) {
               <p className="text-lg font-semibold">R$ {custoInsumos.toFixed(2)}</p>
               <p className="text-xs text-muted-foreground">
                 Levar, alugar e comprar
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between border-b pb-3">
+            <div>
+              <p className="font-medium">Outros Pagamentos</p>
+              <p className="text-sm text-muted-foreground">
+                {pagamentos?.length || 0} pagamento(s)
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-lg font-semibold">R$ {custoOutros.toFixed(2)}</p>
+              <p className="text-xs text-muted-foreground">
+                Diversos
               </p>
             </div>
           </div>
