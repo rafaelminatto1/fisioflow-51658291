@@ -24,8 +24,8 @@ export const participanteCreateSchema = z.object({
   observacoes: z.string().optional().or(z.literal('')),
 });
 
-// Schema para atualizar participante
-export const participanteUpdateSchema = participanteCreateSchema.partial();
+// Schema para atualizar participante (evento_id não pode ser alterado)
+export const participanteUpdateSchema = participanteCreateSchema.omit({ evento_id: true }).partial();
 
 // Schema completo do participante
 export const participanteSchema = participanteCreateSchema.extend({

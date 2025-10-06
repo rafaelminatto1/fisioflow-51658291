@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { NewEventoModal } from '@/components/eventos/NewEventoModal';
+import { useEventos, useDeleteEvento } from '@/hooks/useEventos';
 import { 
   Calendar, 
   MapPin, 
@@ -30,6 +32,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -37,40 +49,25 @@ export default function Eventos() {
   const [busca, setBusca] = useState('');
   const [filtroStatus, setFiltroStatus] = useState<string>('todos');
   const [filtroCategoria, setFiltroCategoria] = useState<string>('todos');
+  const [newEventoOpen, setNewEventoOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [eventoToDelete, setEventoToDelete] = useState<string | null>(null);
 
-  // Mock data - será substituído por dados reais do Supabase
-  const eventos = [
-    {
-      id: '1',
-      nome: 'Corrida de Rua 5K',
-      descricao: 'Corrida beneficente no parque',
-      categoria: 'corrida',
-      local: 'Parque Ibirapuera',
-      data_inicio: new Date('2025-11-15'),
-      data_fim: new Date('2025-11-15'),
-      status: 'AGENDADO',
-      gratuito: false,
-      valor_padrao_prestador: 150,
-      total_prestadores: 5,
-      total_participantes: 120,
-      custo_total: 2500,
-    },
-    {
-      id: '2',
-      nome: 'Ação Corporativa - Empresa XYZ',
-      descricao: 'Ativação em empresa',
-      categoria: 'corporativo',
-      local: 'Escritório Av. Paulista',
-      data_inicio: new Date('2025-11-20'),
-      data_fim: new Date('2025-11-20'),
-      status: 'AGENDADO',
-      gratuito: false,
-      valor_padrao_prestador: 200,
-      total_prestadores: 3,
-      total_participantes: 50,
-      custo_total: 1800,
-    },
-  ];
+  const { data: eventos = [], isLoading } = useEventos({
+    status: filtroStatus,
+    categoria: filtroCategoria,
+    busca,
+  });
+
+  const deleteEvento = useDeleteEvento();
+
+  const handleDelete = async () => {
+    if (eventoToDelete) {
+      await deleteEvento.mutateAsync(eventoToDelete);
+      setDeleteDialogOpen(false);
+      setEventoToDelete(null);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -97,17 +94,29 @@ export default function Eventos() {
     return labels[categoria] || categoria;
   };
 
-  const eventosFiltrados = eventos.filter((evento) => {
-    const matchBusca = evento.nome.toLowerCase().includes(busca.toLowerCase()) ||
-                       evento.local.toLowerCase().includes(busca.toLowerCase());
-    const matchStatus = filtroStatus === 'todos' || evento.status === filtroStatus;
-    const matchCategoria = filtroCategoria === 'todos' || evento.categoria === filtroCategoria;
-    
-    return matchBusca && matchStatus && matchCategoria;
-  });
+  const eventosFiltrados = eventos;
 
   return (
     <MainLayout>
+      <NewEventoModal open={newEventoOpen} onOpenChange={setNewEventoOpen} />
+      
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita e todos os dados relacionados (prestadores, participantes, checklist) serão removidos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -117,7 +126,7 @@ export default function Eventos() {
               Gerencie todos os eventos da clínica
             </p>
           </div>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setNewEventoOpen(true)}>
             <Plus className="w-4 h-4" />
             Novo Evento
           </Button>
@@ -171,8 +180,26 @@ export default function Eventos() {
         </Card>
 
         {/* Lista de Eventos */}
-        <div className="grid gap-4">
-          {eventosFiltrados.length === 0 ? (
+        {isLoading ? (
+          <div className="grid gap-4">
+            {[...Array(2)].map((_, i) => (
+              <Card key={i} className="animate-pulse">
+                <CardHeader>
+                  <div className="h-6 bg-muted rounded w-3/4 mb-2"></div>
+                  <div className="h-4 bg-muted rounded w-1/2"></div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-4 gap-4">
+                    <div className="h-12 bg-muted rounded"></div>
+                    <div className="h-12 bg-muted rounded"></div>
+                    <div className="h-12 bg-muted rounded"></div>
+                    <div className="h-12 bg-muted rounded"></div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : eventosFiltrados.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Calendar className="w-12 h-12 text-muted-foreground mb-4" />
@@ -183,7 +210,7 @@ export default function Eventos() {
                     : 'Comece criando seu primeiro evento'}
                 </p>
                 {!busca && filtroStatus === 'todos' && filtroCategoria === 'todos' && (
-                  <Button>
+                  <Button onClick={() => setNewEventoOpen(true)}>
                     <Plus className="w-4 h-4 mr-2" />
                     Criar Primeiro Evento
                   </Button>
@@ -191,8 +218,9 @@ export default function Eventos() {
               </CardContent>
             </Card>
           ) : (
-            eventosFiltrados.map((evento) => (
-              <Card key={evento.id} className="hover:shadow-lg transition-shadow">
+            <div className="grid gap-4">
+              {eventosFiltrados.map((evento) => (
+                <Card key={evento.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -225,7 +253,13 @@ export default function Eventos() {
                           <Edit className="w-4 h-4 mr-2" />
                           Editar
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
+                        <DropdownMenuItem 
+                          className="text-destructive"
+                          onClick={() => {
+                            setEventoToDelete(evento.id);
+                            setDeleteDialogOpen(true);
+                          }}
+                        >
                           <Trash2 className="w-4 h-4 mr-2" />
                           Excluir
                         </DropdownMenuItem>
@@ -236,15 +270,15 @@ export default function Eventos() {
                 
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Calendar className="w-4 h-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-muted-foreground text-xs">Data</p>
-                        <p className="font-medium">
-                          {format(evento.data_inicio, 'dd/MM/yyyy', { locale: ptBR })}
-                        </p>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-muted-foreground text-xs">Data</p>
+                          <p className="font-medium">
+                            {format(new Date(evento.data_inicio), 'dd/MM/yyyy', { locale: ptBR })}
+                          </p>
+                        </div>
                       </div>
-                    </div>
                     
                     <div className="flex items-center gap-2 text-sm">
                       <MapPin className="w-4 h-4 text-muted-foreground" />
@@ -254,28 +288,28 @@ export default function Eventos() {
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-2 text-sm">
-                      <Users className="w-4 h-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-muted-foreground text-xs">Participantes</p>
-                        <p className="font-medium">{evento.total_participantes}</p>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Users className="w-4 h-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-muted-foreground text-xs">Participantes</p>
+                          <p className="font-medium">0</p>
+                        </div>
                       </div>
-                    </div>
                     
-                    <div className="flex items-center gap-2 text-sm">
-                      <DollarSign className="w-4 h-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-muted-foreground text-xs">Custo Total</p>
-                        <p className="font-medium">R$ {evento.custo_total.toFixed(2)}</p>
+                      <div className="flex items-center gap-2 text-sm">
+                        <DollarSign className="w-4 h-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-muted-foreground text-xs">Custo Total</p>
+                          <p className="font-medium">R$ 0,00</p>
+                        </div>
                       </div>
-                    </div>
                   </div>
                   
-                  <div className="mt-4 pt-4 border-t flex justify-between items-center">
-                    <div className="flex gap-2">
-                      <Badge variant="secondary" className="text-xs">
-                        {evento.total_prestadores} prestadores
-                      </Badge>
+                    <div className="mt-4 pt-4 border-t flex justify-between items-center">
+                      <div className="flex gap-2">
+                        <Badge variant="secondary" className="text-xs">
+                          0 prestadores
+                        </Badge>
                       {evento.gratuito && (
                         <Badge variant="outline" className="text-xs">
                           Gratuito
@@ -290,9 +324,10 @@ export default function Eventos() {
                   </div>
                 </CardContent>
               </Card>
-            ))
-          )}
-        </div>
+              ))}
+            </div>
+          )
+        }
       </div>
     </MainLayout>
   );

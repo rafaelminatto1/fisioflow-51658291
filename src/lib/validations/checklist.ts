@@ -9,8 +9,8 @@ export const checklistItemCreateSchema = z.object({
   custo_unitario: z.number().nonnegative().default(0),
 });
 
-// Schema para atualizar item de checklist
-export const checklistItemUpdateSchema = checklistItemCreateSchema.partial().extend({
+// Schema para atualizar item de checklist (evento_id não pode ser alterado)
+export const checklistItemUpdateSchema = checklistItemCreateSchema.omit({ evento_id: true }).partial().extend({
   status: z.enum(['ABERTO', 'OK']).optional(),
 });
 
