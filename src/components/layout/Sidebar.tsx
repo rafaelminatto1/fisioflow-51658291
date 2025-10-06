@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useNavPreload } from '@/hooks/useIntelligentPreload';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import { 
   LayoutDashboard, 
   Users, 
@@ -17,7 +19,8 @@ import {
   FileText,
   Brain,
   MessageSquare,
-  ShoppingCart
+  ShoppingCart,
+  LogOut
 } from 'lucide-react';
 
 const menuItems = [
@@ -38,7 +41,26 @@ const menuItems = [
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   useNavPreload();
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: 'Erro ao sair',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Logout realizado',
+        description: 'Até breve!',
+      });
+      navigate('/auth');
+    }
+  };
 
   return (
     <div className={cn(
@@ -118,7 +140,20 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-border/50">
+      <div className="p-4 border-t border-border/50 space-y-3">
+        <Button
+          variant="ghost"
+          onClick={handleLogout}
+          className={cn(
+            "w-full justify-start transition-all duration-300 hover:bg-destructive/10 hover:text-destructive",
+            collapsed ? "px-2 py-3" : "px-4 py-3"
+          )}
+          size={collapsed ? "icon" : "default"}
+        >
+          <LogOut className={cn("w-5 h-5", !collapsed && "mr-3")} />
+          {!collapsed && <span className="font-medium">Sair</span>}
+        </Button>
+        
         {!collapsed && (
           <div className="bg-gradient-card p-4 rounded-xl border border-border/50 shadow-card">
             <div className="flex items-center gap-3">
