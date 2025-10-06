@@ -7,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Heart, Shield } from 'lucide-react';
+import { Loader2, Heart, Shield, CheckCircle, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { passwordSchema, emailSchema, fullNameSchema } from '@/lib/validations/auth';
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -16,8 +17,10 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [error, setError] = useState('');
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     // Check if user is already logged in
@@ -62,8 +65,35 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setValidationErrors({});
 
     try {
+      // Validar campos com Zod
+      const fullNameResult = fullNameSchema.safeParse(fullName);
+      const emailResult = emailSchema.safeParse(email);
+      const passwordResult = passwordSchema.safeParse(password);
+      
+      const errors: Record<string, string> = {};
+      
+      if (!fullNameResult.success) {
+        errors.fullName = fullNameResult.error.errors[0].message;
+      }
+      if (!emailResult.success) {
+        errors.email = emailResult.error.errors[0].message;
+      }
+      if (!passwordResult.success) {
+        errors.password = passwordResult.error.errors[0].message;
+      }
+      if (password !== confirmPassword) {
+        errors.confirmPassword = 'As senhas não coincidem';
+      }
+      
+      if (Object.keys(errors).length > 0) {
+        setValidationErrors(errors);
+        setLoading(false);
+        return;
+      }
+
       const redirectUrl = `${window.location.origin}/`;
       
       const { error } = await supabase.auth.signUp({
@@ -73,7 +103,6 @@ export default function Auth() {
           emailRedirectTo: redirectUrl,
           data: {
             full_name: fullName,
-            role: 'fisioterapeuta'
           }
         }
       });
@@ -96,6 +125,18 @@ export default function Auth() {
     } finally {
       setLoading(false);
     }
+  };
+  
+  // Função auxiliar para verificar requisitos de senha em tempo real
+  const getPasswordRequirements = () => {
+    const requirements = [
+      { label: 'Mínimo 8 caracteres', met: password.length >= 8 },
+      { label: 'Uma letra maiúscula', met: /[A-Z]/.test(password) },
+      { label: 'Uma letra minúscula', met: /[a-z]/.test(password) },
+      { label: 'Um número', met: /[0-9]/.test(password) },
+      { label: 'Um caractere especial', met: /[^A-Za-z0-9]/.test(password) },
+    ];
+    return requirements;
   };
 
   return (
@@ -175,9 +216,15 @@ export default function Auth() {
                       type="text"
                       placeholder="Seu nome completo"
                       value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
+                      onChange={(e) => {
+                        setFullName(e.target.value);
+                        setValidationErrors(prev => ({ ...prev, fullName: '' }));
+                      }}
                       required
                     />
+                    {validationErrors.fullName && (
+                      <p className="text-sm text-destructive">{validationErrors.fullName}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="register-email">Email</Label>
@@ -186,9 +233,15 @@ export default function Auth() {
                       type="email"
                       placeholder="seu@email.com"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setValidationErrors(prev => ({ ...prev, email: '' }));
+                      }}
                       required
                     />
+                    {validationErrors.email && (
+                      <p className="text-sm text-destructive">{validationErrors.email}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="register-password">Senha</Label>
@@ -197,10 +250,50 @@ export default function Auth() {
                       type="password"
                       placeholder="••••••••"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        setValidationErrors(prev => ({ ...prev, password: '' }));
+                      }}
                       required
-                      minLength={6}
                     />
+                    {validationErrors.password && (
+                      <p className="text-sm text-destructive">{validationErrors.password}</p>
+                    )}
+                    
+                    {/* Indicadores de requisitos de senha */}
+                    {password && (
+                      <div className="mt-2 space-y-1">
+                        {getPasswordRequirements().map((req, idx) => (
+                          <div key={idx} className="flex items-center gap-2 text-xs">
+                            {req.met ? (
+                              <CheckCircle className="h-3 w-3 text-green-600" />
+                            ) : (
+                              <XCircle className="h-3 w-3 text-muted-foreground" />
+                            )}
+                            <span className={req.met ? 'text-green-600' : 'text-muted-foreground'}>
+                              {req.label}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="register-confirm-password">Confirmar Senha</Label>
+                    <Input
+                      id="register-confirm-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        setValidationErrors(prev => ({ ...prev, confirmPassword: '' }));
+                      }}
+                      required
+                    />
+                    {validationErrors.confirmPassword && (
+                      <p className="text-sm text-destructive">{validationErrors.confirmPassword}</p>
+                    )}
                   </div>
                   
                   {error && (
