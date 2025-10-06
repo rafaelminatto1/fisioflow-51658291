@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { NewEventoModal } from '@/components/eventos/NewEventoModal';
 import { EditEventoModal } from '@/components/eventos/EditEventoModal';
 import { useEventos, useDeleteEvento } from '@/hooks/useEventos';
+import { useRealtimeEventos } from '@/hooks/useRealtimeEventos';
 import { 
   Calendar, 
   MapPin, 
@@ -57,6 +58,9 @@ export default function Eventos() {
   const [selectedEvento, setSelectedEvento] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [eventoToDelete, setEventoToDelete] = useState<string | null>(null);
+
+  // Habilitar atualizações em tempo real
+  useRealtimeEventos();
 
   const { data: eventos = [], isLoading } = useEventos({
     status: filtroStatus,
@@ -138,10 +142,15 @@ export default function Eventos() {
               Gerencie todos os eventos da clínica
             </p>
           </div>
-          <Button className="gap-2" onClick={() => setNewEventoOpen(true)}>
-            <Plus className="w-4 h-4" />
-            Novo Evento
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate('/eventos/analytics')}>
+              📊 Analytics
+            </Button>
+            <Button className="gap-2" onClick={() => setNewEventoOpen(true)}>
+              <Plus className="w-4 h-4" />
+              Novo Evento
+            </Button>
+          </div>
         </div>
 
         {/* Filtros */}
@@ -232,7 +241,7 @@ export default function Eventos() {
           ) : (
             <div className="grid gap-4">
               {eventosFiltrados.map((evento) => (
-                <Card key={evento.id} className="hover:shadow-lg transition-shadow">
+                <Card key={evento.id} className="hover:shadow-lg transition-all duration-300 animate-fade-in">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">

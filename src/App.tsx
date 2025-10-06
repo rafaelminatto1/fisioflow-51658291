@@ -29,6 +29,7 @@ const Partner = lazy(() => import("./pages/Partner"));
 const Vouchers = lazy(() => import("./pages/Vouchers"));
 const Eventos = lazy(() => import("./pages/Eventos"));
 const EventoDetalhes = lazy(() => import("./pages/EventoDetalhes"));
+const EventosAnalytics = lazy(() => import("./pages/EventosAnalytics"));
 const FileUploadTest = lazy(() => import("./pages/FileUploadTest"));
 
 const AdvancedAnalytics = lazy(() => import("./components/analytics/AdvancedAnalytics"));
@@ -110,6 +111,7 @@ const App = () => {
                   <Route path="/partner" element={<ProtectedRoute><Partner /></ProtectedRoute>} />
                   <Route path="/vouchers" element={<ProtectedRoute><Vouchers /></ProtectedRoute>} />
           <Route path="/eventos" element={<ProtectedRoute><Eventos /></ProtectedRoute>} />
+          <Route path="/eventos/analytics" element={<ProtectedRoute><EventosAnalytics /></ProtectedRoute>} />
           <Route path="/eventos/:id" element={<ProtectedRoute><EventoDetalhes /></ProtectedRoute>} />
                   <Route path="/file-upload-test" element={<ProtectedRoute><FileUploadTest /></ProtectedRoute>} />
                   
