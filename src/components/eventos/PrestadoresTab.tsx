@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { usePrestadores, useCreatePrestador, useDeletePrestador, useMarcarPagamento } from '@/hooks/usePrestadores';
+import { useExportPrestadores } from '@/hooks/useExportPrestadores';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2, Check, X } from 'lucide-react';
+import { Plus, Trash2, Check, X, Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -35,6 +36,7 @@ export function PrestadoresTab({ eventoId }: PrestadoresTabProps) {
   const createPrestador = useCreatePrestador();
   const deletePrestador = useDeletePrestador();
   const marcarPagamento = useMarcarPagamento();
+  const exportPrestadores = useExportPrestadores();
 
   const {
     register,
@@ -65,6 +67,10 @@ export function PrestadoresTab({ eventoId }: PrestadoresTabProps) {
     await marcarPagamento.mutateAsync({ id, eventoId });
   };
 
+  const handleExport = async () => {
+    await exportPrestadores.mutateAsync(eventoId);
+  };
+
   const totalPago = prestadores?.filter(p => p.status_pagamento === 'PAGO')
     .reduce((sum, p) => sum + Number(p.valor_acordado), 0) || 0;
 
@@ -81,7 +87,12 @@ export function PrestadoresTab({ eventoId }: PrestadoresTabProps) {
             <span className="text-yellow-600">Pendente: R$ {totalPendente.toFixed(2)}</span>
           </div>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExport} disabled={!prestadores || prestadores.length === 0}>
+            <Download className="h-4 w-4 mr-2" />
+            Exportar CSV
+          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
@@ -141,6 +152,7 @@ export function PrestadoresTab({ eventoId }: PrestadoresTabProps) {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
