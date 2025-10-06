@@ -3,13 +3,15 @@ import { useEvento } from '@/hooks/useEventos';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Calendar, MapPin, DollarSign } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, DollarSign, Edit } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PrestadoresTab } from '@/components/eventos/PrestadoresTab';
 import { ChecklistTab } from '@/components/eventos/ChecklistTab';
 import { ParticipantesTab } from '@/components/eventos/ParticipantesTab';
 import { FinanceiroTab } from '@/components/eventos/FinanceiroTab';
+import { EditEventoModal } from '@/components/eventos/EditEventoModal';
+import { useState } from 'react';
 
 const statusColors = {
   AGENDADO: 'bg-blue-500',
@@ -29,6 +31,7 @@ export default function EventoDetalhes() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: evento, isLoading } = useEvento(id!);
+  const [editOpen, setEditOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -56,6 +59,14 @@ export default function EventoDetalhes() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      {evento && (
+        <EditEventoModal
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          evento={evento}
+        />
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -74,6 +85,10 @@ export default function EventoDetalhes() {
             </div>
           </div>
         </div>
+        <Button onClick={() => setEditOpen(true)}>
+          <Edit className="h-4 w-4 mr-2" />
+          Editar Evento
+        </Button>
       </div>
 
       {/* Info Cards */}
