@@ -74,6 +74,98 @@ export type Database = {
           },
         ]
       }
+      checklist_items: {
+        Row: {
+          created_at: string
+          custo_unitario: number
+          evento_id: string
+          id: string
+          quantidade: number
+          status: string
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          custo_unitario?: number
+          evento_id: string
+          id?: string
+          quantidade?: number
+          status?: string
+          tipo: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          custo_unitario?: number
+          evento_id?: string
+          id?: string
+          quantidade?: number
+          status?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_items_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eventos: {
+        Row: {
+          categoria: string
+          created_at: string
+          data_fim: string
+          data_inicio: string
+          descricao: string | null
+          gratuito: boolean
+          id: string
+          link_whatsapp: string | null
+          local: string
+          nome: string
+          status: string
+          updated_at: string
+          valor_padrao_prestador: number
+        }
+        Insert: {
+          categoria: string
+          created_at?: string
+          data_fim: string
+          data_inicio: string
+          descricao?: string | null
+          gratuito?: boolean
+          id?: string
+          link_whatsapp?: string | null
+          local: string
+          nome: string
+          status?: string
+          updated_at?: string
+          valor_padrao_prestador?: number
+        }
+        Update: {
+          categoria?: string
+          created_at?: string
+          data_fim?: string
+          data_inicio?: string
+          descricao?: string | null
+          gratuito?: boolean
+          id?: string
+          link_whatsapp?: string | null
+          local?: string
+          nome?: string
+          status?: string
+          updated_at?: string
+          valor_padrao_prestador?: number
+        }
+        Relationships: []
+      }
       exercise_plan_items: {
         Row: {
           created_at: string | null
@@ -290,6 +382,94 @@ export type Database = {
           },
         ]
       }
+      pagamentos: {
+        Row: {
+          comprovante_url: string | null
+          created_at: string
+          descricao: string
+          evento_id: string
+          id: string
+          pago_em: string
+          tipo: string
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          comprovante_url?: string | null
+          created_at?: string
+          descricao: string
+          evento_id: string
+          id?: string
+          pago_em: string
+          tipo: string
+          updated_at?: string
+          valor: number
+        }
+        Update: {
+          comprovante_url?: string | null
+          created_at?: string
+          descricao?: string
+          evento_id?: string
+          id?: string
+          pago_em?: string
+          tipo?: string
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagamentos_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      participantes: {
+        Row: {
+          contato: string | null
+          created_at: string
+          evento_id: string
+          id: string
+          instagram: string | null
+          nome: string
+          observacoes: string | null
+          segue_perfil: boolean
+          updated_at: string
+        }
+        Insert: {
+          contato?: string | null
+          created_at?: string
+          evento_id: string
+          id?: string
+          instagram?: string | null
+          nome: string
+          observacoes?: string | null
+          segue_perfil?: boolean
+          updated_at?: string
+        }
+        Update: {
+          contato?: string | null
+          created_at?: string
+          evento_id?: string
+          id?: string
+          instagram?: string | null
+          nome?: string
+          observacoes?: string | null
+          segue_perfil?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "participantes_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_progress: {
         Row: {
           created_at: string | null
@@ -414,6 +594,50 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prestadores: {
+        Row: {
+          contato: string | null
+          cpf_cnpj: string | null
+          created_at: string
+          evento_id: string
+          id: string
+          nome: string
+          status_pagamento: string
+          updated_at: string
+          valor_acordado: number
+        }
+        Insert: {
+          contato?: string | null
+          cpf_cnpj?: string | null
+          created_at?: string
+          evento_id: string
+          id?: string
+          nome: string
+          status_pagamento?: string
+          updated_at?: string
+          valor_acordado?: number
+        }
+        Update: {
+          contato?: string | null
+          cpf_cnpj?: string | null
+          created_at?: string
+          evento_id?: string
+          id?: string
+          nome?: string
+          status_pagamento?: string
+          updated_at?: string
+          valor_acordado?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prestadores_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos"
             referencedColumns: ["id"]
           },
         ]
