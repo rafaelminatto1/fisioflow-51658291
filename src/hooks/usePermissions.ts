@@ -26,9 +26,14 @@ export function usePermissions(): PermissionsResult {
         .select('role')
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching user roles:', error);
+        return [];
+      }
+      
       return data.map(r => r.role as AppRole);
     },
+    staleTime: 5 * 60 * 1000, // Cache por 5 minutos
   });
 
   const isAdmin = roles.includes('admin');
