@@ -4,7 +4,7 @@ import { z } from 'zod';
 export const eventoCreateSchema = z.object({
   nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(100),
   descricao: z.string().optional(),
-  categoria: z.enum(['corrida', 'corporativo', 'ativacao', 'outro']),
+  categoria: z.enum(['corrida', 'corporativo', 'ativacao', 'workshop', 'outro']),
   local: z.string().min(2, 'Local é obrigatório'),
   data_inicio: z.date({
     required_error: 'Data de início é obrigatória',
