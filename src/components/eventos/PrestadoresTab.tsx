@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { usePrestadores, useCreatePrestador, useDeletePrestador, useMarcarPagamento } from '@/hooks/usePrestadores';
 import { useExportPrestadores } from '@/hooks/useExportPrestadores';
+import { useRealtimePrestadores } from '@/hooks/useRealtimePrestadores';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Trash2, Check, X, Download } from 'lucide-react';
@@ -37,6 +38,9 @@ export function PrestadoresTab({ eventoId }: PrestadoresTabProps) {
   const deletePrestador = useDeletePrestador();
   const marcarPagamento = useMarcarPagamento();
   const exportPrestadores = useExportPrestadores();
+
+  // Habilitar atualizações em tempo real
+  useRealtimePrestadores(eventoId);
 
   const {
     register,
