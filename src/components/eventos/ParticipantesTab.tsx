@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { useParticipantes, useCreateParticipante, useDeleteParticipante, useExportParticipantes } from '@/hooks/useParticipantes';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2, Download } from 'lucide-react';
+import { Plus, Trash2, Download, FileText } from 'lucide-react';
+import { exportParticipantesPDF } from '@/lib/export/pdfExport';
+import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -37,6 +39,7 @@ export function ParticipantesTab({ eventoId }: ParticipantesTabProps) {
   const createParticipante = useCreateParticipante();
   const deleteParticipante = useDeleteParticipante();
   const exportParticipantes = useExportParticipantes();
+  const { toast } = useToast();
 
   const {
     register,
@@ -68,6 +71,26 @@ export function ParticipantesTab({ eventoId }: ParticipantesTabProps) {
     await exportParticipantes.mutateAsync(eventoId);
   };
 
+  const handleExportPDF = () => {
+    if (!participantes) return;
+    
+    exportParticipantesPDF(
+      participantes.map(p => ({
+        nome: p.nome,
+        contato: p.contato,
+        instagram: p.instagram,
+        segue_perfil: p.segue_perfil,
+        observacoes: p.observacoes
+      })),
+      'Evento' // TODO: passar nome do evento
+    );
+    
+    toast({
+      title: 'PDF gerado',
+      description: 'Lista de participantes exportada com sucesso',
+    });
+  };
+
   const totalSeguem = participantes?.filter(p => p.segue_perfil).length || 0;
 
   return (
@@ -82,7 +105,11 @@ export function ParticipantesTab({ eventoId }: ParticipantesTabProps) {
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleExport} disabled={!participantes || participantes.length === 0}>
             <Download className="h-4 w-4 mr-2" />
-            Exportar CSV
+            CSV
+          </Button>
+          <Button variant="outline" onClick={handleExportPDF} disabled={!participantes || participantes.length === 0}>
+            <FileText className="h-4 w-4 mr-2" />
+            PDF
           </Button>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
