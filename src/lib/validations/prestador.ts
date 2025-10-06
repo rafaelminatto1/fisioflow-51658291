@@ -2,15 +2,15 @@ import { z } from 'zod';
 
 // Schema para criar prestador
 export const prestadorCreateSchema = z.object({
+  evento_id: z.string().uuid(),
   nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(100),
   contato: z.string().min(8, 'Contato deve ter pelo menos 8 caracteres').optional().or(z.literal('')),
   cpf_cnpj: z.string().min(11, 'CPF/CNPJ inválido').optional().or(z.literal('')),
   valor_acordado: z.number().nonnegative().default(0),
-  evento_id: z.string().uuid(),
 });
 
-// Schema para atualizar prestador
-export const prestadorUpdateSchema = prestadorCreateSchema.partial().extend({
+// Schema para atualizar prestador (evento_id não pode ser alterado)
+export const prestadorUpdateSchema = prestadorCreateSchema.omit({ evento_id: true }).partial().extend({
   status_pagamento: z.enum(['PENDENTE', 'PAGO']).optional(),
 });
 
