@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { useNavPreload } from '@/hooks/useIntelligentPreload';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { GlobalSearch } from '@/components/GlobalSearch';
 import { 
   LayoutDashboard, 
   Users, 
@@ -98,13 +97,6 @@ export function Sidebar() {
           </Button>
         </div>
       </div>
-
-      {/* Global Search */}
-      {!collapsed && (
-        <div className="px-4 pt-4">
-          <GlobalSearch />
-        </div>
-      )}
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
