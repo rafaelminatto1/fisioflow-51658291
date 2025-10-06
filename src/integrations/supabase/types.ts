@@ -74,6 +74,45 @@ export type Database = {
           },
         ]
       }
+      audit_log: {
+        Row: {
+          action: string
+          id: string
+          ip_address: unknown | null
+          new_data: Json | null
+          old_data: Json | null
+          record_id: string | null
+          table_name: string
+          timestamp: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          id?: string
+          ip_address?: unknown | null
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          table_name: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          id?: string
+          ip_address?: unknown | null
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          table_name?: string
+          timestamp?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       checklist_items: {
         Row: {
           created_at: string
@@ -866,6 +905,39 @@ export type Database = {
           },
         ]
       }
+      user_invitations: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          role: Database["public"]["Enums"]["app_role"]
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          invited_by: string
+          role: Database["public"]["Enums"]["app_role"]
+          token: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -892,9 +964,25 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      security_events: {
+        Row: {
+          action: string | null
+          id: string | null
+          new_data: Json | null
+          old_data: Json | null
+          table_name: string | null
+          timestamp: string | null
+          user_email: string | null
+          user_name: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      create_user_invitation: {
+        Args: { _email: string; _role: Database["public"]["Enums"]["app_role"] }
+        Returns: Json
+      }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
@@ -913,6 +1001,16 @@ export type Database = {
       is_fisio_or_admin: {
         Args: { _user_id: string }
         Returns: boolean
+      }
+      log_audit_event: {
+        Args: {
+          _action: string
+          _new_data?: Json
+          _old_data?: Json
+          _record_id: string
+          _table_name: string
+        }
+        Returns: undefined
       }
       user_has_any_role: {
         Args: {
@@ -934,6 +1032,10 @@ export type Database = {
       }
       user_is_fisio_or_admin: {
         Args: { _user_id: string }
+        Returns: boolean
+      }
+      validate_invitation: {
+        Args: { _token: string; _user_id: string }
         Returns: boolean
       }
     }
