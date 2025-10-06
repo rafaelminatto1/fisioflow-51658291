@@ -1,8 +1,17 @@
-import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useUpdateEvento } from '@/hooks/useEventos';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -11,16 +20,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { eventoUpdateSchema, EventoUpdate } from '@/lib/validations/evento';
-import { useUpdateEvento } from '@/hooks/useEventos';
+
+const updateSchema = z.object({
+  id: z.string().uuid(),
+  nome: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(100),
+  descricao: z.string().optional(),
+  categoria: z.enum(['corrida', 'corporativo', 'ativacao', 'workshop', 'outro']),
+  status: z.enum(['AGENDADO', 'EM_ANDAMENTO', 'CONCLUIDO', 'CANCELADO']),
+  local: z.string().min(2, 'Local é obrigatório'),
+  data_inicio: z.string(),
+  data_fim: z.string(),
+  gratuito: z.boolean(),
+  link_whatsapp: z.string().optional(),
+  valor_padrao_prestador: z.number().nonnegative().default(0),
+});
+
+type UpdateFormData = z.infer<typeof updateSchema>;
 
 interface EditEventoModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  evento: any;
+  evento: {
+    id: string;
+    nome: string;
+    descricao: string | null;
+    categoria: string;
+    status: string;
+    local: string;
+    data_inicio: string;
+    data_fim: string;
+    gratuito: boolean;
+    link_whatsapp: string | null;
+    valor_padrao_prestador: number;
+  };
 }
 
 export function EditEventoModal({ open, onOpenChange, evento }: EditEventoModalProps) {
@@ -29,23 +61,25 @@ export function EditEventoModal({ open, onOpenChange, evento }: EditEventoModalP
   const {
     register,
     handleSubmit,
-    control,
+    setValue,
+    watch,
     reset,
     formState: { errors },
-  } = useForm<EventoUpdate>({
-    resolver: zodResolver(eventoUpdateSchema),
+  } = useForm<UpdateFormData>({
+    resolver: zodResolver(updateSchema),
   });
 
   useEffect(() => {
     if (evento) {
       reset({
+        id: evento.id,
         nome: evento.nome,
         descricao: evento.descricao || '',
-        categoria: evento.categoria,
+        categoria: evento.categoria as any,
+        status: evento.status as any,
         local: evento.local,
-        data_inicio: new Date(evento.data_inicio),
-        data_fim: new Date(evento.data_fim),
-        status: evento.status,
+        data_inicio: evento.data_inicio,
+        data_fim: evento.data_fim,
         gratuito: evento.gratuito,
         link_whatsapp: evento.link_whatsapp || '',
         valor_padrao_prestador: Number(evento.valor_padrao_prestador),
@@ -53,10 +87,20 @@ export function EditEventoModal({ open, onOpenChange, evento }: EditEventoModalP
     }
   }, [evento, reset]);
 
-  const onSubmit = async (data: EventoUpdate) => {
-    await updateEvento.mutateAsync({ id: evento.id, data });
+  const onSubmit = async (formData: UpdateFormData) => {
+    const { id, data_inicio, data_fim, ...rest } = formData;
+    const data: any = {
+      ...rest,
+      data_inicio: data_inicio ? new Date(data_inicio) : undefined,
+      data_fim: data_fim ? new Date(data_fim) : undefined,
+    };
+    await updateEvento.mutateAsync({ id, data });
     onOpenChange(false);
   };
+
+  const categoria = watch('categoria');
+  const status = watch('status');
+  const gratuito = watch('gratuito');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -70,65 +114,51 @@ export function EditEventoModal({ open, onOpenChange, evento }: EditEventoModalP
             <Label htmlFor="nome">Nome do Evento *</Label>
             <Input id="nome" {...register('nome')} />
             {errors.nome && (
-              <p className="text-sm text-red-500 mt-1">{errors.nome.message}</p>
+              <p className="text-sm text-destructive mt-1">{errors.nome.message}</p>
             )}
           </div>
 
           <div>
             <Label htmlFor="descricao">Descrição</Label>
             <Textarea id="descricao" {...register('descricao')} rows={3} />
-            {errors.descricao && (
-              <p className="text-sm text-red-500 mt-1">{errors.descricao.message}</p>
-            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="categoria">Categoria *</Label>
-              <Controller
-                name="categoria"
-                control={control}
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="corrida">Corrida</SelectItem>
-                      <SelectItem value="corporativo">Corporativo</SelectItem>
-                      <SelectItem value="ativacao">Ativação</SelectItem>
-                      <SelectItem value="outro">Outro</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.categoria && (
-                <p className="text-sm text-red-500 mt-1">{errors.categoria.message}</p>
-              )}
+              <Select
+                value={categoria}
+                onValueChange={(value) => setValue('categoria', value as any)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="corrida">Corrida</SelectItem>
+                  <SelectItem value="corporativo">Corporativo</SelectItem>
+                  <SelectItem value="ativacao">Ativação</SelectItem>
+                  <SelectItem value="workshop">Workshop</SelectItem>
+                  <SelectItem value="outro">Outro</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
               <Label htmlFor="status">Status *</Label>
-              <Controller
-                name="status"
-                control={control}
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="AGENDADO">Agendado</SelectItem>
-                      <SelectItem value="EM_ANDAMENTO">Em Andamento</SelectItem>
-                      <SelectItem value="CONCLUIDO">Concluído</SelectItem>
-                      <SelectItem value="CANCELADO">Cancelado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.status && (
-                <p className="text-sm text-red-500 mt-1">{errors.status.message}</p>
-              )}
+              <Select
+                value={status}
+                onValueChange={(value) => setValue('status', value as any)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="AGENDADO">Agendado</SelectItem>
+                  <SelectItem value="EM_ANDAMENTO">Em Andamento</SelectItem>
+                  <SelectItem value="CONCLUIDO">Concluído</SelectItem>
+                  <SelectItem value="CANCELADO">Cancelado</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -136,76 +166,42 @@ export function EditEventoModal({ open, onOpenChange, evento }: EditEventoModalP
             <Label htmlFor="local">Local *</Label>
             <Input id="local" {...register('local')} />
             {errors.local && (
-              <p className="text-sm text-red-500 mt-1">{errors.local.message}</p>
+              <p className="text-sm text-destructive mt-1">{errors.local.message}</p>
             )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="data_inicio">Data de Início *</Label>
-              <Controller
-                name="data_inicio"
-                control={control}
-                render={({ field }) => (
-                  <Input
-                    type="date"
-                    value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
-                    onChange={(e) => field.onChange(new Date(e.target.value))}
-                  />
-                )}
-              />
-              {errors.data_inicio && (
-                <p className="text-sm text-red-500 mt-1">{errors.data_inicio.message}</p>
-              )}
+              <Label htmlFor="data_inicio">Data Início *</Label>
+              <Input id="data_inicio" type="date" {...register('data_inicio')} />
             </div>
 
             <div>
-              <Label htmlFor="data_fim">Data de Fim *</Label>
-              <Controller
-                name="data_fim"
-                control={control}
-                render={({ field }) => (
-                  <Input
-                    type="date"
-                    value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
-                    onChange={(e) => field.onChange(new Date(e.target.value))}
-                  />
-                )}
-              />
-              {errors.data_fim && (
-                <p className="text-sm text-red-500 mt-1">{errors.data_fim.message}</p>
-              )}
+              <Label htmlFor="data_fim">Data Fim *</Label>
+              <Input id="data_fim" type="date" {...register('data_fim')} />
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Controller
-              name="gratuito"
-              control={control}
-              render={({ field }) => (
-                <Checkbox
-                  id="gratuito"
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              )}
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="gratuito"
+              checked={gratuito}
+              onChange={(e) => setValue('gratuito', e.target.checked)}
+              className="rounded border-input"
             />
             <Label htmlFor="gratuito" className="cursor-pointer">
-              Evento gratuito
+              Evento Gratuito
             </Label>
           </div>
 
           <div>
-            <Label htmlFor="link_whatsapp">Link do WhatsApp</Label>
+            <Label htmlFor="link_whatsapp">Link WhatsApp</Label>
             <Input
               id="link_whatsapp"
-              type="url"
-              placeholder="https://chat.whatsapp.com/..."
               {...register('link_whatsapp')}
+              placeholder="https://chat.whatsapp.com/..."
             />
-            {errors.link_whatsapp && (
-              <p className="text-sm text-red-500 mt-1">{errors.link_whatsapp.message}</p>
-            )}
           </div>
 
           <div>
@@ -216,11 +212,6 @@ export function EditEventoModal({ open, onOpenChange, evento }: EditEventoModalP
               step="0.01"
               {...register('valor_padrao_prestador', { valueAsNumber: true })}
             />
-            {errors.valor_padrao_prestador && (
-              <p className="text-sm text-red-500 mt-1">
-                {errors.valor_padrao_prestador.message}
-              </p>
-            )}
           </div>
 
           <div className="flex justify-end gap-2 pt-4">

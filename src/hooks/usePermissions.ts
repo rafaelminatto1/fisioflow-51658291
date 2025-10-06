@@ -1,31 +1,61 @@
-import { useAuth } from '@/hooks/useAuth';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
-export function usePermissions() {
-  const { profile } = useAuth();
+type AppRole = 'admin' | 'fisioterapeuta' | 'estagiario' | 'paciente';
 
-  const hasPermission = (permission: string) => {
-    if (!profile?.role) return false;
-    
-    // Admin has all permissions
-    if (profile.role === 'admin') return true;
-    
-    // Basic role-based permissions
-    const rolePermissions = {
-      fisioterapeuta: ['read_patients', 'write_patients', 'read_appointments', 'write_appointments'],
-      estagiario: ['read_patients', 'read_appointments'],
-      paciente: ['read_own_data'],
-      parceiro: ['read_own_data', 'write_sessions']
-    };
-    
-    return rolePermissions[profile.role]?.includes(permission) || false;
+interface PermissionsResult {
+  roles: AppRole[];
+  isAdmin: boolean;
+  isFisio: boolean;
+  isEstagiario: boolean;
+  isPaciente: boolean;
+  canWrite: (resource: string) => boolean;
+  canDelete: (resource: string) => boolean;
+  isLoading: boolean;
+}
+
+export function usePermissions(): PermissionsResult {
+  const { data: roles = [], isLoading } = useQuery({
+    queryKey: ['user-roles'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      return data.map(r => r.role as AppRole);
+    },
+  });
+
+  const isAdmin = roles.includes('admin');
+  const isFisio = roles.includes('fisioterapeuta');
+  const isEstagiario = roles.includes('estagiario');
+  const isPaciente = roles.includes('paciente');
+
+  const canWrite = (resource: string): boolean => {
+    if (isAdmin || isFisio) return true;
+    if (isEstagiario) {
+      return ['participantes', 'checklist'].includes(resource);
+    }
+    return false;
+  };
+
+  const canDelete = (resource: string): boolean => {
+    return isAdmin;
   };
 
   return {
-    hasPermission,
-    canRead: (resource: string) => hasPermission(`read_${resource}`),
-    canWrite: (resource: string) => hasPermission(`write_${resource}`),
-    isAdmin: profile?.role === 'admin',
-    isTherapist: profile?.role === 'fisioterapeuta',
-    role: profile?.role
+    roles,
+    isAdmin,
+    isFisio,
+    isEstagiario,
+    isPaciente,
+    canWrite,
+    canDelete,
+    isLoading,
   };
 }
