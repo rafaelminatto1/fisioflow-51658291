@@ -3,8 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Users, DollarSign, Activity, Clock, UserCheck, AlertCircle, TrendingUp } from 'lucide-react';
+import { EventosStatsWidget } from '@/components/eventos/EventosStatsWidget';
+import { useNavigate } from 'react-router-dom';
 
 export const AdminDashboard: React.FC = () => {
+  const navigate = useNavigate();
+  
   // Mock data - em produção viria do backend
   const stats = {
     totalPacientes: 247,
@@ -33,6 +37,12 @@ export const AdminDashboard: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-fade-in">
+      {/* Estatísticas de Eventos */}
+      <div>
+        <h2 className="text-lg font-semibold mb-4">Estatísticas de Eventos</h2>
+        <EventosStatsWidget />
+      </div>
+
       {/* Cards de Estatísticas */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-gradient-card border-border/50 hover:shadow-medical transition-all duration-300 group">
@@ -142,23 +152,26 @@ export const AdminDashboard: React.FC = () => {
             <CardTitle className="text-foreground">Ações Rápidas</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button className="w-full justify-start bg-gradient-primary text-primary-foreground hover:bg-gradient-primary/90 shadow-sm">
+            <Button 
+              className="w-full justify-start bg-gradient-primary text-primary-foreground hover:bg-gradient-primary/90 shadow-sm"
+              onClick={() => navigate('/patients')}
+            >
               <Users className="mr-3 h-4 w-4" />
               Novo Paciente
             </Button>
-            <Button className="w-full justify-start" variant="outline">
+            <Button className="w-full justify-start" variant="outline" onClick={() => navigate('/schedule')}>
               <Calendar className="mr-3 h-4 w-4 text-primary" />
               Agendar Consulta
             </Button>
-            <Button className="w-full justify-start" variant="outline">
-              <Activity className="mr-3 h-4 w-4 text-secondary" />
-              Registrar Evolução
+            <Button className="w-full justify-start" variant="outline" onClick={() => navigate('/eventos')}>
+              <Calendar className="mr-3 h-4 w-4 text-secondary" />
+              Gerenciar Eventos
             </Button>
-            <Button className="w-full justify-start" variant="outline">
+            <Button className="w-full justify-start" variant="outline" onClick={() => navigate('/reports')}>
               <TrendingUp className="mr-3 h-4 w-4 text-primary-glow" />
               Relatórios
             </Button>
-            <Button className="w-full justify-start" variant="outline">
+            <Button className="w-full justify-start" variant="outline" onClick={() => navigate('/financial')}>
               <DollarSign className="mr-3 h-4 w-4 text-secondary" />
               Financeiro
             </Button>
