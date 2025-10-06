@@ -28,11 +28,11 @@ export function EventosStatsWidget() {
   if (!stats) return null;
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card>
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 animate-fade-in">
+      <Card className="hover-scale transition-all duration-300">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total de Eventos</CardTitle>
-          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <Calendar className="h-4 w-4 text-primary" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.totalEventos}</div>
@@ -42,10 +42,10 @@ export function EventosStatsWidget() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="hover-scale transition-all duration-300">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Participantes</CardTitle>
-          <Users className="h-4 w-4 text-muted-foreground" />
+          <Users className="h-4 w-4 text-primary" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.totalParticipantes}</div>
@@ -55,10 +55,10 @@ export function EventosStatsWidget() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="hover-scale transition-all duration-300">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Custo Total</CardTitle>
-          <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <DollarSign className="h-4 w-4 text-primary" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">R$ {stats.custoTotal.toFixed(2)}</div>
@@ -68,10 +68,10 @@ export function EventosStatsWidget() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="hover-scale transition-all duration-300">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Prestadores</CardTitle>
-          <AlertCircle className="h-4 w-4 text-muted-foreground" />
+          <AlertCircle className="h-4 w-4 text-primary" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.totalPrestadores}</div>

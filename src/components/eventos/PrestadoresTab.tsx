@@ -4,7 +4,9 @@ import { useExportPrestadores } from '@/hooks/useExportPrestadores';
 import { useRealtimePrestadores } from '@/hooks/useRealtimePrestadores';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2, Check, X, Download } from 'lucide-react';
+import { Plus, Trash2, Check, X, Download, FileText } from 'lucide-react';
+import { exportPrestadoresPDF } from '@/lib/export/pdfExport';
+import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -38,6 +40,7 @@ export function PrestadoresTab({ eventoId }: PrestadoresTabProps) {
   const deletePrestador = useDeletePrestador();
   const marcarPagamento = useMarcarPagamento();
   const exportPrestadores = useExportPrestadores();
+  const { toast } = useToast();
 
   // Habilitar atualizações em tempo real
   useRealtimePrestadores(eventoId);
@@ -75,6 +78,26 @@ export function PrestadoresTab({ eventoId }: PrestadoresTabProps) {
     await exportPrestadores.mutateAsync(eventoId);
   };
 
+  const handleExportPDF = () => {
+    if (!prestadores) return;
+    
+    exportPrestadoresPDF(
+      prestadores.map(p => ({
+        nome: p.nome,
+        contato: p.contato,
+        cpf_cnpj: p.cpf_cnpj,
+        valor_acordado: Number(p.valor_acordado),
+        status_pagamento: p.status_pagamento
+      })),
+      'Evento' // TODO: passar nome do evento
+    );
+    
+    toast({
+      title: 'PDF gerado',
+      description: 'Relatório de prestadores exportado com sucesso',
+    });
+  };
+
   const totalPago = prestadores?.filter(p => p.status_pagamento === 'PAGO')
     .reduce((sum, p) => sum + Number(p.valor_acordado), 0) || 0;
 
@@ -94,7 +117,11 @@ export function PrestadoresTab({ eventoId }: PrestadoresTabProps) {
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleExport} disabled={!prestadores || prestadores.length === 0}>
             <Download className="h-4 w-4 mr-2" />
-            Exportar CSV
+            CSV
+          </Button>
+          <Button variant="outline" onClick={handleExportPDF} disabled={!prestadores || prestadores.length === 0}>
+            <FileText className="h-4 w-4 mr-2" />
+            PDF
           </Button>
           <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
