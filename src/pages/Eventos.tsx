@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -46,6 +47,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function Eventos() {
+  const navigate = useNavigate();
   const [busca, setBusca] = useState('');
   const [filtroStatus, setFiltroStatus] = useState<string>('todos');
   const [filtroCategoria, setFiltroCategoria] = useState<string>('todos');
@@ -245,7 +247,7 @@ export default function Eventos() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/eventos/${evento.id}`)}>
                           <Eye className="w-4 h-4 mr-2" />
                           Visualizar
                         </DropdownMenuItem>
@@ -317,7 +319,7 @@ export default function Eventos() {
                       )}
                     </div>
                     
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => navigate(`/eventos/${evento.id}`)}>
                       <Eye className="w-3 h-3 mr-2" />
                       Ver Detalhes
                     </Button>
