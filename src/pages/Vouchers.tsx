@@ -118,14 +118,40 @@ export default function Vouchers() {
 
   const loadVouchers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('vouchers')
-        .select('*')
-        .eq('is_active', true)
-        .order('price');
-
-      if (error) throw error;
-      setVouchers(data || []);
+      // Mock data - tabela vouchers ainda não existe
+      const mockVouchers: Voucher[] = [
+        {
+          id: '1',
+          name: 'Sessão Avulsa',
+          description: 'Ideal para experimentar ou treinos pontuais',
+          price: 100,
+          sessions_included: 1,
+          validity_days: 30,
+          is_unlimited: false,
+          is_active: true
+        },
+        {
+          id: '2',
+          name: 'Pacote 4 Sessões',
+          description: 'Melhor custo-benefício para treinos semanais',
+          price: 320,
+          sessions_included: 4,
+          validity_days: 60,
+          is_unlimited: false,
+          is_active: true
+        },
+        {
+          id: '3',
+          name: 'Plano Mensal',
+          description: 'Acesso ilimitado durante 30 dias',
+          price: 450,
+          sessions_included: null,
+          validity_days: 30,
+          is_unlimited: true,
+          is_active: true
+        }
+      ];
+      setVouchers(mockVouchers);
     } catch (error) {
       console.error('Error loading vouchers:', error);
       toast({

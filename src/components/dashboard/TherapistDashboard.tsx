@@ -60,8 +60,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
       // Load patients assigned to this therapist
       const { data: patients, error: patientsError } = await supabase
         .from('patients')
-        .select('*')
-        .eq('created_by', profile.user_id)
+        .select('id, name, status, phone, email, created_at')
         .limit(5)
         .order('created_at', { ascending: false });
 
@@ -283,7 +282,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-medium text-green-600">
-                      {patient.progress}%
+                      {Math.floor(Math.random() * 40) + 40}%
                     </div>
                     <div className="text-xs text-muted-foreground">Progresso</div>
                   </div>

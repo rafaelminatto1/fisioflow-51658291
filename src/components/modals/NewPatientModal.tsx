@@ -215,7 +215,7 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
                   </PopoverContent>
                 </Popover>
                 {errors.birth_date && (
-                  <p className="text-sm text-destructive">{errors.birth_date.message}</p>
+                  <p className="text-sm text-destructive">{String(errors.birth_date.message)}</p>
                 )}
               </div>
 

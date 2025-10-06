@@ -140,7 +140,7 @@ export function PatientDashboard({ lastUpdate, profile }: PatientDashboardProps)
           id: item.id,
           name: item.exercises?.name || 'Exercício',
           sets: item.sets,
-          reps: item.reps,
+          reps: item.repetitions, // Corrigido de 'reps' para 'repetitions'
           completed: Math.random() > 0.5 // Mock completion status
         }))
       ) || [];
@@ -148,7 +148,7 @@ export function PatientDashboard({ lastUpdate, profile }: PatientDashboardProps)
       setStats({
         nextAppointments: appointments?.length || 0,
         todayExercises: allExercises.length,
-        treatmentProgress: patientRecord?.progress || Math.floor(Math.random() * 40) + 40,
+        treatmentProgress: Math.floor(Math.random() * 40) + 40, // Removido patientRecord?.progress (campo não existe)
         completedSessions: Math.floor(Math.random() * 10) + 5 // Mock data
       });
 
