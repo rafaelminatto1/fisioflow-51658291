@@ -651,7 +651,6 @@ export type Database = {
           id: string
           onboarding_completed: boolean | null
           phone: string | null
-          role: string
           updated_at: string | null
           user_id: string
         }
@@ -663,7 +662,6 @@ export type Database = {
           id?: string
           onboarding_completed?: boolean | null
           phone?: string | null
-          role?: string
           updated_at?: string | null
           user_id: string
         }
@@ -675,7 +673,6 @@ export type Database = {
           id?: string
           onboarding_completed?: boolean | null
           phone?: string | null
-          role?: string
           updated_at?: string | null
           user_id?: string
         }
@@ -914,6 +911,28 @@ export type Database = {
         Returns: boolean
       }
       is_fisio_or_admin: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
+      user_has_any_role: {
+        Args: {
+          _roles: Database["public"]["Enums"]["app_role"][]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      user_has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      user_is_admin: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
+      user_is_fisio_or_admin: {
         Args: { _user_id: string }
         Returns: boolean
       }
