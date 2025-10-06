@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useChecklist, useCreateChecklistItem, useDeleteChecklistItem, useToggleChecklistItem } from '@/hooks/useChecklist';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Trash2 } from 'lucide-react';
@@ -39,10 +40,12 @@ interface ChecklistTabProps {
 
 export function ChecklistTab({ eventoId }: ChecklistTabProps) {
   const [open, setOpen] = useState(false);
+  const [filtroTipo, setFiltroTipo] = useState<string>('todos');
   const { data: items, isLoading } = useChecklist(eventoId);
   const createItem = useCreateChecklistItem();
   const deleteItem = useDeleteChecklistItem();
   const toggleItem = useToggleChecklistItem();
+  const { canWrite, canDelete } = usePermissions();
 
   const {
     register,
@@ -75,6 +78,10 @@ export function ChecklistTab({ eventoId }: ChecklistTabProps) {
     await toggleItem.mutateAsync({ id, eventoId });
   };
 
+  const itemsFiltrados = filtroTipo === 'todos' 
+    ? items 
+    : items?.filter(item => item.tipo === filtroTipo);
+
   const custoTotal = items?.reduce((sum, item) => sum + (Number(item.custo_unitario) * item.quantidade), 0) || 0;
   const totalPorTipo = items?.reduce((acc, item) => {
     const custo = Number(item.custo_unitario) * item.quantidade;
@@ -84,25 +91,27 @@ export function ChecklistTab({ eventoId }: ChecklistTabProps) {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>Checklist</CardTitle>
-          <div className="flex gap-4 mt-2 text-sm">
-            <span>Total: R$ {custoTotal.toFixed(2)}</span>
-            {totalPorTipo && Object.entries(totalPorTipo).map(([tipo, valor]) => (
-              <span key={tipo} className="text-muted-foreground">
-                {tipo}: R$ {valor.toFixed(2)}
-              </span>
-            ))}
+      <CardHeader className="space-y-4">
+        <div className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Checklist</CardTitle>
+            <div className="flex gap-4 mt-2 text-sm">
+              <span>Total: R$ {custoTotal.toFixed(2)}</span>
+              {totalPorTipo && Object.entries(totalPorTipo).map(([tipo, valor]) => (
+                <span key={tipo} className="text-muted-foreground capitalize">
+                  {tipo}: R$ {valor.toFixed(2)}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Adicionar Item
-            </Button>
-          </DialogTrigger>
+          {canWrite('eventos') && (
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar Item
+                </Button>
+              </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Novo Item</DialogTitle>
@@ -175,12 +184,50 @@ export function ChecklistTab({ eventoId }: ChecklistTabProps) {
             </form>
           </DialogContent>
         </Dialog>
+          )}
+        </div>
+        
+        {/* Filtros */}
+        <div className="flex gap-2">
+          <Button
+            variant={filtroTipo === 'todos' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setFiltroTipo('todos')}
+          >
+            Todos ({items?.length || 0})
+          </Button>
+          <Button
+            variant={filtroTipo === 'levar' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setFiltroTipo('levar')}
+          >
+            Levar ({items?.filter(i => i.tipo === 'levar').length || 0})
+          </Button>
+          <Button
+            variant={filtroTipo === 'alugar' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setFiltroTipo('alugar')}
+          >
+            Alugar ({items?.filter(i => i.tipo === 'alugar').length || 0})
+          </Button>
+          <Button
+            variant={filtroTipo === 'comprar' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setFiltroTipo('comprar')}
+          >
+            Comprar ({items?.filter(i => i.tipo === 'comprar').length || 0})
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Carregando...</p>
-        ) : !items || items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhum item no checklist.</p>
+        ) : !itemsFiltrados || itemsFiltrados.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            {filtroTipo === 'todos' 
+              ? 'Nenhum item no checklist.' 
+              : `Nenhum item para ${filtroTipo}.`}
+          </p>
         ) : (
           <Table>
             <TableHeader>
@@ -195,31 +242,34 @@ export function ChecklistTab({ eventoId }: ChecklistTabProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((item) => (
+              {itemsFiltrados.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell>
                     <Checkbox
                       checked={item.status === 'OK'}
-                      onCheckedChange={() => handleToggle(item.id)}
+                      onCheckedChange={() => canWrite('eventos') && handleToggle(item.id)}
+                      disabled={!canWrite('eventos')}
                     />
                   </TableCell>
-                  <TableCell className={item.status === 'OK' ? 'line-through' : ''}>
+                  <TableCell className={item.status === 'OK' ? 'line-through text-muted-foreground' : ''}>
                     {item.titulo}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{item.tipo}</Badge>
+                    <Badge variant="outline" className="capitalize">{item.tipo}</Badge>
                   </TableCell>
                   <TableCell>{item.quantidade}</TableCell>
                   <TableCell>R$ {Number(item.custo_unitario).toFixed(2)}</TableCell>
                   <TableCell>R$ {(Number(item.custo_unitario) * item.quantidade).toFixed(2)}</TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(item.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {canDelete('eventos') && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(item.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

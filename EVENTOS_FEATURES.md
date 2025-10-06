@@ -2,12 +2,15 @@
 
 ## ✨ Funcionalidades Implementadas
 
-### 1. **Sistema de Roles e Permissões**
+### 1. **Sistema de Roles e Permissões** ✅
 - ✅ Tabela `user_roles` separada para segurança
 - ✅ Enum `app_role` (admin, fisioterapeuta, estagiario, paciente)
 - ✅ Funções helper: `has_role()`, `is_admin()`, `is_fisio_or_admin()`, `get_user_roles()`
 - ✅ RLS policies para controle de acesso
 - ✅ Hook `usePermissions()` para verificação client-side
+- ✅ **Integração completa em todos os componentes de eventos**
+- ✅ Botões condicionais baseados em permissões (criar, editar, deletar)
+- ✅ Controle de acesso em Prestadores, Checklist, Participantes e Financeiro
 
 **Segurança:** As roles estão em tabela separada com SECURITY DEFINER functions para evitar escalação de privilégios.
 
@@ -79,9 +82,26 @@
 
 ---
 
-### 6. **Melhorias de UX**
+### 6. **Busca Global Inteligente** ✅
+- ✅ Componente `GlobalSearch` com atalho `Ctrl/⌘ + K`
+- ✅ Busca unificada em eventos, participantes e prestadores
+- ✅ Debounce para performance (300ms)
+- ✅ Preview de resultados com contexto
+- ✅ Navegação rápida por teclado
+- ✅ Ícones diferenciados por tipo de resultado
 
-#### Loading States
+**UX:** Busca em tempo real com limite de 5 resultados por tipo para não sobrecarregar.
+
+---
+
+### 7. **Melhorias de UX Avançadas** ✅
+
+#### Checklist
+- ✅ Filtros por tipo (Todos/Levar/Alugar/Comprar)
+- ✅ Contadores dinâmicos por filtro
+- ✅ Items riscados quando marcados como OK
+- ✅ Checkbox desabilitado sem permissão de escrita
+- ✅ Capitalizações automáticas de tipos
 - ✅ Skeletons nos stats cards
 - ✅ Spinners em botões de submit
 - ✅ Estados de loading em listagens
@@ -109,21 +129,34 @@ src/
 │   ├── useEventoTemplates.ts
 │   ├── useRealtimeEventos.ts
 │   ├── useRealtimePrestadores.ts
-│   └── usePermissions.ts
+│   ├── usePermissions.ts ← NOVO
+│   └── useDebounce.ts ← NOVO
 │
 ├── components/eventos/
 │   ├── NewEventoModal.tsx (com templates)
+│   ├── EditEventoModal.tsx ← NOVO
 │   ├── EventosAnalytics.tsx
 │   ├── EventosStatsWidget.tsx
-│   ├── PrestadoresTab.tsx (export PDF)
-│   └── ParticipantesTab.tsx (export PDF)
+│   ├── GlobalSearch.tsx ← NOVO
+│   ├── PrestadoresTab.tsx (com permissões)
+│   ├── ChecklistTab.tsx (com filtros e permissões) ← MELHORADO
+│   ├── ParticipantesTab.tsx (com permissões) ← MELHORADO
+│   └── FinanceiroTab.tsx (dashboard melhorado) ← MELHORADO
+│
+├── components/layout/
+│   └── MainLayout.tsx (com GlobalSearch) ← MELHORADO
 │
 ├── lib/
 │   ├── export/pdfExport.ts
-│   └── validations/evento.ts
+│   └── validations/
+│       ├── evento.ts (com categoria workshop)
+│       ├── prestador.ts
+│       ├── checklist.ts
+│       └── participante.ts
 │
 └── pages/
-    ├── Eventos.tsx
+    ├── Eventos.tsx (com permissões)
+    ├── EventoDetalhes.tsx
     └── EventosAnalytics.tsx
 
 supabase/migrations/
@@ -133,6 +166,12 @@ supabase/migrations/
 ---
 
 ## 🚀 Como Usar
+
+### Busca Global
+1. Pressione `Ctrl + K` (Windows/Linux) ou `⌘ + K` (Mac)
+2. Digite o nome do evento, participante ou prestador
+3. Navegue pelos resultados com setas
+4. Pressione Enter ou clique para abrir
 
 ### Criar Evento com Template
 1. Clique em "Novo Evento"
@@ -151,16 +190,30 @@ supabase/migrations/
 2. Ou acesse `/eventos/analytics` diretamente
 3. Visualize métricas consolidadas de todos os eventos
 
-### Gerenciar Permissões
-```typescript
-const { isAdmin, canWrite } = usePermissions();
+### Gerenciar Checklist
+1. Acesse o evento
+2. Vá para aba "Checklist"
+3. Use os filtros para ver items por tipo (Todos/Levar/Alugar/Comprar)
+4. Marque items como OK clicando no checkbox
+5. Veja totais por tipo automaticamente
 
+### Verificar Permissões
+```typescript
+const { isAdmin, isFisio, isEstagiario, canWrite, canDelete } = usePermissions();
+
+// Verificar role específica
 if (isAdmin) {
   // Acesso total
 }
 
+// Verificar permissão de escrita
 if (canWrite('eventos')) {
   // Pode criar/editar eventos
+}
+
+// Verificar permissão de deletar
+if (canDelete('eventos')) {
+  // Pode deletar eventos (apenas admin)
 }
 ```
 

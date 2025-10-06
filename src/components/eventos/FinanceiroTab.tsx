@@ -2,7 +2,9 @@ import { usePrestadores } from '@/hooks/usePrestadores';
 import { useChecklist } from '@/hooks/useChecklist';
 import { usePagamentos } from '@/hooks/usePagamentos';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, TrendingDown, AlertCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { DollarSign, TrendingDown, AlertCircle, TrendingUp, Package } from 'lucide-react';
 
 interface FinanceiroTabProps {
   eventoId: string;
@@ -24,12 +26,17 @@ export function FinanceiroTab({ eventoId, evento }: FinanceiroTabProps) {
   const prestadoresPagos = prestadores?.filter(p => p.status_pagamento === 'PAGO')
     .reduce((sum, p) => sum + Number(p.valor_acordado), 0) || 0;
   const prestadoresPendentes = custoPrestadores - prestadoresPagos;
+  const percentualPago = custoPrestadores > 0 ? (prestadoresPagos / custoPrestadores) * 100 : 0;
+  
+  const checklistOk = checklistItems?.filter(i => i.status === 'OK').length || 0;
+  const checklistTotal = checklistItems?.length || 0;
+  const percentualChecklist = checklistTotal > 0 ? (checklistOk / checklistTotal) * 100 : 0;
 
   return (
     <div className="space-y-6">
       {/* Resumo Geral */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="hover-scale">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Custo Total</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -42,7 +49,7 @@ export function FinanceiroTab({ eventoId, evento }: FinanceiroTabProps) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover-scale">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Pago</CardTitle>
             <TrendingDown className="h-4 w-4 text-green-600" />
@@ -51,13 +58,16 @@ export function FinanceiroTab({ eventoId, evento }: FinanceiroTabProps) {
             <div className="text-2xl font-bold text-green-600">
               R$ {prestadoresPagos.toFixed(2)}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Prestadores já pagos
-            </p>
+            <div className="mt-2">
+              <Progress value={percentualPago} className="h-2" />
+              <p className="text-xs text-muted-foreground mt-1">
+                {percentualPago.toFixed(0)}% dos prestadores pagos
+              </p>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover-scale">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Pendente</CardTitle>
             <AlertCircle className="h-4 w-4 text-yellow-600" />
@@ -67,30 +77,60 @@ export function FinanceiroTab({ eventoId, evento }: FinanceiroTabProps) {
               R$ {prestadoresPendentes.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Aguardando pagamento
+              {prestadores?.filter(p => p.status_pagamento === 'PENDENTE').length || 0} prestador(es)
             </p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover-scale">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Checklist</CardTitle>
+            <Package className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">
+              {checklistOk}/{checklistTotal}
+            </div>
+            <div className="mt-2">
+              <Progress value={percentualChecklist} className="h-2" />
+              <p className="text-xs text-muted-foreground mt-1">
+                {percentualChecklist.toFixed(0)}% concluído
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Breakdown por Categoria */}
-      <Card>
+      <Card className="animate-fade-in">
         <CardHeader>
           <CardTitle>Detalhamento de Custos</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between border-b pb-3">
-            <div>
-              <p className="font-medium">Prestadores de Serviço</p>
-              <p className="text-sm text-muted-foreground">
-                {prestadores?.length || 0} prestador(es)
-              </p>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <p className="font-medium">Prestadores de Serviço</p>
+                <Badge variant="secondary">
+                  {prestadores?.length || 0}
+                </Badge>
+              </div>
+              <div className="flex gap-3 mt-2">
+                <span className="text-xs text-green-600">
+                  ✓ {prestadores?.filter(p => p.status_pagamento === 'PAGO').length || 0} Pagos
+                </span>
+                <span className="text-xs text-yellow-600">
+                  ⏳ {prestadores?.filter(p => p.status_pagamento === 'PENDENTE').length || 0} Pendentes
+                </span>
+              </div>
             </div>
             <div className="text-right">
               <p className="text-lg font-semibold">R$ {custoPrestadores.toFixed(2)}</p>
-              <p className="text-xs text-green-600">
-                Pago: R$ {prestadoresPagos.toFixed(2)}
-              </p>
+              <div className="flex gap-2 mt-1 text-xs">
+                <span className="text-green-600">R$ {prestadoresPagos.toFixed(2)}</span>
+                <span className="text-muted-foreground">|</span>
+                <span className="text-yellow-600">R$ {prestadoresPendentes.toFixed(2)}</span>
+              </div>
             </div>
           </div>
 
