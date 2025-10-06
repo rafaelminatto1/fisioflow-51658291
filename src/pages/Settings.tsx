@@ -1,27 +1,33 @@
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Settings as SettingsIcon, 
   User, 
   Bell, 
   Shield, 
   Clock,
-  History
+  History,
+  UserPlus
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { NotificationPreferences } from '@/components/notifications/NotificationPreferences';
 import { NotificationHistory } from '@/components/notifications/NotificationHistory';
+import { InviteUserModal } from '@/components/admin/InviteUserModal';
+import { usePermissions } from '@/hooks/usePermissions';
 
 const Settings = () => {
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('profile');
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const { isAdmin, isLoading: permissionsLoading } = usePermissions();
   
   const [notifications, setNotifications] = useState({
     email: true,
@@ -327,6 +333,43 @@ const Settings = () => {
 
           {/* Security Tab */}
           <TabsContent value="security" className="space-y-6">
+            {/* Gerenciamento de Usuários - Apenas Admins */}
+            {isAdmin && (
+              <Card className="bg-gradient-card border-border shadow-card">
+                <CardHeader className="border-b border-border">
+                  <CardTitle className="text-foreground flex items-center gap-2">
+                    <Shield className="w-5 h-5" />
+                    Gerenciamento de Usuários
+                  </CardTitle>
+                  <CardDescription>
+                    Convide novos membros para a equipe e gerencie permissões
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-4 sm:p-6 space-y-4">
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="space-y-1">
+                      <h3 className="font-medium">Convidar Usuário</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Envie convites para novos fisioterapeutas, estagiários ou administradores
+                      </p>
+                    </div>
+                    <Button onClick={() => setInviteModalOpen(true)}>
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Criar Convite
+                    </Button>
+                  </div>
+
+                  <Alert>
+                    <Shield className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>Segurança:</strong> Todos os convites expiram em 7 dias e são rastreados
+                      no log de auditoria do sistema.
+                    </AlertDescription>
+                  </Alert>
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="bg-gradient-card border-border shadow-card">
               <CardHeader className="border-b border-border">
                 <CardTitle className="text-foreground flex items-center gap-2">
@@ -439,6 +482,8 @@ const Settings = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      <InviteUserModal open={inviteModalOpen} onOpenChange={setInviteModalOpen} />
     </MainLayout>
   );
 };
