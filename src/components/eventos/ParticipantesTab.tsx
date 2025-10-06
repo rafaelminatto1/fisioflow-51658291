@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParticipantes, useCreateParticipante, useDeleteParticipante, useExportParticipantes } from '@/hooks/useParticipantes';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Trash2, Download, FileText } from 'lucide-react';
@@ -40,6 +41,7 @@ export function ParticipantesTab({ eventoId }: ParticipantesTabProps) {
   const deleteParticipante = useDeleteParticipante();
   const exportParticipantes = useExportParticipantes();
   const { toast } = useToast();
+  const { canWrite, canDelete } = usePermissions();
 
   const {
     register,
@@ -111,13 +113,14 @@ export function ParticipantesTab({ eventoId }: ParticipantesTabProps) {
             <FileText className="h-4 w-4 mr-2" />
             PDF
           </Button>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Adicionar Participante
-              </Button>
-            </DialogTrigger>
+          {canWrite('eventos') && (
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar Participante
+                </Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Novo Participante</DialogTitle>
@@ -183,6 +186,7 @@ export function ParticipantesTab({ eventoId }: ParticipantesTabProps) {
               </form>
             </DialogContent>
           </Dialog>
+          )}
         </div>
       </CardHeader>
       <CardContent>
@@ -217,13 +221,15 @@ export function ParticipantesTab({ eventoId }: ParticipantesTabProps) {
                     {participante.observacoes || '-'}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(participante.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {canDelete('eventos') && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(participante.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
