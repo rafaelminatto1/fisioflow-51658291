@@ -31,6 +31,7 @@ const menuItems = [
   { icon: FileText, label: 'Prontuário', href: '/medical-record' },
   { icon: Brain, label: 'Planos IA', href: '/smart-ai' },
   { icon: MessageSquare, label: 'Comunicação', href: '/communications' },
+  { icon: Calendar, label: 'Eventos', href: '/eventos' },
   { icon: ShoppingCart, label: 'Treinos', href: '/vouchers' },
   { icon: DollarSign, label: 'Financeiro', href: '/financial' },
   { icon: BarChart3, label: 'Analytics', href: '/analytics' },

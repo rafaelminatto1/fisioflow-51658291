@@ -27,6 +27,7 @@ const SmartAI = lazy(() => import("./pages/SmartAI"));
 const Communications = lazy(() => import("./pages/Communications"));
 const Partner = lazy(() => import("./pages/Partner"));
 const Vouchers = lazy(() => import("./pages/Vouchers"));
+const Eventos = lazy(() => import("./pages/Eventos"));
 const FileUploadTest = lazy(() => import("./pages/FileUploadTest"));
 
 const AdvancedAnalytics = lazy(() => import("./components/analytics/AdvancedAnalytics"));
@@ -107,6 +108,7 @@ const App = () => {
                   <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
                   <Route path="/partner" element={<ProtectedRoute><Partner /></ProtectedRoute>} />
                   <Route path="/vouchers" element={<ProtectedRoute><Vouchers /></ProtectedRoute>} />
+                  <Route path="/eventos" element={<ProtectedRoute><Eventos /></ProtectedRoute>} />
                   <Route path="/file-upload-test" element={<ProtectedRoute><FileUploadTest /></ProtectedRoute>} />
                   
                   <Route path="/analytics" element={<ProtectedRoute><AdvancedAnalytics /></ProtectedRoute>} />
