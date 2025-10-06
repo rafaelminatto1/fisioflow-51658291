@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,13 +7,16 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Heart, Shield, CheckCircle, XCircle } from 'lucide-react';
+import { Loader2, Heart, Shield, CheckCircle, XCircle, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { passwordSchema, emailSchema, fullNameSchema } from '@/lib/validations/auth';
 
 export default function Auth() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get('invite');
+  
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,6 +24,7 @@ export default function Auth() {
   const [fullName, setFullName] = useState('');
   const [error, setError] = useState('');
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [invitationData, setInvitationData] = useState<{ email: string; role: string } | null>(null);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -32,6 +36,43 @@ export default function Auth() {
     };
     checkAuth();
   }, [navigate]);
+
+  useEffect(() => {
+    // Verificar convite se token presente
+    const checkInvitation = async () => {
+      if (!inviteToken) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('user_invitations')
+          .select('email, role')
+          .eq('token', inviteToken)
+          .is('used_at', null)
+          .gt('expires_at', new Date().toISOString())
+          .single();
+
+        if (error || !data) {
+          toast({
+            title: 'Convite inválido',
+            description: 'Este convite expirou ou já foi utilizado',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        setInvitationData(data);
+        setEmail(data.email);
+        toast({
+          title: 'Convite válido!',
+          description: `Você foi convidado como ${data.role}`,
+        });
+      } catch (err) {
+        console.error('Error checking invitation:', err);
+      }
+    };
+
+    checkInvitation();
+  }, [inviteToken, toast]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,7 +137,7 @@ export default function Auth() {
 
       const redirectUrl = `${window.location.origin}/`;
       
-      const { error } = await supabase.auth.signUp({
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -107,16 +148,42 @@ export default function Auth() {
         }
       });
 
-      if (error) {
-        if (error.message.includes('User already registered')) {
+      if (signUpError) {
+        if (signUpError.message.includes('User already registered')) {
           setError('Este email já está cadastrado. Tente fazer login.');
         } else {
-          setError(error.message);
+          setError(signUpError.message);
+        }
+        return;
+      }
+
+      // Se houver token de convite, validar e atribuir role
+      if (inviteToken && authData.user) {
+        const { data: validationResult, error: validationError } = await supabase.rpc(
+          'validate_invitation',
+          {
+            _token: inviteToken,
+            _user_id: authData.user.id,
+          }
+        );
+
+        if (validationError || !validationResult) {
+          console.error('Erro ao validar convite:', validationError);
+          toast({
+            title: 'Aviso',
+            description: 'Conta criada, mas houve erro ao processar o convite',
+            variant: 'destructive',
+          });
+        } else {
+          toast({
+            title: 'Conta criada com sucesso!',
+            description: `Role ${invitationData?.role} atribuída`,
+          });
         }
       } else {
         toast({
-          title: "Conta criada com sucesso!",
-          description: "Verifique seu email para confirmar a conta",
+          title: 'Conta criada com sucesso!',
+          description: 'Verifique seu email para confirmar a conta',
         });
       }
     } catch (err: unknown) {
@@ -209,6 +276,15 @@ export default function Auth() {
               
               <TabsContent value="register">
                 <form onSubmit={handleSignUp} className="space-y-4">
+                  {invitationData && (
+                    <Alert>
+                      <Mail className="h-4 w-4" />
+                      <AlertDescription>
+                        Você foi convidado como <strong>{invitationData.role}</strong>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  
                   <div className="space-y-2">
                     <Label htmlFor="register-name">Nome Completo</Label>
                     <Input
@@ -238,6 +314,7 @@ export default function Auth() {
                         setValidationErrors(prev => ({ ...prev, email: '' }));
                       }}
                       required
+                      disabled={!!invitationData}
                     />
                     {validationErrors.email && (
                       <p className="text-sm text-destructive">{validationErrors.email}</p>
