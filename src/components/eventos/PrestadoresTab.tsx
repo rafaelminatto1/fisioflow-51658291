@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { usePrestadores, useCreatePrestador, useDeletePrestador, useMarcarPagamento } from '@/hooks/usePrestadores';
 import { useExportPrestadores } from '@/hooks/useExportPrestadores';
 import { useRealtimePrestadores } from '@/hooks/useRealtimePrestadores';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Trash2, Check, X, Download, FileText } from 'lucide-react';
@@ -41,6 +42,7 @@ export function PrestadoresTab({ eventoId }: PrestadoresTabProps) {
   const marcarPagamento = useMarcarPagamento();
   const exportPrestadores = useExportPrestadores();
   const { toast } = useToast();
+  const { canWrite, canDelete } = usePermissions();
 
   // Habilitar atualizações em tempo real
   useRealtimePrestadores(eventoId);
@@ -123,13 +125,14 @@ export function PrestadoresTab({ eventoId }: PrestadoresTabProps) {
             <FileText className="h-4 w-4 mr-2" />
             PDF
           </Button>
-          <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Adicionar Prestador
-            </Button>
-          </DialogTrigger>
+          {canWrite('eventos') && (
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar Prestador
+                </Button>
+              </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Novo Prestador</DialogTitle>
@@ -183,6 +186,7 @@ export function PrestadoresTab({ eventoId }: PrestadoresTabProps) {
             </form>
           </DialogContent>
         </Dialog>
+          )}
         </div>
       </CardHeader>
       <CardContent>
@@ -212,8 +216,8 @@ export function PrestadoresTab({ eventoId }: PrestadoresTabProps) {
                   <TableCell>
                     <Badge
                       variant={prestador.status_pagamento === 'PAGO' ? 'default' : 'secondary'}
-                      className="cursor-pointer"
-                      onClick={() => handleTogglePagamento(prestador.id)}
+                      className={canWrite('eventos') ? 'cursor-pointer' : ''}
+                      onClick={() => canWrite('eventos') && handleTogglePagamento(prestador.id)}
                     >
                       {prestador.status_pagamento === 'PAGO' ? (
                         <Check className="h-3 w-3 mr-1" />
@@ -224,13 +228,15 @@ export function PrestadoresTab({ eventoId }: PrestadoresTabProps) {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(prestador.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {canDelete('eventos') && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(prestador.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

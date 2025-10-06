@@ -2,6 +2,7 @@ import React from 'react';
 import { Sidebar } from './Sidebar';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { GlobalSearch } from '@/components/eventos/GlobalSearch';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +44,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           </div>
           
           <div className="flex items-center gap-4">
+            <GlobalSearch />
+            
             <Button variant="ghost" size="icon" className="hover:bg-accent/80 transition-colors">
               <Bell className="w-5 h-5" />
             </Button>

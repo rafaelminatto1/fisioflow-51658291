@@ -9,6 +9,7 @@ import { NewEventoModal } from '@/components/eventos/NewEventoModal';
 import { EditEventoModal } from '@/components/eventos/EditEventoModal';
 import { useEventos, useDeleteEvento } from '@/hooks/useEventos';
 import { useRealtimeEventos } from '@/hooks/useRealtimeEventos';
+import { usePermissions } from '@/hooks/usePermissions';
 import { 
   Calendar, 
   MapPin, 
@@ -59,6 +60,9 @@ export default function Eventos() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [eventoToDelete, setEventoToDelete] = useState<string | null>(null);
 
+  // Permissões e segurança
+  const { canWrite, canDelete } = usePermissions();
+
   // Habilitar atualizações em tempo real
   useRealtimeEventos();
 
@@ -98,6 +102,7 @@ export default function Eventos() {
       corrida: 'Corrida',
       corporativo: 'Corporativo',
       ativacao: 'Ativação',
+      workshop: 'Workshop',
       outro: 'Outro',
     };
     return labels[categoria] || categoria;
@@ -146,10 +151,12 @@ export default function Eventos() {
             <Button variant="outline" onClick={() => navigate('/eventos/analytics')}>
               📊 Analytics
             </Button>
-            <Button className="gap-2" onClick={() => setNewEventoOpen(true)}>
-              <Plus className="w-4 h-4" />
-              Novo Evento
-            </Button>
+            {canWrite('eventos') && (
+              <Button className="gap-2" onClick={() => setNewEventoOpen(true)}>
+                <Plus className="w-4 h-4" />
+                Novo Evento
+              </Button>
+            )}
           </div>
         </div>
 
@@ -193,6 +200,7 @@ export default function Eventos() {
                   <SelectItem value="corrida">Corrida</SelectItem>
                   <SelectItem value="corporativo">Corporativo</SelectItem>
                   <SelectItem value="ativacao">Ativação</SelectItem>
+                  <SelectItem value="workshop">Workshop</SelectItem>
                   <SelectItem value="outro">Outro</SelectItem>
                 </SelectContent>
               </Select>
@@ -230,7 +238,7 @@ export default function Eventos() {
                     ? 'Tente ajustar os filtros de busca'
                     : 'Comece criando seu primeiro evento'}
                 </p>
-                {!busca && filtroStatus === 'todos' && filtroCategoria === 'todos' && (
+                {!busca && filtroStatus === 'todos' && filtroCategoria === 'todos' && canWrite('eventos') && (
                   <Button onClick={() => setNewEventoOpen(true)}>
                     <Plus className="w-4 h-4 mr-2" />
                     Criar Primeiro Evento
@@ -270,23 +278,27 @@ export default function Eventos() {
                           <Eye className="w-4 h-4 mr-2" />
                           Visualizar
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => {
-                          setSelectedEvento(evento);
-                          setEditEventoOpen(true);
-                        }}>
-                          <Edit className="w-4 h-4 mr-2" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="text-destructive"
-                          onClick={() => {
-                            setEventoToDelete(evento.id);
-                            setDeleteDialogOpen(true);
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Excluir
-                        </DropdownMenuItem>
+                        {canWrite('eventos') && (
+                          <DropdownMenuItem onClick={() => {
+                            setSelectedEvento(evento);
+                            setEditEventoOpen(true);
+                          }}>
+                            <Edit className="w-4 h-4 mr-2" />
+                            Editar
+                          </DropdownMenuItem>
+                        )}
+                        {canDelete('eventos') && (
+                          <DropdownMenuItem 
+                            className="text-destructive"
+                            onClick={() => {
+                              setEventoToDelete(evento.id);
+                              setDeleteDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Excluir
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
