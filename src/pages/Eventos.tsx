@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { NewEventoModal } from '@/components/eventos/NewEventoModal';
+import { EditEventoModal } from '@/components/eventos/EditEventoModal';
 import { useEventos, useDeleteEvento } from '@/hooks/useEventos';
 import { 
   Calendar, 
@@ -52,6 +53,8 @@ export default function Eventos() {
   const [filtroStatus, setFiltroStatus] = useState<string>('todos');
   const [filtroCategoria, setFiltroCategoria] = useState<string>('todos');
   const [newEventoOpen, setNewEventoOpen] = useState(false);
+  const [editEventoOpen, setEditEventoOpen] = useState(false);
+  const [selectedEvento, setSelectedEvento] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [eventoToDelete, setEventoToDelete] = useState<string | null>(null);
 
@@ -101,6 +104,13 @@ export default function Eventos() {
   return (
     <MainLayout>
       <NewEventoModal open={newEventoOpen} onOpenChange={setNewEventoOpen} />
+      {selectedEvento && (
+        <EditEventoModal
+          open={editEventoOpen}
+          onOpenChange={setEditEventoOpen}
+          evento={selectedEvento}
+        />
+      )}
       
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
@@ -251,7 +261,10 @@ export default function Eventos() {
                           <Eye className="w-4 h-4 mr-2" />
                           Visualizar
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          setSelectedEvento(evento);
+                          setEditEventoOpen(true);
+                        }}>
                           <Edit className="w-4 h-4 mr-2" />
                           Editar
                         </DropdownMenuItem>
