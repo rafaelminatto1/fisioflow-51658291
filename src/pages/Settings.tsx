@@ -16,7 +16,8 @@ import {
   History,
   UserPlus,
   Users,
-  FileText
+  FileText,
+  Mail
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
@@ -387,6 +388,19 @@ const Settings = () => {
                       <Button variant="outline" onClick={() => navigate('/admin/audit-logs')}>
                         <FileText className="mr-2 h-4 w-4" />
                         Ver Logs
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="space-y-1">
+                        <h3 className="font-medium">Gerenciar Convites</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Visualize, revogue e copie links de convites pendentes
+                        </p>
+                      </div>
+                      <Button variant="outline" onClick={() => navigate('/admin/invitations')}>
+                        <Mail className="mr-2 h-4 w-4" />
+                        Ver Convites
                       </Button>
                     </div>
                   </div>
