@@ -403,6 +403,19 @@ const Settings = () => {
                         Ver Convites
                       </Button>
                     </div>
+
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="space-y-1">
+                        <h3 className="font-medium">Monitoramento de Segurança</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Acompanhe tentativas de login e atividades suspeitas
+                        </p>
+                      </div>
+                      <Button variant="outline" onClick={() => navigate('/admin/security')}>
+                        <Shield className="mr-2 h-4 w-4" />
+                        Ver Monitoramento
+                      </Button>
+                    </div>
                   </div>
 
                   <Alert>
