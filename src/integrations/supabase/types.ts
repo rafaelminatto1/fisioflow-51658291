@@ -1012,6 +1012,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      revoke_invitation: {
+        Args: { _invitation_id: string }
+        Returns: undefined
+      }
       user_has_any_role: {
         Args: {
           _roles: Database["public"]["Enums"]["app_role"][]
