@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { EmptyState } from '@/components/ui/empty-state';
+import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { NewEventoModal } from '@/components/eventos/NewEventoModal';
 import { EditEventoModal } from '@/components/eventos/EditEventoModal';
 import { useEventos, useDeleteEvento } from '@/hooks/useEventos';
@@ -210,42 +212,25 @@ export default function Eventos() {
 
         {/* Lista de Eventos */}
         {isLoading ? (
-          <div className="grid gap-4">
-            {[...Array(2)].map((_, i) => (
-              <Card key={i} className="animate-pulse">
-                <CardHeader>
-                  <div className="h-6 bg-muted rounded w-3/4 mb-2"></div>
-                  <div className="h-4 bg-muted rounded w-1/2"></div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-4 gap-4">
-                    <div className="h-12 bg-muted rounded"></div>
-                    <div className="h-12 bg-muted rounded"></div>
-                    <div className="h-12 bg-muted rounded"></div>
-                    <div className="h-12 bg-muted rounded"></div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <LoadingSkeleton type="card" rows={3} />
         ) : eventosFiltrados.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Calendar className="w-12 h-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">Nenhum evento encontrado</h3>
-                <p className="text-muted-foreground text-center mb-4">
-                  {busca || filtroStatus !== 'todos' || filtroCategoria !== 'todos'
-                    ? 'Tente ajustar os filtros de busca'
-                    : 'Comece criando seu primeiro evento'}
-                </p>
-                {!busca && filtroStatus === 'todos' && filtroCategoria === 'todos' && canWrite('eventos') && (
-                  <Button onClick={() => setNewEventoOpen(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Criar Primeiro Evento
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
+          <EmptyState
+            icon={Calendar}
+            title="Nenhum evento encontrado"
+            description={
+              busca || filtroStatus !== 'todos' || filtroCategoria !== 'todos'
+                ? 'Tente ajustar os filtros de busca'
+                : 'Comece criando seu primeiro evento'
+            }
+            action={
+              !busca && filtroStatus === 'todos' && filtroCategoria === 'todos' && canWrite('eventos')
+                ? {
+                    label: 'Criar Primeiro Evento',
+                    onClick: () => setNewEventoOpen(true)
+                  }
+                : undefined
+            }
+          />
           ) : (
             <div className="grid gap-4">
               {eventosFiltrados.map((evento) => (

@@ -12,13 +12,16 @@ export default defineConfig({
     css: true,
     reporters: ['verbose'],
     coverage: {
+      provider: 'v8',
       reporter: ['text', 'json', 'html'],
       exclude: [
         'node_modules/',
         'src/test/',
         '**/*.d.ts',
         '**/*.config.*',
-        '**/coverage/**'
+        '**/coverage/**',
+        '**/*.test.{ts,tsx}',
+        '**/mockData',
       ]
     }
   },
