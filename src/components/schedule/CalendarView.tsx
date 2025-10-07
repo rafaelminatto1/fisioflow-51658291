@@ -110,9 +110,13 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             {TIME_SLOTS.map(time => (
               <div 
                 key={time} 
-                className="h-16 border-b border-gray-100 cursor-pointer hover:bg-blue-50 transition-colors"
+                className="h-16 border-b border-border cursor-pointer hover:bg-primary/5 transition-colors group relative"
                 onClick={() => onTimeSlotClick(currentDate, time)}
-              ></div>
+              >
+                <span className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                  Clique para agendar
+                </span>
+              </div>
             ))}
             
             {/* Appointments overlay */}
@@ -124,16 +128,19 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 <div
                   key={apt.id}
                   className={cn(
-                    "absolute left-1 right-1 p-2 rounded-lg cursor-pointer shadow-sm",
+                    "absolute left-1 right-1 p-2 rounded-lg cursor-pointer shadow-md border-l-4",
                     getStatusColor(apt.status), 
-                    "text-white text-xs hover:shadow-md transition-shadow"
+                    "text-white text-xs hover:shadow-lg transition-all duration-200 hover-scale"
                   )}
                   style={{ top: `${top}px`, height: '56px' }}
                   onClick={() => onAppointmentClick(apt)}
                 >
-                  <div className="font-medium truncate">{apt.patientName}</div>
-                  <div className="opacity-90 truncate">{apt.type}</div>
-                  <div className="opacity-75">{apt.time}</div>
+                  <div className="font-semibold truncate text-sm">{apt.patientName}</div>
+                  <div className="opacity-90 truncate text-xs mt-0.5">{apt.type}</div>
+                  <div className="opacity-80 text-xs mt-1 flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {apt.time}
+                  </div>
                 </div>
               );
             })}
@@ -302,45 +309,46 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   };
 
   return (
-    <Card className="h-full flex flex-col border-0 shadow-lg">
+    <Card className="h-full flex flex-col border-0 shadow-xl overflow-hidden">
       <CardContent className="p-0 flex flex-col h-full">
-        {/* Header */}
-        <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+        {/* Header - Melhorado */}
+        <div className="p-4 border-b bg-gradient-to-r from-muted/30 to-muted/10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 bg-background rounded-lg p-1 shadow-sm">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={() => navigateCalendar('prev')}
-                  className="h-8 w-8 p-0"
+                  className="h-9 w-9 p-0 hover-scale"
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className="h-5 w-5" />
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={() => navigateCalendar('next')}
-                  className="h-8 w-8 p-0"
+                  className="h-9 w-9 p-0 hover-scale"
                 >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={goToToday}
-                  className="text-blue-600 hover:text-blue-700"
-                >
-                  Hoje
+                  <ChevronRight className="h-5 w-5" />
                 </Button>
               </div>
               
-              <h2 className="text-lg font-semibold text-gray-900">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToToday}
+                className="hover-scale font-medium"
+              >
+                Hoje
+              </Button>
+              
+              <h2 className="text-lg font-semibold hidden sm:block">
                 {getHeaderTitle()}
               </h2>
             </div>
             
-            <div className="flex items-center gap-1 bg-white rounded-lg p-1 shadow-sm">
+            <div className="flex items-center gap-1 bg-background rounded-lg p-1 shadow-sm">
               {(['day', 'week', 'month'] as CalendarViewType[]).map(type => (
                 <Button
                   key={type}
@@ -348,10 +356,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                   size="sm"
                   onClick={() => onViewTypeChange(type)}
                   className={cn(
-                    "text-xs",
+                    "text-xs transition-all duration-200",
                     viewType === type 
-                      ? "bg-blue-600 text-white shadow-sm" 
-                      : "text-gray-600 hover:text-gray-900"
+                      ? "shadow-sm" 
+                      : "hover-scale"
                   )}
                 >
                   {type === 'day' ? 'Dia' : type === 'week' ? 'Semana' : 'Mês'}
@@ -359,6 +367,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               ))}
             </div>
           </div>
+          
+          {/* Mobile header */}
+          <h2 className="text-base font-semibold mt-3 sm:hidden">
+            {getHeaderTitle()}
+          </h2>
         </div>
         
         {/* Calendar content */}

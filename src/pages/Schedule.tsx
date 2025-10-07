@@ -158,89 +158,110 @@ const { appointments = [], loading, error, initialLoad } = useAppointments();
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      <div className="max-w-7xl mx-auto p-4 space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-              <div className="p-2 bg-blue-600 rounded-lg">
-                <Calendar className="h-6 w-6 text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+      <div className="max-w-7xl mx-auto p-4 space-y-6 animate-fade-in">
+        {/* Header com melhor hierarquia visual */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">
+          <div className="space-y-1">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-gradient-to-br from-primary to-primary/80 rounded-xl shadow-lg">
+                <Calendar className="h-6 w-6 text-primary-foreground" />
               </div>
-              Agenda
-            </h1>
-            <p className="text-gray-600 mt-1">Gerencie seus agendamentos e consultas</p>
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">
+                  Agenda
+                </h1>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Gerencie seus agendamentos de forma eficiente
+                </p>
+              </div>
+            </div>
           </div>
           <Button 
             onClick={handleCreateAppointment}
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
             size="lg"
+            className="shadow-lg hover:shadow-xl transition-all duration-200 hover-scale"
           >
             <Plus className="h-5 w-5 mr-2" />
             Novo Agendamento
           </Button>
         </div>
 
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Statistics Cards - Melhorados */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 {initialLoad ? (
             <>
-              <Card className="border-0 shadow-lg animate-pulse h-28" />
-              <Card className="border-0 shadow-lg animate-pulse h-28" />
-              <Card className="border-0 shadow-lg animate-pulse h-28" />
-              <Card className="border-0 shadow-lg animate-pulse h-28" />
+              {[...Array(4)].map((_, i) => (
+                <Card key={i} className="border-0 shadow-md animate-pulse">
+                  <CardContent className="p-6">
+                    <div className="h-20 bg-muted rounded animate-pulse" />
+                  </CardContent>
+                </Card>
+              ))}
             </>
           ) : (
             <>
-              <Card className="border-0 shadow-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium opacity-90">Hoje</CardTitle>
-                  <div className="flex items-center justify-between">
-                    <div className="text-2xl font-bold">{stats.totalToday}</div>
-                    <Calendar className="h-5 w-5 opacity-80" />
+              <Card className="group border-0 shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden relative animate-scale-in">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-primary/5" />
+                <CardContent className="p-6 relative">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-muted-foreground mb-2">Hoje</p>
+                      <div className="text-3xl font-bold">{stats.totalToday}</div>
+                      <p className="text-xs text-muted-foreground mt-1">Total de agendamentos</p>
+                    </div>
+                    <div className="p-3 bg-primary/10 rounded-xl group-hover:scale-110 transition-transform">
+                      <Calendar className="h-5 w-5 text-primary" />
+                    </div>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs opacity-80">Total de agendamentos</p>
                 </CardContent>
               </Card>
 
-              <Card className="border-0 shadow-lg bg-gradient-to-r from-green-500 to-green-600 text-white">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium opacity-90">Confirmados</CardTitle>
-                  <div className="flex items-center justify-between">
-                    <div className="text-2xl font-bold">{stats.confirmedToday}</div>
-                    <Users className="h-5 w-5 opacity-80" />
+              <Card className="group border-0 shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden relative animate-scale-in" style={{animationDelay: '0.1s'}}>
+                <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-green-500/5" />
+                <CardContent className="p-6 relative">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-muted-foreground mb-2">Confirmados</p>
+                      <div className="text-3xl font-bold text-green-600">{stats.confirmedToday}</div>
+                      <p className="text-xs text-muted-foreground mt-1">Pacientes confirmados</p>
+                    </div>
+                    <div className="p-3 bg-green-500/10 rounded-xl group-hover:scale-110 transition-transform">
+                      <Users className="h-5 w-5 text-green-600" />
+                    </div>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs opacity-80">Pacientes confirmados</p>
                 </CardContent>
               </Card>
 
-              <Card className="border-0 shadow-lg bg-gradient-to-r from-purple-500 to-purple-600 text-white">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium opacity-90">Concluídos</CardTitle>
-                  <div className="flex items-center justify-between">
-                    <div className="text-2xl font-bold">{stats.completedToday}</div>
-                    <TrendingUp className="h-5 w-5 opacity-80" />
+              <Card className="group border-0 shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden relative animate-scale-in" style={{animationDelay: '0.2s'}}>
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-purple-500/5" />
+                <CardContent className="p-6 relative">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-muted-foreground mb-2">Concluídos</p>
+                      <div className="text-3xl font-bold text-purple-600">{stats.completedToday}</div>
+                      <p className="text-xs text-muted-foreground mt-1">Atendimentos finalizados</p>
+                    </div>
+                    <div className="p-3 bg-purple-500/10 rounded-xl group-hover:scale-110 transition-transform">
+                      <TrendingUp className="h-5 w-5 text-purple-600" />
+                    </div>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs opacity-80">Atendimentos finalizados</p>
                 </CardContent>
               </Card>
 
-              <Card className="border-0 shadow-lg bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium opacity-90">Pendentes</CardTitle>
-                  <div className="flex items-center justify-between">
-                    <div className="text-2xl font-bold">{stats.pendingToday}</div>
-                    <Clock className="h-5 w-5 opacity-80" />
+              <Card className="group border-0 shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden relative animate-scale-in" style={{animationDelay: '0.3s'}}>
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-orange-500/5" />
+                <CardContent className="p-6 relative">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-muted-foreground mb-2">Pendentes</p>
+                      <div className="text-3xl font-bold text-orange-600">{stats.pendingToday}</div>
+                      <p className="text-xs text-muted-foreground mt-1">Aguardando atendimento</p>
+                    </div>
+                    <div className="p-3 bg-orange-500/10 rounded-xl group-hover:scale-110 transition-transform">
+                      <Clock className="h-5 w-5 text-orange-600" />
+                    </div>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs opacity-80">Aguardando atendimento</p>
                 </CardContent>
               </Card>
             </>
@@ -255,22 +276,26 @@ const { appointments = [], loading, error, initialLoad } = useAppointments();
           services={services}
         />
 
-        {/* Results Summary */}
+        {/* Results Summary - Melhorado */}
         {(filters.search || filters.status || filters.service || filters.dateFrom || filters.dateTo) && (
-          <Card className="border-blue-200 bg-blue-50">
+          <Card className="border-primary/20 bg-primary/5 shadow-sm animate-fade-in">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                    {filteredAppointments.length} resultado{filteredAppointments.length !== 1 ? 's' : ''}
-                  </Badge>
-                  <span className="text-sm text-blue-700">encontrado{filteredAppointments.length !== 1 ? 's' : ''}</span>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Badge variant="secondary" className="bg-primary text-primary-foreground font-semibold">
+                      {filteredAppointments.length}
+                    </Badge>
+                  </div>
+                  <span className="text-sm font-medium">
+                    resultado{filteredAppointments.length !== 1 ? 's' : ''} encontrado{filteredAppointments.length !== 1 ? 's' : ''}
+                  </span>
                 </div>
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={handleClearFilters}
-                  className="text-blue-600 hover:text-blue-800"
+                  className="hover-scale"
                 >
                   Limpar filtros
                 </Button>
@@ -279,8 +304,8 @@ const { appointments = [], loading, error, initialLoad } = useAppointments();
           </Card>
         )}
 
-        {/* Calendar View */}
-        <div className="h-[600px]">
+        {/* Calendar View - Container melhorado */}
+        <div className="h-[650px] animate-fade-in" style={{animationDelay: '0.4s'}}>
           <CalendarView
             appointments={filteredAppointments}
             currentDate={currentDate}
