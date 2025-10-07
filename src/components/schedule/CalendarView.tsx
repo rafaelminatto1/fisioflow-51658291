@@ -86,21 +86,24 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     const dayAppointments = getAppointmentsForDate(currentDate);
     
     return (
-      <div className="flex h-full">
-        {/* Time column */}
-        <div className="w-20 border-r border-gray-200">
-          <div className="h-12 border-b border-gray-200"></div>
+      <div className="flex h-full bg-gradient-to-br from-background to-muted/20">
+        {/* Time column com design melhorado */}
+        <div className="w-24 border-r bg-muted/30 backdrop-blur-sm">
+          <div className="h-16 border-b flex items-center justify-center">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </div>
           {TIME_SLOTS.map(time => (
-            <div key={time} className="h-16 border-b border-gray-100 p-2 text-xs text-gray-500">
+            <div key={time} className="h-16 border-b border-border/50 p-3 text-sm font-medium text-muted-foreground flex items-center">
               {time}
             </div>
           ))}
         </div>
         
-        {/* Day column */}
-        <div className="flex-1 relative">
-          <div className="h-12 border-b border-gray-200 p-3 bg-gray-50">
-            <div className="font-medium text-center">
+        {/* Day column com hover states */}
+        <div className="flex-1 relative bg-background/50">
+          <div className="h-16 border-b bg-gradient-to-r from-primary/10 to-primary/5 p-4 backdrop-blur-sm sticky top-0 z-10">
+            <div className="font-semibold text-center flex items-center justify-center gap-2">
+              <Calendar className="h-4 w-4" />
               {format(currentDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
             </div>
           </div>
@@ -166,21 +169,24 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           ))}
         </div>
         
-        {/* Week days */}
-        <div className="flex-1 grid grid-cols-7">
+        {/* Week days com melhor design */}
+        <div className="flex-1 grid grid-cols-7 bg-background/50">
           {weekDays.map(day => {
             const dayAppointments = getAppointmentsForDate(day);
+            const isTodayDate = isToday(day);
             
             return (
-              <div key={day.toISOString()} className="border-r border-gray-200 last:border-r-0">
+              <div key={day.toISOString()} className="border-r border-border/50 last:border-r-0 relative group">
                 <div className={cn(
-                  "h-12 border-b border-gray-200 p-2 text-center text-sm",
-                  isToday(day) ? "bg-blue-100 text-blue-800 font-medium" : "bg-gray-50"
+                  "h-16 border-b sticky top-0 z-10 p-3 text-center text-sm backdrop-blur-sm transition-all duration-200",
+                  isTodayDate 
+                    ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-md" 
+                    : "bg-gradient-to-br from-muted/50 to-muted/30 hover:from-muted/70 hover:to-muted/50"
                 )}>
-                  <div>{format(day, 'EEE', { locale: ptBR })}</div>
+                  <div className="font-medium">{format(day, 'EEE', { locale: ptBR })}</div>
                   <div className={cn(
-                    "text-lg",
-                    isToday(day) ? "font-bold" : "font-medium"
+                    "text-xl font-bold mt-1",
+                    isTodayDate && "drop-shadow-sm"
                   )}>
                     {format(day, 'd')}
                   </div>
@@ -205,15 +211,21 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       <div
                         key={apt.id}
                         className={cn(
-                          "absolute left-0.5 right-0.5 p-1 rounded text-white text-xs cursor-pointer shadow-sm",
+                          "absolute left-1 right-1 p-2 rounded-lg text-white text-xs cursor-pointer shadow-lg border-l-4 backdrop-blur-sm",
                           getStatusColor(apt.status),
-                          "hover:shadow-md transition-shadow"
+                          "hover:shadow-xl hover:scale-105 transition-all duration-200 group"
                         )}
                         style={{ top: `${top}px`, height: '56px' }}
                         onClick={() => onAppointmentClick(apt)}
                       >
-                        <div className="font-medium truncate text-xs">{apt.patientName}</div>
-                        <div className="opacity-90 truncate text-xs">{apt.time}</div>
+                        <div className="font-semibold truncate">{apt.patientName}</div>
+                        <div className="opacity-90 truncate text-xs mt-0.5 flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {apt.time}
+                        </div>
+                        <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                        </div>
                       </div>
                     );
                   })}
@@ -242,11 +254,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     }
     
     return (
-      <div className="h-full flex flex-col">
-        {/* Week headers */}
-        <div className="grid grid-cols-7 border-b border-gray-200">
+      <div className="h-full flex flex-col bg-gradient-to-br from-background to-muted/20">
+        {/* Week headers com melhor estilo */}
+        <div className="grid grid-cols-7 border-b bg-gradient-to-r from-muted/50 to-muted/30 sticky top-0 z-10 backdrop-blur-sm">
           {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map(day => (
-            <div key={day} className="p-3 text-center text-sm font-medium text-gray-600 bg-gray-50">
+            <div key={day} className="p-4 text-center text-sm font-semibold border-r border-border/50 last:border-r-0">
               {day}
             </div>
           ))}
@@ -264,36 +276,41 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                   <div
                     key={day.toISOString()}
                     className={cn(
-                      "border-r border-gray-200 last:border-r-0 p-2 min-h-24 cursor-pointer hover:bg-gray-50",
-                      !isCurrentMonth && "bg-gray-50 text-gray-400"
+                      "border-r border-border/50 last:border-r-0 p-3 min-h-28 cursor-pointer transition-all duration-200 group",
+                      !isCurrentMonth && "bg-muted/30",
+                      isCurrentMonth && "hover:bg-primary/5 hover:shadow-inner"
                     )}
                     onClick={() => onDateChange(day)}
                   >
                     <div className={cn(
-                      "text-sm mb-1",
-                      isToday(day) && "bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center font-medium"
+                      "text-sm mb-2 font-medium transition-all duration-200",
+                      isToday(day) 
+                        ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center font-bold shadow-lg ring-2 ring-primary/20" 
+                        : "group-hover:text-primary"
                     )}>
                       {format(day, 'd')}
                     </div>
                     
-                    <div className="space-y-1">
+                    <div className="space-y-1.5">
                       {dayAppointments.slice(0, 3).map(apt => (
                         <div
                           key={apt.id}
                           className={cn(
-                            "text-xs p-1 rounded text-white cursor-pointer truncate",
-                            getStatusColor(apt.status)
+                            "text-xs p-1.5 rounded-md text-white cursor-pointer truncate shadow-sm border-l-2 transition-all duration-200",
+                            getStatusColor(apt.status),
+                            "hover:shadow-md hover:scale-105"
                           )}
                           onClick={(e) => {
                             e.stopPropagation();
                             onAppointmentClick(apt);
                           }}
                         >
-                          {apt.time} - {apt.patientName}
+                          <div className="font-medium truncate">{apt.time}</div>
+                          <div className="truncate opacity-90 text-xs">{apt.patientName}</div>
                         </div>
                       ))}
                       {dayAppointments.length > 3 && (
-                        <div className="text-xs text-gray-500 pl-1">
+                        <div className="text-xs font-medium text-primary pl-2 pt-1 hover:underline">
                           +{dayAppointments.length - 3} mais
                         </div>
                       )}
