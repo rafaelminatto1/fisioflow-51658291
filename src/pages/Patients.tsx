@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { EmptyState } from '@/components/ui/empty-state';
+import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import {
   Select,
   SelectContent,
@@ -120,12 +122,7 @@ const Patients = () => {
   if (loading) {
     return (
       <MainLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="flex items-center gap-2">
-            <Loader2 className="w-6 h-6 animate-spin" />
-            <span>Carregando pacientes...</span>
-          </div>
-        </div>
+        <LoadingSkeleton type="card" rows={4} />
       </MainLayout>
     );
   }
@@ -241,26 +238,23 @@ const Patients = () => {
 
         {/* Patients List */}
         {filteredPatients.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-foreground mb-2">
-                {searchTerm ? 'Nenhum paciente encontrado' : 'Nenhum paciente cadastrado'}
-              </h3>
-              <p className="text-muted-foreground mb-4">
-                {searchTerm 
-                  ? 'Tente ajustar os filtros de busca.' 
-                  : 'Comece adicionando seu primeiro paciente.'
-                }
-              </p>
-              {!searchTerm && (
-                <Button onClick={() => setIsNewPatientModalOpen(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Novo Paciente
-                </Button>
-              )}
-            </CardContent>
-          </Card>
+          <EmptyState
+            icon={Users}
+            title={searchTerm ? 'Nenhum paciente encontrado' : 'Nenhum paciente cadastrado'}
+            description={
+              searchTerm 
+                ? 'Tente ajustar os filtros de busca.' 
+                : 'Comece adicionando seu primeiro paciente.'
+            }
+            action={
+              !searchTerm
+                ? {
+                    label: 'Novo Paciente',
+                    onClick: () => setIsNewPatientModalOpen(true)
+                  }
+                : undefined
+            }
+          />
         ) : (
           <div className="grid gap-6">
             {filteredPatients.map((patient) => (
