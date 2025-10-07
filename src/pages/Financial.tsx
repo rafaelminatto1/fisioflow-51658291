@@ -248,46 +248,54 @@ const Financial = () => {
           </TabsContent>
 
           <TabsContent value="pending" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Pagamentos Pendentes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recentTransactions
-                    .filter(t => t.status === 'Pendente')
-                    .map((transaction) => (
-                      <div
-                        key={transaction.id}
-                        className="flex items-center justify-between p-4 border border-yellow-200 bg-yellow-50 rounded-lg"
-                      >
-                        <div className="flex items-center space-x-4">
-                          <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-                            <AlertCircle className="w-5 h-5 text-yellow-600" />
+            {recentTransactions.filter(t => t.status === 'Pendente').length === 0 ? (
+              <EmptyState
+                icon={AlertCircle}
+                title="Nenhum pagamento pendente"
+                description="Todos os pagamentos estão em dia! 🎉"
+              />
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Pagamentos Pendentes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {recentTransactions
+                      .filter(t => t.status === 'Pendente')
+                      .map((transaction) => (
+                        <div
+                          key={transaction.id}
+                          className="flex items-center justify-between p-4 border border-yellow-200 bg-yellow-50 rounded-lg"
+                        >
+                          <div className="flex items-center space-x-4">
+                            <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                              <AlertCircle className="w-5 h-5 text-yellow-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-foreground">{transaction.patientName}</p>
+                              <p className="text-sm text-muted-foreground">{transaction.service}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium text-foreground">{transaction.patientName}</p>
-                            <p className="text-sm text-muted-foreground">{transaction.service}</p>
+                          <div className="flex items-center gap-3">
+                            <div className="text-right">
+                              <p className="font-medium text-foreground">
+                                R$ {transaction.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {transaction.date.toLocaleDateString('pt-BR')}
+                              </p>
+                            </div>
+                            <Button size="sm" variant="outline">
+                              Cobrar
+                            </Button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <div className="text-right">
-                            <p className="font-medium text-foreground">
-                              R$ {transaction.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {transaction.date.toLocaleDateString('pt-BR')}
-                            </p>
-                          </div>
-                          <Button size="sm" variant="outline">
-                            Cobrar
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </CardContent>
-            </Card>
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">

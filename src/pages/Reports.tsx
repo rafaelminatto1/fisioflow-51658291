@@ -368,9 +368,11 @@ const Reports = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64 flex items-center justify-center bg-muted/20 rounded-lg">
-                    <p className="text-muted-foreground">Gráfico de barras será implementado</p>
-                  </div>
+                  <EmptyState
+                    icon={BarChart3}
+                    title="Gráfico em desenvolvimento"
+                    description="Visualização de dados será implementada em breve"
+                  />
                 </CardContent>
               </Card>
 
@@ -382,9 +384,11 @@ const Reports = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64 flex items-center justify-center bg-muted/20 rounded-lg">
-                    <p className="text-muted-foreground">Gráfico de pizza será implementado</p>
-                  </div>
+                  <EmptyState
+                    icon={PieChart}
+                    title="Gráfico em desenvolvimento"
+                    description="Visualização de dados será implementada em breve"
+                  />
                 </CardContent>
               </Card>
 
@@ -396,9 +400,11 @@ const Reports = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64 flex items-center justify-center bg-muted/20 rounded-lg">
-                    <p className="text-muted-foreground">Gráfico de linha será implementado</p>
-                  </div>
+                  <EmptyState
+                    icon={LineChart}
+                    title="Gráfico em desenvolvimento"
+                    description="Visualização de dados será implementada em breve"
+                  />
                 </CardContent>
               </Card>
             </div>
