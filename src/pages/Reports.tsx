@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { EmptyState, LoadingSkeleton } from '@/components/ui';
 
 const Reports = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('month');

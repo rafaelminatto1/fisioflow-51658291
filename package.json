@@ -15,8 +15,10 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@axe-core/playwright": "^4.10.2",
     "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^3.10.0",
+    "@playwright/test": "^1.56.0",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-aspect-ratio": "^1.1.7",

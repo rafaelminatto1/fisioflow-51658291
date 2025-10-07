@@ -11,6 +11,7 @@ import { useExerciseFavorites } from "@/hooks/useExerciseFavorites";
 import { useExerciseProtocols } from "@/hooks/useExerciseProtocols";
 import { Dumbbell, PlusCircle, Heart, BookOpen, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { EmptyState, LoadingSkeleton } from "@/components/ui";
 
 
 const Exercises = () => {
@@ -145,23 +146,11 @@ const Exercises = () => {
             </TabsContent>
 
             <TabsContent value="protocols" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Protocolos de Exercícios</CardTitle>
-                  <p className="text-muted-foreground">
-                    Templates de exercícios organizados por condição ou objetivo terapêutico
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-12">
-                    <BookOpen className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Protocolos em desenvolvimento</h3>
-                    <p className="text-muted-foreground">
-                      O gerenciamento de protocolos será implementado na próxima atualização
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+              <EmptyState
+                icon={BookOpen}
+                title="Protocolos em desenvolvimento"
+                description="O gerenciamento de protocolos será implementado na próxima atualização"
+              />
             </TabsContent>
 
             <TabsContent value="player" className="mt-6">
