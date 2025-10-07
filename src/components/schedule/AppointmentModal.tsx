@@ -158,69 +158,86 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+      <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto p-0">
+        <DialogHeader className="p-6 pb-4 border-b bg-gradient-to-r from-primary/5 to-primary/10">
+          <DialogTitle className="flex items-center gap-3 text-xl">
             {mode === 'create' && (
               <>
-                <CalendarIcon className="w-5 h-5" />
-                Novo Agendamento
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <CalendarIcon className="w-5 h-5 text-primary" />
+                </div>
+                <span>Novo Agendamento</span>
               </>
             )}
             {mode === 'edit' && (
               <>
-                <CalendarIcon className="w-5 h-5" />
-                Editar Agendamento
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <CalendarIcon className="w-5 h-5 text-primary" />
+                </div>
+                <span>Editar Agendamento</span>
               </>
             )}
             {mode === 'view' && (
               <>
-                <CalendarIcon className="w-5 h-5" />
-                Detalhes do Agendamento
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <CalendarIcon className="w-5 h-5 text-primary" />
+                </div>
+                <span>Detalhes do Agendamento</span>
               </>
             )}
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(handleSave)} className="space-y-6">
-          {/* Patient Selection */}
-          <div className="space-y-2">
-            <Label htmlFor="patientId">Paciente *</Label>
+        <form onSubmit={handleSubmit(handleSave)} className="p-6 space-y-6">
+          {/* Patient Selection - Design melhorado */}
+          <div className="space-y-3 p-4 bg-muted/30 rounded-lg border">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <User className="w-4 h-4 text-primary" />
+              <Label htmlFor="patientId">Paciente *</Label>
+            </div>
             <Select
               value={watch('patientId')}
               onValueChange={(value) => setValue('patientId', value)}
               disabled={mode === 'view'}
             >
-              <SelectTrigger>
+              <SelectTrigger className="bg-background">
                 <SelectValue placeholder="Selecione um paciente" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-60">
                 {patients.map((patient) => (
                   <SelectItem key={patient.id} value={patient.id}>
                     <div className="flex items-center gap-2">
-                      <User className="w-4 h-4" />
-                      {patient.name}
+                      <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                        <User className="w-4 h-4 text-primary" />
+                      </div>
+                      <span className="font-medium">{patient.name}</span>
                     </div>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             {errors.patientId && (
-              <p className="text-sm text-destructive">{errors.patientId.message}</p>
+              <p className="text-sm text-destructive flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {errors.patientId.message}
+              </p>
             )}
           </div>
 
-          {/* Date and Time */}
+          {/* Date and Time - Design melhorado */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Date */}
-            <div className="space-y-2">
-              <Label>Data *</Label>
+            <div className="space-y-3 p-4 bg-muted/30 rounded-lg border">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <CalendarIcon className="w-4 h-4 text-primary" />
+                <Label>Data *</Label>
+              </div>
               <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full justify-start text-left font-normal",
+                      "w-full justify-start text-left font-normal bg-background hover:bg-muted/50",
                       !watchedDate && "text-muted-foreground"
                     )}
                     disabled={mode === 'view'}
@@ -245,23 +262,30 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                       date < new Date(new Date().setHours(0, 0, 0, 0))
                     }
                     initialFocus
+                    className={cn("p-3 pointer-events-auto")}
                   />
                 </PopoverContent>
               </Popover>
               {errors.date && (
-                <p className="text-sm text-destructive">{errors.date.message}</p>
+                <p className="text-sm text-destructive flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  {errors.date.message}
+                </p>
               )}
             </div>
 
             {/* Time */}
-            <div className="space-y-2">
-              <Label htmlFor="time">Horário *</Label>
+            <div className="space-y-3 p-4 bg-muted/30 rounded-lg border">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Clock className="w-4 h-4 text-primary" />
+                <Label htmlFor="time">Horário *</Label>
+              </div>
               <Select
                 value={watchedTime}
                 onValueChange={(value) => setValue('time', value)}
                 disabled={mode === 'view'}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-background">
                   <SelectValue placeholder="Selecione um horário" />
                 </SelectTrigger>
                 <SelectContent className="max-h-60">
@@ -269,29 +293,34 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                     <SelectItem key={slot} value={slot}>
                       <div className="flex items-center gap-2">
                         <Clock className="w-4 h-4" />
-                        {slot}
+                        <span className="font-medium">{slot}</span>
                       </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               {errors.time && (
-                <p className="text-sm text-destructive">{errors.time.message}</p>
+                <p className="text-sm text-destructive flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  {errors.time.message}
+                </p>
               )}
             </div>
           </div>
 
-          {/* Conflict Warning */}
+          {/* Conflict Warning - Redesenhado */}
           {conflictCheck?.hasConflict && (
-            <div className="flex items-start gap-3 p-4 border border-destructive/20 bg-destructive/5 rounded-lg">
-              <AlertTriangle className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-destructive">
-                  Conflito de Horário Detectado
+            <div className="flex items-start gap-3 p-4 border-2 border-destructive/30 bg-destructive/5 rounded-xl animate-fade-in">
+              <div className="p-2 bg-destructive/10 rounded-lg">
+                <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0" />
+              </div>
+              <div className="space-y-1 flex-1">
+                <p className="text-sm font-semibold text-destructive">
+                  ⚠️ Conflito de Horário Detectado
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Já existe um agendamento neste horário com{' '}
-                  <strong>{conflictCheck.conflictingAppointment?.patientName}</strong>
+                  <strong className="text-foreground">{conflictCheck.conflictingAppointment?.patientName}</strong>
                 </p>
               </div>
             </div>
