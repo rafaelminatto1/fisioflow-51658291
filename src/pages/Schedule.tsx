@@ -11,6 +11,7 @@ import { logger } from '@/lib/errors/logger';
 import { AlertTriangle, Calendar, Clock, Users, TrendingUp, Plus } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { EmptyState, LoadingSkeleton } from '@/components/ui';
 
 // Define FilterType interface
 interface FilterType {
@@ -144,14 +145,11 @@ const { appointments = [], loading, error, initialLoad } = useAppointments();
     logger.error('Erro na página Schedule', { error }, 'Schedule');
     return (
       <MainLayout>
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="p-6">
-            <div className="text-center">
-              <div className="text-red-600 text-lg font-semibold mb-2">Erro ao carregar agendamentos</div>
-              <p className="text-red-500">{error}</p>
-            </div>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={AlertTriangle}
+          title="Erro ao carregar agendamentos"
+          description={error}
+        />
       </MainLayout>
     );
   }

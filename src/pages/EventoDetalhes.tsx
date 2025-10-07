@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Calendar, MapPin, DollarSign, Edit } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState, LoadingSkeleton } from '@/components/ui';
 import { PrestadoresTab } from '@/components/eventos/PrestadoresTab';
 import { ChecklistTab } from '@/components/eventos/ChecklistTab';
 import { ParticipantesTab } from '@/components/eventos/ParticipantesTab';
@@ -36,8 +37,7 @@ export default function EventoDetalhes() {
   if (isLoading) {
     return (
       <div className="container mx-auto p-6 space-y-6">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-96 w-full" />
+        <LoadingSkeleton type="card" rows={3} />
       </div>
     );
   }
@@ -45,14 +45,15 @@ export default function EventoDetalhes() {
   if (!evento) {
     return (
       <div className="container mx-auto p-6">
-        <Card>
-          <CardContent className="p-12 text-center">
-            <p className="text-muted-foreground">Evento não encontrado.</p>
-            <Button onClick={() => navigate('/eventos')} className="mt-4">
-              Voltar para Eventos
-            </Button>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={Calendar}
+          title="Evento não encontrado"
+          description="O evento que você procura não existe ou foi removido."
+          action={{
+            label: "Voltar para Eventos",
+            onClick: () => navigate('/eventos')
+          }}
+        />
       </div>
     );
   }
