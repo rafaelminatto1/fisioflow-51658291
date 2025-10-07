@@ -156,107 +156,115 @@ const { appointments = [], loading, error, initialLoad } = useAppointments();
 
   return (
     <MainLayout>
-      <div className="space-y-6 animate-fade-in">
-        {/* Header com melhor hierarquia visual */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">
-          <div className="space-y-1">
+      <div className="space-y-4 sm:space-y-6 animate-fade-in">
+        {/* Header com melhor hierarquia visual e responsividade */}
+        <div className="flex flex-col gap-4 pb-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-gradient-to-br from-primary to-primary/80 rounded-xl shadow-lg">
-                <Calendar className="h-6 w-6 text-primary-foreground" />
+              <div className="p-2.5 sm:p-3 bg-gradient-primary rounded-xl shadow-medical hover-lift">
+                <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold tracking-tight">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
                   Agenda
                 </h1>
-                <p className="text-sm text-muted-foreground mt-0.5">
+                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
                   Gerencie seus agendamentos de forma eficiente
                 </p>
               </div>
             </div>
+            <Button 
+              onClick={handleCreateAppointment}
+              size="lg"
+              className="w-full sm:w-auto shadow-medical hover:shadow-hover transition-all duration-300 hover-lift"
+            >
+              <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+              Novo Agendamento
+            </Button>
           </div>
-          <Button 
-            onClick={handleCreateAppointment}
-            size="lg"
-            className="shadow-lg hover:shadow-xl transition-all duration-200 hover-scale"
-          >
-            <Plus className="h-5 w-5 mr-2" />
-            Novo Agendamento
-          </Button>
         </div>
 
-        {/* Statistics Cards - Melhorados */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Statistics Cards - Melhorados e responsivos */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
 {initialLoad ? (
             <>
               {[...Array(4)].map((_, i) => (
-                <Card key={i} className="border-0 shadow-md animate-pulse">
-                  <CardContent className="p-6">
-                    <div className="h-20 bg-muted rounded animate-pulse" />
+                <Card key={i} className="border-0 shadow-card animate-pulse">
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="h-16 sm:h-20 bg-muted rounded animate-pulse" />
                   </CardContent>
                 </Card>
               ))}
             </>
           ) : (
             <>
-              <Card className="group border-0 shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden relative animate-scale-in">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-primary/5" />
-                <CardContent className="p-6 relative">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-muted-foreground mb-2">Hoje</p>
-                      <div className="text-3xl font-bold">{stats.totalToday}</div>
-                      <p className="text-xs text-muted-foreground mt-1">Total de agendamentos</p>
+              <Card className="group border-0 shadow-card hover:shadow-hover transition-all duration-300 overflow-hidden relative animate-scale-in hover-lift">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/[0.02]" />
+                <CardContent className="p-4 sm:p-6 relative">
+                  <div className="flex flex-col gap-2 sm:gap-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs sm:text-sm font-medium text-muted-foreground">Hoje</p>
+                      <div className="p-2 sm:p-2.5 bg-primary/10 rounded-lg group-hover:scale-110 transition-transform">
+                        <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                      </div>
                     </div>
-                    <div className="p-3 bg-primary/10 rounded-xl group-hover:scale-110 transition-transform">
-                      <Calendar className="h-5 w-5 text-primary" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="group border-0 shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden relative animate-scale-in" style={{animationDelay: '0.1s'}}>
-                <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-green-500/5" />
-                <CardContent className="p-6 relative">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-muted-foreground mb-2">Confirmados</p>
-                      <div className="text-3xl font-bold text-green-600">{stats.confirmedToday}</div>
-                      <p className="text-xs text-muted-foreground mt-1">Pacientes confirmados</p>
-                    </div>
-                    <div className="p-3 bg-green-500/10 rounded-xl group-hover:scale-110 transition-transform">
-                      <Users className="h-5 w-5 text-green-600" />
+                    <div>
+                      <div className="text-2xl sm:text-3xl font-bold">{stats.totalToday}</div>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">Total de agendamentos</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="group border-0 shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden relative animate-scale-in" style={{animationDelay: '0.2s'}}>
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-purple-500/5" />
-                <CardContent className="p-6 relative">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-muted-foreground mb-2">Concluídos</p>
-                      <div className="text-3xl font-bold text-purple-600">{stats.completedToday}</div>
-                      <p className="text-xs text-muted-foreground mt-1">Atendimentos finalizados</p>
+              <Card className="group border-0 shadow-card hover:shadow-hover transition-all duration-300 overflow-hidden relative animate-scale-in hover-lift" style={{animationDelay: '0.1s'}}>
+                <div className="absolute inset-0 bg-gradient-to-br from-success/5 to-success/[0.02]" />
+                <CardContent className="p-4 sm:p-6 relative">
+                  <div className="flex flex-col gap-2 sm:gap-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs sm:text-sm font-medium text-muted-foreground">Confirmados</p>
+                      <div className="p-2 sm:p-2.5 bg-success/10 rounded-lg group-hover:scale-110 transition-transform">
+                        <Users className="h-4 w-4 sm:h-5 sm:w-5 text-success" />
+                      </div>
                     </div>
-                    <div className="p-3 bg-purple-500/10 rounded-xl group-hover:scale-110 transition-transform">
-                      <TrendingUp className="h-5 w-5 text-purple-600" />
+                    <div>
+                      <div className="text-2xl sm:text-3xl font-bold text-success">{stats.confirmedToday}</div>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">Pacientes confirmados</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="group border-0 shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden relative animate-scale-in" style={{animationDelay: '0.3s'}}>
-                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-orange-500/5" />
-                <CardContent className="p-6 relative">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-muted-foreground mb-2">Pendentes</p>
-                      <div className="text-3xl font-bold text-orange-600">{stats.pendingToday}</div>
-                      <p className="text-xs text-muted-foreground mt-1">Aguardando atendimento</p>
+              <Card className="group border-0 shadow-card hover:shadow-hover transition-all duration-300 overflow-hidden relative animate-scale-in hover-lift" style={{animationDelay: '0.2s'}}>
+                <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 to-secondary/[0.02]" />
+                <CardContent className="p-4 sm:p-6 relative">
+                  <div className="flex flex-col gap-2 sm:gap-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs sm:text-sm font-medium text-muted-foreground">Concluídos</p>
+                      <div className="p-2 sm:p-2.5 bg-secondary/10 rounded-lg group-hover:scale-110 transition-transform">
+                        <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-secondary" />
+                      </div>
                     </div>
-                    <div className="p-3 bg-orange-500/10 rounded-xl group-hover:scale-110 transition-transform">
-                      <Clock className="h-5 w-5 text-orange-600" />
+                    <div>
+                      <div className="text-2xl sm:text-3xl font-bold text-secondary">{stats.completedToday}</div>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">Atendimentos finalizados</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="group border-0 shadow-card hover:shadow-hover transition-all duration-300 overflow-hidden relative animate-scale-in hover-lift" style={{animationDelay: '0.3s'}}>
+                <div className="absolute inset-0 bg-gradient-to-br from-warning/5 to-warning/[0.02]" />
+                <CardContent className="p-4 sm:p-6 relative">
+                  <div className="flex flex-col gap-2 sm:gap-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs sm:text-sm font-medium text-muted-foreground">Pendentes</p>
+                      <div className="p-2 sm:p-2.5 bg-warning/10 rounded-lg group-hover:scale-110 transition-transform">
+                        <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-warning" />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-2xl sm:text-3xl font-bold text-warning">{stats.pendingToday}</div>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">Aguardando atendimento</p>
                     </div>
                   </div>
                 </CardContent>
@@ -273,18 +281,18 @@ const { appointments = [], loading, error, initialLoad } = useAppointments();
           services={services}
         />
 
-        {/* Results Summary - Melhorado */}
+        {/* Results Summary - Melhorado e responsivo */}
         {(filters.search || filters.status || filters.service || filters.dateFrom || filters.dateTo) && (
-          <Card className="border-primary/20 bg-primary/5 shadow-sm animate-fade-in">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <Badge variant="secondary" className="bg-primary text-primary-foreground font-semibold">
+          <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/[0.02] shadow-card animate-slide-up">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg">
+                    <Badge variant="secondary" className="bg-primary text-primary-foreground font-semibold text-xs sm:text-sm">
                       {filteredAppointments.length}
                     </Badge>
                   </div>
-                  <span className="text-sm font-medium">
+                  <span className="text-xs sm:text-sm font-medium">
                     resultado{filteredAppointments.length !== 1 ? 's' : ''} encontrado{filteredAppointments.length !== 1 ? 's' : ''}
                   </span>
                 </div>
@@ -292,7 +300,7 @@ const { appointments = [], loading, error, initialLoad } = useAppointments();
                   variant="ghost" 
                   size="sm" 
                   onClick={handleClearFilters}
-                  className="hover-scale"
+                  className="w-full sm:w-auto hover-scale text-xs sm:text-sm"
                 >
                   Limpar filtros
                 </Button>
@@ -301,8 +309,8 @@ const { appointments = [], loading, error, initialLoad } = useAppointments();
           </Card>
         )}
 
-        {/* Calendar View - Container melhorado */}
-        <div className="h-[650px] animate-fade-in" style={{animationDelay: '0.4s'}}>
+        {/* Calendar View - Container melhorado e responsivo */}
+        <div className="h-[500px] sm:h-[600px] lg:h-[650px] animate-slide-up" style={{animationDelay: '0.2s'}}>
           <CalendarView
             appointments={filteredAppointments}
             currentDate={currentDate}
