@@ -31,6 +31,8 @@ const Eventos = lazy(() => import("./pages/Eventos"));
 const EventoDetalhes = lazy(() => import("./pages/EventoDetalhes"));
 const EventosAnalytics = lazy(() => import("./pages/EventosAnalytics"));
 const FileUploadTest = lazy(() => import("./pages/FileUploadTest"));
+const UserManagement = lazy(() => import("./pages/UserManagement"));
+const AuditLogs = lazy(() => import("./pages/AuditLogs"));
 
 const AdvancedAnalytics = lazy(() => import("./components/analytics/AdvancedAnalytics"));
 const MedicalChatbot = lazy(() => import("./components/chatbot/MedicalChatbot"));
@@ -114,6 +116,8 @@ const App = () => {
           <Route path="/eventos/analytics" element={<ProtectedRoute><EventosAnalytics /></ProtectedRoute>} />
           <Route path="/eventos/:id" element={<ProtectedRoute><EventoDetalhes /></ProtectedRoute>} />
                   <Route path="/file-upload-test" element={<ProtectedRoute><FileUploadTest /></ProtectedRoute>} />
+                  <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin']}><UserManagement /></ProtectedRoute>} />
+                  <Route path="/admin/audit-logs" element={<ProtectedRoute allowedRoles={['admin']}><AuditLogs /></ProtectedRoute>} />
                   
                   <Route path="/analytics" element={<ProtectedRoute><AdvancedAnalytics /></ProtectedRoute>} />
                   <Route path="/chatbot" element={<ProtectedRoute><MedicalChatbot userId="current-user" /></ProtectedRoute>} />

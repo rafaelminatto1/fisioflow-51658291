@@ -14,8 +14,11 @@ import {
   Shield, 
   Clock,
   History,
-  UserPlus
+  UserPlus,
+  Users,
+  FileText
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { NotificationPreferences } from '@/components/notifications/NotificationPreferences';
@@ -25,6 +28,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 
 const Settings = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('profile');
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const { isAdmin, isLoading: permissionsLoading } = usePermissions();
@@ -346,17 +350,45 @@ const Settings = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-4 sm:p-6 space-y-4">
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="space-y-1">
-                      <h3 className="font-medium">Convidar Usuário</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Envie convites para novos fisioterapeutas, estagiários ou administradores
-                      </p>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="space-y-1">
+                        <h3 className="font-medium">Convidar Usuário</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Envie convites para novos fisioterapeutas, estagiários ou administradores
+                        </p>
+                      </div>
+                      <Button onClick={() => setInviteModalOpen(true)}>
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        Criar Convite
+                      </Button>
                     </div>
-                    <Button onClick={() => setInviteModalOpen(true)}>
-                      <UserPlus className="mr-2 h-4 w-4" />
-                      Criar Convite
-                    </Button>
+
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="space-y-1">
+                        <h3 className="font-medium">Gerenciar Usuários</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Visualize e gerencie todos os usuários e suas funções
+                        </p>
+                      </div>
+                      <Button variant="outline" onClick={() => navigate('/admin/users')}>
+                        <Users className="mr-2 h-4 w-4" />
+                        Ver Usuários
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="space-y-1">
+                        <h3 className="font-medium">Logs de Auditoria</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Visualize todos os eventos de segurança do sistema
+                        </p>
+                      </div>
+                      <Button variant="outline" onClick={() => navigate('/admin/audit-logs')}>
+                        <FileText className="mr-2 h-4 w-4" />
+                        Ver Logs
+                      </Button>
+                    </div>
                   </div>
 
                   <Alert>
