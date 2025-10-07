@@ -10,6 +10,7 @@ import { useAppointments } from '@/hooks/useAppointments';
 import { logger } from '@/lib/errors/logger';
 import { AlertTriangle, Calendar, Clock, Users, TrendingUp, Plus } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
+import { MainLayout } from '@/components/layout/MainLayout';
 
 // Define FilterType interface
 interface FilterType {
@@ -142,24 +143,22 @@ const { appointments = [], loading, error, initialLoad } = useAppointments();
   if (error) {
     logger.error('Erro na página Schedule', { error }, 'Schedule');
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-4">
-        <div className="max-w-7xl mx-auto">
-          <Card className="border-red-200 bg-red-50">
-            <CardContent className="p-6">
-              <div className="text-center">
-                <div className="text-red-600 text-lg font-semibold mb-2">Erro ao carregar agendamentos</div>
-                <p className="text-red-500">{error}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      <MainLayout>
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-6">
+            <div className="text-center">
+              <div className="text-red-600 text-lg font-semibold mb-2">Erro ao carregar agendamentos</div>
+              <p className="text-red-500">{error}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </MainLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
-      <div className="max-w-7xl mx-auto p-4 space-y-6 animate-fade-in">
+    <MainLayout>
+      <div className="space-y-6 animate-fade-in">
         {/* Header com melhor hierarquia visual */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">
           <div className="space-y-1">
@@ -327,7 +326,7 @@ const { appointments = [], loading, error, initialLoad } = useAppointments();
           mode={selectedAppointment ? 'view' : 'create'}
         />
       </div>
-    </div>
+    </MainLayout>
   );
 };
 
