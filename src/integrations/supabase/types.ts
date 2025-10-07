@@ -358,6 +358,33 @@ export type Database = {
         }
         Relationships: []
       }
+      login_attempts: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          ip_address: unknown | null
+          success: boolean
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          ip_address?: unknown | null
+          success: boolean
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          ip_address?: unknown | null
+          success?: boolean
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       medical_records: {
         Row: {
           allergies: string | null
@@ -977,6 +1004,15 @@ export type Database = {
         }
         Relationships: []
       }
+      suspicious_login_activity: {
+        Row: {
+          email: string | null
+          failed_attempts: number | null
+          ip_addresses: unknown[] | null
+          last_attempt: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       create_user_invitation: {
@@ -1009,6 +1045,15 @@ export type Database = {
           _old_data?: Json
           _record_id: string
           _table_name: string
+        }
+        Returns: undefined
+      }
+      log_login_attempt: {
+        Args: {
+          _email: string
+          _ip_address?: unknown
+          _success: boolean
+          _user_agent?: string
         }
         Returns: undefined
       }
