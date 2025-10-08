@@ -1015,6 +1015,14 @@ export type Database = {
       }
     }
     Functions: {
+      can_view_patient: {
+        Args: { _patient_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_view_profile: {
+        Args: { _profile_id: string; _user_id: string }
+        Returns: boolean
+      }
       create_user_invitation: {
         Args: { _email: string; _role: Database["public"]["Enums"]["app_role"] }
         Returns: Json
