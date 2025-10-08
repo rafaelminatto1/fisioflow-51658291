@@ -59,7 +59,7 @@ export default function EventoDetalhes() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6 animate-fade-in">
       {evento && (
         <EditEventoModal
           open={editOpen}
@@ -68,14 +68,14 @@ export default function EventoDetalhes() {
         />
       )}
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      {/* Header responsivo */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate('/eventos')}>
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold">{evento.nome}</h1>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold truncate">{evento.nome}</h1>
             <div className="flex items-center gap-2 mt-2">
               <Badge className={statusColors[evento.status as keyof typeof statusColors]}>
                 {evento.status}
@@ -86,14 +86,15 @@ export default function EventoDetalhes() {
             </div>
           </div>
         </div>
-        <Button onClick={() => setEditOpen(true)}>
+        <Button onClick={() => setEditOpen(true)} className="w-full sm:w-auto bg-gradient-primary hover:shadow-medical">
           <Edit className="h-4 w-4 mr-2" />
-          Editar Evento
+          <span className="hidden sm:inline">Editar Evento</span>
+          <span className="sm:hidden">Editar</span>
         </Button>
       </div>
 
-      {/* Info Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Info Cards responsivos */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -146,13 +147,13 @@ export default function EventoDetalhes() {
         </Card>
       )}
 
-      {/* Tabs */}
+      {/* Tabs responsivos */}
       <Tabs defaultValue="prestadores" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="prestadores">Prestadores</TabsTrigger>
-          <TabsTrigger value="checklist">Checklist</TabsTrigger>
-          <TabsTrigger value="participantes">Participantes</TabsTrigger>
-          <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto gap-1">
+          <TabsTrigger value="prestadores" className="text-sm">Prestadores</TabsTrigger>
+          <TabsTrigger value="checklist" className="text-sm">Checklist</TabsTrigger>
+          <TabsTrigger value="participantes" className="text-sm">Participantes</TabsTrigger>
+          <TabsTrigger value="financeiro" className="text-sm">Financeiro</TabsTrigger>
         </TabsList>
 
         <TabsContent value="prestadores">

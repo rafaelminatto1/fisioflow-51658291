@@ -140,12 +140,12 @@ export default function Eventos() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 animate-fade-in">
+        {/* Header responsivo */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Eventos</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Eventos</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
               Gerencie todos os eventos da clínica
             </p>
           </div>
@@ -210,7 +210,7 @@ export default function Eventos() {
           </CardContent>
         </Card>
 
-        {/* Lista de Eventos */}
+        {/* Grid responsivo de Eventos */}
         {isLoading ? (
           <LoadingSkeleton type="card" rows={3} />
         ) : eventosFiltrados.length === 0 ? (

@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { EmptyState } from '@/components/ui/empty-state';
+import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { 
   Mail, 
   MessageSquare, 
@@ -21,6 +23,7 @@ import { useState } from 'react';
 const Communications = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedChannel, setSelectedChannel] = useState<string>('all');
+  const [isLoading] = useState(false);
 
   // Mock data para demonstração
   const communications = [
@@ -182,8 +185,21 @@ const Communications = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                <div className="space-y-0">
-                  {communications.map((comm) => (
+                {isLoading ? (
+                  <div className="p-6">
+                    <LoadingSkeleton type="list" rows={5} />
+                  </div>
+                ) : communications.length === 0 ? (
+                  <div className="p-6">
+                    <EmptyState
+                      icon={MessageSquare}
+                      title="Nenhuma comunicação enviada"
+                      description="Comece enviando sua primeira mensagem aos pacientes."
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-0">
+                    {communications.map((comm) => (
                     <div
                       key={comm.id}
                       className="p-4 border-b border-border last:border-b-0 hover:bg-accent/50 transition-colors"
@@ -220,8 +236,9 @@ const Communications = () => {
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
