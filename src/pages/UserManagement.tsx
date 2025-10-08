@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { EmptyState } from '@/components/ui/empty-state';
+import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import {
   Table,
   TableBody,
@@ -115,9 +117,13 @@ export default function UserManagement() {
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Carregando usuários...
-              </div>
+              <LoadingSkeleton type="table" rows={5} />
+            ) : filteredUsers.length === 0 ? (
+              <EmptyState
+                icon={UserPlus}
+                title="Nenhum usuário encontrado"
+                description="Ajuste os filtros ou aguarde novos usuários se cadastrarem."
+              />
             ) : (
               <Table>
                 <TableHeader>

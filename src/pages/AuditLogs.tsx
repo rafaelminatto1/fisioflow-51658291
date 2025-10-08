@@ -3,6 +3,8 @@ import { MainLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { EmptyState } from '@/components/ui/empty-state';
+import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import {
   Table,
   TableBody,
@@ -26,7 +28,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useAuditLogs } from '@/hooks/useAuditLogs';
-import { Search, Eye } from 'lucide-react';
+import { Search, Eye, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -105,13 +107,13 @@ export default function AuditLogs() {
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Carregando logs...
-              </div>
+              <LoadingSkeleton type="table" rows={8} />
             ) : filteredLogs.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Nenhum log encontrado
-              </div>
+              <EmptyState
+                icon={FileText}
+                title="Nenhum log encontrado"
+                description="Não há eventos de segurança registrados com esses filtros."
+              />
             ) : (
               <Table>
                 <TableHeader>
