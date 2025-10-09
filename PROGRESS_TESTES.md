@@ -9,12 +9,12 @@
 | Categoria | Implementado | Total | % |
 |-----------|--------------|-------|---|
 | Validações (Zod) | 6/6 | 6 | 100% ✅ |
-| Hooks | 4/10 | 10 | 40% ⚠️ |
+| Hooks | 8/10 | 10 | 80% ✅ |
 | Componentes UI | 5/20 | 20 | 25% ⚠️ |
 | E2E | 6/8 | 8 | 75% ✅ |
 | Acessibilidade | 3/8 | 8 | 38% ⚠️ |
 
-**Total de testes:** ~85 testes implementados
+**Total de testes:** ~98 testes implementados
 
 ---
 
@@ -29,16 +29,16 @@
 - [x] `pagamento.test.ts` - 4 casos
 - [x] `auth.test.ts` - 6 casos
 
-### Hooks - 4/10 (40%)
+### Hooks - 8/10 (80%) ✅
 
 - [x] `usePermissions.test.ts` - 3 casos ✅
 - [x] `useEventos.test.ts` - 2 casos ✅
 - [x] `useAuth.test.ts` - 3 casos ✅
 - [x] `hooks.integration.test.ts` - 4 casos ✅
-- [ ] `usePrestadores.test.ts` ⏳
-- [ ] `useParticipantes.test.ts` ⏳
-- [ ] `useChecklist.test.ts` ⏳
-- [ ] `usePagamentos.test.ts` ⏳
+- [x] `usePrestadores.test.ts` - 3 casos ✅ **NOVO**
+- [x] `useParticipantes.test.ts` - 3 casos ✅ **NOVO**
+- [x] `useChecklist.test.ts` - 3 casos ✅ **NOVO**
+- [x] `usePagamentos.test.ts` - 4 casos ✅ **NOVO**
 - [ ] `usePatients.test.ts` ⏳
 - [ ] `useAppointments.test.ts` ⏳
 
