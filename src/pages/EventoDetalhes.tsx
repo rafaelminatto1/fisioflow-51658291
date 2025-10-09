@@ -11,8 +11,10 @@ import { PrestadoresTab } from '@/components/eventos/PrestadoresTab';
 import { ChecklistTab } from '@/components/eventos/ChecklistTab';
 import { ParticipantesTab } from '@/components/eventos/ParticipantesTab';
 import { FinanceiroTab } from '@/components/eventos/FinanceiroTab';
+import { EventoFinancialReportButton } from '@/components/eventos/EventoFinancialReportButton';
 import { EditEventoModal } from '@/components/eventos/EditEventoModal';
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 const statusColors = {
   AGENDADO: 'bg-blue-500',
@@ -32,6 +34,7 @@ export default function EventoDetalhes() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: evento, isLoading } = useEvento(id!);
+  const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
 
   if (isLoading) {
@@ -86,11 +89,17 @@ export default function EventoDetalhes() {
             </div>
           </div>
         </div>
-        <Button onClick={() => setEditOpen(true)} className="w-full sm:w-auto bg-gradient-primary hover:shadow-medical">
-          <Edit className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">Editar Evento</span>
-          <span className="sm:hidden">Editar</span>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <EventoFinancialReportButton 
+            eventoId={id!} 
+            eventoNome={evento.nome} 
+          />
+          <Button onClick={() => setEditOpen(true)} className="w-full sm:w-auto">
+            <Edit className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Editar Evento</span>
+            <span className="sm:hidden">Editar</span>
+          </Button>
+        </div>
       </div>
 
       {/* Info Cards responsivos */}
