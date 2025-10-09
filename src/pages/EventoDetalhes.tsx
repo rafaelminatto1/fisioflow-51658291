@@ -12,6 +12,7 @@ import { ChecklistTab } from '@/components/eventos/ChecklistTab';
 import { ParticipantesTab } from '@/components/eventos/ParticipantesTab';
 import { FinanceiroTab } from '@/components/eventos/FinanceiroTab';
 import { EventoFinancialReportButton } from '@/components/eventos/EventoFinancialReportButton';
+import { SaveAsTemplateButton } from '@/components/eventos/SaveAsTemplateButton';
 import { EditEventoModal } from '@/components/eventos/EditEventoModal';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -93,6 +94,10 @@ export default function EventoDetalhes() {
           <EventoFinancialReportButton 
             eventoId={id!} 
             eventoNome={evento.nome} 
+          />
+          <SaveAsTemplateButton 
+            eventoId={id!} 
+            eventoNome={evento.nome}
           />
           <Button onClick={() => setEditOpen(true)} className="w-full sm:w-auto">
             <Edit className="h-4 w-4 mr-2" />
