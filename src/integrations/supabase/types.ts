@@ -155,7 +155,53 @@ export type Database = {
             referencedRelation: "eventos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "checklist_items_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos_resumo"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      empresas_parceiras: {
+        Row: {
+          ativo: boolean
+          contato: string | null
+          contrapartidas: string | null
+          created_at: string
+          email: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          contato?: string | null
+          contrapartidas?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          contato?: string | null
+          contrapartidas?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       evento_templates: {
         Row: {
@@ -205,6 +251,7 @@ export type Database = {
           link_whatsapp: string | null
           local: string
           nome: string
+          parceiro_id: string | null
           status: string
           updated_at: string
           valor_padrao_prestador: number
@@ -220,6 +267,7 @@ export type Database = {
           link_whatsapp?: string | null
           local: string
           nome: string
+          parceiro_id?: string | null
           status?: string
           updated_at?: string
           valor_padrao_prestador?: number
@@ -235,11 +283,20 @@ export type Database = {
           link_whatsapp?: string | null
           local?: string
           nome?: string
+          parceiro_id?: string | null
           status?: string
           updated_at?: string
           valor_padrao_prestador?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "eventos_parceiro_id_fkey"
+            columns: ["parceiro_id"]
+            isOneToOne: false
+            referencedRelation: "empresas_parceiras"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       exercise_plan_items: {
         Row: {
@@ -526,6 +583,13 @@ export type Database = {
             referencedRelation: "eventos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pagamentos_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos_resumo"
+            referencedColumns: ["id"]
+          },
         ]
       }
       participantes: {
@@ -568,6 +632,13 @@ export type Database = {
             columns: ["evento_id"]
             isOneToOne: false
             referencedRelation: "eventos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "participantes_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos_resumo"
             referencedColumns: ["id"]
           },
         ]
@@ -740,6 +811,13 @@ export type Database = {
             columns: ["evento_id"]
             isOneToOne: false
             referencedRelation: "eventos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prestadores_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos_resumo"
             referencedColumns: ["id"]
           },
         ]
@@ -1025,8 +1103,122 @@ export type Database = {
         }
         Relationships: []
       }
+      user_vouchers: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          data_compra: string
+          data_expiracao: string
+          id: string
+          sessoes_restantes: number
+          sessoes_totais: number
+          stripe_payment_intent_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+          valor_pago: number
+          voucher_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          data_compra?: string
+          data_expiracao: string
+          id?: string
+          sessoes_restantes: number
+          sessoes_totais: number
+          stripe_payment_intent_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+          valor_pago: number
+          voucher_id: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          data_compra?: string
+          data_expiracao?: string
+          id?: string
+          sessoes_restantes?: number
+          sessoes_totais?: number
+          stripe_payment_intent_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+          valor_pago?: number
+          voucher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_vouchers_voucher_id_fkey"
+            columns: ["voucher_id"]
+            isOneToOne: false
+            referencedRelation: "vouchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vouchers: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          preco: number
+          sessoes: number | null
+          stripe_price_id: string | null
+          tipo: string
+          updated_at: string
+          validade_dias: number
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          preco: number
+          sessoes?: number | null
+          stripe_price_id?: string | null
+          tipo: string
+          updated_at?: string
+          validade_dias?: number
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          preco?: number
+          sessoes?: number | null
+          stripe_price_id?: string | null
+          tipo?: string
+          updated_at?: string
+          validade_dias?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
+      eventos_resumo: {
+        Row: {
+          categoria: string | null
+          custo_checklist: number | null
+          custo_prestadores: number | null
+          data_fim: string | null
+          data_inicio: string | null
+          id: string | null
+          nome: string | null
+          pagamentos_totais: number | null
+          status: string | null
+          total_participantes: number | null
+          total_prestadores: number | null
+        }
+        Relationships: []
+      }
       security_events: {
         Row: {
           action: string | null
@@ -1062,6 +1254,14 @@ export type Database = {
       create_user_invitation: {
         Args: { _email: string; _role: Database["public"]["Enums"]["app_role"] }
         Returns: Json
+      }
+      decrementar_sessao_voucher: {
+        Args: { _user_voucher_id: string }
+        Returns: boolean
+      }
+      encrypt_cpf: {
+        Args: { cpf_plain: string }
+        Returns: string
       }
       get_user_roles: {
         Args: { _user_id: string }
