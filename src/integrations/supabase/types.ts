@@ -157,6 +157,42 @@ export type Database = {
           },
         ]
       }
+      evento_templates: {
+        Row: {
+          categoria: string
+          checklist_padrao: Json | null
+          created_at: string
+          descricao: string | null
+          gratuito: boolean
+          id: string
+          nome: string
+          updated_at: string
+          valor_padrao_prestador: number
+        }
+        Insert: {
+          categoria: string
+          checklist_padrao?: Json | null
+          created_at?: string
+          descricao?: string | null
+          gratuito?: boolean
+          id?: string
+          nome: string
+          updated_at?: string
+          valor_padrao_prestador?: number
+        }
+        Update: {
+          categoria?: string
+          checklist_padrao?: Json | null
+          created_at?: string
+          descricao?: string | null
+          gratuito?: boolean
+          id?: string
+          nome?: string
+          updated_at?: string
+          valor_padrao_prestador?: number
+        }
+        Relationships: []
+      }
       eventos: {
         Row: {
           categoria: string

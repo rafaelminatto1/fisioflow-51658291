@@ -1,103 +1,164 @@
-import { useState } from 'react';
-import { EventoCreate } from '@/lib/validations/evento';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export type EventoTemplate = {
   id: string;
   nome: string;
   descricao: string;
-  categoria: 'corrida' | 'corporativo' | 'ativacao' | 'outro';
+  categoria: string;
   gratuito: boolean;
   valor_padrao_prestador: number;
-  checklistPadrao?: string[];
+  checklist_padrao?: string[];
 };
 
-const TEMPLATES: EventoTemplate[] = [
-  {
-    id: 'corrida-5k',
-    nome: 'Corrida 5K',
-    descricao: 'Evento de corrida de 5 quilômetros com atendimento fisioterápico',
-    categoria: 'corrida',
-    gratuito: false,
-    valor_padrao_prestador: 300,
-    checklistPadrao: [
-      'Maca portátil',
-      'Kit de primeiros socorros',
-      'Gelo',
-      'Faixas elásticas',
-      'Água mineral',
-      'Tendas para atendimento'
-    ]
-  },
-  {
-    id: 'corrida-10k',
-    nome: 'Corrida 10K',
-    descricao: 'Evento de corrida de 10 quilômetros com suporte completo',
-    categoria: 'corrida',
-    gratuito: false,
-    valor_padrao_prestador: 350,
-    checklistPadrao: [
-      'Maca portátil',
-      'Kit de primeiros socorros completo',
-      'Gelo em quantidade',
-      'Faixas elásticas',
-      'Água mineral',
-      'Tendas para atendimento',
-      'Cadeiras de atendimento'
-    ]
-  },
-  {
-    id: 'acao-corporativa',
-    nome: 'Ação Corporativa',
-    descricao: 'Atendimento fisioterápico em empresa',
-    categoria: 'corporativo',
-    gratuito: false,
-    valor_padrao_prestador: 250,
-    checklistPadrao: [
-      'Maca portátil',
-      'Kit de massagem',
-      'Materiais educativos',
-      'Banner da clínica'
-    ]
-  },
-  {
-    id: 'ativacao-shopping',
-    nome: 'Ativação em Shopping',
-    descricao: 'Estande de fisioterapia em shopping center',
-    categoria: 'ativacao',
-    gratuito: true,
-    valor_padrao_prestador: 200,
-    checklistPadrao: [
-      'Cadeiras de massagem',
-      'Banner da clínica',
-      'Materiais educativos',
-      'Folders',
-      'Brindes'
-    ]
-  }
-];
-
 export function useEventoTemplates() {
-  const [selectedTemplate, setSelectedTemplate] = useState<EventoTemplate | null>(null);
+  return useQuery({
+    queryKey: ['evento-templates'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('evento_templates')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-  const getTemplates = () => TEMPLATES;
+      if (error) throw error;
+      return data as EventoTemplate[];
+    },
+  });
+}
 
-  const getTemplate = (id: string) => TEMPLATES.find(t => t.id === id);
+export function useCreateTemplateFromEvento() {
+  const queryClient = useQueryClient();
 
-  const applyTemplate = (template: EventoTemplate): Partial<EventoCreate> => {
-    return {
-      categoria: template.categoria,
-      descricao: template.descricao,
-      gratuito: template.gratuito,
-      valor_padrao_prestador: template.valor_padrao_prestador,
-    };
-  };
+  return useMutation({
+    mutationFn: async ({ eventoId, nome }: { eventoId: string; nome: string }) => {
+      const { data: evento, error: eventoError } = await supabase
+        .from('eventos')
+        .select('*, checklist_items(*)')
+        .eq('id', eventoId)
+        .single();
 
-  return {
-    templates: TEMPLATES,
-    selectedTemplate,
-    setSelectedTemplate,
-    getTemplates,
-    getTemplate,
-    applyTemplate,
-  };
+      if (eventoError) throw eventoError;
+
+      const { data, error } = await supabase
+        .from('evento_templates')
+        .insert({
+          nome,
+          descricao: evento.descricao,
+          categoria: evento.categoria,
+          gratuito: evento.gratuito,
+          valor_padrao_prestador: evento.valor_padrao_prestador,
+          checklist_padrao: evento.checklist_items?.map((item: any) => ({
+            titulo: item.titulo,
+            tipo: item.tipo,
+            quantidade: item.quantidade,
+            custo_unitario: item.custo_unitario,
+          })),
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['evento-templates'] });
+      toast.success('Template criado com sucesso');
+    },
+    onError: () => {
+      toast.error('Erro ao criar template');
+    },
+  });
+}
+
+export function useCreateEventoFromTemplate() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      templateId,
+      nomeEvento,
+      dataInicio,
+      dataFim,
+      local,
+    }: {
+      templateId: string;
+      nomeEvento: string;
+      dataInicio: string;
+      dataFim: string;
+      local: string;
+    }) => {
+      const { data: template, error: templateError } = await supabase
+        .from('evento_templates')
+        .select('*')
+        .eq('id', templateId)
+        .single();
+
+      if (templateError) throw templateError;
+
+      const { data: evento, error: eventoError } = await supabase
+        .from('eventos')
+        .insert({
+          nome: nomeEvento,
+          descricao: template.descricao,
+          categoria: template.categoria,
+          local,
+          data_inicio: dataInicio,
+          data_fim: dataFim,
+          gratuito: template.gratuito,
+          valor_padrao_prestador: template.valor_padrao_prestador,
+        })
+        .select()
+        .single();
+
+      if (eventoError) throw eventoError;
+
+      if (template.checklist_padrao && Array.isArray(template.checklist_padrao)) {
+        const checklistItems = template.checklist_padrao.map((item: any) => ({
+          evento_id: evento.id,
+          titulo: item.titulo,
+          tipo: item.tipo,
+          quantidade: item.quantidade || 1,
+          custo_unitario: item.custo_unitario || 0,
+        }));
+
+        const { error: checklistError } = await supabase
+          .from('checklist_items')
+          .insert(checklistItems);
+
+        if (checklistError) throw checklistError;
+      }
+
+      return evento;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['eventos'] });
+      toast.success('Evento criado a partir do template');
+    },
+    onError: () => {
+      toast.error('Erro ao criar evento');
+    },
+  });
+}
+
+export function useDeleteTemplate() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (templateId: string) => {
+      const { error } = await supabase
+        .from('evento_templates')
+        .delete()
+        .eq('id', templateId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['evento-templates'] });
+      toast.success('Template excluído');
+    },
+    onError: () => {
+      toast.error('Erro ao excluir template');
+    },
+  });
 }

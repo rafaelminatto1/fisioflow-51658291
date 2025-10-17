@@ -29,7 +29,7 @@ export function NewEventoModal({ open, onOpenChange }: NewEventoModalProps) {
   const [isCalendarFimOpen, setIsCalendarFimOpen] = useState(false);
   const [showTemplates, setShowTemplates] = useState(true);
   const createEvento = useCreateEvento();
-  const { templates, applyTemplate } = useEventoTemplates();
+  const { data: templates, isLoading: isLoadingTemplates } = useEventoTemplates();
 
   const form = useForm<EventoCreate>({
     resolver: zodResolver(eventoCreateSchema),
@@ -49,14 +49,13 @@ export function NewEventoModal({ open, onOpenChange }: NewEventoModalProps) {
   const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting }, reset } = form;
 
   const handleTemplateSelect = (templateId: string) => {
-    const template = templates.find(t => t.id === templateId);
+    const template = templates?.find(t => t.id === templateId);
     if (template) {
-      const dados = applyTemplate(template);
       setValue('nome', template.nome);
-      setValue('descricao', dados.descricao || '');
-      setValue('categoria', dados.categoria!);
-      setValue('gratuito', dados.gratuito!);
-      setValue('valor_padrao_prestador', dados.valor_padrao_prestador || 0);
+      setValue('descricao', template.descricao || '');
+      setValue('categoria', template.categoria as any);
+      setValue('gratuito', template.gratuito);
+      setValue('valor_padrao_prestador', template.valor_padrao_prestador || 0);
       setShowTemplates(false);
     }
   };
@@ -99,7 +98,10 @@ export function NewEventoModal({ open, onOpenChange }: NewEventoModalProps) {
               <span>Escolha um template para começar mais rápido:</span>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              {templates.map((template) => (
+              {isLoadingTemplates && (
+                <p className="text-sm text-muted-foreground col-span-2">Carregando templates...</p>
+              )}
+              {!isLoadingTemplates && templates && templates.map((template) => (
                 <Card
                   key={template.id}
                   className="p-4 cursor-pointer hover:border-primary transition-colors"
