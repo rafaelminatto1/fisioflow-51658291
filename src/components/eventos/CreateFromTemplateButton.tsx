@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileTemplate, Trash2 } from 'lucide-react';
+import { FileText, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -77,7 +77,7 @@ export const CreateFromTemplateButton: React.FC<CreateFromTemplateButtonProps> =
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2">
-          <FileTemplate className="h-4 w-4" />
+          <FileText className="h-4 w-4" />
           <span className="hidden sm:inline">Criar de Template</span>
         </Button>
       </DialogTrigger>
@@ -98,7 +98,7 @@ export const CreateFromTemplateButton: React.FC<CreateFromTemplateButtonProps> =
 
             {!isLoading && templates && templates.length === 0 && (
               <EmptyState
-                icon={FileTemplate}
+                icon={FileText}
                 title="Nenhum template disponível"
                 description="Crie templates a partir de eventos existentes para reutilizar configurações."
               />
