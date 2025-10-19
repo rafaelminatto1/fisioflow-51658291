@@ -2,32 +2,34 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { EventoCreate, EventoUpdate } from '@/lib/validations/evento';
+import { mockEventos } from '@/lib/mockData';
 
 export function useEventos(filtros?: { status?: string; categoria?: string; busca?: string }) {
   return useQuery({
     queryKey: ['eventos', filtros],
     queryFn: async () => {
-      let query = supabase
-        .from('eventos')
-        .select('*')
-        .order('data_inicio', { ascending: false });
+      // Simular delay de API
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      let eventos = [...mockEventos];
 
       if (filtros?.status && filtros.status !== 'todos') {
-        query = query.eq('status', filtros.status);
+        eventos = eventos.filter(e => e.status === filtros.status);
       }
 
       if (filtros?.categoria && filtros.categoria !== 'todos') {
-        query = query.eq('categoria', filtros.categoria);
+        eventos = eventos.filter(e => e.categoria === filtros.categoria);
       }
 
       if (filtros?.busca) {
-        query = query.or(`nome.ilike.%${filtros.busca}%,local.ilike.%${filtros.busca}%`);
+        const busca = filtros.busca.toLowerCase();
+        eventos = eventos.filter(e => 
+          e.nome.toLowerCase().includes(busca) || 
+          e.local.toLowerCase().includes(busca)
+        );
       }
 
-      const { data, error } = await query;
-
-      if (error) throw error;
-      return data;
+      return eventos;
     },
   });
 }
@@ -36,14 +38,12 @@ export function useEvento(id: string) {
   return useQuery({
     queryKey: ['evento', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('eventos')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) throw error;
-      return data;
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      const evento = mockEventos.find(e => e.id === id);
+      if (!evento) throw new Error('Evento não encontrado');
+      
+      return evento;
     },
     enabled: !!id,
   });
