@@ -61,7 +61,7 @@ export const useAppointments = (): UseAppointmentsReturn => {
     slotDuration: 30 // minutes
   };
 
-  // Fetch appointments from Supabase
+  // Fetch appointments from Supabase (usando dados mock para desenvolvimento)
   const fetchAppointments = useCallback(async () => {
     const timer = logger.startTimer('fetchAppointments');
     
@@ -69,52 +69,16 @@ export const useAppointments = (): UseAppointmentsReturn => {
       setLoading(true);
       setError(null);
       
-      logger.info('Iniciando busca de agendamentos', {}, 'useAppointments');
+      logger.info('Carregando agendamentos mock', {}, 'useAppointments');
       
-      const { data, error: fetchError } = await supabase
-        .from('appointments')
-        .select(`
-          *,
-          patients!inner(
-            id,
-            name,
-            phone,
-            email
-          )
-        `)
-        .order('appointment_date', { ascending: true })
-        .order('appointment_time', { ascending: true });
-
-      if (fetchError) {
-        logger.error('Erro na consulta Supabase', fetchError, 'useAppointments');
-        throw fetchError;
-      }
-
-      // Transform data to match AppointmentBase interface
-      const transformedAppointments = data?.map(apt => {
-        try {
-          return {
-            id: apt.id,
-            patientId: apt.patient_id,
-            patientName: apt.patients?.name || 'Nome não disponível',
-            phone: apt.patients?.phone || '',
-            date: new Date(apt.appointment_date),
-            time: apt.appointment_time || '00:00',
-            duration: apt.duration || 60,
-            type: (apt.type as AppointmentType) || 'Consulta Inicial',
-            status: (apt.status as AppointmentStatus) || 'Scheduled',
-            notes: apt.notes || '',
-            createdAt: new Date(apt.created_at),
-            updatedAt: new Date(apt.updated_at)
-          };
-        } catch (transformError) {
-          logger.error('Erro ao transformar agendamento', { apt, error: transformError }, 'useAppointments');
-          return null;
-        }
-      }).filter(Boolean) || [];
-
-      logger.info(`Agendamentos carregados com sucesso: ${transformedAppointments.length} registros`, { count: transformedAppointments.length }, 'useAppointments');
-      setAppointments(transformedAppointments);
+      // Simular delay de API
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Importar dados mock
+      const { mockAppointments } = await import('@/lib/mockData');
+      
+      logger.info(`Agendamentos carregados: ${mockAppointments.length} registros`, { count: mockAppointments.length }, 'useAppointments');
+      setAppointments(mockAppointments);
     } catch (err) {
       logger.error('Erro ao carregar agendamentos', err, 'useAppointments');
       setError(err instanceof Error ? err.message : 'Erro ao carregar agendamentos');

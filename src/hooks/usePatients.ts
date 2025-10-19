@@ -7,11 +7,21 @@ export const useActivePatients = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate loading with mock data
-    setTimeout(() => {
-      setData([]);
-      setIsLoading(false);
-    }, 1000);
+    const loadMockPatients = async () => {
+      try {
+        // Simular delay de API
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const { mockPatients } = await import('@/lib/mockData');
+        setData(mockPatients.filter(p => p.status === 'Em Tratamento' || p.status === 'Inicial'));
+        setIsLoading(false);
+      } catch (err) {
+        setError('Erro ao carregar pacientes');
+        setIsLoading(false);
+      }
+    };
+
+    loadMockPatients();
   }, []);
 
   return { data, isLoading, error };
