@@ -29,6 +29,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -140,72 +141,161 @@ export default function Eventos() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 animate-fade-in">
-        {/* Header responsivo */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Eventos</h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-1">
-              Gerencie todos os eventos da clínica
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate('/eventos/analytics')}>
-              📊 Analytics
-            </Button>
+      <div className="space-y-6 animate-fade-in">
+        {/* Header com gradiente e melhor hierarquia */}
+        <div className="flex flex-col gap-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                Eventos
+              </h1>
+              <p className="text-muted-foreground">
+                Gerencie corridas, ativações e eventos corporativos
+              </p>
+            </div>
             {canWrite('eventos') && (
-              <Button className="gap-2" onClick={() => setNewEventoOpen(true)}>
+              <Button 
+                className="gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
+                onClick={() => setNewEventoOpen(true)}
+              >
                 <Plus className="w-4 h-4" />
-                Novo Evento
+                <span className="hidden sm:inline">Novo Evento</span>
               </Button>
             )}
           </div>
+          
+          {/* Stats cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="hover:shadow-lg transition-all duration-300">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-medical">
+                    <Calendar className="w-5 h-5 text-primary-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{eventos.length}</p>
+                    <p className="text-xs text-muted-foreground">Total</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="hover:shadow-lg transition-all duration-300">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                    <Calendar className="w-5 h-5 text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">
+                      {eventos.filter(e => e.status === 'AGENDADO').length}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Agendados</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="hover:shadow-lg transition-all duration-300">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
+                    <Calendar className="w-5 h-5 text-green-500" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">
+                      {eventos.filter(e => e.status === 'CONCLUIDO').length}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Concluídos</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Button 
+              variant="outline" 
+              className="h-full min-h-[84px] hover:bg-accent/80 transition-all"
+              onClick={() => navigate('/eventos/analytics')}
+            >
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
+                  <span className="text-xl">📊</span>
+                </div>
+                <span className="text-sm font-medium">Analytics</span>
+              </div>
+            </Button>
+          </div>
         </div>
 
-        {/* Filtros */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="md:col-span-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar por nome ou local..."
-                    value={busca}
-                    onChange={(e) => setBusca(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
+        {/* Filtros modernos e mobile-friendly */}
+        <Card className="shadow-card">
+          <CardContent className="p-4 md:p-6">
+            <div className="flex flex-col gap-4">
+              {/* Busca principal */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar eventos por nome ou local..."
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  className="pl-10 h-11 bg-background/50"
+                />
               </div>
               
-              <Select value={filtroStatus} onValueChange={setFiltroStatus}>
-                <SelectTrigger>
-                  <Filter className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos os status</SelectItem>
-                  <SelectItem value="AGENDADO">Agendado</SelectItem>
-                  <SelectItem value="EM_ANDAMENTO">Em Andamento</SelectItem>
-                  <SelectItem value="CONCLUIDO">Concluído</SelectItem>
-                  <SelectItem value="CANCELADO">Cancelado</SelectItem>
-                </SelectContent>
-              </Select>
+              {/* Filtros em grid responsivo */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Select value={filtroStatus} onValueChange={setFiltroStatus}>
+                  <SelectTrigger className="h-11">
+                    <div className="flex items-center gap-2">
+                      <Filter className="w-4 h-4" />
+                      <SelectValue placeholder="Filtrar por status" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">📋 Todos os status</SelectItem>
+                    <SelectItem value="AGENDADO">🕐 Agendado</SelectItem>
+                    <SelectItem value="EM_ANDAMENTO">⚡ Em Andamento</SelectItem>
+                    <SelectItem value="CONCLUIDO">✅ Concluído</SelectItem>
+                    <SelectItem value="CANCELADO">❌ Cancelado</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              <Select value={filtroCategoria} onValueChange={setFiltroCategoria}>
-                <SelectTrigger>
-                  <Filter className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder="Categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todas</SelectItem>
-                  <SelectItem value="corrida">Corrida</SelectItem>
-                  <SelectItem value="corporativo">Corporativo</SelectItem>
-                  <SelectItem value="ativacao">Ativação</SelectItem>
-                  <SelectItem value="workshop">Workshop</SelectItem>
-                  <SelectItem value="outro">Outro</SelectItem>
-                </SelectContent>
-              </Select>
+                <Select value={filtroCategoria} onValueChange={setFiltroCategoria}>
+                  <SelectTrigger className="h-11">
+                    <div className="flex items-center gap-2">
+                      <Filter className="w-4 h-4" />
+                      <SelectValue placeholder="Filtrar por categoria" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">🏷️ Todas as categorias</SelectItem>
+                    <SelectItem value="corrida">🏃 Corrida</SelectItem>
+                    <SelectItem value="corporativo">🏢 Corporativo</SelectItem>
+                    <SelectItem value="ativacao">🎯 Ativação</SelectItem>
+                    <SelectItem value="workshop">📚 Workshop</SelectItem>
+                    <SelectItem value="outro">📌 Outro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {/* Indicador de filtros ativos */}
+              {(filtroStatus !== 'todos' || filtroCategoria !== 'todos' || busca) && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>{eventosFiltrados.length} evento(s) encontrado(s)</span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-7 text-xs"
+                    onClick={() => {
+                      setBusca('');
+                      setFiltroStatus('todos');
+                      setFiltroCategoria('todos');
+                    }}
+                  >
+                    Limpar filtros
+                  </Button>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -232,119 +322,163 @@ export default function Eventos() {
             }
           />
           ) : (
-            <div className="grid gap-4">
-              {eventosFiltrados.map((evento) => (
-                <Card key={evento.id} className="hover:shadow-lg transition-all duration-300 animate-fade-in">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <CardTitle className="text-xl">{evento.nome}</CardTitle>
-                        <Badge variant="outline" className={getStatusColor(evento.status)}>
-                          {evento.status.replace('_', ' ')}
-                        </Badge>
-                        <Badge variant="outline">
-                          {getCategoriaLabel(evento.categoria)}
-                        </Badge>
+            <div className="grid gap-4 animate-fade-in">
+              {eventosFiltrados.map((evento, index) => (
+                <Card 
+                  key={evento.id} 
+                  className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <CardHeader className="pb-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+                          <CardTitle className="text-xl md:text-2xl truncate">
+                            {evento.nome}
+                          </CardTitle>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Badge className={getStatusColor(evento.status)}>
+                              {evento.status === 'AGENDADO' && '🕐'}
+                              {evento.status === 'EM_ANDAMENTO' && '⚡'}
+                              {evento.status === 'CONCLUIDO' && '✅'}
+                              {evento.status === 'CANCELADO' && '❌'}
+                              {' '}{evento.status.replace('_', ' ')}
+                            </Badge>
+                            <Badge variant="secondary">
+                              {evento.categoria === 'corrida' && '🏃'}
+                              {evento.categoria === 'corporativo' && '🏢'}
+                              {evento.categoria === 'ativacao' && '🎯'}
+                              {evento.categoria === 'workshop' && '📚'}
+                              {evento.categoria === 'outro' && '📌'}
+                              {' '}{getCategoriaLabel(evento.categoria)}
+                            </Badge>
+                            {evento.gratuito && (
+                              <Badge variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-400">
+                                Gratuito
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        {evento.descricao && (
+                          <p className="text-muted-foreground text-sm line-clamp-2">
+                            {evento.descricao}
+                          </p>
+                        )}
                       </div>
-                      {evento.descricao && (
-                        <p className="text-muted-foreground text-sm">{evento.descricao}</p>
-                      )}
-                    </div>
-                    
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => navigate(`/eventos/${evento.id}`)}>
-                          <Eye className="w-4 h-4 mr-2" />
-                          Visualizar
-                        </DropdownMenuItem>
-                        {canWrite('eventos') && (
-                          <DropdownMenuItem onClick={() => {
-                            setSelectedEvento(evento);
-                            setEditEventoOpen(true);
-                          }}>
-                            <Edit className="w-4 h-4 mr-2" />
-                            Editar
-                          </DropdownMenuItem>
-                        )}
-                        {canDelete('eventos') && (
-                          <DropdownMenuItem 
-                            className="text-destructive"
-                            onClick={() => {
-                              setEventoToDelete(evento.id);
-                              setDeleteDialogOpen(true);
-                            }}
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity"
                           >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Excluir
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem onClick={() => navigate(`/eventos/${evento.id}`)}>
+                            <Eye className="w-4 h-4 mr-2" />
+                            Visualizar detalhes
                           </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </CardHeader>
-                
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Calendar className="w-4 h-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-muted-foreground text-xs">Data</p>
-                          <p className="font-medium">
+                          {canWrite('eventos') && (
+                            <DropdownMenuItem onClick={() => {
+                              setSelectedEvento(evento);
+                              setEditEventoOpen(true);
+                            }}>
+                              <Edit className="w-4 h-4 mr-2" />
+                              Editar evento
+                            </DropdownMenuItem>
+                          )}
+                          {canDelete('eventos') && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem 
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => {
+                                  setEventoToDelete(evento.id);
+                                  setDeleteDialogOpen(true);
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Excluir evento
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </CardHeader>
+                  
+                  <CardContent className="pt-0">
+                    {/* Informações principais em grid responsivo */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          <Calendar className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs text-muted-foreground mb-1">Data</p>
+                          <p className="font-semibold text-sm truncate">
                             {format(new Date(evento.data_inicio), 'dd/MM/yyyy', { locale: ptBR })}
                           </p>
                         </div>
                       </div>
-                    
-                    <div className="flex items-center gap-2 text-sm">
-                      <MapPin className="w-4 h-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-muted-foreground text-xs">Local</p>
-                        <p className="font-medium">{evento.local}</p>
+                      
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center shrink-0">
+                          <MapPin className="w-5 h-5 text-foreground" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs text-muted-foreground mb-1">Local</p>
+                          <p className="font-semibold text-sm truncate" title={evento.local}>
+                            {evento.local}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
+                          <Users className="w-5 h-5 text-blue-500" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs text-muted-foreground mb-1">Participantes</p>
+                          <p className="font-semibold text-sm">0</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
+                          <DollarSign className="w-5 h-5 text-green-500" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs text-muted-foreground mb-1">Custo</p>
+                          <p className="font-semibold text-sm">R$ 0,00</p>
+                        </div>
                       </div>
                     </div>
                     
-                      <div className="flex items-center gap-2 text-sm">
-                        <Users className="w-4 h-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-muted-foreground text-xs">Participantes</p>
-                          <p className="font-medium">0</p>
-                        </div>
-                      </div>
-                    
-                      <div className="flex items-center gap-2 text-sm">
-                        <DollarSign className="w-4 h-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-muted-foreground text-xs">Custo Total</p>
-                          <p className="font-medium">R$ 0,00</p>
-                        </div>
-                      </div>
-                  </div>
-                  
-                    <div className="mt-4 pt-4 border-t flex justify-between items-center">
-                      <div className="flex gap-2">
-                        <Badge variant="secondary" className="text-xs">
+                    {/* Footer com ações */}
+                    <div className="pt-4 border-t flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant="outline" className="text-xs font-normal">
+                          <Users className="w-3 h-3 mr-1" />
                           0 prestadores
                         </Badge>
-                      {evento.gratuito && (
-                        <Badge variant="outline" className="text-xs">
-                          Gratuito
-                        </Badge>
-                      )}
+                      </div>
+                      
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        className="w-full sm:w-auto shadow-md hover:shadow-lg transition-all"
+                        onClick={() => navigate(`/eventos/${evento.id}`)}
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        Ver Detalhes
+                      </Button>
                     </div>
-                    
-                    <Button variant="outline" size="sm" onClick={() => navigate(`/eventos/${evento.id}`)}>
-                      <Eye className="w-3 h-3 mr-2" />
-                      Ver Detalhes
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )
