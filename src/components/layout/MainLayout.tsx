@@ -1,5 +1,7 @@
 import React from 'react';
 import { Sidebar } from './Sidebar';
+import { MobileHeader } from './MobileHeader';
+import { BottomNavigation } from './BottomNavigation';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { GlobalSearch } from '@/components/eventos/GlobalSearch';
@@ -27,11 +29,17 @@ interface MainLayoutProps {
 export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen flex w-full bg-gradient-to-br from-background via-accent/5 to-background">
-      <Sidebar />
+      {/* Header Mobile */}
+      <MobileHeader />
+      
+      {/* Sidebar - Hidden on mobile */}
+      <div className="hidden md:block">
+        <Sidebar />
+      </div>
       
       <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="h-16 bg-gradient-card border-b border-border/50 flex items-center justify-between px-6 shadow-card backdrop-blur-sm">
+        {/* Header Desktop */}
+        <header className="hidden md:flex h-16 bg-gradient-card border-b border-border/50 items-center justify-between px-6 shadow-card backdrop-blur-sm">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-gradient-primary rounded-xl flex items-center justify-center shadow-medical">
@@ -57,7 +65,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                     <AvatarImage src="/placeholder-avatar.jpg" />
                     <AvatarFallback className="bg-gradient-primary text-primary-foreground font-medium">JS</AvatarFallback>
                   </Avatar>
-                  <span className="hidden md:block font-medium">Dr. João Silva</span>
+                  <span className="hidden lg:block font-medium">Dr. João Silva</span>
                   <ChevronDown className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -82,13 +90,16 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           </div>
         </header>
 
-        {/* Main Content */}
-        <main className="flex-1 p-6 overflow-auto bg-gradient-to-b from-transparent to-accent/5">
+        {/* Main Content - Com padding para mobile header e bottom navigation */}
+        <main className="flex-1 p-4 md:p-6 pt-16 md:pt-6 pb-20 md:pb-6 overflow-auto bg-gradient-to-b from-transparent to-accent/5">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>
         </main>
       </div>
+      
+      {/* Bottom Navigation - Mobile only */}
+      <BottomNavigation />
     </div>
   );
 };

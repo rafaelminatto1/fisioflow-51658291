@@ -65,7 +65,7 @@ export function Sidebar() {
 
   return (
     <div className={cn(
-      "bg-gradient-to-b from-card to-card/80 border-r border-border/50 transition-all duration-300 flex flex-col h-screen sticky top-0 backdrop-blur-sm shadow-card",
+      "hidden md:flex bg-gradient-to-b from-card to-card/80 border-r border-border/50 transition-all duration-300 flex-col h-screen sticky top-0 backdrop-blur-sm shadow-card",
       collapsed ? "w-16" : "w-64"
     )}>
       {/* Header */}
