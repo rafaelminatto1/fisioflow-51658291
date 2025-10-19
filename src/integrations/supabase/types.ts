@@ -203,6 +203,60 @@ export type Database = {
         }
         Relationships: []
       }
+      estagiario_paciente_atribuicao: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          data_atribuicao: string
+          data_expiracao: string | null
+          estagiario_user_id: string
+          id: string
+          observacoes: string | null
+          patient_id: string
+          supervisor_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          data_atribuicao?: string
+          data_expiracao?: string | null
+          estagiario_user_id: string
+          id?: string
+          observacoes?: string | null
+          patient_id: string
+          supervisor_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          data_atribuicao?: string
+          data_expiracao?: string | null
+          estagiario_user_id?: string
+          id?: string
+          observacoes?: string | null
+          patient_id?: string
+          supervisor_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estagiario_paciente_atribuicao_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estagiario_paciente_atribuicao_supervisor_id_fkey"
+            columns: ["supervisor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       evento_templates: {
         Row: {
           categoria: string
@@ -1263,6 +1317,10 @@ export type Database = {
         Args: { cpf_plain: string }
         Returns: string
       }
+      estagiario_pode_acessar_paciente: {
+        Args: { _patient_id: string; _user_id: string }
+        Returns: boolean
+      }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
@@ -1280,6 +1338,10 @@ export type Database = {
       }
       is_fisio_or_admin: {
         Args: { _user_id: string }
+        Returns: boolean
+      }
+      is_voucher_operation_authorized: {
+        Args: Record<PropertyKey, never>
         Returns: boolean
       }
       log_audit_event: {
