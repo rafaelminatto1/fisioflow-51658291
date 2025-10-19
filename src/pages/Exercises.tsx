@@ -43,83 +43,88 @@ const Exercises = () => {
   return (
     <MainLayout>
       <main className="space-y-6 animate-fade-in">
-        {/* Page header */}
-        <section className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-primary grid place-items-center shadow-medical">
-              <Dumbbell className="w-5 h-5 text-primary-foreground" />
+        {/* Page header moderno */}
+        <section className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-primary grid place-items-center shadow-medical">
+                <Dumbbell className="w-6 h-6 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                  Biblioteca de Exercícios
+                </h1>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Biblioteca de Exercícios</h1>
-              <p className="text-muted-foreground">
-                Gerencie exercícios, crie protocolos e prescreva programas personalizados
-              </p>
-            </div>
+            <p className="text-muted-foreground ml-15">
+              Gerencie exercícios, crie protocolos e prescreva programas personalizados
+            </p>
           </div>
           <Button 
-            className="bg-gradient-primary hover:opacity-90"
+            className="shadow-md hover:shadow-lg transition-all w-full sm:w-auto"
             onClick={() => setIsNewExerciseModalOpen(true)}
           >
             <PlusCircle className="w-4 h-4 mr-2" />
-            Novo Exercício
+            <span className="hidden sm:inline">Novo Exercício</span>
+            <span className="sm:hidden">Novo</span>
           </Button>
         </section>
 
-        {/* Estatísticas rápidas */}
-        <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-gradient-card border border-border">
+        {/* Estatísticas rápidas - Melhoradas */}
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="hover:shadow-lg transition-all duration-300 animate-scale-in">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <Dumbbell className="w-5 h-5 text-primary" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-medical">
+                  <Dumbbell className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{exercises.length}</p>
-                  <p className="text-sm text-muted-foreground">Total de Exercícios</p>
+                  <p className="text-xs text-muted-foreground">Total</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-card border border-border">
+          <Card className="hover:shadow-lg transition-all duration-300 animate-scale-in" style={{ animationDelay: '0.1s' }}>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-red-500/10 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center">
                   <Heart className="w-5 h-5 text-red-500" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{favorites.length}</p>
-                  <p className="text-sm text-muted-foreground">Favoritos</p>
+                  <p className="text-xs text-muted-foreground">Favoritos</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-card border border-border">
+          <Card className="hover:shadow-lg transition-all duration-300 animate-scale-in" style={{ animationDelay: '0.2s' }}>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
                   <BookOpen className="w-5 h-5 text-blue-500" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{protocols.length}</p>
-                  <p className="text-sm text-muted-foreground">Protocolos</p>
+                  <p className="text-xs text-muted-foreground">Protocolos</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-card border border-border">
+          <Card className="hover:shadow-lg transition-all duration-300 animate-scale-in" style={{ animationDelay: '0.3s' }}>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
                   <Settings className="w-5 h-5 text-green-500" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">
                     {new Set(exercises.map(ex => ex.category)).size}
                   </p>
-                  <p className="text-sm text-muted-foreground">Categorias</p>
+                  <p className="text-xs text-muted-foreground">Categorias</p>
                 </div>
               </div>
             </CardContent>

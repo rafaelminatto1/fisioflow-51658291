@@ -141,97 +141,172 @@ const Patients = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Pacientes</h1>
-            <p className="text-muted-foreground">
-              {filteredPatients.length} de {patients.length} pacientes
-            </p>
+      <div className="space-y-6 animate-fade-in">
+        {/* Header moderno com stats */}
+        <div className="space-y-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                Pacientes
+              </h1>
+              <p className="text-muted-foreground">
+                Gerencie o cadastro e evolução dos seus pacientes
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={exportPatients}
+                className="hidden sm:flex shadow-md hover:shadow-lg transition-all"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Exportar
+              </Button>
+              <Button 
+                className="shadow-md hover:shadow-lg transition-all"
+                onClick={() => setIsNewPatientModalOpen(true)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Novo Paciente</span>
+              </Button>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={exportPatients}
-              className="hidden sm:flex"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Exportar
-            </Button>
-        <Button 
-          className="bg-primary hover:bg-primary/90"
-          onClick={() => setIsNewPatientModalOpen(true)}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Novo Paciente
-        </Button>
+
+          {/* Stats cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="hover:shadow-lg transition-all duration-300">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-medical">
+                    <Users className="w-5 h-5 text-primary-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{patients.length}</p>
+                    <p className="text-xs text-muted-foreground">Total</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="hover:shadow-lg transition-all duration-300">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
+                    <Users className="w-5 h-5 text-green-500" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">
+                      {patients.filter(p => p.status === 'Em Tratamento').length}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Ativos</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="hover:shadow-lg transition-all duration-300">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                    <Users className="w-5 h-5 text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">
+                      {patients.filter(p => p.status === 'Inicial').length}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Novos</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="hover:shadow-lg transition-all duration-300">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gray-500/10 flex items-center justify-center">
+                    <Users className="w-5 h-5 text-gray-500" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">
+                      {patients.filter(p => p.status === 'Concluído').length}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Concluídos</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
-        {/* Search and Filters */}
-        <Card>
-          <CardContent className="p-4">
+        {/* Search and Filters - Modernizados */}
+        <Card className="shadow-card">
+          <CardContent className="p-4 md:p-6">
             <div className="flex flex-col gap-4">
-              <div className="flex gap-4 items-center">
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                    <Input
-                      placeholder="Buscar por nome, condição, email ou telefone..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-                <Filter className="w-4 h-4 text-muted-foreground" />
+              {/* Busca principal */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                <Input
+                  placeholder="Buscar pacientes por nome, condição, email ou telefone..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 h-11 bg-background/50"
+                />
               </div>
               
-              <div className="flex gap-4 flex-wrap">
-                <div className="min-w-[150px]">
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos os Status</SelectItem>
-                      <SelectItem value="Inicial">Inicial</SelectItem>
-                      <SelectItem value="Em Tratamento">Em Tratamento</SelectItem>
-                      <SelectItem value="Recuperação">Recuperação</SelectItem>
-                      <SelectItem value="Concluído">Concluído</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* Filtros em grid responsivo */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="h-11">
+                    <div className="flex items-center gap-2">
+                      <Filter className="w-4 h-4" />
+                      <SelectValue placeholder="Filtrar por status" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">📋 Todos os Status</SelectItem>
+                    <SelectItem value="Inicial">🆕 Inicial</SelectItem>
+                    <SelectItem value="Em Tratamento">💚 Em Tratamento</SelectItem>
+                    <SelectItem value="Recuperação">⚡ Recuperação</SelectItem>
+                    <SelectItem value="Concluído">✅ Concluído</SelectItem>
+                  </SelectContent>
+                </Select>
                 
-                <div className="min-w-[200px]">
-                  <Select value={conditionFilter} onValueChange={setConditionFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Condição" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas as Condições</SelectItem>
-                      {uniqueConditions.map((condition) => (
-                        <SelectItem key={String(condition)} value={String(condition)}>
-                          {String(condition)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {(statusFilter !== 'all' || conditionFilter !== 'all' || searchTerm) && (
-                  <Button
-                    variant="outline"
+                <Select value={conditionFilter} onValueChange={setConditionFilter}>
+                  <SelectTrigger className="h-11">
+                    <div className="flex items-center gap-2">
+                      <Filter className="w-4 h-4" />
+                      <SelectValue placeholder="Filtrar por condição" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">🏷️ Todas as Condições</SelectItem>
+                    {uniqueConditions.map((condition) => (
+                      <SelectItem key={String(condition)} value={String(condition)}>
+                        {String(condition)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {/* Indicador de filtros ativos */}
+              {(statusFilter !== 'all' || conditionFilter !== 'all' || searchTerm) && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>{filteredPatients.length} paciente(s) encontrado(s)</span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-7 text-xs"
                     onClick={() => {
                       setSearchTerm('');
                       setStatusFilter('all');
                       setConditionFilter('all');
                     }}
                   >
-                    Limpar Filtros
+                    Limpar filtros
                   </Button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -256,65 +331,86 @@ const Patients = () => {
             }
           />
         ) : (
-          <div className="grid gap-6">
-            {filteredPatients.map((patient) => (
-              <Card key={patient.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <Avatar className="h-12 w-12">
-                        <AvatarFallback className="bg-primary/10 text-primary">
+          <div className="grid gap-4 animate-fade-in">
+            {filteredPatients.map((patient, index) => (
+              <Card 
+                key={patient.id} 
+                className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                      <Avatar className="h-14 w-14 ring-2 ring-primary/20 shrink-0">
+                        <AvatarFallback className="bg-gradient-primary text-primary-foreground text-lg font-semibold">
                           {patient.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
-                        <CardTitle className="text-xl">{patient.name}</CardTitle>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>{getPatientAge(new Date(patient.birthDate))} anos</span>
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-xl mb-1">{patient.name}</CardTitle>
+                        <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
+                          <span className="flex items-center gap-1">
+                            👤 {getPatientAge(new Date(patient.birthDate))} anos
+                          </span>
+                          <span>•</span>
                           <span>{patient.gender}</span>
                           {patient.mainCondition && (
-                            <span className="font-medium">{patient.mainCondition}</span>
+                            <>
+                              <span>•</span>
+                              <span className="font-medium text-foreground">
+                                {patient.mainCondition}
+                              </span>
+                            </>
                           )}
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge className={getStatusColor(patient.status)}>
-                        {patient.status}
-                      </Badge>
-                    </div>
+                    <Badge className={getStatusColor(patient.status)}>
+                      {patient.status}
+                    </Badge>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="pt-0">
                   {/* Contact Info */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                     {patient.email && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="w-4 h-4 text-muted-foreground" />
-                        <span>{patient.email}</span>
+                      <div className="flex items-center gap-3 p-3 bg-accent/50 rounded-lg">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          <Mail className="w-4 h-4 text-primary" />
+                        </div>
+                        <span className="text-sm truncate">{patient.email}</span>
                       </div>
                     )}
                     {patient.phone && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Phone className="w-4 h-4 text-muted-foreground" />
-                        <span>{patient.phone}</span>
+                      <div className="flex items-center gap-3 p-3 bg-accent/50 rounded-lg">
+                        <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center shrink-0">
+                          <Phone className="w-4 h-4 text-foreground" />
+                        </div>
+                        <span className="text-sm">{patient.phone}</span>
                       </div>
                     )}
                   </div>
 
-                  {/* Progress */}
-                  <div className="text-center p-3 bg-muted rounded-lg">
-                    <div className="text-2xl font-bold text-primary">
-                      {patient.progress}%
+                  {/* Progress Bar */}
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Progresso do Tratamento</span>
+                      <span className="font-bold text-primary">{patient.progress}%</span>
                     </div>
-                    <div className="text-xs text-muted-foreground">Progresso do Tratamento</div>
+                    <div className="h-3 bg-accent rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-primary rounded-full transition-all duration-500"
+                        style={{ width: `${patient.progress}%` }}
+                      />
+                    </div>
                   </div>
 
                   {/* Action Buttons */}
                   <div className="flex gap-2 pt-4 border-t">
                     <Button 
-                      variant="outline" 
+                      variant="default" 
                       size="sm"
+                      className="flex-1 shadow-md hover:shadow-lg transition-all"
                       onClick={() => setViewingPatient(patient.id)}
                     >
                       <Eye className="w-4 h-4 mr-2" />
@@ -323,6 +419,7 @@ const Patients = () => {
                     <Button 
                       variant="outline" 
                       size="sm"
+                      className="flex-1"
                       onClick={() => setEditingPatient(patient.id)}
                     >
                       <Edit className="w-4 h-4 mr-2" />
