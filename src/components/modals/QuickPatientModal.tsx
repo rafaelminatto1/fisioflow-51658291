@@ -42,6 +42,39 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
   
   const handleSave = async (data: z.infer<typeof quickPatientSchema>) => {
     try {
+      // Verifica sessão e papéis antes de tentar inserir (evita erro 401/RLS)
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData?.user;
+      if (!user) {
+        toast({
+          title: 'Sessão necessária',
+          description: 'Faça login para criar pacientes.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const { data: roles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id);
+
+      if (rolesError) {
+        console.warn('Falha ao buscar papéis do usuário:', rolesError);
+      }
+
+      const allowed = ['admin', 'fisioterapeuta', 'estagiario'];
+      const hasAllowedRole = (roles || []).some((r: any) => allowed.includes(String(r.role)));
+
+      if (!hasAllowedRole) {
+        toast({
+          title: 'Sem permissão',
+          description: 'Você precisa ser Admin, Fisioterapeuta ou Estagiário para criar pacientes.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       console.log('Creating quick patient:', data);
       
       const { data: newPatient, error } = await supabase
@@ -74,9 +107,15 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
       onPatientCreated(newPatient.id, newPatient.name);
     } catch (error: any) {
       console.error('Error creating quick patient:', error);
+
+      let description = error?.message || 'Não foi possível criar o paciente.';
+      if (error?.code === '42501' || /row-level security/i.test(description) || error?.status === 401) {
+        description = 'Sem permissão para criar pacientes (RLS). Faça login e confirme seu papel (admin/fisio/estagiário).';
+      }
+
       toast({
         title: 'Erro ao criar paciente',
-        description: error.message || 'Não foi possível criar o paciente.',
+        description,
         variant: 'destructive',
       });
     }
