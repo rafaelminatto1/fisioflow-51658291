@@ -12,6 +12,8 @@ import { EditEventoModal } from '@/components/eventos/EditEventoModal';
 import { useEventos, useDeleteEvento } from '@/hooks/useEventos';
 import { useRealtimeEventos } from '@/hooks/useRealtimeEventos';
 import { usePermissions } from '@/hooks/usePermissions';
+import { EventosStatsWidget } from '@/components/eventos/EventosStatsWidget';
+import { GlobalSearch } from '@/components/eventos/GlobalSearch';
 import { 
   Calendar, 
   MapPin, 
@@ -163,6 +165,7 @@ export default function Eventos() {
               </Button>
             )}
           </div>
+          <EventosStatsWidget />
           
           {/* Stats cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

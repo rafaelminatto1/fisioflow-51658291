@@ -93,7 +93,6 @@ export default function EventoDetalhes() {
         <div className="flex flex-wrap gap-2">
           <EventoFinancialReportButton 
             eventoId={id!} 
-            eventoNome={evento.nome} 
           />
           <SaveAsTemplateButton 
             eventoId={id!} 
