@@ -40,8 +40,10 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
 
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = form;
   
-  const handleSave = async (data: any) => {
+  const handleSave = async (data: z.infer<typeof quickPatientSchema>) => {
     try {
+      console.log('Creating quick patient:', data);
+      
       const { data: newPatient, error } = await supabase
         .from('patients')
         .insert([{
@@ -55,7 +57,12 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Patient created successfully:', newPatient);
 
       toast({
         title: 'Paciente criado!',
