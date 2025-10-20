@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { checkRateLimit, createRateLimitResponse, addRateLimitHeaders } from '../_shared/rate-limit.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,6 +12,12 @@ serve(async (req) => {
   }
 
   try {
+    // Rate limiting
+    const rateLimitResult = await checkRateLimit(req, 'send-whatsapp');
+    if (!rateLimitResult.allowed) {
+      console.warn(`Rate limit excedido para send-whatsapp: ${rateLimitResult.current_count}/${rateLimitResult.limit}`);
+      return createRateLimitResponse(rateLimitResult, corsHeaders);
+    }
     const { to, message } = await req.json();
     
     // Validação básica
@@ -23,6 +30,12 @@ serve(async (req) => {
     console.log(`Enviando mensagem WhatsApp para ${to}:`, message);
     
     // Simulação de sucesso
+    // Adicionar headers de rate limit
+    const enhancedHeaders = addRateLimitHeaders(
+      { ...corsHeaders, 'Content-Type': 'application/json' },
+      rateLimitResult
+    );
+
     return new Response(
       JSON.stringify({ 
         success: true,
@@ -31,7 +44,7 @@ serve(async (req) => {
         timestamp: new Date().toISOString()
       }),
       {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: enhancedHeaders,
       }
     );
   } catch (error) {
