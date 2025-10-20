@@ -16,6 +16,10 @@
   },
   "dependencies": {
     "@axe-core/playwright": "^4.10.2",
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/cli": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/ios": "^7.4.3",
     "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^3.10.0",
     "@playwright/test": "^1.56.0",
