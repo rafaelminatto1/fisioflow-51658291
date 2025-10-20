@@ -448,7 +448,10 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                   type="button"
                   variant="default"
                   onClick={() => {
-                    window.location.href = `/patient-evolution/${appointment.id}`;
+                    onClose();
+                    setTimeout(() => {
+                      window.location.href = `/patient-evolution/${appointment.id}`;
+                    }, 100);
                   }}
                   className="flex items-center gap-2"
                 >

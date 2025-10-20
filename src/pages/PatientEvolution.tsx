@@ -50,38 +50,83 @@ const PatientEvolution = () => {
   const [assessment, setAssessment] = useState('');
   const [plan, setPlan] = useState('');
 
-  // Buscar dados do agendamento
-  const { data: appointment } = useQuery({
+  // Buscar dados do agendamento (usando mock data)
+  const { data: appointment, isLoading: appointmentLoading } = useQuery({
     queryKey: ['appointment', appointmentId],
     queryFn: async () => {
+      // Primeiro tentar buscar dos dados mock
+      const { mockAppointments, mockPatients } = await import('@/lib/mockData');
+      const mockAppointment = mockAppointments.find(apt => apt.id === appointmentId);
+      
+      if (mockAppointment) {
+        const patient = mockPatients.find(p => p.id === mockAppointment.patientId);
+        return {
+          ...mockAppointment,
+          appointment_date: mockAppointment.date.toISOString(),
+          appointment_time: mockAppointment.time,
+          patient_id: mockAppointment.patientId,
+          patients: patient ? {
+            id: patient.id,
+            name: patient.name,
+            phone: patient.phone,
+            email: patient.email,
+            birth_date: patient.birthDate,
+            status: patient.status
+          } : null
+        };
+      }
+      
+      // Se não encontrar nos mocks, tentar no Supabase
       const { data, error } = await supabase
         .from('appointments')
         .select('*, patients(*)')
         .eq('id', appointmentId)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
+      if (!data) throw new Error('Agendamento não encontrado');
       return data;
     },
-    enabled: !!appointmentId
+    enabled: !!appointmentId,
+    retry: 1
   });
 
   const patientId = appointment?.patient_id;
 
-  // Buscar informações do paciente
-  const { data: patient } = useQuery({
+  // Buscar informações do paciente (usando mock data)
+  const { data: patient, isLoading: patientLoading } = useQuery({
     queryKey: ['patient', patientId],
     queryFn: async () => {
+      // Se veio dos mocks, já temos os dados
+      if (appointment?.patients) {
+        const { mockPatients } = await import('@/lib/mockData');
+        const fullPatient = mockPatients.find(p => p.id === patientId);
+        if (fullPatient) {
+          return {
+            id: fullPatient.id,
+            name: fullPatient.name,
+            phone: fullPatient.phone,
+            email: fullPatient.email,
+            birth_date: fullPatient.birthDate,
+            status: fullPatient.status,
+            created_at: fullPatient.createdAt
+          };
+        }
+      }
+      
+      // Tentar buscar no Supabase
       const { data, error } = await supabase
         .from('patients')
         .select('*, profiles(*)')
         .eq('id', patientId)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
+      if (!data) throw new Error('Paciente não encontrado');
       return data;
     },
-    enabled: !!patientId
+    enabled: !!patientId,
+    retry: 1
   });
 
   // Hooks de dados de evolução
@@ -158,13 +203,31 @@ const PatientEvolution = () => {
     setCurrentSoapRecordId(record.id);
   };
 
+  if (appointmentLoading || patientLoading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center h-[50vh]">
+          <div className="text-center space-y-4">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-muted-foreground">Carregando dados do paciente...</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
   if (!appointment || !patient) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center h-[50vh]">
-          <div className="text-center">
-            <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">Carregando dados do paciente...</p>
+          <div className="text-center space-y-4">
+            <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <p className="text-lg font-semibold">Agendamento não encontrado</p>
+            <p className="text-muted-foreground">Não foi possível carregar os dados do agendamento.</p>
+            <Button onClick={() => navigate('/schedule')} variant="outline">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Voltar para Agenda
+            </Button>
           </div>
         </div>
       </MainLayout>
