@@ -24,8 +24,8 @@ export function EventosAnalytics() {
   if (!stats) return null;
 
   const statusData = [
-    { name: 'Agendados', value: stats.eventosAgendados, color: 'bg-blue-500' },
-    { name: 'Em Andamento', value: stats.eventosEmAndamento, color: 'bg-yellow-500' },
+    { name: 'Agendados', value: stats.eventosAtivos, color: 'bg-blue-500' },
+    { name: 'Em Andamento', value: stats.eventosAtivos, color: 'bg-yellow-500' },
     { name: 'Concluídos', value: stats.eventosConcluidos, color: 'bg-green-500' },
   ];
 
@@ -65,24 +65,14 @@ export function EventosAnalytics() {
             <div className="space-y-6">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">Taxa de Seguidores</span>
+                  <span className="text-sm font-medium">Total de Participantes</span>
                   <span className="text-2xl font-bold text-primary">
-                    {stats.percentualSeguidores.toFixed(0)}%
+                    {stats.totalParticipantes}
                   </span>
                 </div>
-                <Progress value={stats.percentualSeguidores} className="h-3" />
                 <p className="text-xs text-muted-foreground mt-2">
-                  {stats.participantesSeguemPerfil} de {stats.totalParticipantes} participantes seguem o perfil
+                  Média: {stats.mediaParticipantesPorEvento} participantes por evento
                 </p>
-              </div>
-
-              <div className="pt-4 border-t">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Maior evento</span>
-                  <span className="text-lg font-semibold">
-                    {stats.eventoComMaisParticipantes} participantes
-                  </span>
-                </div>
               </div>
             </div>
           </CardContent>
@@ -98,40 +88,23 @@ export function EventosAnalytics() {
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Custo Total</p>
-              <p className="text-2xl font-bold">R$ {stats.custoTotal.toFixed(2)}</p>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Prestadores</p>
-              <p className="text-2xl font-bold text-blue-600">
-                R$ {stats.custoTotalPrestadores.toFixed(2)}
-              </p>
-              <Progress 
-                value={(stats.custoTotalPrestadores / stats.custoTotal) * 100} 
-                className="h-2"
-              />
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Insumos</p>
+              <p className="text-sm text-muted-foreground">Receita Total</p>
               <p className="text-2xl font-bold text-green-600">
-                R$ {stats.custoTotalInsumos.toFixed(2)}
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.receitaTotal)}
               </p>
-              <Progress 
-                value={(stats.custoTotalInsumos / stats.custoTotal) * 100} 
-                className="h-2"
-              />
             </div>
-          </div>
-
-          <div className="mt-6 pt-4 border-t">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-yellow-600" />
-                <span className="text-sm text-muted-foreground">Pagamentos Pendentes</span>
-              </div>
-              <span className="text-lg font-semibold text-yellow-600">
-                {stats.prestadoresPendentes} prestador(es)
-              </span>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Custo Total</p>
+              <p className="text-2xl font-bold text-red-600">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.custoTotal)}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">Margem Média</p>
+              <p className="text-2xl font-bold text-primary">
+                {stats.margemMedia}%
+              </p>
+              <Progress value={stats.margemMedia} className="h-2" />
             </div>
           </div>
         </CardContent>
