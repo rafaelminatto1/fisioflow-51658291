@@ -68,7 +68,7 @@ Sempre que fizer alterações no código:
 
 ## 📝 Configuração Atual
 
-- **App ID**: `app.lovable.5aa177ed5a714e0d9acbd82af5218253`
+- **App ID**: `com.fisioflow.app`
 - **App Name**: FisioFlow
 - **Hot Reload**: Desabilitado por padrão (usa build local)
 - **Splash Screen**: Configurado com cor azul (#0EA5E9)
@@ -167,7 +167,7 @@ npx cap open ios
    - Se não tiver, clique em "Add Account" e faça login
 
 3. **Configurar Bundle Identifier** (se necessário):
-   - O padrão é: `app.lovable.5aa177ed5a714e0d9acbd82af5218253`
+   - O padrão é: `com.fisioflow.app`
    - Se quiser mudar, altere em "Bundle Identifier"
 
 4. **Instalar CocoaPods Dependencies**:
