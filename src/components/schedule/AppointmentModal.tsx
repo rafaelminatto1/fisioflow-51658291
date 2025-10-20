@@ -18,6 +18,8 @@ import { cn } from '@/lib/utils';
 import { AppointmentBase, AppointmentFormData, AppointmentType, AppointmentStatus } from '@/types/appointment';
 import { useCreateAppointment, useUpdateAppointment } from '@/hooks/useAppointments';
 import { useActivePatients } from '@/hooks/usePatients';
+import { PatientCombobox } from '@/components/ui/patient-combobox';
+import { QuickPatientModal } from '@/components/modals/QuickPatientModal';
 
 const appointmentSchema = z.object({
   patientId: z.string().min(1, 'Selecione um paciente'),
@@ -84,6 +86,8 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
 }) => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [conflictCheck, setConflictCheck] = useState<{ hasConflict: boolean; conflictingAppointment?: AppointmentBase } | null>(null);
+  const [isQuickPatientModalOpen, setIsQuickPatientModalOpen] = useState(false);
+  const [quickPatientSearchTerm, setQuickPatientSearchTerm] = useState('');
   const createAppointmentMutation = useCreateAppointment();
   const updateAppointmentMutation = useUpdateAppointment();
   const { data: patients = [] } = useActivePatients();
@@ -189,33 +193,26 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(handleSave)} className="p-6 space-y-6">
-          {/* Patient Selection - Design melhorado */}
+          {/* Patient Selection - Com Autocomplete */}
           <div className="space-y-3 p-4 bg-muted/30 rounded-lg border">
             <div className="flex items-center gap-2 text-sm font-medium">
               <User className="w-4 h-4 text-primary" />
               <Label htmlFor="patientId">Paciente *</Label>
             </div>
-            <Select
+            <PatientCombobox
+              patients={patients.map(p => ({
+                id: p.id,
+                name: p.name,
+                incomplete_registration: p.incomplete_registration
+              }))}
               value={watch('patientId')}
               onValueChange={(value) => setValue('patientId', value)}
+              onCreateNew={(searchTerm) => {
+                setQuickPatientSearchTerm(searchTerm);
+                setIsQuickPatientModalOpen(true);
+              }}
               disabled={mode === 'view'}
-            >
-              <SelectTrigger className="bg-background">
-                <SelectValue placeholder="Selecione um paciente" />
-              </SelectTrigger>
-              <SelectContent className="max-h-60">
-                {patients.map((patient) => (
-                  <SelectItem key={patient.id} value={patient.id}>
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                        <User className="w-4 h-4 text-primary" />
-                      </div>
-                      <span className="font-medium">{patient.name}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
             {errors.patientId && (
               <p className="text-sm text-destructive flex items-center gap-1">
                 <AlertTriangle className="w-3 h-3" />
@@ -490,6 +487,18 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
             </div>
           </div>
         </form>
+
+        {/* Quick Patient Registration Modal */}
+        <QuickPatientModal
+          open={isQuickPatientModalOpen}
+          onOpenChange={setIsQuickPatientModalOpen}
+          suggestedName={quickPatientSearchTerm}
+          onPatientCreated={(patientId, patientName) => {
+            setValue('patientId', patientId);
+            // Force re-fetch of patients list
+            window.location.reload();
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

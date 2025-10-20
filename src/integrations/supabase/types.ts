@@ -982,6 +982,7 @@ export type Database = {
           emergency_phone: string | null
           health_insurance: string | null
           id: string
+          incomplete_registration: boolean | null
           insurance_number: string | null
           name: string
           observations: string | null
@@ -1003,6 +1004,7 @@ export type Database = {
           emergency_phone?: string | null
           health_insurance?: string | null
           id?: string
+          incomplete_registration?: boolean | null
           insurance_number?: string | null
           name: string
           observations?: string | null
@@ -1024,6 +1026,7 @@ export type Database = {
           emergency_phone?: string | null
           health_insurance?: string | null
           id?: string
+          incomplete_registration?: boolean | null
           insurance_number?: string | null
           name?: string
           observations?: string | null

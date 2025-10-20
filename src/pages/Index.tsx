@@ -2,6 +2,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { AdminDashboard } from '@/components/dashboard/AdminDashboard';
 import { PatientDashboard } from '@/components/dashboard/PatientDashboard';
 import { TherapistDashboard } from '@/components/dashboard/TherapistDashboard';
+import { IncompleteRegistrationAlert } from '@/components/dashboard/IncompleteRegistrationAlert';
 import { useAuth } from '@/hooks/useAuth';
 
 const Index = () => {
@@ -48,6 +49,9 @@ const Index = () => {
             </div>
           </div>
         </div>
+
+        {/* Alerta de cadastros incompletos */}
+        <IncompleteRegistrationAlert />
         
         {/* Dashboard content */}
         <div className="w-full">
