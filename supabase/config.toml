@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.send-whatsapp]
 verify_jwt = true
+
+[functions.create-voucher-checkout]
+verify_jwt = true
+
+[functions.verify-voucher-payment]
+verify_jwt = true

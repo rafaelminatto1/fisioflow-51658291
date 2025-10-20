@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Ticket, Calendar, DollarSign } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useVouchers, useUserVouchers } from '@/hooks/useVouchers';
+import { usePurchaseVoucher, useVerifyVoucherPayment } from '@/hooks/usePurchaseVoucher';
 import { usePermissions } from '@/hooks/usePermissions';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -17,6 +18,21 @@ export default function Vouchers() {
   const { data: vouchers, isLoading: vouchersLoading } = useVouchers();
   const { data: userVouchers, isLoading: userVouchersLoading } = useUserVouchers();
   const { isAdmin } = usePermissions();
+  const purchaseVoucher = usePurchaseVoucher();
+  const verifyPayment = useVerifyVoucherPayment();
+
+  // Verificar pagamento ao carregar página com session_id
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
+    
+    if (sessionId) {
+      verifyPayment.mutate(sessionId);
+      
+      // Limpar URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
 
   const activeVouchers = userVouchers?.filter(v => v.ativo && new Date(v.data_expiracao) > new Date()) || [];
 
@@ -149,8 +165,12 @@ export default function Vouchers() {
                         </Badge>
                       </div>
                     </div>
-                    <Button className="w-full" disabled>
-                      Adquirir Plano
+                    <Button 
+                      className="w-full"
+                      onClick={() => purchaseVoucher.mutate(voucher.id)}
+                      disabled={purchaseVoucher.isPending}
+                    >
+                      {purchaseVoucher.isPending ? 'Processando...' : 'Adquirir Plano'}
                     </Button>
                   </CardContent>
                 </Card>
