@@ -310,14 +310,14 @@ export const useAppointments = (): UseAppointmentsReturn => {
 
   // Confirm appointment
   const confirmAppointment = useCallback(async (id: string): Promise<boolean> => {
-    const result = await updateAppointment(id, { status: 'Confirmed' });
+    const result = await updateAppointment(id, { status: 'confirmado' });
     return result !== null;
   }, [updateAppointment]);
 
   // Cancel appointment
   const cancelAppointment = useCallback(async (id: string, reason?: string): Promise<boolean> => {
     const result = await updateAppointment(id, { 
-      status: 'Cancelled',
+      status: 'cancelado',
       notes: reason ? `Cancelado: ${reason}` : 'Cancelado'
     });
     return result !== null;
@@ -431,9 +431,9 @@ export const useAppointments = (): UseAppointmentsReturn => {
     
     return {
       total: appointments.length,
-      confirmed: appointments.filter(apt => apt.status === 'Confirmed').length,
-      pending: appointments.filter(apt => apt.status === 'Scheduled').length,
-      cancelled: appointments.filter(apt => apt.status === 'Cancelled').length,
+      confirmed: appointments.filter(apt => apt.status === 'confirmado').length,
+      pending: appointments.filter(apt => apt.status === 'agendado').length,
+      cancelled: appointments.filter(apt => apt.status === 'cancelado').length,
       today: appointments.filter(apt => {
         const aptDate = new Date(apt.date);
         aptDate.setHours(0, 0, 0, 0);
