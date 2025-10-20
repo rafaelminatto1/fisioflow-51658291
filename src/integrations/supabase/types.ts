@@ -1674,6 +1674,14 @@ export type Database = {
         Args: { _invitation_id: string }
         Returns: undefined
       }
+      setup_demo_user: {
+        Args: {
+          _email: string
+          _full_name: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: undefined
+      }
       user_has_any_role: {
         Args: {
           _roles: Database["public"]["Enums"]["app_role"][]
