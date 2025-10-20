@@ -61,7 +61,7 @@ export const useAppointments = (): UseAppointmentsReturn => {
     slotDuration: 30 // minutes
   };
 
-  // Fetch appointments from Supabase (usando dados mock para desenvolvimento)
+  // Fetch appointments from Supabase
   const fetchAppointments = useCallback(async () => {
     const timer = logger.startTimer('fetchAppointments');
     
@@ -69,16 +69,44 @@ export const useAppointments = (): UseAppointmentsReturn => {
       setLoading(true);
       setError(null);
       
-      logger.info('Carregando agendamentos mock', {}, 'useAppointments');
+      logger.info('Carregando agendamentos do Supabase', {}, 'useAppointments');
       
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const { data, error } = await supabase
+        .from('appointments')
+        .select(`
+          *,
+          patients!inner(
+            id,
+            name,
+            phone,
+            email
+          )
+        `)
+        .order('appointment_date', { ascending: true })
+        .order('appointment_time', { ascending: true });
+
+      if (error) {
+        logger.error('Erro ao buscar agendamentos', error, 'useAppointments');
+        throw error;
+      }
+
+      const transformedAppointments: AppointmentBase[] = (data || []).map(apt => ({
+        id: apt.id,
+        patientId: apt.patient_id,
+        patientName: apt.patients?.name || 'Paciente não identificado',
+        phone: apt.patients?.phone || '',
+        date: new Date(apt.appointment_date),
+        time: apt.appointment_time,
+        duration: apt.duration || 60,
+        type: apt.type as AppointmentType,
+        status: apt.status as AppointmentStatus,
+        notes: apt.notes || '',
+        createdAt: new Date(apt.created_at),
+        updatedAt: new Date(apt.updated_at)
+      }));
       
-      // Importar dados mock
-      const { mockAppointments } = await import('@/lib/mockData');
-      
-      logger.info(`Agendamentos carregados: ${mockAppointments.length} registros`, { count: mockAppointments.length }, 'useAppointments');
-      setAppointments(mockAppointments);
+      logger.info(`Agendamentos carregados: ${transformedAppointments.length} registros`, { count: transformedAppointments.length }, 'useAppointments');
+      setAppointments(transformedAppointments);
     } catch (err) {
       logger.error('Erro ao carregar agendamentos', err, 'useAppointments');
       setError(err instanceof Error ? err.message : 'Erro ao carregar agendamentos');
@@ -242,40 +270,40 @@ export const useAppointments = (): UseAppointmentsReturn => {
         throw error;
       }
 
-      const appointment: AppointmentBase = {
+      const transformedAppointment: AppointmentBase = {
         id: updatedAppointment.id,
         patientId: updatedAppointment.patient_id,
-        patientName: updatedAppointment.patients.name,
-        phone: updatedAppointment.patients.phone,
+        patientName: updatedAppointment.patients?.name || 'Paciente não identificado',
+        phone: updatedAppointment.patients?.phone || '',
         date: new Date(updatedAppointment.appointment_date),
         time: updatedAppointment.appointment_time,
-        duration: updatedAppointment.duration,
+        duration: updatedAppointment.duration || 60,
         type: updatedAppointment.type as AppointmentType,
         status: updatedAppointment.status as AppointmentStatus,
-        notes: updatedAppointment.notes,
+        notes: updatedAppointment.notes || '',
         createdAt: new Date(updatedAppointment.created_at),
         updatedAt: new Date(updatedAppointment.updated_at)
       };
 
-      logger.info('Agendamento atualizado com sucesso', { appointmentId: id }, 'useAppointments');
-      setAppointments(prev => prev.map(apt => apt.id === id ? appointment : apt));
-      
+      setAppointments(prev => prev.map(apt => apt.id === id ? transformedAppointment : apt));
+
+      logger.info('Agendamento atualizado com sucesso', { appointmentId: transformedAppointment.id }, 'useAppointments');
       toast({
         title: "Sucesso",
-        description: "Agendamento atualizado com sucesso"
+        description: "Agendamento atualizado com sucesso",
       });
 
-      return appointment;
+      timer();
+      return transformedAppointment;
     } catch (err) {
       logger.error('Erro ao atualizar agendamento', err, 'useAppointments');
       toast({
         title: "Erro",
-        description: "Não foi possível atualizar o agendamento",
+        description: err instanceof Error ? err.message : "Não foi possível atualizar o agendamento",
         variant: "destructive"
       });
-      return null;
-    } finally {
       timer();
+      return null;
     }
   }, [appointments, toast]);
 
