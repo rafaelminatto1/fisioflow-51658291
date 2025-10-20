@@ -4,27 +4,22 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   AlertTriangle,
   ArrowLeft,
-  Calendar,
   Clock,
-  Target,
-  Activity,
-  TrendingUp,
-  FileText,
   Copy,
   Save,
-  User
+  User,
+  Calendar,
+  Phone,
+  Stethoscope
 } from 'lucide-react';
-import { format, formatDistanceToNow, differenceInDays } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   usePatientSurgeries,
@@ -38,24 +33,15 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { MeasurementForm } from '@/components/evolution/MeasurementForm';
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer
-} from 'recharts';
+import { SurgeryTimeline } from '@/components/evolution/SurgeryTimeline';
+import { GoalsTracker } from '@/components/evolution/GoalsTracker';
+import { PathologyStatus } from '@/components/evolution/PathologyStatus';
+import { MeasurementCharts } from '@/components/evolution/MeasurementCharts';
 
 const PatientEvolution = () => {
   const { appointmentId } = useParams<{ appointmentId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [selectedTab, setSelectedTab] = useState('evolucao');
   const [currentSoapRecordId, setCurrentSoapRecordId] = useState<string | undefined>();
   
   // Estados do formulário SOAP
@@ -187,110 +173,184 @@ const PatientEvolution = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-6 animate-fade-in">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/schedule')}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold">Evolução do Paciente</h1>
-              <p className="text-muted-foreground">
-                {patient.name} • {format(new Date(appointment.appointment_date), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-              </p>
+      <div className="space-y-6 animate-fade-in pb-8">
+        {/* Modern Header with Gradient */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-background p-6 shadow-lg border">
+          <div className="relative z-10">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div className="flex items-start gap-4 flex-1 min-w-0">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => navigate('/schedule')}
+                  className="mt-1 hover:scale-105 transition-transform flex-shrink-0"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <div className="flex-1 space-y-3 min-w-0">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg flex-shrink-0">
+                      <Stethoscope className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <h1 className="text-3xl font-bold tracking-tight truncate">Evolução do Paciente</h1>
+                      <p className="text-muted-foreground flex items-center gap-2 mt-1 truncate">
+                        <User className="h-4 w-4 flex-shrink-0" />
+                        {patient.name}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 text-sm">
+                    <Badge variant="outline" className="gap-1">
+                      <Calendar className="h-3 w-3" />
+                      {format(new Date(appointment.appointment_date), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                    </Badge>
+                    {patient.phone && (
+                      <Badge variant="outline" className="gap-1">
+                        <Phone className="h-3 w-3" />
+                        {patient.phone}
+                      </Badge>
+                    )}
+                    <Badge variant="secondary">
+                      Tratamento iniciado {treatmentDuration}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+              <Button
+                onClick={handleSave}
+                size="lg"
+                disabled={createSoapRecord.isPending}
+                className="shadow-lg hover:shadow-xl transition-all hover:scale-105 flex-shrink-0"
+              >
+                <Save className="h-5 w-5 mr-2" />
+                {createSoapRecord.isPending ? 'Salvando...' : 'Salvar Evolução'}
+              </Button>
             </div>
           </div>
-          <Button onClick={handleSave} size="lg" disabled={createSoapRecord.isPending}>
-            <Save className="h-5 w-5 mr-2" />
-            {createSoapRecord.isPending ? 'Salvando...' : 'Salvar Evolução'}
-          </Button>
+          {/* Decorative gradient overlay */}
+          <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-primary/5 to-transparent pointer-events-none" />
         </div>
 
-        {/* Informações do Paciente */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Informações do Paciente
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Tempo de Tratamento</p>
-                <p className="text-lg font-semibold">{treatmentDuration}</p>
+        {/* Quick Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="shadow-md hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex-shrink-0">
+                  <Clock className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm text-muted-foreground truncate">Tempo de Tratamento</p>
+                  <p className="text-xl font-bold truncate">{treatmentDuration.split(' ')[1] || treatmentDuration}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Data de Nascimento</p>
-                <p className="text-lg font-semibold">
-                  {patient.birth_date ? format(new Date(patient.birth_date), 'dd/MM/yyyy', { locale: ptBR }) : 'N/A'}
-                </p>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-md hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex-shrink-0">
+                  <Stethoscope className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm text-muted-foreground truncate">Sessões Anteriores</p>
+                  <p className="text-xl font-bold">{previousEvolutions.length}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Telefone</p>
-                <p className="text-lg font-semibold">{patient.phone || 'N/A'}</p>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-md hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg flex-shrink-0">
+                  <User className="h-6 w-6 text-green-600 dark:text-green-400" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm text-muted-foreground truncate">Idade</p>
+                  <p className="text-xl font-bold">
+                    {patient.birth_date
+                      ? `${Math.floor((new Date().getTime() - new Date(patient.birth_date).getTime()) / (365.25 * 24 * 60 * 60 * 1000))} anos`
+                      : 'N/A'}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Status</p>
-                <Badge variant="default">{patient.status}</Badge>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-md hover:shadow-lg transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex-shrink-0">
+                  <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm text-muted-foreground truncate">Medições Obrigatórias</p>
+                  <p className="text-xl font-bold">{requiredMeasurements.length}</p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Coluna Principal - Evolução SOAP */}
           <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
+            <Card className="shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-primary/5 to-background">
                 <CardTitle>Registro SOAP</CardTitle>
                 <CardDescription>
                   Preencha os campos abaixo para registrar a evolução do paciente
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 pt-6">
                 <div className="space-y-2">
-                  <Label htmlFor="subjective">Subjetivo (S)</Label>
+                  <Label htmlFor="subjective" className="text-base font-semibold">Subjetivo (S)</Label>
                   <Textarea
                     id="subjective"
                     value={subjective}
                     onChange={(e) => setSubjective(e.target.value)}
                     placeholder="Queixa principal do paciente, relato de dor, desconforto..."
                     rows={4}
+                    className="resize-none"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="objective">Objetivo (O)</Label>
+                  <Label htmlFor="objective" className="text-base font-semibold">Objetivo (O)</Label>
                   <Textarea
                     id="objective"
                     value={objective}
                     onChange={(e) => setObjective(e.target.value)}
                     placeholder="Observações clínicas, testes realizados, medições..."
                     rows={4}
+                    className="resize-none"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="assessment">Avaliação (A)</Label>
+                  <Label htmlFor="assessment" className="text-base font-semibold">Avaliação (A)</Label>
                   <Textarea
                     id="assessment"
                     value={assessment}
                     onChange={(e) => setAssessment(e.target.value)}
                     placeholder="Diagnóstico fisioterapêutico, análise da evolução..."
                     rows={4}
+                    className="resize-none"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="plan">Plano (P)</Label>
+                  <Label htmlFor="plan" className="text-base font-semibold">Plano (P)</Label>
                   <Textarea
                     id="plan"
                     value={plan}
                     onChange={(e) => setPlan(e.target.value)}
                     placeholder="Conduta, exercícios prescritos, orientações..."
                     rows={4}
+                    className="resize-none"
                   />
                 </div>
               </CardContent>
@@ -298,14 +358,14 @@ const PatientEvolution = () => {
 
             {/* Alertas de Medições Obrigatórias */}
             {requiredMeasurements.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5 text-destructive" />
+              <Card className="border-destructive/30 shadow-lg">
+                <CardHeader className="bg-destructive/5">
+                  <CardTitle className="flex items-center gap-2 text-destructive">
+                    <AlertTriangle className="h-5 w-5" />
                     Medições Obrigatórias
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-3 pt-6">
                   {requiredMeasurements.map((req) => (
                     <Alert
                       key={req.id}
@@ -331,157 +391,57 @@ const PatientEvolution = () => {
                 requiredMeasurements={requiredMeasurements}
               />
             )}
+
+            {/* Gráficos de Medições */}
+            <MeasurementCharts measurementsByType={measurementsByType} />
           </div>
 
           {/* Coluna Lateral - Informações Complementares */}
           <div className="space-y-6">
             {/* Cirurgias */}
-            {surgeries.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Activity className="h-5 w-5" />
-                    Cirurgias
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ScrollArea className="h-[200px]">
-                    <div className="space-y-3">
-                      {surgeries.map((surgery) => {
-                        const daysSinceSurgery = differenceInDays(
-                          new Date(),
-                          new Date(surgery.surgery_date)
-                        );
-                        return (
-                          <div key={surgery.id} className="border-l-2 border-primary pl-3 py-2">
-                            <p className="font-medium">{surgery.surgery_name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {format(new Date(surgery.surgery_date), 'dd/MM/yyyy', { locale: ptBR })}
-                              {' • '}
-                              Há {daysSinceSurgery} dias
-                            </p>
-                            <Badge variant="outline" className="mt-1">
-                              {surgery.affected_side}
-                            </Badge>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </ScrollArea>
-                </CardContent>
-              </Card>
-            )}
+            <SurgeryTimeline surgeries={surgeries} />
 
             {/* Objetivos */}
-            {goals.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Target className="h-5 w-5" />
-                    Objetivos
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ScrollArea className="h-[200px]">
-                    <div className="space-y-3">
-                      {goals.map((goal) => {
-                        const daysUntilTarget = goal.target_date
-                          ? differenceInDays(new Date(goal.target_date), new Date())
-                          : null;
-                        return (
-                          <div key={goal.id} className="border-l-2 border-secondary pl-3 py-2">
-                            <p className="font-medium">{goal.goal_title}</p>
-                            {goal.target_date && daysUntilTarget !== null && (
-                              <p className="text-sm text-muted-foreground">
-                                {daysUntilTarget > 0
-                                  ? `Faltam ${daysUntilTarget} dias`
-                                  : daysUntilTarget === 0
-                                  ? 'Hoje!'
-                                  : `Atrasado ${Math.abs(daysUntilTarget)} dias`}
-                              </p>
-                            )}
-                            <Badge
-                              variant={
-                                goal.status === 'concluido'
-                                  ? 'default'
-                                  : goal.status === 'em_andamento'
-                                  ? 'secondary'
-                                  : 'outline'
-                              }
-                              className="mt-1"
-                            >
-                              {goal.status}
-                            </Badge>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </ScrollArea>
-                </CardContent>
-              </Card>
-            )}
+            <GoalsTracker goals={goals} />
 
             {/* Patologias */}
-            {pathologies.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Patologias
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {pathologies.map((pathology) => (
-                      <div key={pathology.id} className="flex items-center justify-between">
-                        <span className="text-sm">{pathology.pathology_name}</span>
-                        <Badge
-                          variant={
-                            pathology.status === 'tratada'
-                              ? 'default'
-                              : pathology.status === 'em_tratamento'
-                              ? 'secondary'
-                              : 'outline'
-                          }
-                        >
-                          {pathology.status}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            <PathologyStatus pathologies={pathologies} />
 
             {/* Evoluções Anteriores */}
             {previousEvolutions.length > 0 && (
-              <Card>
-                <CardHeader>
+              <Card className="shadow-lg">
+                <CardHeader className="bg-gradient-to-r from-indigo-50/50 to-indigo-100/50 dark:from-indigo-950/20 dark:to-indigo-900/20">
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <Clock className="h-5 w-5" />
+                    <Clock className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                     Evoluções Anteriores
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <ScrollArea className="h-[200px]">
+                <CardContent className="pt-6">
+                  <ScrollArea className="h-[280px] pr-4">
                     <div className="space-y-3">
                       {previousEvolutions.map((evolution) => (
-                        <div key={evolution.id} className="border rounded-lg p-3 space-y-2">
+                        <div key={evolution.id} className="border rounded-lg p-3 space-y-2 hover:bg-muted/30 transition-colors">
                           <div className="flex items-center justify-between">
                             <p className="text-sm font-medium">
-                              {format(new Date(evolution.record_date), 'dd/MM/yyyy', { locale: ptBR })}
+                              📅 {format(new Date(evolution.record_date), 'dd/MM/yyyy', { locale: ptBR })}
                             </p>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleCopyPreviousEvolution(evolution)}
+                              className="hover:bg-primary/10"
                             >
                               <Copy className="h-4 w-4" />
                             </Button>
                           </div>
                           {evolution.subjective && (
                             <p className="text-xs text-muted-foreground line-clamp-2">
-                              {evolution.subjective}
+                              <strong>S:</strong> {evolution.subjective}
+                            </p>
+                          )}
+                          {evolution.plan && (
+                            <p className="text-xs text-muted-foreground line-clamp-2">
+                              <strong>P:</strong> {evolution.plan}
                             </p>
                           )}
                         </div>
@@ -493,49 +453,6 @@ const PatientEvolution = () => {
             )}
           </div>
         </div>
-
-        {/* Gráficos de Evolução */}
-        {Object.keys(measurementsByType).length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Evolução de Medições
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue={Object.keys(measurementsByType)[0]}>
-                <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${Math.min(Object.keys(measurementsByType).length, 4)}, 1fr)` }}>
-                  {Object.keys(measurementsByType).slice(0, 4).map((measurementName) => (
-                    <TabsTrigger key={measurementName} value={measurementName}>
-                      {measurementName}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-                {Object.entries(measurementsByType).slice(0, 4).map(([measurementName, data]) => (
-                  <TabsContent key={measurementName} value={measurementName} className="space-y-4">
-                    <ResponsiveContainer width="100%" height={300}>
-                      <LineChart data={data.slice().reverse()}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="date" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Line
-                          type="monotone"
-                          dataKey="value"
-                          stroke="hsl(var(--primary))"
-                          strokeWidth={2}
-                          name={measurementName}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </TabsContent>
-                ))}
-              </Tabs>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </MainLayout>
   );
