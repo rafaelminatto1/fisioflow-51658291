@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { EmptyState } from '@/components/ui/empty-state';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { IncompleteRegistrationAlert } from '@/components/dashboard/IncompleteRegistrationAlert';
 import {
   Select,
   SelectContent,
@@ -237,6 +238,9 @@ const Patients = () => {
             </Card>
           </div>
         </div>
+
+        {/* Alerta de cadastros incompletos */}
+        <IncompleteRegistrationAlert />
 
         {/* Search and Filters - Modernizados */}
         <Card className="shadow-card">

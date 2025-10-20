@@ -31,6 +31,7 @@ export interface Patient {
   medications?: string;
   weight?: number;
   height?: number;
+  incomplete_registration?: boolean;
   createdAt: string;
   updatedAt: string;
 }
