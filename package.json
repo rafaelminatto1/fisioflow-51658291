@@ -12,7 +12,11 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "cap:ios": "npx cap add ios",
+    "cap:sync": "npm run build && npx cap sync",
+    "cap:run:ios": "npx cap run ios",
+    "cap:open:ios": "npx cap open ios"
   },
   "dependencies": {
     "@axe-core/playwright": "^4.10.2",
