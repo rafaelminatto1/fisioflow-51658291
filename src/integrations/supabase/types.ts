@@ -1285,6 +1285,48 @@ export type Database = {
           },
         ]
       }
+      transacoes: {
+        Row: {
+          created_at: string | null
+          descricao: string | null
+          id: string
+          metadata: Json | null
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_refund_id: string | null
+          tipo: string
+          updated_at: string | null
+          user_id: string | null
+          valor: number
+        }
+        Insert: {
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          metadata?: Json | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_refund_id?: string | null
+          tipo: string
+          updated_at?: string | null
+          user_id?: string | null
+          valor: number
+        }
+        Update: {
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          metadata?: Json | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_refund_id?: string | null
+          tipo?: string
+          updated_at?: string | null
+          user_id?: string | null
+          valor?: number
+        }
+        Relationships: []
+      }
       treatment_sessions: {
         Row: {
           appointment_id: string | null
