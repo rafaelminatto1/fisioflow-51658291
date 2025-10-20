@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { checkRateLimit, createRateLimitResponse, addRateLimitHeaders } from '../_shared/rate-limit.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,6 +12,12 @@ serve(async (req) => {
   }
 
   try {
+    // Rate limiting
+    const rateLimitResult = await checkRateLimit(req, 'ai-chat');
+    if (!rateLimitResult.allowed) {
+      console.warn(`Rate limit excedido para ai-chat: ${rateLimitResult.current_count}/${rateLimitResult.limit}`);
+      return createRateLimitResponse(rateLimitResult, corsHeaders);
+    }
     const { messages } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
@@ -83,8 +90,14 @@ Tom: Profissional, acolhedor e educativo.`;
       );
     }
 
+    // Adicionar headers de rate limit na resposta
+    const enhancedHeaders = addRateLimitHeaders(
+      { ...corsHeaders, "Content-Type": "text/event-stream" },
+      rateLimitResult
+    );
+
     return new Response(response.body, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+      headers: enhancedHeaders,
     });
   } catch (e) {
     console.error("Erro no chat:", e);
