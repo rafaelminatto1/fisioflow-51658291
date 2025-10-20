@@ -1,10 +1,15 @@
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DollarSign, TrendingDown, AlertCircle, TrendingUp, Package, Plus, Pencil, Trash2, ExternalLink } from 'lucide-react';
 import { usePrestadores } from '@/hooks/usePrestadores';
 import { useChecklist } from '@/hooks/useChecklist';
-import { usePagamentos } from '@/hooks/usePagamentos';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { DollarSign, TrendingDown, AlertCircle, TrendingUp, Package } from 'lucide-react';
+import { usePagamentos, useDeletePagamento } from '@/hooks/usePagamentos';
+import { PagamentoModal } from './PagamentoModal';
+import { format } from 'date-fns';
 
 interface FinanceiroTabProps {
   eventoId: string;
@@ -12,9 +17,13 @@ interface FinanceiroTabProps {
 }
 
 export function FinanceiroTab({ eventoId, evento }: FinanceiroTabProps) {
+  const [isPagamentoModalOpen, setIsPagamentoModalOpen] = useState(false);
+  const [selectedPagamento, setSelectedPagamento] = useState<any>(null);
+  
   const { data: prestadores } = usePrestadores(eventoId);
   const { data: checklistItems } = useChecklist(eventoId);
   const { data: pagamentos } = usePagamentos(eventoId);
+  const deletePagamento = useDeletePagamento();
 
   const custoPrestadores = prestadores?.reduce((sum, p) => sum + Number(p.valor_acordado), 0) || 0;
   const custoInsumos = checklistItems?.reduce((sum, item) => 
@@ -31,6 +40,17 @@ export function FinanceiroTab({ eventoId, evento }: FinanceiroTabProps) {
   const checklistOk = checklistItems?.filter(i => i.status === 'OK').length || 0;
   const checklistTotal = checklistItems?.length || 0;
   const percentualChecklist = checklistTotal > 0 ? (checklistOk / checklistTotal) * 100 : 0;
+
+  const handleEditPagamento = (pagamento: any) => {
+    setSelectedPagamento(pagamento);
+    setIsPagamentoModalOpen(true);
+  };
+
+  const handleDeletePagamento = (id: string) => {
+    if (confirm('Tem certeza que deseja excluir este pagamento?')) {
+      deletePagamento.mutate({ id, eventoId });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -210,14 +230,91 @@ export function FinanceiroTab({ eventoId, evento }: FinanceiroTabProps) {
                 href={evento.link_whatsapp}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary hover:underline"
+                className="text-primary hover:underline flex items-center gap-1"
               >
-                Ver grupo
+                Ver grupo <ExternalLink className="h-3 w-3" />
               </a>
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Lista de Pagamentos */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Outros Pagamentos</CardTitle>
+          <Button
+            size="sm"
+            onClick={() => {
+              setSelectedPagamento(null);
+              setIsPagamentoModalOpen(true);
+            }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Pagamento
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {!pagamentos || pagamentos.length === 0 ? (
+            <p className="text-muted-foreground text-center py-4">
+              Nenhum pagamento registrado
+            </p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Descrição</TableHead>
+                  <TableHead className="text-right">Valor</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pagamentos.map((pagamento) => (
+                  <TableRow key={pagamento.id}>
+                    <TableCell>{format(new Date(pagamento.pago_em), 'dd/MM/yyyy')}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {pagamento.tipo.charAt(0).toUpperCase() + pagamento.tipo.slice(1)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{pagamento.descricao}</TableCell>
+                    <TableCell className="text-right font-medium">
+                      R$ {Number(pagamento.valor).toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleEditPagamento(pagamento)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDeletePagamento(pagamento.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <PagamentoModal
+        open={isPagamentoModalOpen}
+        onOpenChange={setIsPagamentoModalOpen}
+        eventoId={eventoId}
+        pagamento={selectedPagamento}
+      />
     </div>
   );
 }
