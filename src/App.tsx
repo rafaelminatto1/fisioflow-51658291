@@ -8,6 +8,8 @@ import { DataProvider } from "@/contexts/DataContext";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
+import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
+import { PWAUpdatePrompt } from "@/components/pwa/PWAUpdatePrompt";
 import { logger } from '@/lib/errors/logger';
 import { notificationManager } from '@/lib/services/NotificationManager';
 
@@ -32,6 +34,7 @@ const PatientEvolution = lazy(() => import("./pages/PatientEvolution"));
 const Communications = lazy(() => import("./pages/Communications"));
 const Partner = lazy(() => import("./pages/Partner"));
 const Vouchers = lazy(() => import("./pages/Vouchers"));
+const Install = lazy(() => import("./pages/Install"));
 const Eventos = lazy(() => import("./pages/Eventos"));
 const EventoDetalhes = lazy(() => import("./pages/EventoDetalhes"));
 const EventosAnalytics = lazy(() => import("./pages/EventosAnalytics"));
@@ -97,6 +100,8 @@ const App = () => {
             <DataProvider>
               <Toaster />
               <Sonner />
+              <PWAInstallPrompt />
+              <PWAUpdatePrompt />
             <BrowserRouter>
               <Suspense fallback={<PageLoadingFallback />}>
                 <Routes>
@@ -124,6 +129,7 @@ const App = () => {
                   <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
                   <Route path="/partner" element={<ProtectedRoute><Partner /></ProtectedRoute>} />
                   <Route path="/vouchers" element={<ProtectedRoute><Vouchers /></ProtectedRoute>} />
+                  <Route path="/install" element={<Install />} />
           <Route path="/eventos" element={<ProtectedRoute><Eventos /></ProtectedRoute>} />
           <Route path="/eventos/analytics" element={<ProtectedRoute><EventosAnalytics /></ProtectedRoute>} />
           <Route path="/eventos/:id" element={<ProtectedRoute><EventoDetalhes /></ProtectedRoute>} />
