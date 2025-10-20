@@ -443,6 +443,20 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
             </div>
             
             <div className="flex gap-3">
+              {mode === 'view' && appointment && (
+                <Button
+                  type="button"
+                  variant="default"
+                  onClick={() => {
+                    window.location.href = `/patient-evolution/${appointment.id}`;
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <Check className="w-4 h-4" />
+                  Iniciar Atendimento
+                </Button>
+              )}
+              
               <Button
                 type="button"
                 variant="outline"

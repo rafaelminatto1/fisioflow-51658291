@@ -352,6 +352,63 @@ export type Database = {
           },
         ]
       }
+      evolution_measurements: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          measured_at: string
+          measurement_name: string
+          measurement_type: string
+          notes: string | null
+          patient_id: string
+          soap_record_id: string | null
+          unit: string | null
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          measured_at?: string
+          measurement_name: string
+          measurement_type: string
+          notes?: string | null
+          patient_id: string
+          soap_record_id?: string | null
+          unit?: string | null
+          value: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          measured_at?: string
+          measurement_name?: string
+          measurement_type?: string
+          notes?: string | null
+          patient_id?: string
+          soap_record_id?: string | null
+          unit?: string | null
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evolution_measurements_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evolution_measurements_soap_record_id_fkey"
+            columns: ["soap_record_id"]
+            isOneToOne: false
+            referencedRelation: "soap_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exercise_plan_items: {
         Row: {
           created_at: string | null
@@ -697,6 +754,127 @@ export type Database = {
           },
         ]
       }
+      pathology_required_measurements: {
+        Row: {
+          alert_level: string
+          created_at: string
+          id: string
+          instructions: string | null
+          measurement_name: string
+          measurement_unit: string | null
+          pathology_name: string
+        }
+        Insert: {
+          alert_level?: string
+          created_at?: string
+          id?: string
+          instructions?: string | null
+          measurement_name: string
+          measurement_unit?: string | null
+          pathology_name: string
+        }
+        Update: {
+          alert_level?: string
+          created_at?: string
+          id?: string
+          instructions?: string | null
+          measurement_name?: string
+          measurement_unit?: string | null
+          pathology_name?: string
+        }
+        Relationships: []
+      }
+      patient_goals: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          goal_description: string | null
+          goal_title: string
+          id: string
+          patient_id: string
+          status: string
+          target_date: string | null
+          target_value: string | null
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          goal_description?: string | null
+          goal_title: string
+          id?: string
+          patient_id: string
+          status?: string
+          target_date?: string | null
+          target_value?: string | null
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          goal_description?: string | null
+          goal_title?: string
+          id?: string
+          patient_id?: string
+          status?: string
+          target_date?: string | null
+          target_value?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_goals_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_pathologies: {
+        Row: {
+          created_at: string
+          diagnosis_date: string | null
+          id: string
+          notes: string | null
+          pathology_name: string
+          patient_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          diagnosis_date?: string | null
+          id?: string
+          notes?: string | null
+          pathology_name: string
+          patient_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          diagnosis_date?: string | null
+          id?: string
+          notes?: string | null
+          pathology_name?: string
+          patient_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_pathologies_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_progress: {
         Row: {
           created_at: string | null
@@ -747,6 +925,47 @@ export type Database = {
             columns: ["recorded_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_surgeries: {
+        Row: {
+          affected_side: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          patient_id: string
+          surgery_date: string
+          surgery_name: string
+          updated_at: string
+        }
+        Insert: {
+          affected_side?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          patient_id: string
+          surgery_date: string
+          surgery_name: string
+          updated_at?: string
+        }
+        Update: {
+          affected_side?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          surgery_date?: string
+          surgery_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_surgeries_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
             referencedColumns: ["id"]
           },
         ]
