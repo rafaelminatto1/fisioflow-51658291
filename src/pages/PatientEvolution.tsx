@@ -32,6 +32,7 @@ import { useCreateSoapRecord, useSoapRecords } from '@/hooks/useSoapRecords';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/errors/logger';
 import { MeasurementForm } from '@/components/evolution/MeasurementForm';
 import { SurgeryTimeline } from '@/components/evolution/SurgeryTimeline';
 import { GoalsTracker } from '@/components/evolution/GoalsTracker';
@@ -50,41 +51,38 @@ const PatientEvolution = () => {
   const [assessment, setAssessment] = useState('');
   const [plan, setPlan] = useState('');
 
-  // Buscar dados do agendamento (usando mock data)
+  // Buscar dados do agendamento do Supabase
   const { data: appointment, isLoading: appointmentLoading } = useQuery({
     queryKey: ['appointment', appointmentId],
     queryFn: async () => {
-      // Primeiro tentar buscar dos dados mock
-      const { mockAppointments, mockPatients } = await import('@/lib/mockData');
-      const mockAppointment = mockAppointments.find(apt => apt.id === appointmentId);
+      if (!appointmentId) throw new Error('ID do agendamento não fornecido');
       
-      if (mockAppointment) {
-        const patient = mockPatients.find(p => p.id === mockAppointment.patientId);
-        return {
-          ...mockAppointment,
-          appointment_date: mockAppointment.date.toISOString(),
-          appointment_time: mockAppointment.time,
-          patient_id: mockAppointment.patientId,
-          patients: patient ? {
-            id: patient.id,
-            name: patient.name,
-            phone: patient.phone,
-            email: patient.email,
-            birth_date: patient.birthDate,
-            status: patient.status
-          } : null
-        };
-      }
-      
-      // Se não encontrar nos mocks, tentar no Supabase
       const { data, error } = await supabase
         .from('appointments')
-        .select('*, patients(*)')
+        .select(`
+          *,
+          patients!inner(
+            id,
+            name,
+            phone,
+            email,
+            birth_date,
+            status,
+            created_at
+          )
+        `)
         .eq('id', appointmentId)
         .maybeSingle();
       
-      if (error) throw error;
-      if (!data) throw new Error('Agendamento não encontrado');
+      if (error) {
+        logger.error('Erro ao buscar agendamento', error, 'PatientEvolution');
+        throw error;
+      }
+      
+      if (!data) {
+        throw new Error('Agendamento não encontrado');
+      }
+      
       return data;
     },
     enabled: !!appointmentId,
@@ -93,36 +91,27 @@ const PatientEvolution = () => {
 
   const patientId = appointment?.patient_id;
 
-  // Buscar informações do paciente (usando mock data)
+  // Buscar informações do paciente do Supabase
   const { data: patient, isLoading: patientLoading } = useQuery({
     queryKey: ['patient', patientId],
     queryFn: async () => {
-      // Se veio dos mocks, já temos os dados
-      if (appointment?.patients) {
-        const { mockPatients } = await import('@/lib/mockData');
-        const fullPatient = mockPatients.find(p => p.id === patientId);
-        if (fullPatient) {
-          return {
-            id: fullPatient.id,
-            name: fullPatient.name,
-            phone: fullPatient.phone,
-            email: fullPatient.email,
-            birth_date: fullPatient.birthDate,
-            status: fullPatient.status,
-            created_at: fullPatient.createdAt
-          };
-        }
-      }
+      if (!patientId) throw new Error('ID do paciente não fornecido');
       
-      // Tentar buscar no Supabase
       const { data, error } = await supabase
         .from('patients')
-        .select('*, profiles(*)')
+        .select('*')
         .eq('id', patientId)
         .maybeSingle();
       
-      if (error) throw error;
-      if (!data) throw new Error('Paciente não encontrado');
+      if (error) {
+        logger.error('Erro ao buscar paciente', error, 'PatientEvolution');
+        throw error;
+      }
+      
+      if (!data) {
+        throw new Error('Paciente não encontrado');
+      }
+      
       return data;
     },
     enabled: !!patientId,
