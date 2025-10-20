@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,12 +21,13 @@ const SmartAI = () => {
     {
       id: '1',
       role: 'assistant',
-      content: 'Olá! Sou o assistente inteligente de fisioterapia. Posso ajudar com recomendações de exercícios, orientações sobre tratamentos, análise de sintomas e muito mais. Como posso ajudar você hoje?',
+      content: 'Olá! Sou o assistente inteligente de fisioterapia da Activity. Posso ajudar com recomendações de exercícios, orientações sobre tratamentos, análise de sintomas e muito mais. Como posso ajudar você hoje?',
       timestamp: new Date()
     }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const suggestedQuestions = [
     'Quais exercícios são recomendados para dor lombar?',
@@ -34,6 +35,12 @@ const SmartAI = () => {
     'Qual a frequência ideal de sessões?',
     'Orientações para recuperação pós-cirúrgica'
   ];
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const handleSend = async () => {
     if (!input.trim() || loading) return;
@@ -49,35 +56,137 @@ const SmartAI = () => {
     setInput('');
     setLoading(true);
 
-    // Simular resposta da IA
-    setTimeout(() => {
-      const aiResponse: Message = {
+    try {
+      const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
+      
+      const response = await fetch(CHAT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          messages: [...messages, userMessage].map(m => ({
+            role: m.role,
+            content: m.content
+          }))
+        }),
+      });
+
+      if (response.status === 429) {
+        toast({
+          title: "Limite excedido",
+          description: "Muitas requisições. Aguarde alguns instantes.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (response.status === 402) {
+        toast({
+          title: "Créditos insuficientes",
+          description: "Entre em contato com o suporte.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (!response.ok || !response.body) {
+        throw new Error('Falha ao iniciar stream');
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let textBuffer = '';
+      let streamDone = false;
+      let assistantContent = '';
+
+      // Criar mensagem do assistente imediatamente
+      const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: generateAIResponse(input),
+        content: '',
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, aiResponse]);
-      setLoading(false);
-    }, 1500);
-  };
+      setMessages(prev => [...prev, assistantMessage]);
 
-  const generateAIResponse = (query: string): string => {
-    const lowerQuery = query.toLowerCase();
-    
-    if (lowerQuery.includes('dor lombar') || lowerQuery.includes('lombar')) {
-      return 'Para dor lombar, recomendo:\n\n1. **Alongamento de Gato-Vaca**: 3 séries de 10 repetições\n2. **Ponte**: 3 séries de 15 repetições\n3. **Prancha**: 3 séries de 30 segundos\n4. **Alongamento do Piriforme**: 3 séries de 30 segundos cada lado\n\n**Importante**: Estes exercícios devem ser realizados sem dor. Se houver desconforto, interrompa e consulte seu fisioterapeuta.';
+      while (!streamDone) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        textBuffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+
+          if (line.endsWith('\r')) line = line.slice(0, -1);
+          if (line.startsWith(':') || line.trim() === '') continue;
+          if (!line.startsWith('data: ')) continue;
+
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === '[DONE]') {
+            streamDone = true;
+            break;
+          }
+
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) {
+              assistantContent += content;
+              setMessages(prev => {
+                const newMessages = [...prev];
+                const lastMsg = newMessages[newMessages.length - 1];
+                if (lastMsg.role === 'assistant') {
+                  lastMsg.content = assistantContent;
+                }
+                return newMessages;
+              });
+            }
+          } catch {
+            textBuffer = line + '\n' + textBuffer;
+            break;
+          }
+        }
+      }
+
+      // Flush final
+      if (textBuffer.trim()) {
+        for (let raw of textBuffer.split('\n')) {
+          if (!raw || raw.startsWith(':') || raw.trim() === '' || !raw.startsWith('data: ')) continue;
+          const jsonStr = raw.slice(6).trim();
+          if (jsonStr === '[DONE]') continue;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) {
+              assistantContent += content;
+              setMessages(prev => {
+                const newMessages = [...prev];
+                const lastMsg = newMessages[newMessages.length - 1];
+                if (lastMsg.role === 'assistant') {
+                  lastMsg.content = assistantContent;
+                }
+                return newMessages;
+              });
+            }
+          } catch { /* ignore */ }
+        }
+      }
+
+    } catch (error) {
+      console.error('Erro no chat:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível processar sua mensagem. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-    
-    if (lowerQuery.includes('tendinite') || lowerQuery.includes('ombro')) {
-      return 'Para tendinite no ombro, o tratamento geralmente inclui:\n\n1. **Repouso relativo**: Evite movimentos repetitivos que causam dor\n2. **Crioterapia**: Aplicar gelo por 15-20 minutos, 3-4x ao dia\n3. **Exercícios de Codman**: Movimentos pendulares suaves\n4. **Fortalecimento gradual**: Iniciar após redução da inflamação\n\n**Recomendação**: Consulte um fisioterapeuta para avaliação personalizada e tratamento adequado.';
-    }
-    
-    if (lowerQuery.includes('frequência') || lowerQuery.includes('sessões')) {
-      return 'A frequência ideal de sessões de fisioterapia depende de vários fatores:\n\n• **Fase aguda**: 3-5x por semana\n• **Fase subaguda**: 2-3x por semana\n• **Fase de manutenção**: 1-2x por semana\n\nFatores considerados:\n- Gravidade da condição\n- Objetivos do tratamento\n- Resposta ao tratamento\n- Disponibilidade do paciente\n\nSeu fisioterapeuta personalizará a frequência conforme sua evolução.';
-    }
-    
-    return 'Obrigado pela sua pergunta. Para uma resposta mais precisa e personalizada, recomendo que você:\n\n1. Agende uma avaliação com um fisioterapeuta\n2. Descreva seus sintomas em detalhes\n3. Informe seu histórico médico relevante\n\nCada caso é único e requer avaliação profissional adequada. Posso ajudar com informações gerais, mas o diagnóstico e tratamento devem ser feitos presencialmente.';
   };
 
   const handleSuggestionClick = (question: string) => {
@@ -117,7 +226,7 @@ const SmartAI = () => {
             <CardTitle className="text-lg">Conversa</CardTitle>
           </CardHeader>
           <CardContent className="flex-1 flex flex-col p-0">
-            <ScrollArea className="flex-1 px-6">
+            <ScrollArea className="flex-1 px-6" ref={scrollRef}>
               <div className="space-y-4 py-4">
                 {messages.map((message) => (
                   <div
