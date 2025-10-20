@@ -27,15 +27,14 @@ export type AppointmentType =
   | 'Dry Needling'
   | 'Liberação Miofascial';
 
+// Status conforme constraint do banco (em português)
 export type AppointmentStatus = 
-  | 'Scheduled' 
-  | 'Confirmed' 
-  | 'In Progress' 
-  | 'Completed' 
-  | 'Cancelled' 
-  | 'No Show'
-  | 'Rescheduled'
-  | 'Pending';
+  | 'agendado'
+  | 'confirmado'
+  | 'em_andamento'
+  | 'concluido'
+  | 'cancelado'
+  | 'falta';
 
 export interface EnhancedAppointment extends AppointmentBase {
   // Therapist assignment

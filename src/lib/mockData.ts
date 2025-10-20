@@ -157,10 +157,10 @@ const generateAppointmentsForWeek = (): AppointmentBase[] => {
   ];
   
   const statuses: AppointmentStatus[] = [
-    'Scheduled',
-    'Confirmed',
-    'Completed',
-    'In Progress'
+    'agendado',
+    'confirmado',
+    'concluido',
+    'em_andamento'
   ];
   
   const times = ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'];
@@ -183,11 +183,11 @@ const generateAppointmentsForWeek = (): AppointmentBase[] => {
       
       let status: AppointmentStatus;
       if (dayOffset < 0) {
-        status = Math.random() > 0.3 ? 'Completed' : 'Cancelled';
+        status = Math.random() > 0.3 ? 'concluido' : 'cancelado';
       } else if (dayOffset === 0) {
-        status = Math.random() > 0.5 ? 'Confirmed' : 'In Progress';
+        status = Math.random() > 0.5 ? 'confirmado' : 'em_andamento';
       } else {
-        status = Math.random() > 0.3 ? 'Confirmed' : 'Scheduled';
+        status = Math.random() > 0.3 ? 'confirmado' : 'agendado';
       }
       
       appointments.push({
@@ -200,7 +200,7 @@ const generateAppointmentsForWeek = (): AppointmentBase[] => {
         duration: type === 'Consulta Inicial' ? 90 : 60,
         type: type,
         status: status,
-        notes: status === 'Cancelled' ? 'Paciente solicitou cancelamento' : 
+        notes: status === 'cancelado' ? 'Paciente solicitou cancelamento' : 
                type === 'Consulta Inicial' ? 'Primeira consulta - anamnese completa' :
                'Sessão regular de tratamento',
         createdAt: new Date(date.getTime() - 7 * 24 * 60 * 60 * 1000),
@@ -467,6 +467,6 @@ export const mockStats = {
     const today = new Date();
     return apt.date.toDateString() === today.toDateString();
   }).length,
-  confirmedAppointments: mockAppointments.filter(apt => apt.status === 'Confirmed').length,
-  completedAppointments: mockAppointments.filter(apt => apt.status === 'Completed').length
+  confirmedAppointments: mockAppointments.filter(apt => apt.status === 'confirmado').length,
+  completedAppointments: mockAppointments.filter(apt => apt.status === 'concluido').length
 };

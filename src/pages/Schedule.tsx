@@ -53,9 +53,9 @@ const { appointments = [], loading, error, initialLoad } = useAppointments();
     const todayAppointments = appointments.filter(apt => 
       apt.date instanceof Date ? apt.date.toISOString().split('T')[0] === today : apt.date === today
     );
-    const confirmedToday = todayAppointments.filter(apt => apt.status === 'Confirmed').length;
+    const confirmedToday = todayAppointments.filter(apt => apt.status === 'confirmado').length;
     const totalToday = todayAppointments.length;
-    const completedToday = todayAppointments.filter(apt => apt.status === 'Completed').length;
+    const completedToday = todayAppointments.filter(apt => apt.status === 'concluido').length;
     
     return {
       totalToday,

@@ -57,23 +57,23 @@ const appointmentTypes: AppointmentType[] = [
   'Liberação Miofascial'
 ];
 
-const appointmentStatuses: AppointmentStatus[] = [
-  'Scheduled',
-  'Confirmed',
-  'Completed',
-  'Cancelled',
-  'No Show'
-];
+// Status válidos conforme constraint do banco
+const appointmentStatuses = [
+  'agendado',
+  'confirmado',
+  'em_andamento',
+  'concluido',
+  'cancelado',
+  'falta'
+] as const;
 
-const statusLabels: Record<AppointmentStatus, string> = {
-  'Scheduled': 'Agendado',
-  'Confirmed': 'Confirmado',
-  'In Progress': 'Em Andamento',
-  'Completed': 'Concluído',
-  'Cancelled': 'Cancelado',
-  'No Show': 'Faltou',
-  'Rescheduled': 'Reagendado',
-  'Pending': 'Pendente'
+const statusLabels: Record<string, string> = {
+  'agendado': 'Agendado',
+  'confirmado': 'Confirmado',
+  'em_andamento': 'Em Andamento',
+  'concluido': 'Concluído',
+  'cancelado': 'Cancelado',
+  'falta': 'Faltou'
 };
 
 export const AppointmentModal: React.FC<AppointmentModalProps> = ({
@@ -100,7 +100,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
       time: appointment?.time || defaultTime || '09:00',
       duration: appointment?.duration || 60,
       type: appointment?.type || 'Fisioterapia',
-      status: appointment?.status || 'Scheduled',
+      status: appointment?.status || 'agendado',
       notes: appointment?.notes || '',
       priority: 'Normal'
     }
@@ -150,12 +150,13 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
     }
   };
 
-  const getStatusBadgeVariant = (status: AppointmentStatus) => {
+  const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'Confirmed': return 'default';
-      case 'Completed': return 'secondary';
-      case 'Cancelled': return 'destructive';
-      case 'No Show': return 'destructive';
+      case 'confirmado': return 'default';
+      case 'concluido': return 'secondary';
+      case 'cancelado': 
+      case 'falta': return 'destructive';
+      case 'em_andamento': return 'default';
       default: return 'outline';
     }
   };
@@ -371,8 +372,8 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
               <Label htmlFor="status">Status *</Label>
               {mode === 'view' ? (
                 <div className="flex items-center gap-2 h-10 px-3 py-2 border border-input bg-background rounded-md">
-                  <Badge variant={getStatusBadgeVariant(watch('status') as AppointmentStatus)}>
-                    {statusLabels[watch('status') as AppointmentStatus]}
+                  <Badge variant={getStatusBadgeVariant(watch('status'))}>
+                    {statusLabels[watch('status')] || watch('status')}
                   </Badge>
                 </div>
               ) : (
