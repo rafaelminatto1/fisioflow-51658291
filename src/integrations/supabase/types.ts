@@ -703,6 +703,70 @@ export type Database = {
           },
         ]
       }
+      pain_maps: {
+        Row: {
+          appointment_id: string | null
+          created_at: string
+          created_by: string
+          global_pain_level: number
+          id: string
+          notes: string | null
+          pain_points: Json
+          patient_id: string
+          recorded_at: string
+          session_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          created_at?: string
+          created_by: string
+          global_pain_level: number
+          id?: string
+          notes?: string | null
+          pain_points?: Json
+          patient_id: string
+          recorded_at?: string
+          session_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string | null
+          created_at?: string
+          created_by?: string
+          global_pain_level?: number
+          id?: string
+          notes?: string | null
+          pain_points?: Json
+          patient_id?: string
+          recorded_at?: string
+          session_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pain_maps_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pain_maps_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pain_maps_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "soap_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       participantes: {
         Row: {
           contato: string | null
