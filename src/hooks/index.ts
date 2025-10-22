@@ -78,29 +78,11 @@ export const useFileUpload = (options?: any) => ({
   UseFileUploadOptions: {}
 });
 
-export const FormFieldContext = null;
-export const FormItemContext = null;
-export const useFormField = () => ({
-  error: null,
-  formItemId: '',
-  formDescriptionId: '',
-  formMessageId: '',
-  FormFieldContext: null,
-  FormItemContext: null
-});
+export { useFormField, FormFieldContext, FormItemContext } from './useFormField';
 
-export const useSidebarProvider = () => ({});
-export const SidebarContext = null;
-export const useSidebar = () => ({ 
-  collapsed: false,
-  isMobile: false,
-  state: 'expanded',
-  openMobile: false,
-  setOpenMobile: () => {},
-  toggleSidebar: () => {},
-  useSidebarProvider: () => ({}),
-  SidebarContext: null
-});
+export { useSidebarProvider, SidebarContext } from './useSidebar';
+export { useSidebar } from './useSidebar';
+export { useIsMobile } from './use-mobile';
 
 // Add toasts array for useToast
 export const useToastHook = () => ({
