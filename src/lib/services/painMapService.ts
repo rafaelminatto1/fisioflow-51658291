@@ -10,52 +10,52 @@ import type {
 export class PainMapService {
   static async getPainMapsByPatientId(patientId: string): Promise<PainMapRecord[]> {
     const { data, error } = await supabase
-      .from('pain_maps')
+      .from('pain_maps' as any)
       .select('*')
       .eq('patient_id', patientId)
       .order('recorded_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data as any) || [];
   }
 
   static async getPainMapById(id: string): Promise<PainMapRecord> {
     const { data, error } = await supabase
-      .from('pain_maps')
+      .from('pain_maps' as any)
       .select('*')
       .eq('id', id)
       .single();
 
     if (error) throw error;
-    return data;
+    return data as any;
   }
 
   static async createPainMap(painMap: PainMapFormData): Promise<PainMapRecord> {
     const { data, error } = await supabase
-      .from('pain_maps')
-      .insert(painMap)
+      .from('pain_maps' as any)
+      .insert(painMap as any)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return data as any;
   }
 
   static async updatePainMap(id: string, painMap: Partial<PainMapFormData>): Promise<PainMapRecord> {
     const { data, error } = await supabase
-      .from('pain_maps')
-      .update(painMap)
+      .from('pain_maps' as any)
+      .update(painMap as any)
       .eq('id', id)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return data as any;
   }
 
   static async deletePainMap(id: string): Promise<void> {
     const { error } = await supabase
-      .from('pain_maps')
+      .from('pain_maps' as any)
       .delete()
       .eq('id', id);
 
@@ -64,7 +64,7 @@ export class PainMapService {
 
   static async getPainEvolution(patientId: string, startDate?: string, endDate?: string): Promise<PainEvolutionData[]> {
     let query = supabase
-      .from('pain_maps')
+      .from('pain_maps' as any)
       .select('*')
       .eq('patient_id', patientId)
       .order('recorded_at', { ascending: true });
@@ -75,7 +75,7 @@ export class PainMapService {
     const { data, error } = await query;
     if (error) throw error;
 
-    return (data || []).map(record => ({
+    return ((data as any) || []).map((record: any) => ({
       date: record.recorded_at,
       globalPainLevel: record.global_pain_level,
       regionCount: record.pain_points.length,
