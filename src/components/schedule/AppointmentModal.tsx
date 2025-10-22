@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,10 +16,11 @@ import { ptBR } from 'date-fns/locale';
 import { CalendarIcon, Clock, User, AlertTriangle, Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AppointmentBase, AppointmentFormData, AppointmentType, AppointmentStatus } from '@/types/appointment';
-import { useCreateAppointment, useUpdateAppointment } from '@/hooks/useAppointments';
+import { useCreateAppointment, useUpdateAppointment, useAppointments } from '@/hooks/useAppointments';
 import { useActivePatients } from '@/hooks/usePatients';
 import { PatientCombobox } from '@/components/ui/patient-combobox';
 import { QuickPatientModal } from '@/components/modals/QuickPatientModal';
+import { checkAppointmentConflict } from '@/utils/appointmentValidation';
 
 const appointmentSchema = z.object({
   patientId: z.string().min(1, 'Selecione um paciente'),
@@ -91,6 +92,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
   const createAppointmentMutation = useCreateAppointment();
   const updateAppointmentMutation = useUpdateAppointment();
   const { data: patients = [] } = useActivePatients();
+  const { data: allAppointments = [] } = useAppointments();
 
   const form = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema),
@@ -111,12 +113,20 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
   const watchedTime = watch('time');
   const watchedDuration = watch('duration');
 
-  // TODO: Implement conflict checking logic
-  // useEffect(() => {
-  //   if (watchedDate && watchedTime && watchedDuration) {
-  //     // Check for conflicts logic here
-  //   }
-  // }, [watchedDate, watchedTime, watchedDuration, appointment?.id]);
+  useEffect(() => {
+    if (watchedDate && watchedTime && watchedDuration) {
+      const result = checkAppointmentConflict({
+        date: watchedDate,
+        time: watchedTime,
+        duration: watchedDuration,
+        excludeId: appointment?.id,
+        appointments: allAppointments
+      });
+      setConflictCheck(result);
+    } else {
+      setConflictCheck(null);
+    }
+  }, [watchedDate, watchedTime, watchedDuration, appointment?.id, allAppointments]);
 
   // Generate time slots (15-minute intervals from 7:00 to 19:00)
   const timeSlots = React.useMemo(() => {
@@ -191,6 +201,9 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
               </>
             )}
           </DialogTitle>
+          <DialogDescription id="appointment-dialog-desc" className="sr-only">
+            Preencha os campos para {mode === 'edit' ? 'editar' : 'criar'} um agendamento.
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(handleSave)} className="p-6 space-y-6">
