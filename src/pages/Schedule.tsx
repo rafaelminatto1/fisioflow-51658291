@@ -37,15 +37,14 @@ const Schedule = () => {
     service: ''
   });
 
-const { appointments = [], loading, error, initialLoad } = useAppointments();
+  const { data: appointments = [], isLoading: loading, error } = useAppointments();
 
   useEffect(() => {
     logger.info('Página Schedule carregada', { 
       appointmentsCount: appointments.length,
-      loading,
-      initialLoad 
+      loading
     }, 'Schedule');
-  }, [appointments.length, loading, initialLoad]);
+  }, [appointments.length, loading]);
 
   // Memoized statistics calculation
   const stats = useMemo(() => {
@@ -98,7 +97,7 @@ const { appointments = [], loading, error, initialLoad } = useAppointments();
   }, [appointments, filters]);
 
   const services = useMemo(() => {
-    return Array.from(new Set(appointments.map(apt => apt.type)));
+    return Array.from(new Set(appointments.map(apt => apt.type))) as string[];
   }, [appointments]);
 
   const handleAppointmentClick = (appointment: Appointment) => {
@@ -148,7 +147,7 @@ const { appointments = [], loading, error, initialLoad } = useAppointments();
         <EmptyState
           icon={AlertTriangle}
           title="Erro ao carregar agendamentos"
-          description={error}
+          description={error.message || 'Não foi possível carregar os agendamentos'}
         />
       </MainLayout>
     );
@@ -186,7 +185,7 @@ const { appointments = [], loading, error, initialLoad } = useAppointments();
 
         {/* Statistics Cards - Melhorados e responsivos */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-{initialLoad ? (
+          {loading ? (
             <>
               {[...Array(4)].map((_, i) => (
                 <Card key={i} className="border-0 shadow-card animate-pulse">

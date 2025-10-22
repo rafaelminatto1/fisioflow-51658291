@@ -1,150 +1,86 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { AppointmentBase, AppointmentFormData, AppointmentFilters, AppointmentStatus, AppointmentType } from '@/types/appointment';
+import { AppointmentBase, AppointmentFormData, AppointmentStatus, AppointmentType } from '@/types/appointment';
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
 import { logger } from '@/lib/errors/logger';
 
-interface UseAppointmentsReturn {
-  appointments: AppointmentBase[];
-  loading: boolean;
-  initialLoad: boolean;
-  error: string | null;
+// Fetch all appointments
+async function fetchAppointments(): Promise<AppointmentBase[]> {
+  const timer = logger.startTimer('fetchAppointments');
   
-  // CRUD Operations
-  createAppointment: (data: AppointmentFormData) => Promise<AppointmentBase | null>;
-  updateAppointment: (id: string, data: Partial<AppointmentFormData>) => Promise<AppointmentBase | null>;
-  deleteAppointment: (id: string) => Promise<boolean>;
-  confirmAppointment: (id: string) => Promise<boolean>;
-  cancelAppointment: (id: string, reason?: string) => Promise<boolean>;
+  logger.info('Carregando agendamentos do Supabase', {}, 'useAppointments');
   
-  // Queries
-  getAppointmentsByDateRange: (startDate: Date, endDate: Date) => AppointmentBase[];
-  getAppointmentsByPatient: (patientId: string) => AppointmentBase[];
-  getAppointmentsByTherapist: (therapistId: string) => AppointmentBase[];
-  searchAppointments: (query: string) => AppointmentBase[];
+  const { data, error } = await supabase
+    .from('appointments')
+    .select(`
+      *,
+      patients!inner(
+        id,
+        name,
+        phone,
+        email
+      )
+    `)
+    .order('appointment_date', { ascending: true })
+    .order('appointment_time', { ascending: true });
+
+  if (error) {
+    logger.error('Erro ao buscar agendamentos', error, 'useAppointments');
+    throw error;
+  }
+
+  const transformedAppointments: AppointmentBase[] = (data || []).map(apt => ({
+    id: apt.id,
+    patientId: apt.patient_id,
+    patientName: apt.patients?.name || 'Paciente não identificado',
+    phone: apt.patients?.phone || '',
+    date: new Date(apt.appointment_date),
+    time: apt.appointment_time,
+    duration: apt.duration || 60,
+    type: apt.type as AppointmentType,
+    status: apt.status as AppointmentStatus,
+    notes: apt.notes || '',
+    createdAt: new Date(apt.created_at),
+    updatedAt: new Date(apt.updated_at)
+  }));
   
-  // Conflict Detection
-  checkConflict: (date: Date, time: string, duration: number, excludeId?: string) => { hasConflict: boolean; conflictingAppointment?: AppointmentBase };
-  getAvailableSlots: (date: Date, duration: number) => string[];
+  logger.info(`Agendamentos carregados: ${transformedAppointments.length} registros`, { count: transformedAppointments.length }, 'useAppointments');
+  timer();
   
-  // Filters
-  filteredAppointments: AppointmentBase[];
-  setFilters: (filters: AppointmentFilters) => void;
-  clearFilters: () => void;
-  
-  // Stats
-  getAppointmentStats: () => {
-    total: number;
-    confirmed: number;
-    pending: number;
-    cancelled: number;
-    today: number;
-  };
-  
-  // Utilities
-  refreshAppointments: () => Promise<void>;
+  return transformedAppointments;
 }
 
-export const useAppointments = (): UseAppointmentsReturn => {
-  const [appointments, setAppointments] = useState<AppointmentBase[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [initialLoad, setInitialLoad] = useState(true);
-  const [filters, setFiltersState] = useState<AppointmentFilters>({});
+// Main hook to fetch appointments
+export function useAppointments() {
+  return useQuery({
+    queryKey: ['appointments'],
+    queryFn: fetchAppointments,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}
+
+// Create appointment mutation
+export function useCreateAppointment() {
+  const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Standard business hours for slot generation
-  const businessHours = {
-    start: '08:00',
-    end: '18:00',
-    slotDuration: 30 // minutes
-  };
-
-  // Fetch appointments from Supabase
-  const fetchAppointments = useCallback(async () => {
-    const timer = logger.startTimer('fetchAppointments');
-    
-    try {
-      setLoading(true);
-      setError(null);
-      
-      logger.info('Carregando agendamentos do Supabase', {}, 'useAppointments');
-      
-      const { data, error } = await supabase
-        .from('appointments')
-        .select(`
-          *,
-          patients!inner(
-            id,
-            name,
-            phone,
-            email
-          )
-        `)
-        .order('appointment_date', { ascending: true })
-        .order('appointment_time', { ascending: true });
-
-      if (error) {
-        logger.error('Erro ao buscar agendamentos', error, 'useAppointments');
-        throw error;
-      }
-
-      const transformedAppointments: AppointmentBase[] = (data || []).map(apt => ({
-        id: apt.id,
-        patientId: apt.patient_id,
-        patientName: apt.patients?.name || 'Paciente não identificado',
-        phone: apt.patients?.phone || '',
-        date: new Date(apt.appointment_date),
-        time: apt.appointment_time,
-        duration: apt.duration || 60,
-        type: apt.type as AppointmentType,
-        status: apt.status as AppointmentStatus,
-        notes: apt.notes || '',
-        createdAt: new Date(apt.created_at),
-        updatedAt: new Date(apt.updated_at)
-      }));
-      
-      logger.info(`Agendamentos carregados: ${transformedAppointments.length} registros`, { count: transformedAppointments.length }, 'useAppointments');
-      setAppointments(transformedAppointments);
-    } catch (err) {
-      logger.error('Erro ao carregar agendamentos', err, 'useAppointments');
-      setError(err instanceof Error ? err.message : 'Erro ao carregar agendamentos');
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar os agendamentos",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-      setInitialLoad(false);
-      timer();
-    }
-  }, [toast]);
-
-  // Create new appointment
-  const createAppointment = useCallback(async (data: AppointmentFormData): Promise<AppointmentBase | null> => {
-    const timer = logger.startTimer('createAppointment');
-    
-    try {
+  return useMutation({
+    mutationFn: async (data: AppointmentFormData) => {
       logger.info('Criando novo agendamento', { patientId: data.patientId, date: data.date }, 'useAppointments');
 
-      // Check for conflicts
+      // Check for conflicts with current data
+      const currentAppointments = queryClient.getQueryData<AppointmentBase[]>(['appointments']) || [];
       const conflict = checkAppointmentConflict({
         date: data.date,
         time: data.time,
         duration: data.duration,
-        appointments
+        appointments: currentAppointments
       });
 
       if (conflict.hasConflict) {
         logger.warn('Conflito de horário detectado', { appointmentData: data }, 'useAppointments');
-        toast({
-          title: "Conflito de Horário",
-          description: `Já existe um agendamento neste horário`,
-          variant: "destructive"
-        });
-        return null;
+        throw new Error('Conflito de horário');
       }
 
       const { data: newAppointment, error } = await supabase
@@ -155,8 +91,8 @@ export const useAppointments = (): UseAppointmentsReturn => {
           appointment_time: data.time,
           duration: data.duration,
           type: data.type,
-          status: data.status,
-          notes: data.notes
+          status: data.status || 'agendado',
+          notes: data.notes || null
         })
         .select(`
           *,
@@ -184,76 +120,83 @@ export const useAppointments = (): UseAppointmentsReturn => {
         duration: newAppointment.duration,
         type: newAppointment.type as AppointmentType,
         status: newAppointment.status as AppointmentStatus,
-        notes: newAppointment.notes,
+        notes: newAppointment.notes || '',
         createdAt: new Date(newAppointment.created_at),
         updatedAt: new Date(newAppointment.updated_at)
       };
 
       logger.info('Agendamento criado com sucesso', { appointmentId: appointment.id }, 'useAppointments');
-      setAppointments(prev => [...prev, appointment]);
-      
-      toast({
-        title: "Sucesso",
-        description: "Agendamento criado com sucesso"
-      });
-
       return appointment;
-    } catch (err) {
-      logger.error('Erro ao criar agendamento', err, 'useAppointments');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
       toast({
-        title: "Erro",
-        description: "Não foi possível criar o agendamento",
-        variant: "destructive"
+        title: 'Sucesso',
+        description: 'Agendamento criado com sucesso'
       });
-      return null;
-    } finally {
-      timer();
+    },
+    onError: (error: Error) => {
+      logger.error('Erro ao criar agendamento', error, 'useAppointments');
+      
+      if (error.message === 'Conflito de horário') {
+        toast({
+          title: 'Conflito de Horário',
+          description: 'Já existe um agendamento neste horário',
+          variant: 'destructive'
+        });
+      } else {
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível criar o agendamento',
+          variant: 'destructive'
+        });
+      }
     }
-  }, [appointments, toast]);
+  });
+}
 
-  // Update appointment
-  const updateAppointment = useCallback(async (id: string, data: Partial<AppointmentFormData>): Promise<AppointmentBase | null> => {
-    const timer = logger.startTimer('updateAppointment');
-    
-    try {
-      logger.info('Atualizando agendamento', { appointmentId: id, updates: data }, 'useAppointments');
+// Update appointment mutation
+export function useUpdateAppointment() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ appointmentId, updates }: { appointmentId: string; updates: Partial<AppointmentFormData> }) => {
+      logger.info('Atualizando agendamento', { appointmentId, updates }, 'useAppointments');
 
       // Check for conflicts if date/time is being changed
-      if (data.date || data.time || data.duration) {
-        const existing = appointments.find(apt => apt.id === id);
+      if (updates.date || updates.time || updates.duration) {
+        const currentAppointments = queryClient.getQueryData<AppointmentBase[]>(['appointments']) || [];
+        const existing = currentAppointments.find(apt => apt.id === appointmentId);
+        
         if (existing) {
           const conflict = checkAppointmentConflict({
-            date: data.date || existing.date,
-            time: data.time || existing.time,
-            duration: data.duration || existing.duration,
-            excludeId: id,
-            appointments
+            date: updates.date || existing.date,
+            time: updates.time || existing.time,
+            duration: updates.duration || existing.duration,
+            excludeId: appointmentId,
+            appointments: currentAppointments
           });
 
           if (conflict.hasConflict) {
-            toast({
-              title: "Conflito de Horário",
-              description: `Já existe um agendamento neste horário`,
-              variant: "destructive"
-            });
-            return null;
+            throw new Error('Conflito de horário');
           }
         }
       }
 
       const updateData: any = {};
-      if (data.patientId) updateData.patient_id = data.patientId;
-      if (data.date) updateData.appointment_date = data.date.toISOString().split('T')[0];
-      if (data.time) updateData.appointment_time = data.time;
-      if (data.duration) updateData.duration = data.duration;
-      if (data.type) updateData.type = data.type;
-      if (data.status) updateData.status = data.status;
-      if (data.notes !== undefined) updateData.notes = data.notes;
+      if (updates.patientId) updateData.patient_id = updates.patientId;
+      if (updates.date) updateData.appointment_date = updates.date.toISOString().split('T')[0];
+      if (updates.time) updateData.appointment_time = updates.time;
+      if (updates.duration) updateData.duration = updates.duration;
+      if (updates.type) updateData.type = updates.type;
+      if (updates.status) updateData.status = updates.status;
+      if (updates.notes !== undefined) updateData.notes = updates.notes || null;
 
       const { data: updatedAppointment, error } = await supabase
         .from('appointments')
         .update(updateData)
-        .eq('id', id)
+        .eq('id', appointmentId)
         .select(`
           *,
           patients!inner(
@@ -285,290 +228,129 @@ export const useAppointments = (): UseAppointmentsReturn => {
         updatedAt: new Date(updatedAppointment.updated_at)
       };
 
-      setAppointments(prev => prev.map(apt => apt.id === id ? transformedAppointment : apt));
-
       logger.info('Agendamento atualizado com sucesso', { appointmentId: transformedAppointment.id }, 'useAppointments');
-      toast({
-        title: "Sucesso",
-        description: "Agendamento atualizado com sucesso",
-      });
-
-      timer();
       return transformedAppointment;
-    } catch (err) {
-      logger.error('Erro ao atualizar agendamento', err, 'useAppointments');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
       toast({
-        title: "Erro",
-        description: err instanceof Error ? err.message : "Não foi possível atualizar o agendamento",
-        variant: "destructive"
+        title: 'Sucesso',
+        description: 'Agendamento atualizado com sucesso'
       });
-      timer();
-      return null;
+    },
+    onError: (error: Error) => {
+      logger.error('Erro ao atualizar agendamento', error, 'useAppointments');
+      
+      if (error.message === 'Conflito de horário') {
+        toast({
+          title: 'Conflito de Horário',
+          description: 'Já existe um agendamento neste horário',
+          variant: 'destructive'
+        });
+      } else {
+        toast({
+          title: 'Erro',
+          description: 'Não foi possível atualizar o agendamento',
+          variant: 'destructive'
+        });
+      }
     }
-  }, [appointments, toast]);
+  });
+}
 
-  // Delete appointment
-  const deleteAppointment = useCallback(async (id: string): Promise<boolean> => {
-    try {
+// Delete appointment mutation
+export function useDeleteAppointment() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (appointmentId: string) => {
       const { error } = await supabase
         .from('appointments')
         .delete()
-        .eq('id', id);
+        .eq('id', appointmentId);
 
       if (error) throw error;
-
-      setAppointments(prev => prev.filter(apt => apt.id !== id));
-      
+      return appointmentId;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
       toast({
-        title: "Sucesso",
-        description: "Agendamento excluído com sucesso"
+        title: 'Sucesso',
+        description: 'Agendamento excluído com sucesso'
       });
-
-      return true;
-    } catch (err) {
-      console.error('Error deleting appointment:', err);
+    },
+    onError: (error) => {
+      logger.error('Erro ao excluir agendamento', error, 'useAppointments');
       toast({
-        title: "Erro",
-        description: "Não foi possível excluir o agendamento",
-        variant: "destructive"
+        title: 'Erro',
+        description: 'Não foi possível excluir o agendamento',
+        variant: 'destructive'
       });
-      return false;
     }
-  }, [toast]);
-
-  // Confirm appointment
-  const confirmAppointment = useCallback(async (id: string): Promise<boolean> => {
-    const result = await updateAppointment(id, { status: 'confirmado' });
-    return result !== null;
-  }, [updateAppointment]);
-
-  // Cancel appointment
-  const cancelAppointment = useCallback(async (id: string, reason?: string): Promise<boolean> => {
-    const result = await updateAppointment(id, { 
-      status: 'cancelado',
-      notes: reason ? `Cancelado: ${reason}` : 'Cancelado'
-    });
-    return result !== null;
-  }, [updateAppointment]);
-
-  // Query functions
-  const getAppointmentsByDateRange = useCallback((startDate: Date, endDate: Date): AppointmentBase[] => {
-    return appointments.filter(apt => 
-      apt.date >= startDate && apt.date <= endDate
-    );
-  }, [appointments]);
-
-  const getAppointmentsByPatient = useCallback((patientId: string): AppointmentBase[] => {
-    return appointments.filter(apt => apt.patientId === patientId);
-  }, [appointments]);
-
-  const getAppointmentsByTherapist = useCallback((therapistId: string): AppointmentBase[] => {
-    return [];
-  }, []);
-
-  const searchAppointments = useCallback((query: string): AppointmentBase[] => {
-    const lowerQuery = query.toLowerCase();
-    return appointments.filter(apt => 
-      apt.patientName.toLowerCase().includes(lowerQuery) ||
-      apt.type.toLowerCase().includes(lowerQuery) ||
-      apt.notes?.toLowerCase().includes(lowerQuery) ||
-      apt.status.toLowerCase().includes(lowerQuery)
-    );
-  }, [appointments]);
-
-  // Conflict detection
-  const checkConflict = useCallback((date: Date, time: string, duration: number, excludeId?: string) => {
-    return checkAppointmentConflict({
-      date,
-      time,
-      duration,
-      excludeId,
-      appointments
-    });
-  }, [appointments]);
-
-  // Get available time slots
-  const getAvailableSlots = useCallback((date: Date, duration: number): string[] => {
-    const slots: string[] = [];
-    const [startHour, startMin] = businessHours.start.split(':').map(Number);
-    const [endHour, endMin] = businessHours.end.split(':').map(Number);
-    
-    const startMinutes = startHour * 60 + startMin;
-    const endMinutes = endHour * 60 + endMin;
-    
-    for (let minutes = startMinutes; minutes + duration <= endMinutes; minutes += businessHours.slotDuration) {
-      const hours = Math.floor(minutes / 60);
-      const mins = minutes % 60;
-      const timeSlot = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
-      
-      const conflict = checkAppointmentConflict({
-        date,
-        time: timeSlot,
-        duration,
-        appointments
-      });
-      
-      if (!conflict.hasConflict) {
-        slots.push(timeSlot);
-      }
-    }
-    
-    return slots;
-  }, [appointments]);
-
-  // Apply filters
-  const filteredAppointments = useMemo(() => {
-    let filtered = [...appointments];
-
-    if (filters.dateRange) {
-      filtered = filtered.filter(apt => 
-        apt.date >= filters.dateRange!.start && apt.date <= filters.dateRange!.end
-      );
-    }
-
-    if (filters.status && filters.status.length > 0) {
-      filtered = filtered.filter(apt => filters.status!.includes(apt.status));
-    }
-
-    if (filters.type && filters.type.length > 0) {
-      filtered = filtered.filter(apt => filters.type!.includes(apt.type));
-    }
-
-
-    if (filters.patientId && filters.patientId.length > 0) {
-      filtered = filtered.filter(apt => filters.patientId!.includes(apt.patientId));
-    }
-
-    return filtered;
-  }, [appointments, filters]);
-
-  // Set filters
-  const setFilters = useCallback((newFilters: AppointmentFilters) => {
-    setFiltersState(newFilters);
-  }, []);
-
-  // Clear filters
-  const clearFilters = useCallback(() => {
-    setFiltersState({});
-  }, []);
-
-  // Get appointment statistics
-  const getAppointmentStats = useCallback(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    return {
-      total: appointments.length,
-      confirmed: appointments.filter(apt => apt.status === 'confirmado').length,
-      pending: appointments.filter(apt => apt.status === 'agendado').length,
-      cancelled: appointments.filter(apt => apt.status === 'cancelado').length,
-      today: appointments.filter(apt => {
-        const aptDate = new Date(apt.date);
-        aptDate.setHours(0, 0, 0, 0);
-        return aptDate.getTime() === today.getTime();
-      }).length
-    };
-  }, [appointments]);
-
-  // Refresh appointments
-  const refreshAppointments = useCallback(async () => {
-    await fetchAppointments();
-  }, [fetchAppointments]);
-
-  // Initial load
-  useEffect(() => {
-    fetchAppointments();
-  }, [fetchAppointments]);
-
-  return {
-    appointments,
-    loading,
-    error,
-    initialLoad,
-    
-    // CRUD Operations
-    createAppointment,
-    updateAppointment,
-    deleteAppointment,
-    confirmAppointment,
-    cancelAppointment,
-    
-    // Queries
-    getAppointmentsByDateRange,
-    getAppointmentsByPatient,
-    getAppointmentsByTherapist,
-    searchAppointments,
-    
-    // Conflict Detection
-    checkConflict,
-    getAvailableSlots,
-    
-    // Filters
-    filteredAppointments,
-    setFilters,
-    clearFilters,
-    
-    // Stats
-    getAppointmentStats,
-    
-    // Utilities
-    refreshAppointments
-  };
-};
-
-// Convenience wrappers expected by UI pieces
-export function useCreateAppointment() {
-  const { createAppointment } = useAppointments();
-  return {
-    mutateAsync: (data: AppointmentFormData) => createAppointment(data),
-    isPending: false,
-  };
+  });
 }
 
-export function useUpdateAppointment() {
-  const { updateAppointment } = useAppointments();
-  return {
-    mutateAsync: ({ appointmentId, updates }: { appointmentId: string; updates: Partial<AppointmentFormData> }) =>
-      updateAppointment(appointmentId, updates),
-    isPending: false,
-  };
-}
-
-export function useDeleteAppointment() {
-  const { deleteAppointment } = useAppointments();
-  return {
-    mutateAsync: (appointmentId: string) => deleteAppointment(appointmentId),
-    isPending: false,
-  };
-}
-
+// Update appointment status
 export function useUpdateAppointmentStatus() {
-  const { updateAppointment } = useAppointments();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ appointmentId, status }: { appointmentId: string; status: AppointmentStatus }) => {
+      const { data, error } = await supabase
+        .from('appointments')
+        .update({ status })
+        .eq('id', appointmentId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      toast({
+        title: 'Status atualizado',
+        description: 'Status do agendamento atualizado com sucesso'
+      });
+    },
+    onError: (error) => {
+      logger.error('Erro ao atualizar status', error, 'useAppointments');
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível atualizar o status',
+        variant: 'destructive'
+      });
+    }
+  });
+}
+
+// Reschedule appointment
+export function useRescheduleAppointment() {
+  const { mutateAsync } = useUpdateAppointment();
+  
   return {
-    mutateAsync: ({ appointmentId, status }: { appointmentId: string; status: AppointmentStatus }) =>
-      updateAppointment(appointmentId, { status }),
-    isPending: false,
+    mutateAsync: ({ appointmentId, date, time, duration }: { 
+      appointmentId: string; 
+      date?: Date; 
+      time?: string; 
+      duration?: number; 
+    }) => mutateAsync({ appointmentId, updates: { date, time, duration } }),
+    isPending: false
   };
 }
 
-export function useRescheduleAppointment() {
-  const { updateAppointment } = useAppointments();
-  return {
-    mutateAsync: ({ appointmentId, date, time, duration }: { appointmentId: string; date?: Date; time?: string; duration?: number; }) =>
-      updateAppointment(appointmentId, { date, time, duration }),
-    isPending: false,
-  };
+// Helper hooks for compatibility
+export function useAppointmentsFiltered(_filters: any) {
+  const { data: appointments = [], isLoading, error } = useAppointments();
+  return { data: appointments, isLoading, error };
 }
 
 export function useUpdatePaymentStatus() {
-  // No payment_status column in appointments; simulate success
+  // Payment status not in appointments table
   return {
     mutateAsync: async (_: { appointmentId: string; paymentStatus: 'paid' | 'pending' | 'partial' }) => true,
     isPending: false,
   };
-}
-
-export function useAppointmentsFiltered(_filters: any) {
-  const { appointments, loading, error } = useAppointments();
-  return { data: appointments, isLoading: loading, error };
 }
