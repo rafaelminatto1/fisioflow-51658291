@@ -11,9 +11,9 @@ import {
 
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
+import { useFormField, FormFieldContext, FormItemContext } from "@/hooks/useFormField"
 
 const Form = FormProvider
-
 
 const FormField = <
   TFieldValues extends FieldValues = FieldValues,
@@ -27,9 +27,6 @@ const FormField = <
     </FormFieldContext.Provider>
   )
 }
-
-// Import the hook from separate file
-import { useFormField, FormFieldContext, FormItemContext } from "@/hooks/useFormField"
 
 const FormItem = React.forwardRef<
   HTMLDivElement,
