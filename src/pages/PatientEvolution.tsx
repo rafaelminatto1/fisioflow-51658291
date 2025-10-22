@@ -17,7 +17,8 @@ import {
   User,
   Calendar,
   Phone,
-  Stethoscope
+  Stethoscope,
+  FileText
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -38,6 +39,8 @@ import { SurgeryTimeline } from '@/components/evolution/SurgeryTimeline';
 import { GoalsTracker } from '@/components/evolution/GoalsTracker';
 import { PathologyStatus } from '@/components/evolution/PathologyStatus';
 import { MeasurementCharts } from '@/components/evolution/MeasurementCharts';
+import { PainMapManager } from '@/components/evolution/PainMapManager';
+import { ReportGeneratorDialog } from '@/components/reports/ReportGeneratorDialog';
 
 const PatientEvolution = () => {
   const { appointmentId } = useParams<{ appointmentId: string }>();
@@ -278,6 +281,16 @@ const PatientEvolution = () => {
                 <Save className="h-5 w-5 mr-2" />
                 {createSoapRecord.isPending ? 'Salvando...' : 'Salvar Evolução'}
               </Button>
+              <ReportGeneratorDialog 
+                patientId={patientId!}
+                patientName={patient.name}
+                trigger={
+                  <Button variant="outline" size="lg" className="flex-shrink-0">
+                    <FileText className="h-5 w-5 mr-2" />
+                    Gerar Relatório
+                  </Button>
+                }
+              />
             </div>
           </div>
           {/* Decorative gradient overlay */}
@@ -446,6 +459,23 @@ const PatientEvolution = () => {
 
             {/* Gráficos de Medições */}
             <MeasurementCharts measurementsByType={measurementsByType} />
+
+            {/* Mapa de Dor */}
+            {patientId && (
+              <Card className="shadow-lg">
+                <CardHeader className="bg-gradient-to-r from-red-50/50 to-orange-100/50 dark:from-red-950/20 dark:to-orange-900/20">
+                  <CardTitle className="text-lg">Mapa de Dor</CardTitle>
+                  <CardDescription>Registre e acompanhe a evolução da dor do paciente</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <PainMapManager 
+                    patientId={patientId}
+                    sessionId={currentSoapRecordId}
+                    appointmentId={appointmentId}
+                  />
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Coluna Lateral - Informações Complementares */}
