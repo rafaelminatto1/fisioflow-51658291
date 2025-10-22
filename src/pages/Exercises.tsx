@@ -1,192 +1,158 @@
-import { useEffect, useState } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { NewExerciseModal } from "@/components/modals/NewExerciseModal";
-import { ExerciseLibrary } from "@/components/exercises/ExerciseLibrary";
-import { ExercisePlayer } from "@/components/exercises/ExercisePlayer";
-import { useExercises } from "@/hooks/useExercises";
-import { useExerciseFavorites } from "@/hooks/useExerciseFavorites";
-import { useExerciseProtocols } from "@/hooks/useExerciseProtocols";
-import { Dumbbell, PlusCircle, Heart, BookOpen, Settings } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { EmptyState, LoadingSkeleton } from "@/components/ui";
+import React, { useState } from 'react';
+import { MainLayout } from '@/components/layout';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Activity, Heart, BookOpen, Layers } from 'lucide-react';
+import { ExerciseLibrary } from '@/components/exercises/ExerciseLibrary';
+import { ExercisePlayer } from '@/components/exercises/ExercisePlayer';
+import { NewExerciseModal } from '@/components/modals/NewExerciseModal';
+import { useExercises, type Exercise } from '@/hooks/useExercises';
+import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';
+import { useExerciseProtocols } from '@/hooks/useExerciseProtocols';
 
-
-const Exercises = () => {
-  const [selectedExercise, setSelectedExercise] = useState<{ id: string; name: string; category: string; description?: string; instructions?: string; video_url?: string } | null>(null);
-  const [activeTab, setActiveTab] = useState("library");
-  const [isNewExerciseModalOpen, setIsNewExerciseModalOpen] = useState(false);
-  const { exercises } = useExercises();
+export default function Exercises() {
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
+  const [activeTab, setActiveTab] = useState('library');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  const { exercises, createExercise, updateExercise, isCreating, isUpdating } = useExercises();
   const { favorites } = useExerciseFavorites();
   const { protocols } = useExerciseProtocols();
-  const { toast } = useToast();
 
-  useEffect(() => {
-    document.title = "Exercícios | FisioFlow";
-  }, []);
-
-  const handleViewExercise = (exercise: { id: string; name: string; category: string; description?: string; instructions?: string; video_url?: string }) => {
+  const handleViewExercise = (exercise: Exercise) => {
     setSelectedExercise(exercise);
-    setActiveTab("player");
+    setActiveTab('player');
   };
 
-  const handleAddToPlan = (exerciseData: { id: string; name: string; category: string; description?: string; instructions?: string; video_url?: string }) => {
-    console.log('Adding exercise to plan:', exerciseData);
-    toast({
-      title: "Funcionalidade em desenvolvimento",
-      description: "A criação de planos será implementada na próxima fase"
-    });
+  const handleEditExercise = (exercise: Exercise) => {
+    setEditingExercise(exercise);
+    setIsModalOpen(true);
+  };
+
+  const handleNewExercise = () => {
+    setEditingExercise(null);
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = (data: Omit<Exercise, 'id' | 'created_at' | 'updated_at'>) => {
+    if (editingExercise) {
+      updateExercise({ id: editingExercise.id, ...data });
+    } else {
+      createExercise(data);
+    }
+    setIsModalOpen(false);
+  };
+
+  const handleAddToPlan = (exerciseId: string) => {
+    console.log('Adding exercise to plan:', exerciseId);
   };
 
   return (
     <MainLayout>
-      <main className="space-y-6 animate-fade-in">
-        {/* Page header moderno */}
-        <section className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-primary grid place-items-center shadow-medical">
-                <Dumbbell className="w-6 h-6 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                  Biblioteca de Exercícios
-                </h1>
-              </div>
-            </div>
-            <p className="text-muted-foreground ml-15">
-              Gerencie exercícios, crie protocolos e prescreva programas personalizados
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Biblioteca de Exercícios</h1>
+            <p className="text-muted-foreground">
+              Gerencie e visualize exercícios terapêuticos
             </p>
           </div>
-          <Button 
-            className="shadow-md hover:shadow-lg transition-all w-full sm:w-auto"
-            onClick={() => setIsNewExerciseModalOpen(true)}
-          >
-            <PlusCircle className="w-4 h-4 mr-2" />
-            <span className="hidden sm:inline">Novo Exercício</span>
-            <span className="sm:hidden">Novo</span>
+          <Button onClick={handleNewExercise}>
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Exercício
           </Button>
-        </section>
+        </div>
 
-        {/* Estatísticas rápidas - Melhoradas */}
-        <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="hover:shadow-lg transition-all duration-300 animate-scale-in">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-medical">
-                  <Dumbbell className="w-5 h-5 text-primary-foreground" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{exercises.length}</p>
-                  <p className="text-xs text-muted-foreground">Total</p>
-                </div>
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <Activity className="h-8 w-8 text-primary" />
+              <div>
+                <p className="text-sm text-muted-foreground">Total</p>
+                <p className="text-2xl font-bold">{exercises.length}</p>
               </div>
-            </CardContent>
+            </div>
           </Card>
-
-          <Card className="hover:shadow-lg transition-all duration-300 animate-scale-in" style={{ animationDelay: '0.1s' }}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center">
-                  <Heart className="w-5 h-5 text-red-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{favorites.length}</p>
-                  <p className="text-xs text-muted-foreground">Favoritos</p>
-                </div>
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <Heart className="h-8 w-8 text-red-500" />
+              <div>
+                <p className="text-sm text-muted-foreground">Favoritos</p>
+                <p className="text-2xl font-bold">{favorites.length}</p>
               </div>
-            </CardContent>
+            </div>
           </Card>
-
-          <Card className="hover:shadow-lg transition-all duration-300 animate-scale-in" style={{ animationDelay: '0.2s' }}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                  <BookOpen className="w-5 h-5 text-blue-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{protocols.length}</p>
-                  <p className="text-xs text-muted-foreground">Protocolos</p>
-                </div>
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <BookOpen className="h-8 w-8 text-blue-500" />
+              <div>
+                <p className="text-sm text-muted-foreground">Protocolos</p>
+                <p className="text-2xl font-bold">{protocols.length}</p>
               </div>
-            </CardContent>
+            </div>
           </Card>
-
-          <Card className="hover:shadow-lg transition-all duration-300 animate-scale-in" style={{ animationDelay: '0.3s' }}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
-                  <Settings className="w-5 h-5 text-green-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">
-                    {new Set(exercises.map(ex => ex.category)).size}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Categorias</p>
-                </div>
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <Layers className="h-8 w-8 text-green-500" />
+              <div>
+                <p className="text-sm text-muted-foreground">Categorias</p>
+                <p className="text-2xl font-bold">
+                  {new Set(exercises.map(e => e.category).filter(Boolean)).size}
+                </p>
               </div>
-            </CardContent>
+            </div>
           </Card>
-        </section>
+        </div>
 
-        {/* Conteúdo principal com tabs */}
-        <section>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="library">Biblioteca</TabsTrigger>
-              <TabsTrigger value="protocols">Protocolos</TabsTrigger>
-              <TabsTrigger value="player" disabled={!selectedExercise}>
-                Player {selectedExercise && `- ${selectedExercise.name}`}
-              </TabsTrigger>
-            </TabsList>
+        {/* Main Content */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="library">Biblioteca</TabsTrigger>
+            <TabsTrigger value="protocols">Protocolos</TabsTrigger>
+            <TabsTrigger value="player">Player</TabsTrigger>
+          </TabsList>
 
-            <TabsContent value="library" className="mt-6">
-              <ExerciseLibrary
-                onExerciseSelect={handleViewExercise}
+          <TabsContent value="library" className="mt-6">
+            <ExerciseLibrary 
+              onSelectExercise={handleViewExercise}
+              onEditExercise={handleEditExercise}
+            />
+          </TabsContent>
+
+          <TabsContent value="protocols" className="mt-6">
+            <Card className="p-8 text-center">
+              <p className="text-muted-foreground">Protocolos em desenvolvimento</p>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="player" className="mt-6">
+            {selectedExercise ? (
+              <ExercisePlayer
+                exercise={selectedExercise}
                 onAddToPlan={handleAddToPlan}
-                className="border-0 shadow-none bg-transparent"
               />
-            </TabsContent>
+            ) : (
+              <Card className="p-8 text-center">
+                <p className="text-muted-foreground">
+                  Selecione um exercício na biblioteca para visualizar
+                </p>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
 
-            <TabsContent value="protocols" className="mt-6">
-              <EmptyState
-                icon={BookOpen}
-                title="Protocolos em desenvolvimento"
-                description="O gerenciamento de protocolos será implementado na próxima atualização"
-              />
-            </TabsContent>
-
-            <TabsContent value="player" className="mt-6">
-              {selectedExercise ? (
-                <ExercisePlayer
-                  exercise={selectedExercise}
-                  onClose={() => {
-                    setSelectedExercise(null);
-                    setActiveTab("library");
-                  }}
-                />
-              ) : (
-                <Card>
-                  <CardContent className="p-12 text-center">
-                    <p className="text-muted-foreground">
-                      Selecione um exercício da biblioteca para visualizar
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-          </Tabs>
-        </section>
-        
-        <NewExerciseModal
-          open={isNewExerciseModalOpen}
-          onOpenChange={setIsNewExerciseModalOpen}
-        />
-      </main>
+      <NewExerciseModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        onSubmit={handleSubmit}
+        exercise={editingExercise || undefined}
+        isLoading={isCreating || isUpdating}
+      />
     </MainLayout>
   );
-};
-
-export default Exercises;
+}
