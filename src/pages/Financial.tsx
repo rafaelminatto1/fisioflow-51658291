@@ -11,63 +11,125 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { DollarSign, TrendingUp, Calendar, CreditCard, AlertCircle, Plus, Download, Filter } from 'lucide-react';
+import { 
+  DollarSign, 
+  TrendingUp, 
+  Calendar, 
+  CreditCard, 
+  AlertCircle, 
+  Plus, 
+  Download, 
+  Filter,
+  Edit,
+  Trash2,
+  Check
+} from 'lucide-react';
 import { EmptyState, LoadingSkeleton } from '@/components/ui';
+import { useFinancial, type Transaction } from '@/hooks/useFinancial';
+import { TransactionModal } from '@/components/financial/TransactionModal';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const Financial = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('month');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  // Mock financial data
-  const financialStats = {
-    totalRevenue: 15750.00,
-    pendingPayments: 2340.00,
-    monthlyGrowth: 12.5,
-    paidAppointments: 42,
-    totalAppointments: 47
+  const {
+    transactions,
+    stats,
+    loading,
+    createTransaction,
+    updateTransaction,
+    deleteTransaction,
+    markAsPaid,
+    isCreating,
+    isUpdating,
+    isDeleting,
+  } = useFinancial();
+
+  const handleNewTransaction = () => {
+    setEditingTransaction(null);
+    setIsModalOpen(true);
   };
 
-  const recentTransactions = [
-    {
-      id: '1',
-      patientName: 'Maria Silva',
-      service: 'Fisioterapia',
-      amount: 120.00,
-      status: 'Pago',
-      date: new Date(),
-      paymentMethod: 'Cartão'
-    },
-    {
-      id: '2',
-      patientName: 'João Santos',
-      service: 'Reavaliação',
-      amount: 150.00,
-      status: 'Pendente',
-      date: new Date(),
-      paymentMethod: 'Dinheiro'
-    },
-    {
-      id: '3',
-      patientName: 'Ana Costa',
-      service: 'Consulta Inicial',
-      amount: 180.00,
-      status: 'Pago',
-      date: new Date(Date.now() - 86400000),
-      paymentMethod: 'PIX'
+  const handleEditTransaction = (transaction: Transaction) => {
+    setEditingTransaction(transaction);
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = (data: Omit<Transaction, 'id' | 'created_at' | 'updated_at'>) => {
+    if (editingTransaction) {
+      updateTransaction({ id: editingTransaction.id, ...data });
+    } else {
+      createTransaction(data);
     }
-  ];
+  };
+
+  const handleDelete = () => {
+    if (deleteId) {
+      deleteTransaction(deleteId);
+      setDeleteId(null);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Pago':
+      case 'concluido':
         return 'bg-green-100 text-green-700';
-      case 'Pendente':
+      case 'pendente':
         return 'bg-yellow-100 text-yellow-700';
-      case 'Atrasado':
+      case 'cancelado':
         return 'bg-red-100 text-red-700';
       default:
         return 'bg-muted text-muted-foreground';
     }
   };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'concluido':
+        return 'Pago';
+      case 'pendente':
+        return 'Pendente';
+      case 'cancelado':
+        return 'Cancelado';
+      default:
+        return status;
+    }
+  };
+
+  const getTipoLabel = (tipo: string) => {
+    switch (tipo) {
+      case 'receita':
+        return 'Receita';
+      case 'despesa':
+        return 'Despesa';
+      case 'pagamento':
+        return 'Pagamento';
+      case 'recebimento':
+        return 'Recebimento';
+      default:
+        return tipo;
+    }
+  };
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <LoadingSkeleton />
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
@@ -83,9 +145,12 @@ const Financial = () => {
               <Download className="w-4 h-4 mr-2" />
               Relatório
             </Button>
-            <Button className="bg-gradient-primary hover:bg-gradient-primary/90 shadow-medical">
+            <Button 
+              onClick={handleNewTransaction}
+              className="bg-gradient-primary hover:bg-gradient-primary/90 shadow-medical"
+            >
               <Plus className="w-4 h-4 mr-2" />
-              Nova Cobrança
+              Nova Transação
             </Button>
           </div>
         </div>
@@ -119,9 +184,11 @@ const Financial = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Receita Total</p>
+                  <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+                    Receita Total
+                  </p>
                   <p className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-                    R$ {financialStats.totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    R$ {(stats?.totalRevenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center shadow-medical">
@@ -130,7 +197,9 @@ const Financial = () => {
               </div>
               <div className="flex items-center mt-3">
                 <TrendingUp className="w-4 h-4 text-secondary mr-1" />
-                <span className="text-sm text-secondary font-medium">+{financialStats.monthlyGrowth}%</span>
+                <span className="text-sm text-secondary font-medium">
+                  +{stats?.monthlyGrowth || 0}%
+                </span>
                 <span className="text-sm text-muted-foreground ml-1">vs mês anterior</span>
               </div>
             </CardContent>
@@ -140,9 +209,11 @@ const Financial = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Pagamentos Pendentes</p>
+                  <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+                    Pagamentos Pendentes
+                  </p>
                   <p className="text-2xl font-bold text-foreground">
-                    R$ {financialStats.pendingPayments.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    R$ {(stats?.pendingPayments || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
@@ -150,7 +221,7 @@ const Financial = () => {
                 </div>
               </div>
               <p className="text-sm text-muted-foreground mt-3">
-                {financialStats.totalAppointments - financialStats.paidAppointments} consultas pendentes
+                {(stats?.totalCount || 0) - (stats?.paidCount || 0)} transações pendentes
               </p>
             </CardContent>
           </Card>
@@ -159,9 +230,13 @@ const Financial = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Taxa de Pagamento</p>
+                  <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+                    Taxa de Pagamento
+                  </p>
                   <p className="text-2xl font-bold bg-gradient-to-r from-secondary to-secondary bg-clip-text text-transparent">
-                    {Math.round((financialStats.paidAppointments / financialStats.totalAppointments) * 100)}%
+                    {stats && stats.totalCount > 0
+                      ? Math.round((stats.paidCount / stats.totalCount) * 100)
+                      : 0}%
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-gradient-secondary rounded-xl flex items-center justify-center shadow-medical">
@@ -169,7 +244,7 @@ const Financial = () => {
                 </div>
               </div>
               <p className="text-sm text-muted-foreground mt-3">
-                {financialStats.paidAppointments} de {financialStats.totalAppointments} consultas pagas
+                {stats?.paidCount || 0} de {stats?.totalCount || 0} transações pagas
               </p>
             </CardContent>
           </Card>
@@ -178,77 +253,114 @@ const Financial = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Ticket Médio</p>
+                  <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+                    Ticket Médio
+                  </p>
                   <p className="text-2xl font-bold text-foreground">
-                    R$ {(financialStats.totalRevenue / financialStats.paidAppointments).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    R$ {(stats?.averageTicket || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center shadow-medical">
                   <TrendingUp className="w-6 h-6 text-white" />
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground mt-3">Por consulta realizada</p>
+              <p className="text-sm text-muted-foreground mt-3">Por transação realizada</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Financial Management Tabs */}
         <Tabs defaultValue="transactions" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="transactions">Transações</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="transactions">Todas as Transações</TabsTrigger>
             <TabsTrigger value="pending">Pendências</TabsTrigger>
-            <TabsTrigger value="settings">Configurações</TabsTrigger>
           </TabsList>
 
           <TabsContent value="transactions" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  Transações Recentes
-                  <Button variant="outline" size="sm">
-                    <Filter className="w-4 h-4 mr-2" />
-                    Filtrar
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recentTransactions.map((transaction) => (
-                    <div
-                      key={transaction.id}
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
-                          <DollarSign className="w-5 h-5 text-primary-foreground" />
+            {transactions.length === 0 ? (
+              <EmptyState
+                icon={DollarSign}
+                title="Nenhuma transação encontrada"
+                description="Crie sua primeira transação para começar"
+              />
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    Transações Recentes
+                    <Button variant="outline" size="sm">
+                      <Filter className="w-4 h-4 mr-2" />
+                      Filtrar
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {transactions.map((transaction) => (
+                      <div
+                        key={transaction.id}
+                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="flex items-center space-x-4">
+                          <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
+                            <DollarSign className="w-5 h-5 text-primary-foreground" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground">
+                              {getTipoLabel(transaction.tipo)}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {transaction.descricao || 'Sem descrição'}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-foreground">{transaction.patientName}</p>
-                          <p className="text-sm text-muted-foreground">{transaction.service}</p>
+                        <div className="flex items-center gap-3">
+                          <div className="text-right">
+                            <p className="font-medium text-foreground">
+                              R$ {Number(transaction.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </p>
+                            <Badge className={getStatusColor(transaction.status)}>
+                              {getStatusLabel(transaction.status)}
+                            </Badge>
+                          </div>
+                          <div className="flex gap-1">
+                            {transaction.status === 'pendente' && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => markAsPaid(transaction.id)}
+                                title="Marcar como pago"
+                              >
+                                <Check className="h-4 w-4 text-green-600" />
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEditTransaction(transaction)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setDeleteId(transaction.id)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-medium text-foreground">
-                          R$ {transaction.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <Badge className={getStatusColor(transaction.status)}>
-                            {transaction.status}
-                          </Badge>
-                          <span className="text-sm text-muted-foreground">
-                            {transaction.paymentMethod}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="pending" className="space-y-6">
-            {recentTransactions.filter(t => t.status === 'Pendente').length === 0 ? (
+            {transactions.filter(t => t.status === 'pendente').length === 0 ? (
               <EmptyState
                 icon={AlertCircle}
                 title="Nenhum pagamento pendente"
@@ -261,8 +373,8 @@ const Financial = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {recentTransactions
-                      .filter(t => t.status === 'Pendente')
+                    {transactions
+                      .filter(t => t.status === 'pendente')
                       .map((transaction) => (
                         <div
                           key={transaction.id}
@@ -273,21 +385,28 @@ const Financial = () => {
                               <AlertCircle className="w-5 h-5 text-yellow-600" />
                             </div>
                             <div>
-                              <p className="font-medium text-foreground">{transaction.patientName}</p>
-                              <p className="text-sm text-muted-foreground">{transaction.service}</p>
+                              <p className="font-medium text-foreground">
+                                {getTipoLabel(transaction.tipo)}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {transaction.descricao || 'Sem descrição'}
+                              </p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
                             <div className="text-right">
                               <p className="font-medium text-foreground">
-                                R$ {transaction.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                R$ {Number(transaction.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                               </p>
                               <p className="text-sm text-muted-foreground">
-                                {transaction.date.toLocaleDateString('pt-BR')}
+                                {transaction.created_at ? new Date(transaction.created_at).toLocaleDateString('pt-BR') : ''}
                               </p>
                             </div>
-                            <Button size="sm" variant="outline">
-                              Cobrar
+                            <Button 
+                              size="sm" 
+                              onClick={() => markAsPaid(transaction.id)}
+                            >
+                              Marcar como Pago
                             </Button>
                           </div>
                         </div>
@@ -297,60 +416,33 @@ const Financial = () => {
               </Card>
             )}
           </TabsContent>
-
-          <TabsContent value="settings" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Configurações Financeiras</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <h3 className="font-medium mb-4">Valores por Tipo de Consulta</h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center p-3 border rounded-lg">
-                      <span>Consulta Inicial</span>
-                      <span className="font-medium">R$ 180,00</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 border rounded-lg">
-                      <span>Fisioterapia</span>
-                      <span className="font-medium">R$ 120,00</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 border rounded-lg">
-                      <span>Reavaliação</span>
-                      <span className="font-medium">R$ 150,00</span>
-                    </div>
-                    <div className="flex justify-between items-center p-3 border rounded-lg">
-                      <span>Consulta de Retorno</span>
-                      <span className="font-medium">R$ 100,00</span>
-                    </div>
-                  </div>
-                  <Button className="mt-4" variant="outline">
-                    Editar Valores
-                  </Button>
-                </div>
-
-                <div>
-                  <h3 className="font-medium mb-4">Métodos de Pagamento</h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <input type="checkbox" id="pix" defaultChecked />
-                      <label htmlFor="pix">PIX</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input type="checkbox" id="cartao" defaultChecked />
-                      <label htmlFor="cartao">Cartão de Crédito/Débito</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input type="checkbox" id="dinheiro" defaultChecked />
-                      <label htmlFor="dinheiro">Dinheiro</label>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
       </div>
+
+      <TransactionModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        onSubmit={handleSubmit}
+        transaction={editingTransaction || undefined}
+        isLoading={isCreating || isUpdating}
+      />
+
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+              {isDeleting ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MainLayout>
   );
 };
