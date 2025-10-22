@@ -21,6 +21,7 @@ import { useActivePatients } from '@/hooks/usePatients';
 import { PatientCombobox } from '@/components/ui/patient-combobox';
 import { QuickPatientModal } from '@/components/modals/QuickPatientModal';
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
+import { toast } from '@/hooks/use-toast';
 
 const appointmentSchema = z.object({
   patientId: z.string().min(1, 'Selecione um paciente'),
@@ -140,15 +141,41 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
   }, []);
 
   const handleSave = async (data: any) => {
+    // Verificar conflito antes de salvar
+    if (conflictCheck?.hasConflict) {
+      toast({
+        title: "⚠️ Conflito de horário",
+        description: `Já existe um agendamento com ${conflictCheck.conflictingAppointment?.patientName} neste horário.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       if (mode === 'edit' && appointment) {
         await updateAppointmentMutation.mutateAsync({ appointmentId: appointment.id, updates: data });
+        toast({
+          title: "✅ Agendamento atualizado",
+          description: "O agendamento foi atualizado com sucesso."
+        });
       } else {
         await createAppointmentMutation.mutateAsync(data);
+        toast({
+          title: "✅ Agendamento criado",
+          description: "O agendamento foi criado com sucesso."
+        });
       }
+      
+      // Limpar formulário e fechar modal
+      form.reset();
       onClose();
     } catch (error) {
       console.error('Error saving appointment:', error);
+      toast({
+        title: "❌ Erro ao salvar",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao salvar o agendamento.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -475,6 +502,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                 type="button"
                 variant="outline"
                 onClick={onClose}
+                disabled={createAppointmentMutation.isPending || updateAppointmentMutation.isPending}
               >
                 {mode === 'view' ? 'Fechar' : 'Cancelar'}
               </Button>
@@ -482,18 +510,22 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
               {mode !== 'view' && (
                 <Button
                   type="submit"
-                  disabled={isSubmitting || conflictCheck?.hasConflict}
-                  className="flex items-center gap-2"
+                  disabled={
+                    createAppointmentMutation.isPending || 
+                    updateAppointmentMutation.isPending || 
+                    conflictCheck?.hasConflict
+                  }
+                  className="flex items-center gap-2 relative min-w-[140px]"
                 >
-                  {isSubmitting ? (
+                   {(createAppointmentMutation.isPending || updateAppointmentMutation.isPending) ? (
                     <>
                       <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      Salvando...
+                      <span>Salvando...</span>
                     </>
                   ) : (
                     <>
                       <Check className="w-4 h-4" />
-                      {mode === 'edit' ? 'Atualizar' : 'Criar'}
+                      <span>{mode === 'edit' ? 'Atualizar' : 'Criar Agendamento'}</span>
                     </>
                   )}
                 </Button>
