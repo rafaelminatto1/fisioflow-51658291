@@ -6,11 +6,13 @@ import { Separator } from '@/components/ui/separator';
 import { AppointmentFilters } from '@/components/schedule/AppointmentFilters';
 import { CalendarView, CalendarViewType } from '@/components/schedule/CalendarView';
 import { AppointmentModal } from '@/components/schedule/AppointmentModal';
+import { AppointmentListView } from '@/components/schedule/AppointmentListView';
 import { useAppointments, useCreateAppointment } from '@/hooks/useAppointments';
 import { logger } from '@/lib/errors/logger';
 import { AlertTriangle, Calendar, Clock, Users, TrendingUp, Plus } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { cn } from '@/lib/utils';
 import { EmptyState, LoadingSkeleton } from '@/components/ui';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -30,7 +32,7 @@ const Schedule = () => {
   const [modalDefaultDate, setModalDefaultDate] = useState<Date | undefined>();
   const [modalDefaultTime, setModalDefaultTime] = useState<string | undefined>();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewType, setViewType] = useState<CalendarViewType>('week');
+  const [viewType, setViewType] = useState<CalendarViewType | 'list'>('list');
   const [filters, setFilters] = useState<FilterType>({
     search: '',
     status: '',
@@ -379,17 +381,48 @@ const Schedule = () => {
           </Card>
         )}
 
-        {/* Calendar View - Container melhorado e responsivo */}
-        <div className="h-[500px] sm:h-[600px] lg:h-[650px] animate-slide-up" style={{animationDelay: '0.2s'}}>
-          <CalendarView
-            appointments={filteredAppointments}
-            currentDate={currentDate}
-            onDateChange={setCurrentDate}
-            viewType={viewType}
-            onViewTypeChange={setViewType}
-            onAppointmentClick={handleAppointmentClick}
-            onTimeSlotClick={handleTimeSlotClick}
-          />
+        {/* View Selector - Melhorado para mobile */}
+        <div className="flex justify-center mb-4 animate-slide-up" style={{animationDelay: '0.15s'}}>
+          <div className="inline-flex items-center gap-1 bg-muted/50 p-1.5 rounded-xl shadow-card">
+            {(['list', 'day', 'week', 'month'] as const).map(type => (
+              <button
+                key={type}
+                onClick={() => setViewType(type)}
+                className={cn(
+                  "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                  viewType === type
+                    ? "bg-primary text-primary-foreground shadow-md scale-105"
+                    : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                )}
+              >
+                {type === 'list' ? '📱 Lista' : 
+                 type === 'day' ? '📅 Dia' : 
+                 type === 'week' ? '📊 Semana' : 
+                 '📆 Mês'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Calendar/List View - Container melhorado e responsivo */}
+        <div className="h-[500px] sm:h-[600px] lg:h-[650px] animate-slide-up overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xl" style={{animationDelay: '0.2s'}}>
+          {viewType === 'list' ? (
+            <AppointmentListView
+              appointments={filteredAppointments}
+              selectedDate={currentDate}
+              onAppointmentClick={handleAppointmentClick}
+            />
+          ) : (
+            <CalendarView
+              appointments={filteredAppointments}
+              currentDate={currentDate}
+              onDateChange={setCurrentDate}
+              viewType={viewType as CalendarViewType}
+              onViewTypeChange={(type) => setViewType(type)}
+              onAppointmentClick={handleAppointmentClick}
+              onTimeSlotClick={handleTimeSlotClick}
+            />
+          )}
         </div>
 
 {/* Appointment Modal */}

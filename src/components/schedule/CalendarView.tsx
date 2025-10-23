@@ -185,81 +185,105 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
     
     return (
-      <div className="flex h-full">
-        {/* Time column */}
-        <div className="w-20 border-r border-gray-200">
-          <div className="h-16 border-b border-gray-200"></div>
+      <div className="flex h-full overflow-hidden">
+        {/* Time column - Otimizado mobile */}
+        <div className="w-14 sm:w-20 border-r bg-gradient-to-b from-muted/30 to-muted/10 flex-shrink-0">
+          <div className="h-14 sm:h-16 border-b flex items-center justify-center">
+            <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+          </div>
           {TIME_SLOTS.map(time => (
-            <div key={time} className="h-16 border-b border-gray-100 p-2 text-xs text-gray-500 flex items-start pt-1">
+            <div key={time} className="h-12 sm:h-16 border-b border-border/30 p-1 sm:p-2 text-[10px] sm:text-xs text-muted-foreground font-medium flex items-start pt-1">
               {time}
             </div>
           ))}
         </div>
         
-        {/* Week days com melhor design */}
-        <div className="flex-1 grid grid-cols-7 bg-background/50">
-          {weekDays.map(day => {
-            const dayAppointments = getAppointmentsForDate(day);
-            const isTodayDate = isToday(day);
-            
-            return (
-              <div key={day.toISOString()} className="border-r border-border/50 last:border-r-0 relative group">
-                <div className={cn(
-                  "h-16 border-b sticky top-0 z-10 p-3 text-center text-sm backdrop-blur-sm transition-all duration-200",
-                  isTodayDate 
-                    ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-md" 
-                    : "bg-gradient-to-br from-muted/50 to-muted/30 hover:from-muted/70 hover:to-muted/50"
-                )}>
-                  <div className="font-medium">{format(day, 'EEE', { locale: ptBR })}</div>
+        {/* Week days - Scroll horizontal mobile */}
+        <div className="flex-1 overflow-x-auto overflow-y-hidden">
+          <div className="inline-flex sm:grid sm:grid-cols-7 min-w-full bg-background/50">
+            {weekDays.map(day => {
+              const dayAppointments = getAppointmentsForDate(day);
+              const isTodayDate = isToday(day);
+              
+              return (
+                <div 
+                  key={day.toISOString()} 
+                  className="w-[120px] sm:w-auto border-r border-border/50 last:border-r-0 relative group flex-shrink-0"
+                >
                   <div className={cn(
-                    "text-xl font-bold mt-1",
-                    isTodayDate && "drop-shadow-sm"
+                    "h-14 sm:h-16 border-b sticky top-0 z-10 p-2 sm:p-3 text-center text-xs sm:text-sm backdrop-blur-sm transition-all duration-200",
+                    isTodayDate 
+                      ? "bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground shadow-lg ring-2 ring-primary/20" 
+                      : "bg-gradient-to-br from-muted/60 to-muted/30 hover:from-muted/80 hover:to-muted/50"
                   )}>
-                    {format(day, 'd')}
+                    <div className="font-semibold uppercase tracking-wide text-[10px] sm:text-xs">
+                      {format(day, 'EEE', { locale: ptBR })}
+                    </div>
+                    <div className={cn(
+                      "text-lg sm:text-xl font-bold mt-0.5 sm:mt-1",
+                      isTodayDate && "drop-shadow-md"
+                    )}>
+                      {format(day, 'd')}
+                    </div>
+                  </div>
+                  
+                  {/* Time slots com altura otimizada */}
+                  <div className="relative">
+                    {TIME_SLOTS.map(time => (
+                      <div 
+                        key={time} 
+                        className="h-12 sm:h-16 border-b border-border/20 cursor-pointer hover:bg-primary/5 transition-colors group/slot relative"
+                        onClick={() => onTimeSlotClick(day, time)}
+                      >
+                        <span className="absolute inset-0 flex items-center justify-center text-[10px] text-muted-foreground/30 opacity-0 group-hover/slot:opacity-100 transition-opacity pointer-events-none">
+                          +
+                        </span>
+                      </div>
+                    ))}
+                    
+                    {/* Appointments overlay - Cards melhorados */}
+                    {dayAppointments.map(apt => {
+                      const startTime = parseInt(apt.time?.split(':')[0] || '9');
+                      const top = startTime * 48; // 48px para mobile, 64px para desktop
+                      
+                      return (
+                        <div
+                          key={apt.id}
+                          className={cn(
+                            "absolute left-0.5 right-0.5 sm:left-1 sm:right-1 p-1.5 sm:p-2.5 rounded-xl text-white text-[10px] sm:text-xs cursor-pointer shadow-lg border-l-[3px] sm:border-l-4 backdrop-blur-sm",
+                            getStatusColor(apt.status),
+                            "hover:shadow-2xl hover:scale-105 hover:z-20 transition-all duration-300 group/card"
+                          )}
+                          style={{ 
+                            top: `${top}px`, 
+                            height: '44px',
+                            minHeight: '44px'
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onAppointmentClick(apt);
+                          }}
+                        >
+                          <div className="font-bold truncate drop-shadow-sm leading-tight">
+                            {apt.patientName}
+                          </div>
+                          <div className="opacity-95 truncate text-[9px] sm:text-xs mt-0.5 flex items-center gap-1 font-medium">
+                            <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                            <span>{apt.time}</span>
+                          </div>
+                          
+                          {/* Pulse indicator on hover */}
+                          <div className="absolute top-1 right-1 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                            <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse shadow-lg" />
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-                
-                {/* Time slots */}
-                <div className="relative">
-                  {TIME_SLOTS.map(time => (
-                    <div 
-                      key={time} 
-                      className="h-16 border-b border-gray-100 cursor-pointer hover:bg-blue-50 transition-colors"
-                      onClick={() => onTimeSlotClick(day, time)}
-                    ></div>
-                  ))}
-                  
-                  {/* Appointments overlay */}
-                  {dayAppointments.map(apt => {
-                    const startTime = parseInt(apt.time?.split(':')[0] || '9');
-                    const top = startTime * 64;
-                    
-                    return (
-                      <div
-                        key={apt.id}
-                        className={cn(
-                          "absolute left-1 right-1 p-2.5 rounded-xl text-white text-xs cursor-pointer shadow-lg border-l-4",
-                          getStatusColor(apt.status),
-                          "hover:shadow-2xl hover:scale-110 hover:-translate-y-1 transition-all duration-300 group"
-                        )}
-                        style={{ top: `${top}px`, height: '56px' }}
-                        onClick={() => onAppointmentClick(apt)}
-                      >
-                        <div className="font-bold truncate drop-shadow-sm">{apt.patientName}</div>
-                        <div className="opacity-95 truncate text-xs mt-0.5 flex items-center gap-1 font-medium">
-                          <Clock className="h-3 w-3" />
-                          {apt.time}
-                        </div>
-                        <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="w-2 h-2 bg-white rounded-full animate-pulse shadow-lg" />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     );
