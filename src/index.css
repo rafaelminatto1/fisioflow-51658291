@@ -81,6 +81,22 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 215 25% 20%;
     --sidebar-border: 215 25% 88%;
     --sidebar-ring: 188 85% 48%;
+
+    /* Appointment Status Colors */
+    --apt-confirmed: 142 71% 45%;
+    --apt-scheduled: 217 91% 60%;
+    --apt-pending: 38 92% 50%;
+    --apt-inprogress: 189 94% 43%;
+    --apt-waiting: 239 84% 67%;
+    --apt-late: 48 96% 53%;
+    --apt-completed: 271 81% 56%;
+    --apt-rescheduled: 25 95% 53%;
+    --apt-cancelled: 0 84% 60%;
+    --apt-noshow: 350 89% 60%;
+
+    /* Appointment Shadows */
+    --shadow-apt: 0 4px 12px -2px;
+    --shadow-apt-hover: 0 8px 20px -4px;
   }
 
   .dark {
