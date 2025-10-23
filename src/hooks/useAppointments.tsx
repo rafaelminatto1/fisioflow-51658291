@@ -5,6 +5,7 @@ import { AppointmentBase, AppointmentFormData, AppointmentStatus, AppointmentTyp
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
 import { logger } from '@/lib/errors/logger';
 import { useEffect } from 'react';
+import { AppointmentNotificationService } from '@/lib/services/AppointmentNotificationService';
 
 // Fetch all appointments
 async function fetchAppointments(): Promise<AppointmentBase[]> {
@@ -176,6 +177,16 @@ export function useCreateAppointment() {
       };
 
       logger.info('Agendamento criado com sucesso', { appointmentId: appointment.id }, 'useAppointments');
+      
+      // Enviar notificação (não bloquear se falhar)
+      AppointmentNotificationService.scheduleNotification(
+        appointment.id,
+        appointment.patientId,
+        appointment.date,
+        appointment.time,
+        appointment.patientName
+      );
+      
       return appointment;
     },
     onSuccess: () => {
@@ -279,6 +290,18 @@ export function useUpdateAppointment() {
       };
 
       logger.info('Agendamento atualizado com sucesso', { appointmentId: transformedAppointment.id }, 'useAppointments');
+      
+      // Se data/hora mudou, notificar reagendamento
+      if (updates.date || updates.time) {
+        AppointmentNotificationService.notifyReschedule(
+          transformedAppointment.id,
+          transformedAppointment.patientId,
+          transformedAppointment.date,
+          transformedAppointment.time,
+          transformedAppointment.patientName
+        );
+      }
+      
       return transformedAppointment;
     },
     onSuccess: () => {
@@ -315,12 +338,28 @@ export function useDeleteAppointment() {
 
   return useMutation({
     mutationFn: async (appointmentId: string) => {
+      // Buscar dados do agendamento antes de deletar (para notificação)
+      const currentAppointments = queryClient.getQueryData<AppointmentBase[]>(['appointments']) || [];
+      const appointment = currentAppointments.find(apt => apt.id === appointmentId);
+
       const { error } = await supabase
         .from('appointments')
         .delete()
         .eq('id', appointmentId);
 
       if (error) throw error;
+      
+      // Notificar cancelamento se encontrou os dados
+      if (appointment) {
+        AppointmentNotificationService.notifyCancellation(
+          appointment.id,
+          appointment.patientId,
+          appointment.date,
+          appointment.time,
+          appointment.patientName
+        );
+      }
+      
       return appointmentId;
     },
     onSuccess: () => {
