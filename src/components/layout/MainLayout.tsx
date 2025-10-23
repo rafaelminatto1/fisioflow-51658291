@@ -2,6 +2,7 @@ import React from 'react';
 import { Sidebar } from './Sidebar';
 import { MobileHeader } from './MobileHeader';
 import { BottomNavigation } from './BottomNavigation';
+import { OnlineUsersIndicator } from './OnlineUsersIndicator';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { GlobalSearch } from '@/components/eventos/GlobalSearch';
@@ -53,6 +54,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           
           <div className="flex items-center gap-4">
             <GlobalSearch />
+            
+            {/* Indicador de usuários online */}
+            <OnlineUsersIndicator />
             
             <Button variant="ghost" size="icon" className="hover:bg-accent/80 transition-colors">
               <Bell className="w-5 h-5" />
