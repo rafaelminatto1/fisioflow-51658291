@@ -63,8 +63,12 @@ const appointmentTypes: AppointmentType[] = [
 const appointmentStatuses = [
   'agendado',
   'confirmado',
+  'aguardando_confirmacao',
   'em_andamento',
+  'em_espera',
+  'atrasado',
   'concluido',
+  'remarcado',
   'cancelado',
   'falta'
 ] as const;
@@ -72,10 +76,27 @@ const appointmentStatuses = [
 const statusLabels: Record<string, string> = {
   'agendado': 'Agendado',
   'confirmado': 'Confirmado',
+  'aguardando_confirmacao': 'Aguardando Confirmação',
   'em_andamento': 'Em Andamento',
+  'em_espera': 'Em Espera',
+  'atrasado': 'Atrasado',
   'concluido': 'Concluído',
+  'remarcado': 'Remarcado',
   'cancelado': 'Cancelado',
-  'falta': 'Faltou'
+  'falta': 'Não Compareceu'
+};
+
+const statusColors: Record<string, string> = {
+  'agendado': 'bg-gradient-to-r from-blue-500 to-blue-600',
+  'confirmado': 'bg-gradient-to-r from-emerald-500 to-emerald-600',
+  'aguardando_confirmacao': 'bg-gradient-to-r from-amber-500 to-amber-600',
+  'em_andamento': 'bg-gradient-to-r from-cyan-500 to-cyan-600',
+  'em_espera': 'bg-gradient-to-r from-indigo-500 to-indigo-600',
+  'atrasado': 'bg-gradient-to-r from-yellow-500 to-yellow-600',
+  'concluido': 'bg-gradient-to-r from-purple-500 to-purple-600',
+  'remarcado': 'bg-gradient-to-r from-orange-500 to-orange-600',
+  'cancelado': 'bg-gradient-to-r from-red-500 to-red-600',
+  'falta': 'bg-gradient-to-r from-rose-500 to-rose-600'
 };
 
 export const AppointmentModal: React.FC<AppointmentModalProps> = ({
@@ -188,14 +209,8 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
   };
 
   const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'confirmado': return 'default';
-      case 'concluido': return 'secondary';
-      case 'cancelado': 
-      case 'falta': return 'destructive';
-      case 'em_andamento': return 'default';
-      default: return 'outline';
-    }
+    const colorClass = statusColors[status] || 'bg-gradient-to-r from-gray-500 to-gray-600';
+    return colorClass;
   };
 
   return (
@@ -412,7 +427,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
               <Label htmlFor="status">Status *</Label>
               {mode === 'view' ? (
                 <div className="flex items-center gap-2 h-10 px-3 py-2 border border-input bg-background rounded-md">
-                  <Badge variant={getStatusBadgeVariant(watch('status'))}>
+                  <Badge className={cn("text-white shadow-lg", getStatusBadgeVariant(watch('status')))}>
                     {statusLabels[watch('status')] || watch('status')}
                   </Badge>
                 </div>
@@ -427,7 +442,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                   <SelectContent>
                     {appointmentStatuses.map((status) => (
                       <SelectItem key={status} value={status}>
-                        <Badge variant={getStatusBadgeVariant(status)}>
+                        <Badge className={cn("text-white shadow-md", getStatusBadgeVariant(status))}>
                           {statusLabels[status]}
                         </Badge>
                       </SelectItem>

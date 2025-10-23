@@ -74,11 +74,38 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'confirmed': return 'bg-green-500';
-      case 'scheduled': return 'bg-blue-500';
-      case 'completed': return 'bg-purple-500';
-      case 'cancelled': return 'bg-red-500';
-      default: return 'bg-gray-500';
+      case 'confirmado':
+      case 'confirmed': 
+        return 'bg-gradient-to-br from-emerald-500 to-emerald-600 border-emerald-400 shadow-emerald-500/30';
+      case 'agendado':
+      case 'scheduled': 
+        return 'bg-gradient-to-br from-blue-500 to-blue-600 border-blue-400 shadow-blue-500/30';
+      case 'concluido':
+      case 'completed': 
+        return 'bg-gradient-to-br from-purple-500 to-purple-600 border-purple-400 shadow-purple-500/30';
+      case 'cancelado':
+      case 'cancelled': 
+        return 'bg-gradient-to-br from-red-500 to-red-600 border-red-400 shadow-red-500/30';
+      case 'aguardando_confirmacao':
+      case 'awaiting': 
+        return 'bg-gradient-to-br from-amber-500 to-amber-600 border-amber-400 shadow-amber-500/30';
+      case 'em_andamento':
+      case 'in_progress': 
+        return 'bg-gradient-to-br from-cyan-500 to-cyan-600 border-cyan-400 shadow-cyan-500/30';
+      case 'remarcado':
+      case 'rescheduled': 
+        return 'bg-gradient-to-br from-orange-500 to-orange-600 border-orange-400 shadow-orange-500/30';
+      case 'nao_compareceu':
+      case 'no_show': 
+        return 'bg-gradient-to-br from-rose-500 to-rose-600 border-rose-400 shadow-rose-500/30';
+      case 'em_espera':
+      case 'waiting': 
+        return 'bg-gradient-to-br from-indigo-500 to-indigo-600 border-indigo-400 shadow-indigo-500/30';
+      case 'atrasado':
+      case 'late': 
+        return 'bg-gradient-to-br from-yellow-500 to-yellow-600 border-yellow-400 shadow-yellow-500/30';
+      default: 
+        return 'bg-gradient-to-br from-gray-500 to-gray-600 border-gray-400 shadow-gray-500/30';
     }
   };
 
@@ -131,16 +158,16 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 <div
                   key={apt.id}
                   className={cn(
-                    "absolute left-1 right-1 p-2 rounded-lg cursor-pointer shadow-md border-l-4",
+                    "absolute left-1 right-1 p-2.5 rounded-xl cursor-pointer border-l-4 shadow-lg",
                     getStatusColor(apt.status), 
-                    "text-white text-xs hover:shadow-lg transition-all duration-200 hover-scale"
+                    "text-white text-xs hover:shadow-2xl transition-all duration-300 hover:scale-105 hover:-translate-y-0.5"
                   )}
                   style={{ top: `${top}px`, height: '56px' }}
                   onClick={() => onAppointmentClick(apt)}
                 >
-                  <div className="font-semibold truncate text-sm">{apt.patientName}</div>
-                  <div className="opacity-90 truncate text-xs mt-0.5">{apt.type}</div>
-                  <div className="opacity-80 text-xs mt-1 flex items-center gap-1">
+                  <div className="font-bold truncate text-sm drop-shadow-sm">{apt.patientName}</div>
+                  <div className="opacity-95 truncate text-xs mt-0.5 font-medium">{apt.type}</div>
+                  <div className="opacity-90 text-xs mt-1 flex items-center gap-1 font-medium">
                     <Clock className="h-3 w-3" />
                     {apt.time}
                   </div>
@@ -211,20 +238,20 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       <div
                         key={apt.id}
                         className={cn(
-                          "absolute left-1 right-1 p-2 rounded-lg text-white text-xs cursor-pointer shadow-lg border-l-4 backdrop-blur-sm",
+                          "absolute left-1 right-1 p-2.5 rounded-xl text-white text-xs cursor-pointer shadow-lg border-l-4",
                           getStatusColor(apt.status),
-                          "hover:shadow-xl hover:scale-105 transition-all duration-200 group"
+                          "hover:shadow-2xl hover:scale-110 hover:-translate-y-1 transition-all duration-300 group"
                         )}
                         style={{ top: `${top}px`, height: '56px' }}
                         onClick={() => onAppointmentClick(apt)}
                       >
-                        <div className="font-semibold truncate">{apt.patientName}</div>
-                        <div className="opacity-90 truncate text-xs mt-0.5 flex items-center gap-1">
+                        <div className="font-bold truncate drop-shadow-sm">{apt.patientName}</div>
+                        <div className="opacity-95 truncate text-xs mt-0.5 flex items-center gap-1 font-medium">
                           <Clock className="h-3 w-3" />
                           {apt.time}
                         </div>
-                        <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                        <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="w-2 h-2 bg-white rounded-full animate-pulse shadow-lg" />
                         </div>
                       </div>
                     );
@@ -296,17 +323,17 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         <div
                           key={apt.id}
                           className={cn(
-                            "text-xs p-1.5 rounded-md text-white cursor-pointer truncate shadow-sm border-l-2 transition-all duration-200",
+                            "text-xs p-2 rounded-lg text-white cursor-pointer truncate shadow-md border-l-3 transition-all duration-300",
                             getStatusColor(apt.status),
-                            "hover:shadow-md hover:scale-105"
+                            "hover:shadow-xl hover:scale-110 hover:-translate-x-0.5"
                           )}
                           onClick={(e) => {
                             e.stopPropagation();
                             onAppointmentClick(apt);
                           }}
                         >
-                          <div className="font-medium truncate">{apt.time}</div>
-                          <div className="truncate opacity-90 text-xs">{apt.patientName}</div>
+                          <div className="font-bold truncate drop-shadow-sm">{apt.time}</div>
+                          <div className="truncate opacity-95 text-xs font-medium">{apt.patientName}</div>
                         </div>
                       ))}
                       {dayAppointments.length > 3 && (
