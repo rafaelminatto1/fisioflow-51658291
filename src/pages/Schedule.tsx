@@ -6,12 +6,14 @@ import { Separator } from '@/components/ui/separator';
 import { AppointmentFilters } from '@/components/schedule/AppointmentFilters';
 import { CalendarView, CalendarViewType } from '@/components/schedule/CalendarView';
 import { AppointmentModal } from '@/components/schedule/AppointmentModal';
-import { useAppointments } from '@/hooks/useAppointments';
+import { useAppointments, useCreateAppointment } from '@/hooks/useAppointments';
 import { logger } from '@/lib/errors/logger';
 import { AlertTriangle, Calendar, Clock, Users, TrendingUp, Plus } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { EmptyState, LoadingSkeleton } from '@/components/ui';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 // Define FilterType interface
 interface FilterType {
@@ -38,6 +40,7 @@ const Schedule = () => {
   });
 
   const { data: appointments = [], isLoading: loading, error } = useAppointments();
+  const createAppointmentMutation = useCreateAppointment();
 
   useEffect(() => {
     logger.info('Página Schedule carregada', { 
@@ -140,6 +143,64 @@ const Schedule = () => {
     });
   };
 
+  const createTestAppointments = async () => {
+    try {
+      const today = new Date();
+      const statuses = ['agendado', 'confirmado', 'aguardando_confirmacao', 'em_andamento', 'em_espera', 'atrasado', 'concluido', 'remarcado', 'cancelado', 'falta'] as const;
+      const types = ['Fisioterapia', 'Consulta Inicial', 'Reavaliação', 'Pilates Clínico', 'RPG', 'Terapia Manual', 'Dry Needling'] as const;
+      
+      // Buscar pacientes disponíveis
+      const { data: patients, error: patientsError } = await supabase
+        .from('patients')
+        .select('id, name')
+        .limit(5);
+
+      if (patientsError || !patients || patients.length === 0) {
+        toast({ 
+          title: '❌ Erro', 
+          description: 'Nenhum paciente encontrado. Cadastre pacientes primeiro.', 
+          variant: 'destructive' 
+        });
+        return;
+      }
+
+      toast({ title: 'Criando agendamentos...', description: 'Por favor, aguarde.' });
+
+      // Criar 10 agendamentos diferentes
+      for (let i = 0; i < 10; i++) {
+        const dayOffset = Math.floor(i / 2);
+        const appointmentDate = new Date(today);
+        appointmentDate.setDate(today.getDate() + dayOffset);
+        
+        const hour = 9 + (i % 5);
+        const time = `${hour.toString().padStart(2, '0')}:00`;
+        
+        await createAppointmentMutation.mutateAsync({
+          patientId: patients[i % patients.length].id,
+          date: appointmentDate,
+          time: time,
+          duration: 60,
+          type: types[i % types.length] as any,
+          status: statuses[i % statuses.length] as any,
+          notes: `Agendamento de teste - ${statuses[i % statuses.length]}`,
+          priority: 'Normal'
+        });
+      }
+      
+      toast({ 
+        title: '✅ Sucesso', 
+        description: '10 agendamentos de teste criados com diferentes status!' 
+      });
+    } catch (error) {
+      console.error('Erro ao criar agendamentos de teste:', error);
+      toast({ 
+        title: '❌ Erro', 
+        description: 'Não foi possível criar os agendamentos de teste.', 
+        variant: 'destructive' 
+      });
+    }
+  };
+
   if (error) {
     logger.error('Erro na página Schedule', { error }, 'Schedule');
     return (
@@ -172,14 +233,24 @@ const Schedule = () => {
                 </p>
               </div>
             </div>
-            <Button 
-              onClick={handleCreateAppointment}
-              size="lg"
-              className="w-full sm:w-auto shadow-medical hover:shadow-hover transition-all duration-300 hover-lift"
-            >
-              <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-              Novo Agendamento
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={createTestAppointments}
+                variant="outline"
+                size="lg"
+                className="w-full sm:w-auto"
+              >
+                Criar Dados de Teste
+              </Button>
+              <Button 
+                onClick={handleCreateAppointment}
+                size="lg"
+                className="w-full sm:w-auto shadow-medical hover:shadow-hover transition-all duration-300 hover-lift"
+              >
+                <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                Novo Agendamento
+              </Button>
+            </div>
           </div>
         </div>
 
