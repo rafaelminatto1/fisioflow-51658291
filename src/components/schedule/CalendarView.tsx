@@ -161,9 +161,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       <div className="flex h-full">
         {/* Time column */}
         <div className="w-20 border-r border-gray-200">
-          <div className="h-12 border-b border-gray-200"></div>
+          <div className="h-16 border-b border-gray-200"></div>
           {TIME_SLOTS.map(time => (
-            <div key={time} className="h-16 border-b border-gray-100 p-2 text-xs text-gray-500">
+            <div key={time} className="h-16 border-b border-gray-100 p-2 text-xs text-gray-500 flex items-start pt-1">
               {time}
             </div>
           ))}
