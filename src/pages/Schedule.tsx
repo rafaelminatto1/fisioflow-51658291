@@ -7,6 +7,7 @@ import { AppointmentFilters } from '@/components/schedule/AppointmentFilters';
 import { CalendarView, CalendarViewType } from '@/components/schedule/CalendarView';
 import { AppointmentModal } from '@/components/schedule/AppointmentModal';
 import { AppointmentListView } from '@/components/schedule/AppointmentListView';
+import { MiniCalendar } from '@/components/schedule/MiniCalendar';
 import { useAppointments, useCreateAppointment } from '@/hooks/useAppointments';
 import { logger } from '@/lib/errors/logger';
 import { AlertTriangle, Calendar, Clock, Users, TrendingUp, Plus } from 'lucide-react';
@@ -41,8 +42,19 @@ const Schedule = () => {
     service: ''
   });
 
-  const { data: appointments = [], isLoading: loading, error } = useAppointments();
+  const { data: appointments = [], isLoading: loading, error, refetch } = useAppointments();
   const createAppointmentMutation = useCreateAppointment();
+  
+  // Datas com agendamentos para o mini calendário
+  const appointmentDates = React.useMemo(() => {
+    return appointments.map(apt => 
+      typeof apt.date === 'string' ? new Date(apt.date) : apt.date
+    );
+  }, [appointments]);
+
+  const handleRefresh = async () => {
+    await refetch();
+  };
 
   useEffect(() => {
     logger.info('Página Schedule carregada', { 
@@ -404,6 +416,17 @@ const Schedule = () => {
           </div>
         </div>
 
+        {/* Mini Calendar - Apenas no modo lista */}
+        {viewType === 'list' && (
+          <div className="lg:hidden animate-slide-up" style={{animationDelay: '0.2s'}}>
+            <MiniCalendar
+              selectedDate={currentDate}
+              onDateSelect={setCurrentDate}
+              appointmentDates={appointmentDates}
+            />
+          </div>
+        )}
+
         {/* Calendar/List View - Container melhorado e responsivo */}
         <div className="h-[500px] sm:h-[600px] lg:h-[650px] animate-slide-up overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xl" style={{animationDelay: '0.2s'}}>
           {viewType === 'list' ? (
@@ -411,6 +434,7 @@ const Schedule = () => {
               appointments={filteredAppointments}
               selectedDate={currentDate}
               onAppointmentClick={handleAppointmentClick}
+              onRefresh={handleRefresh}
             />
           ) : (
             <CalendarView

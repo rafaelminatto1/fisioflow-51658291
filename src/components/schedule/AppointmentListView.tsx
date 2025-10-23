@@ -1,22 +1,96 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import { format, isSameDay, isToday, isTomorrow, isYesterday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Calendar, TrendingUp } from 'lucide-react';
-import { AppointmentCard } from './AppointmentCard';
+import { Calendar, TrendingUp, RefreshCw } from 'lucide-react';
+import { SwipeableAppointmentCard } from './SwipeableAppointmentCard';
 import { EmptyState } from '@/components/ui';
+import { useToast } from '@/hooks/use-toast';
 import type { Appointment } from '@/types/appointment';
 
 interface AppointmentListViewProps {
   appointments: Appointment[];
   selectedDate: Date;
   onAppointmentClick: (appointment: Appointment) => void;
+  onRefresh?: () => Promise<void>;
 }
 
 export const AppointmentListView: React.FC<AppointmentListViewProps> = ({
   appointments,
   selectedDate,
-  onAppointmentClick
+  onAppointmentClick,
+  onRefresh
 }) => {
+  const { toast } = useToast();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+  const startY = useRef(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Pull to refresh handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (containerRef.current?.scrollTop === 0) {
+      startY.current = e.touches[0].clientY;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (containerRef.current?.scrollTop === 0 && startY.current > 0) {
+      const currentY = e.touches[0].clientY;
+      const distance = Math.max(0, Math.min(currentY - startY.current, 120));
+      setPullDistance(distance);
+    }
+  };
+
+  const handleTouchEnd = async () => {
+    if (pullDistance > 80 && onRefresh) {
+      setIsRefreshing(true);
+      try {
+        await onRefresh();
+        toast({
+          title: "Atualizado!",
+          description: "Lista de agendamentos atualizada",
+        });
+      } catch (error) {
+        toast({
+          title: "Erro ao atualizar",
+          description: "Tente novamente",
+          variant: "destructive"
+        });
+      } finally {
+        setIsRefreshing(false);
+      }
+    }
+    setPullDistance(0);
+    startY.current = 0;
+  };
+
+  // Swipe action handlers
+  const handleConfirm = (id: string) => {
+    toast({
+      title: "Agendamento confirmado",
+      description: "O paciente será notificado",
+    });
+  };
+
+  const handleCancel = (id: string) => {
+    toast({
+      title: "Agendamento cancelado",
+      description: "O paciente será notificado",
+      variant: "destructive"
+    });
+  };
+
+  const handleCall = (id: string) => {
+    toast({
+      title: "Iniciando ligação...",
+    });
+  };
+
+  const handleWhatsApp = (id: string) => {
+    toast({
+      title: "Abrindo WhatsApp...",
+    });
+  };
   // Filtra e agrupa agendamentos por horário
   const sortedAppointments = useMemo(() => {
     return appointments
@@ -88,7 +162,28 @@ export const AppointmentListView: React.FC<AppointmentListViewProps> = ({
   }
 
   return (
-    <div className="h-full overflow-auto">
+    <div 
+      ref={containerRef}
+      className="h-full overflow-auto"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Pull to refresh indicator */}
+      {pullDistance > 0 && (
+        <div 
+          className="flex items-center justify-center py-2 transition-all duration-200"
+          style={{ 
+            height: pullDistance,
+            opacity: pullDistance / 80
+          }}
+        >
+          <RefreshCw 
+            className={`h-6 w-6 text-primary ${pullDistance > 80 || isRefreshing ? 'animate-spin' : ''}`}
+          />
+        </div>
+      )}
+
       {/* Header com data e estatísticas */}
       <div className="sticky top-0 z-10 bg-gradient-to-b from-background to-background/95 backdrop-blur-sm border-b p-4 sm:p-6">
         <div className="flex items-start justify-between mb-4">
@@ -131,11 +226,14 @@ export const AppointmentListView: React.FC<AppointmentListViewProps> = ({
             </div>
             
             {groupedAppointments.morning.map(apt => (
-              <AppointmentCard
+              <SwipeableAppointmentCard
                 key={apt.id}
                 appointment={apt}
                 onClick={() => onAppointmentClick(apt)}
-                variant="compact"
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
+                onCall={handleCall}
+                onWhatsApp={handleWhatsApp}
               />
             ))}
           </div>
@@ -152,11 +250,14 @@ export const AppointmentListView: React.FC<AppointmentListViewProps> = ({
             </div>
             
             {groupedAppointments.afternoon.map(apt => (
-              <AppointmentCard
+              <SwipeableAppointmentCard
                 key={apt.id}
                 appointment={apt}
                 onClick={() => onAppointmentClick(apt)}
-                variant="compact"
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
+                onCall={handleCall}
+                onWhatsApp={handleWhatsApp}
               />
             ))}
           </div>
@@ -173,11 +274,14 @@ export const AppointmentListView: React.FC<AppointmentListViewProps> = ({
             </div>
             
             {groupedAppointments.evening.map(apt => (
-              <AppointmentCard
+              <SwipeableAppointmentCard
                 key={apt.id}
                 appointment={apt}
                 onClick={() => onAppointmentClick(apt)}
-                variant="compact"
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
+                onCall={handleCall}
+                onWhatsApp={handleWhatsApp}
               />
             ))}
           </div>
