@@ -273,16 +273,23 @@ const Schedule = () => {
           {loading ? (
             <>
               {[...Array(4)].map((_, i) => (
-                <Card key={i} className="border-0 shadow-card animate-pulse">
+                <Card key={i} className="border-0 shadow-card overflow-hidden">
                   <CardContent className="p-4 sm:p-6">
-                    <div className="h-16 sm:h-20 bg-muted rounded animate-pulse" />
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between">
+                        <div className="h-4 w-16 skeleton-shimmer rounded" />
+                        <div className="h-10 w-10 skeleton-shimmer rounded-lg" />
+                      </div>
+                      <div className="h-8 w-12 skeleton-shimmer rounded" />
+                      <div className="h-3 w-24 skeleton-shimmer rounded" />
+                    </div>
                   </CardContent>
                 </Card>
               ))}
             </>
           ) : (
             <>
-              <Card className="group border-0 shadow-card hover:shadow-hover transition-all duration-300 overflow-hidden relative animate-scale-in hover-lift">
+              <Card className="group border-0 shadow-card hover:shadow-hover transition-all duration-300 overflow-hidden relative animate-bounce-in hover-lift">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/[0.02]" />
                 <CardContent className="p-4 sm:p-6 relative">
                   <div className="flex flex-col gap-2 sm:gap-3">
@@ -300,7 +307,7 @@ const Schedule = () => {
                 </CardContent>
               </Card>
 
-              <Card className="group border-0 shadow-card hover:shadow-hover transition-all duration-300 overflow-hidden relative animate-scale-in hover-lift" style={{animationDelay: '0.1s'}}>
+              <Card className="group border-0 shadow-card hover:shadow-hover transition-all duration-300 overflow-hidden relative animate-bounce-in hover-lift" style={{animationDelay: '0.1s'}}>
                 <div className="absolute inset-0 bg-gradient-to-br from-success/5 to-success/[0.02]" />
                 <CardContent className="p-4 sm:p-6 relative">
                   <div className="flex flex-col gap-2 sm:gap-3">
@@ -318,7 +325,7 @@ const Schedule = () => {
                 </CardContent>
               </Card>
 
-              <Card className="group border-0 shadow-card hover:shadow-hover transition-all duration-300 overflow-hidden relative animate-scale-in hover-lift" style={{animationDelay: '0.2s'}}>
+              <Card className="group border-0 shadow-card hover:shadow-hover transition-all duration-300 overflow-hidden relative animate-bounce-in hover-lift" style={{animationDelay: '0.2s'}}>
                 <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 to-secondary/[0.02]" />
                 <CardContent className="p-4 sm:p-6 relative">
                   <div className="flex flex-col gap-2 sm:gap-3">
@@ -336,7 +343,7 @@ const Schedule = () => {
                 </CardContent>
               </Card>
 
-              <Card className="group border-0 shadow-card hover:shadow-hover transition-all duration-300 overflow-hidden relative animate-scale-in hover-lift" style={{animationDelay: '0.3s'}}>
+              <Card className="group border-0 shadow-card hover:shadow-hover transition-all duration-300 overflow-hidden relative animate-bounce-in hover-lift" style={{animationDelay: '0.3s'}}>
                 <div className="absolute inset-0 bg-gradient-to-br from-warning/5 to-warning/[0.02]" />
                 <CardContent className="p-4 sm:p-6 relative">
                   <div className="flex flex-col gap-2 sm:gap-3">

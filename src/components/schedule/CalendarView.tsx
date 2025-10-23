@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths, isSameMonth, isSameDay, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Calendar, Clock, User } from 'lucide-react';
@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { Appointment } from '@/types/appointment';
+import { AppointmentCard } from './AppointmentCard';
 
 export type CalendarViewType = 'day' | 'week' | 'month';
 
@@ -34,6 +35,25 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   onAppointmentClick,
   onTimeSlotClick
 }) => {
+  // Current time indicator
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const currentTimePosition = useMemo(() => {
+    const hours = currentTime.getHours();
+    const minutes = currentTime.getMinutes();
+    const totalMinutesFromStart = (hours * 60 + minutes) - (7 * 60); // Start from 7am
+    const totalDayMinutes = 17 * 60; // 7am to 12am = 17 hours
+    return (totalMinutesFromStart / totalDayMinutes) * 100;
+  }, [currentTime]);
+
   const navigateCalendar = (direction: 'prev' | 'next') => {
     switch (viewType) {
       case 'day':
@@ -137,18 +157,44 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           
           {/* Time slots */}
           <div className="relative">
-            {TIME_SLOTS.map(time => (
-              <div 
-                key={time} 
-                className="h-16 border-b border-border cursor-pointer hover:bg-primary/5 transition-colors group relative"
-                onClick={() => onTimeSlotClick(currentDate, time)}
-              >
-                <span className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                  Clique para agendar
-                </span>
-              </div>
-            ))}
+            {TIME_SLOTS.map(time => {
+              const hour = parseInt(time.split(':')[0]);
+              const isCurrentHour = hour === currentTime.getHours();
+              
+              return (
+                <div 
+                  key={time} 
+                  className={cn(
+                    "h-16 border-b border-border cursor-pointer hover:bg-primary/5 transition-colors group relative",
+                    isCurrentHour && "bg-primary/5"
+                  )}
+                  onClick={() => onTimeSlotClick(currentDate, time)}
+                >
+                  <span className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                    Clique para agendar
+                  </span>
+                </div>
+              );
+            })}
             
+            {/* Current time indicator */}
+            {isSameDay(currentDate, currentTime) && currentTimePosition >= 0 && currentTimePosition <= 100 && (
+              <div 
+                className="absolute left-0 right-0 z-20 pointer-events-none"
+                style={{ top: `${currentTimePosition}%` }}
+              >
+                <div className="flex items-center">
+                  <div className="w-24 flex items-center justify-center">
+                    <div className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md animate-pulse-glow">
+                      <Clock className="h-3 w-3 inline mr-1" />
+                      {format(currentTime, 'HH:mm')}
+                    </div>
+                  </div>
+                  <div className="flex-1 h-0.5 bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
+                </div>
+              </div>
+            )}
+
             {/* Appointments overlay */}
             {dayAppointments.map(apt => {
               const startTime = parseInt(apt.time?.split(':')[0] || '9');
@@ -157,20 +203,15 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               return (
                 <div
                   key={apt.id}
-                  className={cn(
-                    "absolute left-1 right-1 p-2.5 rounded-xl cursor-pointer border-l-4 shadow-lg",
-                    getStatusColor(apt.status), 
-                    "text-white text-xs hover:shadow-2xl transition-all duration-300 hover:scale-105 hover:-translate-y-0.5"
-                  )}
+                  className="absolute left-1 right-1 animate-bounce-in pointer-events-auto"
                   style={{ top: `${top}px`, height: '56px' }}
                   onClick={() => onAppointmentClick(apt)}
                 >
-                  <div className="font-bold truncate text-sm drop-shadow-sm">{apt.patientName}</div>
-                  <div className="opacity-95 truncate text-xs mt-0.5 font-medium">{apt.type}</div>
-                  <div className="opacity-90 text-xs mt-1 flex items-center gap-1 font-medium">
-                    <Clock className="h-3 w-3" />
-                    {apt.time}
-                  </div>
+                  <AppointmentCard
+                    appointment={apt}
+                    variant="compact"
+                    onClick={() => onAppointmentClick(apt)}
+                  />
                 </div>
               );
             })}

@@ -116,7 +116,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
       <div
         onClick={onClick}
         className={cn(
-          'relative overflow-hidden rounded-2xl cursor-pointer',
+          'relative overflow-hidden rounded-2xl cursor-pointer animate-slide-up-fade',
           'bg-gradient-to-br',
           statusConfig.gradient,
           'border-l-[6px]',
@@ -124,7 +124,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
           'shadow-lg',
           statusConfig.shadow,
           'hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1',
-          'transition-all duration-300',
+          'transition-all duration-300 hover-lift',
           'active:scale-95',
           'p-3',
           className
@@ -169,7 +169,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
     <div
       onClick={onClick}
       className={cn(
-        'relative overflow-hidden rounded-2xl cursor-pointer',
+        'relative overflow-hidden rounded-2xl cursor-pointer animate-slide-up-fade',
         'bg-gradient-to-br',
         statusConfig.gradient,
         'border-l-[6px]',
@@ -177,7 +177,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
         'shadow-lg',
         statusConfig.shadow,
         'hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1',
-        'transition-all duration-300',
+        'transition-all duration-300 hover-lift',
         'active:scale-95',
         'p-4',
         'group',
