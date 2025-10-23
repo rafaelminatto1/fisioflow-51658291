@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AppointmentBase, AppointmentFormData, AppointmentStatus, AppointmentType } from '@/types/appointment';
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
 import { logger } from '@/lib/errors/logger';
+import { useEffect } from 'react';
 
 // Fetch all appointments
 async function fetchAppointments(): Promise<AppointmentBase[]> {
@@ -51,8 +52,57 @@ async function fetchAppointments(): Promise<AppointmentBase[]> {
   return transformedAppointments;
 }
 
-// Main hook to fetch appointments
+// Main hook to fetch appointments with Realtime support
 export function useAppointments() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  // Setup Realtime subscription
+  useEffect(() => {
+    logger.info('Configurando Supabase Realtime para appointments', {}, 'useAppointments');
+    
+    const channel = supabase
+      .channel('appointments-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'appointments'
+        },
+        (payload) => {
+          logger.info('Realtime event recebido', { event: payload.eventType }, 'useAppointments');
+          
+          // Invalidate and refetch appointments when changes occur
+          queryClient.invalidateQueries({ queryKey: ['appointments'] });
+          
+          // Show toast notification for changes made by other users
+          if (payload.eventType === 'INSERT') {
+            toast({
+              title: '🔄 Novo agendamento',
+              description: 'Um novo agendamento foi criado por outro usuário',
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            toast({
+              title: '🔄 Agendamento atualizado',
+              description: 'Um agendamento foi atualizado por outro usuário',
+            });
+          } else if (payload.eventType === 'DELETE') {
+            toast({
+              title: '🔄 Agendamento removido',
+              description: 'Um agendamento foi removido por outro usuário',
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      logger.info('Removendo subscription Realtime', {}, 'useAppointments');
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient, toast]);
+
   return useQuery({
     queryKey: ['appointments'],
     queryFn: fetchAppointments,

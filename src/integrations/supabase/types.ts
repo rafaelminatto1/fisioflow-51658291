@@ -78,7 +78,7 @@ export type Database = {
         Row: {
           action: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           new_data: Json | null
           old_data: Json | null
           record_id: string | null
@@ -90,7 +90,7 @@ export type Database = {
         Insert: {
           action: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_data?: Json | null
           old_data?: Json | null
           record_id?: string | null
@@ -102,7 +102,7 @@ export type Database = {
         Update: {
           action?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_data?: Json | null
           old_data?: Json | null
           record_id?: string | null
@@ -567,7 +567,7 @@ export type Database = {
           created_at: string
           email: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           success: boolean
           user_agent: string | null
         }
@@ -575,7 +575,7 @@ export type Database = {
           created_at?: string
           email: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           success: boolean
           user_agent?: string | null
         }
@@ -583,7 +583,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           success?: boolean
           user_agent?: string | null
         }
@@ -1672,10 +1672,7 @@ export type Database = {
         }
         Returns: Json
       }
-      cleanup_old_rate_limits: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      cleanup_old_rate_limits: { Args: never; Returns: undefined }
       create_user_invitation: {
         Args: { _email: string; _role: Database["public"]["Enums"]["app_role"] }
         Returns: Json
@@ -1684,10 +1681,7 @@ export type Database = {
         Args: { _user_voucher_id: string }
         Returns: boolean
       }
-      encrypt_cpf: {
-        Args: { cpf_plain: string }
-        Returns: string
-      }
+      encrypt_cpf: { Args: { cpf_plain: string }; Returns: string }
       estagiario_pode_acessar_paciente: {
         Args: { _patient_id: string; _user_id: string }
         Returns: boolean
@@ -1703,18 +1697,9 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_admin: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
-      is_fisio_or_admin: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
-      is_voucher_operation_authorized: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_fisio_or_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_voucher_operation_authorized: { Args: never; Returns: boolean }
       log_audit_event: {
         Args: {
           _action: string
@@ -1760,14 +1745,8 @@ export type Database = {
         }
         Returns: boolean
       }
-      user_is_admin: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
-      user_is_fisio_or_admin: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      user_is_admin: { Args: { _user_id: string }; Returns: boolean }
+      user_is_fisio_or_admin: { Args: { _user_id: string }; Returns: boolean }
       validate_invitation: {
         Args: { _token: string; _user_id: string }
         Returns: boolean
