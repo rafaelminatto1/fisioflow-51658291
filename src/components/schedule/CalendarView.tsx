@@ -199,7 +199,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             {/* Appointments overlay */}
             {dayAppointments.map(apt => {
               const startTime = parseInt(apt.time?.split(':')[0] || '9');
-              const top = startTime * 64; // 64px per hour
+              const top = (startTime - 7) * 64; // 64px per hour, ajustado para início às 07:00
               
               return (
                 <div
@@ -286,7 +286,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     {/* Appointments overlay - Cards melhorados */}
                     {dayAppointments.map(apt => {
                       const startTime = parseInt(apt.time?.split(':')[0] || '9');
-                      const top = startTime * 48; // 48px para mobile, 64px para desktop
+                      const top = (startTime - 7) * 48; // 48px mobile/64px desktop, ajustado para início às 07:00
                       
                       return (
                         <div
