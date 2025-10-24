@@ -21,10 +21,11 @@ interface CalendarViewProps {
   onTimeSlotClick: (date: Date, time: string) => void;
 }
 
-const TIME_SLOTS = Array.from({ length: 24 }, (_, i) => {
-  const hour = i.toString().padStart(2, '0');
+// Horário de atendimento: Segunda a Sexta 07h-21h, Sábado 07h-13h
+const TIME_SLOTS = Array.from({ length: 15 }, (_, i) => {
+  const hour = (i + 7).toString().padStart(2, '0');
   return `${hour}:00`;
-});
+}); // 07:00 até 21:00
 
 export const CalendarView: React.FC<CalendarViewProps> = ({
   appointments,
@@ -226,10 +227,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
     
     return (
-      <div className="flex h-full overflow-hidden">
+      <div className="flex h-full overflow-y-auto">
         {/* Time column - Otimizado mobile */}
         <div className="w-14 sm:w-20 border-r bg-gradient-to-b from-muted/30 to-muted/10 flex-shrink-0">
-          <div className="h-14 sm:h-16 border-b flex items-center justify-center">
+          <div className="h-14 sm:h-16 border-b flex items-center justify-center sticky top-0 bg-muted/30 z-20">
             <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
           </div>
           {TIME_SLOTS.map(time => (
@@ -240,7 +241,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         </div>
         
         {/* Week days - Scroll horizontal mobile */}
-        <div className="flex-1 overflow-x-auto overflow-y-hidden">
+        <div className="flex-1 overflow-x-auto">
           <div className="inline-flex sm:grid sm:grid-cols-7 min-w-full bg-background/50">
             {weekDays.map(day => {
               const dayAppointments = getAppointmentsForDate(day);

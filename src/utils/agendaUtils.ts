@@ -67,10 +67,13 @@ export const getAppointmentsForWeek = (appointments: Appointment[], weekStart: D
 };
 
 // Time slot utilities
-export const generateTimeSlots = (): string[] => {
+// Segunda a Sexta: 07h-21h | Sábado: 07h-13h
+export const generateTimeSlots = (date?: Date): string[] => {
   const slots: string[] = [];
+  const isSaturday = date && date.getDay() === 6;
+  
   const startHour = 7;
-  const endHour = 19;
+  const endHour = isSaturday ? 13 : 21;
   const slotDuration = 30;
   
   for (let hour = startHour; hour < endHour; hour++) {
@@ -201,11 +204,13 @@ export const addMinutesToTime = (time: string, minutes: number): string => {
   return `${newHour.toString().padStart(2, '0')}:${newMin.toString().padStart(2, '0')}`;
 };
 
-export const isWithinBusinessHours = (startTime: string, endTime: string): boolean => {
+export const isWithinBusinessHours = (startTime: string, endTime: string, date?: Date): boolean => {
   const [startHour] = startTime.split(':').map(Number);
   const [endHour] = endTime.split(':').map(Number);
+  const isSaturday = date && date.getDay() === 6;
   
-  return startHour >= 7 && endHour <= 19;
+  const maxHour = isSaturday ? 13 : 21;
+  return startHour >= 7 && endHour <= maxHour;
 };
 
 // Display utilities

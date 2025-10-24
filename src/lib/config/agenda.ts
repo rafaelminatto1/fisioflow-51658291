@@ -84,18 +84,27 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
 };
 
 // Business hours configuration
+// Segunda a Sexta: 07h-21h | Sábado: 07h-13h
 export const BUSINESS_HOURS = {
-  start: "07:00",
-  end: "19:00",
+  weekdays: {
+    start: "07:00",
+    end: "21:00",
+  },
+  saturday: {
+    start: "07:00",
+    end: "13:00",
+  },
   slotDuration: 30, // minutes
-  daysOfWeek: [1, 2, 3, 4, 5, 6, 0] // Monday to Sunday (0 = Sunday)
+  daysOfWeek: [1, 2, 3, 4, 5, 6] // Monday to Saturday (6 = Saturday)
 };
 
 // Generate time slots for the agenda
-export const generateTimeSlots = (): string[] => {
+export const generateTimeSlots = (date?: Date): string[] => {
   const slots: string[] = [];
+  const isSaturday = date && date.getDay() === 6;
+  
   const startHour = 7;
-  const endHour = 19;
+  const endHour = isSaturday ? 13 : 21; // Sábado até 13h, outros dias até 21h
   const slotDuration = 30;
   
   for (let hour = startHour; hour < endHour; hour++) {
@@ -171,11 +180,13 @@ export const isValidTimeSlot = (time: string): boolean => {
   return TIME_SLOTS.includes(time);
 };
 
-export const isWithinBusinessHours = (startTime: string, endTime: string): boolean => {
+export const isWithinBusinessHours = (startTime: string, endTime: string, date?: Date): boolean => {
   const [startHour] = startTime.split(':').map(Number);
   const [endHour] = endTime.split(':').map(Number);
+  const isSaturday = date && date.getDay() === 6;
   
-  return startHour >= 7 && endHour <= 19;
+  const maxHour = isSaturday ? 13 : 21;
+  return startHour >= 7 && endHour <= maxHour;
 };
 
 export const calculateSessionDuration = (startTime: string, endTime: string): number => {
