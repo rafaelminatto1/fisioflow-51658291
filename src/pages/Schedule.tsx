@@ -8,6 +8,8 @@ import { CalendarView, CalendarViewType } from '@/components/schedule/CalendarVi
 import { AppointmentModal } from '@/components/schedule/AppointmentModal';
 import { AppointmentListView } from '@/components/schedule/AppointmentListView';
 import { MiniCalendar } from '@/components/schedule/MiniCalendar';
+import { AppointmentSearch } from '@/components/schedule/AppointmentSearch';
+import { AdvancedFilters } from '@/components/schedule/AdvancedFilters';
 import { useAppointments, useCreateAppointment } from '@/hooks/useAppointments';
 import { logger } from '@/lib/errors/logger';
 import { AlertTriangle, Calendar, Clock, Users, TrendingUp, Plus } from 'lucide-react';
@@ -40,6 +42,11 @@ const Schedule = () => {
     dateFrom: '',
     dateTo: '',
     service: ''
+  });
+  const [advancedFilters, setAdvancedFilters] = useState({
+    status: [] as string[],
+    types: [] as string[],
+    therapists: [] as string[],
   });
 
   const { data: appointments = [], isLoading: loading, error, refetch } = useAppointments();
@@ -84,6 +91,7 @@ const Schedule = () => {
   // Filter appointments based on current filters
   const filteredAppointments = useMemo(() => {
     return appointments.filter(appointment => {
+      // Basic filters
       if (filters.search && !appointment.patientName.toLowerCase().includes(filters.search.toLowerCase())) {
         return false;
       }
@@ -109,9 +117,18 @@ const Schedule = () => {
           return false;
         }
       }
+      
+      // Advanced filters
+      if (advancedFilters.status.length > 0 && !advancedFilters.status.includes(appointment.status)) {
+        return false;
+      }
+      if (advancedFilters.types.length > 0 && !advancedFilters.types.includes(appointment.type)) {
+        return false;
+      }
+      
       return true;
     });
-  }, [appointments, filters]);
+  }, [appointments, filters, advancedFilters]);
 
   const services = useMemo(() => {
     return Array.from(new Set(appointments.map(apt => apt.type))) as string[];
@@ -154,6 +171,11 @@ const Schedule = () => {
       dateFrom: '',
       dateTo: '',
       service: ''
+    });
+    setAdvancedFilters({
+      status: [],
+      types: [],
+      therapists: []
     });
   };
 
@@ -364,7 +386,23 @@ const Schedule = () => {
           )}
         </div>
 
-        {/* Filters */}
+        {/* Search and Advanced Filters */}
+        <div className="flex gap-3 animate-slide-up" style={{animationDelay: '0.1s'}}>
+          <div className="flex-1">
+            <AppointmentSearch
+              value={filters.search}
+              onChange={(value) => setFilters({ ...filters, search: value })}
+              onClear={() => setFilters({ ...filters, search: '' })}
+            />
+          </div>
+          <AdvancedFilters
+            filters={advancedFilters}
+            onChange={setAdvancedFilters}
+            onClear={() => setAdvancedFilters({ status: [], types: [], therapists: [] })}
+          />
+        </div>
+
+        {/* Basic Filters */}
         <AppointmentFilters
           filters={filters}
           onFiltersChange={handleFiltersChange}
