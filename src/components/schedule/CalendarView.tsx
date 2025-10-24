@@ -230,12 +230,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     return (
       <div className="flex">
         {/* Time column - Sticky e otimizado */}
-        <div className="w-16 sm:w-20 border-r bg-gradient-to-b from-muted/50 to-muted/20 flex-shrink-0 sticky left-0 z-10">
-          <div className="h-14 sm:h-16 border-b flex items-center justify-center sticky top-0 bg-muted/50 backdrop-blur-sm z-20 shadow-sm">
-            <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+        <div className="w-16 sm:w-20 border-r border-border/50 bg-gradient-to-b from-card via-muted/30 to-muted/50 flex-shrink-0 sticky left-0 z-10 shadow-sm">
+          <div className="h-14 sm:h-16 border-b border-border/50 flex items-center justify-center sticky top-0 bg-gradient-primary backdrop-blur-sm z-20 shadow-md">
+            <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-primary-foreground" />
           </div>
           {timeSlots.map(time => (
-            <div key={time} className="h-12 sm:h-16 border-b border-border/40 p-1 sm:p-2 text-[10px] sm:text-xs text-muted-foreground font-semibold flex items-center justify-center bg-muted/30">
+            <div key={time} className="h-12 sm:h-16 border-b border-border/30 p-1 sm:p-2 text-[10px] sm:text-xs text-foreground/70 font-bold flex items-center justify-center hover:bg-accent/50 transition-colors">
               {time}
             </div>
           ))}
@@ -254,17 +254,17 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                   className="w-[140px] sm:w-auto border-r border-border/50 last:border-r-0 relative group flex-shrink-0"
                 >
                   <div className={cn(
-                    "h-14 sm:h-16 border-b sticky top-0 z-10 p-2 sm:p-3 text-center text-xs sm:text-sm backdrop-blur-md transition-all duration-200 shadow-sm",
+                    "h-14 sm:h-16 border-b border-border/50 sticky top-0 z-10 p-2 sm:p-3 text-center text-xs sm:text-sm backdrop-blur-md transition-all duration-300 shadow-sm",
                     isTodayDate 
-                      ? "bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground shadow-lg ring-2 ring-primary/30" 
-                      : "bg-gradient-to-br from-muted/70 to-muted/40 hover:from-muted/90 hover:to-muted/60"
+                      ? "bg-gradient-to-br from-primary via-primary/95 to-primary/85 text-primary-foreground shadow-xl shadow-primary/30 ring-2 ring-primary/40" 
+                      : "bg-gradient-to-br from-muted/60 to-muted/40 hover:from-muted/80 hover:to-muted/60"
                   )}>
-                    <div className="font-bold uppercase tracking-wide text-[10px] sm:text-xs">
+                    <div className="font-extrabold uppercase tracking-wider text-[10px] sm:text-xs">
                       {format(day, 'EEE', { locale: ptBR })}
                     </div>
                     <div className={cn(
-                      "text-lg sm:text-2xl font-extrabold mt-0.5 sm:mt-1",
-                      isTodayDate && "drop-shadow-lg"
+                      "text-lg sm:text-2xl font-black mt-0.5 sm:mt-1",
+                      isTodayDate && "drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]"
                     )}>
                       {format(day, 'd')}
                     </div>
@@ -275,11 +275,13 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     {timeSlots.map(time => (
                       <div 
                         key={time} 
-                        className="h-12 sm:h-16 border-b border-border/30 cursor-pointer hover:bg-primary/10 active:bg-primary/15 transition-all duration-150 group/slot relative"
+                        className="h-12 sm:h-16 border-b border-border/20 cursor-pointer hover:bg-gradient-to-r hover:from-primary/15 hover:to-primary/5 active:bg-primary/20 transition-all duration-200 group/slot relative"
                         onClick={() => onTimeSlotClick(day, time)}
                       >
-                        <span className="absolute inset-0 flex items-center justify-center text-xs sm:text-sm font-semibold text-primary/40 opacity-0 group-hover/slot:opacity-100 transition-all duration-200 pointer-events-none">
-                          + Agendar
+                        <span className="absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs font-bold text-primary-foreground opacity-0 group-hover/slot:opacity-100 transition-all duration-200 scale-95 group-hover/slot:scale-100 pointer-events-none">
+                          <span className="bg-gradient-primary px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg shadow-lg">
+                            + Novo
+                          </span>
                         </span>
                       </div>
                     ))}
@@ -297,9 +299,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         <div
                           key={apt.id}
                           className={cn(
-                            "absolute left-0.5 right-0.5 sm:left-1 sm:right-1 p-1.5 sm:p-2.5 rounded-xl text-white text-[10px] sm:text-xs cursor-pointer shadow-lg border-l-[3px] sm:border-l-4 backdrop-blur-sm",
+                            "absolute left-0.5 right-0.5 sm:left-1 sm:right-1 p-1.5 sm:p-2.5 rounded-xl text-white text-[10px] sm:text-xs cursor-pointer shadow-xl border-l-[3px] sm:border-l-4 backdrop-blur-sm animate-fade-in",
                             getStatusColor(apt.status),
-                            "hover:shadow-2xl hover:scale-105 hover:z-20 transition-all duration-300 group/card"
+                            "hover:shadow-2xl hover:scale-[1.03] hover:z-20 hover:-translate-y-0.5 transition-all duration-300 group/card"
                           )}
                           style={{ 
                             top: `${top}px`, 
@@ -311,17 +313,17 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                             onAppointmentClick(apt);
                           }}
                         >
-                          <div className="font-bold truncate drop-shadow-sm leading-tight">
+                          <div className="font-extrabold truncate drop-shadow-md leading-tight">
                             {apt.patientName}
                           </div>
-                          <div className="opacity-95 truncate text-[9px] sm:text-xs mt-0.5 flex items-center gap-1 font-medium">
+                          <div className="opacity-95 truncate text-[9px] sm:text-xs mt-0.5 flex items-center gap-1 font-semibold">
                             <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                             <span>{apt.time}</span>
                           </div>
                           
                           {/* Pulse indicator on hover */}
-                          <div className="absolute top-1 right-1 opacity-0 group-hover/card:opacity-100 transition-opacity">
-                            <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse shadow-lg" />
+                          <div className="absolute top-1 right-1 opacity-0 group-hover/card:opacity-100 transition-all duration-300">
+                            <div className="w-2 h-2 bg-white rounded-full animate-pulse shadow-lg ring-2 ring-white/50" />
                           </div>
                         </div>
                       );
