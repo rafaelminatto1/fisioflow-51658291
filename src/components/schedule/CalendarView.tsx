@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { Appointment } from '@/types/appointment';
 import { AppointmentCard } from './AppointmentCard';
+import { generateTimeSlots } from '@/lib/config/agenda';
 
 export type CalendarViewType = 'day' | 'week' | 'month';
 
@@ -20,12 +21,6 @@ interface CalendarViewProps {
   onAppointmentClick: (appointment: Appointment) => void;
   onTimeSlotClick: (date: Date, time: string) => void;
 }
-
-// Horário de atendimento: Segunda a Sexta 07h-21h, Sábado 07h-13h
-const TIME_SLOTS = Array.from({ length: 15 }, (_, i) => {
-  const hour = (i + 7).toString().padStart(2, '0');
-  return `${hour}:00`;
-}); // 07:00 até 21:00
 
 export const CalendarView: React.FC<CalendarViewProps> = ({
   appointments,
@@ -132,6 +127,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
   const renderDayView = () => {
     const dayAppointments = getAppointmentsForDate(currentDate);
+    const timeSlots = generateTimeSlots(currentDate);
     
     return (
       <div className="flex h-full bg-gradient-to-br from-background to-muted/20">
@@ -140,7 +136,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           <div className="h-16 border-b flex items-center justify-center">
             <Clock className="h-4 w-4 text-muted-foreground" />
           </div>
-          {TIME_SLOTS.map(time => (
+          {timeSlots.map(time => (
             <div key={time} className="h-16 border-b border-border/50 p-3 text-sm font-medium text-muted-foreground flex items-center">
               {time}
             </div>
@@ -158,7 +154,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           
           {/* Time slots */}
           <div className="relative">
-            {TIME_SLOTS.map(time => {
+            {timeSlots.map(time => {
               const hour = parseInt(time.split(':')[0]);
               const isCurrentHour = hour === currentTime.getHours();
               
@@ -198,8 +194,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
             {/* Appointments overlay */}
             {dayAppointments.map(apt => {
-              const startTime = parseInt(apt.time?.split(':')[0] || '9');
-              const top = (startTime - 7) * 64; // 64px per hour, ajustado para início às 07:00
+              const [hours, minutes] = (apt.time || '09:00').split(':').map(Number);
+              const slotIndex = timeSlots.findIndex(slot => {
+                const [slotHour, slotMin] = slot.split(':').map(Number);
+                return slotHour === hours && slotMin === minutes;
+              });
+              const top = slotIndex >= 0 ? slotIndex * 64 : 0; // 64px por slot na view dia
               
               return (
                 <div
@@ -225,6 +225,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   const renderWeekView = () => {
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
     const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+    const timeSlots = generateTimeSlots(currentDate);
     
     return (
       <div className="flex h-full overflow-y-auto">
@@ -233,7 +234,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           <div className="h-14 sm:h-16 border-b flex items-center justify-center sticky top-0 bg-muted/30 z-20">
             <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
           </div>
-          {TIME_SLOTS.map(time => (
+          {timeSlots.map(time => (
             <div key={time} className="h-12 sm:h-16 border-b border-border/30 p-1 sm:p-2 text-[10px] sm:text-xs text-muted-foreground font-medium flex items-start pt-1">
               {time}
             </div>
@@ -271,7 +272,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                   
                   {/* Time slots com altura otimizada */}
                   <div className="relative">
-                    {TIME_SLOTS.map(time => (
+                    {timeSlots.map(time => (
                       <div 
                         key={time} 
                         className="h-12 sm:h-16 border-b border-border/20 cursor-pointer hover:bg-primary/5 transition-colors group/slot relative"
@@ -285,8 +286,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     
                     {/* Appointments overlay - Cards melhorados */}
                     {dayAppointments.map(apt => {
-                      const startTime = parseInt(apt.time?.split(':')[0] || '9');
-                      const top = (startTime - 7) * 48; // 48px mobile/64px desktop, ajustado para início às 07:00
+                      const [hours, minutes] = (apt.time || '09:00').split(':').map(Number);
+                      const slotIndex = timeSlots.findIndex(slot => {
+                        const [slotHour, slotMin] = slot.split(':').map(Number);
+                        return slotHour === hours && slotMin === minutes;
+                      });
+                      const top = slotIndex >= 0 ? slotIndex * 48 : 0; // 48px por slot
                       
                       return (
                         <div
