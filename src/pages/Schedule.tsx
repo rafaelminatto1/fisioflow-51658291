@@ -446,7 +446,7 @@ const Schedule = () => {
         )}
 
         {/* Calendar/List View - Container melhorado e responsivo */}
-        <div className="h-[500px] sm:h-[600px] lg:h-[650px] animate-slide-up overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xl" style={{animationDelay: '0.2s'}}>
+        <div className="animate-slide-up rounded-2xl border border-border/50 bg-card shadow-xl min-h-[600px]" style={{animationDelay: '0.2s'}}>
           {viewType === 'list' ? (
             <AppointmentListView
               appointments={filteredAppointments}
