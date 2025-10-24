@@ -228,22 +228,22 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     const timeSlots = generateTimeSlots(currentDate);
     
     return (
-      <div className="flex h-full overflow-y-auto">
-        {/* Time column - Otimizado mobile */}
-        <div className="w-14 sm:w-20 border-r bg-gradient-to-b from-muted/30 to-muted/10 flex-shrink-0">
-          <div className="h-14 sm:h-16 border-b flex items-center justify-center sticky top-0 bg-muted/30 z-20">
+      <div className="flex h-full">
+        {/* Time column - Sticky e otimizado */}
+        <div className="w-16 sm:w-20 border-r bg-gradient-to-b from-muted/50 to-muted/20 flex-shrink-0 sticky left-0 z-10">
+          <div className="h-14 sm:h-16 border-b flex items-center justify-center sticky top-0 bg-muted/50 backdrop-blur-sm z-20 shadow-sm">
             <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
           </div>
           {timeSlots.map(time => (
-            <div key={time} className="h-12 sm:h-16 border-b border-border/30 p-1 sm:p-2 text-[10px] sm:text-xs text-muted-foreground font-medium flex items-start pt-1">
+            <div key={time} className="h-12 sm:h-16 border-b border-border/40 p-1 sm:p-2 text-[10px] sm:text-xs text-muted-foreground font-semibold flex items-center justify-center bg-muted/30">
               {time}
             </div>
           ))}
         </div>
         
-        {/* Week days - Scroll horizontal mobile */}
-        <div className="flex-1 overflow-x-auto">
-          <div className="inline-flex sm:grid sm:grid-cols-7 min-w-full bg-background/50">
+        {/* Week days - Grid com scroll horizontal suave */}
+        <div className="flex-1 overflow-x-auto overflow-y-visible">
+          <div className="inline-flex sm:grid sm:grid-cols-7 min-w-full bg-background/30">
             {weekDays.map(day => {
               const dayAppointments = getAppointmentsForDate(day);
               const isTodayDate = isToday(day);
@@ -251,35 +251,35 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               return (
                 <div 
                   key={day.toISOString()} 
-                  className="w-[120px] sm:w-auto border-r border-border/50 last:border-r-0 relative group flex-shrink-0"
+                  className="w-[140px] sm:w-auto border-r border-border/50 last:border-r-0 relative group flex-shrink-0"
                 >
                   <div className={cn(
-                    "h-14 sm:h-16 border-b sticky top-0 z-10 p-2 sm:p-3 text-center text-xs sm:text-sm backdrop-blur-sm transition-all duration-200",
+                    "h-14 sm:h-16 border-b sticky top-0 z-10 p-2 sm:p-3 text-center text-xs sm:text-sm backdrop-blur-md transition-all duration-200 shadow-sm",
                     isTodayDate 
-                      ? "bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground shadow-lg ring-2 ring-primary/20" 
-                      : "bg-gradient-to-br from-muted/60 to-muted/30 hover:from-muted/80 hover:to-muted/50"
+                      ? "bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground shadow-lg ring-2 ring-primary/30" 
+                      : "bg-gradient-to-br from-muted/70 to-muted/40 hover:from-muted/90 hover:to-muted/60"
                   )}>
-                    <div className="font-semibold uppercase tracking-wide text-[10px] sm:text-xs">
+                    <div className="font-bold uppercase tracking-wide text-[10px] sm:text-xs">
                       {format(day, 'EEE', { locale: ptBR })}
                     </div>
                     <div className={cn(
-                      "text-lg sm:text-xl font-bold mt-0.5 sm:mt-1",
-                      isTodayDate && "drop-shadow-md"
+                      "text-lg sm:text-2xl font-extrabold mt-0.5 sm:mt-1",
+                      isTodayDate && "drop-shadow-lg"
                     )}>
                       {format(day, 'd')}
                     </div>
                   </div>
                   
-                  {/* Time slots com altura otimizada */}
+                  {/* Time slots interativos */}
                   <div className="relative">
                     {timeSlots.map(time => (
                       <div 
                         key={time} 
-                        className="h-12 sm:h-16 border-b border-border/20 cursor-pointer hover:bg-primary/5 transition-colors group/slot relative"
+                        className="h-12 sm:h-16 border-b border-border/30 cursor-pointer hover:bg-primary/10 active:bg-primary/15 transition-all duration-150 group/slot relative"
                         onClick={() => onTimeSlotClick(day, time)}
                       >
-                        <span className="absolute inset-0 flex items-center justify-center text-[10px] text-muted-foreground/30 opacity-0 group-hover/slot:opacity-100 transition-opacity pointer-events-none">
-                          +
+                        <span className="absolute inset-0 flex items-center justify-center text-xs sm:text-sm font-semibold text-primary/40 opacity-0 group-hover/slot:opacity-100 transition-all duration-200 pointer-events-none">
+                          + Agendar
                         </span>
                       </div>
                     ))}
@@ -489,8 +489,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           </h2>
         </div>
         
-        {/* Calendar content */}
-        <div className="flex-1 overflow-auto">
+        {/* Calendar content - Scroll otimizado */}
+        <div className="flex-1 overflow-auto scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent hover:scrollbar-thumb-primary/40">
           {viewType === 'day' && renderDayView()}
           {viewType === 'week' && renderWeekView()}
           {viewType === 'month' && renderMonthView()}
