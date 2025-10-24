@@ -11,3 +11,4 @@ export { MiniCalendar } from './MiniCalendar';
 export { SwipeableAppointmentCard } from './SwipeableAppointmentCard';
 export { AppointmentSearch } from './AppointmentSearch';
 export { AdvancedFilters } from './AdvancedFilters';
+export { ScheduleStatsCard } from './ScheduleStatsCard';

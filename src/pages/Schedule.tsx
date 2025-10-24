@@ -1,10 +1,10 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { AppointmentFilters } from '@/components/schedule/AppointmentFilters';
-import { CalendarView, CalendarViewType } from '@/components/schedule/CalendarView';
+import { CalendarViewType } from '@/components/schedule/CalendarView';
 import { AppointmentModal } from '@/components/schedule/AppointmentModal';
 import { AppointmentListView } from '@/components/schedule/AppointmentListView';
 import { MiniCalendar } from '@/components/schedule/MiniCalendar';
@@ -19,6 +19,10 @@ import { cn } from '@/lib/utils';
 import { EmptyState, LoadingSkeleton } from '@/components/ui';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { ScheduleStatsCard } from '@/components/schedule/ScheduleStatsCard';
+
+// Lazy load CalendarView for better initial load performance
+const CalendarView = lazy(() => import('@/components/schedule/CalendarView').then(mod => ({ default: mod.CalendarView })));
 
 // Define FilterType interface
 interface FilterType {
@@ -134,37 +138,38 @@ const Schedule = () => {
     return Array.from(new Set(appointments.map(apt => apt.type))) as string[];
   }, [appointments]);
 
-  const handleAppointmentClick = (appointment: Appointment) => {
+  // Memoize callbacks to prevent unnecessary re-renders
+  const handleAppointmentClick = useCallback((appointment: Appointment) => {
     setSelectedAppointment(appointment);
     setIsModalOpen(true);
-  };
+  }, []);
 
-  const handleCreateAppointment = () => {
+  const handleCreateAppointment = useCallback(() => {
     setSelectedAppointment(null);
     setModalDefaultDate(undefined);
     setModalDefaultTime(undefined);
     setIsModalOpen(true);
-  };
+  }, []);
 
-  const handleTimeSlotClick = (date: Date, time: string) => {
+  const handleTimeSlotClick = useCallback((date: Date, time: string) => {
     setSelectedAppointment(null);
     setModalDefaultDate(date);
     setModalDefaultTime(time);
     setIsModalOpen(true);
-  };
+  }, []);
 
-  const handleModalClose = () => {
+  const handleModalClose = useCallback(() => {
     setIsModalOpen(false);
     setSelectedAppointment(null);
     setModalDefaultDate(undefined);
     setModalDefaultTime(undefined);
-  };
+  }, []);
 
-  const handleFiltersChange = (newFilters: FilterType) => {
+  const handleFiltersChange = useCallback((newFilters: FilterType) => {
     setFilters(newFilters);
-  };
+  }, []);
 
-  const handleClearFilters = () => {
+  const handleClearFilters = useCallback(() => {
     setFilters({
       search: '',
       status: '',
@@ -177,7 +182,7 @@ const Schedule = () => {
       types: [],
       therapists: []
     });
-  };
+  }, []);
 
   const createTestAppointments = async () => {
     try {
@@ -311,77 +316,45 @@ const Schedule = () => {
             </>
           ) : (
             <>
-              <Card className="group border-0 shadow-card hover:shadow-hover transition-all duration-300 overflow-hidden relative animate-bounce-in hover-lift">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/[0.02]" />
-                <CardContent className="p-4 sm:p-6 relative">
-                  <div className="flex flex-col gap-2 sm:gap-3">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs sm:text-sm font-medium text-muted-foreground">Hoje</p>
-                      <div className="p-2 sm:p-2.5 bg-primary/10 rounded-lg group-hover:scale-110 transition-transform">
-                        <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-2xl sm:text-3xl font-bold">{stats.totalToday}</div>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">Total de agendamentos</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="group border-0 shadow-card hover:shadow-hover transition-all duration-300 overflow-hidden relative animate-bounce-in hover-lift" style={{animationDelay: '0.1s'}}>
-                <div className="absolute inset-0 bg-gradient-to-br from-success/5 to-success/[0.02]" />
-                <CardContent className="p-4 sm:p-6 relative">
-                  <div className="flex flex-col gap-2 sm:gap-3">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs sm:text-sm font-medium text-muted-foreground">Confirmados</p>
-                      <div className="p-2 sm:p-2.5 bg-success/10 rounded-lg group-hover:scale-110 transition-transform">
-                        <Users className="h-4 w-4 sm:h-5 sm:w-5 text-success" />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-2xl sm:text-3xl font-bold text-success">{stats.confirmedToday}</div>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">Pacientes confirmados</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="group border-0 shadow-card hover:shadow-hover transition-all duration-300 overflow-hidden relative animate-bounce-in hover-lift" style={{animationDelay: '0.2s'}}>
-                <div className="absolute inset-0 bg-gradient-to-br from-secondary/5 to-secondary/[0.02]" />
-                <CardContent className="p-4 sm:p-6 relative">
-                  <div className="flex flex-col gap-2 sm:gap-3">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs sm:text-sm font-medium text-muted-foreground">Concluídos</p>
-                      <div className="p-2 sm:p-2.5 bg-secondary/10 rounded-lg group-hover:scale-110 transition-transform">
-                        <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-secondary" />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-2xl sm:text-3xl font-bold text-secondary">{stats.completedToday}</div>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">Atendimentos finalizados</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="group border-0 shadow-card hover:shadow-hover transition-all duration-300 overflow-hidden relative animate-bounce-in hover-lift" style={{animationDelay: '0.3s'}}>
-                <div className="absolute inset-0 bg-gradient-to-br from-warning/5 to-warning/[0.02]" />
-                <CardContent className="p-4 sm:p-6 relative">
-                  <div className="flex flex-col gap-2 sm:gap-3">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs sm:text-sm font-medium text-muted-foreground">Pendentes</p>
-                      <div className="p-2 sm:p-2.5 bg-warning/10 rounded-lg group-hover:scale-110 transition-transform">
-                        <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-warning" />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-2xl sm:text-3xl font-bold text-warning">{stats.pendingToday}</div>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">Aguardando atendimento</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <ScheduleStatsCard
+                title="Hoje"
+                value={stats.totalToday}
+                description="Total de agendamentos"
+                icon={Calendar}
+                iconColor="bg-primary/10 text-primary"
+                bgGradient="bg-gradient-to-br from-primary/5 to-primary/[0.02]"
+                animationDelay="0s"
+              />
+              <ScheduleStatsCard
+                title="Confirmados"
+                value={stats.confirmedToday}
+                description="Pacientes confirmados"
+                icon={Users}
+                iconColor="bg-success/10 text-success"
+                bgGradient="bg-gradient-to-br from-success/5 to-success/[0.02]"
+                valueColor="text-success"
+                animationDelay="0.1s"
+              />
+              <ScheduleStatsCard
+                title="Concluídos"
+                value={stats.completedToday}
+                description="Atendimentos finalizados"
+                icon={TrendingUp}
+                iconColor="bg-secondary/10 text-secondary"
+                bgGradient="bg-gradient-to-br from-secondary/5 to-secondary/[0.02]"
+                valueColor="text-secondary"
+                animationDelay="0.2s"
+              />
+              <ScheduleStatsCard
+                title="Pendentes"
+                value={stats.pendingToday}
+                description="Aguardando atendimento"
+                icon={Clock}
+                iconColor="bg-warning/10 text-warning"
+                bgGradient="bg-gradient-to-br from-warning/5 to-warning/[0.02]"
+                valueColor="text-warning"
+                animationDelay="0.3s"
+              />
             </>
           )}
         </div>
@@ -482,27 +455,38 @@ const Schedule = () => {
               onRefresh={handleRefresh}
             />
           ) : (
-            <CalendarView
-              appointments={filteredAppointments}
-              currentDate={currentDate}
-              onDateChange={setCurrentDate}
-              viewType={viewType as CalendarViewType}
-              onViewTypeChange={(type) => setViewType(type)}
-              onAppointmentClick={handleAppointmentClick}
-              onTimeSlotClick={handleTimeSlotClick}
-            />
+            <Suspense fallback={
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center space-y-3">
+                  <div className="h-12 w-12 mx-auto skeleton-shimmer rounded-xl" />
+                  <p className="text-sm text-muted-foreground">Carregando calendário...</p>
+                </div>
+              </div>
+            }>
+              <CalendarView
+                appointments={filteredAppointments}
+                currentDate={currentDate}
+                onDateChange={setCurrentDate}
+                viewType={viewType as CalendarViewType}
+                onViewTypeChange={(type) => setViewType(type)}
+                onAppointmentClick={handleAppointmentClick}
+                onTimeSlotClick={handleTimeSlotClick}
+              />
+            </Suspense>
           )}
         </div>
 
-{/* Appointment Modal */}
-        <AppointmentModal
-          isOpen={isModalOpen}
-          onClose={handleModalClose}
-          appointment={selectedAppointment}
-          defaultDate={modalDefaultDate}
-          defaultTime={modalDefaultTime}
-          mode={selectedAppointment ? 'view' : 'create'}
-        />
+        {/* Appointment Modal */}
+        {isModalOpen && (
+          <AppointmentModal
+            isOpen={isModalOpen}
+            onClose={handleModalClose}
+            appointment={selectedAppointment}
+            defaultDate={modalDefaultDate}
+            defaultTime={modalDefaultTime}
+            mode={selectedAppointment ? 'view' : 'create'}
+          />
+        )}
       </div>
     </MainLayout>
   );

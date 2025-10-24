@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useRef } from 'react';
+import React, { useMemo, useState, useRef, useCallback } from 'react';
 import { format, isSameDay, isToday, isTomorrow, isYesterday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar, TrendingUp, RefreshCw } from 'lucide-react';
@@ -64,33 +64,33 @@ export const AppointmentListView: React.FC<AppointmentListViewProps> = ({
     startY.current = 0;
   };
 
-  // Swipe action handlers
-  const handleConfirm = (id: string) => {
+  // Swipe action handlers - memoized to prevent re-renders
+  const handleConfirm = useCallback((id: string) => {
     toast({
       title: "Agendamento confirmado",
       description: "O paciente será notificado",
     });
-  };
+  }, [toast]);
 
-  const handleCancel = (id: string) => {
+  const handleCancel = useCallback((id: string) => {
     toast({
       title: "Agendamento cancelado",
       description: "O paciente será notificado",
       variant: "destructive"
     });
-  };
+  }, [toast]);
 
-  const handleCall = (id: string) => {
+  const handleCall = useCallback((id: string) => {
     toast({
       title: "Iniciando ligação...",
     });
-  };
+  }, [toast]);
 
-  const handleWhatsApp = (id: string) => {
+  const handleWhatsApp = useCallback((id: string) => {
     toast({
       title: "Abrindo WhatsApp...",
     });
-  };
+  }, [toast]);
   // Filtra e agrupa agendamentos por horário
   const sortedAppointments = useMemo(() => {
     return appointments
@@ -127,12 +127,12 @@ export const AppointmentListView: React.FC<AppointmentListViewProps> = ({
     return groups;
   }, [sortedAppointments]);
 
-  const getDateLabel = () => {
+  const getDateLabel = useMemo(() => {
     if (isToday(selectedDate)) return 'Hoje';
     if (isTomorrow(selectedDate)) return 'Amanhã';
     if (isYesterday(selectedDate)) return 'Ontem';
     return format(selectedDate, "EEEE, d 'de' MMMM", { locale: ptBR });
-  };
+  }, [selectedDate]);
 
   const stats = useMemo(() => {
     const total = sortedAppointments.length;
@@ -146,7 +146,7 @@ export const AppointmentListView: React.FC<AppointmentListViewProps> = ({
     return (
       <div className="p-4 sm:p-6">
         <div className="mb-6">
-          <h2 className="text-xl font-bold mb-1">{getDateLabel()}</h2>
+          <h2 className="text-xl font-bold mb-1">{getDateLabel}</h2>
           <p className="text-sm text-muted-foreground">
             {format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
           </p>
@@ -155,7 +155,7 @@ export const AppointmentListView: React.FC<AppointmentListViewProps> = ({
         <EmptyState
           icon={Calendar}
           title="Nenhum agendamento"
-          description={`Não há agendamentos para ${getDateLabel().toLowerCase()}`}
+          description={`Não há agendamentos para ${getDateLabel.toLowerCase()}`}
         />
       </div>
     );
@@ -188,7 +188,7 @@ export const AppointmentListView: React.FC<AppointmentListViewProps> = ({
       <div className="sticky top-0 z-10 bg-gradient-to-b from-background to-background/95 backdrop-blur-sm border-b p-4 sm:p-6">
         <div className="flex items-start justify-between mb-4">
           <div>
-            <h2 className="text-2xl font-bold mb-1">{getDateLabel()}</h2>
+            <h2 className="text-2xl font-bold mb-1">{getDateLabel}</h2>
             <p className="text-sm text-muted-foreground">
               {format(selectedDate, "d 'de' MMMM 'de' yyyy", { locale: ptBR })}
             </p>
