@@ -228,7 +228,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     const timeSlots = generateTimeSlots(currentDate);
     
     return (
-      <div className="flex h-full">
+      <div className="flex">
         {/* Time column - Sticky e otimizado */}
         <div className="w-16 sm:w-20 border-r bg-gradient-to-b from-muted/50 to-muted/20 flex-shrink-0 sticky left-0 z-10">
           <div className="h-14 sm:h-16 border-b flex items-center justify-center sticky top-0 bg-muted/50 backdrop-blur-sm z-20 shadow-sm">
@@ -242,7 +242,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         </div>
         
         {/* Week days - Grid com scroll horizontal suave */}
-        <div className="flex-1 overflow-x-auto overflow-y-visible">
+        <div className="flex-1 overflow-x-auto">
           <div className="inline-flex sm:grid sm:grid-cols-7 min-w-full bg-background/30">
             {weekDays.map(day => {
               const dayAppointments = getAppointmentsForDate(day);
@@ -490,7 +490,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         </div>
         
         {/* Calendar content - Scroll otimizado */}
-        <div className="flex-1 overflow-auto scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent hover:scrollbar-thumb-primary/40">
+        <div className={cn(
+          "flex-1",
+          viewType === 'week' ? "overflow-x-hidden" : "overflow-visible"
+        )}>
           {viewType === 'day' && renderDayView()}
           {viewType === 'week' && renderWeekView()}
           {viewType === 'month' && renderMonthView()}

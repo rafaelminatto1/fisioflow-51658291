@@ -95,7 +95,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         </header>
 
         {/* Main Content - Com padding para mobile header e bottom navigation */}
-        <main className="flex-1 p-4 md:p-6 pt-16 md:pt-6 pb-20 md:pb-6 overflow-auto bg-gradient-to-b from-transparent to-accent/5">
+        <main className="flex-1 p-4 md:p-6 pt-16 md:pt-6 pb-20 md:pb-6 overflow-visible bg-gradient-to-b from-transparent to-accent/5">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>
