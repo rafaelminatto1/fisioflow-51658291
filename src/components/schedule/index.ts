@@ -1,14 +1,21 @@
+// Core Components
 export { ScheduleGrid } from './ScheduleGrid';
 export { WeekNavigation } from './WeekNavigation';
 export { AppointmentModal } from './AppointmentModal';
 export { AppointmentFilters } from './AppointmentFilters';
 export { DailyAppointmentList } from './DailyAppointmentList';
+
+// View Components
 export { CalendarView } from './CalendarView';
-export { AppointmentCard } from './AppointmentCard';
-export { AppointmentAvatar } from './AppointmentAvatar';
 export { AppointmentListView } from './AppointmentListView';
-export { MiniCalendar } from './MiniCalendar';
+
+// Card Components
+export { AppointmentCard } from './AppointmentCard';
 export { SwipeableAppointmentCard } from './SwipeableAppointmentCard';
+export { ScheduleStatsCard } from './ScheduleStatsCard';
+
+// UI Components
+export { AppointmentAvatar } from './AppointmentAvatar';
+export { MiniCalendar } from './MiniCalendar';
 export { AppointmentSearch } from './AppointmentSearch';
 export { AdvancedFilters } from './AdvancedFilters';
-export { ScheduleStatsCard } from './ScheduleStatsCard';
