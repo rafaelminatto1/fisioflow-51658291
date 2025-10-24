@@ -105,16 +105,24 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
   appointment,
   defaultDate,
   defaultTime,
-  mode = 'create'
+  mode: initialMode = 'create'
 }) => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [conflictCheck, setConflictCheck] = useState<{ hasConflict: boolean; conflictingAppointment?: AppointmentBase } | null>(null);
   const [isQuickPatientModalOpen, setIsQuickPatientModalOpen] = useState(false);
   const [quickPatientSearchTerm, setQuickPatientSearchTerm] = useState('');
+  const [currentMode, setCurrentMode] = useState<'create' | 'edit' | 'view'>(initialMode);
   const createAppointmentMutation = useCreateAppointment();
   const updateAppointmentMutation = useUpdateAppointment();
   const { data: patients = [] } = useActivePatients();
   const { data: allAppointments = [] } = useAppointments();
+
+  // Reset mode quando o modal é reaberto
+  useEffect(() => {
+    if (isOpen) {
+      setCurrentMode(initialMode);
+    }
+  }, [isOpen, initialMode]);
 
   const form = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema),
@@ -173,7 +181,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
     }
 
     try {
-      if (mode === 'edit' && appointment) {
+      if (currentMode === 'edit' && appointment) {
         await updateAppointmentMutation.mutateAsync({ appointmentId: appointment.id, updates: data });
         toast({
           title: "✅ Agendamento atualizado",
@@ -189,6 +197,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
       
       // Limpar formulário e fechar modal
       form.reset();
+      setCurrentMode('create');
       onClose();
     } catch (error) {
       console.error('Error saving appointment:', error);
@@ -218,7 +227,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
       <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto p-0">
         <DialogHeader className="p-6 pb-4 border-b bg-gradient-to-r from-primary/5 to-primary/10">
           <DialogTitle className="flex items-center gap-3 text-xl">
-            {mode === 'create' && (
+            {currentMode === 'create' && (
               <>
                 <div className="p-2 bg-primary/10 rounded-lg">
                   <CalendarIcon className="w-5 h-5 text-primary" />
@@ -226,7 +235,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                 <span>Novo Agendamento</span>
               </>
             )}
-            {mode === 'edit' && (
+            {currentMode === 'edit' && (
               <>
                 <div className="p-2 bg-primary/10 rounded-lg">
                   <CalendarIcon className="w-5 h-5 text-primary" />
@@ -234,7 +243,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                 <span>Editar Agendamento</span>
               </>
             )}
-            {mode === 'view' && (
+            {currentMode === 'view' && (
               <>
                 <div className="p-2 bg-primary/10 rounded-lg">
                   <CalendarIcon className="w-5 h-5 text-primary" />
@@ -244,7 +253,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
             )}
           </DialogTitle>
           <DialogDescription id="appointment-dialog-desc" className="sr-only">
-            Preencha os campos para {mode === 'edit' ? 'editar' : 'criar'} um agendamento.
+            Preencha os campos para {currentMode === 'edit' ? 'editar' : 'criar'} um agendamento.
           </DialogDescription>
         </DialogHeader>
 
@@ -267,7 +276,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                 setQuickPatientSearchTerm(searchTerm);
                 setIsQuickPatientModalOpen(true);
               }}
-              disabled={mode === 'view'}
+              disabled={currentMode === 'view'}
             />
             {errors.patientId && (
               <p className="text-sm text-destructive flex items-center gap-1">
@@ -293,7 +302,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                       "w-full justify-start text-left font-normal bg-background hover:bg-muted/50",
                       !watchedDate && "text-muted-foreground"
                     )}
-                    disabled={mode === 'view'}
+                    disabled={currentMode === 'view'}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {watchedDate ? (
@@ -336,7 +345,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
               <Select
                 value={watchedTime}
                 onValueChange={(value) => setValue('time', value)}
-                disabled={mode === 'view'}
+                disabled={currentMode === 'view'}
               >
                 <SelectTrigger className="bg-background">
                   <SelectValue placeholder="Selecione um horário" />
@@ -391,7 +400,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                 max="240"
                 step="15"
                 {...register('duration', { valueAsNumber: true })}
-                disabled={mode === 'view'}
+                disabled={currentMode === 'view'}
               />
               {errors.duration && (
                 <p className="text-sm text-destructive">{errors.duration.message}</p>
@@ -404,7 +413,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
               <Select
                 value={watch('type')}
                 onValueChange={(value) => setValue('type', value as AppointmentType)}
-                disabled={mode === 'view'}
+                disabled={currentMode === 'view'}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Tipo de consulta" />
@@ -425,7 +434,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
             {/* Status */}
             <div className="space-y-2">
               <Label htmlFor="status">Status *</Label>
-              {mode === 'view' ? (
+              {currentMode === 'view' ? (
                 <div className="flex items-center gap-2 h-10 px-3 py-2 border border-input bg-background rounded-md">
                   <Badge className={cn("text-white shadow-lg", getStatusBadgeVariant(watch('status')))}>
                     {statusLabels[watch('status')] || watch('status')}
@@ -475,19 +484,20 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
               {...register('notes')}
               placeholder="Observações sobre o agendamento..."
               rows={3}
-              disabled={mode === 'view'}
+              disabled={currentMode === 'view'}
+              className="resize-none"
             />
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-between gap-3 pt-4">
+          <div className="flex justify-between gap-3 pt-4 border-t">
             <div>
-              {mode === 'edit' && appointment && (
+              {currentMode === 'edit' && appointment && (
                 <Button
                   type="button"
                   variant="destructive"
                   onClick={handleDelete}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 hover-lift"
                 >
                   <X className="w-4 h-4" />
                   Excluir
@@ -496,21 +506,33 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
             </div>
             
             <div className="flex gap-3">
-              {mode === 'view' && appointment && (
-                <Button
-                  type="button"
-                  variant="default"
-                  onClick={() => {
-                    onClose();
-                    setTimeout(() => {
-                      window.location.href = `/patient-evolution/${appointment.id}`;
-                    }, 100);
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <Check className="w-4 h-4" />
-                  Iniciar Atendimento
-                </Button>
+              {currentMode === 'view' && appointment && (
+                <>
+                  <Button
+                    type="button"
+                    variant="default"
+                    onClick={() => setCurrentMode('edit')}
+                    className="flex items-center gap-2 bg-gradient-primary hover-lift shadow-medical"
+                  >
+                    <CalendarIcon className="w-4 h-4" />
+                    Editar
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => {
+                      onClose();
+                      setTimeout(() => {
+                        window.location.href = `/patient-evolution/${appointment.id}`;
+                      }, 100);
+                    }}
+                    className="flex items-center gap-2 hover-lift"
+                  >
+                    <Check className="w-4 h-4" />
+                    Iniciar Atendimento
+                  </Button>
+                </>
               )}
               
               <Button
@@ -518,11 +540,12 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                 variant="outline"
                 onClick={onClose}
                 disabled={createAppointmentMutation.isPending || updateAppointmentMutation.isPending}
+                className="hover-scale"
               >
-                {mode === 'view' ? 'Fechar' : 'Cancelar'}
+                {currentMode === 'view' ? 'Fechar' : 'Cancelar'}
               </Button>
               
-              {mode !== 'view' && (
+              {currentMode !== 'view' && (
                 <Button
                   type="submit"
                   disabled={
@@ -530,7 +553,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                     updateAppointmentMutation.isPending || 
                     conflictCheck?.hasConflict
                   }
-                  className="flex items-center gap-2 relative min-w-[140px]"
+                  className="flex items-center gap-2 relative min-w-[140px] bg-gradient-primary hover-lift shadow-medical"
                 >
                    {(createAppointmentMutation.isPending || updateAppointmentMutation.isPending) ? (
                     <>
@@ -540,7 +563,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                   ) : (
                     <>
                       <Check className="w-4 h-4" />
-                      <span>{mode === 'edit' ? 'Atualizar' : 'Criar Agendamento'}</span>
+                      <span>{currentMode === 'edit' ? 'Atualizar' : 'Criar Agendamento'}</span>
                     </>
                   )}
                 </Button>
