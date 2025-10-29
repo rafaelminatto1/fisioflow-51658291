@@ -38,7 +38,32 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
     }
   });
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = form;
+  const { register, handleSubmit, formState: { errors, isSubmitting }, reset, setValue, watch } = form;
+  const phoneValue = watch('phone');
+
+  // Função para formatar telefone com máscara (XX) XXXXX-XXXX
+  const formatPhone = (value: string) => {
+    if (!value) return '';
+    
+    // Remove tudo que não é dígito
+    const numbers = value.replace(/\D/g, '');
+    
+    // Aplica a máscara
+    if (numbers.length <= 2) {
+      return `(${numbers}`;
+    } else if (numbers.length <= 7) {
+      return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+    } else if (numbers.length <= 11) {
+      return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+    } else {
+      return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+    }
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhone(e.target.value);
+    setValue('phone', formatted);
+  };
   
   const handleSave = async (data: z.infer<typeof quickPatientSchema>) => {
     try {
@@ -175,8 +200,10 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
             <Label htmlFor="phone">Telefone (Opcional)</Label>
             <Input
               id="phone"
-              {...register('phone')}
+              value={phoneValue || ''}
+              onChange={handlePhoneChange}
               placeholder="(11) 99999-9999"
+              maxLength={15}
             />
             {errors.phone && (
               <p className="text-sm text-destructive">{String(errors.phone.message)}</p>
