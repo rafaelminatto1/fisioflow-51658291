@@ -112,7 +112,7 @@ export const SwipeableAppointmentCard: React.FC<SwipeableAppointmentCardProps> =
       >
         <AppointmentCard
           appointment={appointment}
-          onClick={() => {}}
+          onClick={onClick}
           variant="compact"
         />
       </div>

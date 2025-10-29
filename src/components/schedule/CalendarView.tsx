@@ -117,6 +117,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       case 'em_espera':
       case 'waiting': 
         return 'bg-gradient-to-br from-indigo-500 to-indigo-600 border-indigo-400 shadow-indigo-500/30';
+      case 'falta':
+      case 'no_show_confirmed':
+        return 'bg-gradient-to-br from-rose-500 to-rose-600 border-rose-400 shadow-rose-500/30';
       case 'atrasado':
       case 'late': 
         return 'bg-gradient-to-br from-yellow-500 to-yellow-600 border-yellow-400 shadow-yellow-500/30';
@@ -313,10 +316,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                             onAppointmentClick(apt);
                           }}
                         >
-                          <div className="font-extrabold truncate drop-shadow-md leading-tight">
+                          <div className="font-extrabold drop-shadow-md leading-tight text-[11px] sm:text-xs">
                             {apt.patientName}
                           </div>
-                          <div className="opacity-95 truncate text-[9px] sm:text-xs mt-0.5 flex items-center gap-1 font-semibold">
+                          <div className="opacity-95 text-[9px] sm:text-xs mt-0.5 flex items-center gap-1 font-semibold">
                             <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                             <span>{apt.time}</span>
                           </div>
