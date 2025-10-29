@@ -138,10 +138,26 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
     }
   });
 
-  const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = form;
+  const { register, handleSubmit, watch, setValue, reset, formState: { errors, isSubmitting } } = form;
   const watchedDate = watch('date');
   const watchedTime = watch('time');
   const watchedDuration = watch('duration');
+
+  // Reset form quando defaultDate/defaultTime mudarem
+  useEffect(() => {
+    if (isOpen && !appointment) {
+      reset({
+        patientId: '',
+        date: defaultDate || new Date(),
+        time: defaultTime || '09:00',
+        duration: 60,
+        type: 'Fisioterapia',
+        status: 'agendado',
+        notes: '',
+        priority: 'Normal'
+      });
+    }
+  }, [isOpen, defaultDate, defaultTime, appointment, reset]);
 
   useEffect(() => {
     if (watchedDate && watchedTime && watchedDuration) {
