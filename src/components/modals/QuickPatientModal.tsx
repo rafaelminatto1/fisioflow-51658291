@@ -189,6 +189,12 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
               {...register('name')}
               placeholder="Digite o nome completo do paciente"
               autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleSubmit(handleSave)();
+                }
+              }}
             />
             {errors.name && (
               <p className="text-sm text-destructive">{String(errors.name.message)}</p>
@@ -204,6 +210,12 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
               onChange={handlePhoneChange}
               placeholder="(11) 99999-9999"
               maxLength={15}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleSubmit(handleSave)();
+                }
+              }}
             />
             {errors.phone && (
               <p className="text-sm text-destructive">{String(errors.phone.message)}</p>
