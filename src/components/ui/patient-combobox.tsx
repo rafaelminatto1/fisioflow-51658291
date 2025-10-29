@@ -96,6 +96,12 @@ export function PatientCombobox({
             placeholder="Buscar ou criar paciente..." 
             value={searchTerm}
             onValueChange={setSearchTerm}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && searchTerm && filteredPatients.length === 0) {
+                e.preventDefault();
+                handleCreateNew();
+              }
+            }}
           />
           <CommandList>
             {filteredPatients.length === 0 && searchTerm ? (
