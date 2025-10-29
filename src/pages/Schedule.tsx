@@ -477,16 +477,14 @@ const Schedule = () => {
         </div>
 
         {/* Appointment Modal */}
-        {isModalOpen && (
-          <AppointmentModal
-            isOpen={isModalOpen}
-            onClose={handleModalClose}
-            appointment={selectedAppointment}
-            defaultDate={modalDefaultDate}
-            defaultTime={modalDefaultTime}
-            mode={selectedAppointment ? 'view' : 'create'}
-          />
-        )}
+        <AppointmentModal
+          isOpen={isModalOpen}
+          onClose={handleModalClose}
+          appointment={selectedAppointment}
+          defaultDate={modalDefaultDate}
+          defaultTime={modalDefaultTime}
+          mode={selectedAppointment ? 'view' : 'create'}
+        />
       </div>
     </MainLayout>
   );
