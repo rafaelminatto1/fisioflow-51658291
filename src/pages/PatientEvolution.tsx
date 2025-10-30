@@ -41,6 +41,10 @@ import { PathologyStatus } from '@/components/evolution/PathologyStatus';
 import { MeasurementCharts } from '@/components/evolution/MeasurementCharts';
 import { PainMapManager } from '@/components/evolution/PainMapManager';
 import { ReportGeneratorDialog } from '@/components/reports/ReportGeneratorDialog';
+import { TreatmentAssistant } from '@/components/ai/TreatmentAssistant';
+import { PatientGamification } from '@/components/gamification/PatientGamification';
+import { WhatsAppIntegration } from '@/components/whatsapp/WhatsAppIntegration';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const PatientEvolution = () => {
   const { appointmentId } = useParams<{ appointmentId: string }>();
@@ -360,7 +364,18 @@ const PatientEvolution = () => {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Tabs Navigation */}
+        <Tabs defaultValue="soap" className="w-full">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+            <TabsTrigger value="soap">SOAP</TabsTrigger>
+            <TabsTrigger value="ai">🤖 IA</TabsTrigger>
+            <TabsTrigger value="gamification">🎮 Gamificação</TabsTrigger>
+            <TabsTrigger value="whatsapp">💬 WhatsApp</TabsTrigger>
+            <TabsTrigger value="measurements">📊 Medições</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="soap" className="mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Coluna Principal - Evolução SOAP */}
           <div className="lg:col-span-2 space-y-6">
             <Card className="shadow-lg">
@@ -534,7 +549,30 @@ const PatientEvolution = () => {
               </Card>
             )}
           </div>
-        </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="ai" className="mt-6">
+            <TreatmentAssistant patientId={patientId!} patientName={patient.name} />
+          </TabsContent>
+
+          <TabsContent value="gamification" className="mt-6">
+            <PatientGamification patientId={patientId!} />
+          </TabsContent>
+
+          <TabsContent value="whatsapp" className="mt-6">
+            <WhatsAppIntegration patientId={patientId!} patientPhone={patient.phone} />
+          </TabsContent>
+
+          <TabsContent value="measurements" className="mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <MeasurementForm patientId={patientId!} soapRecordId={currentSoapRecordId} />
+              {Object.keys(measurementsByType).length > 0 && (
+                <MeasurementCharts measurementsByType={measurementsByType} />
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </MainLayout>
   );
