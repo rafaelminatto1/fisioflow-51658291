@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useEmpresasParceiras } from '@/hooks/useEmpresasParceiras';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Users, Plus, Mail, Phone, MapPin, Building2, Edit, Trash2, Star } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { EmptyState } from '@/components/ui/empty-state';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Partner {
   id: string;
@@ -25,9 +27,24 @@ interface Partner {
 }
 
 const Partner = () => {
-  const [partners, setPartners] = useState<Partner[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [editingPartner, setEditingPartner] = useState<Partner | null>(null);
+  const [editingPartner, setEditingPartner] = useState<any | null>(null);
+
+  const { data: empresas = [], refetch } = useEmpresasParceiras();
+  
+  const partners = empresas.map(e => ({
+    id: e.id,
+    name: e.nome,
+    type: 'Empresa Parceira',
+    contact: e.contato || '',
+    email: e.email || '',
+    phone: e.telefone || '',
+    address: '',
+    description: e.observacoes || '',
+    rating: 0,
+    isActive: e.ativo
+  }));
+
   const [formData, setFormData] = useState({
     name: '',
     type: '',
@@ -38,74 +55,56 @@ const Partner = () => {
     description: ''
   });
 
-  useEffect(() => {
-    loadPartners();
-  }, []);
-
-  const loadPartners = () => {
-    // Mock data - em produção viria do Supabase
-    const mockPartners: Partner[] = [
-      {
-        id: '1',
-        name: 'Clínica Ortopédica São Paulo',
-        type: 'Clínica Médica',
-        contact: 'Dr. João Silva',
-        email: 'contato@ortopedicasp.com.br',
-        phone: '(11) 3456-7890',
-        address: 'Av. Paulista, 1000 - São Paulo, SP',
-        description: 'Especializada em ortopedia e traumatologia',
-        rating: 4.8,
-        isActive: true
-      },
-      {
-        id: '2',
-        name: 'Academia FitLife',
-        type: 'Academia',
-        contact: 'Maria Santos',
-        email: 'parceria@fitlife.com.br',
-        phone: '(11) 2345-6789',
-        address: 'Rua das Flores, 250 - São Paulo, SP',
-        description: 'Academia parceira para reabilitação funcional',
-        rating: 4.5,
-        isActive: true
-      }
-    ];
-    setPartners(mockPartners);
-  };
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = () => {
-    if (!formData.name || !formData.type || !formData.contact) {
+  const handleSubmit = async () => {
+    if (!formData.name || !formData.contact) {
       toast({
         title: 'Campos obrigatórios',
-        description: 'Preencha nome, tipo e contato.',
+        description: 'Preencha nome e contato.',
         variant: 'destructive'
       });
       return;
     }
 
-    if (editingPartner) {
-      setPartners(partners.map(p => 
-        p.id === editingPartner.id 
-          ? { ...p, ...formData }
-          : p
-      ));
-      toast({ title: 'Parceiro atualizado com sucesso' });
-    } else {
-      const newPartner: Partner = {
-        id: Date.now().toString(),
-        ...formData,
-        rating: 0,
-        isActive: true
+    try {
+      const empresaData = {
+        nome: formData.name,
+        contato: formData.contact,
+        email: formData.email || null,
+        telefone: formData.phone || null,
+        observacoes: formData.description || null,
+        ativo: true
       };
-      setPartners([...partners, newPartner]);
-      toast({ title: 'Parceiro adicionado com sucesso' });
-    }
 
-    resetForm();
+      if (editingPartner) {
+        const { error } = await supabase
+          .from('empresas_parceiras')
+          .update(empresaData)
+          .eq('id', editingPartner.id);
+        
+        if (error) throw error;
+        toast({ title: 'Parceiro atualizado com sucesso' });
+      } else {
+        const { error } = await supabase
+          .from('empresas_parceiras')
+          .insert(empresaData);
+        
+        if (error) throw error;
+        toast({ title: 'Parceiro adicionado com sucesso' });
+      }
+
+      refetch();
+      resetForm();
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao salvar',
+        description: error.message,
+        variant: 'destructive'
+      });
+    }
   };
 
   const handleEdit = (partner: Partner) => {
@@ -122,9 +121,23 @@ const Partner = () => {
     setIsAddDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    setPartners(partners.filter(p => p.id !== id));
-    toast({ title: 'Parceiro removido' });
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('empresas_parceiras')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      toast({ title: 'Parceiro removido' });
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao deletar',
+        description: error.message,
+        variant: 'destructive'
+      });
+    }
   };
 
   const resetForm = () => {

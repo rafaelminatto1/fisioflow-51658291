@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,12 +34,23 @@ const MedicalRecord = () => {
   const [activeTab, setActiveTab] = useState('anamnesis');
   const [isEditing, setIsEditing] = useState(false);
 
-  // Mock data
-  const patients = [
-    { id: '1', name: 'Maria Silva', condition: 'Dor lombar' },
-    { id: '2', name: 'João Santos', condition: 'Lesão no joelho' },
-    { id: '3', name: 'Ana Costa', condition: 'Tendinite' },
-  ];
+  // Load patients from Supabase
+  const { data: patients = [], isLoading: patientsLoading } = useQuery({
+    queryKey: ['patients'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('patients')
+        .select('id, name, observations')
+        .order('name');
+      
+      if (error) throw error;
+      return data.map(p => ({
+        id: p.id,
+        name: p.name,
+        condition: p.observations || 'Sem observações'
+      }));
+    }
+  });
 
   const recordTypes = [
     { value: 'anamnesis', label: 'Anamnese', icon: ClipboardList },
