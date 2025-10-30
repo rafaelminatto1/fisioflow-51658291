@@ -14,6 +14,79 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements_log: {
+        Row: {
+          achievement_id: string
+          achievement_title: string
+          id: string
+          patient_id: string
+          unlocked_at: string | null
+          xp_reward: number | null
+        }
+        Insert: {
+          achievement_id: string
+          achievement_title: string
+          id?: string
+          patient_id: string
+          unlocked_at?: string | null
+          xp_reward?: number | null
+        }
+        Update: {
+          achievement_id?: string
+          achievement_title?: string
+          id?: string
+          patient_id?: string
+          unlocked_at?: string | null
+          xp_reward?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "achievements_log_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_suggestions: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          patient_id: string
+          suggestion_text: string
+          updated_at: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          patient_id: string
+          suggestion_text: string
+          updated_at?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          patient_id?: string
+          suggestion_text?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_suggestions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           appointment_date: string
@@ -848,6 +921,53 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_gamification: {
+        Row: {
+          achievements: Json | null
+          created_at: string | null
+          current_streak: number | null
+          id: string
+          level: number | null
+          longest_streak: number | null
+          patient_id: string
+          total_points: number | null
+          updated_at: string | null
+          xp: number | null
+        }
+        Insert: {
+          achievements?: Json | null
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string
+          level?: number | null
+          longest_streak?: number | null
+          patient_id: string
+          total_points?: number | null
+          updated_at?: string | null
+          xp?: number | null
+        }
+        Update: {
+          achievements?: Json | null
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string
+          level?: number | null
+          longest_streak?: number | null
+          patient_id?: string
+          total_points?: number | null
+          updated_at?: string | null
+          xp?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_gamification_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: true
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_goals: {
         Row: {
           completed_at: string | null
@@ -1612,6 +1732,41 @@ export type Database = {
           validade_dias?: number
         }
         Relationships: []
+      }
+      xp_transactions: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          patient_id: string
+          reason: string
+          xp_amount: number
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          patient_id: string
+          reason: string
+          xp_amount: number
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          patient_id?: string
+          reason?: string
+          xp_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "xp_transactions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
