@@ -3,6 +3,15 @@ project_id = "ycvbtjfrchcyvmkvuocu"
 [functions.ai-chat]
 verify_jwt = false
 
+[functions.intelligent-reports]
+verify_jwt = true
+
+[functions.ai-exercise-prescription]
+verify_jwt = true
+
+[functions.ai-treatment-assistant]
+verify_jwt = true
+
 [functions.send-whatsapp]
 verify_jwt = true
 

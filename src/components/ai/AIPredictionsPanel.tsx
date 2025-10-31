@@ -1,357 +1,168 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Brain,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  Phone,
-  MessageSquare,
-  Mail,
-  TrendingUp,
-  Target,
-  Zap,
-  Calendar,
-  User
-} from 'lucide-react';
-import { useAIPredictions, AppointmentPrediction } from '@/hooks/useAIPredictions';
+import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
+import { Brain, TrendingUp, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
 
-interface PredictionCardProps {
-  prediction: AppointmentPrediction;
-  onActionTaken: (appointmentId: string) => void;
+interface AIPredictionsPanelProps {
+  patientId: string;
 }
 
-const PredictionCard: React.FC<PredictionCardProps> = ({ prediction, onActionTaken }) => {
-  const [isActioning, setIsActioning] = useState(false);
+export function AIPredictionsPanel({ patientId }: AIPredictionsPanelProps) {
+  const [loading, setLoading] = useState(false);
+  const [predictions, setPredictions] = useState<any>(null);
 
-  const getRiskColor = (riskLevel: string) => {
-    switch (riskLevel) {
-      case 'high': return 'text-red-600 bg-red-50 border-red-200';
-      case 'medium': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      case 'low': return 'text-green-600 bg-green-50 border-green-200';
-      default: return 'text-gray-600 bg-gray-50 border-gray-200';
+  const runPredictions = async () => {
+    try {
+      setLoading(true);
+      setPredictions(null);
+
+      const { data, error } = await supabase.functions.invoke('ai-treatment-assistant', {
+        body: { patientId, action: 'predict_adherence' }
+      });
+
+      if (error) throw error;
+
+      const suggestion = data.suggestion;
+      
+      const riskMatch = suggestion.match(/Risco.*?(Baixo|Médio|Alto)/i);
+      const risk = riskMatch ? riskMatch[1] : 'Médio';
+      
+      setPredictions({
+        adherenceRisk: risk,
+        riskScore: risk === 'Baixo' ? 20 : risk === 'Médio' ? 50 : 80,
+        factors: suggestion,
+      });
+      
+      toast({
+        title: '🔮 Predições geradas',
+        description: 'Análise preditiva concluída',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao gerar predições',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getRiskBadgeVariant = (riskLevel: string) => {
-    switch (riskLevel) {
-      case 'high': return 'destructive';
-      case 'medium': return 'secondary';
-      case 'low': return 'outline';
-      default: return 'outline';
-    }
+  const getRiskColor = (risk: string) => {
+    if (risk === 'Baixo') return 'text-green-600';
+    if (risk === 'Médio') return 'text-amber-600';
+    return 'text-red-600';
   };
 
-  const handleAction = async (action: string) => {
-    setIsActioning(true);
-    // Simula ação sendo executada
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    onActionTaken(prediction.appointmentId);
-    setIsActioning(false);
+  const getRiskBadge = (risk: string) => {
+    if (risk === 'Baixo') return 'default';
+    if (risk === 'Médio') return 'secondary';
+    return 'destructive';
   };
-
-  return (
-    <Card className={`border-l-4 ${getRiskColor(prediction.riskLevel)} hover:shadow-md transition-all duration-200`}>
-      <CardContent className="p-4">
-        <div className="space-y-3">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <User className="w-4 h-4" />
-              <span className="font-semibold">{prediction.patientName}</span>
-            </div>
-            <Badge variant={getRiskBadgeVariant(prediction.riskLevel)}>
-              {prediction.riskLevel === 'high' ? 'Alto Risco' :
-               prediction.riskLevel === 'medium' ? 'Médio Risco' : 'Baixo Risco'}
-            </Badge>
-          </div>
-
-          {/* Appointment Info */}
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <Calendar className="w-4 h-4" />
-              {prediction.appointmentDate.toLocaleDateString('pt-BR')}
-            </div>
-            <div className="flex items-center gap-1">
-              <Clock className="w-4 h-4" />
-              {prediction.appointmentTime}
-            </div>
-          </div>
-
-          {/* Probability */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Probabilidade de No-Show</span>
-              <span className="font-semibold">{Math.round(prediction.noShowProbability * 100)}%</span>
-            </div>
-            <Progress 
-              value={prediction.noShowProbability * 100} 
-              className="h-2"
-            />
-          </div>
-
-          {/* Risk Factors */}
-          {prediction.factors.length > 0 && (
-            <div className="space-y-1">
-              <span className="text-sm font-medium text-muted-foreground">Fatores de Risco:</span>
-              <ul className="text-xs space-y-1">
-                {prediction.factors.map((factor, index) => (
-                  <li key={index} className="flex items-center gap-1">
-                    <div className="w-1 h-1 bg-current rounded-full" />
-                    {factor}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Recommended Actions */}
-          {prediction.recommendedActions.length > 0 && (
-            <div className="space-y-2">
-              <span className="text-sm font-medium text-muted-foreground">Ações Recomendadas:</span>
-              <div className="flex flex-wrap gap-2">
-                {prediction.recommendedActions.map((action, index) => {
-                  const getActionIcon = (actionText: string) => {
-                    if (actionText.includes('Ligar') || actionText.includes('telefone')) return Phone;
-                    if (actionText.includes('WhatsApp') || actionText.includes('SMS')) return MessageSquare;
-                    if (actionText.includes('Email')) return Mail;
-                    return Zap;
-                  };
-
-                  const ActionIcon = getActionIcon(action);
-
-                  return (
-                    <Button
-                      key={index}
-                      size="sm"
-                      variant="outline"
-                      className="text-xs h-7"
-                      onClick={() => handleAction(action)}
-                      disabled={isActioning}
-                    >
-                      <ActionIcon className="w-3 h-3 mr-1" />
-                      {action}
-                    </Button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Confidence */}
-          <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t">
-            <span>Confiança do Modelo: {Math.round(prediction.confidence * 100)}%</span>
-            <span>ID: {prediction.appointmentId}</span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-export const AIPredictionsPanel: React.FC = () => {
-  const {
-    predictions,
-    insights,
-    isLoading,
-    accuracy,
-    getHighRiskPredictions,
-    getMediumRiskPredictions,
-    getLowRiskPredictions,
-    getTodayPredictions,
-    getAverageNoShowProbability,
-    markPredictionAsActioned
-  } = useAIPredictions();
-
-  const [activeTab, setActiveTab] = useState('today');
-
-  if (isLoading) {
-    return (
-      <Card className="bg-gradient-card border-border">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center space-y-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <p className="text-muted-foreground ml-3">Carregando predições de IA...</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const todayPredictions = getTodayPredictions();
-  const highRiskPredictions = getHighRiskPredictions();
-  const mediumRiskPredictions = getMediumRiskPredictions();
-  const lowRiskPredictions = getLowRiskPredictions();
-  const avgProbability = getAverageNoShowProbability();
 
   return (
     <div className="space-y-6">
-      {/* Header com Estatísticas */}
-      <Card className="bg-gradient-card border-border">
+      <Card className="border-2 border-purple-200 dark:border-purple-800">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Brain className="w-6 h-6 text-primary" />
-            Sistema de Predição IA - No-Show
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-muted/30 rounded-lg">
-              <div className="text-2xl font-bold text-primary">{Math.round(accuracy * 100)}%</div>
-              <div className="text-sm text-muted-foreground">Precisão do Modelo</div>
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl shadow-lg">
+              <Brain className="h-6 w-6 text-white" />
             </div>
-            <div className="text-center p-4 bg-muted/30 rounded-lg">
-              <div className="text-2xl font-bold text-red-600">{highRiskPredictions.length}</div>
-              <div className="text-sm text-muted-foreground">Alto Risco</div>
-            </div>
-            <div className="text-center p-4 bg-muted/30 rounded-lg">
-              <div className="text-2xl font-bold text-yellow-600">{mediumRiskPredictions.length}</div>
-              <div className="text-sm text-muted-foreground">Médio Risco</div>
-            </div>
-            <div className="text-center p-4 bg-muted/30 rounded-lg">
-              <div className="text-2xl font-bold text-primary">{Math.round(avgProbability * 100)}%</div>
-              <div className="text-sm text-muted-foreground">Prob. Média</div>
+            <div>
+              <CardTitle className="text-2xl">Predições de IA</CardTitle>
+              <CardDescription>
+                Análise preditiva para otimizar tratamento
+              </CardDescription>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Insights de IA */}
-      {insights.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {insights.map((insight) => {
-            const getInsightIcon = (type: string) => {
-              switch (type) {
-                case 'alert': return AlertTriangle;
-                case 'prediction': return Brain;
-                case 'optimization': return Target;
-                default: return TrendingUp;
-              }
-            };
-
-            const InsightIcon = getInsightIcon(insight.type);
-            const priorityColor = insight.priority === 'high' ? 'border-l-red-500' :
-                                insight.priority === 'medium' ? 'border-l-yellow-500' : 'border-l-blue-500';
-
-            return (
-              <Alert key={insight.id} className={`border-l-4 ${priorityColor}`}>
-                <InsightIcon className="h-4 w-4" />
-                <AlertDescription>
-                  <div className="space-y-1">
-                    <p className="font-semibold">{insight.title}</p>
-                    <p className="text-sm text-muted-foreground">{insight.description}</p>
-                    {insight.actionable && (
-                      <Button size="sm" variant="link" className="p-0 h-auto">
-                        Tomar Ação →
-                      </Button>
-                    )}
-                  </div>
-                </AlertDescription>
-              </Alert>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Tabs de Predições */}
-      <Card className="bg-gradient-card border-border">
-        <CardHeader>
-          <CardTitle>Predições Detalhadas</CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="today">Hoje ({todayPredictions.length})</TabsTrigger>
-              <TabsTrigger value="high">Alto Risco ({highRiskPredictions.length})</TabsTrigger>
-              <TabsTrigger value="medium">Médio Risco ({mediumRiskPredictions.length})</TabsTrigger>
-              <TabsTrigger value="low">Baixo Risco ({lowRiskPredictions.length})</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="today" className="space-y-4 mt-4">
-              {todayPredictions.length > 0 ? (
-                <div className="grid gap-4">
-                  {todayPredictions.map((prediction) => (
-                    <PredictionCard
-                      key={prediction.appointmentId}
-                      prediction={prediction}
-                      onActionTaken={markPredictionAsActioned}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <CheckCircle className="w-12 h-12 mx-auto mb-4 text-green-500" />
-                  <p>Nenhum agendamento para hoje</p>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="high" className="space-y-4 mt-4">
-              {highRiskPredictions.length > 0 ? (
-                <div className="grid gap-4">
-                  {highRiskPredictions.map((prediction) => (
-                    <PredictionCard
-                      key={prediction.appointmentId}
-                      prediction={prediction}
-                      onActionTaken={markPredictionAsActioned}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <CheckCircle className="w-12 h-12 mx-auto mb-4 text-green-500" />
-                  <p>Nenhum paciente de alto risco</p>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="medium" className="space-y-4 mt-4">
-              {mediumRiskPredictions.length > 0 ? (
-                <div className="grid gap-4">
-                  {mediumRiskPredictions.map((prediction) => (
-                    <PredictionCard
-                      key={prediction.appointmentId}
-                      prediction={prediction}
-                      onActionTaken={markPredictionAsActioned}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <CheckCircle className="w-12 h-12 mx-auto mb-4 text-green-500" />
-                  <p>Nenhum paciente de médio risco</p>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="low" className="space-y-4 mt-4">
-              {lowRiskPredictions.length > 0 ? (
-                <div className="grid gap-4">
-                  {lowRiskPredictions.map((prediction) => (
-                    <PredictionCard
-                      key={prediction.appointmentId}
-                      prediction={prediction}
-                      onActionTaken={markPredictionAsActioned}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <CheckCircle className="w-12 h-12 mx-auto mb-4 text-green-500" />
-                  <p>Nenhum paciente de baixo risco</p>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+          <Button 
+            onClick={runPredictions} 
+            disabled={loading}
+            className="w-full"
+            size="lg"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Analisando dados...
+              </>
+            ) : (
+              <>
+                <TrendingUp className="mr-2 h-4 w-4" />
+                Gerar Predições
+              </>
+            )}
+          </Button>
         </CardContent>
       </Card>
+
+      {predictions && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5" />
+                Risco de Abandono
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Nível de Risco:</span>
+                <Badge variant={getRiskBadge(predictions.adherenceRisk)}>
+                  {predictions.adherenceRisk}
+                </Badge>
+              </div>
+              <Progress value={predictions.riskScore} className="h-2" />
+              <p className={`text-2xl font-bold ${getRiskColor(predictions.adherenceRisk)}`}>
+                {predictions.riskScore}%
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5" />
+                Taxa de Sucesso Estimada
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Probabilidade:</span>
+                <Badge variant="default">
+                  {100 - predictions.riskScore}%
+                </Badge>
+              </div>
+              <Progress value={100 - predictions.riskScore} className="h-2" />
+              <p className="text-2xl font-bold text-green-600">
+                {100 - predictions.riskScore}%
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle>Análise Detalhada</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="prose prose-sm dark:prose-invert max-w-none">
+                {predictions.factors.split('\n').map((line: string, idx: number) => {
+                  if (line.trim()) {
+                    return <p key={idx} className="my-2">{line}</p>;
+                  }
+                  return <br key={idx} />;
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
-};
-
-export default AIPredictionsPanel;
+}

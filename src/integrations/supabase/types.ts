@@ -49,6 +49,41 @@ export type Database = {
           },
         ]
       }
+      ai_exercise_prescriptions: {
+        Row: {
+          created_at: string
+          id: string
+          patient_id: string
+          prescription_data: Json
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          patient_id: string
+          prescription_data: Json
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          patient_id?: string
+          prescription_data?: Json
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_exercise_prescriptions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_suggestions: {
         Row: {
           action_type: string
@@ -634,6 +669,50 @@ export type Database = {
           video_url?: string | null
         }
         Relationships: []
+      }
+      generated_reports: {
+        Row: {
+          content: string
+          created_at: string
+          date_range_end: string | null
+          date_range_start: string | null
+          generated_by: string | null
+          id: string
+          patient_id: string
+          report_type: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          date_range_end?: string | null
+          date_range_start?: string | null
+          generated_by?: string | null
+          id?: string
+          patient_id: string
+          report_type: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          date_range_end?: string | null
+          date_range_start?: string | null
+          generated_by?: string | null
+          id?: string
+          patient_id?: string
+          report_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_reports_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       login_attempts: {
         Row: {
