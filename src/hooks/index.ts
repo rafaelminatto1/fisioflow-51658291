@@ -84,6 +84,17 @@ export { useSidebarProvider, SidebarContext } from './useSidebar';
 export { useSidebar } from './useSidebar';
 export { useIsMobile } from './use-mobile';
 
+// Real hooks from separate files
+export { useAuth as useAuthReal } from './useAuth';
+export { useData as useDataReal } from './useData';
+export { useAppointments as useAppointmentsReal } from './useAppointments';
+export { usePatients } from './usePatients';
+export { useExercises } from './useExercises';
+export { useTransacoes, useCreateTransacao, useUpdateTransacao } from './useTransacoes';
+export { useEmpresasParceiras, useCreateEmpresaParceira, useUpdateEmpresaParceira, useDeleteEmpresaParceira } from './useEmpresasParceiras';
+export { useDashboardStats } from './useDashboardStats';
+export { useAppointmentActions } from './useAppointmentActions';
+
 // Add toasts array for useToast
 export const useToastHook = () => ({
   toast: ({ title, description, variant }: { title: string; description?: string; variant?: string }) => {

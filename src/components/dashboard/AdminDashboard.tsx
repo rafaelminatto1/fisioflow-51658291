@@ -1,30 +1,137 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Users, DollarSign, Activity, Clock, UserCheck, AlertCircle, TrendingUp } from 'lucide-react';
 import { EventosStatsWidget } from '@/components/eventos/EventosStatsWidget';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
 
 export const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
-  
-  // Mock data - em produção viria do backend
-  const stats = {
-    totalPacientes: 247,
-    agendamentosHoje: 12,
-    receitaMensal: 18500,
-    fisioterapeutasAtivos: 8,
-    agendamentosRestantes: 5,
-    pacientesNovos: 15
-  };
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalPacientes: 0,
+    agendamentosHoje: 0,
+    receitaMensal: 0,
+    fisioterapeutasAtivos: 0,
+    agendamentosRestantes: 0,
+    pacientesNovos: 0
+  });
+  const [agendamentosProximos, setAgendamentosProximos] = useState<any[]>([]);
 
-  const agendamentosProximos = [
-    { id: 1, paciente: 'Ana Silva', horario: '09:00', fisioterapeuta: 'Dr. João', status: 'confirmado' },
-    { id: 2, paciente: 'Carlos Oliveira', horario: '10:30', fisioterapeuta: 'Dra. Maria', status: 'pendente' },
-    { id: 3, paciente: 'Luciana Santos', horario: '14:00', fisioterapeuta: 'Dr. Pedro', status: 'confirmado' },
-    { id: 4, paciente: 'Roberto Lima', horario: '15:30', fisioterapeuta: 'Dra. Clara', status: 'confirmado' }
-  ];
+  const loadDashboardData = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      // Total de pacientes
+      const { count: totalPacientes } = await supabase
+        .from('patients')
+        .select('*', { count: 'exact', head: true });
+
+      // Pacientes novos este mês
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      const { count: pacientesNovos } = await supabase
+        .from('patients')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', startOfMonth.toISOString());
+
+      // Agendamentos hoje
+      const today = format(new Date(), 'yyyy-MM-dd');
+      const { data: appointmentsToday, count: agendamentosHoje } = await supabase
+        .from('appointments')
+        .select(`
+          *,
+          patients!inner(name)
+        `, { count: 'exact' })
+        .eq('appointment_date', today)
+        .order('appointment_time');
+
+      // Agendamentos concluídos hoje
+      const { count: completedToday } = await supabase
+        .from('appointments')
+        .select('*', { count: 'exact', head: true })
+        .eq('appointment_date', today)
+        .eq('status', 'concluido');
+
+      // Fisioterapeutas ativos
+      const { count: fisioterapeutasAtivos } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .or('role.eq.admin,role.eq.fisioterapeuta');
+
+      // Receita mensal (mock - implementar quando tiver tabela financeira)
+      const receitaMensal = 18500;
+
+      // Próximos agendamentos
+      const { data: nextAppointments } = await supabase
+        .from('appointments')
+        .select(`
+          id,
+          appointment_time,
+          appointment_date,
+          status,
+          type,
+          patients!inner(name),
+          therapist_id
+        `)
+        .gte('appointment_date', today)
+        .order('appointment_date')
+        .order('appointment_time')
+        .limit(4);
+
+      setStats({
+        totalPacientes: totalPacientes || 0,
+        agendamentosHoje: agendamentosHoje || 0,
+        receitaMensal,
+        fisioterapeutasAtivos: fisioterapeutasAtivos || 0,
+        agendamentosRestantes: (agendamentosHoje || 0) - (completedToday || 0),
+        pacientesNovos: pacientesNovos || 0
+      });
+
+      setAgendamentosProximos(nextAppointments?.map(apt => ({
+        id: apt.id,
+        paciente: apt.patients?.name || 'Paciente',
+        horario: apt.appointment_time,
+        fisioterapeuta: 'Fisioterapeuta',
+        status: apt.status
+      })) || []);
+
+    } catch (error) {
+      console.error('Erro ao carregar dados do dashboard:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os dados do dashboard.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadDashboardData();
+
+    // Realtime subscriptions
+    const appointmentsSubscription = supabase
+      .channel('admin-dashboard')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'appointments' },
+        () => loadDashboardData()
+      )
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'patients' },
+        () => loadDashboardData()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(appointmentsSubscription);
+    };
+  }, [loadDashboardData]);
 
   const statusBadgeVariant = (status: string) => {
     switch (status) {
@@ -53,7 +160,9 @@ export const AdminDashboard: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">{stats.totalPacientes}</div>
+            <div className="text-3xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+              {loading ? '...' : stats.totalPacientes}
+            </div>
             <p className="text-sm text-secondary font-medium mt-1">
               +{stats.pacientesNovos} novos este mês
             </p>
@@ -68,7 +177,9 @@ export const AdminDashboard: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-foreground">{stats.agendamentosHoje}</div>
+            <div className="text-3xl font-bold text-foreground">
+              {loading ? '...' : stats.agendamentosHoje}
+            </div>
             <p className="text-sm text-muted-foreground mt-1">
               {stats.agendamentosRestantes} restantes
             </p>
@@ -83,7 +194,9 @@ export const AdminDashboard: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">R$ {stats.receitaMensal.toLocaleString()}</div>
+            <div className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              R$ {loading ? '...' : stats.receitaMensal.toLocaleString()}
+            </div>
             <p className="text-sm text-secondary font-medium mt-1">
               +12% em relação ao mês anterior
             </p>
@@ -98,7 +211,9 @@ export const AdminDashboard: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-foreground">{stats.fisioterapeutasAtivos}</div>
+            <div className="text-3xl font-bold text-foreground">
+              {loading ? '...' : stats.fisioterapeutasAtivos}
+            </div>
             <p className="text-sm text-muted-foreground mt-1">
               Todos disponíveis hoje
             </p>
@@ -120,7 +235,25 @@ export const AdminDashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {agendamentosProximos.map((agendamento) => (
+              {loading ? (
+                [...Array(3)].map((_, i) => (
+                  <div key={i} className="animate-pulse flex items-center justify-between p-4 border border-border/50 rounded-xl">
+                    <div className="flex items-center space-x-4 flex-1">
+                      <div className="h-8 w-16 bg-muted rounded-lg"></div>
+                      <div className="flex-1">
+                        <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                        <div className="h-3 bg-muted rounded w-1/2"></div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : agendamentosProximos.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">
+                  <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Nenhum agendamento próximo</p>
+                </div>
+              ) : (
+                agendamentosProximos.map((agendamento) => (
                 <div key={agendamento.id} className="flex items-center justify-between p-4 border border-border/50 rounded-xl hover:bg-accent/50 transition-colors">
                   <div className="flex items-center space-x-4">
                     <div className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-lg">{agendamento.horario}</div>
@@ -136,10 +269,15 @@ export const AdminDashboard: React.FC = () => {
                     {agendamento.status}
                   </Badge>
                 </div>
-              ))}
+              ))
+              )}
             </div>
             <div className="mt-6">
-              <Button variant="outline" className="w-full hover:bg-accent/80 border-border/50">
+              <Button 
+                variant="outline" 
+                className="w-full hover:bg-accent/80 border-border/50"
+                onClick={() => navigate('/schedule')}
+              >
                 Ver Todos os Agendamentos
               </Button>
             </div>
@@ -195,7 +333,11 @@ export const AdminDashboard: React.FC = () => {
                 <p className="text-sm font-medium">3 pacientes com consultas pendentes de confirmação</p>
                 <p className="text-xs text-muted-foreground">Verificar agendamentos para hoje</p>
               </div>
-              <Button size="sm" variant="outline">
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => navigate('/schedule')}
+              >
                 Verificar
               </Button>
             </div>
