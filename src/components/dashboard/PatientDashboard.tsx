@@ -64,11 +64,9 @@ export function PatientDashboard({ lastUpdate, profile }: PatientDashboardProps)
           .from('patients')
           .insert({
             name: profile.full_name,
-            email: profile.user_id, // Using user_id as email reference
+            phone: profile.phone,
             profile_id: profile.id,
-            birth_date: profile.birth_date || '1990-01-01',
-            gender: 'Não informado',
-            main_condition: 'Em avaliação',
+            birth_date: '1990-01-01',
             status: 'Inicial'
           })
           .select()
@@ -139,8 +137,8 @@ export function PatientDashboard({ lastUpdate, profile }: PatientDashboardProps)
         plan.exercise_plan_items?.map(item => ({
           id: item.id,
           name: item.exercises?.name || 'Exercício',
-          sets: item.sets,
-          reps: item.repetitions, // Corrigido de 'reps' para 'repetitions'
+          sets: item.sets || 3,
+          reps: item.repetitions || 10,
           completed: Math.random() > 0.5 // Mock completion status
         }))
       ) || [];
@@ -148,8 +146,8 @@ export function PatientDashboard({ lastUpdate, profile }: PatientDashboardProps)
       setStats({
         nextAppointments: appointments?.length || 0,
         todayExercises: allExercises.length,
-        treatmentProgress: Math.floor(Math.random() * 40) + 40, // Removido patientRecord?.progress (campo não existe)
-        completedSessions: Math.floor(Math.random() * 10) + 5 // Mock data
+        treatmentProgress: Math.floor(Math.random() * 40) + 40,
+        completedSessions: Math.floor(Math.random() * 10) + 5 // Mock data - tabela treatment_sessions
       });
 
       setUpcomingAppointments(appointments?.map(apt => ({
