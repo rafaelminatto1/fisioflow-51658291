@@ -1,5 +1,8 @@
 project_id = "ycvbtjfrchcyvmkvuocu"
 
+[functions.schedule-notifications]
+verify_jwt = true
+
 [functions.ai-chat]
 verify_jwt = false
 
