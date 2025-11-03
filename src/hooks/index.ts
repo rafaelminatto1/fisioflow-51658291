@@ -94,6 +94,8 @@ export { useTransacoes, useCreateTransacao, useUpdateTransacao } from './useTran
 export { useEmpresasParceiras, useCreateEmpresaParceira, useUpdateEmpresaParceira, useDeleteEmpresaParceira } from './useEmpresasParceiras';
 export { useDashboardStats } from './useDashboardStats';
 export { useAppointmentActions } from './useAppointmentActions';
+export { useOrganizations } from './useOrganizations';
+export { useOrganizationMembers } from './useOrganizationMembers';
 
 // Add toasts array for useToast
 export const useToastHook = () => ({

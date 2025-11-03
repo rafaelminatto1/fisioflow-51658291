@@ -45,6 +45,7 @@ const AuditLogs = lazy(() => import("./pages/AuditLogs"));
 const InvitationManagement = lazy(() => import("./pages/InvitationManagement"));
 const SecurityMonitoring = lazy(() => import("./pages/SecurityMonitoring"));
 const AdminCRUD = lazy(() => import("./pages/AdminCRUD"));
+const OrganizationSettings = lazy(() => import("./pages/OrganizationSettings"));
 
 const AdvancedAnalytics = lazy(() => import("./components/analytics/AdvancedAnalytics"));
 const MedicalChatbot = lazy(() => import("./components/chatbot/MedicalChatbot"));
@@ -142,6 +143,7 @@ const App = () => {
             <Route path="/admin/invitations" element={<ProtectedRoute allowedRoles={['admin']}><InvitationManagement /></ProtectedRoute>} />
             <Route path="/admin/security" element={<ProtectedRoute allowedRoles={['admin']}><SecurityMonitoring /></ProtectedRoute>} />
             <Route path="/admin/crud" element={<ProtectedRoute allowedRoles={['admin', 'fisioterapeuta']}><AdminCRUD /></ProtectedRoute>} />
+            <Route path="/admin/organization" element={<ProtectedRoute allowedRoles={['admin']}><OrganizationSettings /></ProtectedRoute>} />
                   
                   <Route path="/analytics" element={<ProtectedRoute><AdvancedAnalytics /></ProtectedRoute>} />
                   <Route path="/chatbot" element={<ProtectedRoute><MedicalChatbot userId="current-user" /></ProtectedRoute>} />
