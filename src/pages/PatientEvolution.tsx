@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -18,7 +18,8 @@ import {
   Calendar,
   Phone,
   Stethoscope,
-  FileText
+  FileText,
+  CheckCircle2
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -45,18 +46,27 @@ import { TreatmentAssistant } from '@/components/ai/TreatmentAssistant';
 import { PatientGamification } from '@/components/gamification/PatientGamification';
 import { WhatsAppIntegration } from '@/components/whatsapp/WhatsAppIntegration';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SessionWizard, WizardStep } from '@/components/evolution/SessionWizard';
+import { SessionTimer } from '@/components/evolution/SessionTimer';
+import { useAutoSave } from '@/hooks/useAutoSave';
+import { useAppointmentActions } from '@/hooks/useAppointmentActions';
 
 const PatientEvolution = () => {
   const { appointmentId } = useParams<{ appointmentId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [currentSoapRecordId, setCurrentSoapRecordId] = useState<string | undefined>();
+  const [sessionStartTime] = useState(new Date());
+  const [currentWizardStep, setCurrentWizardStep] = useState('subjective');
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
   
   // Estados do formulário SOAP
   const [subjective, setSubjective] = useState('');
   const [objective, setObjective] = useState('');
   const [assessment, setAssessment] = useState('');
   const [plan, setPlan] = useState('');
+
+  const { completeAppointment, isCompleting } = useAppointmentActions();
 
   // Buscar dados do agendamento do Supabase
   const { data: appointment, isLoading: appointmentLoading } = useQuery({
@@ -148,6 +158,53 @@ const PatientEvolution = () => {
   // Mutation para salvar evolução
   const createSoapRecord = useCreateSoapRecord();
 
+  // Wizard steps
+  const wizardSteps: WizardStep[] = useMemo(() => [
+    {
+      id: 'subjective',
+      label: 'Subjetivo',
+      completed: subjective.length > 10
+    },
+    {
+      id: 'objective',
+      label: 'Objetivo',
+      completed: objective.length > 10
+    },
+    {
+      id: 'assessment',
+      label: 'Avaliação',
+      completed: assessment.length > 10
+    },
+    {
+      id: 'plan',
+      label: 'Plano',
+      completed: plan.length > 10
+    },
+    {
+      id: 'measurements',
+      label: 'Medições',
+      completed: measurements.length > 0,
+      optional: true
+    }
+  ], [subjective, objective, assessment, plan, measurements]);
+
+  // Auto-save SOAP data
+  useAutoSave({
+    data: { subjective, objective, assessment, plan },
+    onSave: async (data) => {
+      if (!patientId || !appointmentId) return;
+      if (!data.subjective && !data.objective && !data.assessment && !data.plan) return;
+      
+      await createSoapRecord.mutateAsync({
+        patient_id: patientId,
+        appointment_id: appointmentId,
+        ...data
+      });
+    },
+    delay: 5000,
+    enabled: autoSaveEnabled && !createSoapRecord.isPending
+  });
+
   // Agrupar medições por tipo para gráficos
   const measurementsByType = useMemo(() => {
     const grouped: Record<string, any[]> = {};
@@ -197,6 +254,33 @@ const PatientEvolution = () => {
     });
     
     setCurrentSoapRecordId(record.id);
+  };
+
+  const handleCompleteSession = async () => {
+    if (!subjective && !objective && !assessment && !plan) {
+      toast({
+        title: 'Complete a evolução',
+        description: 'Preencha os campos SOAP antes de concluir o atendimento.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Salvar evolução primeiro
+    await handleSave();
+
+    // Marcar appointment como concluído
+    if (appointmentId) {
+      completeAppointment(appointmentId, {
+        onSuccess: () => {
+          toast({
+            title: 'Atendimento concluído',
+            description: 'O atendimento foi marcado como concluído com sucesso.'
+          });
+          setTimeout(() => navigate('/schedule'), 1500);
+        }
+      });
+    }
   };
 
   if (appointmentLoading || patientLoading) {
@@ -276,93 +360,57 @@ const PatientEvolution = () => {
                   </div>
                 </div>
               </div>
-              <Button
-                onClick={handleSave}
-                size="lg"
-                disabled={createSoapRecord.isPending}
-                className="shadow-lg hover:shadow-xl transition-all hover:scale-105 flex-shrink-0"
-              >
-                <Save className="h-5 w-5 mr-2" />
-                {createSoapRecord.isPending ? 'Salvando...' : 'Salvar Evolução'}
-              </Button>
-              <ReportGeneratorDialog 
-                patientId={patientId!}
-                patientName={patient.name}
-                trigger={
-                  <Button variant="outline" size="lg" className="flex-shrink-0">
-                    <FileText className="h-5 w-5 mr-2" />
-                    Gerar Relatório
-                  </Button>
-                }
-              />
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <SessionTimer startTime={sessionStartTime} />
+                <Button
+                  onClick={handleSave}
+                  size="lg"
+                  variant="outline"
+                  disabled={createSoapRecord.isPending}
+                  className="shadow hover:shadow-lg transition-all"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {createSoapRecord.isPending ? 'Salvando...' : 'Salvar'}
+                </Button>
+                <Button
+                  onClick={handleCompleteSession}
+                  size="lg"
+                  disabled={createSoapRecord.isPending || isCompleting}
+                  className="shadow-lg hover:shadow-xl transition-all hover:scale-105 bg-gradient-to-r from-primary to-primary/80"
+                >
+                  <CheckCircle2 className="h-5 w-5 mr-2" />
+                  {isCompleting ? 'Finalizando...' : 'Concluir Atendimento'}
+                </Button>
+              </div>
             </div>
           </div>
-          {/* Decorative gradient overlay */}
-          <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-primary/5 to-transparent pointer-events-none" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-0" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl -z-0" />
         </div>
 
-        {/* Quick Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="shadow-md hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex-shrink-0">
-                  <Clock className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm text-muted-foreground truncate">Tempo de Tratamento</p>
-                  <p className="text-xl font-bold truncate">{treatmentDuration.split(' ')[1] || treatmentDuration}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-md hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex-shrink-0">
-                  <Stethoscope className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm text-muted-foreground truncate">Sessões Anteriores</p>
-                  <p className="text-xl font-bold">{previousEvolutions.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-md hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg flex-shrink-0">
-                  <User className="h-6 w-6 text-green-600 dark:text-green-400" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm text-muted-foreground truncate">Idade</p>
-                  <p className="text-xl font-bold">
-                    {patient.birth_date
-                      ? `${Math.floor((new Date().getTime() - new Date(patient.birth_date).getTime()) / (365.25 * 24 * 60 * 60 * 1000))} anos`
-                      : 'N/A'}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-md hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex-shrink-0">
-                  <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm text-muted-foreground truncate">Medições Obrigatórias</p>
-                  <p className="text-xl font-bold">{requiredMeasurements.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Wizard Progress */}
+        <Card className="shadow-md">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Progresso do Atendimento</CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
+                className="text-xs"
+              >
+                Auto-save: {autoSaveEnabled ? 'Ativo' : 'Inativo'}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <SessionWizard
+              steps={wizardSteps}
+              currentStep={currentWizardStep}
+              onStepClick={setCurrentWizardStep}
+            />
+          </CardContent>
+        </Card>
 
         {/* Tabs Navigation */}
         <Tabs defaultValue="soap" className="w-full">
