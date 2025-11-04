@@ -846,6 +846,48 @@ export type Database = {
           },
         ]
       }
+      notification_templates: {
+        Row: {
+          actions: Json | null
+          badge: string | null
+          body_template: string
+          created_at: string | null
+          icon: string | null
+          id: string
+          require_interaction: boolean | null
+          tag: string | null
+          title_template: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          actions?: Json | null
+          badge?: string | null
+          body_template: string
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          require_interaction?: boolean | null
+          tag?: string | null
+          title_template: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          actions?: Json | null
+          badge?: string | null
+          body_template?: string
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          require_interaction?: boolean | null
+          tag?: string | null
+          title_template?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       organization_members: {
         Row: {
           active: boolean

@@ -49,7 +49,6 @@ serve(async (req) => {
         .from('notification_templates')
         .select('*')
         .eq('type', payload.type)
-        .eq('active', true)
         .single()
 
       if (templateError || !template) {
