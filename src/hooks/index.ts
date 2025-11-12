@@ -66,7 +66,6 @@ export const useData = () => ({
 });
 
 export const useNavPreload = () => ({});
-export const useIntelligentPreload = () => ({ useNavPreload: () => ({}) });
 
 export interface UseFileUploadOptions {}
 export const useFileUpload = (options?: any) => ({
@@ -95,6 +94,8 @@ export { useEmpresasParceiras, useCreateEmpresaParceira, useUpdateEmpresaParceir
 export { useDashboardStats } from './useDashboardStats';
 export { useAppointmentActions } from './useAppointmentActions';
 export { useAutoSave } from './useAutoSave';
+export { useOfflineSync } from './useOfflineSync';
+export { useIntelligentPreload } from './useIntelligentPreload';
 export { useOrganizations } from './useOrganizations';
 export { useOrganizationMembers } from './useOrganizationMembers';
 
