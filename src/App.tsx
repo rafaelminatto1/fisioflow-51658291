@@ -12,6 +12,7 @@ import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 import { PWAUpdatePrompt } from "@/components/pwa/PWAUpdatePrompt";
 import { logger } from '@/lib/errors/logger';
 import { notificationManager } from '@/lib/services/NotificationManager';
+import { initMonitoring } from '@/lib/monitoring';
 
 // Lazy load pages for better performance
 const Welcome = lazy(() => import("./pages/Welcome"));
@@ -81,6 +82,9 @@ const PageLoadingFallback = () => (
 const App = () => {
   useEffect(() => {
     logger.info('Aplicação iniciada', { timestamp: new Date().toISOString() }, 'App');
+    
+    // Initialize monitoring (performance, errors, analytics)
+    initMonitoring();
     
     // Initialize notification system
     const initNotifications = async () => {
