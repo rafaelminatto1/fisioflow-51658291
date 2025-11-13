@@ -653,6 +653,163 @@ export type Database = {
           },
         ]
       }
+      exercise_protocols: {
+        Row: {
+          condition_name: string
+          created_at: string
+          created_by: string | null
+          id: string
+          milestones: Json
+          name: string
+          organization_id: string | null
+          progression_criteria: Json
+          protocol_type: string
+          restrictions: Json
+          updated_at: string
+          weeks_total: number | null
+        }
+        Insert: {
+          condition_name: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          milestones?: Json
+          name: string
+          organization_id?: string | null
+          progression_criteria?: Json
+          protocol_type: string
+          restrictions?: Json
+          updated_at?: string
+          weeks_total?: number | null
+        }
+        Update: {
+          condition_name?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          milestones?: Json
+          name?: string
+          organization_id?: string | null
+          progression_criteria?: Json
+          protocol_type?: string
+          restrictions?: Json
+          updated_at?: string
+          weeks_total?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercise_protocols_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exercise_template_items: {
+        Row: {
+          created_at: string
+          duration: number | null
+          exercise_id: string
+          id: string
+          notes: string | null
+          order_index: number
+          repetitions: number | null
+          sets: number | null
+          template_id: string
+          week_end: number | null
+          week_start: number | null
+        }
+        Insert: {
+          created_at?: string
+          duration?: number | null
+          exercise_id: string
+          id?: string
+          notes?: string | null
+          order_index?: number
+          repetitions?: number | null
+          sets?: number | null
+          template_id: string
+          week_end?: number | null
+          week_start?: number | null
+        }
+        Update: {
+          created_at?: string
+          duration?: number | null
+          exercise_id?: string
+          id?: string
+          notes?: string | null
+          order_index?: number
+          repetitions?: number | null
+          sets?: number | null
+          template_id?: string
+          week_end?: number | null
+          week_start?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercise_template_items_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercise_template_items_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "exercise_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exercise_templates: {
+        Row: {
+          category: string
+          condition_name: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          organization_id: string | null
+          template_variant: string | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          condition_name: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          organization_id?: string | null
+          template_variant?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          condition_name?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          organization_id?: string | null
+          template_variant?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercise_templates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exercises: {
         Row: {
           category: string | null
