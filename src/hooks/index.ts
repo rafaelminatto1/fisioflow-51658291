@@ -96,6 +96,7 @@ export { useAppointmentActions } from './useAppointmentActions';
 export { useAutoSave } from './useAutoSave';
 export { useOfflineSync } from './useOfflineSync';
 export { useIntelligentPreload } from './useIntelligentPreload';
+export { useExerciseTemplates, useTemplateItems } from './useExerciseTemplates';
 export { useOrganizations } from './useOrganizations';
 export { useOrganizationMembers } from './useOrganizationMembers';
 
