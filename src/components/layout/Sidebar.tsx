@@ -20,6 +20,7 @@ import {
   Brain,
   MessageSquare,
   ShoppingCart,
+  Clock,
   LogOut
 } from 'lucide-react';
 
@@ -31,6 +32,7 @@ const menuItems = [
   { icon: FileText, label: 'Prontuário', href: '/medical-record' },
   { icon: Brain, label: 'Planos IA', href: '/smart-ai' },
   { icon: MessageSquare, label: 'Comunicação', href: '/communications' },
+  { icon: Clock, label: 'Lista de Espera', href: '/waitlist' },
   { icon: Calendar, label: 'Eventos', href: '/eventos' },
   { icon: ShoppingCart, label: 'Treinos', href: '/vouchers' },
   { icon: DollarSign, label: 'Financeiro', href: '/financial' },

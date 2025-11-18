@@ -100,6 +100,7 @@ export { useExerciseTemplates, useTemplateItems } from './useExerciseTemplates';
 export { useApplyExerciseTemplate } from './useApplyExerciseTemplate';
 export { useWaitlist, useWaitlistOffers } from './useWaitlist';
 export { useWhatsAppConfirmations } from './useWhatsAppConfirmations';
+export { usePainMaps } from './usePainMaps';
 export { useOrganizations } from './useOrganizations';
 export { useOrganizationMembers } from './useOrganizationMembers';
 
