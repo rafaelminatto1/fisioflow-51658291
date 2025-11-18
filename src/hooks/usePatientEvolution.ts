@@ -190,6 +190,54 @@ export const useCreateMeasurement = () => {
   });
 };
 
+// Hook para atualizar objetivo
+export const useUpdateGoal = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ goalId, data }: { goalId: string; data: Partial<PatientGoal> }) => {
+      const { data: goal, error } = await supabase
+        .from('patient_goals')
+        .update(data)
+        .eq('id', goalId)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return goal as PatientGoal;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['patient-goals', data.patient_id] });
+      toast({ title: 'Objetivo atualizado com sucesso' });
+    }
+  });
+};
+
+// Hook para completar objetivo
+export const useCompleteGoal = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (goalId: string) => {
+      const { data: goal, error } = await supabase
+        .from('patient_goals')
+        .update({ status: 'concluido', completed_at: new Date().toISOString() })
+        .eq('id', goalId)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return goal as PatientGoal;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['patient-goals', data.patient_id] });
+      toast({ title: '🎉 Objetivo concluído!' });
+    }
+  });
+};
+
 // Hook para criar objetivo
 export const useCreateGoal = () => {
   const queryClient = useQueryClient();
