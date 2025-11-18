@@ -126,12 +126,17 @@ export type Database = {
         Row: {
           appointment_date: string
           appointment_time: string
+          confirmation_method: string | null
+          confirmation_status: string | null
+          confirmed_at: string | null
           created_at: string | null
           duration: number | null
           id: string
           notes: string | null
           organization_id: string | null
           patient_id: string
+          reminder_sent_24h: string | null
+          reminder_sent_2h: string | null
           room: string | null
           status: string | null
           therapist_id: string | null
@@ -141,12 +146,17 @@ export type Database = {
         Insert: {
           appointment_date: string
           appointment_time: string
+          confirmation_method?: string | null
+          confirmation_status?: string | null
+          confirmed_at?: string | null
           created_at?: string | null
           duration?: number | null
           id?: string
           notes?: string | null
           organization_id?: string | null
           patient_id: string
+          reminder_sent_24h?: string | null
+          reminder_sent_2h?: string | null
           room?: string | null
           status?: string | null
           therapist_id?: string | null
@@ -156,12 +166,17 @@ export type Database = {
         Update: {
           appointment_date?: string
           appointment_time?: string
+          confirmation_method?: string | null
+          confirmation_status?: string | null
+          confirmed_at?: string | null
           created_at?: string | null
           duration?: number | null
           id?: string
           notes?: string | null
           organization_id?: string | null
           patient_id?: string
+          reminder_sent_24h?: string | null
+          reminder_sent_2h?: string | null
           room?: string | null
           status?: string | null
           therapist_id?: string | null
@@ -2144,6 +2159,230 @@ export type Database = {
           validade_dias?: number
         }
         Relationships: []
+      }
+      waitlist: {
+        Row: {
+          added_at: string | null
+          created_at: string | null
+          id: string
+          last_notification_sent_at: string | null
+          last_offer_rejected_at: string | null
+          notes: string | null
+          notification_count: number | null
+          organization_id: string | null
+          patient_id: string
+          preferred_days: string[] | null
+          preferred_therapist_ids: string[] | null
+          preferred_time_slots: string[] | null
+          priority: string | null
+          priority_reason: string | null
+          rejection_count: number | null
+          removed_at: string | null
+          scheduled_at: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          added_at?: string | null
+          created_at?: string | null
+          id?: string
+          last_notification_sent_at?: string | null
+          last_offer_rejected_at?: string | null
+          notes?: string | null
+          notification_count?: number | null
+          organization_id?: string | null
+          patient_id: string
+          preferred_days?: string[] | null
+          preferred_therapist_ids?: string[] | null
+          preferred_time_slots?: string[] | null
+          priority?: string | null
+          priority_reason?: string | null
+          rejection_count?: number | null
+          removed_at?: string | null
+          scheduled_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          added_at?: string | null
+          created_at?: string | null
+          id?: string
+          last_notification_sent_at?: string | null
+          last_offer_rejected_at?: string | null
+          notes?: string | null
+          notification_count?: number | null
+          organization_id?: string | null
+          patient_id?: string
+          preferred_days?: string[] | null
+          preferred_therapist_ids?: string[] | null
+          preferred_time_slots?: string[] | null
+          priority?: string | null
+          priority_reason?: string | null
+          rejection_count?: number | null
+          removed_at?: string | null
+          scheduled_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waitlist_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "waitlist_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      waitlist_offers: {
+        Row: {
+          appointment_id: string
+          created_at: string | null
+          expiration_time: string
+          id: string
+          notification_sent_at: string | null
+          patient_id: string
+          rejection_reason: string | null
+          responded_at: string | null
+          response_method: string | null
+          slot_date: string
+          slot_time: string
+          status: string | null
+          therapist_id: string | null
+          updated_at: string | null
+          waitlist_id: string
+        }
+        Insert: {
+          appointment_id: string
+          created_at?: string | null
+          expiration_time: string
+          id?: string
+          notification_sent_at?: string | null
+          patient_id: string
+          rejection_reason?: string | null
+          responded_at?: string | null
+          response_method?: string | null
+          slot_date: string
+          slot_time: string
+          status?: string | null
+          therapist_id?: string | null
+          updated_at?: string | null
+          waitlist_id: string
+        }
+        Update: {
+          appointment_id?: string
+          created_at?: string | null
+          expiration_time?: string
+          id?: string
+          notification_sent_at?: string | null
+          patient_id?: string
+          rejection_reason?: string | null
+          responded_at?: string | null
+          response_method?: string | null
+          slot_date?: string
+          slot_time?: string
+          status?: string | null
+          therapist_id?: string | null
+          updated_at?: string | null
+          waitlist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waitlist_offers_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "waitlist_offers_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "waitlist_offers_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "waitlist_offers_waitlist_id_fkey"
+            columns: ["waitlist_id"]
+            isOneToOne: false
+            referencedRelation: "waitlist"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_messages: {
+        Row: {
+          appointment_id: string | null
+          created_at: string | null
+          delivered_at: string | null
+          id: string
+          message_content: string
+          message_type: string
+          patient_id: string | null
+          read_at: string | null
+          response_content: string | null
+          response_received_at: string | null
+          sent_at: string | null
+          status: string | null
+        }
+        Insert: {
+          appointment_id?: string | null
+          created_at?: string | null
+          delivered_at?: string | null
+          id?: string
+          message_content: string
+          message_type: string
+          patient_id?: string | null
+          read_at?: string | null
+          response_content?: string | null
+          response_received_at?: string | null
+          sent_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          appointment_id?: string | null
+          created_at?: string | null
+          delivered_at?: string | null
+          id?: string
+          message_content?: string
+          message_type?: string
+          patient_id?: string | null
+          read_at?: string | null
+          response_content?: string | null
+          response_received_at?: string | null
+          sent_at?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_messages_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       xp_transactions: {
         Row: {

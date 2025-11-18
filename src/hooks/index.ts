@@ -98,6 +98,8 @@ export { useOfflineSync } from './useOfflineSync';
 export { useIntelligentPreload } from './useIntelligentPreload';
 export { useExerciseTemplates, useTemplateItems } from './useExerciseTemplates';
 export { useApplyExerciseTemplate } from './useApplyExerciseTemplate';
+export { useWaitlist, useWaitlistOffers } from './useWaitlist';
+export { useWhatsAppConfirmations } from './useWhatsAppConfirmations';
 export { useOrganizations } from './useOrganizations';
 export { useOrganizationMembers } from './useOrganizationMembers';
 
