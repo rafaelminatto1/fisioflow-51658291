@@ -18,6 +18,7 @@ serve(async (req) => {
       console.warn(`Rate limit excedido para send-whatsapp: ${rateLimitResult.current_count}/${rateLimitResult.limit}`);
       return createRateLimitResponse(rateLimitResult, corsHeaders);
     }
+
     const { to, message } = await req.json();
     
     // Validação básica
@@ -30,7 +31,6 @@ serve(async (req) => {
     console.log(`Enviando mensagem WhatsApp para ${to}:`, message);
     
     // Simulação de sucesso
-    // Adicionar headers de rate limit
     const enhancedHeaders = addRateLimitHeaders(
       { ...corsHeaders, 'Content-Type': 'application/json' },
       rateLimitResult
