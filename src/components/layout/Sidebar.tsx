@@ -67,25 +67,25 @@ export function Sidebar() {
 
   return (
     <div className={cn(
-      "hidden md:flex bg-gradient-to-b from-card to-card/80 border-r border-border/50 transition-all duration-300 flex-col h-screen sticky top-0 backdrop-blur-sm shadow-card",
+      "hidden md:flex bg-card border-r border-border/50 transition-all duration-300 flex-col h-screen sticky top-0 shadow-sm",
       collapsed ? "w-16" : "w-64"
     )}>
       {/* Header */}
-      <div className="p-4 border-b border-border/50 bg-gradient-card/50">
+      <div className="p-6 border-b border-border/50">
         <div className="flex items-center justify-between">
           {!collapsed && (
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center shadow-medical">
+            <div className="flex items-center gap-3 group">
+              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-sm transition-all group-hover:shadow-md group-hover:scale-105">
                 <Stethoscope className="w-6 h-6 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="font-bold text-lg bg-gradient-primary bg-clip-text text-transparent">FisioFlow</h1>
-                <p className="text-xs text-muted-foreground font-medium">Sistema de Gestão</p>
+                <h1 className="font-bold text-xl text-foreground group-hover:text-primary transition-colors">FisioFlow</h1>
+                <p className="text-xs text-muted-foreground font-medium">Gestão Inteligente</p>
               </div>
             </div>
           )}
           {collapsed && (
-            <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center shadow-medical mx-auto">
+            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-sm mx-auto">
               <Stethoscope className="w-6 h-6 text-primary-foreground" />
             </div>
           )}
@@ -93,7 +93,7 @@ export function Sidebar() {
             variant="ghost"
             size="icon"
             onClick={() => setCollapsed(!collapsed)}
-            className={cn("hover:bg-accent/80 transition-colors", !collapsed && "ml-auto")}
+            className={cn("hover:bg-secondary transition-colors", !collapsed && "ml-auto")}
           >
             {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </Button>
@@ -107,74 +107,43 @@ export function Sidebar() {
           const isActive = location.pathname === item.href;
           
           return (
-            <Link key={item.href} to={item.href}>
-              <Button
-                variant={isActive ? "default" : "ghost"}
-                className={cn(
-                  "w-full justify-start transition-all duration-300 group relative",
-                  collapsed ? "px-2 py-3" : "px-4 py-3 h-auto",
-                  isActive 
-                    ? "bg-gradient-primary text-primary-foreground shadow-medical hover:bg-gradient-primary/90" 
-                    : "hover:bg-accent/80 hover:text-foreground",
-                  !collapsed && "rounded-xl"
-                )}
-                size={collapsed ? "icon" : "default"}
-              >
-                <Icon className={cn(
-                  "w-5 h-5 transition-colors", 
-                  !collapsed && "mr-3",
-                  isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-primary"
-                )} />
-                {!collapsed && (
-                  <span className={cn(
-                    "font-medium transition-colors",
-                    isActive ? "text-primary-foreground" : "text-foreground"
-                  )}>
-                    {item.label}
-                  </span>
-                )}
-                {isActive && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary-glow/20 to-transparent rounded-xl" />
-                )}
-              </Button>
+            <Link
+              key={item.href}
+              to={item.href}
+              className={cn(
+                "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all group relative",
+                isActive
+                  ? "bg-primary text-primary-foreground font-medium shadow-sm"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                collapsed && "justify-center px-2"
+              )}
+            >
+              <Icon className={cn(
+                "h-5 w-5 transition-transform",
+                !isActive && "group-hover:scale-110"
+              )} />
+              {!collapsed && <span className="text-sm">{item.label}</span>}
+              {collapsed && isActive && (
+                <div className="absolute left-0 w-1 h-8 bg-primary rounded-r-lg" />
+              )}
             </Link>
           );
         })}
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-border/50 space-y-3">
+      <div className="p-3 border-t border-border/50">
         <Button
           variant="ghost"
           onClick={handleLogout}
           className={cn(
-            "w-full justify-start transition-all duration-300 hover:bg-destructive/10 hover:text-destructive",
-            collapsed ? "px-2 py-3" : "px-4 py-3"
+            "w-full justify-start gap-3 px-4 py-2.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all group",
+            collapsed && "justify-center px-2"
           )}
-          size={collapsed ? "icon" : "default"}
         >
-          <LogOut className={cn("w-5 h-5", !collapsed && "mr-3")} />
-          {!collapsed && <span className="font-medium">Sair</span>}
+          <LogOut className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+          {!collapsed && <span className="text-sm">Sair</span>}
         </Button>
-        
-        {!collapsed && (
-          <div className="bg-gradient-card p-4 rounded-xl border border-border/50 shadow-card">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-secondary rounded-lg flex items-center justify-center shadow-sm">
-                <span className="text-secondary-foreground font-bold">JS</span>
-              </div>
-              <div>
-                <p className="text-sm font-bold text-foreground">Dr. João Silva</p>
-                <p className="text-xs text-muted-foreground font-medium">Fisioterapeuta</p>
-              </div>
-            </div>
-          </div>
-        )}
-        {collapsed && (
-          <div className="w-10 h-10 bg-gradient-secondary rounded-lg flex items-center justify-center shadow-sm mx-auto">
-            <span className="text-secondary-foreground font-bold text-sm">JS</span>
-          </div>
-        )}
       </div>
     </div>
   );
