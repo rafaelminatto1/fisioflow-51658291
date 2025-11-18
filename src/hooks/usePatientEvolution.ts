@@ -244,7 +244,7 @@ export const useCreateGoal = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (goal: Omit<PatientGoal, 'id' | 'created_at' | 'updated_at'>) => {
+    mutationFn: async (goal: Omit<PatientGoal, 'id' | 'created_at' | 'updated_at' | 'created_by' | 'status'> & { status?: PatientGoal['status'] }) => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('Usuário não autenticado');
 
@@ -252,6 +252,7 @@ export const useCreateGoal = () => {
         .from('patient_goals')
         .insert({
           ...goal,
+          status: goal.status || 'em_andamento',
           created_by: userData.user.id
         })
         .select()
