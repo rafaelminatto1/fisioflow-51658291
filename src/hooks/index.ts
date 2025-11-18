@@ -97,6 +97,7 @@ export { useAutoSave } from './useAutoSave';
 export { useOfflineSync } from './useOfflineSync';
 export { useIntelligentPreload } from './useIntelligentPreload';
 export { useExerciseTemplates, useTemplateItems } from './useExerciseTemplates';
+export { useApplyExerciseTemplate } from './useApplyExerciseTemplate';
 export { useOrganizations } from './useOrganizations';
 export { useOrganizationMembers } from './useOrganizationMembers';
 

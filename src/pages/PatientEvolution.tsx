@@ -19,7 +19,8 @@ import {
   Phone,
   Stethoscope,
   FileText,
-  CheckCircle2
+  CheckCircle2,
+  Activity
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -50,6 +51,7 @@ import { SessionWizard, WizardStep } from '@/components/evolution/SessionWizard'
 import { SessionTimer } from '@/components/evolution/SessionTimer';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
+import { ApplyTemplateModal } from '@/components/exercises/ApplyTemplateModal';
 
 const PatientEvolution = () => {
   const { appointmentId } = useParams<{ appointmentId: string }>();
@@ -59,6 +61,7 @@ const PatientEvolution = () => {
   const [sessionStartTime] = useState(new Date());
   const [currentWizardStep, setCurrentWizardStep] = useState('subjective');
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  const [showApplyTemplate, setShowApplyTemplate] = useState(false);
   
   // Estados do formulário SOAP
   const [subjective, setSubjective] = useState('');
@@ -361,6 +364,15 @@ const PatientEvolution = () => {
                 </div>
               </div>
               <div className="flex items-center gap-3 flex-shrink-0">
+                <Button
+                  onClick={() => setShowApplyTemplate(true)}
+                  size="lg"
+                  variant="secondary"
+                  className="shadow hover:shadow-lg transition-all"
+                >
+                  <Activity className="h-4 w-4 mr-2" />
+                  Aplicar Template
+                </Button>
                 <SessionTimer startTime={sessionStartTime} />
                 <Button
                   onClick={handleSave}
@@ -622,6 +634,16 @@ const PatientEvolution = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Modal para aplicar template */}
+      {patientId && (
+        <ApplyTemplateModal
+          open={showApplyTemplate}
+          onOpenChange={setShowApplyTemplate}
+          patientId={patientId}
+          patientName={patient.name}
+        />
+      )}
     </MainLayout>
   );
 };
