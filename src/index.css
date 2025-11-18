@@ -8,63 +8,63 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Base colors - Light mode */
-    --background: 210 20% 98%;
-    --foreground: 215 25% 15%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 215 25% 15%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 15%;
-
-    /* Primary - Turquoise/Teal (Activity Fisioterapia) */
-    --primary: 188 85% 48%;
-    --primary-foreground: 0 0% 100%;
-    --primary-glow: 188 95% 60%;
-    --primary-dark: 188 85% 35%;
-
-    /* Secondary - Green/Aqua */
-    --secondary: 167 70% 48%;
-    --secondary-foreground: 0 0% 100%;
-    --secondary-light: 167 70% 65%;
-
-    /* Success */
-    --success: 142 76% 45%;
-    --success-foreground: 0 0% 100%;
-
-    /* Warning */
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-
-    /* Muted colors */
-    --muted: 210 25% 95%;
-    --muted-foreground: 215 20% 50%;
-
-    /* Accent */
-    --accent: 210 40% 96%;
-    --accent-foreground: 215 25% 15%;
-
-    /* Destructive */
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-
-    /* Borders & Inputs */
-    --border: 215 25% 88%;
-    --input: 215 25% 88%;
-    --ring: 188 85% 48%;
-
-    /* Medical theme gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(188 85% 48%), hsl(188 95% 60%));
-    --gradient-secondary: linear-gradient(135deg, hsl(167 70% 48%), hsl(167 70% 65%));
-    --gradient-success: linear-gradient(135deg, hsl(142 76% 45%), hsl(142 76% 60%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(210 25% 98%));
-    --gradient-background: linear-gradient(180deg, hsl(210 20% 98%), hsl(210 25% 96%));
+    /* Base colors - Professional and clean */
+    --background: 0 0% 100%;
+    --foreground: 222.2 47.4% 11.2%;
     
-    /* Shadows - Medical theme */
-    --shadow-medical: 0 10px 40px -10px hsl(188 85% 48% / 0.2);
-    --shadow-card: 0 2px 8px -2px hsl(215 25% 20% / 0.08);
-    --shadow-hover: 0 8px 24px -8px hsl(188 85% 48% / 0.25);
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47.4% 11.2%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 47.4% 11.2%;
+    
+    /* Primary - Purple/Blue from FisioFlow brand */
+    --primary: 255 90% 72%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 255 90% 65%;
+    --primary-glow: 255 95% 80%;
+    
+    /* Secondary - Neutral grays */
+    --secondary: 220 13% 95%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    
+    /* Success - Green for positive actions */
+    --success: 158 64% 52%;
+    --success-foreground: 0 0% 100%;
+    
+    /* Warning - Amber for attention */
+    --warning: 43 96% 56%;
+    --warning-foreground: 0 0% 100%;
+    
+    /* Muted - Subtle backgrounds */
+    --muted: 220 13% 95%;
+    --muted-foreground: 220 9% 46%;
+    
+    /* Accent - Green for interactive elements */
+    --accent: 158 64% 52%;
+    --accent-foreground: 0 0% 100%;
+    
+    /* Destructive - Red for errors/delete */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Borders & Inputs */
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 255 90% 72%;
+
+    /* Modern gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(255 90% 72%), hsl(255 95% 80%));
+    --gradient-success: linear-gradient(135deg, hsl(158 64% 52%), hsl(158 74% 62%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(220 13% 98%));
+    --gradient-background: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 13% 98%));
+    
+    /* Shadows - Clean and professional */
+    --shadow-sm: 0 1px 2px 0 hsl(220 13% 91% / 0.5);
+    --shadow-md: 0 4px 6px -1px hsl(220 13% 91% / 0.3);
+    --shadow-lg: 0 10px 15px -3px hsl(220 13% 91% / 0.2);
+    --shadow-card: 0 2px 8px -2px hsl(220 13% 20% / 0.08);
+    --shadow-hover: 0 8px 24px -8px hsl(255 90% 72% / 0.25);
     
   /* Transitions */
   --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -76,15 +76,15 @@ All colors MUST be HSL.
 
   --radius: 0.75rem;
 
-    /* Sidebar */
-    --sidebar-background: 210 20% 98%;
-    --sidebar-foreground: 215 25% 20%;
-    --sidebar-primary: 188 85% 48%;
+    /* Sidebar - Clean and professional */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222.2 47.4% 11.2%;
+    --sidebar-primary: 255 90% 72%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 96%;
-    --sidebar-accent-foreground: 215 25% 20%;
-    --sidebar-border: 215 25% 88%;
-    --sidebar-ring: 188 85% 48%;
+    --sidebar-accent: 220 13% 95%;
+    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 255 90% 72%;
 
     /* Appointment Status Colors */
     --apt-confirmed: 142 71% 45%;
@@ -105,72 +105,75 @@ All colors MUST be HSL.
 
   .dark {
     /* Base colors - Dark mode */
-    --background: 215 30% 8%;
-    --foreground: 210 20% 98%;
-
-    --card: 215 28% 11%;
-    --card-foreground: 210 20% 98%;
-
-    --popover: 215 28% 11%;
-    --popover-foreground: 210 20% 98%;
-
-    /* Primary - Brighter in dark mode */
-    --primary: 188 90% 52%;
-    --primary-foreground: 0 0% 100%;
-    --primary-glow: 188 95% 65%;
-    --primary-dark: 188 90% 40%;
-
-    /* Secondary */
-    --secondary: 167 75% 52%;
-    --secondary-foreground: 0 0% 100%;
-    --secondary-light: 167 75% 65%;
-
+    --background: 222.2 47.4% 11.2%;
+    --foreground: 210 40% 98%;
+    
+    --card: 222.2 47.4% 11.2%;
+    --card-foreground: 210 40% 98%;
+    
+    --popover: 222.2 47.4% 11.2%;
+    --popover-foreground: 210 40% 98%;
+    
+    /* Primary - Slightly brighter in dark mode */
+    --primary: 255 90% 72%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary-hover: 255 90% 78%;
+    --primary-glow: 255 95% 85%;
+    
+    /* Secondary - Dark grays */
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    
     /* Success */
-    --success: 142 76% 50%;
-    --success-foreground: 0 0% 100%;
-
+    --success: 158 64% 52%;
+    --success-foreground: 222.2 47.4% 11.2%;
+    
     /* Warning */
-    --warning: 38 92% 55%;
+    --warning: 43 96% 56%;
     --warning-foreground: 215 30% 8%;
 
     /* Muted */
-    --muted: 215 28% 18%;
-    --muted-foreground: 215 20% 65%;
-
+    --warning-foreground: 222.2 47.4% 11.2%;
+    
+    /* Muted - Dark backgrounds */
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    
     /* Accent */
-    --accent: 215 28% 16%;
-    --accent-foreground: 210 20% 98%;
-
+    --accent: 158 64% 52%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    
     /* Destructive */
-    --destructive: 0 72% 55%;
-    --destructive-foreground: 0 0% 100%;
-
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    
     /* Borders & Inputs */
-    --border: 215 28% 20%;
-    --input: 215 28% 20%;
-    --ring: 188 90% 52%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 255 90% 72%;
     
     /* Dark mode gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(188 90% 52%), hsl(188 95% 65%));
-    --gradient-secondary: linear-gradient(135deg, hsl(167 75% 52%), hsl(167 75% 65%));
-    --gradient-success: linear-gradient(135deg, hsl(142 76% 50%), hsl(142 76% 65%));
-    --gradient-card: linear-gradient(145deg, hsl(215 28% 11%), hsl(215 28% 14%));
-    --gradient-background: linear-gradient(180deg, hsl(215 30% 8%), hsl(215 30% 10%));
+    --gradient-primary: linear-gradient(135deg, hsl(255 90% 72%), hsl(255 95% 80%));
+    --gradient-success: linear-gradient(135deg, hsl(158 64% 52%), hsl(158 74% 62%));
+    --gradient-card: linear-gradient(145deg, hsl(222.2 47.4% 11.2%), hsl(217.2 32.6% 14%));
+    --gradient-background: linear-gradient(180deg, hsl(222.2 47.4% 11.2%), hsl(217.2 32.6% 13%));
     
     /* Dark mode shadows */
-    --shadow-medical: 0 10px 40px -10px hsl(0 0% 0% / 0.4);
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.5);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.3);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.2);
     --shadow-card: 0 2px 8px -2px hsl(0 0% 0% / 0.3);
-    --shadow-hover: 0 8px 24px -8px hsl(188 90% 52% / 0.3);
+    --shadow-hover: 0 8px 24px -8px hsl(255 90% 72% / 0.3);
 
     /* Sidebar dark */
-    --sidebar-background: 215 30% 10%;
-    --sidebar-foreground: 210 20% 90%;
-    --sidebar-primary: 188 90% 52%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 28% 16%;
-    --sidebar-accent-foreground: 210 20% 90%;
-    --sidebar-border: 215 28% 18%;
-    --sidebar-ring: 188 90% 52%;
+    --sidebar-background: 222.2 47.4% 11.2%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 255 90% 72%;
+    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 255 90% 72%;
   }
 }
 
@@ -180,7 +183,26 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+  
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-muted/30;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-lg;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
   }
 }
 
