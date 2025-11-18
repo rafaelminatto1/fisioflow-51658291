@@ -42,6 +42,7 @@ const EventoDetalhes = lazy(() => import("./pages/EventoDetalhes"));
 const EventosAnalytics = lazy(() => import("./pages/EventosAnalytics"));
 const FileUploadTest = lazy(() => import("./pages/FileUploadTest"));
 const UserManagement = lazy(() => import("./pages/UserManagement"));
+const Waitlist = lazy(() => import("./pages/Waitlist"));
 const AuditLogs = lazy(() => import("./pages/AuditLogs"));
 const InvitationManagement = lazy(() => import("./pages/InvitationManagement"));
 const SecurityMonitoring = lazy(() => import("./pages/SecurityMonitoring"));
@@ -134,9 +135,10 @@ const App = () => {
                   <Route path="/exercise-library" element={<ProtectedRoute><ExerciseLibraryExpanded /></ProtectedRoute>} />
                   <Route path="/biofeedback" element={<ProtectedRoute><Biofeedback /></ProtectedRoute>} />
                   <Route path="/patient-evolution/:appointmentId" element={<ProtectedRoute><PatientEvolution /></ProtectedRoute>} />
-                  <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
-                  <Route path="/partner" element={<ProtectedRoute><Partner /></ProtectedRoute>} />
-                  <Route path="/vouchers" element={<ProtectedRoute><Vouchers /></ProtectedRoute>} />
+          <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
+          <Route path="/partner" element={<ProtectedRoute><Partner /></ProtectedRoute>} />
+          <Route path="/waitlist" element={<ProtectedRoute><Waitlist /></ProtectedRoute>} />
+          <Route path="/vouchers" element={<ProtectedRoute><Vouchers /></ProtectedRoute>} />
                   <Route path="/install" element={<Install />} />
           <Route path="/eventos" element={<ProtectedRoute><Eventos /></ProtectedRoute>} />
           <Route path="/eventos/analytics" element={<ProtectedRoute><EventosAnalytics /></ProtectedRoute>} />
