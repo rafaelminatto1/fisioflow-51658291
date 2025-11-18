@@ -297,6 +297,50 @@ export type Database = {
           },
         ]
       }
+      conduct_library: {
+        Row: {
+          category: string
+          conduct_text: string
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          organization_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          conduct_text: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          organization_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          conduct_text?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          organization_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conduct_library_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       empresas_parceiras: {
         Row: {
           ativo: boolean
@@ -1327,6 +1371,56 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_documents: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          patient_id: string
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          patient_id: string
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          patient_id?: string
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_documents_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_gamification: {
         Row: {
           achievements: Json | null
@@ -2068,7 +2162,10 @@ export type Database = {
           created_at: string
           data_compra: string
           data_expiracao: string
+          first_session_date: string | null
           id: string
+          last_session_date: string | null
+          sessions_per_week_actual: number | null
           sessoes_restantes: number
           sessoes_totais: number
           stripe_payment_intent_id: string | null
@@ -2083,7 +2180,10 @@ export type Database = {
           created_at?: string
           data_compra?: string
           data_expiracao: string
+          first_session_date?: string | null
           id?: string
+          last_session_date?: string | null
+          sessions_per_week_actual?: number | null
           sessoes_restantes: number
           sessoes_totais: number
           stripe_payment_intent_id?: string | null
@@ -2098,7 +2198,10 @@ export type Database = {
           created_at?: string
           data_compra?: string
           data_expiracao?: string
+          first_session_date?: string | null
           id?: string
+          last_session_date?: string | null
+          sessions_per_week_actual?: number | null
           sessoes_restantes?: number
           sessoes_totais?: number
           stripe_payment_intent_id?: string | null
@@ -2121,11 +2224,14 @@ export type Database = {
       vouchers: {
         Row: {
           ativo: boolean
+          auto_renew: boolean | null
           created_at: string
           descricao: string | null
+          duration_weeks: number | null
           id: string
           nome: string
           preco: number
+          sessions_per_week: number | null
           sessoes: number | null
           stripe_price_id: string | null
           tipo: string
@@ -2134,11 +2240,14 @@ export type Database = {
         }
         Insert: {
           ativo?: boolean
+          auto_renew?: boolean | null
           created_at?: string
           descricao?: string | null
+          duration_weeks?: number | null
           id?: string
           nome: string
           preco: number
+          sessions_per_week?: number | null
           sessoes?: number | null
           stripe_price_id?: string | null
           tipo: string
@@ -2147,11 +2256,14 @@ export type Database = {
         }
         Update: {
           ativo?: boolean
+          auto_renew?: boolean | null
           created_at?: string
           descricao?: string | null
+          duration_weeks?: number | null
           id?: string
           nome?: string
           preco?: number
+          sessions_per_week?: number | null
           sessoes?: number | null
           stripe_price_id?: string | null
           tipo?: string

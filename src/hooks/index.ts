@@ -101,6 +101,8 @@ export { useApplyExerciseTemplate } from './useApplyExerciseTemplate';
 export { useWaitlist, useWaitlistOffers } from './useWaitlist';
 export { useWhatsAppConfirmations } from './useWhatsAppConfirmations';
 export { usePainMaps } from './usePainMaps';
+export { usePatientDocuments } from './usePatientDocuments';
+export { useConductLibrary } from './useConductLibrary';
 export { useOrganizations } from './useOrganizations';
 export { useOrganizationMembers } from './useOrganizationMembers';
 
