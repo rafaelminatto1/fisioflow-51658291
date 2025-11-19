@@ -132,12 +132,17 @@ export type Database = {
           created_at: string | null
           duration: number | null
           id: string
+          is_recurring: boolean | null
           notes: string | null
           organization_id: string | null
           patient_id: string
+          payment_amount: number | null
+          payment_status: string | null
+          recurring_until: string | null
           reminder_sent_24h: string | null
           reminder_sent_2h: string | null
           room: string | null
+          session_package_id: string | null
           status: string | null
           therapist_id: string | null
           type: string
@@ -152,12 +157,17 @@ export type Database = {
           created_at?: string | null
           duration?: number | null
           id?: string
+          is_recurring?: boolean | null
           notes?: string | null
           organization_id?: string | null
           patient_id: string
+          payment_amount?: number | null
+          payment_status?: string | null
+          recurring_until?: string | null
           reminder_sent_24h?: string | null
           reminder_sent_2h?: string | null
           room?: string | null
+          session_package_id?: string | null
           status?: string | null
           therapist_id?: string | null
           type?: string
@@ -172,12 +182,17 @@ export type Database = {
           created_at?: string | null
           duration?: number | null
           id?: string
+          is_recurring?: boolean | null
           notes?: string | null
           organization_id?: string | null
           patient_id?: string
+          payment_amount?: number | null
+          payment_status?: string | null
+          recurring_until?: string | null
           reminder_sent_24h?: string | null
           reminder_sent_2h?: string | null
           room?: string | null
+          session_package_id?: string | null
           status?: string | null
           therapist_id?: string | null
           type?: string
@@ -196,6 +211,13 @@ export type Database = {
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_session_package_id_fkey"
+            columns: ["session_package_id"]
+            isOneToOne: false
+            referencedRelation: "session_packages"
             referencedColumns: ["id"]
           },
           {
@@ -2268,6 +2290,47 @@ export type Database = {
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedule_capacity_config: {
+        Row: {
+          created_at: string | null
+          day_of_week: number
+          end_time: string
+          id: string
+          max_patients: number
+          organization_id: string | null
+          start_time: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          day_of_week: number
+          end_time: string
+          id?: string
+          max_patients?: number
+          organization_id?: string | null
+          start_time: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          max_patients?: number
+          organization_id?: string | null
+          start_time?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_capacity_config_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
