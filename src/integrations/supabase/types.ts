@@ -297,6 +297,168 @@ export type Database = {
           },
         ]
       }
+      clinical_materials: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          download_count: number
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          is_public: boolean
+          name: string
+          organization_id: string | null
+          specialty: Database["public"]["Enums"]["material_specialty"]
+          tags: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          download_count?: number
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          is_public?: boolean
+          name: string
+          organization_id?: string | null
+          specialty?: Database["public"]["Enums"]["material_specialty"]
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          download_count?: number
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          is_public?: boolean
+          name?: string
+          organization_id?: string | null
+          specialty?: Database["public"]["Enums"]["material_specialty"]
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_materials_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communication_logs: {
+        Row: {
+          appointment_id: string | null
+          body: string
+          cost: number | null
+          created_at: string
+          delivered_at: string | null
+          error_message: string | null
+          external_id: string | null
+          failed_at: string | null
+          id: string
+          organization_id: string
+          patient_id: string | null
+          provider: string | null
+          read_at: string | null
+          recipient: string
+          response_at: string | null
+          response_received: boolean | null
+          response_text: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["communication_status"]
+          subject: string | null
+          template_name: string | null
+          type: Database["public"]["Enums"]["communication_type"]
+        }
+        Insert: {
+          appointment_id?: string | null
+          body: string
+          cost?: number | null
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          external_id?: string | null
+          failed_at?: string | null
+          id?: string
+          organization_id: string
+          patient_id?: string | null
+          provider?: string | null
+          read_at?: string | null
+          recipient: string
+          response_at?: string | null
+          response_received?: boolean | null
+          response_text?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["communication_status"]
+          subject?: string | null
+          template_name?: string | null
+          type: Database["public"]["Enums"]["communication_type"]
+        }
+        Update: {
+          appointment_id?: string | null
+          body?: string
+          cost?: number | null
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          external_id?: string | null
+          failed_at?: string | null
+          id?: string
+          organization_id?: string
+          patient_id?: string | null
+          provider?: string | null
+          read_at?: string | null
+          recipient?: string
+          response_at?: string | null
+          response_received?: boolean | null
+          response_text?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["communication_status"]
+          subject?: string | null
+          template_name?: string | null
+          type?: Database["public"]["Enums"]["communication_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_logs_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_logs_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conduct_library: {
         Row: {
           category: string
@@ -1559,6 +1721,108 @@ export type Database = {
           },
         ]
       }
+      patient_precadastro: {
+        Row: {
+          address: string | null
+          allergies: string | null
+          birth_date: string | null
+          completed_at: string | null
+          cpf: string | null
+          created_at: string
+          current_medications: string | null
+          email: string | null
+          emergency_contact: string | null
+          emergency_relationship: string | null
+          expires_at: string
+          full_name: string | null
+          gender: string | null
+          id: string
+          insurance_number: string | null
+          insurance_plan: string | null
+          ip_address: unknown
+          main_complaint: string | null
+          medical_history: string | null
+          organization_id: string
+          patient_id: string | null
+          phone: string | null
+          status: Database["public"]["Enums"]["precadastro_status"]
+          token: string
+          updated_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          address?: string | null
+          allergies?: string | null
+          birth_date?: string | null
+          completed_at?: string | null
+          cpf?: string | null
+          created_at?: string
+          current_medications?: string | null
+          email?: string | null
+          emergency_contact?: string | null
+          emergency_relationship?: string | null
+          expires_at: string
+          full_name?: string | null
+          gender?: string | null
+          id?: string
+          insurance_number?: string | null
+          insurance_plan?: string | null
+          ip_address?: unknown
+          main_complaint?: string | null
+          medical_history?: string | null
+          organization_id: string
+          patient_id?: string | null
+          phone?: string | null
+          status?: Database["public"]["Enums"]["precadastro_status"]
+          token: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          address?: string | null
+          allergies?: string | null
+          birth_date?: string | null
+          completed_at?: string | null
+          cpf?: string | null
+          created_at?: string
+          current_medications?: string | null
+          email?: string | null
+          emergency_contact?: string | null
+          emergency_relationship?: string | null
+          expires_at?: string
+          full_name?: string | null
+          gender?: string | null
+          id?: string
+          insurance_number?: string | null
+          insurance_plan?: string | null
+          ip_address?: unknown
+          main_complaint?: string | null
+          medical_history?: string | null
+          organization_id?: string
+          patient_id?: string | null
+          phone?: string | null
+          status?: Database["public"]["Enums"]["precadastro_status"]
+          token?: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_precadastro_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_precadastro_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_progress: {
         Row: {
           created_at: string | null
@@ -1916,6 +2180,175 @@ export type Database = {
           },
           {
             foreignKeyName: "reports_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      satisfaction_surveys: {
+        Row: {
+          appointment_id: string | null
+          comments: string | null
+          created_at: string
+          id: string
+          nps_score: number | null
+          organization_id: string
+          patient_id: string
+          q_care_quality: number | null
+          q_communication: number | null
+          q_facility_cleanliness: number | null
+          q_professionalism: number | null
+          q_scheduling_ease: number | null
+          responded_at: string | null
+          response_time_hours: number | null
+          sent_at: string
+          suggestions: string | null
+          therapist_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          comments?: string | null
+          created_at?: string
+          id?: string
+          nps_score?: number | null
+          organization_id: string
+          patient_id: string
+          q_care_quality?: number | null
+          q_communication?: number | null
+          q_facility_cleanliness?: number | null
+          q_professionalism?: number | null
+          q_scheduling_ease?: number | null
+          responded_at?: string | null
+          response_time_hours?: number | null
+          sent_at?: string
+          suggestions?: string | null
+          therapist_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string | null
+          comments?: string | null
+          created_at?: string
+          id?: string
+          nps_score?: number | null
+          organization_id?: string
+          patient_id?: string
+          q_care_quality?: number | null
+          q_communication?: number | null
+          q_facility_cleanliness?: number | null
+          q_professionalism?: number | null
+          q_scheduling_ease?: number | null
+          responded_at?: string | null
+          response_time_hours?: number | null
+          sent_at?: string
+          suggestions?: string | null
+          therapist_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "satisfaction_surveys_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "satisfaction_surveys_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "satisfaction_surveys_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_packages: {
+        Row: {
+          created_at: string
+          created_by: string
+          discount_value: number | null
+          final_value: number
+          id: string
+          notes: string | null
+          organization_id: string
+          package_name: string
+          paid_at: string | null
+          patient_id: string
+          payment_method: string | null
+          payment_status: string
+          remaining_sessions: number | null
+          status: Database["public"]["Enums"]["package_status"]
+          total_sessions: number
+          total_value: number
+          updated_at: string
+          used_sessions: number
+          valid_until: string | null
+          value_per_session: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          discount_value?: number | null
+          final_value: number
+          id?: string
+          notes?: string | null
+          organization_id: string
+          package_name: string
+          paid_at?: string | null
+          patient_id: string
+          payment_method?: string | null
+          payment_status?: string
+          remaining_sessions?: number | null
+          status?: Database["public"]["Enums"]["package_status"]
+          total_sessions: number
+          total_value: number
+          updated_at?: string
+          used_sessions?: number
+          valid_until?: string | null
+          value_per_session?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          discount_value?: number | null
+          final_value?: number
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          package_name?: string
+          paid_at?: string | null
+          patient_id?: string
+          payment_method?: string | null
+          payment_status?: string
+          remaining_sessions?: number | null
+          status?: Database["public"]["Enums"]["package_status"]
+          total_sessions?: number
+          total_value?: number
+          updated_at?: string
+          used_sessions?: number
+          valid_until?: string | null
+          value_per_session?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_packages_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_packages_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"
@@ -2655,6 +3088,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      use_package_session: { Args: { _package_id: string }; Returns: boolean }
       user_belongs_to_organization: {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
@@ -2682,6 +3116,23 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "fisioterapeuta" | "estagiario" | "paciente"
+      communication_status:
+        | "pendente"
+        | "enviado"
+        | "entregue"
+        | "lido"
+        | "falha"
+      communication_type: "whatsapp" | "sms" | "email" | "push"
+      material_specialty:
+        | "ortopedia"
+        | "neurologia"
+        | "geriatria"
+        | "esportiva"
+        | "pediatria"
+        | "respiratoria"
+        | "geral"
+      package_status: "ativo" | "consumido" | "expirado" | "cancelado"
+      precadastro_status: "pendente" | "concluido" | "expirado" | "cancelado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2810,6 +3261,25 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "fisioterapeuta", "estagiario", "paciente"],
+      communication_status: [
+        "pendente",
+        "enviado",
+        "entregue",
+        "lido",
+        "falha",
+      ],
+      communication_type: ["whatsapp", "sms", "email", "push"],
+      material_specialty: [
+        "ortopedia",
+        "neurologia",
+        "geriatria",
+        "esportiva",
+        "pediatria",
+        "respiratoria",
+        "geral",
+      ],
+      package_status: ["ativo", "consumido", "expirado", "cancelado"],
+      precadastro_status: ["pendente", "concluido", "expirado", "cancelado"],
     },
   },
 } as const
