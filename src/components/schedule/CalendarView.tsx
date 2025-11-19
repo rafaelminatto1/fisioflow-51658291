@@ -204,11 +204,15 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               });
               const top = slotIndex >= 0 ? slotIndex * 64 : 0; // 64px por slot na view dia
               
+              // Calcular altura baseada na duração (cada 30min = 64px)
+              const duration = apt.duration || 60;
+              const height = Math.max((duration / 30) * 64, 56); // Mínimo 56px
+              
               return (
                 <div
                   key={apt.id}
                   className="absolute left-1 right-1 animate-bounce-in pointer-events-auto"
-                  style={{ top: `${top}px`, height: '56px' }}
+                  style={{ top: `${top}px`, height: `${height}px` }}
                   onClick={() => onAppointmentClick(apt)}
                 >
                   <AppointmentCard
@@ -296,19 +300,24 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         const [slotHour, slotMin] = slot.split(':').map(Number);
                         return slotHour === hours && slotMin === minutes;
                       });
-                      const top = slotIndex >= 0 ? slotIndex * 48 : 0; // 48px por slot
+                      const top = slotIndex >= 0 ? slotIndex * 48 : 0; // 48px por slot em mobile, 64px em desktop
+                      
+                      // Calcular altura baseada na duração (cada 30min = 48px mobile / 64px desktop)
+                      const duration = apt.duration || 60;
+                      const heightMobile = Math.max((duration / 30) * 48, 44);
+                      const heightDesktop = Math.max((duration / 30) * 64, 56);
                       
                       return (
                         <div
                           key={apt.id}
                           className={cn(
-                            "absolute left-0.5 right-0.5 sm:left-1 sm:right-1 p-1.5 sm:p-2.5 rounded-xl text-white text-[10px] sm:text-xs cursor-pointer shadow-xl border-l-[3px] sm:border-l-4 backdrop-blur-sm animate-fade-in",
+                            "absolute left-0.5 right-0.5 sm:left-1 sm:right-1 p-1.5 sm:p-2.5 rounded-xl text-white text-[10px] sm:text-xs cursor-pointer shadow-xl border-l-[3px] sm:border-l-4 backdrop-blur-sm animate-fade-in overflow-hidden flex flex-col",
                             getStatusColor(apt.status),
                             "hover:shadow-2xl hover:scale-[1.03] hover:z-20 hover:-translate-y-0.5 transition-all duration-300 group/card"
                           )}
                           style={{ 
-                            top: `${top}px`, 
-                            height: '44px',
+                            top: `${top}px`,
+                            height: `${heightMobile}px`,
                             minHeight: '44px'
                           }}
                           onClick={(e) => {
