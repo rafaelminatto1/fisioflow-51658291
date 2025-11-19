@@ -202,24 +202,33 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 const [slotHour, slotMin] = slot.split(':').map(Number);
                 return slotHour === hours && slotMin === minutes;
               });
-              const top = slotIndex >= 0 ? slotIndex * 64 : 0; // 64px por slot na view dia
               
-              // Calcular altura baseada na duração (cada 30min = 64px)
+              // Calcular altura baseada na duração (cada slot = 64px, cada slot = 30min)
               const duration = apt.duration || 60;
-              const height = Math.max((duration / 30) * 64, 56); // Mínimo 56px
+              const heightInPixels = (duration / 30) * 64;
+              const top = slotIndex >= 0 ? slotIndex * 64 : 0;
               
               return (
                 <div
                   key={apt.id}
-                  className="absolute left-1 right-1 animate-bounce-in pointer-events-auto"
-                  style={{ top: `${top}px`, height: `${height}px` }}
+                  className={cn(
+                    "absolute left-1 right-1 p-2 rounded-xl text-white cursor-pointer shadow-xl border-l-4 backdrop-blur-sm animate-fade-in overflow-hidden",
+                    getStatusColor(apt.status),
+                    "hover:shadow-2xl hover:scale-[1.02] hover:z-20 transition-all duration-300"
+                  )}
+                  style={{ 
+                    top: `${top}px`, 
+                    height: `${heightInPixels}px`
+                  }}
                   onClick={() => onAppointmentClick(apt)}
                 >
-                  <AppointmentCard
-                    appointment={apt}
-                    variant="compact"
-                    onClick={() => onAppointmentClick(apt)}
-                  />
+                  <div className="font-bold text-sm truncate leading-tight">
+                    {apt.patientName}
+                  </div>
+                  <div className="text-xs opacity-90 flex items-center gap-1 mt-1">
+                    <Clock className="h-3 w-3 flex-shrink-0" />
+                    <span>{apt.time}</span>
+                  </div>
                 </div>
               );
             })}
@@ -300,42 +309,48 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         const [slotHour, slotMin] = slot.split(':').map(Number);
                         return slotHour === hours && slotMin === minutes;
                       });
-                      const top = slotIndex >= 0 ? slotIndex * 48 : 0; // 48px por slot em mobile, 64px em desktop
                       
-                      // Calcular altura baseada na duração (cada 30min = 48px mobile / 64px desktop)
+                      // Altura e posição baseada na duração: 48px/slot mobile, 64px/slot desktop (cada slot = 30min)
                       const duration = apt.duration || 60;
-                      const heightMobile = Math.max((duration / 30) * 48, 44);
-                      const heightDesktop = Math.max((duration / 30) * 64, 56);
+                      const slots = duration / 30;
+                      const heightMobile = slots * 48; // h-12 = 48px
+                      const heightDesktop = slots * 64; // sm:h-16 = 64px
+                      const topMobile = slotIndex >= 0 ? slotIndex * 48 : 0;
+                      const topDesktop = slotIndex >= 0 ? slotIndex * 64 : 0;
                       
                       return (
                         <div
                           key={apt.id}
                           className={cn(
-                            "absolute left-0.5 right-0.5 sm:left-1 sm:right-1 p-1.5 sm:p-2.5 rounded-xl text-white text-[10px] sm:text-xs cursor-pointer shadow-xl border-l-[3px] sm:border-l-4 backdrop-blur-sm animate-fade-in overflow-hidden flex flex-col",
+                            "absolute left-0.5 right-0.5 sm:left-1 sm:right-1 p-1.5 sm:p-2.5 rounded-xl text-white cursor-pointer shadow-xl border-l-[3px] sm:border-l-4 backdrop-blur-sm animate-fade-in overflow-hidden",
                             getStatusColor(apt.status),
-                            "hover:shadow-2xl hover:scale-[1.03] hover:z-20 hover:-translate-y-0.5 transition-all duration-300 group/card"
+                            "hover:shadow-2xl hover:scale-[1.02] hover:z-20 transition-all duration-200 group/card"
                           )}
                           style={{ 
-                            top: `${top}px`,
+                            top: `${topMobile}px`,
                             height: `${heightMobile}px`,
-                            minHeight: '44px'
-                          }}
+                            ['--top-desktop' as any]: `${topDesktop}px`,
+                            ['--height-desktop' as any]: `${heightDesktop}px`
+                          } as React.CSSProperties}
                           onClick={(e) => {
                             e.stopPropagation();
                             onAppointmentClick(apt);
                           }}
                         >
-                          <div className="font-extrabold drop-shadow-md leading-tight text-[11px] sm:text-xs">
+                          <style dangerouslySetInnerHTML={{__html: `
+                            @media (min-width: 640px) {
+                              [style*="--top-desktop"][style*="--height-desktop"] {
+                                top: var(--top-desktop) !important;
+                                height: var(--height-desktop) !important;
+                              }
+                            }
+                          `}} />
+                          <div className="font-extrabold drop-shadow-md leading-tight text-[11px] sm:text-xs truncate">
                             {apt.patientName}
                           </div>
                           <div className="opacity-95 text-[9px] sm:text-xs mt-0.5 flex items-center gap-1 font-semibold">
-                            <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                            <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3 flex-shrink-0" />
                             <span>{apt.time}</span>
-                          </div>
-                          
-                          {/* Pulse indicator on hover */}
-                          <div className="absolute top-1 right-1 opacity-0 group-hover/card:opacity-100 transition-all duration-300">
-                            <div className="w-2 h-2 bg-white rounded-full animate-pulse shadow-lg ring-2 ring-white/50" />
                           </div>
                         </div>
                       );
