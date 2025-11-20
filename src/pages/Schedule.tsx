@@ -217,14 +217,13 @@ const Schedule = () => {
         const time = `${hour.toString().padStart(2, '0')}:00`;
         
         await createAppointmentMutation.mutateAsync({
-          patientId: patients[i % patients.length].id,
-          date: appointmentDate,
-          time: time,
+          patient_id: patients[i % patients.length].id,
+          appointment_date: appointmentDate.toISOString().split('T')[0],
+          appointment_time: time,
           duration: 60,
           type: types[i % types.length] as any,
           status: statuses[i % statuses.length] as any,
-          notes: `Agendamento de teste - ${statuses[i % statuses.length]}`,
-          priority: 'Normal'
+          notes: `Agendamento de teste - ${statuses[i % statuses.length]}`
         });
       }
       
