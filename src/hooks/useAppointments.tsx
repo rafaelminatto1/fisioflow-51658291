@@ -118,13 +118,13 @@ export function useCreateAppointment() {
 
   return useMutation({
     mutationFn: async (data: AppointmentFormData) => {
-      logger.info('Criando novo agendamento', { patientId: data.patientId, date: data.date }, 'useAppointments');
+      logger.info('Criando novo agendamento', { patientId: data.patient_id, date: data.appointment_date }, 'useAppointments');
 
       // Check for conflicts with current data
       const currentAppointments = queryClient.getQueryData<AppointmentBase[]>(['appointments']) || [];
       const conflict = checkAppointmentConflict({
-        date: data.date,
-        time: data.time,
+        date: new Date(data.appointment_date),
+        time: data.appointment_time,
         duration: data.duration,
         appointments: currentAppointments
       });
@@ -134,12 +134,12 @@ export function useCreateAppointment() {
         throw new Error('Conflito de horário');
       }
 
-      const { data: newAppointment, error } = await supabase
+      const { data: newAppointment, error} = await supabase
         .from('appointments')
         .insert({
-          patient_id: data.patientId,
-          appointment_date: data.date.toISOString().split('T')[0],
-          appointment_time: data.time,
+          patient_id: data.patient_id,
+          appointment_date: data.appointment_date,
+          appointment_time: data.appointment_time,
           duration: data.duration,
           type: data.type,
           status: data.status || 'agendado',
@@ -226,14 +226,14 @@ export function useUpdateAppointment() {
       logger.info('Atualizando agendamento', { appointmentId, updates }, 'useAppointments');
 
       // Check for conflicts if date/time is being changed
-      if (updates.date || updates.time || updates.duration) {
+      if (updates.appointment_date || updates.appointment_time || updates.duration) {
         const currentAppointments = queryClient.getQueryData<AppointmentBase[]>(['appointments']) || [];
         const existing = currentAppointments.find(apt => apt.id === appointmentId);
         
         if (existing) {
           const conflict = checkAppointmentConflict({
-            date: updates.date || existing.date,
-            time: updates.time || existing.time,
+            date: updates.appointment_date ? new Date(updates.appointment_date) : existing.date,
+            time: updates.appointment_time || existing.time,
             duration: updates.duration || existing.duration,
             excludeId: appointmentId,
             appointments: currentAppointments
@@ -246,9 +246,9 @@ export function useUpdateAppointment() {
       }
 
       const updateData: any = {};
-      if (updates.patientId) updateData.patient_id = updates.patientId;
-      if (updates.date) updateData.appointment_date = updates.date.toISOString().split('T')[0];
-      if (updates.time) updateData.appointment_time = updates.time;
+      if (updates.patient_id) updateData.patient_id = updates.patient_id;
+      if (updates.appointment_date) updateData.appointment_date = updates.appointment_date;
+      if (updates.appointment_time) updateData.appointment_time = updates.appointment_time;
       if (updates.duration) updateData.duration = updates.duration;
       if (updates.type) updateData.type = updates.type;
       if (updates.status) updateData.status = updates.status;
@@ -292,7 +292,7 @@ export function useUpdateAppointment() {
       logger.info('Agendamento atualizado com sucesso', { appointmentId: transformedAppointment.id }, 'useAppointments');
       
       // Se data/hora mudou, notificar reagendamento
-      if (updates.date || updates.time) {
+      if (updates.appointment_date || updates.appointment_time) {
         AppointmentNotificationService.notifyReschedule(
           transformedAppointment.id,
           transformedAppointment.patientId,
@@ -420,12 +420,12 @@ export function useRescheduleAppointment() {
   const { mutateAsync } = useUpdateAppointment();
   
   return {
-    mutateAsync: ({ appointmentId, date, time, duration }: { 
+    mutateAsync: ({ appointmentId, appointment_date, appointment_time, duration }: { 
       appointmentId: string; 
-      date?: Date; 
-      time?: string; 
+      appointment_date?: string; 
+      appointment_time?: string; 
       duration?: number; 
-    }) => mutateAsync({ appointmentId, updates: { date, time, duration } }),
+    }) => mutateAsync({ appointmentId, updates: { appointment_date, appointment_time, duration } }),
     isPending: false
   };
 }
