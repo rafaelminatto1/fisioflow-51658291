@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -22,20 +23,36 @@ import { PatientCombobox } from '@/components/ui/patient-combobox';
 import { QuickPatientModal } from '@/components/modals/QuickPatientModal';
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
 import { toast } from '@/hooks/use-toast';
+import { useScheduleCapacity } from '@/hooks/useScheduleCapacity';
 
 const appointmentSchema = z.object({
-  patientId: z.string().min(1, 'Selecione um paciente'),
-  date: z.date({
+  patient_id: z.string().min(1, 'Selecione um paciente'),
+  appointment_date: z.date({
     required_error: 'Selecione uma data',
   }),
-  time: z.string().min(1, 'Selecione um horário'),
+  appointment_time: z.string().min(1, 'Selecione um horário'),
   duration: z.number().min(15, 'Duração mínima de 15 minutos').max(240, 'Duração máxima de 4 horas'),
   type: z.string().min(1, 'Selecione o tipo de consulta'),
   status: z.string().min(1, 'Selecione o status'),
   notes: z.string().optional(),
-  therapistId: z.string().optional(),
-  room: z.string().optional()
+  therapist_id: z.string().optional(),
+  room: z.string().optional(),
+  payment_status: z.enum(['pending', 'paid', 'package']).default('pending'),
+  payment_amount: z.number().min(0).optional(),
+  session_package_id: z.string().uuid().optional(),
+  is_recurring: z.boolean().default(false),
+  recurring_until: z.date().optional(),
+}).refine((data) => {
+  if (data.is_recurring && !data.recurring_until) {
+    return false;
+  }
+  return true;
+}, {
+  message: 'Selecione a data final da recorrência',
+  path: ['recurring_until']
 });
+
+type AppointmentSchemaType = z.infer<typeof appointmentSchema>;
 
 interface AppointmentModalProps {
   isOpen: boolean;
@@ -59,7 +76,6 @@ const appointmentTypes: AppointmentType[] = [
   'Liberação Miofascial'
 ];
 
-// Status válidos conforme constraint do banco
 const appointmentStatuses = [
   'agendado',
   'confirmado',
@@ -108,56 +124,72 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
   mode: initialMode = 'create'
 }) => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [conflictCheck, setConflictCheck] = useState<{ hasConflict: boolean; conflictingAppointment?: AppointmentBase } | null>(null);
-  const [isQuickPatientModalOpen, setIsQuickPatientModalOpen] = useState(false);
-  const [quickPatientSearchTerm, setQuickPatientSearchTerm] = useState('');
+  const [isRecurringCalendarOpen, setIsRecurringCalendarOpen] = useState(false);
+  const [conflictCheck, setConflictCheck] = useState<{ hasConflict: boolean; conflictingAppointment?: AppointmentBase; conflictCount?: number } | null>(null);
+  const [quickPatientModalOpen, setQuickPatientModalOpen] = useState(false);
   const [currentMode, setCurrentMode] = useState<'create' | 'edit' | 'view'>(initialMode);
-  const createAppointmentMutation = useCreateAppointment();
-  const updateAppointmentMutation = useUpdateAppointment();
-  const { data: patients = [] } = useActivePatients();
-  const { data: allAppointments = [] } = useAppointments();
+  const { mutate: createAppointmentMutation, isPending: isCreating } = useCreateAppointment();
+  const { mutate: updateAppointmentMutation, isPending: isUpdating } = useUpdateAppointment();
+  const { data: activePatients, isLoading: patientsLoading } = useActivePatients();
+  const { data: appointments = [] } = useAppointments();
+  const { getCapacityForTime } = useScheduleCapacity();
 
-  // Reset mode quando o modal é reaberto
-  useEffect(() => {
-    if (isOpen) {
-      setCurrentMode(initialMode);
-    }
-  }, [isOpen, initialMode]);
-
-  const form = useForm<AppointmentFormData>({
+  const { register, handleSubmit, formState: { errors }, setValue, watch, reset } = useForm<AppointmentSchemaType>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
-      patientId: appointment?.patientId || '',
-      date: appointment?.date || defaultDate || new Date(),
-      time: appointment?.time || defaultTime || '09:00',
+      patient_id: (appointment as any)?.patient_id || '',
+      appointment_date: (appointment as any)?.appointment_date ? new Date((appointment as any).appointment_date) : (defaultDate || new Date()),
+      appointment_time: (appointment as any)?.appointment_time || defaultTime || '',
       duration: appointment?.duration || 60,
       type: appointment?.type || 'Fisioterapia',
       status: appointment?.status || 'agendado',
       notes: appointment?.notes || '',
-      priority: 'Normal'
-    }
+      therapist_id: (appointment as any)?.therapist_id || undefined,
+      room: (appointment as any)?.room || undefined,
+      payment_status: 'pending',
+      payment_amount: undefined,
+      session_package_id: undefined,
+      is_recurring: false,
+      recurring_until: undefined,
+    },
   });
 
-  const { register, handleSubmit, watch, setValue, reset, formState: { errors, isSubmitting } } = form;
-  const watchedDate = watch('date');
-  const watchedTime = watch('time');
-  const watchedDuration = watch('duration');
-
-  // Reset form quando defaultDate/defaultTime mudarem
   useEffect(() => {
-    if (isOpen && !appointment) {
+    if (appointment && isOpen) {
+      const apt = appointment as any;
+      setValue('patient_id', apt.patient_id);
+      setValue('appointment_date', apt.appointment_date ? new Date(apt.appointment_date) : new Date());
+      setValue('appointment_time', apt.appointment_time);
+      setValue('duration', appointment.duration || 60);
+      setValue('type', appointment.type || 'Fisioterapia');
+      setValue('status', appointment.status || 'agendado');
+      setValue('notes', appointment.notes || '');
+      setValue('therapist_id', apt.therapist_id);
+      setValue('room', apt.room || undefined);
+      setValue('payment_status', 'pending');
+      setValue('payment_amount', undefined);
+      setValue('session_package_id', undefined);
+      setValue('is_recurring', false);
+      setValue('recurring_until', undefined);
+    } else {
       reset({
-        patientId: '',
-        date: defaultDate || new Date(),
-        time: defaultTime || '09:00',
+        patient_id: '',
+        appointment_date: defaultDate || new Date(),
+        appointment_time: defaultTime || '',
         duration: 60,
         type: 'Fisioterapia',
         status: 'agendado',
         notes: '',
-        priority: 'Normal'
+        payment_status: 'pending',
+        is_recurring: false,
       });
     }
-  }, [isOpen, defaultDate, defaultTime, appointment, reset]);
+    setCurrentMode(initialMode);
+  }, [appointment, isOpen, defaultDate, defaultTime, initialMode, setValue, reset]);
+
+  const watchedDate = watch('appointment_date');
+  const watchedTime = watch('appointment_time');
+  const watchedDuration = watch('duration');
 
   useEffect(() => {
     if (watchedDate && watchedTime && watchedDuration) {
@@ -166,145 +198,145 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
         time: watchedTime,
         duration: watchedDuration,
         excludeId: appointment?.id,
-        appointments: allAppointments
+        appointments: appointments
       });
       setConflictCheck(result);
-    } else {
-      setConflictCheck(null);
     }
-  }, [watchedDate, watchedTime, watchedDuration, appointment?.id, allAppointments]);
+  }, [watchedDate, watchedTime, watchedDuration, appointment?.id, appointments]);
 
-  // Generate time slots (15-minute intervals from 7:00 to 19:00)
-  const timeSlots = React.useMemo(() => {
-    const slots = [];
-    for (let hour = 7; hour < 19; hour++) {
-      for (let minute = 0; minute < 60; minute += 15) {
-        slots.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
+  const timeSlots = useMemo(() => {
+    const slots: string[] = [];
+    for (let hour = 7; hour < 21; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        slots.push(`${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`);
       }
     }
     return slots;
   }, []);
 
-  const handleSave = async (data: any) => {
-    // Verificar conflito antes de salvar
-    if (conflictCheck?.hasConflict) {
-      toast({
-        title: "⚠️ Conflito de horário",
-        description: `Já existe um agendamento com ${conflictCheck.conflictingAppointment?.patientName} neste horário.`,
-        variant: "destructive"
-      });
-      return;
-    }
-
+  const handleSave = async (data: AppointmentSchemaType) => {
     try {
+      const dateStr = format(data.appointment_date, 'yyyy-MM-dd');
+
+      const formData: AppointmentFormData = {
+        patient_id: data.patient_id,
+        appointment_date: dateStr,
+        appointment_time: data.appointment_time,
+        duration: data.duration,
+        type: data.type as AppointmentType,
+        status: data.status as AppointmentStatus,
+        notes: data.notes || null,
+        therapist_id: data.therapist_id || null,
+        room: data.room || null,
+        payment_status: data.payment_status,
+        payment_amount: data.payment_amount || null,
+        session_package_id: data.session_package_id || null,
+        is_recurring: data.is_recurring,
+        recurring_until: data.recurring_until ? format(data.recurring_until, 'yyyy-MM-dd') : null,
+      };
+
       if (currentMode === 'edit' && appointment) {
-        await updateAppointmentMutation.mutateAsync({ appointmentId: appointment.id, updates: data });
-        toast({
-          title: "✅ Agendamento atualizado",
-          description: "O agendamento foi atualizado com sucesso."
-        });
+        updateAppointmentMutation(
+          { id: appointment.id, ...formData },
+          {
+            onSuccess: () => {
+              toast({
+                title: 'Agendamento atualizado',
+                description: 'As alterações foram salvas com sucesso.',
+              });
+              onClose();
+            },
+            onError: (error: Error) => {
+              toast({
+                title: 'Erro ao atualizar',
+                description: error.message,
+                variant: 'destructive'
+              });
+            }
+          }
+        );
       } else {
-        await createAppointmentMutation.mutateAsync(data);
-        toast({
-          title: "✅ Agendamento criado",
-          description: "O agendamento foi criado com sucesso."
+        createAppointmentMutation(formData, {
+          onSuccess: () => {
+            toast({
+              title: 'Agendamento criado',
+              description: 'O agendamento foi criado com sucesso.',
+            });
+            onClose();
+          },
+          onError: (error: Error) => {
+            toast({
+              title: 'Erro ao criar',
+              description: error.message,
+              variant: 'destructive'
+            });
+          }
         });
       }
-      
-      // Limpar formulário e fechar modal
-      form.reset();
-      setCurrentMode('create');
-      onClose();
     } catch (error) {
       console.error('Error saving appointment:', error);
       toast({
-        title: "❌ Erro ao salvar",
-        description: error instanceof Error ? error.message : "Ocorreu um erro ao salvar o agendamento.",
-        variant: "destructive"
+        title: 'Erro',
+        description: 'Ocorreu um erro ao salvar o agendamento.',
+        variant: 'destructive'
       });
     }
   };
 
-  const handleDelete = async () => {
-    if (appointment && window.confirm('Tem certeza que deseja excluir este agendamento?')) {
-      // TODO: Implement delete appointment functionality
-      console.log('Delete appointment:', appointment.id);
-      onClose();
-    }
+  const handleDelete = () => {
+    toast({
+      title: 'Funcionalidade em desenvolvimento',
+      description: 'A exclusão de agendamentos estará disponível em breve.',
+    });
   };
 
   const getStatusBadgeVariant = (status: string) => {
-    const colorClass = statusColors[status] || 'bg-gradient-to-r from-gray-500 to-gray-600';
-    return colorClass;
+    return statusColors[status] || 'bg-gray-500';
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto p-0">
-        <DialogHeader className="p-6 pb-4 border-b bg-gradient-to-r from-primary/5 to-primary/10">
-          <DialogTitle className="flex items-center gap-3 text-xl">
-            {currentMode === 'create' && (
-              <>
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <CalendarIcon className="w-5 h-5 text-primary" />
-                </div>
-                <span>Novo Agendamento</span>
-              </>
-            )}
-            {currentMode === 'edit' && (
-              <>
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <CalendarIcon className="w-5 h-5 text-primary" />
-                </div>
-                <span>Editar Agendamento</span>
-              </>
-            )}
-            {currentMode === 'view' && (
-              <>
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <CalendarIcon className="w-5 h-5 text-primary" />
-                </div>
-                <span>Detalhes do Agendamento</span>
-              </>
-            )}
+      <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-hidden flex flex-col bg-gradient-to-br from-background via-background to-muted/20">
+        <DialogHeader className="pb-4 border-b space-y-2 flex-shrink-0">
+          <DialogTitle className="text-2xl font-bold flex items-center gap-3">
+            <div className="p-2 bg-gradient-primary rounded-lg shadow-medical">
+              <CalendarIcon className="w-6 h-6 text-white" />
+            </div>
+            <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              {currentMode === 'create' ? 'Novo Agendamento' : currentMode === 'edit' ? 'Editar Agendamento' : 'Detalhes do Agendamento'}
+            </span>
           </DialogTitle>
-          <DialogDescription id="appointment-dialog-desc" className="sr-only">
-            Preencha os campos para {currentMode === 'edit' ? 'editar' : 'criar'} um agendamento.
+          <DialogDescription className="text-base text-muted-foreground">
+            {currentMode === 'create' ? 'Preencha os dados para criar um novo agendamento' : 
+             currentMode === 'edit' ? 'Atualize os dados do agendamento' :
+             'Visualize as informações do agendamento'}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(handleSave)} className="p-6 space-y-6">
-          {/* Patient Selection - Com Autocomplete */}
+        <form onSubmit={handleSubmit(handleSave)} className="space-y-6 pt-4 overflow-y-auto flex-1 pr-2">
+          {/* Patient Selection */}
           <div className="space-y-3 p-4 bg-muted/30 rounded-lg border">
             <div className="flex items-center gap-2 text-sm font-medium">
               <User className="w-4 h-4 text-primary" />
-              <Label htmlFor="patientId">Paciente *</Label>
+              <Label>Paciente *</Label>
             </div>
             <PatientCombobox
-              patients={patients.map(p => ({
-                id: p.id,
-                name: p.name,
-                incomplete_registration: p.incomplete_registration
-              }))}
-              value={watch('patientId')}
-              onValueChange={(value) => setValue('patientId', value)}
-              onCreateNew={(searchTerm) => {
-                setQuickPatientSearchTerm(searchTerm);
-                setIsQuickPatientModalOpen(true);
-              }}
-              disabled={currentMode === 'view'}
+              patients={activePatients || []}
+              value={watch('patient_id')}
+              onChange={(value) => setValue('patient_id', value)}
+              onAddNew={() => setQuickPatientModalOpen(true)}
+              disabled={currentMode === 'view' || patientsLoading}
             />
-            {errors.patientId && (
+            {errors.patient_id && (
               <p className="text-sm text-destructive flex items-center gap-1">
                 <AlertTriangle className="w-3 h-3" />
-                {errors.patientId.message}
+                {errors.patient_id.message}
               </p>
             )}
           </div>
 
-          {/* Date and Time - Design melhorado */}
+          {/* Date and Time */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Date */}
             <div className="space-y-3 p-4 bg-muted/30 rounded-lg border">
               <div className="flex items-center gap-2 text-sm font-medium">
                 <CalendarIcon className="w-4 h-4 text-primary" />
@@ -333,34 +365,32 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                     mode="single"
                     selected={watchedDate}
                     onSelect={(date) => {
-                      setValue('date', date || new Date());
+                      setValue('appointment_date', date || new Date());
                       setIsCalendarOpen(false);
                     }}
                     disabled={(date) =>
                       date < new Date(new Date().setHours(0, 0, 0, 0))
                     }
                     initialFocus
-                    className={cn("p-3 pointer-events-auto")}
                   />
                 </PopoverContent>
               </Popover>
-              {errors.date && (
+              {errors.appointment_date && (
                 <p className="text-sm text-destructive flex items-center gap-1">
                   <AlertTriangle className="w-3 h-3" />
-                  {errors.date.message}
+                  {errors.appointment_date.message}
                 </p>
               )}
             </div>
 
-            {/* Time */}
             <div className="space-y-3 p-4 bg-muted/30 rounded-lg border">
               <div className="flex items-center gap-2 text-sm font-medium">
                 <Clock className="w-4 h-4 text-primary" />
-                <Label htmlFor="time">Horário *</Label>
+                <Label>Horário *</Label>
               </div>
               <Select
                 value={watchedTime}
-                onValueChange={(value) => setValue('time', value)}
+                onValueChange={(value) => setValue('appointment_time', value)}
                 disabled={currentMode === 'view'}
               >
                 <SelectTrigger className="bg-background">
@@ -369,44 +399,61 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                 <SelectContent className="max-h-60">
                   {timeSlots.map((slot) => (
                     <SelectItem key={slot} value={slot}>
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4" />
-                        <span className="font-medium">{slot}</span>
-                      </div>
+                      {slot}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {errors.time && (
+              {errors.appointment_time && (
                 <p className="text-sm text-destructive flex items-center gap-1">
                   <AlertTriangle className="w-3 h-3" />
-                  {errors.time.message}
+                  {errors.appointment_time.message}
                 </p>
               )}
             </div>
           </div>
 
-          {/* Conflict Warning - Redesenhado */}
-          {conflictCheck?.hasConflict && (
-            <div className="flex items-start gap-3 p-4 border-2 border-destructive/30 bg-destructive/5 rounded-xl animate-fade-in">
-              <div className="p-2 bg-destructive/10 rounded-lg">
-                <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0" />
+          {/* Capacity Warning */}
+          {watchedDate && watchedTime && (() => {
+            const dayOfWeek = watchedDate.getDay();
+            const maxCapacity = getCapacityForTime(dayOfWeek, watchedTime);
+            const conflictCount = conflictCheck?.conflictCount || 0;
+            const exceedsCapacity = conflictCount >= maxCapacity;
+            
+            return (conflictCount > 0 || exceedsCapacity) && (
+              <div className={cn(
+                "flex items-start gap-3 p-4 border-2 rounded-xl animate-fade-in",
+                exceedsCapacity 
+                  ? "border-amber-500/30 bg-amber-500/5" 
+                  : "border-blue-500/30 bg-blue-500/5"
+              )}>
+                <div className={cn(
+                  "p-2 rounded-lg",
+                  exceedsCapacity ? "bg-amber-500/10" : "bg-blue-500/10"
+                )}>
+                  <AlertTriangle className={cn(
+                    "w-5 h-5 flex-shrink-0",
+                    exceedsCapacity ? "text-amber-600" : "text-blue-600"
+                  )} />
+                </div>
+                <div className="space-y-1 flex-1">
+                  <p className={cn(
+                    "text-sm font-semibold",
+                    exceedsCapacity ? "text-amber-600" : "text-blue-600"
+                  )}>
+                    {exceedsCapacity ? '⚠️ Capacidade Excedida' : 'ℹ️ Horário em Uso'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {conflictCount} de {maxCapacity} paciente(s) agendado(s) neste horário.
+                    {exceedsCapacity && ' Capacidade máxima atingida!'}
+                  </p>
+                </div>
               </div>
-              <div className="space-y-1 flex-1">
-                <p className="text-sm font-semibold text-destructive">
-                  ⚠️ Conflito de Horário Detectado
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Já existe um agendamento neste horário com{' '}
-                  <strong className="text-foreground">{conflictCheck.conflictingAppointment?.patientName}</strong>
-                </p>
-              </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Duration, Type, and Status */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Duration */}
             <div className="space-y-2">
               <Label htmlFor="duration">Duração (min) *</Label>
               <Input
@@ -423,7 +470,6 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
               )}
             </div>
 
-            {/* Type */}
             <div className="space-y-2">
               <Label htmlFor="type">Tipo *</Label>
               <Select
@@ -447,7 +493,6 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
               )}
             </div>
 
-            {/* Status */}
             <div className="space-y-2">
               <Label htmlFor="status">Status *</Label>
               {currentMode === 'view' ? (
@@ -481,15 +526,110 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
             </div>
           </div>
 
-          {/* Optional Fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Additional field placeholder */}
-            <div className="space-y-2">
-              <Label>Configurações Adicionais</Label>
-              <p className="text-sm text-muted-foreground">
-                Campos adicionais serão implementados na próxima versão
-              </p>
+          {/* Payment Fields */}
+          <div className="space-y-4 p-4 bg-muted/30 rounded-lg border">
+            <Label className="text-base font-semibold">Pagamento</Label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="payment_status">Status do Pagamento</Label>
+                <Select
+                  value={watch('payment_status')}
+                  onValueChange={(value) => setValue('payment_status', value as 'pending' | 'paid' | 'package')}
+                  disabled={currentMode === 'view'}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pendente</SelectItem>
+                    <SelectItem value="paid">Pago (Avulso)</SelectItem>
+                    <SelectItem value="package">Pacote</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {watch('payment_status') === 'paid' && (
+                <div className="space-y-2">
+                  <Label htmlFor="payment_amount">Valor Pago (R$)</Label>
+                  <Input
+                    id="payment_amount"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="180.00"
+                    {...register('payment_amount', { valueAsNumber: true })}
+                    disabled={currentMode === 'view'}
+                  />
+                </div>
+              )}
+
+              {watch('payment_status') === 'package' && (
+                <div className="space-y-2">
+                  <Label>Pacote de Sessões</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Será descontado do pacote do paciente
+                  </p>
+                </div>
+              )}
             </div>
+          </div>
+
+          {/* Recurring Fields */}
+          <div className="space-y-4 p-4 bg-muted/30 rounded-lg border">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="is_recurring"
+                checked={watch('is_recurring')}
+                onCheckedChange={(checked) => setValue('is_recurring', checked as boolean)}
+                disabled={currentMode === 'view'}
+              />
+              <Label htmlFor="is_recurring" className="text-base font-semibold cursor-pointer">
+                Agendamento Recorrente
+              </Label>
+            </div>
+
+            {watch('is_recurring') && (
+              <div className="space-y-2 pl-6">
+                <Label htmlFor="recurring_until">Repetir até</Label>
+                <Popover open={isRecurringCalendarOpen} onOpenChange={setIsRecurringCalendarOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !watch('recurring_until') && "text-muted-foreground"
+                      )}
+                      disabled={currentMode === 'view'}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {watch('recurring_until') ? (
+                        format(watch('recurring_until')!, 'dd/MM/yyyy', { locale: ptBR })
+                      ) : (
+                        "Selecione a data final"
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={watch('recurring_until')}
+                      onSelect={(date) => {
+                        setValue('recurring_until', date);
+                        setIsRecurringCalendarOpen(false);
+                      }}
+                      disabled={(date) => date < watchedDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                {errors.recurring_until && (
+                  <p className="text-sm text-destructive">{errors.recurring_until.message}</p>
+                )}
+                <p className="text-sm text-muted-foreground">
+                  Este agendamento se repetirá semanalmente até a data selecionada
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Notes */}
@@ -506,7 +646,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-between gap-3 pt-4 border-t">
+          <div className="flex justify-between gap-3 pt-4 border-t flex-shrink-0">
             <div>
               {currentMode === 'edit' && appointment && (
                 <Button
@@ -533,21 +673,6 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                     <CalendarIcon className="w-4 h-4" />
                     Editar
                   </Button>
-                  
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => {
-                      onClose();
-                      setTimeout(() => {
-                        window.location.href = `/patient-evolution/${appointment.id}`;
-                      }, 100);
-                    }}
-                    className="flex items-center gap-2 hover-lift"
-                  >
-                    <Check className="w-4 h-4" />
-                    Iniciar Atendimento
-                  </Button>
                 </>
               )}
               
@@ -555,7 +680,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                 type="button"
                 variant="outline"
                 onClick={onClose}
-                disabled={createAppointmentMutation.isPending || updateAppointmentMutation.isPending}
+                disabled={isCreating || isUpdating}
                 className="hover-scale"
               >
                 {currentMode === 'view' ? 'Fechar' : 'Cancelar'}
@@ -564,14 +689,10 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
               {currentMode !== 'view' && (
                 <Button
                   type="submit"
-                  disabled={
-                    createAppointmentMutation.isPending || 
-                    updateAppointmentMutation.isPending || 
-                    conflictCheck?.hasConflict
-                  }
+                  disabled={isCreating || isUpdating}
                   className="flex items-center gap-2 relative min-w-[140px] bg-gradient-primary hover-lift shadow-medical"
                 >
-                   {(createAppointmentMutation.isPending || updateAppointmentMutation.isPending) ? (
+                  {(isCreating || isUpdating) ? (
                     <>
                       <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                       <span>Salvando...</span>
@@ -579,7 +700,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                   ) : (
                     <>
                       <Check className="w-4 h-4" />
-                      <span>{currentMode === 'edit' ? 'Atualizar' : 'Criar Agendamento'}</span>
+                      <span>{currentMode === 'edit' ? 'Salvar Alterações' : 'Criar Agendamento'}</span>
                     </>
                   )}
                 </Button>
@@ -587,19 +708,18 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
             </div>
           </div>
         </form>
+      </DialogContent>
 
-        {/* Quick Patient Registration Modal */}
+      {quickPatientModalOpen && (
         <QuickPatientModal
-          open={isQuickPatientModalOpen}
-          onOpenChange={setIsQuickPatientModalOpen}
-          suggestedName={quickPatientSearchTerm}
-          onPatientCreated={(patientId, patientName) => {
-            setValue('patientId', patientId);
-            // Force re-fetch of patients list
-            window.location.reload();
+          open={quickPatientModalOpen}
+          onClose={() => setQuickPatientModalOpen(false)}
+          onSuccess={(patientId) => {
+            setValue('patient_id', patientId);
+            setQuickPatientModalOpen(false);
           }}
         />
-      </DialogContent>
+      )}
     </Dialog>
   );
 };
