@@ -307,7 +307,22 @@ export interface CalendarSettings {
 }
 
 // Form data types
-export type AppointmentFormData = Omit<EnhancedAppointment, 'id' | 'patientName' | 'phone' | 'createdAt' | 'updatedAt' | 'therapistName' | 'roomName' | 'equipment' | 'recurrenceId' | 'isRecurring' | 'recurrencePattern' | 'reminderSent' | 'confirmationSent' | 'lastReminderSent' | 'previousAppointmentId' | 'nextAppointmentId' | 'treatmentPhase' | 'sessionNumber' | 'preferredTime' | 'preferredDays' | 'cancellationReason' | 'rescheduledFromId' | 'rescheduledToId' | 'cancellationTimestamp' | 'color' | 'externalCalendarId' | 'syncedWithGoogle' | 'syncedWithOutlook'>;
+export type AppointmentFormData = {
+  patient_id: string;
+  appointment_date: string;
+  appointment_time: string;
+  duration: number;
+  type: AppointmentType;
+  status: AppointmentStatus;
+  notes?: string | null;
+  therapist_id?: string | null;
+  room?: string | null;
+  payment_status?: string | null;
+  payment_amount?: number | null;
+  session_package_id?: string | null;
+  is_recurring?: boolean | null;
+  recurring_until?: string | null;
+};
 export type AppointmentTemplateFormData = Omit<AppointmentTemplate, 'id' | 'createdAt' | 'updatedAt'>;
 export type TherapistFormData = Omit<Therapist, 'id' | 'createdAt' | 'updatedAt'>;
 export type RoomFormData = Omit<Room, 'id' | 'createdAt' | 'updatedAt'>;
