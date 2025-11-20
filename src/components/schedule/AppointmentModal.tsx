@@ -236,8 +236,10 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
       };
 
       if (currentMode === 'edit' && appointment) {
-        updateAppointmentMutation(
-          { id: appointment.id, ...formData },
+        updateAppointmentMutation({
+          appointmentId: appointment.id,
+          updates: formData
+        },
           {
             onSuccess: () => {
               toast({
@@ -323,8 +325,8 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
             <PatientCombobox
               patients={activePatients || []}
               value={watch('patient_id')}
-              onChange={(value) => setValue('patient_id', value)}
-              onAddNew={() => setQuickPatientModalOpen(true)}
+              onValueChange={(value) => setValue('patient_id', value)}
+              onCreateNew={() => setQuickPatientModalOpen(true)}
               disabled={currentMode === 'view' || patientsLoading}
             />
             {errors.patient_id && (
@@ -713,8 +715,8 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
       {quickPatientModalOpen && (
         <QuickPatientModal
           open={quickPatientModalOpen}
-          onClose={() => setQuickPatientModalOpen(false)}
-          onSuccess={(patientId) => {
+          onOpenChange={setQuickPatientModalOpen}
+          onPatientCreated={(patientId) => {
             setValue('patient_id', patientId);
             setQuickPatientModalOpen(false);
           }}
