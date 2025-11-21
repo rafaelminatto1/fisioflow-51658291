@@ -9,6 +9,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -298,418 +299,375 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-hidden flex flex-col bg-gradient-to-br from-background via-background to-muted/20">
-        <DialogHeader className="pb-4 border-b space-y-2 flex-shrink-0">
-          <DialogTitle className="text-2xl font-bold flex items-center gap-3">
-            <div className="p-2 bg-gradient-primary rounded-lg shadow-medical">
-              <CalendarIcon className="w-6 h-6 text-white" />
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col bg-gradient-to-br from-background via-background to-muted/20">
+        <DialogHeader className="pb-3 border-b space-y-1 flex-shrink-0">
+          <DialogTitle className="text-xl font-bold flex items-center gap-2">
+            <div className="p-1.5 bg-gradient-primary rounded-lg shadow-medical">
+              <CalendarIcon className="w-5 h-5 text-white" />
             </div>
             <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
               {currentMode === 'create' ? 'Novo Agendamento' : currentMode === 'edit' ? 'Editar Agendamento' : 'Detalhes do Agendamento'}
             </span>
           </DialogTitle>
-          <DialogDescription className="text-base text-muted-foreground">
+          <DialogDescription className="text-sm text-muted-foreground">
             {currentMode === 'create' ? 'Preencha os dados para criar um novo agendamento' : 
              currentMode === 'edit' ? 'Atualize os dados do agendamento' :
              'Visualize as informações do agendamento'}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(handleSave)} className="space-y-6 pt-4 overflow-y-auto flex-1 pr-2">
-          {/* Patient Selection */}
-          <div className="space-y-3 p-4 bg-muted/30 rounded-lg border">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <User className="w-4 h-4 text-primary" />
-              <Label>Paciente *</Label>
-            </div>
-            <PatientCombobox
-              patients={activePatients || []}
-              value={watch('patient_id')}
-              onValueChange={(value) => setValue('patient_id', value)}
-              onCreateNew={() => setQuickPatientModalOpen(true)}
-              disabled={currentMode === 'view' || patientsLoading}
-            />
-            {errors.patient_id && (
-              <p className="text-sm text-destructive flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3" />
-                {errors.patient_id.message}
-              </p>
-            )}
-          </div>
-
-          {/* Date and Time */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-3 p-4 bg-muted/30 rounded-lg border">
+        <ScrollArea className="flex-1 -mx-6 px-6">
+          <form id="appointment-form" onSubmit={handleSubmit(handleSave)} className="space-y-4 py-4">
+            {/* Patient Selection */}
+            <div className="space-y-2 p-3 bg-muted/30 rounded-lg border">
               <div className="flex items-center gap-2 text-sm font-medium">
-                <CalendarIcon className="w-4 h-4 text-primary" />
-                <Label>Data *</Label>
+                <User className="w-4 h-4 text-primary" />
+                <Label>Paciente *</Label>
               </div>
-              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal bg-background hover:bg-muted/50",
-                      !watchedDate && "text-muted-foreground"
-                    )}
-                    disabled={currentMode === 'view'}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {watchedDate ? (
-                      format(watchedDate, 'dd/MM/yyyy', { locale: ptBR })
-                    ) : (
-                      "Selecione uma data"
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={watchedDate}
-                    onSelect={(date) => {
-                      setValue('appointment_date', date || new Date());
-                      setIsCalendarOpen(false);
-                    }}
-                    disabled={(date) =>
-                      date < new Date(new Date().setHours(0, 0, 0, 0))
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              {errors.appointment_date && (
-                <p className="text-sm text-destructive flex items-center gap-1">
+              <PatientCombobox
+                patients={activePatients || []}
+                value={watch('patient_id')}
+                onValueChange={(value) => setValue('patient_id', value)}
+                onCreateNew={() => setQuickPatientModalOpen(true)}
+                disabled={currentMode === 'view' || patientsLoading}
+              />
+              {errors.patient_id && (
+                <p className="text-xs text-destructive flex items-center gap-1">
                   <AlertTriangle className="w-3 h-3" />
-                  {errors.appointment_date.message}
+                  {errors.patient_id.message}
                 </p>
               )}
             </div>
 
-            <div className="space-y-3 p-4 bg-muted/30 rounded-lg border">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <Clock className="w-4 h-4 text-primary" />
-                <Label>Horário *</Label>
-              </div>
-              <Select
-                value={watchedTime}
-                onValueChange={(value) => setValue('appointment_time', value)}
-                disabled={currentMode === 'view'}
-              >
-                <SelectTrigger className="bg-background">
-                  <SelectValue placeholder="Selecione um horário" />
-                </SelectTrigger>
-                <SelectContent className="max-h-60">
-                  {timeSlots.map((slot) => (
-                    <SelectItem key={slot} value={slot}>
-                      {slot}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.appointment_time && (
-                <p className="text-sm text-destructive flex items-center gap-1">
-                  <AlertTriangle className="w-3 h-3" />
-                  {errors.appointment_time.message}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Capacity Warning */}
-          {watchedDate && watchedTime && (() => {
-            const dayOfWeek = watchedDate.getDay();
-            const maxCapacity = getCapacityForTime(dayOfWeek, watchedTime);
-            const conflictCount = conflictCheck?.conflictCount || 0;
-            const exceedsCapacity = conflictCount >= maxCapacity;
-            
-            return (conflictCount > 0 || exceedsCapacity) && (
-              <div className={cn(
-                "flex items-start gap-3 p-4 border-2 rounded-xl animate-fade-in",
-                exceedsCapacity 
-                  ? "border-amber-500/30 bg-amber-500/5" 
-                  : "border-blue-500/30 bg-blue-500/5"
-              )}>
-                <div className={cn(
-                  "p-2 rounded-lg",
-                  exceedsCapacity ? "bg-amber-500/10" : "bg-blue-500/10"
-                )}>
-                  <AlertTriangle className={cn(
-                    "w-5 h-5 flex-shrink-0",
-                    exceedsCapacity ? "text-amber-600" : "text-blue-600"
-                  )} />
-                </div>
-                <div className="space-y-1 flex-1">
-                  <p className={cn(
-                    "text-sm font-semibold",
-                    exceedsCapacity ? "text-amber-600" : "text-blue-600"
-                  )}>
-                    {exceedsCapacity ? '⚠️ Capacidade Excedida' : 'ℹ️ Horário em Uso'}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {conflictCount} de {maxCapacity} paciente(s) agendado(s) neste horário.
-                    {exceedsCapacity && ' Capacidade máxima atingida!'}
-                  </p>
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* Duration, Type, and Status */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="duration">Duração (min) *</Label>
-              <Input
-                id="duration"
-                type="number"
-                min="15"
-                max="240"
-                step="15"
-                {...register('duration', { valueAsNumber: true })}
-                disabled={currentMode === 'view'}
-              />
-              {errors.duration && (
-                <p className="text-sm text-destructive">{errors.duration.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="type">Tipo *</Label>
-              <Select
-                value={watch('type')}
-                onValueChange={(value) => setValue('type', value as AppointmentType)}
-                disabled={currentMode === 'view'}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Tipo de consulta" />
-                </SelectTrigger>
-                <SelectContent>
-                  {appointmentTypes.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.type && (
-                <p className="text-sm text-destructive">{errors.type.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="status">Status *</Label>
-              {currentMode === 'view' ? (
-                <div className="flex items-center gap-2 h-10 px-3 py-2 border border-input bg-background rounded-md">
-                  <Badge className={cn("text-white shadow-lg", getStatusBadgeVariant(watch('status')))}>
-                    {statusLabels[watch('status')] || watch('status')}
-                  </Badge>
-                </div>
-              ) : (
-                <Select
-                  value={watch('status')}
-                  onValueChange={(value) => setValue('status', value as AppointmentStatus)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {appointmentStatuses.map((status) => (
-                      <SelectItem key={status} value={status}>
-                        <Badge className={cn("text-white shadow-md", getStatusBadgeVariant(status))}>
-                          {statusLabels[status]}
-                        </Badge>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-              {errors.status && (
-                <p className="text-sm text-destructive">{errors.status.message}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Payment Fields */}
-          <div className="space-y-4 p-4 bg-muted/30 rounded-lg border">
-            <Label className="text-base font-semibold">Pagamento</Label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="payment_status">Status do Pagamento</Label>
-                <Select
-                  value={watch('payment_status')}
-                  onValueChange={(value) => setValue('payment_status', value as 'pending' | 'paid' | 'package')}
-                  disabled={currentMode === 'view'}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pendente</SelectItem>
-                    <SelectItem value="paid">Pago (Avulso)</SelectItem>
-                    <SelectItem value="package">Pacote</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {watch('payment_status') === 'paid' && (
-                <div className="space-y-2">
-                  <Label htmlFor="payment_amount">Valor Pago (R$)</Label>
-                  <Input
-                    id="payment_amount"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="180.00"
-                    {...register('payment_amount', { valueAsNumber: true })}
-                    disabled={currentMode === 'view'}
-                  />
-                </div>
-              )}
-
-              {watch('payment_status') === 'package' && (
-                <div className="space-y-2">
-                  <Label>Pacote de Sessões</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Será descontado do pacote do paciente
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Recurring Fields */}
-          <div className="space-y-4 p-4 bg-muted/30 rounded-lg border">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="is_recurring"
-                checked={watch('is_recurring')}
-                onCheckedChange={(checked) => setValue('is_recurring', checked as boolean)}
-                disabled={currentMode === 'view'}
-              />
-              <Label htmlFor="is_recurring" className="text-base font-semibold cursor-pointer">
-                Agendamento Recorrente
-              </Label>
-            </div>
-
-            {watch('is_recurring') && (
-              <div className="space-y-2 pl-6">
-                <Label htmlFor="recurring_until">Repetir até</Label>
-                <Popover open={isRecurringCalendarOpen} onOpenChange={setIsRecurringCalendarOpen}>
+            {/* Date and Time - More compact */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-2 p-3 bg-muted/30 rounded-lg border">
+                <Label className="text-sm flex items-center gap-2">
+                  <CalendarIcon className="w-3.5 h-3.5 text-primary" />
+                  Data *
+                </Label>
+                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !watch('recurring_until') && "text-muted-foreground"
+                        "w-full justify-start text-left font-normal bg-background hover:bg-muted/50 h-9",
+                        !watchedDate && "text-muted-foreground"
                       )}
                       disabled={currentMode === 'view'}
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {watch('recurring_until') ? (
-                        format(watch('recurring_until')!, 'dd/MM/yyyy', { locale: ptBR })
-                      ) : (
-                        "Selecione a data final"
-                      )}
+                      <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                      {watchedDate ? format(watchedDate, 'dd/MM/yyyy', { locale: ptBR }) : "Selecione"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={watch('recurring_until')}
+                      selected={watchedDate}
                       onSelect={(date) => {
-                        setValue('recurring_until', date);
-                        setIsRecurringCalendarOpen(false);
+                        setValue('appointment_date', date || new Date());
+                        setIsCalendarOpen(false);
                       }}
-                      disabled={(date) => date < watchedDate}
+                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                       initialFocus
                     />
                   </PopoverContent>
                 </Popover>
-                {errors.recurring_until && (
-                  <p className="text-sm text-destructive">{errors.recurring_until.message}</p>
+                {errors.appointment_date && (
+                  <p className="text-xs text-destructive">{errors.appointment_date.message}</p>
                 )}
-                <p className="text-sm text-muted-foreground">
-                  Este agendamento se repetirá semanalmente até a data selecionada
-                </p>
               </div>
-            )}
-          </div>
 
-          {/* Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="notes">Observações</Label>
-            <Textarea
-              id="notes"
-              {...register('notes')}
-              placeholder="Observações sobre o agendamento..."
-              rows={3}
-              disabled={currentMode === 'view'}
-              className="resize-none"
-            />
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex justify-between gap-3 pt-4 border-t flex-shrink-0">
-            <div>
-              {currentMode === 'edit' && appointment && (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={handleDelete}
-                  className="flex items-center gap-2 hover-lift"
+              <div className="space-y-2 p-3 bg-muted/30 rounded-lg border">
+                <Label className="text-sm flex items-center gap-2">
+                  <Clock className="w-3.5 h-3.5 text-primary" />
+                  Horário *
+                </Label>
+                <Select
+                  value={watchedTime}
+                  onValueChange={(value) => setValue('appointment_time', value)}
+                  disabled={currentMode === 'view'}
                 >
-                  <X className="w-4 h-4" />
-                  Excluir
-                </Button>
+                  <SelectTrigger className="bg-background h-9">
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60">
+                    {timeSlots.map((slot) => (
+                      <SelectItem key={slot} value={slot}>{slot}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.appointment_time && (
+                  <p className="text-xs text-destructive">{errors.appointment_time.message}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Capacity Warning */}
+            {watchedDate && watchedTime && (() => {
+              const dayOfWeek = watchedDate.getDay();
+              const maxCapacity = getCapacityForTime(dayOfWeek, watchedTime);
+              const conflictCount = conflictCheck?.conflictCount || 0;
+              const exceedsCapacity = conflictCount >= maxCapacity;
+              
+              return (conflictCount > 0 || exceedsCapacity) && (
+                <div className={cn(
+                  "flex items-start gap-2 p-3 border rounded-lg text-sm",
+                  exceedsCapacity ? "border-amber-500/30 bg-amber-500/5" : "border-blue-500/30 bg-blue-500/5"
+                )}>
+                  <AlertTriangle className={cn("w-4 h-4 flex-shrink-0 mt-0.5", exceedsCapacity ? "text-amber-600" : "text-blue-600")} />
+                  <div className="space-y-1">
+                    <p className={cn("font-medium", exceedsCapacity ? "text-amber-700" : "text-blue-700")}>
+                      {exceedsCapacity ? '⚠️ Capacidade Excedida' : `${conflictCount} agendamento(s) neste horário`}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {exceedsCapacity 
+                        ? `Limite de ${maxCapacity} paciente(s) foi atingido` 
+                        : `Capacidade: ${conflictCount}/${maxCapacity}`}
+                    </p>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Duration, Type, Status - 3 columns */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="space-y-2 p-3 bg-muted/30 rounded-lg border">
+                <Label htmlFor="duration" className="text-sm">Duração (min) *</Label>
+                <Input
+                  id="duration"
+                  type="number"
+                  min="15"
+                  max="240"
+                  step="15"
+                  {...register('duration', { valueAsNumber: true })}
+                  disabled={currentMode === 'view'}
+                  className="h-9"
+                />
+                {errors.duration && <p className="text-xs text-destructive">{errors.duration.message}</p>}
+              </div>
+
+              <div className="space-y-2 p-3 bg-muted/30 rounded-lg border">
+                <Label htmlFor="type" className="text-sm">Tipo *</Label>
+                <Select
+                  value={watch('type')}
+                  onValueChange={(value) => setValue('type', value as AppointmentType)}
+                  disabled={currentMode === 'view'}
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {appointmentTypes.map((type) => (
+                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.type && <p className="text-xs text-destructive">{errors.type.message}</p>}
+              </div>
+
+              <div className="space-y-2 p-3 bg-muted/30 rounded-lg border">
+                <Label htmlFor="status" className="text-sm">Status *</Label>
+                {currentMode === 'view' ? (
+                  <div className="flex items-center h-9 px-3 py-2 border bg-background rounded-md">
+                    <Badge className={cn("text-white text-xs", getStatusBadgeVariant(watch('status')))}>
+                      {statusLabels[watch('status')]}
+                    </Badge>
+                  </div>
+                ) : (
+                  <Select
+                    value={watch('status')}
+                    onValueChange={(value) => setValue('status', value as AppointmentStatus)}
+                  >
+                    <SelectTrigger className="h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {appointmentStatuses.map((status) => (
+                        <SelectItem key={status} value={status}>
+                          <Badge className={cn("text-white text-xs", getStatusBadgeVariant(status))}>
+                            {statusLabels[status]}
+                          </Badge>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {errors.status && <p className="text-xs text-destructive">{errors.status.message}</p>}
+              </div>
+            </div>
+
+            {/* Payment - 3 columns */}
+            <div className="space-y-2 p-3 bg-muted/30 rounded-lg border">
+              <Label className="text-sm font-semibold">Pagamento</Label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="payment_status" className="text-xs">Status</Label>
+                  <Select
+                    value={watch('payment_status')}
+                    onValueChange={(value) => setValue('payment_status', value as 'pending' | 'paid' | 'package')}
+                    disabled={currentMode === 'view'}
+                  >
+                    <SelectTrigger className="h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pendente</SelectItem>
+                      <SelectItem value="paid">Pago</SelectItem>
+                      <SelectItem value="package">Pacote</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {watch('payment_status') === 'paid' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="payment_amount" className="text-xs">Valor (R$)</Label>
+                    <Input
+                      id="payment_amount"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="180.00"
+                      {...register('payment_amount', { valueAsNumber: true })}
+                      disabled={currentMode === 'view'}
+                      className="h-9"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Recurring */}
+            <div className="space-y-2 p-3 bg-muted/30 rounded-lg border">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="is_recurring"
+                  checked={watch('is_recurring')}
+                  onCheckedChange={(checked) => setValue('is_recurring', checked as boolean)}
+                  disabled={currentMode === 'view'}
+                />
+                <Label htmlFor="is_recurring" className="text-sm font-semibold cursor-pointer">
+                  Agendamento Recorrente
+                </Label>
+              </div>
+
+              {watch('is_recurring') && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                  <div className="space-y-2">
+                    <Label className="text-xs">Repetir até</Label>
+                    <Popover open={isRecurringCalendarOpen} onOpenChange={setIsRecurringCalendarOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn("w-full justify-start h-9", !watch('recurring_until') && "text-muted-foreground")}
+                          disabled={currentMode === 'view'}
+                        >
+                          <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                          {watch('recurring_until') ? format(watch('recurring_until')!, 'dd/MM/yyyy', { locale: ptBR }) : "Selecione"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={watch('recurring_until')}
+                          onSelect={(date) => {
+                            setValue('recurring_until', date);
+                            setIsRecurringCalendarOpen(false);
+                          }}
+                          disabled={(date) => date < watchedDate}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    {errors.recurring_until && <p className="text-xs text-destructive">{errors.recurring_until.message}</p>}
+                  </div>
+                  <div className="flex items-center">
+                    <p className="text-xs text-muted-foreground">Será repetido semanalmente até a data selecionada</p>
+                  </div>
+                </div>
               )}
             </div>
-            
-            <div className="flex gap-3">
-              {currentMode === 'view' && appointment && (
-                <>
-                  <Button
-                    type="button"
-                    variant="default"
-                    onClick={() => setCurrentMode('edit')}
-                    className="flex items-center gap-2 bg-gradient-primary hover-lift shadow-medical"
-                  >
-                    <CalendarIcon className="w-4 h-4" />
-                    Editar
-                  </Button>
-                </>
-              )}
-              
+
+            {/* Notes */}
+            <div className="space-y-2 p-3 bg-muted/30 rounded-lg border">
+              <Label htmlFor="notes" className="text-sm">Observações</Label>
+              <Textarea
+                id="notes"
+                {...register('notes')}
+                placeholder="Observações sobre o agendamento..."
+                rows={2}
+                disabled={currentMode === 'view'}
+                className="resize-none text-sm"
+              />
+            </div>
+          </form>
+        </ScrollArea>
+
+        {/* Action Buttons - Outside ScrollArea */}
+        <div className="flex justify-between gap-3 pt-3 border-t flex-shrink-0">
+          <div>
+            {currentMode === 'edit' && appointment && (
               <Button
                 type="button"
-                variant="outline"
-                onClick={onClose}
-                disabled={isCreating || isUpdating}
-                className="hover-scale"
+                variant="destructive"
+                onClick={handleDelete}
+                className="flex items-center gap-2"
+                size="sm"
               >
-                {currentMode === 'view' ? 'Fechar' : 'Cancelar'}
+                <X className="w-4 h-4" />
+                Excluir
               </Button>
-              
-              {currentMode !== 'view' && (
-                <Button
-                  type="submit"
-                  disabled={isCreating || isUpdating}
-                  className="flex items-center gap-2 relative min-w-[140px] bg-gradient-primary hover-lift shadow-medical"
-                >
-                  {(isCreating || isUpdating) ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      <span>Salvando...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Check className="w-4 h-4" />
-                      <span>{currentMode === 'edit' ? 'Salvar Alterações' : 'Criar Agendamento'}</span>
-                    </>
-                  )}
-                </Button>
-              )}
-            </div>
+            )}
           </div>
-        </form>
+          
+          <div className="flex gap-2">
+            {currentMode === 'view' && appointment && (
+              <Button
+                type="button"
+                variant="default"
+                onClick={() => setCurrentMode('edit')}
+                className="flex items-center gap-2 bg-gradient-primary"
+                size="sm"
+              >
+                <CalendarIcon className="w-4 h-4" />
+                Editar
+              </Button>
+            )}
+            
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isCreating || isUpdating}
+              size="sm"
+            >
+              {currentMode === 'view' ? 'Fechar' : 'Cancelar'}
+            </Button>
+            
+            {currentMode !== 'view' && (
+              <Button
+                type="submit"
+                form="appointment-form"
+                disabled={isCreating || isUpdating}
+                className="flex items-center gap-2 bg-gradient-primary min-w-[120px]"
+                size="sm"
+                onClick={handleSubmit(handleSave)}
+              >
+                {(isCreating || isUpdating) ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4" />
+                    {currentMode === 'edit' ? 'Salvar' : 'Criar'}
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        </div>
       </DialogContent>
 
       {quickPatientModalOpen && (
