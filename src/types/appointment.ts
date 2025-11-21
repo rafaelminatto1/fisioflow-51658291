@@ -4,13 +4,18 @@ export interface AppointmentBase {
   id: string;
   patientId: string;
   patientName: string;
+  phone?: string;
   date: Date;
   time: string;
   duration: number;
   type: AppointmentType;
   status: AppointmentStatus;
   notes?: string;
-  phone?: string;
+  payment_status?: string;
+  payment_amount?: number;
+  session_package_id?: string;
+  is_recurring?: boolean;
+  recurring_until?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
