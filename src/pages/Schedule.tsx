@@ -10,14 +10,16 @@ import { AppointmentListView } from '@/components/schedule/AppointmentListView';
 import { MiniCalendar } from '@/components/schedule/MiniCalendar';
 import { AppointmentSearch } from '@/components/schedule/AppointmentSearch';
 import { AdvancedFilters } from '@/components/schedule/AdvancedFilters';
+import { QuickStats } from '@/components/schedule/QuickStats';
 import { useAppointments, useCreateAppointment } from '@/hooks/useAppointments';
 import { logger } from '@/lib/errors/logger';
-import { AlertTriangle, Calendar, Clock, Users, TrendingUp, Plus } from 'lucide-react';
+import { AlertTriangle, Calendar, Clock, Users, TrendingUp, Plus, Settings as SettingsIcon } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { cn } from '@/lib/utils';
 import { EmptyState, LoadingSkeleton } from '@/components/ui';
 import { supabase } from '@/integrations/supabase/client';
+import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { ScheduleStatsCard } from '@/components/schedule/ScheduleStatsCard';
 
@@ -274,7 +276,13 @@ const Schedule = () => {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button 
+              <Link to="/schedule/settings">
+                <Button variant="outline" size="sm">
+                  <SettingsIcon className="mr-2 h-4 w-4" />
+                  Configurações
+                </Button>
+              </Link>
+              <Button
                 onClick={createTestAppointments}
                 variant="outline"
                 size="lg"
@@ -293,6 +301,9 @@ const Schedule = () => {
             </div>
           </div>
         </div>
+
+        {/* Quick Stats */}
+        <QuickStats />
 
         {/* Statistics Cards - Melhorados e responsivos */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
