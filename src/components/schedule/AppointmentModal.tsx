@@ -299,31 +299,27 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col bg-gradient-to-br from-background via-background to-muted/20">
-        <DialogHeader className="pb-3 border-b space-y-1 flex-shrink-0">
-          <DialogTitle className="text-xl font-bold flex items-center gap-2">
-            <div className="p-1.5 bg-gradient-primary rounded-lg shadow-medical">
-              <CalendarIcon className="w-5 h-5 text-white" />
-            </div>
-            <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              {currentMode === 'create' ? 'Novo Agendamento' : currentMode === 'edit' ? 'Editar Agendamento' : 'Detalhes do Agendamento'}
-            </span>
+      <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-hidden p-0">
+        <DialogHeader className="px-6 pt-5 pb-3 border-b">
+          <DialogTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-primary" />
+            {currentMode === 'create' ? 'Novo Agendamento' : currentMode === 'edit' ? 'Editar Agendamento' : 'Detalhes do Agendamento'}
           </DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground">
+          <DialogDescription>
             {currentMode === 'create' ? 'Preencha os dados para criar um novo agendamento' : 
              currentMode === 'edit' ? 'Atualize os dados do agendamento' :
              'Visualize as informações do agendamento'}
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 -mx-6 px-6">
-          <form id="appointment-form" onSubmit={handleSubmit(handleSave)} className="space-y-4 py-4">
+        <ScrollArea className="max-h-[calc(85vh-140px)]">
+          <form id="appointment-form" onSubmit={handleSubmit(handleSave)} className="p-6 space-y-4">
             {/* Patient Selection */}
-            <div className="space-y-2 p-3 bg-muted/30 rounded-lg border">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <User className="w-4 h-4 text-primary" />
-                <Label>Paciente *</Label>
-              </div>
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2 text-sm font-medium">
+                <User className="h-4 w-4 text-muted-foreground" />
+                Paciente *
+              </Label>
               <PatientCombobox
                 patients={activePatients || []}
                 value={watch('patient_id')}
@@ -332,18 +328,15 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                 disabled={currentMode === 'view' || patientsLoading}
               />
               {errors.patient_id && (
-                <p className="text-xs text-destructive flex items-center gap-1">
-                  <AlertTriangle className="w-3 h-3" />
-                  {errors.patient_id.message}
-                </p>
+                <p className="text-xs text-destructive">{errors.patient_id.message}</p>
               )}
             </div>
 
-            {/* Date and Time - More compact */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="space-y-2 p-3 bg-muted/30 rounded-lg border">
-                <Label className="text-sm flex items-center gap-2">
-                  <CalendarIcon className="w-3.5 h-3.5 text-primary" />
+            {/* Date and Time */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2 text-sm font-medium">
+                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                   Data *
                 </Label>
                 <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
@@ -351,12 +344,12 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                     <Button
                       variant="outline"
                       className={cn(
-                        "w-full justify-start text-left font-normal bg-background hover:bg-muted/50 h-9",
+                        "w-full justify-start text-left font-normal",
                         !watchedDate && "text-muted-foreground"
                       )}
                       disabled={currentMode === 'view'}
                     >
-                      <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                      <CalendarIcon className="mr-2 h-4 w-4" />
                       {watchedDate ? format(watchedDate, 'dd/MM/yyyy', { locale: ptBR }) : "Selecione"}
                     </Button>
                   </PopoverTrigger>
@@ -378,9 +371,9 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                 )}
               </div>
 
-              <div className="space-y-2 p-3 bg-muted/30 rounded-lg border">
-                <Label className="text-sm flex items-center gap-2">
-                  <Clock className="w-3.5 h-3.5 text-primary" />
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2 text-sm font-medium">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
                   Horário *
                 </Label>
                 <Select
@@ -388,7 +381,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                   onValueChange={(value) => setValue('appointment_time', value)}
                   disabled={currentMode === 'view'}
                 >
-                  <SelectTrigger className="bg-background h-9">
+                  <SelectTrigger>
                     <SelectValue placeholder="Selecione" />
                   </SelectTrigger>
                   <SelectContent className="max-h-60">
@@ -431,9 +424,9 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
             })()}
 
             {/* Duration, Type, Status - 3 columns */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="space-y-2 p-3 bg-muted/30 rounded-lg border">
-                <Label htmlFor="duration" className="text-sm">Duração (min) *</Label>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="duration" className="text-sm font-medium">Duração (min) *</Label>
                 <Input
                   id="duration"
                   type="number"
@@ -442,19 +435,18 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                   step="15"
                   {...register('duration', { valueAsNumber: true })}
                   disabled={currentMode === 'view'}
-                  className="h-9"
                 />
                 {errors.duration && <p className="text-xs text-destructive">{errors.duration.message}</p>}
               </div>
 
-              <div className="space-y-2 p-3 bg-muted/30 rounded-lg border">
-                <Label htmlFor="type" className="text-sm">Tipo *</Label>
+              <div className="space-y-2">
+                <Label htmlFor="type" className="text-sm font-medium">Tipo *</Label>
                 <Select
                   value={watch('type')}
                   onValueChange={(value) => setValue('type', value as AppointmentType)}
                   disabled={currentMode === 'view'}
                 >
-                  <SelectTrigger className="h-9">
+                  <SelectTrigger>
                     <SelectValue placeholder="Tipo" />
                   </SelectTrigger>
                   <SelectContent>
@@ -466,10 +458,10 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                 {errors.type && <p className="text-xs text-destructive">{errors.type.message}</p>}
               </div>
 
-              <div className="space-y-2 p-3 bg-muted/30 rounded-lg border">
-                <Label htmlFor="status" className="text-sm">Status *</Label>
+              <div className="space-y-2">
+                <Label htmlFor="status" className="text-sm font-medium">Status *</Label>
                 {currentMode === 'view' ? (
-                  <div className="flex items-center h-9 px-3 py-2 border bg-background rounded-md">
+                  <div className="flex items-center h-10 px-3 py-2 border bg-background rounded-md">
                     <Badge className={cn("text-white text-xs", getStatusBadgeVariant(watch('status')))}>
                       {statusLabels[watch('status')]}
                     </Badge>
@@ -479,7 +471,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                     value={watch('status')}
                     onValueChange={(value) => setValue('status', value as AppointmentStatus)}
                   >
-                    <SelectTrigger className="h-9">
+                    <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -497,18 +489,18 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
               </div>
             </div>
 
-            {/* Payment - 3 columns */}
-            <div className="space-y-2 p-3 bg-muted/30 rounded-lg border">
-              <Label className="text-sm font-semibold">Pagamento</Label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {/* Payment */}
+            <div className="space-y-3 p-4 rounded-lg border bg-muted/10">
+              <Label className="text-sm font-medium">Pagamento</Label>
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="payment_status" className="text-xs">Status</Label>
+                  <Label htmlFor="payment_status" className="text-xs text-muted-foreground">Status</Label>
                   <Select
                     value={watch('payment_status')}
                     onValueChange={(value) => setValue('payment_status', value as 'pending' | 'paid' | 'package')}
                     disabled={currentMode === 'view'}
                   >
-                    <SelectTrigger className="h-9">
+                    <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -521,7 +513,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
 
                 {watch('payment_status') === 'paid' && (
                   <div className="space-y-2">
-                    <Label htmlFor="payment_amount" className="text-xs">Valor (R$)</Label>
+                    <Label htmlFor="payment_amount" className="text-xs text-muted-foreground">Valor (R$)</Label>
                     <Input
                       id="payment_amount"
                       type="number"
@@ -530,7 +522,6 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                       placeholder="180.00"
                       {...register('payment_amount', { valueAsNumber: true })}
                       disabled={currentMode === 'view'}
-                      className="h-9"
                     />
                   </div>
                 )}
@@ -538,7 +529,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
             </div>
 
             {/* Recurring */}
-            <div className="space-y-2 p-3 bg-muted/30 rounded-lg border">
+            <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Checkbox
                   id="is_recurring"
@@ -546,65 +537,61 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                   onCheckedChange={(checked) => setValue('is_recurring', checked as boolean)}
                   disabled={currentMode === 'view'}
                 />
-                <Label htmlFor="is_recurring" className="text-sm font-semibold cursor-pointer">
+                <Label htmlFor="is_recurring" className="text-sm font-medium cursor-pointer">
                   Agendamento Recorrente
                 </Label>
               </div>
 
               {watch('is_recurring') && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-                  <div className="space-y-2">
-                    <Label className="text-xs">Repetir até</Label>
-                    <Popover open={isRecurringCalendarOpen} onOpenChange={setIsRecurringCalendarOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn("w-full justify-start h-9", !watch('recurring_until') && "text-muted-foreground")}
-                          disabled={currentMode === 'view'}
-                        >
-                          <CalendarIcon className="mr-2 h-3.5 w-3.5" />
-                          {watch('recurring_until') ? format(watch('recurring_until')!, 'dd/MM/yyyy', { locale: ptBR }) : "Selecione"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={watch('recurring_until')}
-                          onSelect={(date) => {
-                            setValue('recurring_until', date);
-                            setIsRecurringCalendarOpen(false);
-                          }}
-                          disabled={(date) => date < watchedDate}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    {errors.recurring_until && <p className="text-xs text-destructive">{errors.recurring_until.message}</p>}
-                  </div>
-                  <div className="flex items-center">
-                    <p className="text-xs text-muted-foreground">Será repetido semanalmente até a data selecionada</p>
-                  </div>
+                <div className="space-y-2 pl-6">
+                  <Label className="text-xs text-muted-foreground">Repetir até</Label>
+                  <Popover open={isRecurringCalendarOpen} onOpenChange={setIsRecurringCalendarOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn("w-full justify-start", !watch('recurring_until') && "text-muted-foreground")}
+                        disabled={currentMode === 'view'}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {watch('recurring_until') ? format(watch('recurring_until')!, 'dd/MM/yyyy', { locale: ptBR }) : "Selecione"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={watch('recurring_until')}
+                        onSelect={(date) => {
+                          setValue('recurring_until', date);
+                          setIsRecurringCalendarOpen(false);
+                        }}
+                        disabled={(date) => date < watchedDate}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {errors.recurring_until && <p className="text-xs text-destructive">{errors.recurring_until.message}</p>}
+                  <p className="text-xs text-muted-foreground">Será repetido semanalmente até a data selecionada</p>
                 </div>
               )}
             </div>
 
             {/* Notes */}
-            <div className="space-y-2 p-3 bg-muted/30 rounded-lg border">
-              <Label htmlFor="notes" className="text-sm">Observações</Label>
+            <div className="space-y-2">
+              <Label htmlFor="notes" className="text-sm font-medium">Observações</Label>
               <Textarea
                 id="notes"
                 {...register('notes')}
                 placeholder="Observações sobre o agendamento..."
-                rows={2}
+                rows={3}
                 disabled={currentMode === 'view'}
-                className="resize-none text-sm"
+                className="resize-none"
               />
             </div>
           </form>
         </ScrollArea>
 
-        {/* Action Buttons - Outside ScrollArea */}
-        <div className="flex justify-between gap-3 pt-3 border-t flex-shrink-0">
+        {/* Action Buttons */}
+        <div className="flex justify-between gap-3 px-6 py-4 border-t">
           <div>
             {currentMode === 'edit' && appointment && (
               <Button
