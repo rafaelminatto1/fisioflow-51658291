@@ -21,6 +21,7 @@ const CreateDemoUsers = lazy(() => import("./pages/CreateDemoUsers"));
 const Index = lazy(() => import("./pages/Index"));
 const Patients = lazy(() => import("./pages/Patients"));
 const Schedule = lazy(() => import("./pages/Schedule"));
+const ScheduleSettings = lazy(() => import("./pages/ScheduleSettings"));
 const Exercises = lazy(() => import("./pages/Exercises"));
 const Financial = lazy(() => import("./pages/Financial"));
 const Reports = lazy(() => import("./pages/Reports"));
@@ -123,6 +124,7 @@ const App = () => {
                   <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
                   <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
                   <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
+                  <Route path="/schedule/settings" element={<ProtectedRoute><ScheduleSettings /></ProtectedRoute>} />
                   <Route path="/exercises" element={<ProtectedRoute><Exercises /></ProtectedRoute>} />
                   <Route path="/financial" element={<ProtectedRoute><Financial /></ProtectedRoute>} />
                   <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
