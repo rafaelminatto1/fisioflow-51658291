@@ -47,6 +47,7 @@ const Waitlist = lazy(() => import("./pages/Waitlist"));
 const AuditLogs = lazy(() => import("./pages/AuditLogs"));
 const InvitationManagement = lazy(() => import("./pages/InvitationManagement"));
 const SecurityMonitoring = lazy(() => import("./pages/SecurityMonitoring"));
+const SecuritySettings = lazy(() => import("./pages/SecuritySettings"));
 const AdminCRUD = lazy(() => import("./pages/AdminCRUD"));
 const OrganizationSettings = lazy(() => import("./pages/OrganizationSettings"));
 
@@ -150,6 +151,7 @@ const App = () => {
             <Route path="/admin/audit-logs" element={<ProtectedRoute allowedRoles={['admin']}><AuditLogs /></ProtectedRoute>} />
             <Route path="/admin/invitations" element={<ProtectedRoute allowedRoles={['admin']}><InvitationManagement /></ProtectedRoute>} />
             <Route path="/admin/security" element={<ProtectedRoute allowedRoles={['admin']}><SecurityMonitoring /></ProtectedRoute>} />
+            <Route path="/security-settings" element={<ProtectedRoute><SecuritySettings /></ProtectedRoute>} />
             <Route path="/admin/crud" element={<ProtectedRoute allowedRoles={['admin', 'fisioterapeuta']}><AdminCRUD /></ProtectedRoute>} />
             <Route path="/admin/organization" element={<ProtectedRoute allowedRoles={['admin']}><OrganizationSettings /></ProtectedRoute>} />
                   
