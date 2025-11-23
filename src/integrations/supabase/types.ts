@@ -525,6 +525,45 @@ export type Database = {
           },
         ]
       }
+      data_export_requests: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          data_package_url: string | null
+          error_message: string | null
+          expires_at: string | null
+          id: string
+          request_type: string
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          data_package_url?: string | null
+          error_message?: string | null
+          expires_at?: string | null
+          id?: string
+          request_type: string
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          data_package_url?: string | null
+          error_message?: string | null
+          expires_at?: string | null
+          id?: string
+          request_type?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       empresas_parceiras: {
         Row: {
           ativo: boolean
@@ -1156,6 +1195,48 @@ export type Database = {
           },
         ]
       }
+      lgpd_consents: {
+        Row: {
+          consent_type: string
+          created_at: string | null
+          granted: boolean
+          granted_at: string | null
+          id: string
+          ip_address: unknown
+          revoked_at: string | null
+          updated_at: string | null
+          user_agent: string | null
+          user_id: string
+          version: string
+        }
+        Insert: {
+          consent_type: string
+          created_at?: string | null
+          granted?: boolean
+          granted_at?: string | null
+          id?: string
+          ip_address?: unknown
+          revoked_at?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+          user_id: string
+          version?: string
+        }
+        Update: {
+          consent_type?: string
+          created_at?: string | null
+          granted?: boolean
+          granted_at?: string | null
+          id?: string
+          ip_address?: unknown
+          revoked_at?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+          user_id?: string
+          version?: string
+        }
+        Relationships: []
+      }
       login_attempts: {
         Row: {
           created_at: string
@@ -1245,6 +1326,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      mfa_settings: {
+        Row: {
+          backup_codes: string[] | null
+          created_at: string | null
+          id: string
+          last_used_at: string | null
+          mfa_enabled: boolean
+          mfa_method: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          backup_codes?: string[] | null
+          created_at?: string | null
+          id?: string
+          last_used_at?: string | null
+          mfa_enabled?: boolean
+          mfa_method?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          backup_codes?: string[] | null
+          created_at?: string | null
+          id?: string
+          last_used_at?: string | null
+          mfa_enabled?: boolean
+          mfa_method?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       notification_templates: {
         Row: {
@@ -2335,6 +2449,39 @@ export type Database = {
           },
         ]
       }
+      security_audit_events: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          ip_address: unknown
+          metadata: Json | null
+          severity: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id?: string
+          ip_address?: unknown
+          metadata?: Json | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown
+          metadata?: Json | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       session_packages: {
         Row: {
           created_at: string
@@ -3138,6 +3285,23 @@ export type Database = {
           _user_agent?: string
         }
         Returns: undefined
+      }
+      log_security_event: {
+        Args: {
+          _event_type: string
+          _metadata?: Json
+          _severity?: string
+          _user_id: string
+        }
+        Returns: string
+      }
+      manage_consent: {
+        Args: { _consent_type: string; _granted: boolean; _user_id: string }
+        Returns: string
+      }
+      request_data_export: {
+        Args: { _request_type: string; _user_id: string }
+        Returns: string
       }
       revoke_invitation: {
         Args: { _invitation_id: string }

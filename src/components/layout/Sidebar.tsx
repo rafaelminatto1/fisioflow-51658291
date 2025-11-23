@@ -21,6 +21,7 @@ import {
   MessageSquare,
   ShoppingCart,
   Clock,
+  Shield,
   LogOut
 } from 'lucide-react';
 
@@ -38,6 +39,7 @@ const menuItems = [
   { icon: DollarSign, label: 'Financeiro', href: '/financial' },
   { icon: BarChart3, label: 'Analytics', href: '/analytics' },
   { icon: BarChart3, label: 'Relatórios', href: '/reports' },
+  { icon: Shield, label: 'Segurança & LGPD', href: '/security-settings' },
   { icon: Settings, label: 'Configurações', href: '/settings' },
 ];
 
