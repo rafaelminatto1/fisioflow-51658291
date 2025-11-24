@@ -5,8 +5,12 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { FileText, TrendingUp, AlertCircle } from 'lucide-react';
+import { FileText, TrendingUp, AlertCircle, History, Award } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useStandardizedTests, useSaveStandardizedTest } from '@/hooks/useStandardizedTests';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Test {
   id: string;
@@ -168,9 +172,11 @@ interface StandardizedTestsProps {
 export function StandardizedTests({ patientId, onSave }: StandardizedTestsProps) {
   const [selectedTest, setSelectedTest] = useState<Test | null>(null);
   const [answers, setAnswers] = useState<Record<string, number>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   const tests = [oswestryTest, lysholmTest];
+  const { data: testHistory = [] } = useStandardizedTests(patientId);
+  const saveTest = useSaveStandardizedTest();
 
   const calculateScore = () => {
     if (!selectedTest) return 0;
@@ -213,33 +219,23 @@ export function StandardizedTests({ patientId, onSave }: StandardizedTestsProps)
       });
       return;
     }
-
-    setIsSubmitting(true);
     
-    try {
-      const score = calculateScore();
-      
-      // Aqui você salvaria no Supabase
-      // await supabase.from('standardized_tests').insert({...})
-      
-      onSave?.(selectedTest.name, score);
-      
-      toast({
-        title: 'Sucesso',
-        description: `Teste ${selectedTest.name} salvo com pontuação ${score}.`,
-      });
-      
-      setAnswers({});
-      setSelectedTest(null);
-    } catch (error) {
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível salvar o teste.',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    const score = calculateScore();
+    const interpretation = getScoreInterpretation(score, selectedTest.id);
+
+    await saveTest.mutateAsync({
+      patient_id: patientId,
+      test_type: selectedTest.id as 'oswestry' | 'lysholm' | 'dash',
+      test_name: selectedTest.name,
+      score,
+      max_score: selectedTest.id === 'oswestry' ? 100 : 100,
+      interpretation: interpretation.text,
+      answers,
+    });
+    
+    onSave?.(selectedTest.name, score);
+    setAnswers({});
+    setSelectedTest(null);
   };
 
   const currentScore = calculateScore();
@@ -248,6 +244,59 @@ export function StandardizedTests({ patientId, onSave }: StandardizedTestsProps)
 
   return (
     <div className="space-y-6">
+      {/* Histórico de testes */}
+      {testHistory.length > 0 && !selectedTest && (
+        <Card className="border-primary/20">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <History className="h-5 w-5 text-primary" />
+                <CardTitle className="text-lg">Histórico de Testes</CardTitle>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowHistory(!showHistory)}
+              >
+                {showHistory ? 'Ocultar' : 'Ver Todos'}
+              </Button>
+            </div>
+          </CardHeader>
+          {showHistory && (
+            <CardContent>
+              <ScrollArea className="h-[300px]">
+                <div className="space-y-3">
+                  {testHistory.map((test) => (
+                    <Card key={test.id} className="p-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Award className="h-4 w-4 text-primary" />
+                            <h4 className="font-semibold">{test.test_name}</h4>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-1">
+                            Pontuação: <span className="font-bold text-foreground">{test.score}</span>
+                            {test.max_score && ` / ${test.max_score}`}
+                          </p>
+                          {test.interpretation && (
+                            <Badge variant="outline" className="text-xs">
+                              {test.interpretation}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="text-right text-xs text-muted-foreground">
+                          {format(new Date(test.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          )}
+        </Card>
+      )}
+
       {!selectedTest ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {tests.map((test) => (
@@ -354,10 +403,10 @@ export function StandardizedTests({ patientId, onSave }: StandardizedTestsProps)
             </Button>
             <Button 
               onClick={handleSubmit} 
-              disabled={Object.keys(answers).length !== selectedTest.questions.length || isSubmitting}
+              disabled={Object.keys(answers).length !== selectedTest.questions.length || saveTest.isPending}
               className="gap-2"
             >
-              {isSubmitting ? 'Salvando...' : 'Salvar Teste'}
+              {saveTest.isPending ? 'Salvando...' : 'Salvar Teste'}
             </Button>
           </div>
         </div>
