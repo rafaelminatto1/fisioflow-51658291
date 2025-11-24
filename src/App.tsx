@@ -48,10 +48,9 @@ const AuditLogs = lazy(() => import("./pages/AuditLogs"));
 const InvitationManagement = lazy(() => import("./pages/InvitationManagement"));
 const SecurityMonitoring = lazy(() => import("./pages/SecurityMonitoring"));
 const SecuritySettings = lazy(() => import("./pages/SecuritySettings"));
+const AdvancedAnalytics = lazy(() => import("./pages/AdvancedAnalytics"));
 const AdminCRUD = lazy(() => import("./pages/AdminCRUD"));
 const OrganizationSettings = lazy(() => import("./pages/OrganizationSettings"));
-
-const AdvancedAnalytics = lazy(() => import("./components/analytics/AdvancedAnalytics"));
 const MedicalChatbot = lazy(() => import("./components/chatbot/MedicalChatbot"));
 const ComputerVisionExercise = lazy(() => import("./components/computer-vision/ComputerVisionExercise"));
 const IntelligentReports = lazy(() => import("./components/reports/IntelligentReports"));

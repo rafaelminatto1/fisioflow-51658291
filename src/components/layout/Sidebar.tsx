@@ -37,8 +37,8 @@ const menuItems = [
   { icon: Calendar, label: 'Eventos', href: '/eventos' },
   { icon: ShoppingCart, label: 'Treinos', href: '/vouchers' },
   { icon: DollarSign, label: 'Financeiro', href: '/financial' },
-  { icon: BarChart3, label: 'Analytics', href: '/analytics' },
-  { icon: BarChart3, label: 'Relatórios', href: '/reports' },
+  { icon: BarChart3, label: 'Analytics Avançado', href: '/analytics' },
+  { icon: FileText, label: 'Relatórios', href: '/reports' },
   { icon: Shield, label: 'Segurança & LGPD', href: '/security-settings' },
   { icon: Settings, label: 'Configurações', href: '/settings' },
 ];
