@@ -38,8 +38,10 @@ const appointmentSchema = z.object({
   notes: z.string().optional(),
   therapist_id: z.string().optional(),
   room: z.string().optional(),
-  payment_status: z.enum(['pending', 'paid', 'package']).default('pending'),
-  payment_amount: z.number().min(0).optional(),
+  payment_status: z.enum(['pending', 'paid_single', 'paid_package']).default('pending'),
+  payment_amount: z.number().min(0).default(170),
+  payment_method: z.enum(['pix', 'dinheiro', 'debito', 'credito']).optional(),
+  installments: z.number().min(1).max(6).optional(),
   session_package_id: z.string().uuid().optional(),
   is_recurring: z.boolean().default(false),
   recurring_until: z.date().optional(),
@@ -148,7 +150,9 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
       therapist_id: (appointment as any)?.therapist_id || undefined,
       room: (appointment as any)?.room || undefined,
       payment_status: 'pending',
-      payment_amount: undefined,
+      payment_amount: 170,
+      payment_method: undefined,
+      installments: 1,
       session_package_id: undefined,
       is_recurring: false,
       recurring_until: undefined,
@@ -168,7 +172,9 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
       setValue('therapist_id', apt.therapist_id);
       setValue('room', apt.room || undefined);
       setValue('payment_status', 'pending');
-      setValue('payment_amount', undefined);
+      setValue('payment_amount', 170);
+      setValue('payment_method', undefined);
+      setValue('installments', 1);
       setValue('session_package_id', undefined);
       setValue('is_recurring', false);
       setValue('recurring_until', undefined);
@@ -182,6 +188,9 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
         status: 'agendado',
         notes: '',
         payment_status: 'pending',
+        payment_amount: 170,
+        payment_method: undefined,
+        installments: 1,
         is_recurring: false,
       });
     }
@@ -229,7 +238,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
         notes: data.notes || null,
         therapist_id: data.therapist_id || null,
         room: data.room || null,
-        payment_status: data.payment_status,
+        payment_status: data.payment_status === 'paid_single' || data.payment_status === 'paid_package' ? 'paid' : 'pending',
         payment_amount: data.payment_amount || null,
         session_package_id: data.session_package_id || null,
         is_recurring: data.is_recurring,
@@ -297,23 +306,26 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
     return statusColors[status] || 'bg-gray-500';
   };
 
+  const watchPaymentStatus = watch('payment_status');
+  const watchPaymentMethod = watch('payment_method');
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-hidden p-0">
-        <DialogHeader className="px-6 pt-5 pb-3 border-b">
-          <DialogTitle className="flex items-center gap-2">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden p-0">
+        <DialogHeader className="px-6 pt-4 pb-3 border-b bg-background">
+          <DialogTitle className="flex items-center gap-2 text-lg">
             <Calendar className="h-5 w-5 text-primary" />
             {currentMode === 'create' ? 'Novo Agendamento' : currentMode === 'edit' ? 'Editar Agendamento' : 'Detalhes do Agendamento'}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-sm">
             {currentMode === 'create' ? 'Preencha os dados para criar um novo agendamento' : 
              currentMode === 'edit' ? 'Atualize os dados do agendamento' :
              'Visualize as informações do agendamento'}
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[calc(85vh-140px)]">
-          <form id="appointment-form" onSubmit={handleSubmit(handleSave)} className="p-6 space-y-4">
+        <ScrollArea className="max-h-[calc(90vh-160px)] overflow-y-auto">
+          <form id="appointment-form" onSubmit={handleSubmit(handleSave)} className="p-6 space-y-5">
             {/* Patient Selection */}
             <div className="space-y-2">
               <Label className="flex items-center gap-2 text-sm font-medium">
@@ -489,43 +501,134 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
               </div>
             </div>
 
-            {/* Payment */}
-            <div className="space-y-3 p-4 rounded-lg border bg-muted/10">
-              <Label className="text-sm font-medium">Pagamento</Label>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="payment_status" className="text-xs text-muted-foreground">Status</Label>
-                  <Select
-                    value={watch('payment_status')}
-                    onValueChange={(value) => setValue('payment_status', value as 'pending' | 'paid' | 'package')}
+            {/* Payment Section */}
+            <div className="space-y-4 border-t pt-4">
+              <Label className="text-base font-semibold">💰 Pagamento</Label>
+              
+              {/* Payment Type Buttons */}
+              <div className="space-y-3">
+                <Label className="text-sm text-muted-foreground">Tipo de Pagamento</Label>
+                <div className="grid grid-cols-3 gap-3">
+                  <Button
+                    type="button"
+                    variant={watchPaymentStatus === 'pending' ? 'default' : 'outline'}
+                    className="w-full"
+                    onClick={() => setValue('payment_status', 'pending')}
                     disabled={currentMode === 'view'}
                   >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pendente</SelectItem>
-                      <SelectItem value="paid">Pago</SelectItem>
-                      <SelectItem value="package">Pacote</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    Pendente
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={watchPaymentStatus === 'paid_single' ? 'default' : 'outline'}
+                    className="w-full"
+                    onClick={() => {
+                      setValue('payment_status', 'paid_single');
+                      setValue('payment_amount', 180);
+                    }}
+                    disabled={currentMode === 'view'}
+                  >
+                    Pagou Avulso
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={watchPaymentStatus === 'paid_package' ? 'default' : 'outline'}
+                    className="w-full"
+                    onClick={() => {
+                      setValue('payment_status', 'paid_package');
+                      setValue('payment_amount', 170);
+                    }}
+                    disabled={currentMode === 'view'}
+                  >
+                    Pagou Pacote
+                  </Button>
                 </div>
-
-                {watch('payment_status') === 'paid' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="payment_amount" className="text-xs text-muted-foreground">Valor (R$)</Label>
-                    <Input
-                      id="payment_amount"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      placeholder="180.00"
-                      {...register('payment_amount', { valueAsNumber: true })}
-                      disabled={currentMode === 'view'}
-                    />
-                  </div>
-                )}
               </div>
+
+              {/* Payment Amount */}
+              <div className="space-y-2">
+                <Label htmlFor="payment_amount" className="text-sm">Valor da Sessão (R$)</Label>
+                <Input
+                  id="payment_amount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="170.00"
+                  {...register('payment_amount', { valueAsNumber: true })}
+                  disabled={currentMode === 'view' || watchPaymentStatus === 'pending'}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Pacote: R$ 170/sessão • Avulso: R$ 180/sessão
+                </p>
+              </div>
+
+              {/* Payment Method - Only show if paid */}
+              {(watchPaymentStatus === 'paid_single' || watchPaymentStatus === 'paid_package') && (
+                <div className="space-y-3 bg-muted/30 p-4 rounded-lg border">
+                  <Label className="text-sm font-medium">Forma de Pagamento</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button
+                      type="button"
+                      variant={watchPaymentMethod === 'pix' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setValue('payment_method', 'pix')}
+                      disabled={currentMode === 'view'}
+                    >
+                      PIX
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={watchPaymentMethod === 'dinheiro' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setValue('payment_method', 'dinheiro')}
+                      disabled={currentMode === 'view'}
+                    >
+                      Dinheiro
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={watchPaymentMethod === 'debito' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setValue('payment_method', 'debito')}
+                      disabled={currentMode === 'view'}
+                    >
+                      Débito
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={watchPaymentMethod === 'credito' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setValue('payment_method', 'credito')}
+                      disabled={currentMode === 'view'}
+                    >
+                      Crédito
+                    </Button>
+                  </div>
+
+                  {/* Installments - Only show if credit card */}
+                  {watchPaymentMethod === 'credito' && (
+                    <div className="space-y-2 pt-2 border-t">
+                      <Label htmlFor="installments" className="text-sm">Parcelas (até 6x sem juros)</Label>
+                      <Select
+                        value={watch('installments')?.toString()}
+                        onValueChange={(value) => setValue('installments', parseInt(value))}
+                        disabled={currentMode === 'view'}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[1, 2, 3, 4, 5, 6].map((num) => (
+                            <SelectItem key={num} value={num.toString()}>
+                              {num}x de R$ {(watch('payment_amount') / num).toFixed(2)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Recurring */}
