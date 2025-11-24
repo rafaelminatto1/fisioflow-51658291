@@ -28,9 +28,8 @@ export const usePatientEvolutionReport = (patientId: string) => {
         .select(`
           id,
           record_date,
-          pain_level,
           created_at,
-          objective_data,
+          objective,
           plan,
           created_by
         `)
@@ -53,6 +52,17 @@ export const usePatientEvolutionReport = (patientId: string) => {
         };
       }
 
+      // Buscar mapas de dor associados às sessões
+      const soapIds = soapRecords.map(r => r.id);
+      const { data: painMaps } = await supabase
+        .from("pain_maps")
+        .select("session_id, global_pain_level")
+        .in("session_id", soapIds);
+
+      const painMapsBySession = new Map(
+        painMaps?.map(pm => [pm.session_id, pm.global_pain_level]) || []
+      );
+
       // Buscar informações dos terapeutas
       const therapistIds = [...new Set(soapRecords.map(r => r.created_by))];
       const { data: profiles } = await supabase
@@ -66,28 +76,19 @@ export const usePatientEvolutionReport = (patientId: string) => {
 
       // Processar sessões
       const sessions = soapRecords.map((record) => {
-        // Extrair score de mobilidade do objective_data se disponível
-        let mobilityScore = 50; // valor padrão
-        try {
-          const objData = record.objective_data as any;
-          if (objData?.mobility_score) {
-            mobilityScore = objData.mobility_score;
-          } else if (objData?.range_of_motion) {
-            // Calcular baseado em range of motion
-            mobilityScore = Math.min(100, objData.range_of_motion);
-          }
-        } catch (e) {
-          // Usar valor padrão
-        }
+        const painLevel = painMapsBySession.get(record.id) || 0;
+        
+        // Estimativa de mobilidade baseada no nível de dor (inverso)
+        const mobilityScore = Math.max(0, 100 - (painLevel * 10));
 
         return {
           id: record.id,
           date: record.record_date || record.created_at || "",
-          painLevel: record.pain_level || 0,
+          painLevel,
           mobilityScore,
           observations: record.plan || "",
           therapist: therapistMap.get(record.created_by) || "Não informado",
-          duration: 60, // Valor padrão
+          duration: 60,
         };
       });
 
