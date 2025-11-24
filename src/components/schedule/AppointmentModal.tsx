@@ -365,7 +365,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                       {watchedDate ? format(watchedDate, 'dd/MM/yyyy', { locale: ptBR }) : "Selecione"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  <PopoverContent className="w-auto p-0 z-50" align="start">
                     <Calendar
                       mode="single"
                       selected={watchedDate}
@@ -375,6 +375,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                       }}
                       disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                       initialFocus
+                      className="pointer-events-auto"
                     />
                   </PopoverContent>
                 </Popover>
@@ -659,7 +660,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                         {watch('recurring_until') ? format(watch('recurring_until')!, 'dd/MM/yyyy', { locale: ptBR }) : "Selecione"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent className="w-auto p-0 z-50" align="start">
                       <Calendar
                         mode="single"
                         selected={watch('recurring_until')}
@@ -669,6 +670,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                         }}
                         disabled={(date) => date < watchedDate}
                         initialFocus
+                        className="pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>
