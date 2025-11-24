@@ -351,7 +351,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                   <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                   Data *
                 </Label>
-                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen} modal={true}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -365,7 +365,13 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                       {watchedDate ? format(watchedDate, 'dd/MM/yyyy', { locale: ptBR }) : "Selecione"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 z-50" align="start">
+                  <PopoverContent 
+                    className="w-auto p-0 bg-popover border shadow-lg" 
+                    align="start"
+                    side="bottom"
+                    sideOffset={4}
+                    style={{ zIndex: 9999 }}
+                  >
                     <Calendar
                       mode="single"
                       selected={watchedDate}
@@ -649,7 +655,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
               {watch('is_recurring') && (
                 <div className="space-y-2 pl-6">
                   <Label className="text-xs text-muted-foreground">Repetir até</Label>
-                  <Popover open={isRecurringCalendarOpen} onOpenChange={setIsRecurringCalendarOpen}>
+                  <Popover open={isRecurringCalendarOpen} onOpenChange={setIsRecurringCalendarOpen} modal={true}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
@@ -660,7 +666,13 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                         {watch('recurring_until') ? format(watch('recurring_until')!, 'dd/MM/yyyy', { locale: ptBR }) : "Selecione"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 z-50" align="start">
+                    <PopoverContent 
+                      className="w-auto p-0 bg-popover border shadow-lg" 
+                      align="start"
+                      side="bottom"
+                      sideOffset={4}
+                      style={{ zIndex: 9999 }}
+                    >
                       <Calendar
                         mode="single"
                         selected={watch('recurring_until')}
