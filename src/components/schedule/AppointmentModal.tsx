@@ -311,7 +311,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden p-0">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0">
         <DialogHeader className="px-6 pt-4 pb-3 border-b bg-background">
           <DialogTitle className="flex items-center gap-2 text-lg">
             <Calendar className="h-5 w-5 text-primary" />
@@ -324,7 +324,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[calc(90vh-160px)] overflow-y-auto">
+        <ScrollArea className="flex-1 overflow-y-auto">
           <form id="appointment-form" onSubmit={handleSubmit(handleSave)} className="p-6 space-y-5">
             {/* Patient Selection */}
             <div className="space-y-2">
@@ -351,7 +351,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                   <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                   Data *
                 </Label>
-                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen} modal={true}>
+                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -366,11 +366,8 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent 
-                    className="w-auto p-0 bg-popover border shadow-lg" 
+                    className="w-auto p-0 bg-background border" 
                     align="start"
-                    side="bottom"
-                    sideOffset={4}
-                    style={{ zIndex: 9999 }}
                   >
                     <Calendar
                       mode="single"
@@ -381,7 +378,6 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                       }}
                       disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                       initialFocus
-                      className="pointer-events-auto"
                     />
                   </PopoverContent>
                 </Popover>
@@ -655,7 +651,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
               {watch('is_recurring') && (
                 <div className="space-y-2 pl-6">
                   <Label className="text-xs text-muted-foreground">Repetir até</Label>
-                  <Popover open={isRecurringCalendarOpen} onOpenChange={setIsRecurringCalendarOpen} modal={true}>
+                  <Popover open={isRecurringCalendarOpen} onOpenChange={setIsRecurringCalendarOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
@@ -667,11 +663,8 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent 
-                      className="w-auto p-0 bg-popover border shadow-lg" 
+                      className="w-auto p-0 bg-background border" 
                       align="start"
-                      side="bottom"
-                      sideOffset={4}
-                      style={{ zIndex: 9999 }}
                     >
                       <Calendar
                         mode="single"
@@ -682,7 +675,6 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                         }}
                         disabled={(date) => date < watchedDate}
                         initialFocus
-                        className="pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>
@@ -708,7 +700,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
         </ScrollArea>
 
         {/* Action Buttons */}
-        <div className="flex justify-between gap-3 px-6 py-4 border-t">
+        <div className="flex justify-between gap-3 px-6 py-4 border-t bg-background">
           <div>
             {currentMode === 'edit' && appointment && (
               <Button
