@@ -351,36 +351,19 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                   <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                   Data *
                 </Label>
-                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !watchedDate && "text-muted-foreground"
-                      )}
-                      disabled={currentMode === 'view'}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {watchedDate ? format(watchedDate, 'dd/MM/yyyy', { locale: ptBR }) : "Selecione"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent 
-                    className="w-auto p-0 bg-background border" 
-                    align="start"
-                  >
-                    <Calendar
-                      mode="single"
-                      selected={watchedDate}
-                      onSelect={(date) => {
-                        setValue('appointment_date', date || new Date());
-                        setIsCalendarOpen(false);
-                      }}
-                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !watchedDate && "text-muted-foreground"
+                  )}
+                  disabled={currentMode === 'view'}
+                  onClick={() => setIsCalendarOpen(true)}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {watchedDate ? format(watchedDate, 'dd/MM/yyyy', { locale: ptBR }) : "Selecione"}
+                </Button>
                 {errors.appointment_date && (
                   <p className="text-xs text-destructive">{errors.appointment_date.message}</p>
                 )}
@@ -651,33 +634,16 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
               {watch('is_recurring') && (
                 <div className="space-y-2 pl-6">
                   <Label className="text-xs text-muted-foreground">Repetir até</Label>
-                  <Popover open={isRecurringCalendarOpen} onOpenChange={setIsRecurringCalendarOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn("w-full justify-start", !watch('recurring_until') && "text-muted-foreground")}
-                        disabled={currentMode === 'view'}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {watch('recurring_until') ? format(watch('recurring_until')!, 'dd/MM/yyyy', { locale: ptBR }) : "Selecione"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent 
-                      className="w-auto p-0 bg-background border" 
-                      align="start"
-                    >
-                      <Calendar
-                        mode="single"
-                        selected={watch('recurring_until')}
-                        onSelect={(date) => {
-                          setValue('recurring_until', date);
-                          setIsRecurringCalendarOpen(false);
-                        }}
-                        disabled={(date) => date < watchedDate}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className={cn("w-full justify-start", !watch('recurring_until') && "text-muted-foreground")}
+                    disabled={currentMode === 'view'}
+                    onClick={() => setIsRecurringCalendarOpen(true)}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {watch('recurring_until') ? format(watch('recurring_until')!, 'dd/MM/yyyy', { locale: ptBR }) : "Selecione"}
+                  </Button>
                   {errors.recurring_until && <p className="text-xs text-destructive">{errors.recurring_until.message}</p>}
                   <p className="text-xs text-muted-foreground">Será repetido semanalmente até a data selecionada</p>
                 </div>
@@ -776,6 +742,40 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
           }}
         />
       )}
+
+      {/* Calendar Dialog for Main Date */}
+      <Dialog open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+        <DialogContent className="sm:max-w-md p-0">
+          <Calendar
+            mode="single"
+            selected={watchedDate}
+            onSelect={(date) => {
+              setValue('appointment_date', date || new Date());
+              setIsCalendarOpen(false);
+            }}
+            disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+            initialFocus
+            className="rounded-md"
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Calendar Dialog for Recurring Until */}
+      <Dialog open={isRecurringCalendarOpen} onOpenChange={setIsRecurringCalendarOpen}>
+        <DialogContent className="sm:max-w-md p-0">
+          <Calendar
+            mode="single"
+            selected={watch('recurring_until')}
+            onSelect={(date) => {
+              setValue('recurring_until', date);
+              setIsRecurringCalendarOpen(false);
+            }}
+            disabled={(date) => date < watchedDate}
+            initialFocus
+            className="rounded-md"
+          />
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
