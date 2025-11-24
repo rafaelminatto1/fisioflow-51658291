@@ -2633,6 +2633,56 @@ export type Database = {
           },
         ]
       }
+      standardized_test_results: {
+        Row: {
+          answers: Json
+          created_at: string
+          created_by: string
+          id: string
+          interpretation: string | null
+          max_score: number
+          patient_id: string
+          score: number
+          test_name: string
+          test_type: string
+          updated_at: string
+        }
+        Insert: {
+          answers?: Json
+          created_at?: string
+          created_by: string
+          id?: string
+          interpretation?: string | null
+          max_score: number
+          patient_id: string
+          score: number
+          test_name: string
+          test_type: string
+          updated_at?: string
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          created_by?: string
+          id?: string
+          interpretation?: string | null
+          max_score?: number
+          patient_id?: string
+          score?: number
+          test_name?: string
+          test_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "standardized_test_results_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transacoes: {
         Row: {
           created_at: string | null

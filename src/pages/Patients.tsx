@@ -19,7 +19,7 @@ import { NewPatientModal } from '@/components/modals/NewPatientModal';
 import { EditPatientModal } from '@/components/modals/EditPatientModal';
 import { ViewPatientModal } from '@/components/modals/ViewPatientModal';
 import { useActivePatients } from '@/hooks/usePatients';
-import { 
+import {
   Plus, 
   Search, 
   Eye, 
@@ -29,8 +29,10 @@ import {
   Users,
   Filter,
   Download,
-  Loader2
+  Loader2,
+  TrendingUp
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
 const Patients = () => {
@@ -42,6 +44,7 @@ const Patients = () => {
   const [isNewPatientModalOpen, setIsNewPatientModalOpen] = useState(false);
   const { data: patients = [], isLoading: loading } = useActivePatients();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Get unique conditions and statuses for filters
   const uniqueConditions = useMemo(() => {
@@ -411,6 +414,15 @@ const Patients = () => {
 
                   {/* Action Buttons */}
                   <div className="flex gap-2 pt-4 border-t">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="flex-1 shadow-md hover:shadow-lg transition-all"
+                      onClick={() => navigate(`/patient-evolution-report/${patient.id}`)}
+                    >
+                      <TrendingUp className="w-4 h-4 mr-2" />
+                      Dashboard 360º
+                    </Button>
                     <Button 
                       variant="default" 
                       size="sm"
