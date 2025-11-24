@@ -3209,7 +3209,7 @@ export type Database = {
         Row: {
           email: string | null
           failed_attempts: number | null
-          ip_addresses: unknown[] | null
+          ip_addresses: string[] | null
           last_attempt: string | null
         }
         Relationships: []

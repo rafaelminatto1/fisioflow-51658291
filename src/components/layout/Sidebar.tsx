@@ -22,6 +22,7 @@ import {
   ShoppingCart,
   Clock,
   Shield,
+  Lock,
   LogOut
 } from 'lucide-react';
 
@@ -39,7 +40,8 @@ const menuItems = [
   { icon: DollarSign, label: 'Financeiro', href: '/financial' },
   { icon: BarChart3, label: 'Analytics Avançado', href: '/analytics' },
   { icon: FileText, label: 'Relatórios', href: '/reports' },
-  { icon: Shield, label: 'Segurança & LGPD', href: '/security-settings' },
+  { icon: Lock, label: 'Segurança & LGPD', href: '/security-settings' },
+  { icon: Shield, label: 'Monitoramento', href: '/security-monitoring' },
   { icon: Settings, label: 'Configurações', href: '/settings' },
 ];
 
