@@ -3,6 +3,8 @@ import { AdminDashboard } from '@/components/dashboard/AdminDashboard';
 import { PatientDashboard } from '@/components/dashboard/PatientDashboard';
 import { TherapistDashboard } from '@/components/dashboard/TherapistDashboard';
 import { IncompleteRegistrationAlert } from '@/components/dashboard/IncompleteRegistrationAlert';
+import { CustomizableDashboard } from '@/components/dashboard/CustomizableDashboard';
+import { RealtimeActivityFeed } from '@/components/dashboard/RealtimeActivityFeed';
 import { useAuth } from '@/hooks/useAuth';
 
 const Index = () => {
@@ -53,9 +55,20 @@ const Index = () => {
         {/* Alerta de cadastros incompletos */}
         <IncompleteRegistrationAlert />
         
-        {/* Dashboard content */}
-        <div className="w-full">
-          {renderDashboard()}
+        {/* Dashboard Customizável */}
+        <CustomizableDashboard />
+        
+        {/* Grid de conteúdo */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Dashboard principal */}
+          <div className="lg:col-span-2">
+            {renderDashboard()}
+          </div>
+          
+          {/* Feed de atividades em tempo real */}
+          <div className="lg:col-span-1">
+            <RealtimeActivityFeed />
+          </div>
         </div>
       </div>
     </MainLayout>

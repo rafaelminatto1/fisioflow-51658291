@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AdvancedReportGenerator } from '@/components/reports/AdvancedReportGenerator';
 import { 
   FileText, 
   Download, 
@@ -224,11 +225,16 @@ const Reports = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="templates" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="templates">Modelos de Relatório</TabsTrigger>
+            <TabsTrigger value="advanced">Gerador Avançado</TabsTrigger>
             <TabsTrigger value="recent">Relatórios Recentes</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="advanced" className="space-y-6">
+            <AdvancedReportGenerator />
+          </TabsContent>
 
           <TabsContent value="templates" className="space-y-6">
             {/* Period Selector */}
