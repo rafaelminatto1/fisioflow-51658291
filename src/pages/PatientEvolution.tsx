@@ -323,8 +323,9 @@ const PatientEvolution = () => {
         {/* Modern Header with Gradient */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-background p-6 shadow-lg border">
           <div className="relative z-10">
-            <div className="flex items-start justify-between gap-4 flex-wrap">
-              <div className="flex items-start gap-4 flex-1 min-w-0">
+            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+              {/* Info Section */}
+              <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
                 <Button
                   variant="outline"
                   size="icon"
@@ -333,65 +334,67 @@ const PatientEvolution = () => {
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
-                <div className="flex-1 space-y-3 min-w-0">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg flex-shrink-0">
-                      <Stethoscope className="h-6 w-6 text-primary" />
+                <div className="flex-1 space-y-2 sm:space-y-3 min-w-0">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg flex-shrink-0">
+                      <Stethoscope className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                     </div>
                     <div className="min-w-0">
-                      <h1 className="text-3xl font-bold tracking-tight truncate">Evolução do Paciente</h1>
-                      <p className="text-muted-foreground flex items-center gap-2 mt-1 truncate">
+                      <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight truncate">Evolução do Paciente</h1>
+                      <p className="text-muted-foreground flex items-center gap-2 mt-0.5 sm:mt-1 text-sm sm:text-base truncate">
                         <User className="h-4 w-4 flex-shrink-0" />
                         {patient.name}
                       </p>
                     </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2 text-sm">
-                    <Badge variant="outline" className="gap-1">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
+                    <Badge variant="outline" className="gap-1 text-xs">
                       <Calendar className="h-3 w-3" />
                       {format(new Date(appointment.appointment_date), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                     </Badge>
                     {patient.phone && (
-                      <Badge variant="outline" className="gap-1">
+                      <Badge variant="outline" className="gap-1 text-xs">
                         <Phone className="h-3 w-3" />
                         {patient.phone}
                       </Badge>
                     )}
-                    <Badge variant="secondary">
-                      Tratamento iniciado {treatmentDuration}
+                    <Badge variant="secondary" className="text-xs">
+                      {treatmentDuration}
                     </Badge>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 flex-shrink-0">
-                <Button
-                  onClick={() => setShowApplyTemplate(true)}
-                  size="lg"
-                  variant="secondary"
-                  className="shadow hover:shadow-lg transition-all"
-                >
-                  <Activity className="h-4 w-4 mr-2" />
-                  Aplicar Template
-                </Button>
+              
+              {/* Actions Section */}
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-2 lg:pt-0 border-t lg:border-t-0 border-border/30">
                 <SessionTimer startTime={sessionStartTime} />
                 <Button
+                  onClick={() => setShowApplyTemplate(true)}
+                  size="sm"
+                  variant="secondary"
+                  className="shadow hover:shadow-lg transition-all text-xs sm:text-sm lg:size-default"
+                >
+                  <Activity className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Template</span>
+                </Button>
+                <Button
                   onClick={handleSave}
-                  size="lg"
+                  size="sm"
                   variant="outline"
                   disabled={createSoapRecord.isPending}
-                  className="shadow hover:shadow-lg transition-all"
+                  className="shadow hover:shadow-lg transition-all text-xs sm:text-sm lg:size-default"
                 >
-                  <Save className="h-4 w-4 mr-2" />
-                  {createSoapRecord.isPending ? 'Salvando...' : 'Salvar'}
+                  <Save className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">{createSoapRecord.isPending ? 'Salvando...' : 'Salvar'}</span>
                 </Button>
                 <Button
                   onClick={handleCompleteSession}
-                  size="lg"
+                  size="sm"
                   disabled={createSoapRecord.isPending || isCompleting}
-                  className="shadow-lg hover:shadow-xl transition-all hover:scale-105 bg-gradient-to-r from-primary to-primary/80"
+                  className="shadow-lg hover:shadow-xl transition-all hover:scale-105 bg-gradient-to-r from-primary to-primary/80 text-xs sm:text-sm lg:size-default"
                 >
-                  <CheckCircle2 className="h-5 w-5 mr-2" />
-                  {isCompleting ? 'Finalizando...' : 'Concluir Atendimento'}
+                  <CheckCircle2 className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">{isCompleting ? 'Finalizando...' : 'Concluir'}</span>
                 </Button>
               </div>
             </div>
