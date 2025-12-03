@@ -107,13 +107,62 @@ export function useMFASettings() {
     },
   });
 
+  const sendOTP = useMutation({
+    mutationFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !user.email) throw new Error("Usuário não autenticado");
+
+      const { data, error } = await supabase.functions.invoke("send-mfa-otp", {
+        body: { userId: user.id, email: user.email },
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Código enviado para seu email");
+    },
+    onError: (error) => {
+      console.error("Erro ao enviar OTP:", error);
+      toast.error("Erro ao enviar código de verificação");
+    },
+  });
+
+  const verifyOTP = useMutation({
+    mutationFn: async (code: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+
+      const { data, error } = await supabase.rpc("verify_mfa_otp", {
+        _user_id: user.id,
+        _code: code,
+      });
+
+      if (error) throw error;
+      if (!data) throw new Error("Código inválido ou expirado");
+
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Código verificado com sucesso");
+    },
+    onError: (error) => {
+      console.error("Erro ao verificar OTP:", error);
+      toast.error("Código inválido ou expirado");
+    },
+  });
+
   return {
     settings,
     isLoading,
     isMFAEnabled: settings?.mfa_enabled ?? false,
     enableMFA: enableMFA.mutateAsync,
     disableMFA: disableMFA.mutate,
+    sendOTP: sendOTP.mutateAsync,
+    verifyOTP: verifyOTP.mutateAsync,
     isEnabling: enableMFA.isPending,
     isDisabling: disableMFA.isPending,
+    isSendingOTP: sendOTP.isPending,
+    isVerifyingOTP: verifyOTP.isPending,
   };
 }
