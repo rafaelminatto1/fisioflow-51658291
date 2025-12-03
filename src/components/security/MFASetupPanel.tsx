@@ -3,32 +3,61 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Shield, Lock, Key, Copy, Check } from "lucide-react";
-import { useMFASettings, MFAMethod } from "@/hooks/useMFASettings";
+import { Input } from "@/components/ui/input";
+import { Shield, Lock, Key, Copy, Check, Mail, Send } from "lucide-react";
+import { useMFASettings } from "@/hooks/useMFASettings";
 import { toast } from "sonner";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 
 export function MFASetupPanel() {
-  const { settings, isLoading, isMFAEnabled, enableMFA, disableMFA, isEnabling, isDisabling } =
-    useMFASettings();
-  const [selectedMethod, setSelectedMethod] = useState<MFAMethod>("totp");
+  const { 
+    settings, 
+    isLoading, 
+    isMFAEnabled, 
+    enableMFA, 
+    disableMFA, 
+    sendOTP,
+    verifyOTP,
+    isEnabling, 
+    isDisabling,
+    isSendingOTP,
+    isVerifyingOTP,
+  } = useMFASettings();
   const [backupCodes, setBackupCodes] = useState<string[] | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [showOTPInput, setShowOTPInput] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
 
   const handleEnableMFA = async () => {
     try {
-      const result = await enableMFA(selectedMethod);
+      // Send OTP first
+      await sendOTP();
+      setShowOTPInput(true);
+    } catch (error) {
+      console.error("Erro ao enviar OTP:", error);
+    }
+  };
+
+  const handleVerifyAndEnable = async () => {
+    if (otpCode.length !== 6) {
+      toast.error("Digite o código de 6 dígitos");
+      return;
+    }
+
+    try {
+      await verifyOTP(otpCode);
+      const result = await enableMFA("email");
       if (result && result.backupCodes) {
         setBackupCodes(result.backupCodes);
       }
+      setShowOTPInput(false);
+      setOtpCode("");
     } catch (error) {
-      console.error("Erro ao ativar MFA:", error);
+      console.error("Erro ao verificar OTP:", error);
     }
   };
 
@@ -47,7 +76,7 @@ export function MFASetupPanel() {
   };
 
   if (isLoading) {
-    return <div>Carregando configurações...</div>;
+    return <div className="p-4 text-center text-muted-foreground">Carregando configurações...</div>;
   }
 
   return (
@@ -58,7 +87,7 @@ export function MFASetupPanel() {
           Autenticação de Dois Fatores (MFA)
         </CardTitle>
         <CardDescription>
-          Adicione uma camada extra de segurança à sua conta
+          Adicione uma camada extra de segurança à sua conta via código por email
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -77,34 +106,77 @@ export function MFASetupPanel() {
           </Badge>
         </div>
 
-        {!isMFAEnabled && !backupCodes && (
+        {!isMFAEnabled && !backupCodes && !showOTPInput && (
           <div className="space-y-4">
             <Alert>
-              <Shield className="h-4 w-4" />
+              <Mail className="h-4 w-4" />
               <AlertDescription>
-                A autenticação de dois fatores adiciona uma camada extra de segurança, exigindo um código
-                adicional além da sua senha ao fazer login.
+                A autenticação de dois fatores enviará um código de verificação para seu email 
+                sempre que você fizer login, adicionando uma camada extra de segurança.
               </AlertDescription>
             </Alert>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Método de Autenticação</label>
-              <Select value={selectedMethod} onValueChange={(v) => setSelectedMethod(v as MFAMethod)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="totp">App Autenticador (Google Authenticator, Authy)</SelectItem>
-                  <SelectItem value="email">Código por Email</SelectItem>
-                  <SelectItem value="sms">Código por SMS</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Button onClick={handleEnableMFA} disabled={isEnabling} className="w-full">
+            <Button onClick={handleEnableMFA} disabled={isSendingOTP} className="w-full">
               <Shield className="mr-2 h-4 w-4" />
-              {isEnabling ? "Ativando..." : "Ativar MFA"}
+              {isSendingOTP ? "Enviando código..." : "Ativar MFA por Email"}
             </Button>
+          </div>
+        )}
+
+        {showOTPInput && (
+          <div className="space-y-4">
+            <Alert>
+              <Send className="h-4 w-4" />
+              <AlertDescription>
+                Enviamos um código de 6 dígitos para seu email. Digite-o abaixo para confirmar.
+              </AlertDescription>
+            </Alert>
+
+            <div className="flex flex-col items-center space-y-4">
+              <InputOTP
+                maxLength={6}
+                value={otpCode}
+                onChange={setOtpCode}
+              >
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
+
+              <div className="flex gap-2 w-full">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowOTPInput(false);
+                    setOtpCode("");
+                  }}
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleVerifyAndEnable}
+                  disabled={isVerifyingOTP || isEnabling || otpCode.length !== 6}
+                  className="flex-1"
+                >
+                  {isVerifyingOTP || isEnabling ? "Verificando..." : "Verificar e Ativar"}
+                </Button>
+              </div>
+
+              <Button
+                variant="link"
+                size="sm"
+                onClick={handleEnableMFA}
+                disabled={isSendingOTP}
+              >
+                {isSendingOTP ? "Enviando..." : "Reenviar código"}
+              </Button>
+            </div>
           </div>
         )}
 
@@ -114,7 +186,7 @@ export function MFASetupPanel() {
               <Key className="h-4 w-4 text-yellow-600" />
               <AlertDescription className="text-yellow-800 dark:text-yellow-200">
                 <strong>IMPORTANTE:</strong> Guarde estes códigos de backup em um local seguro. Você pode
-                usá-los para acessar sua conta se perder acesso ao método de autenticação principal.
+                usá-los para acessar sua conta se perder acesso ao seu email.
               </AlertDescription>
             </Alert>
 
@@ -168,10 +240,7 @@ export function MFASetupPanel() {
             <Alert className="border-green-500 bg-green-50 dark:bg-green-950/20">
               <Shield className="h-4 w-4 text-green-600" />
               <AlertDescription className="text-green-800 dark:text-green-200">
-                Sua conta está protegida com autenticação de dois fatores via{" "}
-                {settings?.mfa_method === "totp" && "App Autenticador"}
-                {settings?.mfa_method === "email" && "Email"}
-                {settings?.mfa_method === "sms" && "SMS"}
+                Sua conta está protegida com autenticação de dois fatores via Email OTP.
               </AlertDescription>
             </Alert>
 
