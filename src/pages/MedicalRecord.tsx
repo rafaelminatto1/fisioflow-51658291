@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { 
   FileText, 
   Plus, 
@@ -24,15 +25,19 @@ import {
   Save,
   Edit,
   Eye,
-  Download
+  Download,
+  X
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 const MedicalRecord = () => {
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('anamnesis');
   const [isEditing, setIsEditing] = useState(false);
+  const [viewingRecord, setViewingRecord] = useState<typeof medicalRecords[0] | null>(null);
+  const [editingRecord, setEditingRecord] = useState<typeof medicalRecords[0] | null>(null);
 
   // Load patients from Supabase
   const { data: patients = [], isLoading: patientsLoading } = useQuery({
@@ -108,7 +113,41 @@ const MedicalRecord = () => {
   const handleSaveRecord = () => {
     console.log('Saving record:', recordForm);
     setIsEditing(false);
-    // Implement save logic here
+    setEditingRecord(null);
+  };
+
+  const handleViewRecord = (record: typeof medicalRecords[0]) => {
+    setViewingRecord(record);
+  };
+
+  const handleEditRecord = (record: typeof medicalRecords[0]) => {
+    setEditingRecord(record);
+    setIsEditing(true);
+    setRecordForm({
+      ...recordForm,
+      type: record.type,
+      title: record.title,
+      content: record.content,
+    });
+  };
+
+  const handleExportPDF = (record: typeof medicalRecords[0]) => {
+    import('jspdf').then(({ jsPDF }) => {
+      const doc = new jsPDF();
+      doc.setFontSize(18);
+      doc.text(record.title, 20, 20);
+      doc.setFontSize(12);
+      doc.text(`Tipo: ${getRecordTypeLabel(record.type)}`, 20, 35);
+      doc.text(`Data: ${format(record.date, 'dd/MM/yyyy', { locale: ptBR })}`, 20, 45);
+      doc.text(`Profissional: ${record.therapist}`, 20, 55);
+      doc.setFontSize(10);
+      const contentLines = doc.splitTextToSize(record.content, 170);
+      doc.text(contentLines, 20, 70);
+      doc.save(`registro-${record.id}.pdf`);
+      toast.success('PDF exportado com sucesso!');
+    }).catch(() => {
+      toast.error('Erro ao exportar PDF');
+    });
   };
 
   const getRecordIcon = (type: string) => {
@@ -437,15 +476,15 @@ const MedicalRecord = () => {
                                 </div>
                               </div>
                               <div className="flex gap-2">
-                                <Button variant="outline" size="sm">
+                                <Button variant="outline" size="sm" onClick={() => handleViewRecord(record)}>
                                   <Eye className="w-4 h-4 mr-2" />
                                   Ver
                                 </Button>
-                                <Button variant="outline" size="sm">
+                                <Button variant="outline" size="sm" onClick={() => handleEditRecord(record)}>
                                   <Edit className="w-4 h-4 mr-2" />
                                   Editar
                                 </Button>
-                                <Button variant="outline" size="sm">
+                                <Button variant="outline" size="sm" onClick={() => handleExportPDF(record)}>
                                   <Download className="w-4 h-4 mr-2" />
                                   PDF
                                 </Button>
@@ -476,6 +515,47 @@ const MedicalRecord = () => {
           </div>
         </div>
       </div>
+
+      {/* View Record Dialog */}
+      <Dialog open={!!viewingRecord} onOpenChange={() => setViewingRecord(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {viewingRecord && getRecordIcon(viewingRecord.type)}
+              {viewingRecord?.title}
+            </DialogTitle>
+            <DialogDescription>
+              {viewingRecord && (
+                <span className="flex items-center gap-2 mt-2">
+                  <Badge variant="outline">{getRecordTypeLabel(viewingRecord.type)}</Badge>
+                  <span>•</span>
+                  <span>{viewingRecord.therapist}</span>
+                  <span>•</span>
+                  <span>{format(viewingRecord.date, 'dd/MM/yyyy', { locale: ptBR })}</span>
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+            <p className="text-sm whitespace-pre-wrap">{viewingRecord?.content}</p>
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => viewingRecord && handleExportPDF(viewingRecord)}>
+              <Download className="w-4 h-4 mr-2" />
+              Exportar PDF
+            </Button>
+            <Button onClick={() => {
+              if (viewingRecord) {
+                handleEditRecord(viewingRecord);
+                setViewingRecord(null);
+              }
+            }}>
+              <Edit className="w-4 h-4 mr-2" />
+              Editar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 };
