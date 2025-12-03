@@ -18,12 +18,47 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { usePatients } from '@/hooks/usePatients';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const Communications = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedChannel, setSelectedChannel] = useState<string>('all');
   const [isLoading] = useState(false);
+  
+  // Form state
+  const [sendChannel, setSendChannel] = useState<'email' | 'whatsapp' | 'sms'>('email');
+  const [selectedPatient, setSelectedPatient] = useState<{ id: string; name: string } | null>(null);
+  const [patientSearch, setPatientSearch] = useState('');
+  const [patientPopoverOpen, setPatientPopoverOpen] = useState(false);
+  const [subject, setSubject] = useState('');
+  const [message, setMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
+
+  const { data: patients = [] } = usePatients();
+
+  // Filter patients based on search
+  const filteredPatients = useMemo(() => {
+    if (!patientSearch) return patients.slice(0, 10);
+    return patients.filter(p => 
+      p.name.toLowerCase().includes(patientSearch.toLowerCase())
+    ).slice(0, 10);
+  }, [patients, patientSearch]);
 
   // Mock data para demonstração
   const communications = [
@@ -99,6 +134,49 @@ const Communications = () => {
     }
   };
 
+  const handleNewCommunication = () => {
+    // Reset form
+    setSelectedPatient(null);
+    setPatientSearch('');
+    setSubject('');
+    setMessage('');
+    setSendChannel('email');
+    toast.info('Preencha o formulário para enviar uma nova comunicação');
+  };
+
+  const handleSendCommunication = async () => {
+    if (!selectedPatient) {
+      toast.error('Selecione um paciente');
+      return;
+    }
+    if (!subject.trim()) {
+      toast.error('Digite o assunto da mensagem');
+      return;
+    }
+    if (!message.trim()) {
+      toast.error('Digite a mensagem');
+      return;
+    }
+
+    setIsSending(true);
+    try {
+      // Simulating API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast.success(`Comunicação enviada para ${selectedPatient.name} via ${sendChannel.toUpperCase()}`);
+      
+      // Reset form
+      setSelectedPatient(null);
+      setPatientSearch('');
+      setSubject('');
+      setMessage('');
+    } catch (error) {
+      toast.error('Erro ao enviar comunicação');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   return (
     <MainLayout>
       <div className="space-y-4 sm:space-y-6 animate-fade-in">
@@ -113,7 +191,10 @@ const Communications = () => {
                 Gerencie mensagens e notificações aos pacientes
               </p>
             </div>
-            <Button className="bg-gradient-primary text-primary-foreground hover:shadow-medical w-full sm:w-auto">
+            <Button 
+              onClick={handleNewCommunication}
+              className="bg-gradient-primary text-primary-foreground hover:shadow-medical w-full sm:w-auto"
+            >
               <Plus className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">Nova Comunicação</span>
               <span className="sm:hidden">Nova</span>
@@ -199,7 +280,14 @@ const Communications = () => {
                   </div>
                 ) : (
                   <div className="space-y-0">
-                    {communications.map((comm) => (
+                    {communications
+                      .filter(comm => selectedChannel === 'all' || comm.type === selectedChannel)
+                      .filter(comm => 
+                        !searchTerm || 
+                        comm.recipient.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        comm.subject.toLowerCase().includes(searchTerm.toLowerCase())
+                      )
+                      .map((comm) => (
                     <div
                       key={comm.id}
                       className="p-4 border-b border-border last:border-b-0 hover:bg-accent/50 transition-colors"
@@ -257,15 +345,30 @@ const Communications = () => {
                     Canal
                   </label>
                   <div className="grid grid-cols-3 gap-2">
-                    <Button variant="outline" size="sm" className="flex-col p-3 h-auto">
+                    <Button 
+                      variant={sendChannel === 'email' ? 'default' : 'outline'} 
+                      size="sm" 
+                      className="flex-col p-3 h-auto"
+                      onClick={() => setSendChannel('email')}
+                    >
                       <Mail className="w-4 h-4 mb-1" />
                       <span className="text-xs">Email</span>
                     </Button>
-                    <Button variant="outline" size="sm" className="flex-col p-3 h-auto">
+                    <Button 
+                      variant={sendChannel === 'whatsapp' ? 'default' : 'outline'} 
+                      size="sm" 
+                      className="flex-col p-3 h-auto"
+                      onClick={() => setSendChannel('whatsapp')}
+                    >
                       <MessageSquare className="w-4 h-4 mb-1" />
                       <span className="text-xs">WhatsApp</span>
                     </Button>
-                    <Button variant="outline" size="sm" className="flex-col p-3 h-auto">
+                    <Button 
+                      variant={sendChannel === 'sms' ? 'default' : 'outline'} 
+                      size="sm" 
+                      className="flex-col p-3 h-auto"
+                      onClick={() => setSendChannel('sms')}
+                    >
                       <Phone className="w-4 h-4 mb-1" />
                       <span className="text-xs">SMS</span>
                     </Button>
@@ -276,14 +379,56 @@ const Communications = () => {
                   <label className="text-sm font-medium text-foreground mb-2 block">
                     Destinatário
                   </label>
-                  <Input placeholder="Selecionar paciente..." />
+                  <Popover open={patientPopoverOpen} onOpenChange={setPatientPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={patientPopoverOpen}
+                        className="w-full justify-start font-normal"
+                      >
+                        {selectedPatient ? selectedPatient.name : "Buscar paciente..."}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[300px] p-0" align="start">
+                      <Command>
+                        <CommandInput 
+                          placeholder="Digite o nome do paciente..." 
+                          value={patientSearch}
+                          onValueChange={setPatientSearch}
+                        />
+                        <CommandList>
+                          <CommandEmpty>Nenhum paciente encontrado.</CommandEmpty>
+                          <CommandGroup>
+                            {filteredPatients.map((patient) => (
+                              <CommandItem
+                                key={patient.id}
+                                value={patient.name}
+                                onSelect={() => {
+                                  setSelectedPatient({ id: patient.id, name: patient.name });
+                                  setPatientPopoverOpen(false);
+                                  setPatientSearch('');
+                                }}
+                              >
+                                {patient.name}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">
                     Assunto
                   </label>
-                  <Input placeholder="Assunto da mensagem..." />
+                  <Input 
+                    placeholder="Assunto da mensagem..." 
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                  />
                 </div>
 
                 <div>
@@ -294,12 +439,24 @@ const Communications = () => {
                     placeholder="Digite sua mensagem..." 
                     rows={4}
                     className="resize-none"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
                   />
                 </div>
 
-                <Button className="w-full bg-gradient-primary text-primary-foreground hover:shadow-medical">
-                  <Send className="w-4 h-4 mr-2" />
-                  Enviar Comunicação
+                <Button 
+                  className="w-full bg-gradient-primary text-primary-foreground hover:shadow-medical"
+                  onClick={handleSendCommunication}
+                  disabled={isSending}
+                >
+                  {isSending ? (
+                    <>Enviando...</>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4 mr-2" />
+                      Enviar Comunicação
+                    </>
+                  )}
                 </Button>
               </CardContent>
             </Card>
