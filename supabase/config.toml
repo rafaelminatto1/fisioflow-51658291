@@ -23,3 +23,6 @@ verify_jwt = true
 
 [functions.verify-voucher-payment]
 verify_jwt = true
+
+[functions.send-mfa-otp]
+verify_jwt = true
