@@ -311,7 +311,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl max-h-[85vh] flex flex-col p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-4xl h-[85vh] max-h-[85vh] flex flex-col p-0 overflow-hidden">
         <DialogHeader className="px-6 pt-4 pb-3 border-b bg-background">
           <DialogTitle className="flex items-center gap-2 text-lg">
             <Calendar className="h-5 w-5 text-primary" />
@@ -324,7 +324,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 min-h-0">
+        <ScrollArea className="flex-1 overflow-auto">
           <form id="appointment-form" onSubmit={handleSubmit(handleSave)} className="p-6 space-y-5">
             {/* Patient Selection */}
             <div className="space-y-2">
@@ -665,8 +665,8 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
           </form>
         </ScrollArea>
 
-        {/* Action Buttons */}
-        <div className="flex justify-between gap-3 px-6 py-4 border-t bg-background">
+        {/* Action Buttons - Fixed at bottom */}
+        <div className="flex justify-between gap-3 px-6 py-4 border-t bg-background shrink-0">
           <div>
             {currentMode === 'edit' && appointment && (
               <Button
