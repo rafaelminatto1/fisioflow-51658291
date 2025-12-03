@@ -10,6 +10,7 @@ import type { Appointment } from '@/types/appointment';
 import { AppointmentCard } from './AppointmentCard';
 import { generateTimeSlots } from '@/lib/config/agenda';
 import { RescheduleConfirmDialog } from './RescheduleConfirmDialog';
+import { AppointmentQuickView } from './AppointmentQuickView';
 
 export type CalendarViewType = 'day' | 'week' | 'month';
 
@@ -33,6 +34,8 @@ interface CalendarViewProps {
   onTimeSlotClick: (date: Date, time: string) => void;
   onAppointmentReschedule?: (appointment: Appointment, newDate: Date, newTime: string) => Promise<void>;
   isRescheduling?: boolean;
+  onEditAppointment?: (appointment: Appointment) => void;
+  onDeleteAppointment?: (appointment: Appointment) => void;
 }
 
 export const CalendarView: React.FC<CalendarViewProps> = ({
@@ -44,8 +47,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   onAppointmentClick,
   onTimeSlotClick,
   onAppointmentReschedule,
-  isRescheduling = false
+  isRescheduling = false,
+  onEditAppointment,
+  onDeleteAppointment
 }) => {
+  // State for appointment quick view popover
+  const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
   // Current time indicator
   const [currentTime, setCurrentTime] = useState(new Date());
   
@@ -300,37 +307,44 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               const isDraggable = !!onAppointmentReschedule;
               
               return (
-                <div
+                <AppointmentQuickView
                   key={apt.id}
-                  draggable={isDraggable}
-                  onDragStart={(e) => handleDragStart(e, apt)}
-                  onDragEnd={handleDragEnd}
-                  className={cn(
-                    "absolute left-1 right-1 p-2 rounded-xl text-white cursor-pointer shadow-xl border-l-4 backdrop-blur-sm animate-fade-in overflow-hidden",
-                    getStatusColor(apt.status),
-                    "hover:shadow-2xl hover:scale-[1.02] hover:z-20 transition-all duration-300",
-                    isDraggable && "cursor-grab active:cursor-grabbing",
-                    dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50 scale-95"
-                  )}
-                  style={{ 
-                    top: `${top}px`, 
-                    height: `${heightInPixels}px`
-                  }}
-                  onClick={() => onAppointmentClick(apt)}
+                  appointment={apt}
+                  open={openPopoverId === apt.id}
+                  onOpenChange={(open) => setOpenPopoverId(open ? apt.id : null)}
+                  onEdit={onEditAppointment ? () => onEditAppointment(apt) : undefined}
+                  onDelete={onDeleteAppointment ? () => onDeleteAppointment(apt) : undefined}
                 >
+                  <div
+                    draggable={isDraggable}
+                    onDragStart={(e) => handleDragStart(e, apt)}
+                    onDragEnd={handleDragEnd}
+                    className={cn(
+                      "absolute left-1 right-1 p-2 rounded-xl text-white cursor-pointer shadow-xl border-l-4 backdrop-blur-sm animate-fade-in overflow-hidden",
+                      getStatusColor(apt.status),
+                      "hover:shadow-2xl hover:scale-[1.02] hover:z-20 transition-all duration-300",
+                      isDraggable && "cursor-grab active:cursor-grabbing",
+                      dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50 scale-95"
+                    )}
+                    style={{ 
+                      top: `${top}px`, 
+                      height: `${heightInPixels}px`
+                    }}
+                  >
                     <div className="flex items-start justify-between gap-1">
                       <div className="font-bold text-sm line-clamp-3 leading-tight flex-1">
                         {apt.patientName}
                       </div>
-                    {isDraggable && (
-                      <GripVertical className="h-4 w-4 opacity-50 flex-shrink-0" />
-                    )}
+                      {isDraggable && (
+                        <GripVertical className="h-4 w-4 opacity-50 flex-shrink-0" />
+                      )}
+                    </div>
+                    <div className="text-xs opacity-90 flex items-center gap-1 mt-1">
+                      <Clock className="h-3 w-3 flex-shrink-0" />
+                      <span>{apt.time}</span>
+                    </div>
                   </div>
-                  <div className="text-xs opacity-90 flex items-center gap-1 mt-1">
-                    <Clock className="h-3 w-3 flex-shrink-0" />
-                    <span>{apt.time}</span>
-                  </div>
-                </div>
+                </AppointmentQuickView>
               );
             })}
           </div>
@@ -434,50 +448,55 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       const isDraggable = !!onAppointmentReschedule;
                       
                       return (
-                        <div
+                        <AppointmentQuickView
                           key={apt.id}
-                          draggable={isDraggable}
-                          onDragStart={(e) => handleDragStart(e, apt)}
-                          onDragEnd={handleDragEnd}
-                          className={cn(
-                            "absolute left-0.5 right-0.5 sm:left-1 sm:right-1 p-1.5 sm:p-2.5 rounded-xl text-white cursor-pointer shadow-xl border-l-[3px] sm:border-l-4 backdrop-blur-sm animate-fade-in overflow-hidden",
-                            getStatusColor(apt.status),
-                            "hover:shadow-2xl hover:scale-[1.02] hover:z-20 transition-all duration-200 group/card",
-                            isDraggable && "cursor-grab active:cursor-grabbing",
-                            dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50 scale-95"
-                          )}
-                          style={{ 
-                            top: `${topMobile}px`,
-                            height: `${heightMobile}px`,
-                            ['--top-desktop' as any]: `${topDesktop}px`,
-                            ['--height-desktop' as any]: `${heightDesktop}px`
-                          } as React.CSSProperties}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onAppointmentClick(apt);
-                          }}
+                          appointment={apt}
+                          open={openPopoverId === apt.id}
+                          onOpenChange={(open) => setOpenPopoverId(open ? apt.id : null)}
+                          onEdit={onEditAppointment ? () => onEditAppointment(apt) : undefined}
+                          onDelete={onDeleteAppointment ? () => onDeleteAppointment(apt) : undefined}
                         >
-                          <style dangerouslySetInnerHTML={{__html: `
-                            @media (min-width: 640px) {
-                              [style*="--top-desktop"][style*="--height-desktop"] {
-                                top: var(--top-desktop) !important;
-                                height: var(--height-desktop) !important;
-                              }
-                            }
-                          `}} />
-                          <div className="flex items-start justify-between gap-0.5">
-                            <div className="font-extrabold drop-shadow-md leading-tight text-[11px] sm:text-xs line-clamp-3 flex-1">
-                              {apt.patientName}
-                            </div>
-                            {isDraggable && (
-                              <GripVertical className="h-3 w-3 opacity-50 flex-shrink-0 hidden sm:block" />
+                          <div
+                            draggable={isDraggable}
+                            onDragStart={(e) => handleDragStart(e, apt)}
+                            onDragEnd={handleDragEnd}
+                            className={cn(
+                              "absolute left-0.5 right-0.5 sm:left-1 sm:right-1 p-1.5 sm:p-2.5 rounded-xl text-white cursor-pointer shadow-xl border-l-[3px] sm:border-l-4 backdrop-blur-sm animate-fade-in overflow-hidden",
+                              getStatusColor(apt.status),
+                              "hover:shadow-2xl hover:scale-[1.02] hover:z-20 transition-all duration-200 group/card",
+                              isDraggable && "cursor-grab active:cursor-grabbing",
+                              dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50 scale-95"
                             )}
+                            style={{ 
+                              top: `${topMobile}px`,
+                              height: `${heightMobile}px`,
+                              ['--top-desktop' as any]: `${topDesktop}px`,
+                              ['--height-desktop' as any]: `${heightDesktop}px`
+                            } as React.CSSProperties}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <style dangerouslySetInnerHTML={{__html: `
+                              @media (min-width: 640px) {
+                                [style*="--top-desktop"][style*="--height-desktop"] {
+                                  top: var(--top-desktop) !important;
+                                  height: var(--height-desktop) !important;
+                                }
+                              }
+                            `}} />
+                            <div className="flex items-start justify-between gap-0.5">
+                              <div className="font-extrabold drop-shadow-md leading-tight text-[11px] sm:text-xs line-clamp-3 flex-1">
+                                {apt.patientName}
+                              </div>
+                              {isDraggable && (
+                                <GripVertical className="h-3 w-3 opacity-50 flex-shrink-0 hidden sm:block" />
+                              )}
+                            </div>
+                            <div className="opacity-95 text-[9px] sm:text-xs mt-0.5 flex items-center gap-1 font-semibold">
+                              <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3 flex-shrink-0" />
+                              <span>{apt.time}</span>
+                            </div>
                           </div>
-                          <div className="opacity-95 text-[9px] sm:text-xs mt-0.5 flex items-center gap-1 font-semibold">
-                            <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3 flex-shrink-0" />
-                            <span>{apt.time}</span>
-                          </div>
-                        </div>
+                        </AppointmentQuickView>
                       );
                     })}
                   </div>
@@ -545,21 +564,26 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     
                     <div className="space-y-1.5">
                       {dayAppointments.slice(0, 3).map(apt => (
-                        <div
+                        <AppointmentQuickView
                           key={apt.id}
-                          className={cn(
-                            "text-xs p-2 rounded-lg text-white cursor-pointer truncate shadow-md border-l-3 transition-all duration-300",
-                            getStatusColor(apt.status),
-                            "hover:shadow-xl hover:scale-110 hover:-translate-x-0.5"
-                          )}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onAppointmentClick(apt);
-                          }}
+                          appointment={apt}
+                          open={openPopoverId === apt.id}
+                          onOpenChange={(open) => setOpenPopoverId(open ? apt.id : null)}
+                          onEdit={onEditAppointment ? () => onEditAppointment(apt) : undefined}
+                          onDelete={onDeleteAppointment ? () => onDeleteAppointment(apt) : undefined}
                         >
-                          <div className="font-bold truncate drop-shadow-sm">{apt.time}</div>
-                          <div className="truncate opacity-95 text-xs font-medium">{apt.patientName}</div>
-                        </div>
+                          <div
+                            className={cn(
+                              "text-xs p-2 rounded-lg text-white cursor-pointer truncate shadow-md border-l-3 transition-all duration-300",
+                              getStatusColor(apt.status),
+                              "hover:shadow-xl hover:scale-110 hover:-translate-x-0.5"
+                            )}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="font-bold truncate drop-shadow-sm">{apt.time}</div>
+                            <div className="truncate opacity-95 text-xs font-medium">{apt.patientName}</div>
+                          </div>
+                        </AppointmentQuickView>
                       ))}
                       {dayAppointments.length > 3 && (
                         <div className="text-xs font-medium text-primary pl-2 pt-1 hover:underline">
