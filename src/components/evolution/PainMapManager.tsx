@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PainMapCanvas } from './PainMapCanvas';
@@ -9,7 +8,7 @@ import { PainMapHistory } from './PainMapHistory';
 import { usePainMaps, usePainEvolution, usePainStatistics, useCreatePainMap, useUpdatePainMap } from '@/hooks/usePainMaps';
 import { useAuth } from '@/hooks/useAuth';
 import type { PainMapPoint, PainIntensity } from '@/types/painMap';
-import { Save, TrendingDown, TrendingUp, Minus } from 'lucide-react';
+import { TrendingDown, TrendingUp, Minus, CheckCircle2, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface PainMapManagerProps {
@@ -23,7 +22,10 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
   const [painPoints, setPainPoints] = useState<PainMapPoint[]>([]);
   const [chartType, setChartType] = useState<'line' | 'area' | 'bar'>('line');
   const [notes, setNotes] = useState('');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const { user } = useAuth();
+  const saveTimeoutRef = useRef<NodeJS.Timeout>();
+  const lastSavedRef = useRef<string>('');
   
   const { data: painMaps = [], isLoading } = usePainMaps(patientId);
   const { data: painEvolution = [] } = usePainEvolution(patientId);
@@ -35,8 +37,14 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
     ? Math.round(painPoints.reduce((sum, p) => sum + p.intensity, 0) / painPoints.length) as PainIntensity
     : 0;
 
-  const handleSave = async () => {
-    if (!user) return;
+  // Auto-save function
+  const autoSave = useCallback(async () => {
+    if (!user || painPoints.length === 0 || readOnly) return;
+
+    const currentData = JSON.stringify(painPoints);
+    if (currentData === lastSavedRef.current) return;
+
+    setSaveStatus('saving');
 
     const painMapData = {
       patient_id: patientId,
@@ -51,12 +59,37 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
 
     try {
       await createPainMap.mutateAsync(painMapData);
-      setPainPoints([]);
-      setNotes('');
+      lastSavedRef.current = currentData;
+      setSaveStatus('saved');
+      
+      // Reset to idle after 2 seconds
+      setTimeout(() => setSaveStatus('idle'), 2000);
     } catch (error) {
       console.error('Erro ao salvar mapa de dor:', error);
+      setSaveStatus('idle');
     }
-  };
+  }, [user, painPoints, patientId, sessionId, appointmentId, globalPainLevel, notes, createPainMap, readOnly]);
+
+  // Auto-save effect with debounce
+  useEffect(() => {
+    if (painPoints.length === 0 || readOnly) return;
+
+    // Clear previous timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Set new timeout for auto-save (2 seconds delay)
+    saveTimeoutRef.current = setTimeout(() => {
+      autoSave();
+    }, 2000);
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [painPoints, autoSave, readOnly]);
 
   const getTrendIcon = () => {
     if (!stats) return <Minus className="w-4 h-4" />;
@@ -134,14 +167,25 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
                   <p className="text-sm font-medium">Nível Global de Dor</p>
                   <p className="text-3xl font-bold text-primary">{globalPainLevel}/10</p>
                 </div>
-                <Button 
-                  onClick={handleSave}
-                  disabled={painPoints.length === 0 || createPainMap.isPending}
-                  size="lg"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {createPainMap.isPending ? 'Salvando...' : 'Salvar Mapa de Dor'}
-                </Button>
+                
+                {/* Auto-save status indicator */}
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  {saveStatus === 'saving' && (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Salvando...</span>
+                    </>
+                  )}
+                  {saveStatus === 'saved' && (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                      <span className="text-green-600">Salvo automaticamente</span>
+                    </>
+                  )}
+                  {saveStatus === 'idle' && painPoints.length > 0 && (
+                    <span className="text-xs">Auto-save ativo</span>
+                  )}
+                </div>
               </div>
             </Card>
           )}
