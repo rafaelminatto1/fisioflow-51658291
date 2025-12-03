@@ -11,7 +11,7 @@ import { MiniCalendar } from '@/components/schedule/MiniCalendar';
 import { AppointmentSearch } from '@/components/schedule/AppointmentSearch';
 import { AdvancedFilters } from '@/components/schedule/AdvancedFilters';
 import { QuickStats } from '@/components/schedule/QuickStats';
-import { useAppointments, useCreateAppointment } from '@/hooks/useAppointments';
+import { useAppointments, useCreateAppointment, useRescheduleAppointment } from '@/hooks/useAppointments';
 import { logger } from '@/lib/errors/logger';
 import { AlertTriangle, Calendar, Clock, Users, TrendingUp, Plus, Settings as SettingsIcon } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
@@ -22,6 +22,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { ScheduleStatsCard } from '@/components/schedule/ScheduleStatsCard';
+import { format } from 'date-fns';
 
 // Lazy load CalendarView for better initial load performance
 const CalendarView = lazy(() => import('@/components/schedule/CalendarView').then(mod => ({ default: mod.CalendarView })));
@@ -57,6 +58,7 @@ const Schedule = () => {
 
   const { data: appointments = [], isLoading: loading, error, refetch } = useAppointments();
   const createAppointmentMutation = useCreateAppointment();
+  const { mutateAsync: rescheduleAppointment, isPending: isRescheduling } = useRescheduleAppointment();
   
   // Datas com agendamentos para o mini calendário
   const appointmentDates = React.useMemo(() => {
@@ -166,6 +168,28 @@ const Schedule = () => {
     setModalDefaultDate(undefined);
     setModalDefaultTime(undefined);
   }, []);
+
+  const handleAppointmentReschedule = useCallback(async (appointment: Appointment, newDate: Date, newTime: string) => {
+    try {
+      await rescheduleAppointment({
+        appointmentId: appointment.id,
+        appointment_date: format(newDate, 'yyyy-MM-dd'),
+        appointment_time: newTime,
+        duration: appointment.duration
+      });
+      toast({
+        title: '✅ Reagendado com sucesso',
+        description: `Atendimento de ${appointment.patientName} movido para ${format(newDate, 'dd/MM/yyyy')} às ${newTime}.`,
+      });
+    } catch (error) {
+      toast({
+        title: '❌ Erro ao reagendar',
+        description: 'Não foi possível reagendar o atendimento.',
+        variant: 'destructive'
+      });
+      throw error;
+    }
+  }, [rescheduleAppointment]);
 
   const handleFiltersChange = useCallback((newFilters: FilterType) => {
     setFilters(newFilters);
@@ -481,6 +505,8 @@ const Schedule = () => {
                 onViewTypeChange={(type) => setViewType(type)}
                 onAppointmentClick={handleAppointmentClick}
                 onTimeSlotClick={handleTimeSlotClick}
+                onAppointmentReschedule={handleAppointmentReschedule}
+                isRescheduling={isRescheduling}
               />
             </Suspense>
           )}
