@@ -318,10 +318,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                   }}
                   onClick={() => onAppointmentClick(apt)}
                 >
-                  <div className="flex items-start justify-between gap-1">
-                    <div className="font-bold text-sm truncate leading-tight flex-1">
-                      {apt.patientName}
-                    </div>
+                    <div className="flex items-start justify-between gap-1">
+                      <div className="font-bold text-sm line-clamp-3 leading-tight flex-1">
+                        {apt.patientName}
+                      </div>
                     {isDraggable && (
                       <GripVertical className="h-4 w-4 opacity-50 flex-shrink-0" />
                     )}
@@ -466,7 +466,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                             }
                           `}} />
                           <div className="flex items-start justify-between gap-0.5">
-                            <div className="font-extrabold drop-shadow-md leading-tight text-[11px] sm:text-xs truncate flex-1">
+                            <div className="font-extrabold drop-shadow-md leading-tight text-[11px] sm:text-xs line-clamp-3 flex-1">
                               {apt.patientName}
                             </div>
                             {isDraggable && (
