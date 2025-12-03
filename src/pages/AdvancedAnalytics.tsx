@@ -1,11 +1,12 @@
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, TrendingUp, Users, Calendar, DollarSign, Activity } from "lucide-react";
+import { BarChart3, Users, Calendar, DollarSign, Activity, LayoutDashboard } from "lucide-react";
 import { AppointmentAnalytics } from "@/components/analytics/AppointmentAnalytics";
 import { PatientAnalytics } from "@/components/analytics/PatientAnalytics";
 import { FinancialAnalytics } from "@/components/analytics/FinancialAnalytics";
 import { PredictiveAnalytics } from "@/components/analytics/PredictiveAnalytics";
+import { InternalDashboard } from "@/components/analytics/InternalDashboard";
 import { useAnalyticsSummary } from "@/hooks/useAnalyticsSummary";
 
 export default function AdvancedAnalytics() {
@@ -69,7 +70,7 @@ export default function AdvancedAnalytics() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {isLoading ? "..." : `R$ ${summary?.monthlyRevenue?.toFixed(2) || "0,00"}`}
+                {isLoading ? "..." : `R$ ${(summary?.monthlyRevenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 {isLoading ? "..." : `${summary?.revenueGrowth || 0}%`} vs. mês anterior
@@ -96,13 +97,21 @@ export default function AdvancedAnalytics() {
         </div>
 
         {/* Tabs de Analytics */}
-        <Tabs defaultValue="appointments" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
+        <Tabs defaultValue="dashboard" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="dashboard">
+              <LayoutDashboard className="h-4 w-4 mr-2" />
+              Dashboard
+            </TabsTrigger>
             <TabsTrigger value="appointments">Agendamentos</TabsTrigger>
             <TabsTrigger value="patients">Pacientes</TabsTrigger>
             <TabsTrigger value="financial">Financeiro</TabsTrigger>
             <TabsTrigger value="predictive">Preditivo</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="dashboard" className="space-y-4">
+            <InternalDashboard />
+          </TabsContent>
 
           <TabsContent value="appointments" className="space-y-4">
             <AppointmentAnalytics />
