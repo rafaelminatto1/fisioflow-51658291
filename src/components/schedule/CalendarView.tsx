@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths, isSameMonth, isSameDay, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Calendar, Clock, User } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Clock, User, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,8 +9,19 @@ import { cn } from '@/lib/utils';
 import type { Appointment } from '@/types/appointment';
 import { AppointmentCard } from './AppointmentCard';
 import { generateTimeSlots } from '@/lib/config/agenda';
+import { RescheduleConfirmDialog } from './RescheduleConfirmDialog';
 
 export type CalendarViewType = 'day' | 'week' | 'month';
+
+interface DragState {
+  appointment: Appointment | null;
+  isDragging: boolean;
+}
+
+interface DropTarget {
+  date: Date;
+  time: string;
+}
 
 interface CalendarViewProps {
   appointments: Appointment[];
@@ -20,6 +31,8 @@ interface CalendarViewProps {
   onViewTypeChange: (type: CalendarViewType) => void;
   onAppointmentClick: (appointment: Appointment) => void;
   onTimeSlotClick: (date: Date, time: string) => void;
+  onAppointmentReschedule?: (appointment: Appointment, newDate: Date, newTime: string) => Promise<void>;
+  isRescheduling?: boolean;
 }
 
 export const CalendarView: React.FC<CalendarViewProps> = ({
@@ -29,10 +42,79 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   viewType,
   onViewTypeChange,
   onAppointmentClick,
-  onTimeSlotClick
+  onTimeSlotClick,
+  onAppointmentReschedule,
+  isRescheduling = false
 }) => {
   // Current time indicator
   const [currentTime, setCurrentTime] = useState(new Date());
+  
+  // Drag and drop state
+  const [dragState, setDragState] = useState<DragState>({ appointment: null, isDragging: false });
+  const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingReschedule, setPendingReschedule] = useState<{ appointment: Appointment; newDate: Date; newTime: string } | null>(null);
+
+  // Drag handlers
+  const handleDragStart = useCallback((e: React.DragEvent, appointment: Appointment) => {
+    if (!onAppointmentReschedule) return;
+    e.dataTransfer.setData('text/plain', appointment.id);
+    e.dataTransfer.effectAllowed = 'move';
+    setDragState({ appointment, isDragging: true });
+  }, [onAppointmentReschedule]);
+
+  const handleDragEnd = useCallback(() => {
+    setDragState({ appointment: null, isDragging: false });
+    setDropTarget(null);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent, date: Date, time: string) => {
+    if (!dragState.isDragging || !onAppointmentReschedule) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDropTarget({ date, time });
+  }, [dragState.isDragging, onAppointmentReschedule]);
+
+  const handleDragLeave = useCallback(() => {
+    setDropTarget(null);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent, date: Date, time: string) => {
+    e.preventDefault();
+    if (!dragState.appointment || !onAppointmentReschedule) return;
+
+    // Verificar se é o mesmo horário
+    const oldDate = typeof dragState.appointment.date === 'string' 
+      ? new Date(dragState.appointment.date) 
+      : dragState.appointment.date;
+    
+    if (isSameDay(oldDate, date) && dragState.appointment.time === time) {
+      handleDragEnd();
+      return;
+    }
+
+    // Abrir diálogo de confirmação
+    setPendingReschedule({ appointment: dragState.appointment, newDate: date, newTime: time });
+    setShowConfirmDialog(true);
+    handleDragEnd();
+  }, [dragState.appointment, onAppointmentReschedule, handleDragEnd]);
+
+  const handleConfirmReschedule = useCallback(async () => {
+    if (!pendingReschedule || !onAppointmentReschedule) return;
+    
+    try {
+      await onAppointmentReschedule(pendingReschedule.appointment, pendingReschedule.newDate, pendingReschedule.newTime);
+      setShowConfirmDialog(false);
+      setPendingReschedule(null);
+    } catch (error) {
+      console.error('Erro ao reagendar:', error);
+    }
+  }, [pendingReschedule, onAppointmentReschedule]);
+
+  const handleCancelReschedule = useCallback(() => {
+    setShowConfirmDialog(false);
+    setPendingReschedule(null);
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -160,18 +242,26 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             {timeSlots.map(time => {
               const hour = parseInt(time.split(':')[0]);
               const isCurrentHour = hour === currentTime.getHours();
+              const isDropTarget = dropTarget && isSameDay(dropTarget.date, currentDate) && dropTarget.time === time;
               
               return (
                 <div 
                   key={time} 
                   className={cn(
                     "h-16 border-b border-border cursor-pointer hover:bg-primary/5 transition-colors group relative",
-                    isCurrentHour && "bg-primary/5"
+                    isCurrentHour && "bg-primary/5",
+                    isDropTarget && "bg-primary/20 ring-2 ring-primary ring-inset"
                   )}
                   onClick={() => onTimeSlotClick(currentDate, time)}
+                  onDragOver={(e) => handleDragOver(e, currentDate, time)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, currentDate, time)}
                 >
-                  <span className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                    Clique para agendar
+                  <span className={cn(
+                    "absolute inset-0 flex items-center justify-center text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity",
+                    isDropTarget && "opacity-100 text-primary font-medium"
+                  )}>
+                    {isDropTarget ? 'Soltar aqui' : 'Clique para agendar'}
                   </span>
                 </div>
               );
@@ -207,14 +297,20 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               const duration = apt.duration || 60;
               const heightInPixels = (duration / 30) * 64;
               const top = slotIndex >= 0 ? slotIndex * 64 : 0;
+              const isDraggable = !!onAppointmentReschedule;
               
               return (
                 <div
                   key={apt.id}
+                  draggable={isDraggable}
+                  onDragStart={(e) => handleDragStart(e, apt)}
+                  onDragEnd={handleDragEnd}
                   className={cn(
                     "absolute left-1 right-1 p-2 rounded-xl text-white cursor-pointer shadow-xl border-l-4 backdrop-blur-sm animate-fade-in overflow-hidden",
                     getStatusColor(apt.status),
-                    "hover:shadow-2xl hover:scale-[1.02] hover:z-20 transition-all duration-300"
+                    "hover:shadow-2xl hover:scale-[1.02] hover:z-20 transition-all duration-300",
+                    isDraggable && "cursor-grab active:cursor-grabbing",
+                    dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50 scale-95"
                   )}
                   style={{ 
                     top: `${top}px`, 
@@ -222,8 +318,13 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                   }}
                   onClick={() => onAppointmentClick(apt)}
                 >
-                  <div className="font-bold text-sm truncate leading-tight">
-                    {apt.patientName}
+                  <div className="flex items-start justify-between gap-1">
+                    <div className="font-bold text-sm truncate leading-tight flex-1">
+                      {apt.patientName}
+                    </div>
+                    {isDraggable && (
+                      <GripVertical className="h-4 w-4 opacity-50 flex-shrink-0" />
+                    )}
                   </div>
                   <div className="text-xs opacity-90 flex items-center gap-1 mt-1">
                     <Clock className="h-3 w-3 flex-shrink-0" />
@@ -288,19 +389,32 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                   
                   {/* Time slots interativos */}
                   <div className="relative">
-                    {timeSlots.map(time => (
-                      <div 
-                        key={time} 
-                        className="h-12 sm:h-16 border-b border-border/20 cursor-pointer hover:bg-gradient-to-r hover:from-primary/15 hover:to-primary/5 active:bg-primary/20 transition-all duration-200 group/slot relative"
-                        onClick={() => onTimeSlotClick(day, time)}
-                      >
-                        <span className="absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs font-bold text-primary-foreground opacity-0 group-hover/slot:opacity-100 transition-all duration-200 scale-95 group-hover/slot:scale-100 pointer-events-none">
-                          <span className="bg-gradient-primary px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg shadow-lg">
-                            + Novo
+                    {timeSlots.map(time => {
+                      const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === time;
+                      
+                      return (
+                        <div 
+                          key={time} 
+                          className={cn(
+                            "h-12 sm:h-16 border-b border-border/20 cursor-pointer hover:bg-gradient-to-r hover:from-primary/15 hover:to-primary/5 active:bg-primary/20 transition-all duration-200 group/slot relative",
+                            isDropTarget && "bg-primary/25 ring-2 ring-primary ring-inset"
+                          )}
+                          onClick={() => onTimeSlotClick(day, time)}
+                          onDragOver={(e) => handleDragOver(e, day, time)}
+                          onDragLeave={handleDragLeave}
+                          onDrop={(e) => handleDrop(e, day, time)}
+                        >
+                          <span className={cn(
+                            "absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs font-bold text-primary-foreground opacity-0 group-hover/slot:opacity-100 transition-all duration-200 scale-95 group-hover/slot:scale-100 pointer-events-none",
+                            isDropTarget && "opacity-100"
+                          )}>
+                            <span className="bg-gradient-primary px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg shadow-lg">
+                              {isDropTarget ? '↓ Soltar' : '+ Novo'}
+                            </span>
                           </span>
-                        </span>
-                      </div>
-                    ))}
+                        </div>
+                      );
+                    })}
                     
                     {/* Appointments overlay - Cards melhorados */}
                     {dayAppointments.map(apt => {
@@ -317,14 +431,20 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       const heightDesktop = slots * 64; // sm:h-16 = 64px
                       const topMobile = slotIndex >= 0 ? slotIndex * 48 : 0;
                       const topDesktop = slotIndex >= 0 ? slotIndex * 64 : 0;
+                      const isDraggable = !!onAppointmentReschedule;
                       
                       return (
                         <div
                           key={apt.id}
+                          draggable={isDraggable}
+                          onDragStart={(e) => handleDragStart(e, apt)}
+                          onDragEnd={handleDragEnd}
                           className={cn(
                             "absolute left-0.5 right-0.5 sm:left-1 sm:right-1 p-1.5 sm:p-2.5 rounded-xl text-white cursor-pointer shadow-xl border-l-[3px] sm:border-l-4 backdrop-blur-sm animate-fade-in overflow-hidden",
                             getStatusColor(apt.status),
-                            "hover:shadow-2xl hover:scale-[1.02] hover:z-20 transition-all duration-200 group/card"
+                            "hover:shadow-2xl hover:scale-[1.02] hover:z-20 transition-all duration-200 group/card",
+                            isDraggable && "cursor-grab active:cursor-grabbing",
+                            dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50 scale-95"
                           )}
                           style={{ 
                             top: `${topMobile}px`,
@@ -345,8 +465,13 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                               }
                             }
                           `}} />
-                          <div className="font-extrabold drop-shadow-md leading-tight text-[11px] sm:text-xs truncate">
-                            {apt.patientName}
+                          <div className="flex items-start justify-between gap-0.5">
+                            <div className="font-extrabold drop-shadow-md leading-tight text-[11px] sm:text-xs truncate flex-1">
+                              {apt.patientName}
+                            </div>
+                            {isDraggable && (
+                              <GripVertical className="h-3 w-3 opacity-50 flex-shrink-0 hidden sm:block" />
+                            )}
                           </div>
                           <div className="opacity-95 text-[9px] sm:text-xs mt-0.5 flex items-center gap-1 font-semibold">
                             <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3 flex-shrink-0" />
@@ -453,6 +578,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   };
 
   return (
+    <>
     <Card className="h-full flex flex-col border-0 shadow-xl overflow-hidden">
       <CardContent className="p-0 flex flex-col h-full">
         {/* Header - Melhorado */}
@@ -529,5 +655,19 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         </div>
       </CardContent>
     </Card>
+
+    {/* Reschedule Confirmation Dialog */}
+    <RescheduleConfirmDialog
+      open={showConfirmDialog}
+      onOpenChange={(open) => {
+        if (!open) handleCancelReschedule();
+      }}
+      appointment={pendingReschedule?.appointment || null}
+      newDate={pendingReschedule?.newDate || null}
+      newTime={pendingReschedule?.newTime || null}
+      onConfirm={handleConfirmReschedule}
+      isPending={isRescheduling}
+    />
+    </>
   );
 };
