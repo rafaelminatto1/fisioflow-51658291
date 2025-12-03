@@ -64,7 +64,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   const canStartAttendance = appointment.status === 'confirmado' || appointment.status === 'agendado';
 
   const handleStartAttendance = () => {
-    navigate(`/patient-evolution/${appointment.patientId}`);
+    navigate(`/patient-evolution/${appointment.id}`);
     toast.success('Iniciando atendimento', {
       description: `Atendimento de ${appointment.patientName}`,
     });
