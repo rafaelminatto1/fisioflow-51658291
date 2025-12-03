@@ -26,11 +26,51 @@ serve(async (req) => {
       throw new Error("Telefone e mensagem são obrigatórios");
     }
 
-    // TODO: Integrar com API do WhatsApp Business
-    // Por enquanto, apenas simula o envio
-    console.log(`Enviando mensagem WhatsApp para ${to}:`, message);
+    // Obter credenciais do WhatsApp Business API
+    const accessToken = Deno.env.get('WHATSAPP_ACCESS_TOKEN');
+    const phoneNumberId = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID');
+
+    if (!accessToken || !phoneNumberId) {
+      console.error('Credenciais do WhatsApp Business não configuradas');
+      throw new Error("Credenciais do WhatsApp Business não configuradas");
+    }
+
+    // Formatar número de telefone (remover caracteres especiais)
+    const formattedPhone = to.replace(/\D/g, '');
     
-    // Simulação de sucesso
+    console.log(`Enviando mensagem WhatsApp para ${formattedPhone}`);
+
+    // Chamar API do WhatsApp Business
+    const whatsappResponse = await fetch(
+      `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          recipient_type: 'individual',
+          to: formattedPhone,
+          type: 'text',
+          text: {
+            preview_url: false,
+            body: message
+          }
+        }),
+      }
+    );
+
+    const responseData = await whatsappResponse.json();
+    
+    if (!whatsappResponse.ok) {
+      console.error('Erro da API WhatsApp:', responseData);
+      throw new Error(responseData.error?.message || 'Erro ao enviar mensagem via WhatsApp');
+    }
+
+    console.log('Mensagem enviada com sucesso:', responseData);
+    
     const enhancedHeaders = addRateLimitHeaders(
       { ...corsHeaders, 'Content-Type': 'application/json' },
       rateLimitResult
@@ -40,7 +80,8 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true,
         message: "Mensagem enviada com sucesso",
-        to,
+        to: formattedPhone,
+        messageId: responseData.messages?.[0]?.id,
         timestamp: new Date().toISOString()
       }),
       {
