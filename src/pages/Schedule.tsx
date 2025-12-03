@@ -191,6 +191,34 @@ const Schedule = () => {
     }
   }, [rescheduleAppointment]);
 
+  const handleEditAppointment = useCallback((appointment: Appointment) => {
+    setSelectedAppointment(appointment);
+    setIsModalOpen(true);
+  }, []);
+
+  const handleDeleteAppointment = useCallback(async (appointment: Appointment) => {
+    try {
+      const { error } = await supabase
+        .from('appointments')
+        .delete()
+        .eq('id', appointment.id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: '✅ Agendamento excluído',
+        description: `Agendamento de ${appointment.patientName} foi excluído.`,
+      });
+      refetch();
+    } catch (error) {
+      toast({
+        title: '❌ Erro ao excluir',
+        description: 'Não foi possível excluir o agendamento.',
+        variant: 'destructive'
+      });
+    }
+  }, [refetch]);
+
   const handleFiltersChange = useCallback((newFilters: FilterType) => {
     setFilters(newFilters);
   }, []);
@@ -507,6 +535,8 @@ const Schedule = () => {
                 onTimeSlotClick={handleTimeSlotClick}
                 onAppointmentReschedule={handleAppointmentReschedule}
                 isRescheduling={isRescheduling}
+                onEditAppointment={handleEditAppointment}
+                onDeleteAppointment={handleDeleteAppointment}
               />
             </Suspense>
           )}
