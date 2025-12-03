@@ -352,7 +352,14 @@ const Reports = () => {
                         <Badge className={getStatusColor(report.status)}>
                           {report.status}
                         </Badge>
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            console.log('Downloading report:', report.name);
+                            alert(`Baixando: ${report.name}`);
+                          }}
+                        >
                           <Download className="w-4 h-4 mr-2" />
                           Download
                         </Button>
