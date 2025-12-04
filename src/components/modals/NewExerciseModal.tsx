@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -37,24 +37,51 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
   const form = useForm<ExerciseFormData>({
     resolver: zodResolver(exerciseSchema),
     defaultValues: {
-      name: exercise?.name || '',
-      description: exercise?.description || '',
-      category: exercise?.category || '',
-      difficulty: exercise?.difficulty as 'Iniciante' | 'Intermediário' | 'Avançado' || undefined,
-      video_url: exercise?.video_url || '',
-      image_url: exercise?.image_url || '',
-      instructions: exercise?.instructions || '',
-      sets: exercise?.sets || undefined,
-      repetitions: exercise?.repetitions || undefined,
-      duration: exercise?.duration || undefined,
+      name: '',
+      description: '',
+      category: '',
+      difficulty: undefined,
+      video_url: '',
+      image_url: '',
+      instructions: '',
+      sets: undefined,
+      repetitions: undefined,
+      duration: undefined,
     },
   });
 
+  useEffect(() => {
+    if (exercise) {
+      form.reset({
+        name: exercise.name || '',
+        description: exercise.description || '',
+        category: exercise.category || '',
+        difficulty: exercise.difficulty as 'Iniciante' | 'Intermediário' | 'Avançado' || undefined,
+        video_url: exercise.video_url || '',
+        image_url: exercise.image_url || '',
+        instructions: exercise.instructions || '',
+        sets: exercise.sets || undefined,
+        repetitions: exercise.repetitions || undefined,
+        duration: exercise.duration || undefined,
+      });
+    } else {
+      form.reset({
+        name: '',
+        description: '',
+        category: '',
+        difficulty: undefined,
+        video_url: '',
+        image_url: '',
+        instructions: '',
+        sets: undefined,
+        repetitions: undefined,
+        duration: undefined,
+      });
+    }
+  }, [exercise, form]);
+
   const handleSubmit = (data: ExerciseFormData) => {
     onSubmit(data as any);
-    if (!exercise) {
-      form.reset();
-    }
     onOpenChange(false);
   };
 

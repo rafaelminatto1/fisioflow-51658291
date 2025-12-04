@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export interface Transacao {
   id: string;
@@ -39,7 +39,6 @@ export function useTransacoes(userId?: string) {
 
 export function useCreateTransacao() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (transacao: Omit<Transacao, 'id' | 'created_at' | 'updated_at'>) => {
@@ -54,24 +53,16 @@ export function useCreateTransacao() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transacoes'] });
-      toast({
-        title: 'Transação criada!',
-        description: 'Transação registrada com sucesso.',
-      });
+      toast.success('Transação criada com sucesso');
     },
     onError: (error: any) => {
-      toast({
-        title: 'Erro ao criar transação',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast.error('Erro ao criar transação: ' + error.message);
     },
   });
 }
 
 export function useUpdateTransacao() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<Transacao> }) => {
@@ -87,17 +78,32 @@ export function useUpdateTransacao() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transacoes'] });
-      toast({
-        title: 'Transação atualizada!',
-        description: 'Alterações salvas com sucesso.',
-      });
+      toast.success('Transação atualizada com sucesso');
     },
     onError: (error: any) => {
-      toast({
-        title: 'Erro ao atualizar transação',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast.error('Erro ao atualizar transação: ' + error.message);
+    },
+  });
+}
+
+export function useDeleteTransacao() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('transacoes')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transacoes'] });
+      toast.success('Transação excluída com sucesso');
+    },
+    onError: (error: any) => {
+      toast.error('Erro ao excluir transação: ' + error.message);
     },
   });
 }
