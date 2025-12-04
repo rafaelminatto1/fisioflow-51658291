@@ -68,13 +68,13 @@ export function useScheduleSettings() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Get organization ID
-  const { data: orgMember } = useQuery({
-    queryKey: ['org-member', user?.id],
+  // Get organization ID from profiles (avoids RLS recursion)
+  const { data: profile } = useQuery({
+    queryKey: ['profile-org', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
       const { data } = await supabase
-        .from('organization_members')
+        .from('profiles')
         .select('organization_id')
         .eq('user_id', user.id)
         .single();
@@ -83,7 +83,7 @@ export function useScheduleSettings() {
     enabled: !!user?.id,
   });
 
-  const organizationId = orgMember?.organization_id;
+  const organizationId = profile?.organization_id;
 
   // Business Hours
   const { data: businessHours, isLoading: isLoadingHours } = useQuery({

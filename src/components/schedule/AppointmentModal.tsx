@@ -25,6 +25,7 @@ import { QuickPatientModal } from '@/components/modals/QuickPatientModal';
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
 import { toast } from '@/hooks/use-toast';
 import { useScheduleCapacity } from '@/hooks/useScheduleCapacity';
+import { useAvailableTimeSlots } from '@/hooks/useAvailableTimeSlots';
 
 const appointmentSchema = z.object({
   patient_id: z.string().min(1, 'Selecione um paciente'),
@@ -214,15 +215,22 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
     }
   }, [watchedDate, watchedTime, watchedDuration, appointment?.id, appointments]);
 
+  // Get available time slots based on business hours and blocked times
+  const { timeSlots: slotInfo, availableTimes, isDayClosed, isTimeBlocked, getBlockReason } = useAvailableTimeSlots(watchedDate || null);
+  
   const timeSlots = useMemo(() => {
-    const slots: string[] = [];
-    for (let hour = 7; hour < 21; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        slots.push(`${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`);
+    // Fallback to default if no business hours configured
+    if (slotInfo.length === 0 && !isDayClosed) {
+      const slots: string[] = [];
+      for (let hour = 7; hour < 21; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+          slots.push(`${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`);
+        }
       }
+      return slots;
     }
-    return slots;
-  }, []);
+    return slotInfo.map(s => s.time);
+  }, [slotInfo, isDayClosed]);
 
   const handleSave = async (data: AppointmentSchemaType) => {
     try {
