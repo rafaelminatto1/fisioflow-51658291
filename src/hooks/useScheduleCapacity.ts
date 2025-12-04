@@ -68,6 +68,10 @@ export function useScheduleCapacity() {
 
   const createCapacity = useMutation({
     mutationFn: async (formData: CapacityFormData) => {
+      if (!organizationId) {
+        throw new Error('Organização não encontrada. Tente novamente.');
+      }
+      
       const validated = capacitySchema.parse(formData);
 
       const { data, error } = await supabase
@@ -86,7 +90,7 @@ export function useScheduleCapacity() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['schedule-capacity'] });
+      queryClient.invalidateQueries({ queryKey: ['schedule-capacity', organizationId] });
       toast({
         title: 'Configuração salva',
         description: 'A capacidade de horário foi configurada com sucesso.',
@@ -186,6 +190,7 @@ export function useScheduleCapacity() {
     capacities: capacities || [],
     isLoading,
     daysOfWeek,
+    organizationId,
     createCapacity: createCapacity.mutate,
     updateCapacity: updateCapacity.mutate,
     deleteCapacity: deleteCapacity.mutate,
