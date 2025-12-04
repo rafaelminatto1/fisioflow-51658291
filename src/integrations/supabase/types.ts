@@ -2685,6 +2685,166 @@ export type Database = {
           },
         ]
       }
+      schedule_blocked_times: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          end_date: string
+          end_time: string | null
+          id: string
+          is_all_day: boolean
+          is_recurring: boolean
+          organization_id: string | null
+          reason: string | null
+          recurring_days: number[] | null
+          start_date: string
+          start_time: string | null
+          therapist_id: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          end_date: string
+          end_time?: string | null
+          id?: string
+          is_all_day?: boolean
+          is_recurring?: boolean
+          organization_id?: string | null
+          reason?: string | null
+          recurring_days?: number[] | null
+          start_date: string
+          start_time?: string | null
+          therapist_id?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          end_date?: string
+          end_time?: string | null
+          id?: string
+          is_all_day?: boolean
+          is_recurring?: boolean
+          organization_id?: string | null
+          reason?: string | null
+          recurring_days?: number[] | null
+          start_date?: string
+          start_time?: string | null
+          therapist_id?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_blocked_times_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedule_blocked_times_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedule_business_hours: {
+        Row: {
+          break_end: string | null
+          break_start: string | null
+          close_time: string
+          created_at: string | null
+          day_of_week: number
+          id: string
+          is_open: boolean
+          open_time: string
+          organization_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          break_end?: string | null
+          break_start?: string | null
+          close_time?: string
+          created_at?: string | null
+          day_of_week: number
+          id?: string
+          is_open?: boolean
+          open_time?: string
+          organization_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          break_end?: string | null
+          break_start?: string | null
+          close_time?: string
+          created_at?: string | null
+          day_of_week?: number
+          id?: string
+          is_open?: boolean
+          open_time?: string
+          organization_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_business_hours_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedule_cancellation_rules: {
+        Row: {
+          allow_patient_cancellation: boolean
+          charge_late_cancellation: boolean
+          created_at: string | null
+          id: string
+          late_cancellation_fee: number | null
+          max_cancellations_month: number | null
+          min_hours_before: number
+          organization_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          allow_patient_cancellation?: boolean
+          charge_late_cancellation?: boolean
+          created_at?: string | null
+          id?: string
+          late_cancellation_fee?: number | null
+          max_cancellations_month?: number | null
+          min_hours_before?: number
+          organization_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          allow_patient_cancellation?: boolean
+          charge_late_cancellation?: boolean
+          created_at?: string | null
+          id?: string
+          late_cancellation_fee?: number | null
+          max_cancellations_month?: number | null
+          min_hours_before?: number
+          organization_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_cancellation_rules_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       schedule_capacity_config: {
         Row: {
           created_at: string | null
@@ -2721,6 +2881,56 @@ export type Database = {
             foreignKeyName: "schedule_capacity_config_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedule_notification_settings: {
+        Row: {
+          created_at: string | null
+          custom_confirmation_message: string | null
+          custom_reminder_message: string | null
+          id: string
+          organization_id: string | null
+          send_cancellation_notice: boolean
+          send_confirmation_email: boolean
+          send_confirmation_whatsapp: boolean
+          send_reminder_24h: boolean
+          send_reminder_2h: boolean
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          custom_confirmation_message?: string | null
+          custom_reminder_message?: string | null
+          id?: string
+          organization_id?: string | null
+          send_cancellation_notice?: boolean
+          send_confirmation_email?: boolean
+          send_confirmation_whatsapp?: boolean
+          send_reminder_24h?: boolean
+          send_reminder_2h?: boolean
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          custom_confirmation_message?: string | null
+          custom_reminder_message?: string | null
+          id?: string
+          organization_id?: string | null
+          send_cancellation_notice?: boolean
+          send_confirmation_email?: boolean
+          send_confirmation_whatsapp?: boolean
+          send_reminder_24h?: boolean
+          send_reminder_2h?: boolean
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_notification_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
