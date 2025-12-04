@@ -1,16 +1,18 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths, isSameMonth, isSameDay, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Calendar, Clock, User, GripVertical } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Clock, User, GripVertical, Ban } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import type { Appointment } from '@/types/appointment';
 import { AppointmentCard } from './AppointmentCard';
 import { generateTimeSlots } from '@/lib/config/agenda';
 import { RescheduleConfirmDialog } from './RescheduleConfirmDialog';
 import { AppointmentQuickView } from './AppointmentQuickView';
+import { useAvailableTimeSlots } from '@/hooks/useAvailableTimeSlots';
 
 export type CalendarViewType = 'day' | 'week' | 'month';
 
@@ -217,9 +219,22 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     }
   };
 
+  // Hook for time slots availability
+  const { timeSlots: dayTimeSlotInfo, isDayClosed, isTimeBlocked, getBlockReason, blockedTimes, businessHours } = useAvailableTimeSlots(currentDate);
+
   const renderDayView = () => {
     const dayAppointments = getAppointmentsForDate(currentDate);
-    const timeSlots = generateTimeSlots(currentDate);
+    const timeSlots = dayTimeSlotInfo.length > 0 ? dayTimeSlotInfo.map(s => s.time) : generateTimeSlots(currentDate);
+    
+    if (isDayClosed) {
+      return (
+        <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+          <Ban className="h-12 w-12 mb-4 opacity-50" />
+          <p className="text-lg font-medium">Clínica fechada neste dia</p>
+          <p className="text-sm">Não há horários disponíveis</p>
+        </div>
+      );
+    }
     
     return (
       <div className="flex h-full bg-gradient-to-br from-background to-muted/20">
@@ -250,27 +265,49 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               const hour = parseInt(time.split(':')[0]);
               const isCurrentHour = hour === currentTime.getHours();
               const isDropTarget = dropTarget && isSameDay(dropTarget.date, currentDate) && dropTarget.time === time;
+              const blocked = isTimeBlocked(time);
+              const blockReason = getBlockReason(time);
               
               return (
-                <div 
-                  key={time} 
-                  className={cn(
-                    "h-16 border-b border-border cursor-pointer hover:bg-primary/5 transition-colors group relative",
-                    isCurrentHour && "bg-primary/5",
-                    isDropTarget && "bg-primary/20 ring-2 ring-primary ring-inset"
-                  )}
-                  onClick={() => onTimeSlotClick(currentDate, time)}
-                  onDragOver={(e) => handleDragOver(e, currentDate, time)}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, currentDate, time)}
-                >
-                  <span className={cn(
-                    "absolute inset-0 flex items-center justify-center text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity",
-                    isDropTarget && "opacity-100 text-primary font-medium"
-                  )}>
-                    {isDropTarget ? 'Soltar aqui' : 'Clique para agendar'}
-                  </span>
-                </div>
+                <TooltipProvider key={time}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div 
+                        className={cn(
+                          "h-16 border-b border-border cursor-pointer transition-colors group relative",
+                          blocked 
+                            ? "bg-destructive/10 cursor-not-allowed" 
+                            : "hover:bg-primary/5",
+                          isCurrentHour && !blocked && "bg-primary/5",
+                          isDropTarget && !blocked && "bg-primary/20 ring-2 ring-primary ring-inset"
+                        )}
+                        onClick={() => !blocked && onTimeSlotClick(currentDate, time)}
+                        onDragOver={(e) => !blocked && handleDragOver(e, currentDate, time)}
+                        onDragLeave={handleDragLeave}
+                        onDrop={(e) => !blocked && handleDrop(e, currentDate, time)}
+                      >
+                        {blocked ? (
+                          <span className="absolute inset-0 flex items-center justify-center text-xs text-destructive/70">
+                            <Ban className="h-3 w-3 mr-1" />
+                            Bloqueado
+                          </span>
+                        ) : (
+                          <span className={cn(
+                            "absolute inset-0 flex items-center justify-center text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity",
+                            isDropTarget && "opacity-100 text-primary font-medium"
+                          )}>
+                            {isDropTarget ? 'Soltar aqui' : 'Clique para agendar'}
+                          </span>
+                        )}
+                      </div>
+                    </TooltipTrigger>
+                    {blocked && blockReason && (
+                      <TooltipContent>
+                        <p>{blockReason}</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
               );
             })}
             
@@ -353,6 +390,62 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     );
   };
 
+  // Helper to check if time is blocked for any date
+  const checkTimeBlocked = useCallback((date: Date, time: string): { blocked: boolean; reason?: string } => {
+    if (!blockedTimes) return { blocked: false };
+    
+    const dayOfWeek = date.getDay();
+    const [timeH, timeM] = time.split(':').map(Number);
+    const timeMinutes = timeH * 60 + timeM;
+    
+    for (const block of blockedTimes) {
+      const blockStart = new Date(block.start_date);
+      const blockEnd = new Date(block.end_date);
+      blockStart.setHours(0, 0, 0, 0);
+      blockEnd.setHours(23, 59, 59, 999);
+      
+      const checkDate = new Date(date);
+      checkDate.setHours(0, 0, 0, 0);
+      
+      if (checkDate >= blockStart && checkDate <= blockEnd) {
+        if (block.is_all_day) {
+          return { blocked: true, reason: block.title };
+        }
+        if (block.start_time && block.end_time) {
+          const [btH, btM] = block.start_time.split(':').map(Number);
+          const [etH, etM] = block.end_time.split(':').map(Number);
+          if (timeMinutes >= btH * 60 + btM && timeMinutes < etH * 60 + etM) {
+            return { blocked: true, reason: block.title };
+          }
+        }
+      }
+      
+      if (block.is_recurring && block.recurring_days?.includes(dayOfWeek)) {
+        if (block.is_all_day) {
+          return { blocked: true, reason: block.title };
+        }
+        if (block.start_time && block.end_time) {
+          const [btH, btM] = block.start_time.split(':').map(Number);
+          const [etH, etM] = block.end_time.split(':').map(Number);
+          if (timeMinutes >= btH * 60 + btM && timeMinutes < etH * 60 + etM) {
+            return { blocked: true, reason: block.title };
+          }
+        }
+      }
+    }
+    return { blocked: false };
+  }, [blockedTimes]);
+
+  // Check if a day is closed based on business hours
+  const isDayClosedForDate = useCallback((date: Date): boolean => {
+    const dayOfWeek = date.getDay();
+    if (!businessHours || businessHours.length === 0) {
+      return dayOfWeek === 0; // Sunday closed by default
+    }
+    const dayConfig = businessHours.find(h => h.day_of_week === dayOfWeek);
+    return dayConfig ? !dayConfig.is_open : dayOfWeek === 0;
+  }, [businessHours]);
+
   const renderWeekView = () => {
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
     const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -403,32 +496,59 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                   
                   {/* Time slots interativos */}
                   <div className="relative">
-                    {timeSlots.map(time => {
+                    {isDayClosedForDate(day) ? (
+                      <div className="h-full flex items-center justify-center text-muted-foreground text-xs p-4">
+                        <Ban className="h-4 w-4 mr-1" />
+                        Fechado
+                      </div>
+                    ) : (
+                    timeSlots.map(time => {
                       const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === time;
+                      const { blocked, reason } = checkTimeBlocked(day, time);
                       
                       return (
-                        <div 
-                          key={time} 
-                          className={cn(
-                            "h-12 sm:h-16 border-b border-border/20 cursor-pointer hover:bg-gradient-to-r hover:from-primary/15 hover:to-primary/5 active:bg-primary/20 transition-all duration-200 group/slot relative",
-                            isDropTarget && "bg-primary/25 ring-2 ring-primary ring-inset"
-                          )}
-                          onClick={() => onTimeSlotClick(day, time)}
-                          onDragOver={(e) => handleDragOver(e, day, time)}
-                          onDragLeave={handleDragLeave}
-                          onDrop={(e) => handleDrop(e, day, time)}
-                        >
-                          <span className={cn(
-                            "absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs font-bold text-primary-foreground opacity-0 group-hover/slot:opacity-100 transition-all duration-200 scale-95 group-hover/slot:scale-100 pointer-events-none",
-                            isDropTarget && "opacity-100"
-                          )}>
-                            <span className="bg-gradient-primary px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg shadow-lg">
-                              {isDropTarget ? '↓ Soltar' : '+ Novo'}
-                            </span>
-                          </span>
-                        </div>
+                        <TooltipProvider key={time}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div 
+                                className={cn(
+                                  "h-12 sm:h-16 border-b border-border/20 cursor-pointer transition-all duration-200 group/slot relative",
+                                  blocked 
+                                    ? "bg-destructive/10 cursor-not-allowed" 
+                                    : "hover:bg-gradient-to-r hover:from-primary/15 hover:to-primary/5 active:bg-primary/20",
+                                  isDropTarget && !blocked && "bg-primary/25 ring-2 ring-primary ring-inset"
+                                )}
+                                onClick={() => !blocked && onTimeSlotClick(day, time)}
+                                onDragOver={(e) => !blocked && handleDragOver(e, day, time)}
+                                onDragLeave={handleDragLeave}
+                                onDrop={(e) => !blocked && handleDrop(e, day, time)}
+                              >
+                                {blocked ? (
+                                  <span className="absolute inset-0 flex items-center justify-center text-[10px] text-destructive/60">
+                                    <Ban className="h-2 w-2" />
+                                  </span>
+                                ) : (
+                                  <span className={cn(
+                                    "absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs font-bold text-primary-foreground opacity-0 group-hover/slot:opacity-100 transition-all duration-200 scale-95 group-hover/slot:scale-100 pointer-events-none",
+                                    isDropTarget && "opacity-100"
+                                  )}>
+                                    <span className="bg-gradient-primary px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg shadow-lg">
+                                      {isDropTarget ? '↓ Soltar' : '+ Novo'}
+                                    </span>
+                                  </span>
+                                )}
+                              </div>
+                            </TooltipTrigger>
+                            {blocked && reason && (
+                              <TooltipContent>
+                                <p>{reason}</p>
+                              </TooltipContent>
+                            )}
+                          </Tooltip>
+                        </TooltipProvider>
                       );
-                    })}
+                    })
+                    )}
                     
                     {/* Appointments overlay - Cards melhorados */}
                     {dayAppointments.map(apt => {
