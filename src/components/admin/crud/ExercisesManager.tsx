@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useExercises } from '@/hooks/useExercises';
+import { useExercises, type Exercise } from '@/hooks/useExercises';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,10 +17,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import type { Exercise } from '@/hooks/useExercises';
 
 export function ExercisesManager() {
-  const { exercises, loading, deleteExercise } = useExercises();
+  const { exercises, loading, createExercise, updateExercise, deleteExercise, isCreating, isUpdating } = useExercises();
   const [search, setSearch] = useState('');
   const [showNewModal, setShowNewModal] = useState(false);
   const [editExercise, setEditExercise] = useState<Exercise | null>(null);
@@ -36,6 +35,30 @@ export function ExercisesManager() {
       deleteExercise(deleteId);
       setDeleteId(null);
     }
+  };
+
+  const handleSubmit = (data: Omit<Exercise, 'id' | 'created_at' | 'updated_at'>) => {
+    if (editExercise) {
+      updateExercise({ id: editExercise.id, ...data });
+    } else {
+      createExercise(data);
+    }
+    setShowNewModal(false);
+    setEditExercise(null);
+  };
+
+  const getDifficultyBadge = (difficulty?: string) => {
+    if (!difficulty) return null;
+    const colors: Record<string, string> = {
+      'Iniciante': 'bg-green-500/10 text-green-600 border-green-500/20',
+      'Intermediário': 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20',
+      'Avançado': 'bg-red-500/10 text-red-600 border-red-500/20',
+    };
+    return (
+      <Badge variant="outline" className={colors[difficulty] || ''}>
+        {difficulty}
+      </Badge>
+    );
   };
 
   return (
@@ -83,11 +106,7 @@ export function ExercisesManager() {
                   <TableRow key={exercise.id}>
                     <TableCell className="font-medium">{exercise.name}</TableCell>
                     <TableCell>{exercise.category || '-'}</TableCell>
-                    <TableCell>
-                      {exercise.difficulty && (
-                        <Badge variant="outline">{exercise.difficulty}</Badge>
-                      )}
-                    </TableCell>
+                    <TableCell>{getDifficultyBadge(exercise.difficulty)}</TableCell>
                     <TableCell>{exercise.sets || '-'}</TableCell>
                     <TableCell>{exercise.repetitions || '-'}</TableCell>
                     <TableCell className="text-right space-x-2">
@@ -122,16 +141,9 @@ export function ExercisesManager() {
             setEditExercise(null);
           }
         }}
-        onSubmit={(data) => {
-          if (editExercise) {
-            // Update logic would go here
-            console.log('Update exercise', data);
-          } else {
-            // Create logic would go here
-            console.log('Create exercise', data);
-          }
-        }}
+        onSubmit={handleSubmit}
         exercise={editExercise || undefined}
+        isLoading={isCreating || isUpdating}
       />
 
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
