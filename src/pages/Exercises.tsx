@@ -3,21 +3,27 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, BookOpen, Play, Target, FileText } from 'lucide-react';
+import { 
+  Plus, BookOpen, Play, Target, FileText, Heart, 
+  TrendingUp, Dumbbell 
+} from 'lucide-react';
 import { ExerciseLibrary } from '@/components/exercises/ExerciseLibrary';
 import { ExercisePlayer } from '@/components/exercises/ExercisePlayer';
 import { TemplateManager } from '@/components/exercises/TemplateManager';
+import { ProtocolsManager } from '@/components/exercises/ProtocolsManager';
 import { NewExerciseModal } from '@/components/modals/NewExerciseModal';
 import { useExercises, type Exercise } from '@/hooks/useExercises';
 import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';
 import { useExerciseProtocols } from '@/hooks/useExerciseProtocols';
 import { useExerciseTemplates } from '@/hooks/useExerciseTemplates';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 
 export default function Exercises() {
-  const { exercises, createExercise, updateExercise } = useExercises();
+  const { exercises, loading: loadingExercises, createExercise, updateExercise, isCreating, isUpdating } = useExercises();
   const { favorites } = useExerciseFavorites();
-  const { protocols } = useExerciseProtocols();
-  const { templates } = useExerciseTemplates();
+  const { protocols, loading: loadingProtocols } = useExerciseProtocols();
+  const { templates, loading: loadingTemplates } = useExerciseTemplates();
   
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
@@ -46,98 +52,120 @@ export default function Exercises() {
       createExercise(data);
     }
     setShowNewModal(false);
+    setEditingExercise(null);
   };
 
   const handleAddToPlan = (exerciseId: string) => {
     console.log('Adding exercise to plan:', exerciseId);
   };
 
+  const isLoading = loadingExercises || loadingProtocols || loadingTemplates;
+
+  const stats = [
+    {
+      label: 'Total de Exercícios',
+      value: exercises.length,
+      icon: Dumbbell,
+      color: 'text-primary',
+      bgColor: 'bg-primary/10',
+    },
+    {
+      label: 'Favoritos',
+      value: favorites.length,
+      icon: Heart,
+      color: 'text-red-500',
+      bgColor: 'bg-red-500/10',
+    },
+    {
+      label: 'Templates',
+      value: templates.length,
+      icon: FileText,
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/10',
+    },
+    {
+      label: 'Protocolos',
+      value: protocols.length,
+      icon: Target,
+      color: 'text-green-500',
+      bgColor: 'bg-green-500/10',
+    },
+  ];
+
   return (
     <MainLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Biblioteca de Exercícios</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-3xl font-bold flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Dumbbell className="h-6 w-6 text-primary" />
+              </div>
+              Biblioteca de Exercícios
+            </h1>
+            <p className="text-muted-foreground mt-1">
               Gerencie exercícios, templates e protocolos terapêuticos
             </p>
           </div>
-          <Button onClick={handleNewExercise}>
+          <Button onClick={handleNewExercise} size="lg">
             <Plus className="h-4 w-4 mr-2" />
             Novo Exercício
           </Button>
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <BookOpen className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total</p>
-                <p className="text-2xl font-bold">{exercises.length}</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-yellow-500/10 rounded-lg">
-                <Target className="h-5 w-5 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Favoritos</p>
-                <p className="text-2xl font-bold">{favorites.length}</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-500/10 rounded-lg">
-                <FileText className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Templates</p>
-                <p className="text-2xl font-bold">{templates.length}</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-500/10 rounded-lg">
-                <Play className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Protocolos</p>
-                <p className="text-2xl font-bold">{protocols.length}</p>
-              </div>
-            </div>
-          </Card>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {isLoading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i} className="p-4">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-10 w-10 rounded-lg" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-20" />
+                    <Skeleton className="h-6 w-10" />
+                  </div>
+                </div>
+              </Card>
+            ))
+          ) : (
+            stats.map((stat) => (
+              <Card 
+                key={stat.label} 
+                className="p-4 hover:shadow-md transition-all hover:border-primary/30 cursor-default"
+              >
+                <div className="flex items-center gap-3">
+                  <div className={cn("p-2.5 rounded-lg", stat.bgColor)}>
+                    <stat.icon className={cn("h-5 w-5", stat.color)} />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">{stat.label}</p>
+                    <p className="text-2xl font-bold">{stat.value}</p>
+                  </div>
+                </div>
+              </Card>
+            ))
+          )}
         </div>
 
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-          <TabsList>
-            <TabsTrigger value="library">
-              <BookOpen className="h-4 w-4 mr-2" />
-              Biblioteca
+          <TabsList className="w-full sm:w-auto grid grid-cols-4 sm:inline-flex">
+            <TabsTrigger value="library" className="gap-2">
+              <BookOpen className="h-4 w-4" />
+              <span className="hidden sm:inline">Biblioteca</span>
             </TabsTrigger>
-            <TabsTrigger value="templates">
-              <FileText className="h-4 w-4 mr-2" />
-              Templates
+            <TabsTrigger value="templates" className="gap-2">
+              <FileText className="h-4 w-4" />
+              <span className="hidden sm:inline">Templates</span>
             </TabsTrigger>
-            <TabsTrigger value="protocols">
-              <Target className="h-4 w-4 mr-2" />
-              Protocolos
+            <TabsTrigger value="protocols" className="gap-2">
+              <Target className="h-4 w-4" />
+              <span className="hidden sm:inline">Protocolos</span>
             </TabsTrigger>
-            <TabsTrigger value="player" disabled={!selectedExercise}>
-              <Play className="h-4 w-4 mr-2" />
-              Player
+            <TabsTrigger value="player" disabled={!selectedExercise} className="gap-2">
+              <Play className="h-4 w-4" />
+              <span className="hidden sm:inline">Player</span>
             </TabsTrigger>
           </TabsList>
 
@@ -153,24 +181,35 @@ export default function Exercises() {
           </TabsContent>
 
           <TabsContent value="protocols" className="mt-6">
-            <Card className="p-6">
-              <p className="text-muted-foreground text-center py-8">
-                Protocolos de progressão em desenvolvimento
-              </p>
-            </Card>
+            <ProtocolsManager />
           </TabsContent>
 
           <TabsContent value="player" className="mt-6">
             {selectedExercise ? (
-              <ExercisePlayer
-                exercise={selectedExercise}
-                onAddToPlan={handleAddToPlan}
-              />
+              <div className="space-y-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setActiveTab('library')}
+                  className="mb-2"
+                >
+                  ← Voltar para Biblioteca
+                </Button>
+                <ExercisePlayer
+                  exercise={selectedExercise}
+                  onAddToPlan={handleAddToPlan}
+                />
+              </div>
             ) : (
-              <Card className="p-8 text-center">
-                <p className="text-muted-foreground">
-                  Selecione um exercício na biblioteca para visualizar
+              <Card className="p-12 text-center">
+                <Play className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Nenhum exercício selecionado</h3>
+                <p className="text-muted-foreground mb-4">
+                  Selecione um exercício na biblioteca para visualizar os detalhes
                 </p>
+                <Button onClick={() => setActiveTab('library')}>
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Ir para Biblioteca
+                </Button>
               </Card>
             )}
           </TabsContent>
@@ -179,9 +218,13 @@ export default function Exercises() {
 
       <NewExerciseModal
         open={showNewModal}
-        onOpenChange={setShowNewModal}
+        onOpenChange={(open) => {
+          setShowNewModal(open);
+          if (!open) setEditingExercise(null);
+        }}
         onSubmit={handleSubmit}
         exercise={editingExercise || undefined}
+        isLoading={isCreating || isUpdating}
       />
     </MainLayout>
   );
