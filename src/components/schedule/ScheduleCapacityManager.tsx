@@ -19,7 +19,7 @@ const DAYS_OF_WEEK = [
 ];
 
 export function ScheduleCapacityManager() {
-  const { capacities, isLoading, createCapacity, updateCapacity, deleteCapacity } = useScheduleCapacity();
+  const { capacities, isLoading, createCapacity, updateCapacity, deleteCapacity, organizationId, isCreating } = useScheduleCapacity();
   const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
   const [newCapacity, setNewCapacity] = useState({
@@ -30,6 +30,11 @@ export function ScheduleCapacityManager() {
   });
 
   const handleAdd = async () => {
+    if (!organizationId) {
+      toast({ title: 'Erro', description: 'Organização não carregada. Aguarde.', variant: 'destructive' });
+      return;
+    }
+    
     if (!newCapacity.start_time || !newCapacity.end_time) {
       toast({ title: 'Erro', description: 'Preencha horário de início e fim', variant: 'destructive' });
       return;
@@ -186,8 +191,8 @@ export function ScheduleCapacityManager() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button onClick={handleAdd}>
-                Adicionar
+              <Button onClick={handleAdd} disabled={isCreating || !organizationId}>
+                {isCreating ? 'Salvando...' : 'Adicionar'}
               </Button>
               <Button variant="outline" onClick={() => setIsAdding(false)}>
                 Cancelar
