@@ -29,13 +29,13 @@ export function useScheduleCapacity() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Get organization ID from user
-  const { data: orgMember } = useQuery({
-    queryKey: ['org-member', user?.id],
+  // Get organization ID from profiles table (avoids RLS recursion issue)
+  const { data: profile } = useQuery({
+    queryKey: ['profile-org', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
       const { data } = await supabase
-        .from('organization_members')
+        .from('profiles')
         .select('organization_id')
         .eq('user_id', user.id)
         .single();
@@ -44,7 +44,7 @@ export function useScheduleCapacity() {
     enabled: !!user?.id,
   });
 
-  const organizationId = orgMember?.organization_id;
+  const organizationId = profile?.organization_id;
 
   const { data: capacities, isLoading } = useQuery({
     queryKey: ['schedule-capacity', organizationId],
