@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
   Play, Search, Edit, Trash2, Heart, Dumbbell, 
-  Video, Clock, Repeat, LayoutGrid, List 
+  Video, Clock, Repeat, LayoutGrid, List, AlertTriangle, VideoOff
 } from 'lucide-react';
 import { useExercises, type Exercise } from '@/hooks/useExercises';
 import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';
@@ -28,9 +28,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ExerciseViewModal } from './ExerciseViewModal';
 
 interface ExerciseLibraryProps {
-  onSelectExercise: (exercise: Exercise) => void;
+  onSelectExercise?: (exercise: Exercise) => void;
   onEditExercise: (exercise: Exercise) => void;
 }
 
@@ -49,7 +50,9 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise }: ExerciseLi
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [showNoVideoOnly, setShowNoVideoOnly] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [viewExercise, setViewExercise] = useState<Exercise | null>(null);
   
   const { 
     exercises, 
@@ -63,6 +66,8 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise }: ExerciseLi
   const categories = ['all', ...Array.from(new Set(exercises.map(e => e.category).filter(Boolean)))];
   const difficulties = ['all', ...Array.from(new Set(exercises.map(e => e.difficulty).filter(Boolean)))];
   
+  const exercisesWithoutVideo = exercises.filter(ex => !ex.video_url);
+  
   const filteredExercises = exercises.filter(ex => {
     const matchesSearch = searchTerm === '' || 
       ex.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -70,8 +75,13 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise }: ExerciseLi
     const matchesCategory = selectedCategory === 'all' || ex.category === selectedCategory;
     const matchesDifficulty = selectedDifficulty === 'all' || ex.difficulty === selectedDifficulty;
     const matchesFavorite = !showFavoritesOnly || isFavorite(ex.id);
-    return matchesSearch && matchesCategory && matchesDifficulty && matchesFavorite;
+    const matchesNoVideo = !showNoVideoOnly || !ex.video_url;
+    return matchesSearch && matchesCategory && matchesDifficulty && matchesFavorite && matchesNoVideo;
   });
+
+  const handleViewExercise = (exercise: Exercise) => {
+    setViewExercise(exercise);
+  };
 
   const handleDelete = () => {
     if (deleteId) {
@@ -145,15 +155,30 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise }: ExerciseLi
       </div>
 
       {/* View Controls */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant={showFavoritesOnly ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+            onClick={() => {
+              setShowFavoritesOnly(!showFavoritesOnly);
+              if (!showFavoritesOnly) setShowNoVideoOnly(false);
+            }}
           >
             <Heart className={cn("h-4 w-4 mr-2", showFavoritesOnly && "fill-current")} />
             Favoritos
+          </Button>
+          <Button
+            variant={showNoVideoOnly ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => {
+              setShowNoVideoOnly(!showNoVideoOnly);
+              if (!showNoVideoOnly) setShowFavoritesOnly(false);
+            }}
+            className={cn(showNoVideoOnly && "bg-orange-500 hover:bg-orange-600")}
+          >
+            <VideoOff className="h-4 w-4 mr-2" />
+            Sem Vídeo ({exercisesWithoutVideo.length})
           </Button>
           <span className="text-sm text-muted-foreground">
             {filteredExercises.length} exercício{filteredExercises.length !== 1 ? 's' : ''}
@@ -285,9 +310,10 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise }: ExerciseLi
                 {/* Actions */}
                 <div className="flex gap-2 pt-2">
                   <Button
-                    onClick={() => onSelectExercise(exercise)}
+                    onClick={() => handleViewExercise(exercise)}
                     className="flex-1"
                     size="sm"
+                    variant={exercise.video_url ? 'default' : 'secondary'}
                   >
                     <Play className="h-4 w-4 mr-2" />
                     Ver
@@ -381,8 +407,9 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise }: ExerciseLi
                     <Heart className={cn("h-4 w-4", isFavorite(exercise.id) && "fill-current")} />
                   </Button>
                   <Button
-                    onClick={() => onSelectExercise(exercise)}
+                    onClick={() => handleViewExercise(exercise)}
                     size="sm"
+                    variant={exercise.video_url ? 'default' : 'secondary'}
                   >
                     <Play className="h-4 w-4 mr-2" />
                     Ver
@@ -426,6 +453,13 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise }: ExerciseLi
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ExerciseViewModal
+        open={!!viewExercise}
+        onOpenChange={(open) => !open && setViewExercise(null)}
+        exercise={viewExercise}
+        onEdit={onEditExercise}
+      />
     </div>
   );
 }
