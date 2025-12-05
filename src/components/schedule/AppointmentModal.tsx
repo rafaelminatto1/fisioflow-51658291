@@ -721,7 +721,6 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
                 disabled={isCreating || isUpdating}
                 className="flex items-center gap-2 bg-gradient-primary min-w-[120px]"
                 size="sm"
-                onClick={handleSubmit(handleSave)}
               >
                 {(isCreating || isUpdating) ? (
                   <>
