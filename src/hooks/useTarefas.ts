@@ -52,14 +52,11 @@ export function useTarefas() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('tarefas')
-        .select(`
-          *,
-          responsavel:profiles!tarefas_responsavel_id_fkey(full_name, avatar_url)
-        `)
+        .select('*')
         .order('order_index', { ascending: true });
 
       if (error) throw error;
-      return data as Tarefa[];
+      return (data || []) as Tarefa[];
     }
   });
 }
