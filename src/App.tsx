@@ -51,6 +51,7 @@ const SecuritySettings = lazy(() => import("./pages/SecuritySettings"));
 const AdvancedAnalytics = lazy(() => import("./pages/AdvancedAnalytics"));
 const AdminCRUD = lazy(() => import("./pages/AdminCRUD"));
 const OrganizationSettings = lazy(() => import("./pages/OrganizationSettings"));
+const Tarefas = lazy(() => import("./pages/Tarefas"));
 const MedicalChatbot = lazy(() => import("./components/chatbot/MedicalChatbot"));
 const ComputerVisionExercise = lazy(() => import("./components/computer-vision/ComputerVisionExercise"));
 const IntelligentReports = lazy(() => import("./components/reports/IntelligentReports"));
@@ -156,6 +157,7 @@ const App = () => {
             <Route path="/admin/crud" element={<ProtectedRoute allowedRoles={['admin', 'fisioterapeuta']}><AdminCRUD /></ProtectedRoute>} />
             <Route path="/admin/organization" element={<ProtectedRoute allowedRoles={['admin']}><OrganizationSettings /></ProtectedRoute>} />
                   
+                  <Route path="/tarefas" element={<ProtectedRoute><Tarefas /></ProtectedRoute>} />
                   <Route path="/analytics" element={<ProtectedRoute><AdvancedAnalytics /></ProtectedRoute>} />
                   <Route path="/chatbot" element={<ProtectedRoute><MedicalChatbot userId="current-user" /></ProtectedRoute>} />
                   <Route path="/computer-vision" element={<ProtectedRoute><ComputerVisionExercise patientId="current-patient" /></ProtectedRoute>} />
