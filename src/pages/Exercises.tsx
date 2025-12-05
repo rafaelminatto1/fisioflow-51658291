@@ -4,11 +4,10 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  Plus, BookOpen, Play, Target, FileText, Heart, 
-  TrendingUp, Dumbbell 
+  Plus, BookOpen, Target, FileText, Heart, 
+  Dumbbell, VideoOff
 } from 'lucide-react';
 import { ExerciseLibrary } from '@/components/exercises/ExerciseLibrary';
-import { ExercisePlayer } from '@/components/exercises/ExercisePlayer';
 import { TemplateManager } from '@/components/exercises/TemplateManager';
 import { ProtocolsManager } from '@/components/exercises/ProtocolsManager';
 import { NewExerciseModal } from '@/components/modals/NewExerciseModal';
@@ -25,15 +24,11 @@ export default function Exercises() {
   const { protocols, loading: loadingProtocols } = useExerciseProtocols();
   const { templates, loading: loadingTemplates } = useExerciseTemplates();
   
-  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
-  const [activeTab, setActiveTab] = useState<'library' | 'templates' | 'protocols' | 'player'>('library');
+  const [activeTab, setActiveTab] = useState<'library' | 'templates' | 'protocols'>('library');
   const [showNewModal, setShowNewModal] = useState(false);
 
-  const handleViewExercise = (exercise: Exercise) => {
-    setSelectedExercise(exercise);
-    setActiveTab('player');
-  };
+  const exercisesWithoutVideo = exercises.filter(ex => !ex.video_url);
 
   const handleEditExercise = (exercise: Exercise) => {
     setEditingExercise(exercise);
@@ -55,10 +50,6 @@ export default function Exercises() {
     setEditingExercise(null);
   };
 
-  const handleAddToPlan = (exerciseId: string) => {
-    console.log('Adding exercise to plan:', exerciseId);
-  };
-
   const isLoading = loadingExercises || loadingProtocols || loadingTemplates;
 
   const stats = [
@@ -70,18 +61,18 @@ export default function Exercises() {
       bgColor: 'bg-primary/10',
     },
     {
+      label: 'Sem Vídeo',
+      value: exercisesWithoutVideo.length,
+      icon: VideoOff,
+      color: 'text-orange-500',
+      bgColor: 'bg-orange-500/10',
+    },
+    {
       label: 'Favoritos',
       value: favorites.length,
       icon: Heart,
       color: 'text-red-500',
       bgColor: 'bg-red-500/10',
-    },
-    {
-      label: 'Templates',
-      value: templates.length,
-      icon: FileText,
-      color: 'text-blue-500',
-      bgColor: 'bg-blue-500/10',
     },
     {
       label: 'Protocolos',
@@ -150,7 +141,7 @@ export default function Exercises() {
 
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-          <TabsList className="w-full sm:w-auto grid grid-cols-4 sm:inline-flex">
+          <TabsList className="w-full sm:w-auto grid grid-cols-3 sm:inline-flex">
             <TabsTrigger value="library" className="gap-2">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Biblioteca</span>
@@ -163,15 +154,10 @@ export default function Exercises() {
               <Target className="h-4 w-4" />
               <span className="hidden sm:inline">Protocolos</span>
             </TabsTrigger>
-            <TabsTrigger value="player" disabled={!selectedExercise} className="gap-2">
-              <Play className="h-4 w-4" />
-              <span className="hidden sm:inline">Player</span>
-            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="library" className="mt-6">
             <ExerciseLibrary 
-              onSelectExercise={handleViewExercise}
               onEditExercise={handleEditExercise}
             />
           </TabsContent>
@@ -182,36 +168,6 @@ export default function Exercises() {
 
           <TabsContent value="protocols" className="mt-6">
             <ProtocolsManager />
-          </TabsContent>
-
-          <TabsContent value="player" className="mt-6">
-            {selectedExercise ? (
-              <div className="space-y-4">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setActiveTab('library')}
-                  className="mb-2"
-                >
-                  ← Voltar para Biblioteca
-                </Button>
-                <ExercisePlayer
-                  exercise={selectedExercise}
-                  onAddToPlan={handleAddToPlan}
-                />
-              </div>
-            ) : (
-              <Card className="p-12 text-center">
-                <Play className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Nenhum exercício selecionado</h3>
-                <p className="text-muted-foreground mb-4">
-                  Selecione um exercício na biblioteca para visualizar os detalhes
-                </p>
-                <Button onClick={() => setActiveTab('library')}>
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Ir para Biblioteca
-                </Button>
-              </Card>
-            )}
           </TabsContent>
         </Tabs>
       </div>
