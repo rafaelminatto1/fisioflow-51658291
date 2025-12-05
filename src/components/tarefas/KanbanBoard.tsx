@@ -170,15 +170,23 @@ export function KanbanBoard() {
 
   if (totalTarefas === 0) {
     return (
-      <EmptyState
-        icon={LayoutGrid}
-        title="Nenhuma tarefa criada"
-        description="Comece criando sua primeira tarefa para organizar o trabalho da equipe."
-        action={{
-          label: 'Criar Tarefa',
-          onClick: () => handleAddTask('A_FAZER')
-        }}
-      />
+      <>
+        <EmptyState
+          icon={LayoutGrid}
+          title="Nenhuma tarefa criada"
+          description="Comece criando sua primeira tarefa para organizar o trabalho da equipe."
+          action={{
+            label: 'Criar Tarefa',
+            onClick: () => handleAddTask('A_FAZER')
+          }}
+        />
+        <TarefaModal
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          tarefa={selectedTarefa}
+          defaultStatus={defaultStatus}
+        />
+      </>
     );
   }
 
