@@ -3191,6 +3191,69 @@ export type Database = {
           },
         ]
       }
+      tarefas: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          data_vencimento: string | null
+          descricao: string | null
+          id: string
+          order_index: number
+          organization_id: string | null
+          prioridade: string
+          responsavel_id: string | null
+          status: string
+          tags: string[] | null
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          data_vencimento?: string | null
+          descricao?: string | null
+          id?: string
+          order_index?: number
+          organization_id?: string | null
+          prioridade?: string
+          responsavel_id?: string | null
+          status?: string
+          tags?: string[] | null
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          data_vencimento?: string | null
+          descricao?: string | null
+          id?: string
+          order_index?: number
+          organization_id?: string | null
+          prioridade?: string
+          responsavel_id?: string | null
+          status?: string
+          tags?: string[] | null
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarefas_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefas_responsavel_id_fkey"
+            columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transacoes: {
         Row: {
           created_at: string | null
