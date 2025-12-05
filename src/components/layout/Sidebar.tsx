@@ -23,7 +23,8 @@ import {
   Clock,
   Shield,
   Lock,
-  LogOut
+  LogOut,
+  LayoutGrid
 } from 'lucide-react';
 
 const menuItems = [
@@ -34,6 +35,7 @@ const menuItems = [
   { icon: FileText, label: 'Prontuário', href: '/medical-record' },
   { icon: Brain, label: 'Planos IA', href: '/smart-ai' },
   { icon: MessageSquare, label: 'Comunicação', href: '/communications' },
+  { icon: LayoutGrid, label: 'Tarefas', href: '/tarefas' },
   { icon: Clock, label: 'Lista de Espera', href: '/waitlist' },
   { icon: Calendar, label: 'Eventos', href: '/eventos' },
   { icon: ShoppingCart, label: 'Treinos', href: '/vouchers' },
