@@ -24,7 +24,10 @@ import {
   X, 
   CreditCard,
   FileText,
-  Repeat
+  Repeat,
+  Copy,
+  Bell,
+  Zap
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AppointmentBase, AppointmentFormData, AppointmentType, AppointmentStatus } from '@/types/appointment';
@@ -36,6 +39,9 @@ import { checkAppointmentConflict } from '@/utils/appointmentValidation';
 import { toast } from '@/hooks/use-toast';
 import { useScheduleCapacity } from '@/hooks/useScheduleCapacity';
 import { useAvailableTimeSlots } from '@/hooks/useAvailableTimeSlots';
+import { EquipmentSelector, SelectedEquipment } from './EquipmentSelector';
+import { AppointmentReminder, AppointmentReminderData } from './AppointmentReminder';
+import { DuplicateAppointmentDialog, DuplicateConfig } from './DuplicateAppointmentDialog';
 
 const appointmentSchema = z.object({
   patient_id: z.string().min(1, 'Selecione um paciente'),
@@ -143,6 +149,9 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const [quickPatientModalOpen, setQuickPatientModalOpen] = useState(false);
   const [currentMode, setCurrentMode] = useState<'create' | 'edit' | 'view'>(initialMode);
   const [activeTab, setActiveTab] = useState('info');
+  const [selectedEquipments, setSelectedEquipments] = useState<SelectedEquipment[]>([]);
+  const [reminders, setReminders] = useState<AppointmentReminderData[]>([]);
+  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
   
   const { mutate: createAppointmentMutation, isPending: isCreating } = useCreateAppointment();
   const { mutate: updateAppointmentMutation, isPending: isUpdating } = useUpdateAppointment();
@@ -324,6 +333,46 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     toast({
       title: 'Funcionalidade em desenvolvimento',
       description: 'A exclusão de agendamentos estará disponível em breve.',
+    });
+  };
+
+  const handleDuplicate = (config: DuplicateConfig) => {
+    if (!appointment) return;
+    
+    // Create duplicated appointments
+    const apt = appointment as any;
+    config.dates.forEach((date) => {
+      const formData: AppointmentFormData = {
+        patient_id: apt.patient_id,
+        appointment_date: format(date, 'yyyy-MM-dd'),
+        appointment_time: config.keepTime ? apt.appointment_time : (config.newTime || apt.appointment_time),
+        duration: appointment.duration || 60,
+        type: appointment.type as AppointmentType,
+        status: 'agendado',
+        notes: config.keepNotes ? appointment.notes : null,
+        therapist_id: apt.therapist_id || null,
+        room: apt.room || null,
+        payment_status: config.keepPaymentInfo ? apt.payment_status : 'pending',
+        payment_amount: config.keepPaymentInfo ? apt.payment_amount : null,
+        session_package_id: null,
+        is_recurring: false,
+        recurring_until: null,
+      };
+
+      createAppointmentMutation(formData, {
+        onError: (error: Error) => {
+          toast({
+            title: 'Erro ao duplicar',
+            description: error.message,
+            variant: 'destructive'
+          });
+        }
+      });
+    });
+
+    toast({
+      title: 'Agendamentos duplicados',
+      description: `${config.dates.length} agendamento(s) criado(s) com sucesso.`,
     });
   };
 
@@ -641,6 +690,19 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
 
               {/* Tab: Opções */}
               <TabsContent value="options" className="mt-0 space-y-4">
+                {/* Equipment Selection */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-primary" />
+                    Equipamentos
+                  </Label>
+                  <EquipmentSelector
+                    selectedEquipments={selectedEquipments}
+                    onSelectionChange={setSelectedEquipments}
+                    disabled={currentMode === 'view'}
+                  />
+                </div>
+
                 {/* Recurring */}
                 <div className="space-y-3 bg-muted/30 p-4 rounded-lg border">
                   <div className="flex items-center gap-3">
@@ -676,6 +738,19 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                   )}
                 </div>
 
+                {/* Reminders */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    <Bell className="h-4 w-4 text-primary" />
+                    Lembretes
+                  </Label>
+                  <AppointmentReminder
+                    reminders={reminders}
+                    onRemindersChange={setReminders}
+                    disabled={currentMode === 'view'}
+                  />
+                </div>
+
                 {/* Room Selection */}
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Sala</Label>
@@ -695,6 +770,21 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Duplicate Button - Only in edit mode */}
+                {currentMode === 'edit' && appointment && (
+                  <div className="pt-2 border-t">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => setDuplicateDialogOpen(true)}
+                    >
+                      <Copy className="h-4 w-4 mr-2" />
+                      Duplicar Agendamento
+                    </Button>
+                  </div>
+                )}
               </TabsContent>
             </form>
           </ScrollArea>
@@ -811,6 +901,14 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
           />
         </DialogContent>
       </Dialog>
+
+      {/* Duplicate Dialog */}
+      <DuplicateAppointmentDialog
+        open={duplicateDialogOpen}
+        onOpenChange={setDuplicateDialogOpen}
+        appointment={appointment || null}
+        onDuplicate={handleDuplicate}
+      />
     </Dialog>
   );
 };
