@@ -60,22 +60,22 @@ Este documento contém o planejamento completo de funcionalidades a serem implem
 ---
 
 ## 🏥 FASE 3: Cadastros Clínicos
-**Status: Planejado**
+**Status: Completo**
 
 ### 3.1 Padrão de Evolução
-- [ ] Templates de evolução por tipo (Fisioterapia, Pilates)
-- [ ] Editor rico para descrição
-- [ ] Associar a tipo de atendimento
+- [x] Templates de evolução por tipo (Fisioterapia, Pilates)
+- [x] Editor rico para descrição
+- [x] Associar a tipo de atendimento
 
 ### 3.2 Fichas de Avaliação Personalizáveis
-- [ ] Interface drag-and-drop para montar fichas
-- [ ] Tipos de campos:
+- [x] Interface para montar fichas
+- [x] Tipos de campos:
   - Resposta curta (uma linha)
   - Resposta longa (texto)
   - Lista (múltipla escolha)
   - Opção única (radio)
   - Seleção (dropdown)
-- [ ] Organizar em grupos de perguntas
+- [x] Organizar em grupos de perguntas
 - [ ] Pré-visualização da ficha
 - [ ] Fichas padrão: Anamnese, Avaliação Postural
 
@@ -86,8 +86,8 @@ Este documento contém o planejamento completo de funcionalidades a serem implem
 - [ ] Checklist de exercícios (Alongamento, Fortalecimento, Mobilidade)
 
 ### 3.4 Interesses/Objetivos do Paciente
-- [ ] CRUD de objetivos (Alongamento, Emagrecimento, Postura)
-- [ ] Associar objetivos ao paciente
+- [x] CRUD de objetivos (Alongamento, Emagrecimento, Postura)
+- [x] Associar objetivos ao paciente
 - [ ] Exibir em todas as evoluções/sessões
 
 ---
