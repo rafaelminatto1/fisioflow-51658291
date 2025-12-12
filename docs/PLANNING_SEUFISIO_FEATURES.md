@@ -21,19 +21,19 @@ Este documento contém o planejamento completo de funcionalidades a serem implem
 ---
 
 ## 📋 FASE 2: Gestão de Cadastros Gerais
-**Status: Planejado**
+**Status: Completo**
 
 ### 2.1 Tabela de Preços
-- [ ] CRUD de serviços (Fisioterapia, Pilates, etc.)
-- [ ] Configurar duração padrão por serviço
-- [ ] Tipo de cobrança (Unitário, Mensal, Pacote)
-- [ ] Centro de custo por serviço
-- [ ] Valor unitário/mensal
-- [ ] Permitir agendamento online por serviço
+- [x] CRUD de serviços (Fisioterapia, Pilates, etc.)
+- [x] Configurar duração padrão por serviço
+- [x] Tipo de cobrança (Unitário, Mensal, Pacote)
+- [x] Centro de custo por serviço
+- [x] Valor unitário/mensal
+- [x] Permitir agendamento online por serviço
 
 ### 2.2 Modelos de Atestados
-- [ ] CRUD de templates de atestados
-- [ ] Sistema de variáveis dinâmicas:
+- [x] CRUD de templates de atestados
+- [x] Sistema de variáveis dinâmicas:
   - `#cliente-nome`
   - `#cliente-cpf`
   - `#data-hoje`
@@ -43,19 +43,19 @@ Este documento contém o planejamento completo de funcionalidades a serem implem
 - [ ] Geração de PDF do atestado
 
 ### 2.3 Modelos de Contratos
-- [ ] CRUD de templates de contratos
-- [ ] Variáveis dinâmicas para personalização
+- [x] CRUD de templates de contratos
+- [x] Variáveis dinâmicas para personalização
 - [ ] Geração de PDF do contrato
 
 ### 2.4 Gestão de Fornecedores
-- [ ] CRUD de fornecedores (PJ/PF)
-- [ ] Campos: Razão Social, CNPJ/CPF, Contato, Endereço
+- [x] CRUD de fornecedores (PJ/PF)
+- [x] Campos: Razão Social, CNPJ/CPF, Contato, Endereço
 - [ ] Vincular a contas a pagar
 
 ### 2.5 Gestão de Feriados
-- [ ] Pré-popular feriados nacionais
-- [ ] Feriados estaduais/municipais configuráveis
-- [ ] Integrar com bloqueio automático da agenda
+- [x] Pré-popular feriados nacionais
+- [x] Feriados estaduais/municipais configuráveis
+- [x] Integrar com bloqueio automático da agenda
 
 ---
 

@@ -24,8 +24,15 @@ import {
   Shield,
   Lock,
   LogOut,
-  LayoutGrid
+  LayoutGrid,
+  ClipboardList,
+  ChevronDown
 } from 'lucide-react';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
@@ -47,12 +54,23 @@ const menuItems = [
   { icon: Settings, label: 'Configurações', href: '/settings' },
 ];
 
+const cadastrosSubmenu = [
+  { label: 'Serviços', href: '/cadastros/servicos' },
+  { label: 'Fornecedores', href: '/cadastros/fornecedores' },
+  { label: 'Feriados', href: '/cadastros/feriados' },
+  { label: 'Atestados', href: '/cadastros/atestados' },
+  { label: 'Contratos', href: '/cadastros/contratos' },
+];
+
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const [cadastrosOpen, setCadastrosOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
   useNavPreload();
+  
+  const isCadastrosActive = location.pathname.startsWith('/cadastros');
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -135,6 +153,66 @@ export function Sidebar() {
             </Link>
           );
         })}
+        
+        {/* Cadastros Submenu */}
+        {!collapsed && (
+          <Collapsible open={cadastrosOpen || isCadastrosActive} onOpenChange={setCadastrosOpen}>
+            <CollapsibleTrigger asChild>
+              <button
+                className={cn(
+                  "flex items-center justify-between w-full px-4 py-2.5 rounded-lg transition-all group",
+                  isCadastrosActive
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <ClipboardList className="h-5 w-5" />
+                  <span className="text-sm">Cadastros</span>
+                </div>
+                <ChevronDown className={cn(
+                  "h-4 w-4 transition-transform",
+                  (cadastrosOpen || isCadastrosActive) && "rotate-180"
+                )} />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-8 space-y-1 mt-1">
+              {cadastrosSubmenu.map((item) => {
+                const isSubActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className={cn(
+                      "block px-4 py-2 rounded-lg text-sm transition-all",
+                      isSubActive
+                        ? "bg-primary text-primary-foreground font-medium"
+                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+        {collapsed && (
+          <Link
+            to="/cadastros/servicos"
+            className={cn(
+              "flex items-center justify-center px-2 py-2.5 rounded-lg transition-all group relative",
+              isCadastrosActive
+                ? "bg-primary text-primary-foreground font-medium shadow-sm"
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+            )}
+          >
+            <ClipboardList className="h-5 w-5" />
+            {isCadastrosActive && (
+              <div className="absolute left-0 w-1 h-8 bg-primary rounded-r-lg" />
+            )}
+          </Link>
+        )}
       </nav>
 
       {/* Footer */}
