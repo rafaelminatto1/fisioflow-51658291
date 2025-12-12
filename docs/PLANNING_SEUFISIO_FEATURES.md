@@ -5,17 +5,17 @@ Este documento contém o planejamento completo de funcionalidades a serem implem
 ---
 
 ## ✅ FASE 1: Modal de Agendamento (PRIORIDADE ALTA)
-**Status: Em Andamento**
+**Status: Completo**
 
 - [x] Refatorar modal para layout com Tabs (Informações, Pagamento, Opções)
 - [x] Exibir informações resumidas do paciente selecionado
 - [x] Organizar campos de forma mais compacta
 - [x] Seleção de sala para atendimento
 - [x] Status visual com cores
-- [ ] Adicionar seleção de equipamentos/aparelhos (laser, ultrassom)
-- [ ] Parâmetros de equipamentos com templates
-- [ ] Duplicar atendimento
-- [ ] Inserir lembrete personalizado
+- [x] Adicionar seleção de equipamentos/aparelhos (laser, ultrassom, TENS, etc.)
+- [x] Parâmetros de equipamentos com templates
+- [x] Duplicar atendimento (data única, múltiplas datas, semanal)
+- [x] Inserir lembrete personalizado (WhatsApp, Email, Push)
 - [ ] Mover para pacote personalizado
 
 ---
