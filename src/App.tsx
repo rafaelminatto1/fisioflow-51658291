@@ -62,6 +62,8 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const ServicosPage = lazy(() => import("./pages/cadastros/ServicosPage"));
 const FornecedoresPage = lazy(() => import("./pages/cadastros/FornecedoresPage"));
 const FeriadosPage = lazy(() => import("./pages/cadastros/FeriadosPage"));
+const AtestadosPage = lazy(() => import("./pages/cadastros/AtestadosPage"));
+const ContratosPage = lazy(() => import("./pages/cadastros/ContratosPage"));
 
 // Create a client with performance optimizations
 const queryClient = new QueryClient({
@@ -161,6 +163,13 @@ const App = () => {
             <Route path="/security-monitoring" element={<ProtectedRoute><SecurityMonitoring /></ProtectedRoute>} />
             <Route path="/admin/crud" element={<ProtectedRoute allowedRoles={['admin', 'fisioterapeuta']}><AdminCRUD /></ProtectedRoute>} />
             <Route path="/admin/organization" element={<ProtectedRoute allowedRoles={['admin']}><OrganizationSettings /></ProtectedRoute>} />
+                  
+                  {/* Cadastros Gerais */}
+                  <Route path="/cadastros/servicos" element={<ProtectedRoute><ServicosPage /></ProtectedRoute>} />
+                  <Route path="/cadastros/fornecedores" element={<ProtectedRoute><FornecedoresPage /></ProtectedRoute>} />
+                  <Route path="/cadastros/feriados" element={<ProtectedRoute><FeriadosPage /></ProtectedRoute>} />
+                  <Route path="/cadastros/atestados" element={<ProtectedRoute><AtestadosPage /></ProtectedRoute>} />
+                  <Route path="/cadastros/contratos" element={<ProtectedRoute><ContratosPage /></ProtectedRoute>} />
                   
                   <Route path="/tarefas" element={<ProtectedRoute><Tarefas /></ProtectedRoute>} />
                   <Route path="/analytics" element={<ProtectedRoute><AdvancedAnalytics /></ProtectedRoute>} />
