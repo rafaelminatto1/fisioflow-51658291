@@ -44,6 +44,13 @@ export type Database = {
             foreignKeyName: "achievements_log_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "achievements_log_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
             referencedRelation: "patient_activity_summary"
             referencedColumns: ["id"]
           },
@@ -82,6 +89,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ai_exercise_prescriptions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ai_exercise_prescriptions_patient_id_fkey"
             columns: ["patient_id"]
@@ -127,6 +141,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "ai_suggestions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ai_suggestions_patient_id_fkey"
             columns: ["patient_id"]
@@ -225,6 +246,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
             referencedColumns: ["id"]
           },
           {
@@ -459,6 +487,75 @@ export type Database = {
           },
         ]
       }
+      comissoes: {
+        Row: {
+          created_at: string
+          data_pagamento: string | null
+          descontos: number | null
+          id: string
+          organization_id: string | null
+          percentual_comissao: number | null
+          periodo_fim: string
+          periodo_inicio: string
+          profissional_id: string
+          status: string | null
+          total_atendimentos: number | null
+          updated_at: string
+          valor_bruto: number | null
+          valor_comissao: number | null
+          valor_liquido: number | null
+        }
+        Insert: {
+          created_at?: string
+          data_pagamento?: string | null
+          descontos?: number | null
+          id?: string
+          organization_id?: string | null
+          percentual_comissao?: number | null
+          periodo_fim: string
+          periodo_inicio: string
+          profissional_id: string
+          status?: string | null
+          total_atendimentos?: number | null
+          updated_at?: string
+          valor_bruto?: number | null
+          valor_comissao?: number | null
+          valor_liquido?: number | null
+        }
+        Update: {
+          created_at?: string
+          data_pagamento?: string | null
+          descontos?: number | null
+          id?: string
+          organization_id?: string | null
+          percentual_comissao?: number | null
+          periodo_fim?: string
+          periodo_inicio?: string
+          profissional_id?: string
+          status?: string | null
+          total_atendimentos?: number | null
+          updated_at?: string
+          valor_bruto?: number | null
+          valor_comissao?: number | null
+          valor_liquido?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comissoes_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comissoes_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       communication_logs: {
         Row: {
           appointment_id: string | null
@@ -551,6 +648,13 @@ export type Database = {
             foreignKeyName: "communication_logs_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_logs_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
             referencedRelation: "patient_activity_summary"
             referencedColumns: ["id"]
           },
@@ -603,6 +707,134 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contas_financeiras: {
+        Row: {
+          appointment_id: string | null
+          categoria: string | null
+          comprovante_url: string | null
+          created_at: string
+          created_by: string | null
+          data_pagamento: string | null
+          data_vencimento: string
+          descricao: string
+          forma_pagamento: string | null
+          fornecedor_id: string | null
+          id: string
+          observacoes: string | null
+          organization_id: string | null
+          parcela_atual: number | null
+          parcelas: number | null
+          patient_id: string | null
+          profissional_id: string | null
+          recorrencia_tipo: string | null
+          recorrente: boolean | null
+          status: string
+          tipo: string
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          appointment_id?: string | null
+          categoria?: string | null
+          comprovante_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_pagamento?: string | null
+          data_vencimento: string
+          descricao: string
+          forma_pagamento?: string | null
+          fornecedor_id?: string | null
+          id?: string
+          observacoes?: string | null
+          organization_id?: string | null
+          parcela_atual?: number | null
+          parcelas?: number | null
+          patient_id?: string | null
+          profissional_id?: string | null
+          recorrencia_tipo?: string | null
+          recorrente?: boolean | null
+          status?: string
+          tipo: string
+          updated_at?: string
+          valor: number
+        }
+        Update: {
+          appointment_id?: string | null
+          categoria?: string | null
+          comprovante_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_pagamento?: string | null
+          data_vencimento?: string
+          descricao?: string
+          forma_pagamento?: string | null
+          fornecedor_id?: string | null
+          id?: string
+          observacoes?: string | null
+          organization_id?: string | null
+          parcela_atual?: number | null
+          parcelas?: number | null
+          patient_id?: string | null
+          profissional_id?: string | null
+          recorrencia_tipo?: string | null
+          recorrente?: boolean | null
+          status?: string
+          tipo?: string
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contas_financeiras_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_financeiras_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_financeiras_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_financeiras_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_financeiras_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patient_activity_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_financeiras_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contas_financeiras_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -898,6 +1130,13 @@ export type Database = {
             foreignKeyName: "estagiario_paciente_atribuicao_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estagiario_paciente_atribuicao_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
             referencedRelation: "patient_activity_summary"
             referencedColumns: ["id"]
           },
@@ -1158,6 +1397,13 @@ export type Database = {
             foreignKeyName: "evolution_measurements_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evolution_measurements_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
             referencedRelation: "patient_activity_summary"
             referencedColumns: ["id"]
           },
@@ -1321,6 +1567,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercise_plans_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
             referencedColumns: ["id"]
           },
           {
@@ -1712,6 +1965,13 @@ export type Database = {
             foreignKeyName: "generated_reports_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generated_reports_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
             referencedRelation: "patient_activity_summary"
             referencedColumns: ["id"]
           },
@@ -1720,6 +1980,119 @@ export type Database = {
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_historico: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          id: string
+          lead_id: string
+          proximo_contato: string | null
+          resultado: string | null
+          tipo_contato: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          lead_id: string
+          proximo_contato?: string | null
+          resultado?: string | null
+          tipo_contato: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          lead_id?: string
+          proximo_contato?: string | null
+          resultado?: string | null
+          tipo_contato?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_historico_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          data_primeiro_contato: string | null
+          data_ultimo_contato: string | null
+          email: string | null
+          estagio: string | null
+          id: string
+          interesse: string | null
+          motivo_nao_efetivacao: string | null
+          nome: string
+          observacoes: string | null
+          organization_id: string | null
+          origem: string | null
+          responsavel_id: string | null
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          data_primeiro_contato?: string | null
+          data_ultimo_contato?: string | null
+          email?: string | null
+          estagio?: string | null
+          id?: string
+          interesse?: string | null
+          motivo_nao_efetivacao?: string | null
+          nome: string
+          observacoes?: string | null
+          organization_id?: string | null
+          origem?: string | null
+          responsavel_id?: string | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          data_primeiro_contato?: string | null
+          data_ultimo_contato?: string | null
+          email?: string | null
+          estagio?: string | null
+          id?: string
+          interesse?: string | null
+          motivo_nao_efetivacao?: string | null
+          nome?: string
+          observacoes?: string | null
+          organization_id?: string | null
+          origem?: string | null
+          responsavel_id?: string | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_responsavel_id_fkey"
+            columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1851,6 +2224,13 @@ export type Database = {
             foreignKeyName: "medical_records_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "medical_records_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
             referencedRelation: "patient_activity_summary"
             referencedColumns: ["id"]
           },
@@ -1922,6 +2302,63 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      movimentacoes_caixa: {
+        Row: {
+          categoria: string | null
+          conta_financeira_id: string | null
+          created_at: string
+          data: string
+          descricao: string
+          forma_pagamento: string | null
+          id: string
+          organization_id: string | null
+          tipo: string
+          usuario_id: string | null
+          valor: number
+        }
+        Insert: {
+          categoria?: string | null
+          conta_financeira_id?: string | null
+          created_at?: string
+          data?: string
+          descricao: string
+          forma_pagamento?: string | null
+          id?: string
+          organization_id?: string | null
+          tipo: string
+          usuario_id?: string | null
+          valor: number
+        }
+        Update: {
+          categoria?: string | null
+          conta_financeira_id?: string | null
+          created_at?: string
+          data?: string
+          descricao?: string
+          forma_pagamento?: string | null
+          id?: string
+          organization_id?: string | null
+          tipo?: string
+          usuario_id?: string | null
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movimentacoes_caixa_conta_financeira_id_fkey"
+            columns: ["conta_financeira_id"]
+            isOneToOne: false
+            referencedRelation: "contas_financeiras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movimentacoes_caixa_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notification_templates: {
         Row: {
@@ -2139,6 +2576,13 @@ export type Database = {
             foreignKeyName: "pain_maps_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pain_maps_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
             referencedRelation: "patient_activity_summary"
             referencedColumns: ["id"]
           },
@@ -2284,6 +2728,13 @@ export type Database = {
             foreignKeyName: "patient_documents_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_documents_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
             referencedRelation: "patient_activity_summary"
             referencedColumns: ["id"]
           },
@@ -2330,6 +2781,13 @@ export type Database = {
             columns: ["form_id"]
             isOneToOne: false
             referencedRelation: "evaluation_forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_evaluation_responses_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
             referencedColumns: ["id"]
           },
           {
@@ -2386,6 +2844,13 @@ export type Database = {
           xp?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "patient_gamification_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: true
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "patient_gamification_patient_id_fkey"
             columns: ["patient_id"]
@@ -2447,6 +2912,13 @@ export type Database = {
             foreignKeyName: "patient_goals_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_goals_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
             referencedRelation: "patient_activity_summary"
             referencedColumns: ["id"]
           },
@@ -2490,6 +2962,13 @@ export type Database = {
             columns: ["objective_id"]
             isOneToOne: false
             referencedRelation: "patient_objectives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_objective_assignments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
             referencedColumns: ["id"]
           },
           {
@@ -2578,6 +3057,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "patient_pathologies_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "patient_pathologies_patient_id_fkey"
             columns: ["patient_id"]
@@ -2691,6 +3177,13 @@ export type Database = {
             foreignKeyName: "patient_precadastro_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_precadastro_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
             referencedRelation: "patient_activity_summary"
             referencedColumns: ["id"]
           },
@@ -2741,6 +3234,13 @@ export type Database = {
           strength_score?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "patient_progress_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "patient_progress_patient_id_fkey"
             columns: ["patient_id"]
@@ -2796,6 +3296,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "patient_surgeries_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "patient_surgeries_patient_id_fkey"
             columns: ["patient_id"]
@@ -3027,6 +3534,86 @@ export type Database = {
         }
         Relationships: []
       }
+      recibos: {
+        Row: {
+          assinado: boolean | null
+          cpf_cnpj_emitente: string | null
+          created_at: string
+          created_by: string | null
+          data_emissao: string
+          emitido_por: string
+          id: string
+          logo_url: string | null
+          numero_recibo: number
+          organization_id: string | null
+          patient_id: string | null
+          referente: string
+          valor: number
+          valor_extenso: string | null
+        }
+        Insert: {
+          assinado?: boolean | null
+          cpf_cnpj_emitente?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_emissao?: string
+          emitido_por: string
+          id?: string
+          logo_url?: string | null
+          numero_recibo?: number
+          organization_id?: string | null
+          patient_id?: string | null
+          referente: string
+          valor: number
+          valor_extenso?: string | null
+        }
+        Update: {
+          assinado?: boolean | null
+          cpf_cnpj_emitente?: string | null
+          created_at?: string
+          created_by?: string | null
+          data_emissao?: string
+          emitido_por?: string
+          id?: string
+          logo_url?: string | null
+          numero_recibo?: number
+          organization_id?: string | null
+          patient_id?: string | null
+          referente?: string
+          valor?: number
+          valor_extenso?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recibos_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recibos_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recibos_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patient_activity_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recibos_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reports: {
         Row: {
           content: string | null
@@ -3076,11 +3663,89 @@ export type Database = {
             foreignKeyName: "reports_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
             referencedRelation: "patient_activity_summary"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "reports_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      retencao_cancelamentos: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          data_evento: string
+          id: string
+          motivo: string | null
+          observacoes: string | null
+          organization_id: string | null
+          patient_id: string
+          tipo: string
+          valor_anterior: number | null
+          valor_novo: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          data_evento?: string
+          id?: string
+          motivo?: string | null
+          observacoes?: string | null
+          organization_id?: string | null
+          patient_id: string
+          tipo: string
+          valor_anterior?: number | null
+          valor_novo?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          data_evento?: string
+          id?: string
+          motivo?: string | null
+          observacoes?: string | null
+          organization_id?: string | null
+          patient_id?: string
+          tipo?: string
+          valor_anterior?: number | null
+          valor_novo?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "retencao_cancelamentos_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "retencao_cancelamentos_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "retencao_cancelamentos_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patient_activity_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "retencao_cancelamentos_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"
@@ -3162,6 +3827,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "satisfaction_surveys_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
             referencedColumns: ["id"]
           },
           {
@@ -3599,6 +4271,13 @@ export type Database = {
             foreignKeyName: "session_packages_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_packages_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
             referencedRelation: "patient_activity_summary"
             referencedColumns: ["id"]
           },
@@ -3673,6 +4352,13 @@ export type Database = {
             foreignKeyName: "soap_records_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "soap_records_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
             referencedRelation: "patient_activity_summary"
             referencedColumns: ["id"]
           },
@@ -3726,6 +4412,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "standardized_test_results_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "standardized_test_results_patient_id_fkey"
             columns: ["patient_id"]
@@ -3903,6 +4596,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treatment_sessions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
             referencedColumns: ["id"]
           },
           {
@@ -4170,6 +4870,13 @@ export type Database = {
             foreignKeyName: "waitlist_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "waitlist_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
             referencedRelation: "patient_activity_summary"
             referencedColumns: ["id"]
           },
@@ -4240,6 +4947,13 @@ export type Database = {
             columns: ["appointment_id"]
             isOneToOne: false
             referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "waitlist_offers_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
             referencedColumns: ["id"]
           },
           {
@@ -4327,6 +5041,13 @@ export type Database = {
             foreignKeyName: "whatsapp_messages_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_messages_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
             referencedRelation: "patient_activity_summary"
             referencedColumns: ["id"]
           },
@@ -4369,6 +5090,13 @@ export type Database = {
             foreignKeyName: "xp_transactions_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "xp_transactions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
             referencedRelation: "patient_activity_summary"
             referencedColumns: ["id"]
           },
@@ -4383,6 +5111,47 @@ export type Database = {
       }
     }
     Views: {
+      aniversariantes_mes: {
+        Row: {
+          birth_date: string | null
+          dia: number | null
+          email: string | null
+          id: string | null
+          idade: number | null
+          name: string | null
+          organization_id: string | null
+          phone: string | null
+        }
+        Insert: {
+          birth_date?: string | null
+          dia?: never
+          email?: string | null
+          id?: string | null
+          idade?: never
+          name?: string | null
+          organization_id?: string | null
+          phone?: string | null
+        }
+        Update: {
+          birth_date?: string | null
+          dia?: never
+          email?: string | null
+          id?: string | null
+          idade?: never
+          name?: string | null
+          organization_id?: string | null
+          phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patients_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       eventos_resumo: {
         Row: {
           categoria: string | null
@@ -4412,6 +5181,24 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "appointments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fluxo_caixa_resumo: {
+        Row: {
+          entradas: number | null
+          mes: string | null
+          organization_id: string | null
+          saidas: number | null
+          saldo: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movimentacoes_caixa_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
