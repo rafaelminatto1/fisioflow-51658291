@@ -65,6 +65,11 @@ const FeriadosPage = lazy(() => import("./pages/cadastros/FeriadosPage"));
 const AtestadosPage = lazy(() => import("./pages/cadastros/AtestadosPage"));
 const ContratosPage = lazy(() => import("./pages/cadastros/ContratosPage"));
 
+// Fase 3: Cadastros Clínicos
+const EvolutionTemplatesPage = lazy(() => import("./pages/cadastros/EvolutionTemplatesPage"));
+const EvaluationFormsPage = lazy(() => import("./pages/cadastros/EvaluationFormsPage"));
+const PatientObjectivesPage = lazy(() => import("./pages/cadastros/PatientObjectivesPage"));
+
 // Create a client with performance optimizations
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -170,6 +175,11 @@ const App = () => {
                   <Route path="/cadastros/feriados" element={<ProtectedRoute><FeriadosPage /></ProtectedRoute>} />
                   <Route path="/cadastros/atestados" element={<ProtectedRoute><AtestadosPage /></ProtectedRoute>} />
                   <Route path="/cadastros/contratos" element={<ProtectedRoute><ContratosPage /></ProtectedRoute>} />
+                  
+                  {/* Cadastros Clínicos - Fase 3 */}
+                  <Route path="/cadastros/templates-evolucao" element={<ProtectedRoute><EvolutionTemplatesPage /></ProtectedRoute>} />
+                  <Route path="/cadastros/fichas-avaliacao" element={<ProtectedRoute><EvaluationFormsPage /></ProtectedRoute>} />
+                  <Route path="/cadastros/objetivos" element={<ProtectedRoute><PatientObjectivesPage /></ProtectedRoute>} />
                   
                   <Route path="/tarefas" element={<ProtectedRoute><Tarefas /></ProtectedRoute>} />
                   <Route path="/analytics" element={<ProtectedRoute><AdvancedAnalytics /></ProtectedRoute>} />
