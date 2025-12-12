@@ -60,6 +60,9 @@ const cadastrosSubmenu = [
   { label: 'Feriados', href: '/cadastros/feriados' },
   { label: 'Atestados', href: '/cadastros/atestados' },
   { label: 'Contratos', href: '/cadastros/contratos' },
+  { label: 'Templates Evolução', href: '/cadastros/templates-evolucao' },
+  { label: 'Fichas Avaliação', href: '/cadastros/fichas-avaliacao' },
+  { label: 'Objetivos', href: '/cadastros/objetivos' },
 ];
 
 export function Sidebar() {

@@ -917,6 +917,97 @@ export type Database = {
           },
         ]
       }
+      evaluation_form_fields: {
+        Row: {
+          created_at: string
+          form_id: string
+          grupo: string | null
+          id: string
+          label: string
+          obrigatorio: boolean
+          opcoes: Json | null
+          ordem: number
+          placeholder: string | null
+          tipo_campo: string
+        }
+        Insert: {
+          created_at?: string
+          form_id: string
+          grupo?: string | null
+          id?: string
+          label: string
+          obrigatorio?: boolean
+          opcoes?: Json | null
+          ordem?: number
+          placeholder?: string | null
+          tipo_campo?: string
+        }
+        Update: {
+          created_at?: string
+          form_id?: string
+          grupo?: string | null
+          id?: string
+          label?: string
+          obrigatorio?: boolean
+          opcoes?: Json | null
+          ordem?: number
+          placeholder?: string | null
+          tipo_campo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluation_form_fields_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "evaluation_forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluation_forms: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          organization_id: string | null
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          organization_id?: string | null
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          organization_id?: string | null
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluation_forms_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       evento_templates: {
         Row: {
           categoria: string
@@ -1082,6 +1173,56 @@ export type Database = {
             columns: ["soap_record_id"]
             isOneToOne: false
             referencedRelation: "soap_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evolution_templates: {
+        Row: {
+          ativo: boolean
+          campos_padrao: Json | null
+          conteudo: string
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          organization_id: string | null
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          campos_padrao?: Json | null
+          conteudo: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          organization_id?: string | null
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          campos_padrao?: Json | null
+          conteudo?: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          organization_id?: string | null
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evolution_templates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -2155,6 +2296,58 @@ export type Database = {
           },
         ]
       }
+      patient_evaluation_responses: {
+        Row: {
+          created_at: string
+          form_id: string
+          id: string
+          patient_id: string
+          preenchido_por: string | null
+          respostas: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          form_id: string
+          id?: string
+          patient_id: string
+          preenchido_por?: string | null
+          respostas?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          form_id?: string
+          id?: string
+          patient_id?: string
+          preenchido_por?: string | null
+          respostas?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_evaluation_responses_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "evaluation_forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_evaluation_responses_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patient_activity_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_evaluation_responses_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_gamification: {
         Row: {
           achievements: Json | null
@@ -2262,6 +2455,93 @@ export type Database = {
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_objective_assignments: {
+        Row: {
+          created_at: string
+          id: string
+          notas: string | null
+          objective_id: string
+          patient_id: string
+          prioridade: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notas?: string | null
+          objective_id: string
+          patient_id: string
+          prioridade?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notas?: string | null
+          objective_id?: string
+          patient_id?: string
+          prioridade?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_objective_assignments_objective_id_fkey"
+            columns: ["objective_id"]
+            isOneToOne: false
+            referencedRelation: "patient_objectives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_objective_assignments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patient_activity_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_objective_assignments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_objectives: {
+        Row: {
+          ativo: boolean
+          categoria: string | null
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          organization_id: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          categoria?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          organization_id?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          organization_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_objectives_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
