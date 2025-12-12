@@ -1,3 +1,6 @@
+// Re-export the refactored modal as the main AppointmentModal
+export { AppointmentModalRefactored as AppointmentModal } from './AppointmentModalRefactored';
+// Keep old implementation below for reference during transition
 import React, { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
