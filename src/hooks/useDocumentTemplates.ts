@@ -16,7 +16,7 @@ export interface AtestadoTemplate {
   updated_at: string;
 }
 
-export type AtestadoTemplateFormData = Omit<AtestadoTemplate, 'id' | 'created_at' | 'updated_at'>;
+export type AtestadoTemplateFormData = Partial<Pick<AtestadoTemplate, 'organization_id' | 'variaveis_disponiveis' | 'created_by'>> & Pick<AtestadoTemplate, 'nome' | 'descricao' | 'conteudo' | 'ativo'>;
 
 // Contrato Templates
 export interface ContratoTemplate {
@@ -24,7 +24,7 @@ export interface ContratoTemplate {
   organization_id: string | null;
   nome: string;
   descricao: string | null;
-  tipo: 'servico' | 'pacote' | 'mensal' | 'outro';
+  tipo: string;
   conteudo: string;
   variaveis_disponiveis: string[];
   ativo: boolean;
@@ -33,7 +33,7 @@ export interface ContratoTemplate {
   updated_at: string;
 }
 
-export type ContratoTemplateFormData = Omit<ContratoTemplate, 'id' | 'created_at' | 'updated_at'>;
+export type ContratoTemplateFormData = Partial<Pick<ContratoTemplate, 'organization_id' | 'variaveis_disponiveis' | 'created_by'>> & Pick<ContratoTemplate, 'nome' | 'descricao' | 'conteudo' | 'tipo' | 'ativo'>;
 
 // Atestado Hooks
 export function useAtestadoTemplates() {
