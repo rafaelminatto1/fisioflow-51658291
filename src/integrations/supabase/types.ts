@@ -257,6 +257,53 @@ export type Database = {
           },
         ]
       }
+      atestado_templates: {
+        Row: {
+          ativo: boolean
+          conteudo: string
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          organization_id: string | null
+          updated_at: string
+          variaveis_disponiveis: Json | null
+        }
+        Insert: {
+          ativo?: boolean
+          conteudo: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          organization_id?: string | null
+          updated_at?: string
+          variaveis_disponiveis?: Json | null
+        }
+        Update: {
+          ativo?: boolean
+          conteudo?: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          organization_id?: string | null
+          updated_at?: string
+          variaveis_disponiveis?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atestado_templates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           action: string
@@ -553,6 +600,56 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "conduct_library_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contrato_templates: {
+        Row: {
+          ativo: boolean
+          conteudo: string
+          created_at: string
+          created_by: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          organization_id: string | null
+          tipo: string
+          updated_at: string
+          variaveis_disponiveis: Json | null
+        }
+        Insert: {
+          ativo?: boolean
+          conteudo: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          organization_id?: string | null
+          tipo?: string
+          updated_at?: string
+          variaveis_disponiveis?: Json | null
+        }
+        Update: {
+          ativo?: boolean
+          conteudo?: string
+          created_at?: string
+          created_by?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          organization_id?: string | null
+          tipo?: string
+          updated_at?: string
+          variaveis_disponiveis?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contrato_templates_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -1310,6 +1407,124 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "exercises_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feriados: {
+        Row: {
+          bloqueia_agenda: boolean
+          created_at: string
+          data: string
+          id: string
+          nome: string
+          organization_id: string | null
+          recorrente: boolean
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          bloqueia_agenda?: boolean
+          created_at?: string
+          data: string
+          id?: string
+          nome: string
+          organization_id?: string | null
+          recorrente?: boolean
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          bloqueia_agenda?: boolean
+          created_at?: string
+          data?: string
+          id?: string
+          nome?: string
+          organization_id?: string | null
+          recorrente?: boolean
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feriados_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fornecedores: {
+        Row: {
+          ativo: boolean
+          categoria: string | null
+          celular: string | null
+          cep: string | null
+          cidade: string | null
+          cpf_cnpj: string | null
+          created_at: string
+          email: string | null
+          endereco: string | null
+          estado: string | null
+          id: string
+          inscricao_estadual: string | null
+          nome_fantasia: string | null
+          observacoes: string | null
+          organization_id: string | null
+          razao_social: string
+          telefone: string | null
+          tipo_pessoa: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          categoria?: string | null
+          celular?: string | null
+          cep?: string | null
+          cidade?: string | null
+          cpf_cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          estado?: string | null
+          id?: string
+          inscricao_estadual?: string | null
+          nome_fantasia?: string | null
+          observacoes?: string | null
+          organization_id?: string | null
+          razao_social: string
+          telefone?: string | null
+          tipo_pessoa?: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string | null
+          celular?: string | null
+          cep?: string | null
+          cidade?: string | null
+          cpf_cnpj?: string | null
+          created_at?: string
+          email?: string | null
+          endereco?: string | null
+          estado?: string | null
+          id?: string
+          inscricao_estadual?: string | null
+          nome_fantasia?: string | null
+          observacoes?: string | null
+          organization_id?: string | null
+          razao_social?: string
+          telefone?: string | null
+          tipo_pessoa?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fornecedores_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -2968,6 +3183,62 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      servicos: {
+        Row: {
+          ativo: boolean
+          centro_custo: string | null
+          cor: string | null
+          created_at: string
+          descricao: string | null
+          duracao_padrao: number
+          id: string
+          nome: string
+          organization_id: string | null
+          permite_agendamento_online: boolean
+          tipo_cobranca: string
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          ativo?: boolean
+          centro_custo?: string | null
+          cor?: string | null
+          created_at?: string
+          descricao?: string | null
+          duracao_padrao?: number
+          id?: string
+          nome: string
+          organization_id?: string | null
+          permite_agendamento_online?: boolean
+          tipo_cobranca?: string
+          updated_at?: string
+          valor?: number
+        }
+        Update: {
+          ativo?: boolean
+          centro_custo?: string | null
+          cor?: string | null
+          created_at?: string
+          descricao?: string | null
+          duracao_padrao?: number
+          id?: string
+          nome?: string
+          organization_id?: string | null
+          permite_agendamento_online?: boolean
+          tipo_cobranca?: string
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "servicos_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       session_packages: {
         Row: {

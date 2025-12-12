@@ -58,6 +58,11 @@ const IntelligentReports = lazy(() => import("./components/reports/IntelligentRe
 const AugmentedRealityExercise = lazy(() => import("./components/ar/AugmentedRealityExercise"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
+// Fase 2: Cadastros Gerais
+const ServicosPage = lazy(() => import("./pages/cadastros/ServicosPage"));
+const FornecedoresPage = lazy(() => import("./pages/cadastros/FornecedoresPage"));
+const FeriadosPage = lazy(() => import("./pages/cadastros/FeriadosPage"));
+
 // Create a client with performance optimizations
 const queryClient = new QueryClient({
   defaultOptions: {
