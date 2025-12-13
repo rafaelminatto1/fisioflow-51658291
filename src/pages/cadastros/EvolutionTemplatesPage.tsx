@@ -144,12 +144,12 @@ export default function EvolutionTemplatesPage() {
                   className="pl-10"
                 />
               </div>
-              <Select value={selectedTipo} onValueChange={setSelectedTipo}>
+              <Select value={selectedTipo || "all"} onValueChange={(value) => setSelectedTipo(value === "all" ? "" : value)}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Todos os tipos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os tipos</SelectItem>
+                  <SelectItem value="all">Todos os tipos</SelectItem>
                   {TIPOS_EVOLUCAO.map(t => (
                     <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
                   ))}
