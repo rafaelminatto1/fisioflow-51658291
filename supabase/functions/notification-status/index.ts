@@ -6,11 +6,49 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-interface StatusUpdatePayload {
-  notificationId: string
-  status: 'delivered' | 'clicked' | 'failed'
-  errorMessage?: string
-  timestamp?: number
+// Validation helper
+function isValidUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  return uuidRegex.test(str)
+}
+
+function validateStatusPayload(payload: any): { valid: boolean; error?: string } {
+  if (!payload || typeof payload !== 'object') {
+    return { valid: false, error: 'Payload inválido' }
+  }
+  
+  if (!payload.notificationId || typeof payload.notificationId !== 'string') {
+    return { valid: false, error: 'notificationId é obrigatório' }
+  }
+  
+  if (!isValidUUID(payload.notificationId)) {
+    return { valid: false, error: 'notificationId deve ser um UUID válido' }
+  }
+  
+  const validStatuses = ['delivered', 'clicked', 'failed']
+  if (!payload.status || !validStatuses.includes(payload.status)) {
+    return { valid: false, error: 'status deve ser delivered, clicked ou failed' }
+  }
+  
+  if (payload.errorMessage && (typeof payload.errorMessage !== 'string' || payload.errorMessage.length > 500)) {
+    return { valid: false, error: 'errorMessage deve ter no máximo 500 caracteres' }
+  }
+  
+  return { valid: true }
+}
+
+// Generic error response for security
+function safeErrorResponse(requestId: string) {
+  return new Response(
+    JSON.stringify({ 
+      error: 'Erro ao processar requisição. Tente novamente mais tarde.',
+      requestId 
+    }),
+    { 
+      status: 500, 
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+    }
+  )
 }
 
 serve(async (req) => {
@@ -18,6 +56,8 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
+
+  const requestId = crypto.randomUUID()
 
   try {
     // Initialize Supabase client
@@ -27,17 +67,22 @@ serve(async (req) => {
     )
 
     if (req.method === 'POST') {
-      // Update notification status
-      const payload: StatusUpdatePayload = await req.json()
-
-      // Validate required fields
-      if (!payload.notificationId || !payload.status) {
+      // Parse and validate payload
+      let payload
+      try {
+        payload = await req.json()
+      } catch {
         return new Response(
-          JSON.stringify({ error: 'Missing required fields: notificationId, status' }),
-          { 
-            status: 400, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
+          JSON.stringify({ error: 'Corpo da requisição inválido' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      const validation = validateStatusPayload(payload)
+      if (!validation.valid) {
+        return new Response(
+          JSON.stringify({ error: validation.error }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
 
@@ -49,14 +94,19 @@ serve(async (req) => {
       })
 
       if (error) {
-        throw error
+        console.error('[notification-status] Database error:', {
+          requestId,
+          error,
+          timestamp: new Date().toISOString()
+        })
+        return safeErrorResponse(requestId)
       }
 
-      console.log(`Notification status updated: ${payload.notificationId} -> ${payload.status}`)
+      console.log(`[notification-status] Status updated: ${payload.notificationId} -> ${payload.status}`)
 
       return new Response(
         JSON.stringify({
-          message: 'Status updated successfully',
+          message: 'Status atualizado com sucesso',
           notificationId: payload.notificationId,
           status: payload.status
         }),
@@ -73,6 +123,14 @@ serve(async (req) => {
       const startDate = url.searchParams.get('startDate')
       const endDate = url.searchParams.get('endDate')
 
+      // Validate userId if provided
+      if (userId && !isValidUUID(userId)) {
+        return new Response(
+          JSON.stringify({ error: 'userId deve ser um UUID válido' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
       // Get analytics data
       const { data: analytics, error } = await supabaseClient.rpc('get_notification_analytics', {
         p_start_date: startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
@@ -81,7 +139,12 @@ serve(async (req) => {
       })
 
       if (error) {
-        throw error
+        console.error('[notification-status] Analytics error:', {
+          requestId,
+          error,
+          timestamp: new Date().toISOString()
+        })
+        return safeErrorResponse(requestId)
       }
 
       return new Response(
@@ -100,7 +163,7 @@ serve(async (req) => {
 
     } else {
       return new Response(
-        JSON.stringify({ error: 'Method not allowed' }),
+        JSON.stringify({ error: 'Método não permitido' }),
         { 
           status: 405, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -109,14 +172,12 @@ serve(async (req) => {
     }
 
   } catch (error) {
-    console.error('Error in notification-status function:', error)
+    console.error('[notification-status] Unexpected error:', {
+      requestId,
+      error,
+      timestamp: new Date().toISOString()
+    })
     
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
+    return safeErrorResponse(requestId)
   }
 })
