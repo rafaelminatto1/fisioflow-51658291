@@ -70,6 +70,16 @@ const EvolutionTemplatesPage = lazy(() => import("./pages/cadastros/EvolutionTem
 const EvaluationFormsPage = lazy(() => import("./pages/cadastros/EvaluationFormsPage"));
 const PatientObjectivesPage = lazy(() => import("./pages/cadastros/PatientObjectivesPage"));
 
+// Fase 4: Financeiro Avançado
+const ContasFinanceirasPage = lazy(() => import("./pages/financeiro/ContasFinanceirasPage"));
+const FluxoCaixaPage = lazy(() => import("./pages/financeiro/FluxoCaixaPage"));
+
+// Fase 5: Relatórios
+const AniversariantesPage = lazy(() => import("./pages/relatorios/AniversariantesPage"));
+
+// Fase 6: Marketing/CRM
+const LeadsPage = lazy(() => import("./pages/crm/LeadsPage"));
+
 // Create a client with performance optimizations
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -180,6 +190,16 @@ const App = () => {
                   <Route path="/cadastros/templates-evolucao" element={<ProtectedRoute><EvolutionTemplatesPage /></ProtectedRoute>} />
                   <Route path="/cadastros/fichas-avaliacao" element={<ProtectedRoute><EvaluationFormsPage /></ProtectedRoute>} />
                   <Route path="/cadastros/objetivos" element={<ProtectedRoute><PatientObjectivesPage /></ProtectedRoute>} />
+                  
+                  {/* Financeiro Avançado - Fase 4 */}
+                  <Route path="/financeiro/contas" element={<ProtectedRoute><ContasFinanceirasPage /></ProtectedRoute>} />
+                  <Route path="/financeiro/fluxo-caixa" element={<ProtectedRoute><FluxoCaixaPage /></ProtectedRoute>} />
+                  
+                  {/* Relatórios - Fase 5 */}
+                  <Route path="/relatorios/aniversariantes" element={<ProtectedRoute><AniversariantesPage /></ProtectedRoute>} />
+                  
+                  {/* Marketing/CRM - Fase 6 */}
+                  <Route path="/crm/leads" element={<ProtectedRoute><LeadsPage /></ProtectedRoute>} />
                   
                   <Route path="/tarefas" element={<ProtectedRoute><Tarefas /></ProtectedRoute>} />
                   <Route path="/analytics" element={<ProtectedRoute><AdvancedAnalytics /></ProtectedRoute>} />
