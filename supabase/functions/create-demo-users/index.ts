@@ -33,15 +33,39 @@ const DEMO_USERS: DemoUser[] = [
   },
 ];
 
+// Generic error response for security
+function safeErrorResponse(requestId: string) {
+  return new Response(
+    JSON.stringify({ 
+      error: 'Erro ao processar requisição. Tente novamente mais tarde.',
+      requestId 
+    }),
+    { 
+      status: 500, 
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+    }
+  )
+}
+
 Deno.serve(async (req) => {
   // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  const requestId = crypto.randomUUID()
+
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('[create-demo-users] Missing credentials:', {
+        requestId,
+        timestamp: new Date().toISOString()
+      })
+      return safeErrorResponse(requestId)
+    }
 
     // Create admin client
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
@@ -62,7 +86,7 @@ Deno.serve(async (req) => {
         let userId: string;
 
         if (userExists) {
-          console.log(`User ${demoUser.email} already exists, skipping creation`);
+          console.log(`[create-demo-users] User exists: ${demoUser.email}`);
           const user = existingUser?.users?.find((u) => u.email === demoUser.email);
           userId = user!.id;
           results.push({ email: demoUser.email, status: 'already_exists', userId });
@@ -71,20 +95,23 @@ Deno.serve(async (req) => {
           const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
             email: demoUser.email,
             password: demoUser.password,
-            email_confirm: true, // Auto-confirm email
+            email_confirm: true,
             user_metadata: {
               full_name: demoUser.full_name,
             },
           });
 
           if (createError) {
-            console.error(`Error creating user ${demoUser.email}:`, createError);
-            results.push({ email: demoUser.email, status: 'error', error: createError.message });
+            console.error(`[create-demo-users] Create error for ${demoUser.email}:`, {
+              requestId,
+              timestamp: new Date().toISOString()
+            });
+            results.push({ email: demoUser.email, status: 'error' });
             continue;
           }
 
           userId = newUser.user!.id;
-          console.log(`Created user ${demoUser.email} with ID ${userId}`);
+          console.log(`[create-demo-users] Created: ${demoUser.email}`);
           results.push({ email: demoUser.email, status: 'created', userId });
         }
 
@@ -96,19 +123,24 @@ Deno.serve(async (req) => {
         });
 
         if (setupError) {
-          console.error(`Error setting up user ${demoUser.email}:`, setupError);
+          console.error(`[create-demo-users] Setup error for ${demoUser.email}:`, {
+            requestId,
+            timestamp: new Date().toISOString()
+          });
           results.push({
             email: demoUser.email,
             status: 'setup_error',
-            error: setupError.message,
           });
         }
       } catch (error) {
-        console.error(`Unexpected error for ${demoUser.email}:`, error);
+        console.error(`[create-demo-users] Unexpected error for ${demoUser.email}:`, {
+          requestId,
+          error,
+          timestamp: new Date().toISOString()
+        });
         results.push({
           email: demoUser.email,
           status: 'unexpected_error',
-          error: error.message,
         });
       }
     }
@@ -118,10 +150,11 @@ Deno.serve(async (req) => {
       status: 200,
     });
   } catch (error) {
-    console.error('Function error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 500,
+    console.error('[create-demo-users] Function error:', {
+      requestId,
+      error,
+      timestamp: new Date().toISOString()
     });
+    return safeErrorResponse(requestId)
   }
 });

@@ -6,17 +6,81 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Validation helper
+function validateConductPayload(payload: any): { valid: boolean; error?: string } {
+  if (!payload || typeof payload !== 'object') {
+    return { valid: false, error: 'Payload inválido' }
+  }
+  
+  if (!payload.subjective || typeof payload.subjective !== 'string' || payload.subjective.length > 2000) {
+    return { valid: false, error: 'subjective é obrigatório (máximo 2000 caracteres)' }
+  }
+  
+  if (!payload.objective || typeof payload.objective !== 'string' || payload.objective.length > 2000) {
+    return { valid: false, error: 'objective é obrigatório (máximo 2000 caracteres)' }
+  }
+  
+  if (payload.patientHistory && (typeof payload.patientHistory !== 'string' || payload.patientHistory.length > 5000)) {
+    return { valid: false, error: 'patientHistory deve ter no máximo 5000 caracteres' }
+  }
+  
+  if (payload.pathology && (typeof payload.pathology !== 'string' || payload.pathology.length > 200)) {
+    return { valid: false, error: 'pathology deve ter no máximo 200 caracteres' }
+  }
+  
+  return { valid: true }
+}
+
+// Generic error response for security
+function safeErrorResponse(requestId: string) {
+  return new Response(
+    JSON.stringify({ 
+      error: 'Erro ao processar requisição. Tente novamente mais tarde.',
+      requestId 
+    }),
+    { 
+      status: 500, 
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+    }
+  )
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const requestId = crypto.randomUUID()
+
   try {
-    const { subjective, objective, patientHistory, pathology } = await req.json();
+    // Parse and validate payload
+    let payload
+    try {
+      payload = await req.json()
+    } catch {
+      return new Response(
+        JSON.stringify({ error: 'Corpo da requisição inválido' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const validation = validateConductPayload(payload)
+    if (!validation.valid) {
+      return new Response(
+        JSON.stringify({ error: validation.error }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const { subjective, objective, patientHistory, pathology } = payload
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     
     if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY não configurada');
+      console.error('[ai-suggest-conduct] Missing API key:', {
+        requestId,
+        timestamp: new Date().toISOString()
+      })
+      return safeErrorResponse(requestId)
     }
 
     const systemPrompt = `Você é um fisioterapeuta especialista com vasta experiência clínica.
@@ -74,9 +138,12 @@ Sugira uma conduta terapêutica completa para esta sessão.`
         );
       }
       
-      const errorText = await response.text();
-      console.error('Erro na API:', errorText);
-      throw new Error('Erro ao gerar sugestão');
+      console.error('[ai-suggest-conduct] API error:', {
+        requestId,
+        status: response.status,
+        timestamp: new Date().toISOString()
+      })
+      return safeErrorResponse(requestId)
     }
 
     const data = await response.json();
@@ -90,13 +157,11 @@ Sugira uma conduta terapêutica completa para esta sessão.`
     );
 
   } catch (error) {
-    console.error('Erro na função:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    console.error('[ai-suggest-conduct] Unexpected error:', {
+      requestId,
+      error,
+      timestamp: new Date().toISOString()
+    })
+    return safeErrorResponse(requestId)
   }
 });
