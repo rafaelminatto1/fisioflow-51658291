@@ -34,6 +34,7 @@ const Telemedicine = lazy(() => import("./pages/Telemedicine"));
 const ExerciseLibraryExpanded = lazy(() => import("./pages/ExerciseLibraryExpanded"));
 const Biofeedback = lazy(() => import("./pages/Biofeedback"));
 const PatientEvolution = lazy(() => import("./pages/PatientEvolution"));
+const PatientEvolutionReport = lazy(() => import("./pages/PatientEvolutionReport"));
 const Communications = lazy(() => import("./pages/Communications"));
 const Partner = lazy(() => import("./pages/Partner"));
 const Vouchers = lazy(() => import("./pages/Vouchers"));
@@ -161,6 +162,7 @@ const App = () => {
                   <Route path="/exercise-library" element={<ProtectedRoute><ExerciseLibraryExpanded /></ProtectedRoute>} />
                   <Route path="/biofeedback" element={<ProtectedRoute><Biofeedback /></ProtectedRoute>} />
                   <Route path="/patient-evolution/:appointmentId" element={<ProtectedRoute><PatientEvolution /></ProtectedRoute>} />
+                  <Route path="/patient-evolution-report/:patientId" element={<ProtectedRoute><PatientEvolutionReport /></ProtectedRoute>} />
           <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
           <Route path="/partner" element={<ProtectedRoute><Partner /></ProtectedRoute>} />
           <Route path="/waitlist" element={<ProtectedRoute><Waitlist /></ProtectedRoute>} />
