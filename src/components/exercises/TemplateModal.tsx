@@ -214,14 +214,14 @@ export function TemplateModal({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Variante (Opcional)</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={(val) => field.onChange(val === "none" ? "" : val)} value={field.value || "none"}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione a variante" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Nenhuma</SelectItem>
+                      <SelectItem value="none">Nenhuma</SelectItem>
                       <SelectItem value="conservador">Conservador</SelectItem>
                       <SelectItem value="agressivo">Agressivo</SelectItem>
                       <SelectItem value="inicial">Inicial</SelectItem>
