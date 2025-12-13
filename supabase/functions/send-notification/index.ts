@@ -6,14 +6,52 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-interface NotificationPayload {
-  userId: string
-  type: string
-  title: string
-  body: string
-  data?: Record<string, any>
-  actions?: Array<{ action: string; title: string; icon?: string }>
-  scheduleAt?: string
+// Validation helpers
+function isValidUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  return uuidRegex.test(str)
+}
+
+function validateNotificationPayload(payload: any): { valid: boolean; error?: string } {
+  if (!payload || typeof payload !== 'object') {
+    return { valid: false, error: 'Payload inválido' }
+  }
+  
+  if (!payload.userId || typeof payload.userId !== 'string' || !isValidUUID(payload.userId)) {
+    return { valid: false, error: 'userId deve ser um UUID válido' }
+  }
+  
+  if (!payload.type || typeof payload.type !== 'string' || payload.type.length > 50) {
+    return { valid: false, error: 'type é obrigatório (máximo 50 caracteres)' }
+  }
+  
+  if (!payload.title || typeof payload.title !== 'string' || payload.title.length > 100) {
+    return { valid: false, error: 'title é obrigatório (máximo 100 caracteres)' }
+  }
+  
+  if (!payload.body || typeof payload.body !== 'string' || payload.body.length > 500) {
+    return { valid: false, error: 'body é obrigatório (máximo 500 caracteres)' }
+  }
+  
+  if (payload.actions && !Array.isArray(payload.actions)) {
+    return { valid: false, error: 'actions deve ser um array' }
+  }
+  
+  return { valid: true }
+}
+
+// Generic error response for security
+function safeErrorResponse(requestId: string) {
+  return new Response(
+    JSON.stringify({ 
+      error: 'Erro ao processar requisição. Tente novamente mais tarde.',
+      requestId 
+    }),
+    { 
+      status: 500, 
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+    }
+  )
 }
 
 serve(async (req) => {
@@ -22,6 +60,8 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  const requestId = crypto.randomUUID()
+
   try {
     // Initialize Supabase client
     const supabaseClient = createClient(
@@ -29,17 +69,22 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Parse request body
-    const payload: NotificationPayload = await req.json()
-
-    // Validate required fields
-    if (!payload.userId || !payload.type || !payload.title || !payload.body) {
+    // Parse and validate request body
+    let payload
+    try {
+      payload = await req.json()
+    } catch {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        JSON.stringify({ error: 'Corpo da requisição inválido' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const validation = validateNotificationPayload(payload)
+    if (!validation.valid) {
+      return new Response(
+        JSON.stringify({ error: validation.error }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -50,9 +95,9 @@ serve(async (req) => {
     })
 
     if (!shouldSend) {
-      console.log(`Notification blocked by user preferences: ${payload.userId}, ${payload.type}`)
+      console.log(`[send-notification] Blocked by preferences: ${payload.userId}, ${payload.type}`)
       return new Response(
-        JSON.stringify({ message: 'Notification blocked by user preferences' }),
+        JSON.stringify({ message: 'Notificação bloqueada por preferências do usuário' }),
         { 
           status: 200, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -67,13 +112,18 @@ serve(async (req) => {
       .eq('user_id', payload.userId)
 
     if (subscriptionsError) {
-      throw subscriptionsError
+      console.error('[send-notification] Subscriptions error:', {
+        requestId,
+        error: subscriptionsError,
+        timestamp: new Date().toISOString()
+      })
+      return safeErrorResponse(requestId)
     }
 
     if (!subscriptions || subscriptions.length === 0) {
-      console.log(`No push subscriptions found for user: ${payload.userId}`)
+      console.log(`[send-notification] No subscriptions found: ${payload.userId}`)
       return new Response(
-        JSON.stringify({ message: 'No push subscriptions found' }),
+        JSON.stringify({ message: 'Nenhuma assinatura de push encontrada' }),
         { 
           status: 200, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -92,7 +142,11 @@ serve(async (req) => {
     })
 
     if (logError) {
-      console.error('Failed to log notification:', logError)
+      console.error('[send-notification] Log error:', {
+        requestId,
+        error: logError,
+        timestamp: new Date().toISOString()
+      })
     }
 
     // Prepare push notification payload
@@ -120,7 +174,7 @@ serve(async (req) => {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            to: subscription.endpoint.split('/').pop(), // Extract registration token
+            to: subscription.endpoint.split('/').pop(),
             notification: {
               title: pushPayload.title,
               body: pushPayload.body,
@@ -130,7 +184,7 @@ serve(async (req) => {
             data: pushPayload.data,
             webpush: {
               headers: {
-                'TTL': '86400' // 24 hours
+                'TTL': '86400'
               },
               notification: {
                 title: pushPayload.title,
@@ -145,26 +199,30 @@ serve(async (req) => {
         })
 
         if (!response.ok) {
-          throw new Error(`FCM request failed: ${response.status}`)
+          throw new Error('FCM request failed')
         }
 
         const result = await response.json()
-        console.log('Push notification sent successfully:', result)
+        console.log('[send-notification] Push sent successfully')
         
         return { success: true, subscription: subscription.id }
       } catch (error) {
-        console.error('Failed to send push notification:', error)
+        console.error('[send-notification] Push failed:', {
+          requestId,
+          subscriptionId: subscription.id,
+          timestamp: new Date().toISOString()
+        })
         
         // Update notification status to failed
         if (notificationRecord) {
           await supabaseClient.rpc('update_notification_status', {
             p_notification_id: notificationRecord,
             p_status: 'failed',
-            p_error_message: error.message
+            p_error_message: 'Falha no envio'
           })
         }
         
-        return { success: false, subscription: subscription.id, error: error.message }
+        return { success: false, subscription: subscription.id }
       }
     })
 
@@ -172,11 +230,11 @@ serve(async (req) => {
     const successCount = results.filter(r => r.success).length
     const failureCount = results.filter(r => !r.success).length
 
-    console.log(`Notification delivery complete: ${successCount} success, ${failureCount} failures`)
+    console.log(`[send-notification] Complete: ${successCount} success, ${failureCount} failures`)
 
     return new Response(
       JSON.stringify({
-        message: 'Notification sent',
+        message: 'Notificação enviada',
         notificationId: notificationRecord,
         results: {
           total: results.length,
@@ -191,14 +249,12 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Error in send-notification function:', error)
+    console.error('[send-notification] Unexpected error:', {
+      requestId,
+      error,
+      timestamp: new Date().toISOString()
+    })
     
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
+    return safeErrorResponse(requestId)
   }
 })

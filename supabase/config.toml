@@ -26,3 +26,29 @@ verify_jwt = true
 
 [functions.send-mfa-otp]
 verify_jwt = true
+
+# Funções adicionadas com JWT verification
+[functions.notification-status]
+verify_jwt = true
+
+[functions.send-notification]
+verify_jwt = true
+
+[functions.process-notification-events]
+verify_jwt = true
+
+[functions.schedule-reminders]
+verify_jwt = true
+
+[functions.send-appointment-email]
+verify_jwt = true
+
+[functions.ai-suggest-conduct]
+verify_jwt = true
+
+[functions.ai-transcribe-session]
+verify_jwt = true
+
+# Função administrativa especial - não requer JWT
+[functions.create-demo-users]
+verify_jwt = false
