@@ -26,7 +26,13 @@ import {
   LogOut,
   LayoutGrid,
   ClipboardList,
-  ChevronDown
+  ChevronDown,
+  Building2,
+  CalendarOff,
+  FileCheck,
+  FileSignature,
+  Target,
+  TrendingUp
 } from 'lucide-react';
 import {
   Collapsible,
@@ -46,34 +52,53 @@ const menuItems = [
   { icon: Clock, label: 'Lista de Espera', href: '/waitlist' },
   { icon: Calendar, label: 'Eventos', href: '/eventos' },
   { icon: ShoppingCart, label: 'Treinos', href: '/vouchers' },
-  { icon: DollarSign, label: 'Financeiro', href: '/financial' },
   { icon: BarChart3, label: 'Analytics Avançado', href: '/analytics' },
-  { icon: FileText, label: 'Relatórios', href: '/reports' },
   { icon: Lock, label: 'Segurança & LGPD', href: '/security-settings' },
   { icon: Shield, label: 'Monitoramento', href: '/security-monitoring' },
   { icon: Settings, label: 'Configurações', href: '/settings' },
 ];
 
 const cadastrosSubmenu = [
-  { label: 'Serviços', href: '/cadastros/servicos' },
-  { label: 'Fornecedores', href: '/cadastros/fornecedores' },
-  { label: 'Feriados', href: '/cadastros/feriados' },
-  { label: 'Atestados', href: '/cadastros/atestados' },
-  { label: 'Contratos', href: '/cadastros/contratos' },
-  { label: 'Templates Evolução', href: '/cadastros/templates-evolucao' },
-  { label: 'Fichas Avaliação', href: '/cadastros/fichas-avaliacao' },
-  { label: 'Objetivos', href: '/cadastros/objetivos' },
+  { icon: FileText, label: 'Serviços', href: '/cadastros/servicos' },
+  { icon: Building2, label: 'Fornecedores', href: '/cadastros/fornecedores' },
+  { icon: CalendarOff, label: 'Feriados', href: '/cadastros/feriados' },
+  { icon: FileCheck, label: 'Atestados', href: '/cadastros/atestados' },
+  { icon: FileSignature, label: 'Contratos', href: '/cadastros/contratos' },
+  { icon: FileText, label: 'Templates Evolução', href: '/cadastros/templates-evolucao' },
+  { icon: ClipboardList, label: 'Fichas Avaliação', href: '/cadastros/fichas-avaliacao' },
+  { icon: Target, label: 'Objetivos', href: '/cadastros/objetivos' },
+];
+
+const financeiroSubmenu = [
+  { icon: DollarSign, label: 'Dashboard', href: '/financial' },
+  { icon: FileText, label: 'Contas', href: '/financeiro/contas' },
+  { icon: TrendingUp, label: 'Fluxo de Caixa', href: '/financeiro/fluxo-caixa' },
+];
+
+const relatoriosSubmenu = [
+  { icon: BarChart3, label: 'Dashboard', href: '/reports' },
+  { icon: Users, label: 'Aniversariantes', href: '/relatorios/aniversariantes' },
+];
+
+const crmSubmenu = [
+  { icon: Users, label: 'Leads', href: '/crm/leads' },
 ];
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [cadastrosOpen, setCadastrosOpen] = useState(false);
+  const [financeiroOpen, setFinanceiroOpen] = useState(false);
+  const [relatoriosOpen, setRelatoriosOpen] = useState(false);
+  const [crmOpen, setCrmOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
   useNavPreload();
   
   const isCadastrosActive = location.pathname.startsWith('/cadastros');
+  const isFinanceiroActive = location.pathname.startsWith('/financeiro') || location.pathname === '/financial';
+  const isRelatoriosActive = location.pathname.startsWith('/relatorios') || location.pathname === '/reports';
+  const isCrmActive = location.pathname.startsWith('/crm');
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -212,6 +237,186 @@ export function Sidebar() {
           >
             <ClipboardList className="h-5 w-5" />
             {isCadastrosActive && (
+              <div className="absolute left-0 w-1 h-8 bg-primary rounded-r-lg" />
+            )}
+          </Link>
+        )}
+
+        {/* Financeiro Submenu */}
+        {!collapsed && (
+          <Collapsible open={financeiroOpen || isFinanceiroActive} onOpenChange={setFinanceiroOpen}>
+            <CollapsibleTrigger asChild>
+              <button
+                className={cn(
+                  "flex items-center justify-between w-full px-4 py-2.5 rounded-lg transition-all group",
+                  isFinanceiroActive
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <DollarSign className="h-5 w-5" />
+                  <span className="text-sm">Financeiro</span>
+                </div>
+                <ChevronDown className={cn(
+                  "h-4 w-4 transition-transform",
+                  (financeiroOpen || isFinanceiroActive) && "rotate-180"
+                )} />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-8 space-y-1 mt-1">
+              {financeiroSubmenu.map((item) => {
+                const isSubActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className={cn(
+                      "block px-4 py-2 rounded-lg text-sm transition-all",
+                      isSubActive
+                        ? "bg-primary text-primary-foreground font-medium"
+                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+        {collapsed && (
+          <Link
+            to="/financial"
+            className={cn(
+              "flex items-center justify-center px-2 py-2.5 rounded-lg transition-all group relative",
+              isFinanceiroActive
+                ? "bg-primary text-primary-foreground font-medium shadow-sm"
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+            )}
+          >
+            <DollarSign className="h-5 w-5" />
+            {isFinanceiroActive && (
+              <div className="absolute left-0 w-1 h-8 bg-primary rounded-r-lg" />
+            )}
+          </Link>
+        )}
+
+        {/* Relatórios Submenu */}
+        {!collapsed && (
+          <Collapsible open={relatoriosOpen || isRelatoriosActive} onOpenChange={setRelatoriosOpen}>
+            <CollapsibleTrigger asChild>
+              <button
+                className={cn(
+                  "flex items-center justify-between w-full px-4 py-2.5 rounded-lg transition-all group",
+                  isRelatoriosActive
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <BarChart3 className="h-5 w-5" />
+                  <span className="text-sm">Relatórios</span>
+                </div>
+                <ChevronDown className={cn(
+                  "h-4 w-4 transition-transform",
+                  (relatoriosOpen || isRelatoriosActive) && "rotate-180"
+                )} />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-8 space-y-1 mt-1">
+              {relatoriosSubmenu.map((item) => {
+                const isSubActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className={cn(
+                      "block px-4 py-2 rounded-lg text-sm transition-all",
+                      isSubActive
+                        ? "bg-primary text-primary-foreground font-medium"
+                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+        {collapsed && (
+          <Link
+            to="/reports"
+            className={cn(
+              "flex items-center justify-center px-2 py-2.5 rounded-lg transition-all group relative",
+              isRelatoriosActive
+                ? "bg-primary text-primary-foreground font-medium shadow-sm"
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+            )}
+          >
+            <BarChart3 className="h-5 w-5" />
+            {isRelatoriosActive && (
+              <div className="absolute left-0 w-1 h-8 bg-primary rounded-r-lg" />
+            )}
+          </Link>
+        )}
+
+        {/* CRM Submenu */}
+        {!collapsed && (
+          <Collapsible open={crmOpen || isCrmActive} onOpenChange={setCrmOpen}>
+            <CollapsibleTrigger asChild>
+              <button
+                className={cn(
+                  "flex items-center justify-between w-full px-4 py-2.5 rounded-lg transition-all group",
+                  isCrmActive
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <TrendingUp className="h-5 w-5" />
+                  <span className="text-sm">CRM</span>
+                </div>
+                <ChevronDown className={cn(
+                  "h-4 w-4 transition-transform",
+                  (crmOpen || isCrmActive) && "rotate-180"
+                )} />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-8 space-y-1 mt-1">
+              {crmSubmenu.map((item) => {
+                const isSubActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className={cn(
+                      "block px-4 py-2 rounded-lg text-sm transition-all",
+                      isSubActive
+                        ? "bg-primary text-primary-foreground font-medium"
+                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+        {collapsed && (
+          <Link
+            to="/crm/leads"
+            className={cn(
+              "flex items-center justify-center px-2 py-2.5 rounded-lg transition-all group relative",
+              isCrmActive
+                ? "bg-primary text-primary-foreground font-medium shadow-sm"
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+            )}
+          >
+            <TrendingUp className="h-5 w-5" />
+            {isCrmActive && (
               <div className="absolute left-0 w-1 h-8 bg-primary rounded-r-lg" />
             )}
           </Link>
