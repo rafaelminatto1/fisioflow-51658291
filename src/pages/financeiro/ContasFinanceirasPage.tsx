@@ -186,12 +186,12 @@ export default function ContasFinanceirasPage() {
                     A Pagar
                   </TabsTrigger>
                 </TabsList>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <Select value={statusFilter || "all"} onValueChange={(value) => setStatusFilter(value === "all" ? "" : value)}>
                   <SelectTrigger className="w-[150px]">
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
                     <SelectItem value="pendente">Pendentes</SelectItem>
                     <SelectItem value="pago">Pagos</SelectItem>
                     <SelectItem value="atrasado">Atrasados</SelectItem>
