@@ -132,12 +132,12 @@ export default function PatientObjectivesPage() {
                   className="pl-10"
                 />
               </div>
-              <Select value={selectedCategoria} onValueChange={setSelectedCategoria}>
+              <Select value={selectedCategoria || "all"} onValueChange={(value) => setSelectedCategoria(value === "all" ? "" : value)}>
                 <SelectTrigger className="w-[200px]">
                   <SelectValue placeholder="Todas as categorias" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas as categorias</SelectItem>
+                  <SelectItem value="all">Todas as categorias</SelectItem>
                   {CATEGORIAS.map(c => (
                     <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
                   ))}
