@@ -143,24 +143,26 @@ export default function Eventos() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-4 sm:space-y-6 animate-fade-in pb-20 md:pb-0">
         {/* Header com gradiente e melhor hierarquia */}
-        <div className="flex flex-col gap-4">
-          <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
             <div className="space-y-1">
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                 Eventos
               </h1>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Gerencie corridas, ativações e eventos corporativos
               </p>
             </div>
             {canWrite('eventos') && (
               <Button 
-                className="gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
+                size="sm"
+                className="gap-2 shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto"
                 onClick={() => setNewEventoOpen(true)}
               >
                 <Plus className="w-4 h-4" />
+                <span className="sm:hidden">Novo</span>
                 <span className="hidden sm:inline">Novo Evento</span>
               </Button>
             )}
@@ -168,48 +170,48 @@ export default function Eventos() {
           <EventosStatsWidget />
           
           {/* Stats cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <Card className="hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-medical">
-                    <Calendar className="w-5 h-5 text-primary-foreground" />
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-medical shrink-0">
+                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
                   </div>
-                  <div>
-                    <p className="text-2xl font-bold">{eventos.length}</p>
-                    <p className="text-xs text-muted-foreground">Total</p>
+                  <div className="min-w-0">
+                    <p className="text-lg sm:text-2xl font-bold">{eventos.length}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Total</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
             
             <Card className="hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                    <Calendar className="w-5 h-5 text-blue-500" />
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
                   </div>
-                  <div>
-                    <p className="text-2xl font-bold">
+                  <div className="min-w-0">
+                    <p className="text-lg sm:text-2xl font-bold">
                       {eventos.filter(e => e.status === 'AGENDADO').length}
                     </p>
-                    <p className="text-xs text-muted-foreground">Agendados</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Agendados</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
             
             <Card className="hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
-                    <Calendar className="w-5 h-5 text-green-500" />
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0">
+                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
                   </div>
-                  <div>
-                    <p className="text-2xl font-bold">
+                  <div className="min-w-0">
+                    <p className="text-lg sm:text-2xl font-bold">
                       {eventos.filter(e => e.status === 'CONCLUIDO').length}
                     </p>
-                    <p className="text-xs text-muted-foreground">Concluídos</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Concluídos</p>
                   </div>
                 </div>
               </CardContent>
@@ -217,14 +219,14 @@ export default function Eventos() {
             
             <Button 
               variant="outline" 
-              className="h-full min-h-[84px] hover:bg-accent/80 transition-all"
+              className="h-full min-h-[72px] sm:min-h-[84px] hover:bg-accent/80 transition-all"
               onClick={() => navigate('/eventos/analytics')}
             >
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
-                  <span className="text-xl">📊</span>
+              <div className="flex flex-col items-center gap-1 sm:gap-2">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-accent flex items-center justify-center">
+                  <span className="text-lg sm:text-xl">📊</span>
                 </div>
-                <span className="text-sm font-medium">Analytics</span>
+                <span className="text-xs sm:text-sm font-medium">Analytics</span>
               </div>
             </Button>
           </div>
@@ -232,8 +234,8 @@ export default function Eventos() {
 
         {/* Filtros modernos e mobile-friendly */}
         <Card className="shadow-card">
-          <CardContent className="p-4 md:p-6">
-            <div className="flex flex-col gap-4">
+          <CardContent className="p-3 sm:p-4 md:p-6">
+            <div className="flex flex-col gap-3 sm:gap-4">
               {/* Busca principal */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />

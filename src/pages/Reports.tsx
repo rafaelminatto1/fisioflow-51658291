@@ -138,41 +138,41 @@ const Reports = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-4 sm:space-y-6 animate-fade-in pb-20 md:pb-0">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <FileText className="w-6 h-6" />
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
+              <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
               Relatórios
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-sm sm:text-base text-muted-foreground">
               Análises e relatórios detalhados da clínica
             </p>
           </div>
-          <div className="flex gap-3">
-            <Button variant="outline" className="hover:bg-accent/80 border-border/50">
-              <Filter className="w-4 h-4 mr-2" />
-              Filtros
+          <div className="flex gap-2 sm:gap-3">
+            <Button variant="outline" size="sm" className="hover:bg-accent/80 border-border/50 flex-1 sm:flex-none">
+              <Filter className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Filtros</span>
             </Button>
-            <Button className="bg-gradient-primary hover:bg-gradient-primary/90 shadow-medical">
-              <Plus className="w-4 h-4 mr-2" />
-              Novo Relatório
+            <Button size="sm" className="bg-gradient-primary hover:bg-gradient-primary/90 shadow-medical flex-1 sm:flex-none">
+              <Plus className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Novo Relatório</span>
             </Button>
           </div>
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           <Card className="bg-gradient-card border-border/50 hover:shadow-medical transition-all duration-300">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total de Pacientes</p>
-                  <p className="text-2xl font-bold text-foreground">{reportsData.patients.total}</p>
+            <CardContent className="p-3 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="order-2 sm:order-1">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total de Pacientes</p>
+                  <p className="text-lg sm:text-2xl font-bold text-foreground">{reportsData.patients.total}</p>
                 </div>
-                <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center shadow-medical">
-                  <Users className="w-6 h-6 text-primary-foreground" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-primary rounded-xl flex items-center justify-center shadow-medical order-1 sm:order-2">
+                  <Users className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
                 </div>
               </div>
             </CardContent>
@@ -224,12 +224,21 @@ const Reports = () => {
         </div>
 
         {/* Main Content */}
-        <Tabs defaultValue="templates" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="templates">Modelos de Relatório</TabsTrigger>
-            <TabsTrigger value="advanced">Gerador Avançado</TabsTrigger>
-            <TabsTrigger value="recent">Relatórios Recentes</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        <Tabs defaultValue="templates" className="space-y-4 sm:space-y-6">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
+            <TabsTrigger value="templates" className="text-xs sm:text-sm py-2">
+              <span className="hidden sm:inline">Modelos de Relatório</span>
+              <span className="sm:hidden">Modelos</span>
+            </TabsTrigger>
+            <TabsTrigger value="advanced" className="text-xs sm:text-sm py-2">
+              <span className="hidden sm:inline">Gerador Avançado</span>
+              <span className="sm:hidden">Avançado</span>
+            </TabsTrigger>
+            <TabsTrigger value="recent" className="text-xs sm:text-sm py-2">
+              <span className="hidden sm:inline">Relatórios Recentes</span>
+              <span className="sm:hidden">Recentes</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="text-xs sm:text-sm py-2">Analytics</TabsTrigger>
           </TabsList>
 
           <TabsContent value="advanced" className="space-y-6">
@@ -262,7 +271,7 @@ const Reports = () => {
             </Card>
 
             {/* Report Templates */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {reportTemplates.map((template) => {
                 const IconComponent = template.icon;
                 const isGenerating = selectedReport === template.id;

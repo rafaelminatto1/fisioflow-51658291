@@ -85,36 +85,38 @@ export default function Exercises() {
 
   return (
     <MainLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 pb-20 md:pb-0">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Dumbbell className="h-6 w-6 text-primary" />
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold flex items-center gap-2 sm:gap-3">
+              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Dumbbell className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               </div>
-              Biblioteca de Exercícios
+              <span className="hidden sm:inline">Biblioteca de Exercícios</span>
+              <span className="sm:hidden">Exercícios</span>
             </h1>
-            <p className="text-muted-foreground mt-1">
-              Gerencie exercícios, templates e protocolos terapêuticos
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
+              Gerencie exercícios, templates e protocolos
             </p>
           </div>
-          <Button onClick={handleNewExercise} size="lg">
+          <Button onClick={handleNewExercise} size="sm" className="w-full sm:w-auto">
             <Plus className="h-4 w-4 mr-2" />
-            Novo Exercício
+            <span className="sm:hidden">Novo</span>
+            <span className="hidden sm:inline">Novo Exercício</span>
           </Button>
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
-              <Card key={i} className="p-4">
-                <div className="flex items-center gap-3">
-                  <Skeleton className="h-10 w-10 rounded-lg" />
-                  <div className="space-y-2">
-                    <Skeleton className="h-3 w-20" />
-                    <Skeleton className="h-6 w-10" />
+              <Card key={i} className="p-3 sm:p-4">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <Skeleton className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg" />
+                  <div className="space-y-1 sm:space-y-2">
+                    <Skeleton className="h-3 w-16 sm:w-20" />
+                    <Skeleton className="h-5 sm:h-6 w-8 sm:w-10" />
                   </div>
                 </div>
               </Card>
@@ -123,15 +125,15 @@ export default function Exercises() {
             stats.map((stat) => (
               <Card 
                 key={stat.label} 
-                className="p-4 hover:shadow-md transition-all hover:border-primary/30 cursor-default"
+                className="p-3 sm:p-4 hover:shadow-md transition-all hover:border-primary/30 cursor-default"
               >
-                <div className="flex items-center gap-3">
-                  <div className={cn("p-2.5 rounded-lg", stat.bgColor)}>
-                    <stat.icon className={cn("h-5 w-5", stat.color)} />
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className={cn("p-2 sm:p-2.5 rounded-lg", stat.bgColor)}>
+                    <stat.icon className={cn("h-4 w-4 sm:h-5 sm:w-5", stat.color)} />
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">{stat.label}</p>
-                    <p className="text-2xl font-bold">{stat.value}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{stat.label}</p>
+                    <p className="text-lg sm:text-2xl font-bold">{stat.value}</p>
                   </div>
                 </div>
               </Card>
