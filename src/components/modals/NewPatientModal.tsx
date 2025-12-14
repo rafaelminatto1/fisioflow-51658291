@@ -16,6 +16,7 @@ import { CalendarIcon, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 const patientSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -54,6 +55,7 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
 }) => {
   const [isCalendarOpen, setIsCalendarOpen] = React.useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const form = useForm({
     resolver: zodResolver(patientSchema),
@@ -103,6 +105,7 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
         description: 'Novo paciente adicionado com sucesso.',
       });
 
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
       reset();
       onOpenChange(false);
     } catch (error: any) {
