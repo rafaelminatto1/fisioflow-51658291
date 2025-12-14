@@ -18,7 +18,8 @@ import {
 import { NewPatientModal } from '@/components/modals/NewPatientModal';
 import { EditPatientModal } from '@/components/modals/EditPatientModal';
 import { ViewPatientModal } from '@/components/modals/ViewPatientModal';
-import { useActivePatients } from '@/hooks/usePatients';
+import { DeletePatientDialog } from '@/components/modals/DeletePatientDialog';
+import { usePatientsQuery, useDeletePatient, PatientDB } from '@/hooks/usePatientsQuery';
 import {
   Plus, 
   Search, 
@@ -29,7 +30,7 @@ import {
   Users,
   Filter,
   Download,
-  Loader2,
+  Trash2,
   TrendingUp
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -41,14 +42,16 @@ const Patients = () => {
   const [conditionFilter, setConditionFilter] = useState<string>('all');
   const [editingPatient, setEditingPatient] = useState<string | null>(null);
   const [viewingPatient, setViewingPatient] = useState<string | null>(null);
+  const [deletingPatient, setDeletingPatient] = useState<PatientDB | null>(null);
   const [isNewPatientModalOpen, setIsNewPatientModalOpen] = useState(false);
-  const { data: patients = [], isLoading: loading } = useActivePatients();
+  const { data: patients = [], isLoading: loading } = usePatientsQuery();
+  const deletePatient = useDeletePatient();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   // Get unique conditions and statuses for filters
   const uniqueConditions = useMemo(() => {
-    const conditions = [...new Set(patients.map(p => p.mainCondition).filter(Boolean))];
+    const conditions = [...new Set(patients.map(p => p.main_condition).filter(Boolean))];
     return conditions.sort();
   }, [patients]);
 
@@ -56,23 +59,32 @@ const Patients = () => {
     return patients.filter(patient => {
       const matchesSearch = 
         patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (patient.mainCondition || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (patient.main_condition || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (patient.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (patient.phone || '').toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesStatus = statusFilter === 'all' || patient.status === statusFilter;
-      const matchesCondition = conditionFilter === 'all' || patient.mainCondition === conditionFilter;
+      const matchesCondition = conditionFilter === 'all' || patient.main_condition === conditionFilter;
       
       return matchesSearch && matchesStatus && matchesCondition;
     });
   }, [patients, searchTerm, statusFilter, conditionFilter]);
 
-  const getPatientAge = (birthDate: Date) => {
+  const handleDeletePatient = () => {
+    if (!deletingPatient) return;
+    deletePatient.mutate(deletingPatient.id, {
+      onSuccess: () => setDeletingPatient(null),
+    });
+  };
+
+  const getPatientAge = (birthDate?: string | null) => {
+    if (!birthDate) return 0;
     try {
       const today = new Date();
-      const age = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      const birth = new Date(birthDate);
+      const age = today.getFullYear() - birth.getFullYear();
+      const monthDiff = today.getMonth() - birth.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
         return age - 1;
       }
       return age;
@@ -89,11 +101,11 @@ const Patients = () => {
           patient.name,
           patient.email || '',
           patient.phone || '',
-          getPatientAge(new Date(patient.birthDate)),
-          patient.gender,
-          patient.mainCondition,
-          patient.status,
-          patient.progress
+          getPatientAge(patient.birth_date),
+          patient.gender || '',
+          patient.main_condition || '',
+          patient.status || '',
+          patient.progress || 0
         ].join(','))
       ].join('\n');
       
@@ -360,23 +372,23 @@ const Patients = () => {
                         <CardTitle className="text-xl mb-1">{patient.name}</CardTitle>
                         <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
                           <span className="flex items-center gap-1">
-                            👤 {getPatientAge(new Date(patient.birthDate))} anos
+                            👤 {getPatientAge(patient.birth_date)} anos
                           </span>
                           <span>•</span>
-                          <span>{patient.gender}</span>
-                          {patient.mainCondition && (
+                          <span>{patient.gender || 'Não informado'}</span>
+                          {patient.main_condition && (
                             <>
                               <span>•</span>
                               <span className="font-medium text-foreground">
-                                {patient.mainCondition}
+                                {patient.main_condition}
                               </span>
                             </>
                           )}
                         </div>
                       </div>
                     </div>
-                    <Badge className={getStatusColor(patient.status)}>
-                      {patient.status}
+                    <Badge className={getStatusColor(patient.status || '')}>
+                      {patient.status || 'Inicial'}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -405,12 +417,12 @@ const Patients = () => {
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Progresso do Tratamento</span>
-                      <span className="font-bold text-primary">{patient.progress}%</span>
+                      <span className="font-bold text-primary">{patient.progress || 0}%</span>
                     </div>
                     <div className="h-3 bg-accent rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-gradient-primary rounded-full transition-all duration-500"
-                        style={{ width: `${patient.progress}%` }}
+                        style={{ width: `${patient.progress || 0}%` }}
                       />
                     </div>
                   </div>
@@ -424,25 +436,33 @@ const Patients = () => {
                       onClick={() => navigate(`/patient-evolution-report/${patient.id}`)}
                     >
                       <TrendingUp className="w-4 h-4 mr-2" />
-                      Dashboard 360º
+                      <span className="hidden sm:inline">Dashboard 360º</span>
+                      <span className="sm:hidden">360º</span>
                     </Button>
                     <Button 
                       variant="default" 
                       size="sm"
-                      className="flex-1 shadow-md hover:shadow-lg transition-all"
+                      className="shadow-md hover:shadow-lg transition-all"
                       onClick={() => setViewingPatient(patient.id)}
                     >
-                      <Eye className="w-4 h-4 mr-2" />
-                      Ver Detalhes
+                      <Eye className="w-4 h-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Ver</span>
                     </Button>
                     <Button 
                       variant="outline" 
                       size="sm"
-                      className="flex-1"
                       onClick={() => setEditingPatient(patient.id)}
                     >
-                      <Edit className="w-4 h-4 mr-2" />
-                      Editar
+                      <Edit className="w-4 h-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Editar</span>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => setDeletingPatient(patient)}
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </CardContent>
@@ -473,6 +493,14 @@ const Patients = () => {
           onOpenChange={() => setViewingPatient(null)}
         />
       )}
+
+      <DeletePatientDialog
+        open={!!deletingPatient}
+        onOpenChange={(open) => !open && setDeletingPatient(null)}
+        patientName={deletingPatient?.name}
+        onConfirm={handleDeletePatient}
+        isDeleting={deletePatient.isPending}
+      />
     </MainLayout>
   );
 };
