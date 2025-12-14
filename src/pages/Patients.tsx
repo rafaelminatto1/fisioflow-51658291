@@ -145,21 +145,22 @@ const Patients = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-4 sm:space-y-6 animate-fade-in pb-20 md:pb-0">
         {/* Header moderno com stats */}
-        <div className="space-y-4">
-          <div className="flex items-start justify-between gap-4">
+        <div className="space-y-3 sm:space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
             <div className="space-y-1">
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                 Pacientes
               </h1>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Gerencie o cadastro e evolução dos seus pacientes
               </p>
             </div>
             <div className="flex gap-2">
               <Button
                 variant="outline"
+                size="sm"
                 onClick={exportPatients}
                 className="hidden sm:flex shadow-md hover:shadow-lg transition-all"
               >
@@ -167,74 +168,76 @@ const Patients = () => {
                 Exportar
               </Button>
               <Button 
-                className="shadow-md hover:shadow-lg transition-all"
+                size="sm"
+                className="shadow-md hover:shadow-lg transition-all w-full sm:w-auto"
                 onClick={() => setIsNewPatientModalOpen(true)}
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">Novo Paciente</span>
+                <span className="sm:hidden">Novo</span>
               </Button>
             </div>
           </div>
 
           {/* Stats cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <Card className="hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-medical">
-                    <Users className="w-5 h-5 text-primary-foreground" />
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-medical shrink-0">
+                    <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
                   </div>
-                  <div>
-                    <p className="text-2xl font-bold">{patients.length}</p>
-                    <p className="text-xs text-muted-foreground">Total</p>
+                  <div className="min-w-0">
+                    <p className="text-lg sm:text-2xl font-bold">{patients.length}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Total</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
             
             <Card className="hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
-                    <Users className="w-5 h-5 text-green-500" />
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0">
+                    <Users className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
                   </div>
-                  <div>
-                    <p className="text-2xl font-bold">
+                  <div className="min-w-0">
+                    <p className="text-lg sm:text-2xl font-bold">
                       {patients.filter(p => p.status === 'Em Tratamento').length}
                     </p>
-                    <p className="text-xs text-muted-foreground">Ativos</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Ativos</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
             
             <Card className="hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                    <Users className="w-5 h-5 text-blue-500" />
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+                    <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
                   </div>
-                  <div>
-                    <p className="text-2xl font-bold">
+                  <div className="min-w-0">
+                    <p className="text-lg sm:text-2xl font-bold">
                       {patients.filter(p => p.status === 'Inicial').length}
                     </p>
-                    <p className="text-xs text-muted-foreground">Novos</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Novos</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
             
             <Card className="hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gray-500/10 flex items-center justify-center">
-                    <Users className="w-5 h-5 text-gray-500" />
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gray-500/10 flex items-center justify-center shrink-0">
+                    <Users className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
                   </div>
-                  <div>
-                    <p className="text-2xl font-bold">
+                  <div className="min-w-0">
+                    <p className="text-lg sm:text-2xl font-bold">
                       {patients.filter(p => p.status === 'Concluído').length}
                     </p>
-                    <p className="text-xs text-muted-foreground">Concluídos</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Concluídos</p>
                   </div>
                 </div>
               </CardContent>
@@ -247,8 +250,8 @@ const Patients = () => {
 
         {/* Search and Filters - Modernizados */}
         <Card className="shadow-card">
-          <CardContent className="p-4 md:p-6">
-            <div className="flex flex-col gap-4">
+          <CardContent className="p-3 sm:p-4 md:p-6">
+            <div className="flex flex-col gap-3 sm:gap-4">
               {/* Busca principal */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
