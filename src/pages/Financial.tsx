@@ -133,38 +133,41 @@ const Financial = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-4 sm:space-y-6 animate-fade-in pb-20 md:pb-0">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Financeiro</h1>
-            <p className="text-muted-foreground">Gerencie cobranças e acompanhe sua receita</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Financeiro</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Gerencie cobranças e acompanhe sua receita</p>
           </div>
-          <div className="flex gap-3">
-            <Button variant="outline" className="hover:bg-accent/80 border-border/50">
-              <Download className="w-4 h-4 mr-2" />
-              Relatório
+          <div className="flex gap-2 sm:gap-3">
+            <Button variant="outline" size="sm" className="hover:bg-accent/80 border-border/50 flex-1 sm:flex-none">
+              <Download className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Relatório</span>
             </Button>
             <Button 
               onClick={handleNewTransaction}
-              className="bg-gradient-primary hover:bg-gradient-primary/90 shadow-medical"
+              size="sm"
+              className="bg-gradient-primary hover:bg-gradient-primary/90 shadow-medical flex-1 sm:flex-none"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Nova Transação
+              <Plus className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Nova Transação</span>
             </Button>
           </div>
         </div>
 
         {/* Period Selector */}
         <Card className="bg-gradient-card border-border/50 shadow-card">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-gradient-primary/10 rounded-lg">
-                <Calendar className="w-5 h-5 text-primary" />
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-primary/10 rounded-lg">
+                  <Calendar className="w-5 h-5 text-primary" />
+                </div>
+                <span className="font-medium text-foreground">Período:</span>
               </div>
-              <span className="font-medium text-foreground">Período:</span>
               <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-                <SelectTrigger className="w-48 border-border/50">
+                <SelectTrigger className="w-full sm:w-48 border-border/50">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -179,28 +182,28 @@ const Financial = () => {
         </Card>
 
         {/* Financial Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           <Card className="bg-gradient-card border-border/50 hover:shadow-medical transition-all duration-300 group">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+            <CardContent className="p-3 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="order-2 sm:order-1">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
                     Receita Total
                   </p>
-                  <p className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+                  <p className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
                     R$ {(stats?.totalRevenue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center shadow-medical">
-                  <DollarSign className="w-6 h-6 text-primary-foreground" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-primary rounded-xl flex items-center justify-center shadow-medical order-1 sm:order-2">
+                  <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-primary-foreground" />
                 </div>
               </div>
-              <div className="flex items-center mt-3">
-                <TrendingUp className="w-4 h-4 text-secondary mr-1" />
-                <span className="text-sm text-secondary font-medium">
+              <div className="flex items-center mt-2 sm:mt-3">
+                <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-secondary mr-1" />
+                <span className="text-xs sm:text-sm text-secondary font-medium">
                   +{stats?.monthlyGrowth || 0}%
                 </span>
-                <span className="text-sm text-muted-foreground ml-1">vs mês anterior</span>
+                <span className="text-xs sm:text-sm text-muted-foreground ml-1 hidden sm:inline">vs mês anterior</span>
               </div>
             </CardContent>
           </Card>

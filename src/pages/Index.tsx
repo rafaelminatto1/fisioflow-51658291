@@ -27,15 +27,15 @@ const Index = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-4 sm:space-y-6 animate-fade-in pb-20 md:pb-0">
         {/* Header moderno com gradiente */}
-        <div className="flex flex-col gap-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-2">
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+        <div className="flex flex-col gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+            <div className="space-y-1 sm:space-y-2">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
                 Dashboard FisioFlow
               </h1>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Bem-vindo! Aqui está uma visão geral da sua clínica
               </p>
             </div>
@@ -59,7 +59,7 @@ const Index = () => {
         <CustomizableDashboard />
         
         {/* Grid de conteúdo */}
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
           {/* Dashboard principal */}
           <div className="lg:col-span-2">
             {renderDashboard()}
