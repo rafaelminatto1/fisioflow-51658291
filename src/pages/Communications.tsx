@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
-import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 import { 
   Mail, 
   MessageSquare, 
@@ -13,14 +13,25 @@ import {
   Send, 
   Plus,
   Search,
-  Filter,
   Clock,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  RefreshCw,
+  Trash2,
+  MoreVertical
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
-import { usePatients } from '@/hooks/usePatients';
-import { toast } from 'sonner';
+import { usePatientsQuery } from '@/hooks/usePatientsQuery';
+import { 
+  useCommunications, 
+  useCommunicationStats, 
+  useSendCommunication, 
+  useDeleteCommunication,
+  useResendCommunication,
+  getStatusLabel,
+  getTypeLabel,
+  type Communication 
+} from '@/hooks/useCommunications';
 import { cn } from '@/lib/utils';
 import {
   Command,
@@ -35,24 +46,46 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const Communications = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedChannel, setSelectedChannel] = useState<string>('all');
-  const [isLoading] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   
   // Form state
   const [sendChannel, setSendChannel] = useState<'email' | 'whatsapp' | 'sms'>('email');
-  const [selectedPatient, setSelectedPatient] = useState<{ id: string; name: string } | null>(null);
+  const [selectedPatient, setSelectedPatient] = useState<{ id: string; name: string; email?: string | null; phone?: string | null } | null>(null);
   const [patientSearch, setPatientSearch] = useState('');
   const [patientPopoverOpen, setPatientPopoverOpen] = useState(false);
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
-  const [isSending, setIsSending] = useState(false);
 
-  const { data: patients = [] } = usePatients();
+  const { data: patients = [] } = usePatientsQuery();
+  const { data: communications = [], isLoading } = useCommunications({ channel: selectedChannel });
+  const { data: stats } = useCommunicationStats();
+  const sendCommunication = useSendCommunication();
+  const deleteCommunication = useDeleteCommunication();
+  const resendCommunication = useResendCommunication();
 
-  // Filter patients based on search
   const filteredPatients = useMemo(() => {
     if (!patientSearch) return patients.slice(0, 10);
     return patients.filter(p => 
@@ -60,270 +93,255 @@ const Communications = () => {
     ).slice(0, 10);
   }, [patients, patientSearch]);
 
-  // Mock data para demonstração
-  const communications = [
-    {
-      id: '1',
-      type: 'email',
-      recipient: 'João Silva',
-      subject: 'Lembrete de consulta',
-      status: 'sent',
-      sentAt: new Date('2024-01-15T10:30:00'),
-      channel: 'Email'
-    },
-    {
-      id: '2',
-      type: 'whatsapp',
-      recipient: 'Maria Santos',
-      subject: 'Confirmação de agendamento',
-      status: 'delivered',
-      sentAt: new Date('2024-01-15T14:20:00'),
-      channel: 'WhatsApp'
-    },
-    {
-      id: '3',
-      type: 'sms',
-      recipient: 'Pedro Costa',
-      subject: 'Cancelamento de sessão',
-      status: 'pending',
-      sentAt: new Date('2024-01-15T16:45:00'),
-      channel: 'SMS'
-    }
-  ];
+  const filteredCommunications = useMemo(() => {
+    return communications.filter(comm => 
+      !searchTerm || 
+      comm.patient?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      comm.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      comm.recipient.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [communications, searchTerm]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'sent':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'delivered':
-        return <CheckCircle className="w-4 h-4 text-blue-500" />;
-      case 'pending':
-        return <Clock className="w-4 h-4 text-yellow-500" />;
-      case 'failed':
-        return <AlertCircle className="w-4 h-4 text-red-500" />;
-      default:
-        return <Clock className="w-4 h-4 text-gray-500" />;
+      case 'enviado': return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'entregue': return <CheckCircle className="w-4 h-4 text-blue-500" />;
+      case 'pendente': return <Clock className="w-4 h-4 text-yellow-500" />;
+      case 'falha': return <AlertCircle className="w-4 h-4 text-red-500" />;
+      case 'lido': return <CheckCircle className="w-4 h-4 text-primary" />;
+      default: return <Clock className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'sent':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'delivered':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'failed':
-        return 'bg-red-100 text-red-800 border-red-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'enviado': return 'bg-green-500/10 text-green-700 dark:text-green-400';
+      case 'entregue': return 'bg-blue-500/10 text-blue-700 dark:text-blue-400';
+      case 'pendente': return 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400';
+      case 'falha': return 'bg-red-500/10 text-red-700 dark:text-red-400';
+      case 'lido': return 'bg-primary/10 text-primary';
+      default: return 'bg-muted text-muted-foreground';
     }
   };
 
   const getChannelIcon = (type: string) => {
     switch (type) {
-      case 'email':
-        return <Mail className="w-4 h-4" />;
-      case 'whatsapp':
-        return <MessageSquare className="w-4 h-4" />;
-      case 'sms':
-        return <Phone className="w-4 h-4" />;
-      default:
-        return <Mail className="w-4 h-4" />;
+      case 'email': return <Mail className="w-4 h-4" />;
+      case 'whatsapp': return <MessageSquare className="w-4 h-4" />;
+      case 'sms': return <Phone className="w-4 h-4" />;
+      default: return <Mail className="w-4 h-4" />;
     }
-  };
-
-  const handleNewCommunication = () => {
-    // Reset form
-    setSelectedPatient(null);
-    setPatientSearch('');
-    setSubject('');
-    setMessage('');
-    setSendChannel('email');
-    toast.info('Preencha o formulário para enviar uma nova comunicação');
   };
 
   const handleSendCommunication = async () => {
-    if (!selectedPatient) {
-      toast.error('Selecione um paciente');
-      return;
-    }
-    if (!subject.trim()) {
-      toast.error('Digite o assunto da mensagem');
-      return;
-    }
-    if (!message.trim()) {
-      toast.error('Digite a mensagem');
-      return;
-    }
+    if (!selectedPatient) return;
+    
+    const recipient = sendChannel === 'email' 
+      ? selectedPatient.email || '' 
+      : selectedPatient.phone || '';
 
-    setIsSending(true);
-    try {
-      // Simulating API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast.success(`Comunicação enviada para ${selectedPatient.name} via ${sendChannel.toUpperCase()}`);
-      
-      // Reset form
-      setSelectedPatient(null);
-      setPatientSearch('');
-      setSubject('');
-      setMessage('');
-    } catch (error) {
-      toast.error('Erro ao enviar comunicação');
-    } finally {
-      setIsSending(false);
+    await sendCommunication.mutateAsync({
+      type: sendChannel,
+      patient_id: selectedPatient.id,
+      recipient,
+      subject: subject || undefined,
+      body: message,
+    });
+    
+    setSelectedPatient(null);
+    setSubject('');
+    setMessage('');
+  };
+
+  const handleDelete = async () => {
+    if (deleteId) {
+      await deleteCommunication.mutateAsync(deleteId);
+      setDeleteId(null);
     }
   };
 
   return (
     <MainLayout>
-      <div className="space-y-4 sm:space-y-6 animate-fade-in">
-        {/* Header responsivo */}
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-foreground">
-                Comunicações
-              </h1>
-              <p className="text-sm sm:text-base text-muted-foreground">
-                Gerencie mensagens e notificações aos pacientes
-              </p>
-            </div>
-            <Button 
-              onClick={handleNewCommunication}
-              className="bg-gradient-primary text-primary-foreground hover:shadow-medical w-full sm:w-auto"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Nova Comunicação</span>
-              <span className="sm:hidden">Nova</span>
-            </Button>
-          </div>
-
-          {/* Filtros e busca responsivos */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input
-                  placeholder="Buscar comunicações..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+      <div className="space-y-4 sm:space-y-6 pb-20 md:pb-0">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold flex items-center gap-3">
+              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               </div>
-            </div>
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              <Button
-                variant={selectedChannel === 'all' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedChannel('all')}
-                className="whitespace-nowrap"
-              >
-                <Filter className="w-4 h-4 mr-2" />
-                Todos
-              </Button>
-              <Button
-                variant={selectedChannel === 'email' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedChannel('email')}
-                className="whitespace-nowrap"
-              >
-                <Mail className="w-4 h-4 mr-2" />
-                Email
-              </Button>
-              <Button
-                variant={selectedChannel === 'whatsapp' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedChannel('whatsapp')}
-                className="whitespace-nowrap"
-              >
-                <MessageSquare className="w-4 h-4 mr-2" />
-                WhatsApp
-              </Button>
-              <Button
-                variant={selectedChannel === 'sms' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedChannel('sms')}
-                className="whitespace-nowrap"
-              >
-                <Phone className="w-4 h-4 mr-2" />
-                SMS
-              </Button>
-            </div>
+              Comunicações
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
+              Gerencie mensagens e notificações aos pacientes
+            </p>
           </div>
         </div>
 
-        {/* Grid responsivo */}
+        {/* Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <Card className="hover:shadow-md transition-all">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Total</p>
+                  <p className="text-lg sm:text-2xl font-bold">{stats?.total || 0}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="hover:shadow-md transition-all">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-2 rounded-lg bg-green-500/10">
+                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
+                </div>
+                <div>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Enviadas</p>
+                  <p className="text-lg sm:text-2xl font-bold">{stats?.sent || 0}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="hover:shadow-md transition-all">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-2 rounded-lg bg-blue-500/10">
+                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
+                </div>
+                <div>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Entregues</p>
+                  <p className="text-lg sm:text-2xl font-bold">{stats?.delivered || 0}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="hover:shadow-md transition-all">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-2 rounded-lg bg-red-500/10">
+                  <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-500" />
+                </div>
+                <div>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Falhas</p>
+                  <p className="text-lg sm:text-2xl font-bold">{stats?.failed || 0}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filtros */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
+              placeholder="Buscar comunicações..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
+            {['all', 'email', 'whatsapp', 'sms'].map((channel) => (
+              <Button
+                key={channel}
+                variant={selectedChannel === channel ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedChannel(channel)}
+                className="whitespace-nowrap"
+              >
+                {channel === 'all' && 'Todos'}
+                {channel === 'email' && <><Mail className="w-4 h-4 mr-1" />Email</>}
+                {channel === 'whatsapp' && <><MessageSquare className="w-4 h-4 mr-1" />WhatsApp</>}
+                {channel === 'sms' && <><Phone className="w-4 h-4 mr-1" />SMS</>}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          {/* Lista de comunicações */}
+          {/* Lista */}
           <div className="lg:col-span-2">
-            <Card className="bg-gradient-card border-border shadow-card">
-              <CardHeader className="border-b border-border">
-                <CardTitle className="text-foreground">
-                  Histórico de Comunicações
-                </CardTitle>
+            <Card>
+              <CardHeader className="border-b">
+                <CardTitle>Histórico de Comunicações</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 {isLoading ? (
-                  <div className="p-6">
-                    <LoadingSkeleton type="list" rows={5} />
+                  <div className="p-4 space-y-3">
+                    {[1, 2, 3, 4, 5].map((i) => (<Skeleton key={i} className="h-20 w-full" />))}
                   </div>
-                ) : communications.length === 0 ? (
+                ) : filteredCommunications.length === 0 ? (
                   <div className="p-6">
                     <EmptyState
                       icon={MessageSquare}
-                      title="Nenhuma comunicação enviada"
-                      description="Comece enviando sua primeira mensagem aos pacientes."
+                      title="Nenhuma comunicação"
+                      description="Envie sua primeira mensagem aos pacientes."
                     />
                   </div>
                 ) : (
-                  <div className="space-y-0">
-                    {communications
-                      .filter(comm => selectedChannel === 'all' || comm.type === selectedChannel)
-                      .filter(comm => 
-                        !searchTerm || 
-                        comm.recipient.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        comm.subject.toLowerCase().includes(searchTerm.toLowerCase())
-                      )
-                      .map((comm) => (
-                    <div
-                      key={comm.id}
-                      className="p-4 border-b border-border last:border-b-0 hover:bg-accent/50 transition-colors"
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="flex items-start gap-3 flex-1">
-                          <div className="mt-1">
-                            {getChannelIcon(comm.type)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                              <p className="font-medium text-foreground truncate">
-                                {comm.recipient}
+                  <div className="divide-y">
+                    {filteredCommunications.map((comm) => (
+                      <div key={comm.id} className="p-4 hover:bg-accent/50 transition-colors">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                            <div className="mt-1 p-2 rounded-lg bg-muted">
+                              {getChannelIcon(comm.type)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="font-medium truncate">
+                                  {comm.patient?.name || comm.recipient}
+                                </p>
+                                <Badge className={cn("text-xs", getStatusColor(comm.status))}>
+                                  {getStatusLabel(comm.status)}
+                                </Badge>
+                              </div>
+                              {comm.subject && (
+                                <p className="text-sm text-muted-foreground truncate mt-0.5">
+                                  {comm.subject}
+                                </p>
+                              )}
+                              <p className="text-sm text-muted-foreground line-clamp-1 mt-1">
+                                {comm.body}
                               </p>
-                              <Badge className={`text-xs w-fit ${getStatusColor(comm.status)}`}>
-                                {comm.status}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground truncate mt-1">
-                              {comm.subject}
-                            </p>
-                            <div className="flex items-center gap-2 mt-2">
-                              <span className="text-xs text-muted-foreground">
-                                {comm.channel}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {comm.sentAt.toLocaleString('pt-BR')}
-                              </span>
+                              <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                                <span>{getTypeLabel(comm.type)}</span>
+                                <span>{format(new Date(comm.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}</span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {getStatusIcon(comm.status)}
+                          <div className="flex items-center gap-2">
+                            {getStatusIcon(comm.status)}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                {comm.status === 'falha' && (
+                                  <DropdownMenuItem onClick={() => resendCommunication.mutate(comm.id)}>
+                                    <RefreshCw className="h-4 w-4 mr-2" />Reenviar
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => setDeleteId(comm.id)}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />Excluir
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </div>
                       </div>
-                    </div>
                     ))}
                   </div>
                 )}
@@ -332,68 +350,44 @@ const Communications = () => {
           </div>
 
           {/* Painel de envio */}
-          <div className="space-y-4">
-            <Card className="bg-gradient-card border-border shadow-card">
-              <CardHeader className="border-b border-border">
-                <CardTitle className="text-foreground">
-                  Enviar Comunicação
-                </CardTitle>
+          <div>
+            <Card>
+              <CardHeader className="border-b">
+                <CardTitle>Enviar Comunicação</CardTitle>
               </CardHeader>
               <CardContent className="p-4 space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">
-                    Canal
-                  </label>
+                  <label className="text-sm font-medium mb-2 block">Canal</label>
                   <div className="grid grid-cols-3 gap-2">
-                    <Button 
-                      variant={sendChannel === 'email' ? 'default' : 'outline'} 
-                      size="sm" 
-                      className="flex-col p-3 h-auto"
-                      onClick={() => setSendChannel('email')}
-                    >
-                      <Mail className="w-4 h-4 mb-1" />
-                      <span className="text-xs">Email</span>
-                    </Button>
-                    <Button 
-                      variant={sendChannel === 'whatsapp' ? 'default' : 'outline'} 
-                      size="sm" 
-                      className="flex-col p-3 h-auto"
-                      onClick={() => setSendChannel('whatsapp')}
-                    >
-                      <MessageSquare className="w-4 h-4 mb-1" />
-                      <span className="text-xs">WhatsApp</span>
-                    </Button>
-                    <Button 
-                      variant={sendChannel === 'sms' ? 'default' : 'outline'} 
-                      size="sm" 
-                      className="flex-col p-3 h-auto"
-                      onClick={() => setSendChannel('sms')}
-                    >
-                      <Phone className="w-4 h-4 mb-1" />
-                      <span className="text-xs">SMS</span>
-                    </Button>
+                    {(['email', 'whatsapp', 'sms'] as const).map((channel) => (
+                      <Button 
+                        key={channel}
+                        variant={sendChannel === channel ? 'default' : 'outline'} 
+                        size="sm" 
+                        className="flex-col p-3 h-auto"
+                        onClick={() => setSendChannel(channel)}
+                      >
+                        {channel === 'email' && <Mail className="w-4 h-4 mb-1" />}
+                        {channel === 'whatsapp' && <MessageSquare className="w-4 h-4 mb-1" />}
+                        {channel === 'sms' && <Phone className="w-4 h-4 mb-1" />}
+                        <span className="text-xs capitalize">{channel}</span>
+                      </Button>
+                    ))}
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">
-                    Destinatário
-                  </label>
+                  <label className="text-sm font-medium mb-2 block">Destinatário</label>
                   <Popover open={patientPopoverOpen} onOpenChange={setPatientPopoverOpen}>
                     <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={patientPopoverOpen}
-                        className="w-full justify-start font-normal"
-                      >
+                      <Button variant="outline" className="w-full justify-start font-normal">
                         {selectedPatient ? selectedPatient.name : "Buscar paciente..."}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[300px] p-0" align="start">
                       <Command>
                         <CommandInput 
-                          placeholder="Digite o nome do paciente..." 
+                          placeholder="Digite o nome..." 
                           value={patientSearch}
                           onValueChange={setPatientSearch}
                         />
@@ -405,7 +399,12 @@ const Communications = () => {
                                 key={patient.id}
                                 value={patient.name}
                                 onSelect={() => {
-                                  setSelectedPatient({ id: patient.id, name: patient.name });
+                                  setSelectedPatient({ 
+                                    id: patient.id, 
+                                    name: patient.name,
+                                    email: patient.email,
+                                    phone: patient.phone
+                                  });
                                   setPatientPopoverOpen(false);
                                   setPatientSearch('');
                                 }}
@@ -420,21 +419,19 @@ const Communications = () => {
                   </Popover>
                 </div>
 
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">
-                    Assunto
-                  </label>
-                  <Input 
-                    placeholder="Assunto da mensagem..." 
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                  />
-                </div>
+                {sendChannel === 'email' && (
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Assunto</label>
+                    <Input 
+                      placeholder="Assunto da mensagem..." 
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                    />
+                  </div>
+                )}
 
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">
-                    Mensagem
-                  </label>
+                  <label className="text-sm font-medium mb-2 block">Mensagem</label>
                   <Textarea 
                     placeholder="Digite sua mensagem..." 
                     rows={4}
@@ -445,45 +442,36 @@ const Communications = () => {
                 </div>
 
                 <Button 
-                  className="w-full bg-gradient-primary text-primary-foreground hover:shadow-medical"
+                  className="w-full"
                   onClick={handleSendCommunication}
-                  disabled={isSending}
+                  disabled={sendCommunication.isPending || !selectedPatient || !message}
                 >
-                  {isSending ? (
-                    <>Enviando...</>
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4 mr-2" />
-                      Enviar Comunicação
-                    </>
+                  {sendCommunication.isPending ? 'Enviando...' : (
+                    <><Send className="w-4 h-4 mr-2" />Enviar</>
                   )}
                 </Button>
-              </CardContent>
-            </Card>
-
-            {/* Estatísticas */}
-            <Card className="bg-gradient-card border-border shadow-card">
-              <CardHeader className="border-b border-border">
-                <CardTitle className="text-foreground">
-                  Estatísticas
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="text-center p-3 bg-accent/30 rounded-lg">
-                    <p className="text-lg font-bold text-foreground">12</p>
-                    <p className="text-xs text-muted-foreground">Enviadas hoje</p>
-                  </div>
-                  <div className="text-center p-3 bg-accent/30 rounded-lg">
-                    <p className="text-lg font-bold text-foreground">85%</p>
-                    <p className="text-xs text-muted-foreground">Taxa de entrega</p>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
+
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Comunicação</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir esta comunicação? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </MainLayout>
   );
 };
