@@ -138,3 +138,40 @@ export function useDecrementVoucherSession() {
     },
   });
 }
+
+export function useDeleteVoucher() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('vouchers')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vouchers'] });
+      toast.success('Voucher excluído com sucesso');
+    },
+    onError: (error: Error) => {
+      toast.error('Erro ao excluir voucher: ' + error.message);
+    },
+  });
+}
+
+export function useAllVouchers() {
+  return useQuery({
+    queryKey: ['all-vouchers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('vouchers')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data as Voucher[];
+    },
+  });
+}

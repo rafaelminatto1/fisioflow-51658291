@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -27,8 +28,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useCreateVoucher, type Voucher } from '@/hooks/useVouchers';
+import { useCreateVoucher, useUpdateVoucher, type Voucher } from '@/hooks/useVouchers';
 import { Switch } from '@/components/ui/switch';
+import { Loader2 } from 'lucide-react';
 
 const voucherSchema = z.object({
   nome: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
@@ -50,45 +52,75 @@ interface VoucherModalProps {
 
 export function VoucherModal({ open, onOpenChange, voucher }: VoucherModalProps) {
   const createVoucher = useCreateVoucher();
+  const updateVoucher = useUpdateVoucher();
+  const isEditing = !!voucher;
 
   const form = useForm<VoucherFormData>({
     resolver: zodResolver(voucherSchema),
-    defaultValues: voucher
-      ? {
-          nome: voucher.nome,
-          descricao: voucher.descricao || '',
-          tipo: voucher.tipo,
-          sessoes: voucher.sessoes,
-          validade_dias: voucher.validade_dias,
-          preco: Number(voucher.preco),
-          ativo: voucher.ativo,
-        }
-      : {
-          nome: '',
-          descricao: '',
-          tipo: 'pacote',
-          sessoes: null,
-          validade_dias: 30,
-          preco: 0,
-          ativo: true,
-        },
+    defaultValues: {
+      nome: '',
+      descricao: '',
+      tipo: 'pacote',
+      sessoes: null,
+      validade_dias: 30,
+      preco: 0,
+      ativo: true,
+    },
   });
 
+  // Reset form when voucher changes
+  useEffect(() => {
+    if (voucher) {
+      form.reset({
+        nome: voucher.nome,
+        descricao: voucher.descricao || '',
+        tipo: voucher.tipo,
+        sessoes: voucher.sessoes,
+        validade_dias: voucher.validade_dias,
+        preco: Number(voucher.preco),
+        ativo: voucher.ativo,
+      });
+    } else {
+      form.reset({
+        nome: '',
+        descricao: '',
+        tipo: 'pacote',
+        sessoes: null,
+        validade_dias: 30,
+        preco: 0,
+        ativo: true,
+      });
+    }
+  }, [voucher, form]);
+
   const tipo = form.watch('tipo');
+  const isPending = createVoucher.isPending || updateVoucher.isPending;
 
   const onSubmit = async (data: VoucherFormData) => {
-    await createVoucher.mutateAsync({
-      nome: data.nome,
-      descricao: data.descricao || null,
-      tipo: data.tipo,
-      sessoes: data.sessoes,
-      validade_dias: data.validade_dias,
-      preco: data.preco,
-      ativo: data.ativo,
-      stripe_price_id: null,
-    });
+    if (isEditing) {
+      await updateVoucher.mutateAsync({
+        id: voucher.id,
+        nome: data.nome,
+        descricao: data.descricao || null,
+        tipo: data.tipo,
+        sessoes: data.sessoes,
+        validade_dias: data.validade_dias,
+        preco: data.preco,
+        ativo: data.ativo,
+      });
+    } else {
+      await createVoucher.mutateAsync({
+        nome: data.nome,
+        descricao: data.descricao || null,
+        tipo: data.tipo,
+        sessoes: data.sessoes,
+        validade_dias: data.validade_dias,
+        preco: data.preco,
+        ativo: data.ativo,
+        stripe_price_id: null,
+      });
+    }
     onOpenChange(false);
-    form.reset();
   };
 
   return (
@@ -96,10 +128,10 @@ export function VoucherModal({ open, onOpenChange, voucher }: VoucherModalProps)
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {voucher ? 'Editar Voucher' : 'Novo Voucher'}
+            {isEditing ? 'Editar Voucher' : 'Novo Voucher'}
           </DialogTitle>
           <DialogDescription>
-            Preencha os dados do voucher/plano
+            {isEditing ? 'Atualize os dados do voucher/plano' : 'Preencha os dados do voucher/plano'}
           </DialogDescription>
         </DialogHeader>
 
@@ -137,17 +169,14 @@ export function VoucherModal({ open, onOpenChange, voucher }: VoucherModalProps)
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="tipo"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Tipo</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o tipo" />
@@ -192,7 +221,7 @@ export function VoucherModal({ open, onOpenChange, voucher }: VoucherModalProps)
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="validade_dias"
@@ -204,9 +233,7 @@ export function VoucherModal({ open, onOpenChange, voucher }: VoucherModalProps)
                         type="number"
                         placeholder="30"
                         {...field}
-                        onChange={(e) =>
-                          field.onChange(parseInt(e.target.value))
-                        }
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 30)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -226,9 +253,7 @@ export function VoucherModal({ open, onOpenChange, voucher }: VoucherModalProps)
                         step="0.01"
                         placeholder="0.00"
                         {...field}
-                        onChange={(e) =>
-                          field.onChange(parseFloat(e.target.value))
-                        }
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -258,16 +283,18 @@ export function VoucherModal({ open, onOpenChange, voucher }: VoucherModalProps)
               )}
             />
 
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-2 pt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
+                disabled={isPending}
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={createVoucher.isPending}>
-                {createVoucher.isPending ? 'Salvando...' : 'Salvar'}
+              <Button type="submit" disabled={isPending}>
+                {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                {isEditing ? 'Salvar Alterações' : 'Criar Voucher'}
               </Button>
             </div>
           </form>
