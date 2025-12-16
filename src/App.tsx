@@ -78,8 +78,8 @@ const FluxoCaixaPage = lazy(() => import("./pages/financeiro/FluxoCaixaPage"));
 // Fase 5: Relatórios
 const AniversariantesPage = lazy(() => import("./pages/relatorios/AniversariantesPage"));
 
-// Fase 6: Marketing/CRM
 const LeadsPage = lazy(() => import("./pages/crm/LeadsPage"));
+const PatientPortal = lazy(() => import("./pages/PatientPortal"));
 
 // Create a client with performance optimizations
 const queryClient = new QueryClient({
@@ -202,6 +202,9 @@ const App = () => {
                   
                   {/* Marketing/CRM - Fase 6 */}
                   <Route path="/crm/leads" element={<ProtectedRoute><LeadsPage /></ProtectedRoute>} />
+                  
+                  {/* Portal do Paciente */}
+                  <Route path="/portal" element={<ProtectedRoute><PatientPortal /></ProtectedRoute>} />
                   
                   <Route path="/tarefas" element={<ProtectedRoute><Tarefas /></ProtectedRoute>} />
                   <Route path="/analytics" element={<ProtectedRoute><AdvancedAnalytics /></ProtectedRoute>} />
