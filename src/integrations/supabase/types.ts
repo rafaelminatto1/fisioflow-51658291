@@ -1059,6 +1059,62 @@ export type Database = {
         }
         Relationships: []
       }
+      document_signatures: {
+        Row: {
+          created_at: string
+          document_id: string
+          document_title: string
+          document_type: string
+          id: string
+          ip_address: unknown
+          organization_id: string | null
+          signature_hash: string
+          signature_image: string
+          signed_at: string
+          signer_id: string | null
+          signer_name: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          document_title: string
+          document_type: string
+          id?: string
+          ip_address?: unknown
+          organization_id?: string | null
+          signature_hash: string
+          signature_image: string
+          signed_at?: string
+          signer_id?: string | null
+          signer_name: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          document_title?: string
+          document_type?: string
+          id?: string
+          ip_address?: unknown
+          organization_id?: string | null
+          signature_hash?: string
+          signature_image?: string
+          signed_at?: string
+          signer_id?: string | null
+          signer_name?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_signatures_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       empresas_parceiras: {
         Row: {
           ativo: boolean
