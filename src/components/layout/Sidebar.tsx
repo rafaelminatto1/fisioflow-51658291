@@ -45,6 +45,7 @@ const menuItems = [
   { icon: Users, label: 'Pacientes', href: '/patients' },
   { icon: Calendar, label: 'Agenda', href: '/schedule' },
   { icon: Activity, label: 'Exercícios', href: '/exercises' },
+  { icon: Target, label: 'Protocolos', href: '/protocols' },
   { icon: FileText, label: 'Prontuário', href: '/medical-record' },
   { icon: Brain, label: 'Planos IA', href: '/smart-ai' },
   { icon: MessageSquare, label: 'Comunicação', href: '/communications' },
