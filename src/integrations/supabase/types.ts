@@ -3210,6 +3210,62 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_progress: {
+        Row: {
+          completed_at: string | null
+          completed_steps: Json | null
+          created_at: string | null
+          current_step: string | null
+          first_appointment_created: boolean | null
+          first_patient_added: boolean | null
+          id: string
+          organization_id: string | null
+          profile_completed: boolean | null
+          skipped_at: string | null
+          tour_shown: boolean | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_steps?: Json | null
+          created_at?: string | null
+          current_step?: string | null
+          first_appointment_created?: boolean | null
+          first_patient_added?: boolean | null
+          id?: string
+          organization_id?: string | null
+          profile_completed?: boolean | null
+          skipped_at?: string | null
+          tour_shown?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          completed_steps?: Json | null
+          created_at?: string | null
+          current_step?: string | null
+          first_appointment_created?: boolean | null
+          first_patient_added?: boolean | null
+          id?: string
+          organization_id?: string | null
+          profile_completed?: boolean | null
+          skipped_at?: string | null
+          tour_shown?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_progress_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_members: {
         Row: {
           active: boolean
@@ -4428,6 +4484,158 @@ export type Database = {
           },
         ]
       }
+      precadastro_tokens: {
+        Row: {
+          ativo: boolean | null
+          campos_obrigatorios: Json | null
+          campos_opcionais: Json | null
+          created_at: string | null
+          created_by: string | null
+          descricao: string | null
+          expires_at: string | null
+          id: string
+          max_usos: number | null
+          nome: string | null
+          organization_id: string | null
+          token: string
+          usos_atuais: number | null
+          validade_dias: number | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          campos_obrigatorios?: Json | null
+          campos_opcionais?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          descricao?: string | null
+          expires_at?: string | null
+          id?: string
+          max_usos?: number | null
+          nome?: string | null
+          organization_id?: string | null
+          token?: string
+          usos_atuais?: number | null
+          validade_dias?: number | null
+        }
+        Update: {
+          ativo?: boolean | null
+          campos_obrigatorios?: Json | null
+          campos_opcionais?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          descricao?: string | null
+          expires_at?: string | null
+          id?: string
+          max_usos?: number | null
+          nome?: string | null
+          organization_id?: string | null
+          token?: string
+          usos_atuais?: number | null
+          validade_dias?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "precadastro_tokens_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      precadastros: {
+        Row: {
+          created_at: string | null
+          dados_adicionais: Json | null
+          data_nascimento: string | null
+          email: string | null
+          endereco: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          organization_id: string | null
+          patient_id: string | null
+          processado_em: string | null
+          processado_por: string | null
+          status: string | null
+          telefone: string | null
+          token_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dados_adicionais?: Json | null
+          data_nascimento?: string | null
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          organization_id?: string | null
+          patient_id?: string | null
+          processado_em?: string | null
+          processado_por?: string | null
+          status?: string | null
+          telefone?: string | null
+          token_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dados_adicionais?: Json | null
+          data_nascimento?: string | null
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          organization_id?: string | null
+          patient_id?: string | null
+          processado_em?: string | null
+          processado_por?: string | null
+          status?: string | null
+          telefone?: string | null
+          token_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "precadastros_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "precadastros_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "precadastros_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patient_activity_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "precadastros_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "precadastros_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "precadastro_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prestadores: {
         Row: {
           contato: string | null
@@ -4519,6 +4727,109 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_notifications_log: {
+        Row: {
+          body: string | null
+          clicked_at: string | null
+          created_at: string | null
+          data: Json | null
+          delivered_at: string | null
+          error_message: string | null
+          id: string
+          sent_at: string | null
+          status: string | null
+          subscription_id: string | null
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          body?: string | null
+          clicked_at?: string | null
+          created_at?: string | null
+          data?: Json | null
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string | null
+          subscription_id?: string | null
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          body?: string | null
+          clicked_at?: string | null
+          created_at?: string | null
+          data?: Json | null
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string | null
+          subscription_id?: string | null
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_notifications_log_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "push_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_subscriptions: {
+        Row: {
+          active: boolean | null
+          auth: string
+          created_at: string | null
+          device_info: Json | null
+          endpoint: string
+          id: string
+          last_used_at: string | null
+          organization_id: string | null
+          p256dh: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          auth: string
+          created_at?: string | null
+          device_info?: Json | null
+          endpoint: string
+          id?: string
+          last_used_at?: string | null
+          organization_id?: string | null
+          p256dh: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          auth?: string
+          created_at?: string | null
+          device_info?: Json | null
+          endpoint?: string
+          id?: string
+          last_used_at?: string | null
+          organization_id?: string | null
+          p256dh?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -5571,6 +5882,102 @@ export type Database = {
           },
         ]
       }
+      stripe_purchases: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string | null
+          id: string
+          metadata: Json | null
+          organization_id: string | null
+          paid_at: string | null
+          patient_id: string | null
+          payment_method: string | null
+          receipt_url: string | null
+          status: string | null
+          stripe_customer_id: string | null
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          updated_at: string | null
+          user_id: string | null
+          voucher_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          metadata?: Json | null
+          organization_id?: string | null
+          paid_at?: string | null
+          patient_id?: string | null
+          payment_method?: string | null
+          receipt_url?: string | null
+          status?: string | null
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          voucher_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          metadata?: Json | null
+          organization_id?: string | null
+          paid_at?: string | null
+          patient_id?: string | null
+          payment_method?: string | null
+          receipt_url?: string | null
+          status?: string | null
+          stripe_customer_id?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          voucher_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stripe_purchases_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stripe_purchases_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stripe_purchases_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patient_activity_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stripe_purchases_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stripe_purchases_voucher_id_fkey"
+            columns: ["voucher_id"]
+            isOneToOne: false
+            referencedRelation: "vouchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tarefas: {
         Row: {
           created_at: string
@@ -5635,6 +6042,110 @@ export type Database = {
           {
             foreignKeyName: "tarefas_responsavel_id_fkey"
             columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      telemedicine_rooms: {
+        Row: {
+          appointment_id: string | null
+          created_at: string | null
+          duration_minutes: number | null
+          ended_at: string | null
+          id: string
+          notas: string | null
+          organization_id: string | null
+          patient_id: string | null
+          recording_url: string | null
+          room_code: string
+          room_url: string | null
+          started_at: string | null
+          status: string | null
+          therapist_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          appointment_id?: string | null
+          created_at?: string | null
+          duration_minutes?: number | null
+          ended_at?: string | null
+          id?: string
+          notas?: string | null
+          organization_id?: string | null
+          patient_id?: string | null
+          recording_url?: string | null
+          room_code?: string
+          room_url?: string | null
+          started_at?: string | null
+          status?: string | null
+          therapist_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          appointment_id?: string | null
+          created_at?: string | null
+          duration_minutes?: number | null
+          ended_at?: string | null
+          id?: string
+          notas?: string | null
+          organization_id?: string | null
+          patient_id?: string | null
+          recording_url?: string | null
+          room_code?: string
+          room_url?: string | null
+          started_at?: string | null
+          status?: string | null
+          therapist_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telemedicine_rooms_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "telemedicine_rooms_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "telemedicine_rooms_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "telemedicine_rooms_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patient_activity_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "telemedicine_rooms_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "telemedicine_rooms_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "telemedicine_rooms_therapist_id_fkey"
+            columns: ["therapist_id"]
             isOneToOne: false
             referencedRelation: "profiles_safe"
             referencedColumns: ["id"]
@@ -6596,6 +7107,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_precadastro_token_usage: {
+        Args: { _token: string }
+        Returns: string
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_fisio_or_admin: { Args: { _user_id: string }; Returns: boolean }
