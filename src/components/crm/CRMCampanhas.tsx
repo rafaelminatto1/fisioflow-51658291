@@ -41,16 +41,27 @@ const ESTAGIOS = [
   { value: 'nao_efetivado', label: 'Não Efetivado' },
 ];
 
+type TipoCampanha = 'whatsapp' | 'email' | 'sms';
+
+interface FormDataCampanha {
+  nome: string;
+  descricao: string;
+  tipo: TipoCampanha;
+  assunto: string;
+  conteudo: string;
+  filtro_estagios: string[];
+}
+
 export function CRMCampanhas() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedCampanha, setSelectedCampanha] = useState<CRMCampanha | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormDataCampanha>({
     nome: '',
     descricao: '',
-    tipo: 'whatsapp' as const,
+    tipo: 'whatsapp',
     assunto: '',
     conteudo: '',
-    filtro_estagios: [] as string[],
+    filtro_estagios: [],
   });
 
   const { data: campanhas = [], isLoading } = useCRMCampanhas();
@@ -254,7 +265,7 @@ export function CRMCampanhas() {
               </div>
               <div className="space-y-2">
                 <Label>Canal</Label>
-                <Select value={formData.tipo} onValueChange={(v) => setFormData(prev => ({ ...prev, tipo: v }))}>
+                <Select value={formData.tipo} onValueChange={(v) => setFormData(prev => ({ ...prev, tipo: v as TipoCampanha }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {TIPOS_CAMPANHA.map(t => {
