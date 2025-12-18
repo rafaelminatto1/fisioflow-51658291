@@ -11,9 +11,12 @@ import { MiniCalendar } from '@/components/schedule/MiniCalendar';
 import { AppointmentSearch } from '@/components/schedule/AppointmentSearch';
 import { AdvancedFilters } from '@/components/schedule/AdvancedFilters';
 import { QuickStats } from '@/components/schedule/QuickStats';
+import { WaitlistQuickAdd } from '@/components/schedule/WaitlistQuickAdd';
+import { WaitlistNotification } from '@/components/schedule/WaitlistNotification';
 import { useAppointments, useCreateAppointment, useRescheduleAppointment } from '@/hooks/useAppointments';
+import { useWaitlistMatch } from '@/hooks/useWaitlistMatch';
 import { logger } from '@/lib/errors/logger';
-import { AlertTriangle, Calendar, Clock, Users, TrendingUp, Plus, Settings as SettingsIcon } from 'lucide-react';
+import { AlertTriangle, Calendar, Clock, Users, TrendingUp, Plus, Settings as SettingsIcon, Bell } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { cn } from '@/lib/utils';
@@ -56,10 +59,14 @@ const Schedule = () => {
     types: [] as string[],
     therapists: [] as string[],
   });
+  
+  // Waitlist quick add state
+  const [waitlistQuickAdd, setWaitlistQuickAdd] = useState<{ date: Date; time: string } | null>(null);
 
   const { data: appointments = [], isLoading: loading, error, refetch } = useAppointments();
   const createAppointmentMutation = useCreateAppointment();
   const { mutateAsync: rescheduleAppointment, isPending: isRescheduling } = useRescheduleAppointment();
+  const { totalInWaitlist } = useWaitlistMatch();
   
   // Datas com agendamentos para o mini calendário
   const appointmentDates = React.useMemo(() => {
@@ -343,7 +350,7 @@ const Schedule = () => {
         </div>
 
         {/* Stats compactos em linha */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-5 gap-2">
           <div className="bg-card border rounded-lg p-2.5 text-center">
             <div className="text-lg font-bold text-foreground">{stats.totalToday}</div>
             <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Hoje</div>
@@ -360,6 +367,13 @@ const Schedule = () => {
             <div className="text-lg font-bold text-warning">{stats.pendingToday}</div>
             <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Pendentes</div>
           </div>
+          <Link to="/waitlist" className="bg-card border rounded-lg p-2.5 text-center hover:bg-muted/50 transition-colors">
+            <div className="text-lg font-bold text-primary flex items-center justify-center gap-1">
+              {totalInWaitlist}
+              {totalInWaitlist > 0 && <Users className="h-4 w-4" />}
+            </div>
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Lista Espera</div>
+          </Link>
         </div>
 
         {/* View Selector + Search integrado */}
@@ -457,6 +471,16 @@ const Schedule = () => {
           defaultTime={modalDefaultTime}
           mode={selectedAppointment ? 'view' : 'create'}
         />
+
+        {/* Waitlist Quick Add Modal */}
+        {waitlistQuickAdd && (
+          <WaitlistQuickAdd
+            open={!!waitlistQuickAdd}
+            onOpenChange={(open) => !open && setWaitlistQuickAdd(null)}
+            date={waitlistQuickAdd.date}
+            time={waitlistQuickAdd.time}
+          />
+        )}
       </div>
     </MainLayout>
   );
