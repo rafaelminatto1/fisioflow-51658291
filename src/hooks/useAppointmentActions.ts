@@ -101,14 +101,37 @@ export const useAppointmentActions = () => {
     },
   });
 
+  const updateStatus = useMutation({
+    mutationFn: async ({ appointmentId, status }: { appointmentId: string; status: string }) => {
+      const { data, error } = await supabase
+        .from('appointments')
+        .update({ status })
+        .eq('id', appointmentId)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      toast.success('Status atualizado com sucesso');
+    },
+    onError: (error: Error) => {
+      toast.error('Erro ao atualizar status: ' + error.message);
+    },
+  });
+
   return {
     confirmAppointment: confirmAppointment.mutate,
     cancelAppointment: cancelAppointment.mutate,
     rescheduleAppointment: rescheduleAppointment.mutate,
     completeAppointment: completeAppointment.mutate,
+    updateStatus: updateStatus.mutate,
     isConfirming: confirmAppointment.isPending,
     isCanceling: cancelAppointment.isPending,
     isRescheduling: rescheduleAppointment.isPending,
     isCompleting: completeAppointment.isPending,
+    isUpdatingStatus: updateStatus.isPending,
   };
 };
