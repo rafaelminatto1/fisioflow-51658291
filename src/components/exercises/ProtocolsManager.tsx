@@ -32,14 +32,17 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { NewProtocolModal } from '@/components/modals/NewProtocolModal';
 
 export function ProtocolsManager() {
   const [activeTab, setActiveTab] = useState<'patologia' | 'pos_operatorio'>('pos_operatorio');
   const [search, setSearch] = useState('');
   const [viewProtocol, setViewProtocol] = useState<ExerciseProtocol | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [editingProtocol, setEditingProtocol] = useState<ExerciseProtocol | null>(null);
 
-  const { protocols, loading, deleteProtocol, isDeleting } = useExerciseProtocols(activeTab);
+  const { protocols, loading, createProtocol, updateProtocol, deleteProtocol, isCreating, isUpdating, isDeleting } = useExerciseProtocols(activeTab);
 
   const filteredProtocols = protocols.filter(p => 
     p.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -61,6 +64,27 @@ export function ProtocolsManager() {
       deleteProtocol(deleteId);
       setDeleteId(null);
     }
+  };
+
+  const handleNewProtocol = () => {
+    setEditingProtocol(null);
+    setShowModal(true);
+  };
+
+  const handleEditProtocol = (protocol: ExerciseProtocol) => {
+    setEditingProtocol(protocol);
+    setViewProtocol(null);
+    setShowModal(true);
+  };
+
+  const handleSubmit = (data: Omit<ExerciseProtocol, 'id' | 'created_at' | 'updated_at'>) => {
+    if (editingProtocol) {
+      updateProtocol({ id: editingProtocol.id, ...data });
+    } else {
+      createProtocol(data);
+    }
+    setShowModal(false);
+    setEditingProtocol(null);
   };
 
   const getMilestones = (protocol: ExerciseProtocol) => {
@@ -85,7 +109,7 @@ export function ProtocolsManager() {
               Gerencie protocolos com marcos e restrições temporais
             </p>
           </div>
-          <Button>
+          <Button onClick={handleNewProtocol}>
             <Plus className="h-4 w-4 mr-2" />
             Novo Protocolo
           </Button>
@@ -135,7 +159,7 @@ export function ProtocolsManager() {
                 <p className="text-muted-foreground mb-4">
                   {search ? 'Tente outra busca' : 'Crie seu primeiro protocolo de progressão'}
                 </p>
-                <Button>
+                <Button onClick={handleNewProtocol}>
                   <Plus className="h-4 w-4 mr-2" />
                   Criar Protocolo
                 </Button>
@@ -317,7 +341,7 @@ export function ProtocolsManager() {
 
               {/* Actions */}
               <div className="flex gap-2 pt-4 border-t">
-                <Button className="flex-1">
+                <Button className="flex-1" onClick={() => handleEditProtocol(viewProtocol)}>
                   <Edit className="h-4 w-4 mr-2" />
                   Editar Protocolo
                 </Button>
@@ -354,6 +378,18 @@ export function ProtocolsManager() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Protocol Create/Edit Modal */}
+      <NewProtocolModal
+        open={showModal}
+        onOpenChange={(open) => {
+          setShowModal(open);
+          if (!open) setEditingProtocol(null);
+        }}
+        onSubmit={handleSubmit}
+        protocol={editingProtocol || undefined}
+        isLoading={isCreating || isUpdating}
+      />
     </>
   );
 }
