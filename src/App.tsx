@@ -59,6 +59,9 @@ const IntelligentReports = lazy(() => import("./components/reports/IntelligentRe
 const AugmentedRealityExercise = lazy(() => import("./components/ar/AugmentedRealityExercise"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ProtocolsPage = lazy(() => import("./pages/Protocols"));
+const SmartDashboard = lazy(() => import("./pages/SmartDashboard"));
+const Inventory = lazy(() => import("./pages/Inventory"));
+const PatientGamificationPage = lazy(() => import("./pages/PatientGamificationPage"));
 
 // Fase 2: Cadastros Gerais
 const ServicosPage = lazy(() => import("./pages/cadastros/ServicosPage"));
@@ -212,6 +215,9 @@ const App = () => {
                   
                   <Route path="/tarefas" element={<ProtectedRoute><Tarefas /></ProtectedRoute>} />
                   <Route path="/analytics" element={<ProtectedRoute><AdvancedAnalytics /></ProtectedRoute>} />
+                  <Route path="/smart-dashboard" element={<ProtectedRoute><SmartDashboard /></ProtectedRoute>} />
+                  <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
+                  <Route path="/gamification" element={<ProtectedRoute><PatientGamificationPage /></ProtectedRoute>} />
                   <Route path="/chatbot" element={<ProtectedRoute><MedicalChatbot userId="current-user" /></ProtectedRoute>} />
                   <Route path="/computer-vision" element={<ProtectedRoute><ComputerVisionExercise patientId="current-patient" /></ProtectedRoute>} />
                   <Route path="/intelligent-reports" element={<ProtectedRoute><IntelligentReports patientId="demo-patient" patientName="Paciente Demo" /></ProtectedRoute>} />
