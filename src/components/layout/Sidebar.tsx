@@ -48,6 +48,7 @@ import {
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
+  { icon: TrendingUp, label: 'Ocupação', href: '/ocupacao-fisioterapeutas' },
   { icon: Sparkles, label: 'Dashboard IA', href: '/smart-dashboard' },
   { icon: Users, label: 'Pacientes', href: '/patients' },
   { icon: Calendar, label: 'Agenda', href: '/schedule' },
