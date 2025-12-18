@@ -108,13 +108,11 @@ const PreCadastroAdmin = () => {
   // Update precadastro status
   const updatePrecadastro = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { data: { user } } = await supabase.auth.getUser();
       const { error } = await supabase
         .from('precadastros')
         .update({ 
           status,
-          processado_por: user?.id,
-          processado_em: new Date().toISOString()
+          updated_at: new Date().toISOString()
         })
         .eq('id', id);
       if (error) throw error;
@@ -387,8 +385,12 @@ const PreCadastroAdmin = () => {
                           </div>
                           <p className="text-sm text-muted-foreground mt-1">
                             {t.usos_atuais} usos {t.max_usos ? `de ${t.max_usos}` : '(ilimitado)'}
-                            {' • '}
-                            Expira em {format(new Date(t.expires_at), 'dd/MM/yyyy', { locale: ptBR })}
+                            {t.expires_at && (
+                              <>
+                                {' • '}
+                                Expira em {format(new Date(t.expires_at), 'dd/MM/yyyy', { locale: ptBR })}
+                              </>
+                            )}
                           </p>
                         </div>
                         
