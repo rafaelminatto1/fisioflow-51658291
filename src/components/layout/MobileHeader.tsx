@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, Bell, Stethoscope } from 'lucide-react';
+import { Menu, Stethoscope } from 'lucide-react';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -150,9 +151,7 @@ export function MobileHeader() {
         </div>
 
         {/* Notificações */}
-        <Button variant="ghost" size="icon" className="hover:bg-accent/80">
-          <Bell className="w-5 h-5" />
-        </Button>
+        <NotificationBell />
       </div>
     </header>
   );
