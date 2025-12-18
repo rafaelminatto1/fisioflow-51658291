@@ -4,6 +4,7 @@ import { MobileHeader } from './MobileHeader';
 import { BottomNavigation } from './BottomNavigation';
 import { OnlineUsersIndicator } from './OnlineUsersIndicator';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { GlobalSearch } from '@/components/eventos/GlobalSearch';
@@ -16,7 +17,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { 
-  Bell, 
   ChevronDown, 
   User, 
   Settings, 
@@ -62,9 +62,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             {/* Indicador de usuários online */}
             <OnlineUsersIndicator />
             
-            <Button variant="ghost" size="icon" className="hover:bg-accent/80 transition-colors">
-              <Bell className="w-5 h-5" />
-            </Button>
+            <NotificationBell />
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

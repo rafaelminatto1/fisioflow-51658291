@@ -90,6 +90,7 @@ const PatientPortal = lazy(() => import("./pages/PatientPortal"));
 const PreCadastro = lazy(() => import("./pages/PreCadastro"));
 const PreCadastroAdmin = lazy(() => import("./pages/PreCadastroAdmin"));
 const TelemedicineRoom = lazy(() => import("./pages/TelemedicineRoom"));
+const Notifications = lazy(() => import("./pages/Notifications"));
 // Create a client with performance optimizations
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -192,6 +193,7 @@ const App = () => {
             <Route path="/security-monitoring" element={<ProtectedRoute><SecurityMonitoring /></ProtectedRoute>} />
             <Route path="/admin/crud" element={<ProtectedRoute allowedRoles={['admin', 'fisioterapeuta']}><AdminCRUD /></ProtectedRoute>} />
             <Route path="/admin/organization" element={<ProtectedRoute allowedRoles={['admin']}><OrganizationSettings /></ProtectedRoute>} />
+            <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
                   
                   {/* Cadastros Gerais */}
                   <Route path="/cadastros/servicos" element={<ProtectedRoute><ServicosPage /></ProtectedRoute>} />
