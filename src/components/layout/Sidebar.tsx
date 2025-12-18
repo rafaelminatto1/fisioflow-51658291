@@ -32,7 +32,10 @@ import {
   FileCheck,
   FileSignature,
   Target,
-  TrendingUp
+  TrendingUp,
+  Sparkles,
+  Package,
+  Trophy
 } from 'lucide-react';
 import {
   Collapsible,
@@ -42,6 +45,7 @@ import {
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
+  { icon: Sparkles, label: 'Dashboard IA', href: '/smart-dashboard' },
   { icon: Users, label: 'Pacientes', href: '/patients' },
   { icon: Calendar, label: 'Agenda', href: '/schedule' },
   { icon: Activity, label: 'Exercícios', href: '/exercises' },
@@ -53,6 +57,8 @@ const menuItems = [
   { icon: Clock, label: 'Lista de Espera', href: '/waitlist' },
   { icon: Calendar, label: 'Eventos', href: '/eventos' },
   { icon: ShoppingCart, label: 'Treinos', href: '/vouchers' },
+  { icon: Package, label: 'Estoque', href: '/inventory' },
+  { icon: Trophy, label: 'Gamificação', href: '/gamification' },
   { icon: BarChart3, label: 'Analytics Avançado', href: '/analytics' },
   { icon: Lock, label: 'Segurança & LGPD', href: '/security-settings' },
   { icon: Shield, label: 'Monitoramento', href: '/security-monitoring' },
