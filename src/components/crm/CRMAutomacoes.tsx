@@ -31,15 +31,27 @@ const CANAIS = [
   { value: 'sms', label: 'SMS', icon: Smartphone },
 ];
 
+type TipoAutomacao = 'aniversario' | 'reengajamento' | 'pos_avaliacao' | 'boas_vindas' | 'follow_up_automatico';
+type CanalAutomacao = 'whatsapp' | 'email' | 'sms';
+
+interface FormDataAutomacao {
+  nome: string;
+  descricao: string;
+  tipo: TipoAutomacao;
+  canal: CanalAutomacao;
+  template_mensagem: string;
+  gatilho_config: Record<string, any>;
+}
+
 export function CRMAutomacoes() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormDataAutomacao>({
     nome: '',
     descricao: '',
-    tipo: 'boas_vindas' as const,
-    canal: 'whatsapp' as const,
+    tipo: 'boas_vindas',
+    canal: 'whatsapp',
     template_mensagem: '',
-    gatilho_config: {} as Record<string, any>,
+    gatilho_config: {},
   });
 
   const { data: automacoes = [], isLoading } = useCRMAutomacoes();
@@ -235,7 +247,7 @@ export function CRMAutomacoes() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Tipo</Label>
-                <Select value={formData.tipo} onValueChange={(v) => setFormData(prev => ({ ...prev, tipo: v }))}>
+                <Select value={formData.tipo} onValueChange={(v) => setFormData(prev => ({ ...prev, tipo: v as TipoAutomacao }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {TIPOS_AUTOMACAO.map(t => {
@@ -254,7 +266,7 @@ export function CRMAutomacoes() {
               </div>
               <div className="space-y-2">
                 <Label>Canal</Label>
-                <Select value={formData.canal} onValueChange={(v) => setFormData(prev => ({ ...prev, canal: v }))}>
+                <Select value={formData.canal} onValueChange={(v) => setFormData(prev => ({ ...prev, canal: v as CanalAutomacao }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {CANAIS.map(c => {
