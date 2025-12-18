@@ -33,6 +33,9 @@ const PreCadastro = () => {
     telefone: '',
     data_nascimento: '',
     endereco: '',
+    cpf: '',
+    convenio: '',
+    queixa_principal: '',
     observacoes: ''
   });
 
@@ -114,7 +117,12 @@ const PreCadastro = () => {
         return;
       }
 
-      // Insert precadastro
+      // Insert precadastro with additional data
+      const dadosAdicionais: Record<string, string> = {};
+      if (formData.cpf) dadosAdicionais.cpf = formData.cpf;
+      if (formData.convenio) dadosAdicionais.convenio = formData.convenio;
+      if (formData.queixa_principal) dadosAdicionais.queixa_principal = formData.queixa_principal;
+
       const { error: insertError } = await supabase
         .from('precadastros')
         .insert({
@@ -125,7 +133,8 @@ const PreCadastro = () => {
           telefone: formData.telefone || null,
           data_nascimento: formData.data_nascimento || null,
           endereco: formData.endereco || null,
-          observacoes: formData.observacoes || null
+          observacoes: formData.observacoes || null,
+          dados_adicionais: Object.keys(dadosAdicionais).length > 0 ? dadosAdicionais : null
         });
 
       if (insertError) throw insertError;
@@ -282,6 +291,52 @@ const PreCadastro = () => {
                   onChange={(e) => setFormData({ ...formData, endereco: e.target.value })}
                   placeholder="Rua, número, bairro"
                   required={isFieldRequired('endereco')}
+                />
+              </div>
+            )}
+
+            {isFieldVisible('cpf') && (
+              <div className="space-y-2">
+                <Label htmlFor="cpf">
+                  CPF {isFieldRequired('cpf') && <span className="text-destructive">*</span>}
+                </Label>
+                <Input
+                  id="cpf"
+                  value={formData.cpf}
+                  onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
+                  placeholder="000.000.000-00"
+                  required={isFieldRequired('cpf')}
+                />
+              </div>
+            )}
+
+            {isFieldVisible('convenio') && (
+              <div className="space-y-2">
+                <Label htmlFor="convenio">
+                  Convênio/Plano de Saúde {isFieldRequired('convenio') && <span className="text-destructive">*</span>}
+                </Label>
+                <Input
+                  id="convenio"
+                  value={formData.convenio}
+                  onChange={(e) => setFormData({ ...formData, convenio: e.target.value })}
+                  placeholder="Nome do convênio ou Particular"
+                  required={isFieldRequired('convenio')}
+                />
+              </div>
+            )}
+
+            {isFieldVisible('queixa_principal') && (
+              <div className="space-y-2">
+                <Label htmlFor="queixa_principal">
+                  Queixa Principal {isFieldRequired('queixa_principal') && <span className="text-destructive">*</span>}
+                </Label>
+                <Textarea
+                  id="queixa_principal"
+                  value={formData.queixa_principal}
+                  onChange={(e) => setFormData({ ...formData, queixa_principal: e.target.value })}
+                  placeholder="Descreva brevemente o motivo da consulta"
+                  rows={2}
+                  required={isFieldRequired('queixa_principal')}
                 />
               </div>
             )}
