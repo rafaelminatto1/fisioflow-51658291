@@ -91,6 +91,7 @@ const financeiroSubmenu = [
 const relatoriosSubmenu = [
   { icon: BarChart3, label: 'Dashboard', href: '/reports' },
   { icon: Users, label: 'Aniversariantes', href: '/relatorios/aniversariantes' },
+  { icon: TrendingUp, label: 'Taxa de Comparecimento', href: '/relatorios/comparecimento' },
 ];
 
 const crmSubmenu = [
