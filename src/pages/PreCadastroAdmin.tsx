@@ -10,12 +10,24 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Link2, Plus, Copy, Trash2, Eye, UserPlus, Clock, Users, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Link2, Plus, Copy, Trash2, Eye, UserPlus, Clock, Users, CheckCircle, XCircle, Loader2, MessageCircle, Settings2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
+const AVAILABLE_FIELDS = [
+  { id: 'nome', label: 'Nome completo', defaultRequired: true },
+  { id: 'email', label: 'E-mail', defaultRequired: true },
+  { id: 'telefone', label: 'Telefone/WhatsApp', defaultRequired: true },
+  { id: 'data_nascimento', label: 'Data de Nascimento', defaultRequired: false },
+  { id: 'endereco', label: 'Endereço', defaultRequired: false },
+  { id: 'cpf', label: 'CPF', defaultRequired: false },
+  { id: 'convenio', label: 'Convênio/Plano de Saúde', defaultRequired: false },
+  { id: 'queixa_principal', label: 'Queixa Principal', defaultRequired: false },
+];
 
 const PreCadastroAdmin = () => {
   const queryClient = useQueryClient();
@@ -24,7 +36,9 @@ const PreCadastroAdmin = () => {
     nome: '',
     descricao: '',
     validade_dias: 30,
-    max_usos: ''
+    max_usos: '',
+    campos_obrigatorios: ['nome', 'email', 'telefone'] as string[],
+    campos_opcionais: [] as string[]
   });
 
   // Fetch tokens
@@ -69,9 +83,10 @@ const PreCadastroAdmin = () => {
           organization_id: profile?.organization_id,
           nome: newToken.nome || 'Link de Pré-cadastro',
           descricao: newToken.descricao,
-          validade_dias: newToken.validade_dias,
           max_usos: newToken.max_usos ? parseInt(newToken.max_usos) : null,
-          created_by: user?.id
+          expires_at: new Date(Date.now() + newToken.validade_dias * 24 * 60 * 60 * 1000).toISOString(),
+          campos_obrigatorios: newToken.campos_obrigatorios,
+          campos_opcionais: newToken.campos_opcionais
         })
         .select()
         .single();
@@ -83,12 +98,55 @@ const PreCadastroAdmin = () => {
       queryClient.invalidateQueries({ queryKey: ['precadastro-tokens'] });
       toast.success('Link criado com sucesso!');
       setIsCreateOpen(false);
-      setNewToken({ nome: '', descricao: '', validade_dias: 30, max_usos: '' });
+      resetForm();
     },
     onError: () => {
       toast.error('Erro ao criar link');
     }
   });
+
+  const resetForm = () => {
+    setNewToken({ 
+      nome: '', 
+      descricao: '', 
+      validade_dias: 30, 
+      max_usos: '',
+      campos_obrigatorios: ['nome', 'email', 'telefone'],
+      campos_opcionais: []
+    });
+  };
+
+  const toggleFieldRequired = (fieldId: string) => {
+    const isRequired = newToken.campos_obrigatorios.includes(fieldId);
+    const isOptional = newToken.campos_opcionais.includes(fieldId);
+    
+    if (isRequired) {
+      // Move to optional
+      setNewToken({
+        ...newToken,
+        campos_obrigatorios: newToken.campos_obrigatorios.filter(f => f !== fieldId),
+        campos_opcionais: [...newToken.campos_opcionais, fieldId]
+      });
+    } else if (isOptional) {
+      // Remove completely
+      setNewToken({
+        ...newToken,
+        campos_opcionais: newToken.campos_opcionais.filter(f => f !== fieldId)
+      });
+    } else {
+      // Add as required
+      setNewToken({
+        ...newToken,
+        campos_obrigatorios: [...newToken.campos_obrigatorios, fieldId]
+      });
+    }
+  };
+
+  const getFieldStatus = (fieldId: string): 'required' | 'optional' | 'hidden' => {
+    if (newToken.campos_obrigatorios.includes(fieldId)) return 'required';
+    if (newToken.campos_opcionais.includes(fieldId)) return 'optional';
+    return 'hidden';
+  };
 
   // Toggle token status
   const toggleToken = useMutation({
@@ -129,6 +187,14 @@ const PreCadastroAdmin = () => {
     toast.success('Link copiado!');
   };
 
+  const shareWhatsApp = (token: string, tokenName: string) => {
+    const url = `${window.location.origin}/pre-cadastro/${token}`;
+    const message = encodeURIComponent(
+      `Olá! 👋\n\nPara agilizar seu atendimento, preencha seu pré-cadastro através do link abaixo:\n\n${url}\n\nLevará apenas alguns minutos. Aguardamos você! 💙`
+    );
+    window.open(`https://wa.me/?text=${message}`, '_blank');
+  };
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string }> = {
       pendente: { variant: 'secondary', label: 'Pendente' },
@@ -156,22 +222,45 @@ const PreCadastroAdmin = () => {
                 Criar Link
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Criar Link de Pré-cadastro</DialogTitle>
                 <DialogDescription>
-                  Crie um link para pacientes se pré-cadastrarem
+                  Configure os campos que o paciente deverá preencher
                 </DialogDescription>
               </DialogHeader>
               
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label>Nome do Link</Label>
-                  <Input
-                    value={newToken.nome}
-                    onChange={(e) => setNewToken({ ...newToken, nome: e.target.value })}
-                    placeholder="Ex: Link Instagram"
-                  />
+              <div className="space-y-6 py-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Nome do Link</Label>
+                    <Input
+                      value={newToken.nome}
+                      onChange={(e) => setNewToken({ ...newToken, nome: e.target.value })}
+                      placeholder="Ex: Link Instagram, Campanha Google"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-2">
+                      <Label>Validade (dias)</Label>
+                      <Input
+                        type="number"
+                        value={newToken.validade_dias}
+                        onChange={(e) => setNewToken({ ...newToken, validade_dias: parseInt(e.target.value) || 30 })}
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>Máx. usos</Label>
+                      <Input
+                        type="number"
+                        value={newToken.max_usos}
+                        onChange={(e) => setNewToken({ ...newToken, max_usos: e.target.value })}
+                        placeholder="∞"
+                      />
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
@@ -180,27 +269,46 @@ const PreCadastroAdmin = () => {
                     value={newToken.descricao}
                     onChange={(e) => setNewToken({ ...newToken, descricao: e.target.value })}
                     placeholder="Preencha seus dados para agendar sua avaliação"
+                    rows={2}
                   />
                 </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Validade (dias)</Label>
-                    <Input
-                      type="number"
-                      value={newToken.validade_dias}
-                      onChange={(e) => setNewToken({ ...newToken, validade_dias: parseInt(e.target.value) || 30 })}
-                    />
+
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Settings2 className="h-4 w-4" />
+                    <Label className="text-base font-medium">Campos do Formulário</Label>
                   </div>
+                  <p className="text-sm text-muted-foreground">
+                    Clique para alternar: <Badge variant="default" className="mx-1">Obrigatório</Badge> 
+                    → <Badge variant="secondary" className="mx-1">Opcional</Badge> 
+                    → <Badge variant="outline" className="mx-1">Oculto</Badge>
+                  </p>
                   
-                  <div className="space-y-2">
-                    <Label>Máx. usos (vazio = ilimitado)</Label>
-                    <Input
-                      type="number"
-                      value={newToken.max_usos}
-                      onChange={(e) => setNewToken({ ...newToken, max_usos: e.target.value })}
-                      placeholder="Ilimitado"
-                    />
+                  <div className="grid grid-cols-2 gap-2">
+                    {AVAILABLE_FIELDS.map((field) => {
+                      const status = getFieldStatus(field.id);
+                      return (
+                        <button
+                          key={field.id}
+                          type="button"
+                          onClick={() => toggleFieldRequired(field.id)}
+                          className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors text-left"
+                        >
+                          <span className="text-sm">{field.label}</span>
+                          <Badge 
+                            variant={
+                              status === 'required' ? 'default' : 
+                              status === 'optional' ? 'secondary' : 
+                              'outline'
+                            }
+                          >
+                            {status === 'required' ? 'Obrigatório' : 
+                             status === 'optional' ? 'Opcional' : 
+                             'Oculto'}
+                          </Badge>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -375,9 +483,9 @@ const PreCadastroAdmin = () => {
                 ) : (
                   <div className="space-y-4">
                     {tokens?.map((t) => (
-                      <div key={t.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div key={t.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg gap-4">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <h4 className="font-medium">{t.nome || 'Link de Pré-cadastro'}</h4>
                             <Badge variant={t.ativo ? 'default' : 'secondary'}>
                               {t.ativo ? 'Ativo' : 'Inativo'}
@@ -392,6 +500,20 @@ const PreCadastroAdmin = () => {
                               </>
                             )}
                           </p>
+                          {((t.campos_obrigatorios as string[])?.length > 0 || (t.campos_opcionais as string[])?.length > 0) && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {(t.campos_obrigatorios as string[] || []).map((campo: string) => (
+                                <Badge key={campo} variant="outline" className="text-xs">
+                                  {AVAILABLE_FIELDS.find(f => f.id === campo)?.label || campo}*
+                                </Badge>
+                              ))}
+                              {(t.campos_opcionais as string[] || []).map((campo: string) => (
+                                <Badge key={campo} variant="secondary" className="text-xs">
+                                  {AVAILABLE_FIELDS.find(f => f.id === campo)?.label || campo}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
                         </div>
                         
                         <div className="flex items-center gap-2">
@@ -403,8 +525,18 @@ const PreCadastroAdmin = () => {
                             size="sm"
                             variant="outline"
                             onClick={() => copyLink(t.token)}
+                            title="Copiar link"
                           >
                             <Copy className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={() => shareWhatsApp(t.token, t.nome)}
+                            className="bg-green-600 hover:bg-green-700"
+                            title="Enviar por WhatsApp"
+                          >
+                            <MessageCircle className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
