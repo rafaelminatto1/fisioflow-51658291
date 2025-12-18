@@ -91,6 +91,8 @@ const PreCadastro = lazy(() => import("./pages/PreCadastro"));
 const PreCadastroAdmin = lazy(() => import("./pages/PreCadastroAdmin"));
 const TelemedicineRoom = lazy(() => import("./pages/TelemedicineRoom"));
 const Notifications = lazy(() => import("./pages/Notifications"));
+const TherapistOccupancy = lazy(() => import("./pages/TherapistOccupancy"));
+
 // Create a client with performance optimizations
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -158,6 +160,7 @@ const App = () => {
                   
                   {/* Protected routes */}
                   <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+                  <Route path="/ocupacao-fisioterapeutas" element={<ProtectedRoute><TherapistOccupancy /></ProtectedRoute>} />
                   <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
                   <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
                   <Route path="/agenda" element={<Navigate to="/schedule" replace />} />
