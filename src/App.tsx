@@ -58,6 +58,7 @@ const ComputerVisionExercise = lazy(() => import("./components/computer-vision/C
 const IntelligentReports = lazy(() => import("./components/reports/IntelligentReports"));
 const AugmentedRealityExercise = lazy(() => import("./components/ar/AugmentedRealityExercise"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const ProtocolsPage = lazy(() => import("./pages/Protocols"));
 
 // Fase 2: Cadastros Gerais
 const ServicosPage = lazy(() => import("./pages/cadastros/ServicosPage"));
@@ -152,6 +153,7 @@ const App = () => {
                   <Route path="/agenda" element={<Navigate to="/schedule" replace />} />
                   <Route path="/schedule/settings" element={<ProtectedRoute><ScheduleSettings /></ProtectedRoute>} />
                   <Route path="/exercises" element={<ProtectedRoute><Exercises /></ProtectedRoute>} />
+                  <Route path="/protocols" element={<ProtectedRoute><ProtocolsPage /></ProtectedRoute>} />
                   <Route path="/financial" element={<ProtectedRoute><Financial /></ProtectedRoute>} />
                   <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
                   <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
