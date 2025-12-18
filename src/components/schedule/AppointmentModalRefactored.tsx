@@ -439,10 +439,13 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
             <form id="appointment-form" onSubmit={handleSubmit(handleSave)} className="p-4 sm:p-6 pt-3 sm:pt-4">
               
               {/* Tab: Informações */}
-              <TabsContent value="info" className="mt-0 space-y-4">
+              <TabsContent value="info" className="mt-0 space-y-3 sm:space-y-4">
                 {/* Patient Selection */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Paciente *</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
+                    <User className="h-3.5 w-3.5 text-primary" />
+                    Paciente *
+                  </Label>
                   <PatientCombobox
                     patients={activePatients || []}
                     value={watch('patient_id')}
@@ -457,11 +460,19 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
 
                 {/* Patient Quick Info */}
                 {selectedPatient && (
-                  <div className="bg-muted/30 rounded-lg p-2 sm:p-3 border space-y-1">
-                    <p className="text-sm font-medium truncate">{selectedPatient.name}</p>
-                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-muted-foreground">
-                      {selectedPatient.phone && <span className="truncate">📱 {selectedPatient.phone}</span>}
-                      {selectedPatient.email && <span className="truncate">✉️ {selectedPatient.email}</span>}
+                  <div className="bg-gradient-to-r from-primary/5 to-transparent rounded-lg p-2.5 sm:p-3 border border-primary/10 space-y-1">
+                    <p className="text-sm font-medium truncate text-foreground">{selectedPatient.name}</p>
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-muted-foreground">
+                      {selectedPatient.phone && (
+                        <span className="flex items-center gap-1 bg-background/50 px-2 py-0.5 rounded-full">
+                          📱 {selectedPatient.phone}
+                        </span>
+                      )}
+                      {selectedPatient.email && (
+                        <span className="flex items-center gap-1 bg-background/50 px-2 py-0.5 rounded-full truncate max-w-[180px]">
+                          ✉️ {selectedPatient.email}
+                        </span>
+                      )}
                     </div>
                   </div>
                 )}
@@ -524,22 +535,47 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                   </div>
                 </div>
 
-                {/* Capacity Warning */}
+                {/* Capacity Indicator */}
                 {watchedDate && watchedTime && (() => {
                   const dayOfWeek = watchedDate.getDay();
                   const maxCapacity = getCapacityForTime(dayOfWeek, watchedTime);
                   const conflictCount = conflictCheck?.conflictCount || 0;
+                  const availableSlots = maxCapacity - conflictCount;
                   const exceedsCapacity = conflictCount >= maxCapacity;
                   
-                  return (conflictCount > 0 || exceedsCapacity) && (
+                  return (
                     <div className={cn(
-                      "flex items-center gap-2 p-3 border rounded-lg text-sm",
-                      exceedsCapacity ? "border-amber-500/30 bg-amber-500/5" : "border-blue-500/30 bg-blue-500/5"
+                      "flex items-center justify-between p-2 sm:p-2.5 border rounded-lg text-xs sm:text-sm transition-all",
+                      exceedsCapacity 
+                        ? "border-red-500/30 bg-red-500/5" 
+                        : conflictCount > 0 
+                          ? "border-amber-500/30 bg-amber-500/5" 
+                          : "border-emerald-500/30 bg-emerald-500/5"
                     )}>
-                      <AlertTriangle className={cn("w-4 h-4", exceedsCapacity ? "text-amber-600" : "text-blue-600")} />
-                      <span className={exceedsCapacity ? "text-amber-700" : "text-blue-700"}>
-                        {conflictCount}/{maxCapacity} paciente(s) neste horário
-                      </span>
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        {exceedsCapacity ? (
+                          <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-600" />
+                        ) : (
+                          <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
+                        )}
+                        <span className={cn(
+                          "font-medium",
+                          exceedsCapacity ? "text-red-700" : conflictCount > 0 ? "text-amber-700" : "text-emerald-700"
+                        )}>
+                          {exceedsCapacity 
+                            ? "Horário lotado!" 
+                            : availableSlots === maxCapacity 
+                              ? "Horário livre" 
+                              : `${availableSlots} vaga${availableSlots !== 1 ? 's' : ''} disponível`
+                          }
+                        </span>
+                      </div>
+                      <Badge variant="outline" className={cn(
+                        "text-[10px] sm:text-xs h-5 sm:h-6",
+                        exceedsCapacity ? "border-red-500/50" : "border-muted"
+                      )}>
+                        {conflictCount}/{maxCapacity}
+                      </Badge>
                     </div>
                   );
                 })()}
@@ -602,22 +638,27 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
               </TabsContent>
 
               {/* Tab: Pagamento */}
-              <TabsContent value="payment" className="mt-0 space-y-4">
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Tipo de Pagamento</Label>
-                  <div className="grid grid-cols-3 gap-2">
+              <TabsContent value="payment" className="mt-0 space-y-3 sm:space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
+                    <CreditCard className="h-3.5 w-3.5 text-primary" />
+                    Tipo de Pagamento
+                  </Label>
+                  <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                     {[
-                      { value: 'pending', label: 'Pendente', icon: '⏳' },
-                      { value: 'paid_single', label: 'Avulso', icon: '💵' },
-                      { value: 'paid_package', label: 'Pacote', icon: '📦' },
+                      { value: 'pending', label: 'Pendente', icon: '⏳', color: 'border-amber-500/30 bg-amber-500/5' },
+                      { value: 'paid_single', label: 'Avulso', icon: '💵', color: 'border-emerald-500/30 bg-emerald-500/5' },
+                      { value: 'paid_package', label: 'Pacote', icon: '📦', color: 'border-blue-500/30 bg-blue-500/5' },
                     ].map((option) => (
                       <Button
                         key={option.value}
                         type="button"
                         variant={watchPaymentStatus === option.value ? 'default' : 'outline'}
                         className={cn(
-                          "h-16 flex-col gap-1",
-                          watchPaymentStatus === option.value && "ring-2 ring-primary ring-offset-2"
+                          "h-14 sm:h-16 flex-col gap-0.5 sm:gap-1 transition-all",
+                          watchPaymentStatus === option.value 
+                            ? "ring-2 ring-primary ring-offset-1 sm:ring-offset-2 shadow-md" 
+                            : option.color
                         )}
                         onClick={() => {
                           setValue('payment_status', option.value as any);
@@ -626,16 +667,16 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                         }}
                         disabled={currentMode === 'view'}
                       >
-                        <span className="text-lg">{option.icon}</span>
-                        <span className="text-xs">{option.label}</span>
+                        <span className="text-base sm:text-lg">{option.icon}</span>
+                        <span className="text-[10px] sm:text-xs font-medium">{option.label}</span>
                       </Button>
                     ))}
                   </div>
                 </div>
 
                 {/* Payment Amount */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Valor da Sessão (R$)</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs sm:text-sm font-medium">Valor da Sessão (R$)</Label>
                   <Input
                     type="number"
                     step="0.01"
@@ -643,18 +684,18 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                     placeholder="170.00"
                     {...register('payment_amount', { valueAsNumber: true })}
                     disabled={currentMode === 'view' || watchPaymentStatus === 'pending'}
-                    className="h-10"
+                    className="h-9 sm:h-10 text-sm"
                   />
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground bg-muted/30 px-2 py-1 rounded">
                     💡 Pacote: R$ 170/sessão • Avulso: R$ 180/sessão
                   </p>
                 </div>
 
                 {/* Payment Method */}
                 {(watchPaymentStatus === 'paid_single' || watchPaymentStatus === 'paid_package') && (
-                  <div className="space-y-3 bg-muted/30 p-4 rounded-lg border">
-                    <Label className="text-sm font-medium">Forma de Pagamento</Label>
-                    <div className="grid grid-cols-4 gap-2">
+                  <div className="space-y-2 bg-gradient-to-r from-emerald-500/5 to-transparent p-3 sm:p-4 rounded-lg border border-emerald-500/20">
+                    <Label className="text-xs sm:text-sm font-medium">Forma de Pagamento</Label>
+                    <div className="grid grid-cols-4 gap-1 sm:gap-2">
                       {[
                         { value: 'pix', label: 'PIX', icon: '📲' },
                         { value: 'dinheiro', label: 'Dinheiro', icon: '💵' },
@@ -666,26 +707,29 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                           type="button"
                           variant={watchPaymentMethod === method.value ? 'default' : 'outline'}
                           size="sm"
-                          className="h-12 flex-col gap-0.5"
+                          className={cn(
+                            "h-10 sm:h-12 flex-col gap-0 sm:gap-0.5 transition-all",
+                            watchPaymentMethod === method.value && "ring-1 ring-primary shadow-sm"
+                          )}
                           onClick={() => setValue('payment_method', method.value as any)}
                           disabled={currentMode === 'view'}
                         >
-                          <span className="text-sm">{method.icon}</span>
-                          <span className="text-[10px]">{method.label}</span>
+                          <span className="text-xs sm:text-sm">{method.icon}</span>
+                          <span className="text-[8px] sm:text-[10px]">{method.label}</span>
                         </Button>
                       ))}
                     </div>
 
                     {/* Installments for Credit */}
                     {watchPaymentMethod === 'credito' && (
-                      <div className="space-y-2 pt-2 border-t">
-                        <Label className="text-sm">Parcelas (até 6x sem juros)</Label>
+                      <div className="space-y-1.5 pt-2 border-t border-emerald-500/20">
+                        <Label className="text-xs sm:text-sm">Parcelas (até 6x sem juros)</Label>
                         <Select
                           value={watch('installments')?.toString()}
                           onValueChange={(value) => setValue('installments', parseInt(value))}
                           disabled={currentMode === 'view'}
                         >
-                          <SelectTrigger className="h-10">
+                          <SelectTrigger className="h-9 sm:h-10 text-sm">
                             <SelectValue placeholder="Parcelas" />
                           </SelectTrigger>
                           <SelectContent>
@@ -703,11 +747,11 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
               </TabsContent>
 
               {/* Tab: Opções */}
-              <TabsContent value="options" className="mt-0 space-y-4">
+              <TabsContent value="options" className="mt-0 space-y-3 sm:space-y-4">
                 {/* Equipment Selection */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium flex items-center gap-2">
-                    <Zap className="h-4 w-4 text-primary" />
+                <div className="space-y-1.5">
+                  <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
+                    <Zap className="h-3.5 w-3.5 text-primary" />
                     Equipamentos
                   </Label>
                   <EquipmentSelector
@@ -718,33 +762,34 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                 </div>
 
                 {/* Recurring */}
-                <div className="space-y-3 bg-muted/30 p-4 rounded-lg border">
-                  <div className="flex items-center gap-3">
+                <div className="space-y-2 bg-gradient-to-r from-blue-500/5 to-transparent p-3 sm:p-4 rounded-lg border border-blue-500/20">
+                  <div className="flex items-center gap-2 sm:gap-3">
                     <Checkbox
                       id="is_recurring"
                       checked={watch('is_recurring')}
                       onCheckedChange={(checked) => setValue('is_recurring', checked as boolean)}
                       disabled={currentMode === 'view'}
+                      className="h-4 w-4"
                     />
-                    <div className="flex items-center gap-2">
-                      <Repeat className="h-4 w-4 text-muted-foreground" />
-                      <Label htmlFor="is_recurring" className="text-sm font-medium cursor-pointer">
+                    <div className="flex items-center gap-1.5">
+                      <Repeat className="h-3.5 w-3.5 text-blue-600" />
+                      <Label htmlFor="is_recurring" className="text-xs sm:text-sm font-medium cursor-pointer">
                         Agendamento Recorrente
                       </Label>
                     </div>
                   </div>
 
                   {watch('is_recurring') && (
-                    <div className="space-y-2 pl-7">
-                      <Label className="text-xs text-muted-foreground">Repetir semanalmente até</Label>
+                    <div className="space-y-1.5 pl-6 sm:pl-7">
+                      <Label className="text-[10px] sm:text-xs text-muted-foreground">Repetir semanalmente até</Label>
                       <Button
                         type="button"
                         variant="outline"
-                        className={cn("w-full justify-start h-10", !watch('recurring_until') && "text-muted-foreground")}
+                        className={cn("w-full justify-start h-9 sm:h-10 text-xs sm:text-sm", !watch('recurring_until') && "text-muted-foreground")}
                         disabled={currentMode === 'view'}
                         onClick={() => setIsRecurringCalendarOpen(true)}
                       >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        <CalendarIcon className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         {watch('recurring_until') ? format(watch('recurring_until')!, 'dd/MM/yyyy', { locale: ptBR }) : "Selecione a data final"}
                       </Button>
                       {errors.recurring_until && <p className="text-xs text-destructive">{errors.recurring_until.message}</p>}
@@ -753,9 +798,9 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                 </div>
 
                 {/* Reminders */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium flex items-center gap-2">
-                    <Bell className="h-4 w-4 text-primary" />
+                <div className="space-y-1.5">
+                  <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
+                    <Bell className="h-3.5 w-3.5 text-primary" />
                     Lembretes
                   </Label>
                   <AppointmentReminder
@@ -766,21 +811,21 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                 </div>
 
                 {/* Room Selection */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Sala</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs sm:text-sm font-medium">Sala</Label>
                   <Select
                     value={watch('room') || ''}
                     onValueChange={(value) => setValue('room', value)}
                     disabled={currentMode === 'view'}
                   >
-                    <SelectTrigger className="h-10">
+                    <SelectTrigger className="h-9 sm:h-10 text-sm">
                       <SelectValue placeholder="Selecione a sala" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="sala-1">Sala 01</SelectItem>
-                      <SelectItem value="sala-2">Sala 02</SelectItem>
-                      <SelectItem value="sala-3">Sala 03</SelectItem>
-                      <SelectItem value="pilates">Sala Pilates</SelectItem>
+                      <SelectItem value="sala-1">🚪 Sala 01</SelectItem>
+                      <SelectItem value="sala-2">🚪 Sala 02</SelectItem>
+                      <SelectItem value="sala-3">🚪 Sala 03</SelectItem>
+                      <SelectItem value="pilates">🧘 Sala Pilates</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -791,10 +836,10 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full"
+                      className="w-full h-9 sm:h-10 text-xs sm:text-sm"
                       onClick={() => setDuplicateDialogOpen(true)}
                     >
-                      <Copy className="h-4 w-4 mr-2" />
+                      <Copy className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
                       Duplicar Agendamento
                     </Button>
                   </div>
