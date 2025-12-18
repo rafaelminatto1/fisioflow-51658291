@@ -86,6 +86,10 @@ const LeadsPage = lazy(() => import("./pages/crm/LeadsPage"));
 const CRMDashboard = lazy(() => import("./pages/crm/CRMDashboard"));
 const PatientPortal = lazy(() => import("./pages/PatientPortal"));
 
+// Novas páginas - Fase Final
+const PreCadastro = lazy(() => import("./pages/PreCadastro"));
+const PreCadastroAdmin = lazy(() => import("./pages/PreCadastroAdmin"));
+const TelemedicineRoom = lazy(() => import("./pages/TelemedicineRoom"));
 // Create a client with performance optimizations
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -148,6 +152,8 @@ const App = () => {
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/auth/login" element={<Auth />} />
                   <Route path="/create-demo-users" element={<CreateDemoUsers />} />
+                  <Route path="/pre-cadastro" element={<PreCadastro />} />
+                  <Route path="/pre-cadastro/:token" element={<PreCadastro />} />
                   
                   {/* Protected routes */}
                   <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
@@ -212,6 +218,8 @@ const App = () => {
                   
                   {/* Portal do Paciente */}
                   <Route path="/portal" element={<ProtectedRoute><PatientPortal /></ProtectedRoute>} />
+                  <Route path="/pre-cadastro-admin" element={<ProtectedRoute allowedRoles={['admin']}><PreCadastroAdmin /></ProtectedRoute>} />
+                  <Route path="/telemedicine-room/:roomId" element={<ProtectedRoute><TelemedicineRoom /></ProtectedRoute>} />
                   
                   <Route path="/tarefas" element={<ProtectedRoute><Tarefas /></ProtectedRoute>} />
                   <Route path="/analytics" element={<ProtectedRoute><AdvancedAnalytics /></ProtectedRoute>} />
