@@ -13,6 +13,7 @@ import { AdvancedFilters } from '@/components/schedule/AdvancedFilters';
 import { QuickStats } from '@/components/schedule/QuickStats';
 import { WaitlistQuickAdd } from '@/components/schedule/WaitlistQuickAdd';
 import { WaitlistNotification } from '@/components/schedule/WaitlistNotification';
+import { WaitlistQuickViewModal } from '@/components/schedule/WaitlistQuickViewModal';
 import { useAppointments, useCreateAppointment, useRescheduleAppointment } from '@/hooks/useAppointments';
 import { useWaitlistMatch } from '@/hooks/useWaitlistMatch';
 import { logger } from '@/lib/errors/logger';
@@ -60,8 +61,10 @@ const Schedule = () => {
     therapists: [] as string[],
   });
   
-  // Waitlist quick add state
+  // Waitlist state
   const [waitlistQuickAdd, setWaitlistQuickAdd] = useState<{ date: Date; time: string } | null>(null);
+  const [showWaitlistModal, setShowWaitlistModal] = useState(false);
+  const [scheduleFromWaitlist, setScheduleFromWaitlist] = useState<{ patientId: string; patientName: string } | null>(null);
 
   const { data: appointments = [], isLoading: loading, error, refetch } = useAppointments();
   const createAppointmentMutation = useCreateAppointment();
@@ -367,13 +370,16 @@ const Schedule = () => {
             <div className="text-lg font-bold text-warning">{stats.pendingToday}</div>
             <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Pendentes</div>
           </div>
-          <Link to="/waitlist" className="bg-card border rounded-lg p-2.5 text-center hover:bg-muted/50 transition-colors">
+          <button 
+            onClick={() => setShowWaitlistModal(true)}
+            className="bg-card border rounded-lg p-2.5 text-center hover:bg-muted/50 transition-colors cursor-pointer"
+          >
             <div className="text-lg font-bold text-primary flex items-center justify-center gap-1">
               {totalInWaitlist}
               {totalInWaitlist > 0 && <Users className="h-4 w-4" />}
             </div>
             <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Lista Espera</div>
-          </Link>
+          </button>
         </div>
 
         {/* View Selector + Search integrado */}
@@ -465,10 +471,14 @@ const Schedule = () => {
         {/* Appointment Modal */}
         <AppointmentModal
           isOpen={isModalOpen}
-          onClose={handleModalClose}
+          onClose={() => {
+            handleModalClose();
+            setScheduleFromWaitlist(null);
+          }}
           appointment={selectedAppointment}
           defaultDate={modalDefaultDate}
           defaultTime={modalDefaultTime}
+          defaultPatientId={scheduleFromWaitlist?.patientId}
           mode={selectedAppointment ? 'view' : 'create'}
         />
 
@@ -481,6 +491,19 @@ const Schedule = () => {
             time={waitlistQuickAdd.time}
           />
         )}
+
+        {/* Waitlist Quick View Modal */}
+        <WaitlistQuickViewModal
+          open={showWaitlistModal}
+          onOpenChange={setShowWaitlistModal}
+          onSchedulePatient={(patientId, patientName) => {
+            setScheduleFromWaitlist({ patientId, patientName });
+            setShowWaitlistModal(false);
+            setSelectedAppointment(null);
+            setModalDefaultDate(currentDate);
+            setIsModalOpen(true);
+          }}
+        />
       </div>
     </MainLayout>
   );
