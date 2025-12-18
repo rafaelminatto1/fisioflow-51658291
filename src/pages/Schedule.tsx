@@ -6,6 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { AppointmentFilters } from '@/components/schedule/AppointmentFilters';
 import { CalendarViewType } from '@/components/schedule/CalendarView';
 import { AppointmentModal } from '@/components/schedule/AppointmentModal';
+import { AppointmentQuickEditModal } from '@/components/schedule/AppointmentQuickEditModal';
 import { AppointmentListView } from '@/components/schedule/AppointmentListView';
 import { MiniCalendar } from '@/components/schedule/MiniCalendar';
 import { AppointmentSearch } from '@/components/schedule/AppointmentSearch';
@@ -43,6 +44,7 @@ interface FilterType {
 
 const Schedule = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [quickEditAppointment, setQuickEditAppointment] = useState<Appointment | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalDefaultDate, setModalDefaultDate] = useState<Date | undefined>();
   const [modalDefaultTime, setModalDefaultTime] = useState<string | undefined>();
@@ -155,8 +157,8 @@ const Schedule = () => {
 
   // Memoize callbacks to prevent unnecessary re-renders
   const handleAppointmentClick = useCallback((appointment: Appointment) => {
-    setSelectedAppointment(appointment);
-    setIsModalOpen(true);
+    // Open quick edit modal instead of the full modal
+    setQuickEditAppointment(appointment);
   }, []);
 
   const handleCreateAppointment = useCallback(() => {
@@ -468,7 +470,14 @@ const Schedule = () => {
           )}
         </div>
 
-        {/* Appointment Modal */}
+        {/* Quick Edit Modal - opens when clicking on appointment cards */}
+        <AppointmentQuickEditModal
+          appointment={quickEditAppointment}
+          open={!!quickEditAppointment}
+          onOpenChange={(open) => !open && setQuickEditAppointment(null)}
+        />
+
+        {/* Appointment Modal for creating new appointments */}
         <AppointmentModal
           isOpen={isModalOpen}
           onClose={() => {
