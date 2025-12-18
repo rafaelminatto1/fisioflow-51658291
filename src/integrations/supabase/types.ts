@@ -63,6 +63,59 @@ export type Database = {
           },
         ]
       }
+      ai_clinical_sessions: {
+        Row: {
+          ai_generated_soap: Json | null
+          ai_suggestions: Json | null
+          appointment_id: string | null
+          approved_at: string | null
+          audio_url: string | null
+          created_at: string | null
+          id: string
+          patient_id: string
+          therapist_approved: boolean | null
+          therapist_id: string | null
+          transcription: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ai_generated_soap?: Json | null
+          ai_suggestions?: Json | null
+          appointment_id?: string | null
+          approved_at?: string | null
+          audio_url?: string | null
+          created_at?: string | null
+          id?: string
+          patient_id: string
+          therapist_approved?: boolean | null
+          therapist_id?: string | null
+          transcription?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ai_generated_soap?: Json | null
+          ai_suggestions?: Json | null
+          appointment_id?: string | null
+          approved_at?: string | null
+          audio_url?: string | null
+          created_at?: string | null
+          id?: string
+          patient_id?: string
+          therapist_approved?: boolean | null
+          therapist_id?: string | null
+          transcription?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_clinical_sessions_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_exercise_prescriptions: {
         Row: {
           created_at: string
@@ -160,6 +213,50 @@ export type Database = {
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_predictions: {
+        Row: {
+          appointment_id: string | null
+          created_at: string | null
+          id: string
+          no_show_probability: number | null
+          patient_id: string
+          prediction_date: string | null
+          recommended_actions: string[] | null
+          risk_factors: Json | null
+          was_accurate: boolean | null
+        }
+        Insert: {
+          appointment_id?: string | null
+          created_at?: string | null
+          id?: string
+          no_show_probability?: number | null
+          patient_id: string
+          prediction_date?: string | null
+          recommended_actions?: string[] | null
+          risk_factors?: Json | null
+          was_accurate?: boolean | null
+        }
+        Update: {
+          appointment_id?: string | null
+          created_at?: string | null
+          id?: string
+          no_show_probability?: number | null
+          patient_id?: string
+          prediction_date?: string | null
+          recommended_actions?: string[] | null
+          risk_factors?: Json | null
+          was_accurate?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_predictions_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
             referencedColumns: ["id"]
           },
         ]
@@ -428,6 +525,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      clinic_inventory: {
+        Row: {
+          category: string | null
+          cost_per_unit: number | null
+          created_at: string | null
+          current_quantity: number | null
+          expiration_date: string | null
+          id: string
+          is_active: boolean | null
+          item_name: string
+          last_restock_date: string | null
+          location: string | null
+          minimum_quantity: number | null
+          organization_id: string | null
+          supplier: string | null
+          unit: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          cost_per_unit?: number | null
+          created_at?: string | null
+          current_quantity?: number | null
+          expiration_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          item_name: string
+          last_restock_date?: string | null
+          location?: string | null
+          minimum_quantity?: number | null
+          organization_id?: string | null
+          supplier?: string | null
+          unit?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          cost_per_unit?: number | null
+          created_at?: string | null
+          current_quantity?: number | null
+          expiration_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          item_name?: string
+          last_restock_date?: string | null
+          location?: string | null
+          minimum_quantity?: number | null
+          organization_id?: string | null
+          supplier?: string | null
+          unit?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       clinical_materials: {
         Row: {
@@ -2438,6 +2589,45 @@ export type Database = {
           },
         ]
       }
+      gamification_rewards: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          level_required: number | null
+          name: string
+          type: string
+          xp_required: number | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          level_required?: number | null
+          name: string
+          type: string
+          xp_required?: number | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          level_required?: number | null
+          name?: string
+          type?: string
+          xp_required?: number | null
+        }
+        Relationships: []
+      }
       generated_reports: {
         Row: {
           content: string
@@ -2492,6 +2682,47 @@ export type Database = {
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_movements: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          inventory_id: string | null
+          movement_type: string
+          quantity: number
+          reason: string | null
+          related_appointment_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          inventory_id?: string | null
+          movement_type: string
+          quantity: number
+          reason?: string | null
+          related_appointment_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          inventory_id?: string | null
+          movement_type?: string
+          quantity?: number
+          reason?: string | null
+          related_appointment_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_movements_inventory_id_fkey"
+            columns: ["inventory_id"]
+            isOneToOne: false
+            referencedRelation: "clinic_inventory"
             referencedColumns: ["id"]
           },
         ]
@@ -3260,6 +3491,38 @@ export type Database = {
         }
         Relationships: []
       }
+      patient_achievements: {
+        Row: {
+          id: string
+          notified: boolean | null
+          patient_id: string
+          reward_id: string | null
+          unlocked_at: string | null
+        }
+        Insert: {
+          id?: string
+          notified?: boolean | null
+          patient_id: string
+          reward_id?: string | null
+          unlocked_at?: string | null
+        }
+        Update: {
+          id?: string
+          notified?: boolean | null
+          patient_id?: string
+          reward_id?: string | null
+          unlocked_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_achievements_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "gamification_rewards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patient_documents: {
         Row: {
           category: string
@@ -3508,6 +3771,48 @@ export type Database = {
           },
         ]
       }
+      patient_levels: {
+        Row: {
+          badges: Json | null
+          created_at: string | null
+          current_level: number | null
+          current_streak: number | null
+          id: string
+          last_activity_date: string | null
+          longest_streak: number | null
+          patient_id: string
+          title: string | null
+          total_xp: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          badges?: Json | null
+          created_at?: string | null
+          current_level?: number | null
+          current_streak?: number | null
+          id?: string
+          last_activity_date?: string | null
+          longest_streak?: number | null
+          patient_id: string
+          title?: string | null
+          total_xp?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          badges?: Json | null
+          created_at?: string | null
+          current_level?: number | null
+          current_streak?: number | null
+          id?: string
+          last_activity_date?: string | null
+          longest_streak?: number | null
+          patient_id?: string
+          title?: string | null
+          total_xp?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       patient_objective_assignments: {
         Row: {
           created_at: string
@@ -3601,6 +3906,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      patient_outcome_predictions: {
+        Row: {
+          condition: string
+          confidence_score: number | null
+          created_at: string | null
+          factors: Json | null
+          id: string
+          model_version: string | null
+          patient_id: string
+          predicted_completion_date: string | null
+          predicted_sessions_to_recovery: number | null
+          risk_of_dropout: number | null
+        }
+        Insert: {
+          condition: string
+          confidence_score?: number | null
+          created_at?: string | null
+          factors?: Json | null
+          id?: string
+          model_version?: string | null
+          patient_id: string
+          predicted_completion_date?: string | null
+          predicted_sessions_to_recovery?: number | null
+          risk_of_dropout?: number | null
+        }
+        Update: {
+          condition?: string
+          confidence_score?: number | null
+          created_at?: string | null
+          factors?: Json | null
+          id?: string
+          model_version?: string | null
+          patient_id?: string
+          predicted_completion_date?: string | null
+          predicted_sessions_to_recovery?: number | null
+          risk_of_dropout?: number | null
+        }
+        Relationships: []
       }
       patient_pathologies: {
         Row: {
@@ -3847,6 +4191,93 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      patient_scheduling_preferences: {
+        Row: {
+          auto_book_enabled: boolean | null
+          avoided_days: string[] | null
+          avoided_times: string[] | null
+          created_at: string | null
+          id: string
+          max_travel_time: number | null
+          notification_preferences: Json | null
+          patient_id: string
+          preferred_days: string[] | null
+          preferred_therapist_id: string | null
+          preferred_times: string[] | null
+          prefers_same_therapist: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          auto_book_enabled?: boolean | null
+          avoided_days?: string[] | null
+          avoided_times?: string[] | null
+          created_at?: string | null
+          id?: string
+          max_travel_time?: number | null
+          notification_preferences?: Json | null
+          patient_id: string
+          preferred_days?: string[] | null
+          preferred_therapist_id?: string | null
+          preferred_times?: string[] | null
+          prefers_same_therapist?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          auto_book_enabled?: boolean | null
+          avoided_days?: string[] | null
+          avoided_times?: string[] | null
+          created_at?: string | null
+          id?: string
+          max_travel_time?: number | null
+          notification_preferences?: Json | null
+          patient_id?: string
+          preferred_days?: string[] | null
+          preferred_therapist_id?: string | null
+          preferred_times?: string[] | null
+          prefers_same_therapist?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      patient_self_assessments: {
+        Row: {
+          assessment_type: string
+          created_at: string | null
+          id: string
+          numeric_value: number | null
+          patient_id: string
+          question: string
+          received_via: string | null
+          responded_at: string | null
+          response: string | null
+          sent_at: string | null
+        }
+        Insert: {
+          assessment_type: string
+          created_at?: string | null
+          id?: string
+          numeric_value?: number | null
+          patient_id: string
+          question: string
+          received_via?: string | null
+          responded_at?: string | null
+          response?: string | null
+          sent_at?: string | null
+        }
+        Update: {
+          assessment_type?: string
+          created_at?: string | null
+          id?: string
+          numeric_value?: number | null
+          patient_id?: string
+          question?: string
+          received_via?: string | null
+          responded_at?: string | null
+          response?: string | null
+          sent_at?: string | null
+        }
+        Relationships: []
       }
       patient_surgeries: {
         Row: {
@@ -4350,6 +4781,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      revenue_forecasts: {
+        Row: {
+          actual_appointments: number | null
+          actual_revenue: number | null
+          confidence_interval_high: number | null
+          confidence_interval_low: number | null
+          created_at: string | null
+          factors: Json | null
+          forecast_date: string
+          id: string
+          model_version: string | null
+          organization_id: string | null
+          predicted_appointments: number | null
+          predicted_revenue: number | null
+        }
+        Insert: {
+          actual_appointments?: number | null
+          actual_revenue?: number | null
+          confidence_interval_high?: number | null
+          confidence_interval_low?: number | null
+          created_at?: string | null
+          factors?: Json | null
+          forecast_date: string
+          id?: string
+          model_version?: string | null
+          organization_id?: string | null
+          predicted_appointments?: number | null
+          predicted_revenue?: number | null
+        }
+        Update: {
+          actual_appointments?: number | null
+          actual_revenue?: number | null
+          confidence_interval_high?: number | null
+          confidence_interval_low?: number | null
+          created_at?: string | null
+          factors?: Json | null
+          forecast_date?: string
+          id?: string
+          model_version?: string | null
+          organization_id?: string | null
+          predicted_appointments?: number | null
+          predicted_revenue?: number | null
+        }
+        Relationships: []
       }
       satisfaction_surveys: {
         Row: {
@@ -4982,6 +5458,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      staff_performance_metrics: {
+        Row: {
+          average_session_duration: number | null
+          cancelled_appointments: number | null
+          completed_appointments: number | null
+          created_at: string | null
+          id: string
+          metric_date: string
+          new_patients: number | null
+          no_show_appointments: number | null
+          patient_satisfaction_avg: number | null
+          returning_patients: number | null
+          revenue_generated: number | null
+          therapist_id: string
+          total_appointments: number | null
+        }
+        Insert: {
+          average_session_duration?: number | null
+          cancelled_appointments?: number | null
+          completed_appointments?: number | null
+          created_at?: string | null
+          id?: string
+          metric_date: string
+          new_patients?: number | null
+          no_show_appointments?: number | null
+          patient_satisfaction_avg?: number | null
+          returning_patients?: number | null
+          revenue_generated?: number | null
+          therapist_id: string
+          total_appointments?: number | null
+        }
+        Update: {
+          average_session_duration?: number | null
+          cancelled_appointments?: number | null
+          completed_appointments?: number | null
+          created_at?: string | null
+          id?: string
+          metric_date?: string
+          new_patients?: number | null
+          no_show_appointments?: number | null
+          patient_satisfaction_avg?: number | null
+          returning_patients?: number | null
+          revenue_generated?: number | null
+          therapist_id?: string
+          total_appointments?: number | null
+        }
+        Relationships: []
       }
       standardized_test_results: {
         Row: {
@@ -5619,6 +6143,51 @@ export type Database = {
           },
         ]
       }
+      whatsapp_exercise_queue: {
+        Row: {
+          created_at: string | null
+          delivered_at: string | null
+          error_message: string | null
+          exercise_plan_id: string | null
+          exercises: Json
+          id: string
+          opened_at: string | null
+          patient_id: string
+          phone_number: string
+          scheduled_for: string | null
+          sent_at: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          delivered_at?: string | null
+          error_message?: string | null
+          exercise_plan_id?: string | null
+          exercises: Json
+          id?: string
+          opened_at?: string | null
+          patient_id: string
+          phone_number: string
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          delivered_at?: string | null
+          error_message?: string | null
+          exercise_plan_id?: string | null
+          exercises?: Json
+          id?: string
+          opened_at?: string | null
+          patient_id?: string
+          phone_number?: string
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       whatsapp_messages: {
         Row: {
           appointment_id: string | null
@@ -6081,6 +6650,10 @@ export type Database = {
           _full_name: string
           _role: Database["public"]["Enums"]["app_role"]
         }
+        Returns: undefined
+      }
+      update_patient_streak: {
+        Args: { _patient_id: string }
         Returns: undefined
       }
       use_package_session: { Args: { _package_id: string }; Returns: boolean }
