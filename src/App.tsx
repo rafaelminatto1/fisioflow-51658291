@@ -62,6 +62,7 @@ const ProtocolsPage = lazy(() => import("./pages/Protocols"));
 const SmartDashboard = lazy(() => import("./pages/SmartDashboard"));
 const Inventory = lazy(() => import("./pages/Inventory"));
 const PatientGamificationPage = lazy(() => import("./pages/PatientGamificationPage"));
+const PainMapHistoryPage = lazy(() => import("./pages/patients/PainMapHistoryPage"));
 
 // Fase 2: Cadastros Gerais
 const ServicosPage = lazy(() => import("./pages/cadastros/ServicosPage"));
@@ -181,6 +182,7 @@ const App = () => {
                   <Route path="/biofeedback" element={<ProtectedRoute><Biofeedback /></ProtectedRoute>} />
                   <Route path="/patient-evolution/:appointmentId" element={<ProtectedRoute><PatientEvolution /></ProtectedRoute>} />
                   <Route path="/patient-evolution-report/:patientId" element={<ProtectedRoute><PatientEvolutionReport /></ProtectedRoute>} />
+                  <Route path="/pacientes/:id/mapas-dor" element={<ProtectedRoute><PainMapHistoryPage /></ProtectedRoute>} />
           <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
           <Route path="/partner" element={<ProtectedRoute><Partner /></ProtectedRoute>} />
           <Route path="/waitlist" element={<ProtectedRoute><Waitlist /></ProtectedRoute>} />
