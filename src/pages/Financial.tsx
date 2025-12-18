@@ -37,12 +37,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { exportFinancialReport } from '@/lib/export/excelExport';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 const Financial = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const { toast } = useToast();
 
   const {
     transactions,
@@ -79,6 +84,42 @@ const Financial = () => {
     if (deleteId) {
       deleteTransaction(deleteId);
       setDeleteId(null);
+    }
+  };
+
+  const handleExport = async () => {
+    if (!stats || transactions.length === 0) return;
+    
+    setIsExporting(true);
+    try {
+      await exportFinancialReport({
+        totalRevenue: stats.totalRevenue,
+        pendingPayments: stats.pendingPayments,
+        paidCount: stats.paidCount,
+        totalCount: stats.totalCount,
+        averageTicket: stats.averageTicket,
+        transactions: transactions.map(t => ({
+          id: t.id,
+          tipo: t.tipo,
+          descricao: t.descricao || '',
+          valor: Number(t.valor),
+          status: t.status,
+          data_vencimento: t.created_at,
+          data_pagamento: t.status === 'concluido' ? t.updated_at : undefined
+        }))
+      });
+      toast({
+        title: 'Exportação concluída',
+        description: 'O arquivo Excel foi gerado com sucesso.'
+      });
+    } catch (error) {
+      toast({
+        title: 'Erro na exportação',
+        description: 'Não foi possível gerar o arquivo.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -141,8 +182,14 @@ const Financial = () => {
             <p className="text-sm sm:text-base text-muted-foreground">Gerencie cobranças e acompanhe sua receita</p>
           </div>
           <div className="flex gap-2 sm:gap-3">
-            <Button variant="outline" size="sm" className="hover:bg-accent/80 border-border/50 flex-1 sm:flex-none">
-              <Download className="w-4 h-4 sm:mr-2" />
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="hover:bg-accent/80 border-border/50 flex-1 sm:flex-none"
+              onClick={handleExport}
+              disabled={isExporting || transactions.length === 0}
+            >
+              <Download className={cn("w-4 h-4 sm:mr-2", isExporting && "animate-pulse")} />
               <span className="hidden sm:inline">Relatório</span>
             </Button>
             <Button 

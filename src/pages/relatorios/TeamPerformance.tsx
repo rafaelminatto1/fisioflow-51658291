@@ -42,7 +42,6 @@ import {
 } from 'lucide-react';
 import { 
   useTeamPerformance, 
-  exportTeamPerformanceToExcel,
   type PerformancePeriod,
   type TherapistPerformance 
 } from '@/hooks/useTeamPerformance';
@@ -50,6 +49,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
+import { exportTeamPerformance } from '@/lib/export/excelExport';
 
 const CHART_COLORS = [
   'hsl(var(--primary))',
@@ -83,7 +83,13 @@ export default function TeamPerformance() {
     
     setIsExporting(true);
     try {
-      await exportTeamPerformanceToExcel(data);
+      await exportTeamPerformance({
+        totalRevenue: data.totalRevenue,
+        averageTicket: data.averageTicket,
+        retentionRate: data.retentionRate,
+        averageNps: data.averageNps,
+        therapists: data.therapists
+      });
       toast({
         title: 'Exportação concluída',
         description: 'O arquivo Excel foi gerado com sucesso.'

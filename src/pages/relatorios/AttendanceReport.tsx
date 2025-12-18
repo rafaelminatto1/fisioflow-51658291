@@ -36,12 +36,15 @@ import {
   Info,
   ChevronDown,
   Phone,
-  Clock
+  Clock,
+  Download
 } from 'lucide-react';
 import { useAttendanceReport, useTherapists, type PeriodFilter, type StatusFilter } from '@/hooks/useAttendanceReport';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { exportAttendanceReport } from '@/lib/export/excelExport';
+import { useToast } from '@/hooks/use-toast';
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -67,6 +70,8 @@ export default function AttendanceReport() {
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [isExporting, setIsExporting] = useState(false);
+  const { toast } = useToast();
 
   const { data, isLoading, refetch, isFetching } = useAttendanceReport({
     period,
@@ -86,6 +91,43 @@ export default function AttendanceReport() {
       newSet.add(id);
     }
     setExpandedRows(newSet);
+  };
+
+  const handleExport = async () => {
+    if (!data) return;
+    
+    setIsExporting(true);
+    try {
+      await exportAttendanceReport({
+        totalAppointments: data.totalAppointments,
+        attended: data.attended,
+        noShow: data.noShow,
+        cancelled: data.cancelled,
+        attendanceRate: data.attendanceRate,
+        cancellationRate: data.cancellationRate,
+        therapistData: data.therapistData.map(t => ({
+          name: t.name,
+          total: t.total,
+          attended: t.attended,
+          noShow: t.noShow,
+          cancelled: t.cancelled,
+          attendanceRate: t.rate
+        })),
+        appointments: data.appointments
+      });
+      toast({
+        title: 'Exportação concluída',
+        description: 'O arquivo Excel foi gerado com sucesso.'
+      });
+    } catch (error) {
+      toast({
+        title: 'Erro na exportação',
+        description: 'Não foi possível gerar o arquivo.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const StatCard = ({ 
@@ -130,14 +172,24 @@ export default function AttendanceReport() {
             <h1 className="text-2xl md:text-3xl font-bold">Taxa de Comparecimento</h1>
             <p className="text-muted-foreground mt-1">Análise detalhada de comparecimentos e faltas</p>
           </div>
-          <Button 
-            variant="outline" 
-            size="icon"
-            onClick={() => refetch()}
-            disabled={isFetching}
-          >
-            <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="outline"
+              onClick={handleExport}
+              disabled={isExporting || isLoading || !data}
+            >
+              <Download className={cn("h-4 w-4 mr-2", isExporting && "animate-pulse")} />
+              Exportar Excel
+            </Button>
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={() => refetch()}
+              disabled={isFetching}
+            >
+              <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
+            </Button>
+          </div>
         </div>
 
         {/* Filters */}
