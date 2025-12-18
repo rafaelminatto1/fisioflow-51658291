@@ -910,6 +910,427 @@ export type Database = {
           },
         ]
       }
+      crm_automacao_logs: {
+        Row: {
+          automacao_id: string | null
+          created_at: string | null
+          detalhes: Json | null
+          id: string
+          lead_id: string | null
+          patient_id: string | null
+          status: string | null
+        }
+        Insert: {
+          automacao_id?: string | null
+          created_at?: string | null
+          detalhes?: Json | null
+          id?: string
+          lead_id?: string | null
+          patient_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          automacao_id?: string | null
+          created_at?: string | null
+          detalhes?: Json | null
+          id?: string
+          lead_id?: string | null
+          patient_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_automacao_logs_automacao_id_fkey"
+            columns: ["automacao_id"]
+            isOneToOne: false
+            referencedRelation: "crm_automacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_automacao_logs_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_automacao_logs_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_automacao_logs_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patient_activity_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_automacao_logs_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_automacoes: {
+        Row: {
+          acao_config: Json | null
+          ativo: boolean | null
+          canal: string | null
+          created_at: string | null
+          created_by: string | null
+          descricao: string | null
+          gatilho_config: Json | null
+          id: string
+          nome: string
+          organization_id: string | null
+          template_mensagem: string | null
+          tipo: string
+          total_executado: number | null
+          ultima_execucao: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          acao_config?: Json | null
+          ativo?: boolean | null
+          canal?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          descricao?: string | null
+          gatilho_config?: Json | null
+          id?: string
+          nome: string
+          organization_id?: string | null
+          template_mensagem?: string | null
+          tipo: string
+          total_executado?: number | null
+          ultima_execucao?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          acao_config?: Json | null
+          ativo?: boolean | null
+          canal?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          descricao?: string | null
+          gatilho_config?: Json | null
+          id?: string
+          nome?: string
+          organization_id?: string | null
+          template_mensagem?: string | null
+          tipo?: string
+          total_executado?: number | null
+          ultima_execucao?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_automacoes_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_campanha_envios: {
+        Row: {
+          aberto_em: string | null
+          campanha_id: string | null
+          clicado_em: string | null
+          created_at: string | null
+          entregue_em: string | null
+          enviado_em: string | null
+          erro_mensagem: string | null
+          id: string
+          lead_id: string | null
+          status: string | null
+        }
+        Insert: {
+          aberto_em?: string | null
+          campanha_id?: string | null
+          clicado_em?: string | null
+          created_at?: string | null
+          entregue_em?: string | null
+          enviado_em?: string | null
+          erro_mensagem?: string | null
+          id?: string
+          lead_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          aberto_em?: string | null
+          campanha_id?: string | null
+          clicado_em?: string | null
+          created_at?: string | null
+          entregue_em?: string | null
+          enviado_em?: string | null
+          erro_mensagem?: string | null
+          id?: string
+          lead_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_campanha_envios_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "crm_campanhas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_campanha_envios_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_campanhas: {
+        Row: {
+          agendada_para: string | null
+          assunto: string | null
+          concluida_em: string | null
+          conteudo: string
+          created_at: string | null
+          created_by: string | null
+          descricao: string | null
+          filtro_estagios: string[] | null
+          filtro_origens: string[] | null
+          filtro_tags: string[] | null
+          id: string
+          iniciada_em: string | null
+          nome: string
+          organization_id: string | null
+          status: string | null
+          template_id: string | null
+          tipo: string
+          total_abertos: number | null
+          total_clicados: number | null
+          total_destinatarios: number | null
+          total_enviados: number | null
+          total_respondidos: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          agendada_para?: string | null
+          assunto?: string | null
+          concluida_em?: string | null
+          conteudo: string
+          created_at?: string | null
+          created_by?: string | null
+          descricao?: string | null
+          filtro_estagios?: string[] | null
+          filtro_origens?: string[] | null
+          filtro_tags?: string[] | null
+          id?: string
+          iniciada_em?: string | null
+          nome: string
+          organization_id?: string | null
+          status?: string | null
+          template_id?: string | null
+          tipo: string
+          total_abertos?: number | null
+          total_clicados?: number | null
+          total_destinatarios?: number | null
+          total_enviados?: number | null
+          total_respondidos?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          agendada_para?: string | null
+          assunto?: string | null
+          concluida_em?: string | null
+          conteudo?: string
+          created_at?: string | null
+          created_by?: string | null
+          descricao?: string | null
+          filtro_estagios?: string[] | null
+          filtro_origens?: string[] | null
+          filtro_tags?: string[] | null
+          id?: string
+          iniciada_em?: string | null
+          nome?: string
+          organization_id?: string | null
+          status?: string | null
+          template_id?: string | null
+          tipo?: string
+          total_abertos?: number | null
+          total_clicados?: number | null
+          total_destinatarios?: number | null
+          total_enviados?: number | null
+          total_respondidos?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_campanhas_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_pesquisas_nps: {
+        Row: {
+          categoria: string | null
+          comentario: string | null
+          created_at: string | null
+          id: string
+          lead_id: string | null
+          motivo_nota: string | null
+          nota: number
+          organization_id: string | null
+          origem: string | null
+          patient_id: string | null
+          respondido_em: string | null
+          sugestoes: string | null
+        }
+        Insert: {
+          categoria?: string | null
+          comentario?: string | null
+          created_at?: string | null
+          id?: string
+          lead_id?: string | null
+          motivo_nota?: string | null
+          nota: number
+          organization_id?: string | null
+          origem?: string | null
+          patient_id?: string | null
+          respondido_em?: string | null
+          sugestoes?: string | null
+        }
+        Update: {
+          categoria?: string | null
+          comentario?: string | null
+          created_at?: string | null
+          id?: string
+          lead_id?: string | null
+          motivo_nota?: string | null
+          nota?: number
+          organization_id?: string | null
+          origem?: string | null
+          patient_id?: string | null
+          respondido_em?: string | null
+          sugestoes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_pesquisas_nps_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_pesquisas_nps_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_pesquisas_nps_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_pesquisas_nps_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patient_activity_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_pesquisas_nps_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_tarefas: {
+        Row: {
+          concluida_em: string | null
+          concluida_por: string | null
+          created_at: string | null
+          data_vencimento: string | null
+          descricao: string | null
+          hora_vencimento: string | null
+          id: string
+          lead_id: string | null
+          lembrete_enviado: boolean | null
+          organization_id: string | null
+          prioridade: string | null
+          responsavel_id: string | null
+          status: string | null
+          tipo: string
+          titulo: string
+          updated_at: string | null
+        }
+        Insert: {
+          concluida_em?: string | null
+          concluida_por?: string | null
+          created_at?: string | null
+          data_vencimento?: string | null
+          descricao?: string | null
+          hora_vencimento?: string | null
+          id?: string
+          lead_id?: string | null
+          lembrete_enviado?: boolean | null
+          organization_id?: string | null
+          prioridade?: string | null
+          responsavel_id?: string | null
+          status?: string | null
+          tipo?: string
+          titulo: string
+          updated_at?: string | null
+        }
+        Update: {
+          concluida_em?: string | null
+          concluida_por?: string | null
+          created_at?: string | null
+          data_vencimento?: string | null
+          descricao?: string | null
+          hora_vencimento?: string | null
+          id?: string
+          lead_id?: string | null
+          lembrete_enviado?: boolean | null
+          organization_id?: string | null
+          prioridade?: string | null
+          responsavel_id?: string | null
+          status?: string | null
+          tipo?: string
+          titulo?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_tarefas_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_tarefas_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_metrics: {
         Row: {
           active_patients: number | null
@@ -2118,9 +2539,11 @@ export type Database = {
       }
       leads: {
         Row: {
+          convertido_patient_id: string | null
           created_at: string
           created_by: string | null
           data_primeiro_contato: string | null
+          data_proxima_acao: string | null
           data_ultimo_contato: string | null
           email: string | null
           estagio: string | null
@@ -2131,14 +2554,21 @@ export type Database = {
           observacoes: string | null
           organization_id: string | null
           origem: string | null
+          proxima_acao: string | null
           responsavel_id: string | null
+          score: number | null
+          tags: string[] | null
           telefone: string | null
+          temperatura: string | null
           updated_at: string
+          valor_potencial: number | null
         }
         Insert: {
+          convertido_patient_id?: string | null
           created_at?: string
           created_by?: string | null
           data_primeiro_contato?: string | null
+          data_proxima_acao?: string | null
           data_ultimo_contato?: string | null
           email?: string | null
           estagio?: string | null
@@ -2149,14 +2579,21 @@ export type Database = {
           observacoes?: string | null
           organization_id?: string | null
           origem?: string | null
+          proxima_acao?: string | null
           responsavel_id?: string | null
+          score?: number | null
+          tags?: string[] | null
           telefone?: string | null
+          temperatura?: string | null
           updated_at?: string
+          valor_potencial?: number | null
         }
         Update: {
+          convertido_patient_id?: string | null
           created_at?: string
           created_by?: string | null
           data_primeiro_contato?: string | null
+          data_proxima_acao?: string | null
           data_ultimo_contato?: string | null
           email?: string | null
           estagio?: string | null
@@ -2167,11 +2604,37 @@ export type Database = {
           observacoes?: string | null
           organization_id?: string | null
           origem?: string | null
+          proxima_acao?: string | null
           responsavel_id?: string | null
+          score?: number | null
+          tags?: string[] | null
           telefone?: string | null
+          temperatura?: string | null
           updated_at?: string
+          valor_potencial?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "leads_convertido_patient_id_fkey"
+            columns: ["convertido_patient_id"]
+            isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_convertido_patient_id_fkey"
+            columns: ["convertido_patient_id"]
+            isOneToOne: false
+            referencedRelation: "patient_activity_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_convertido_patient_id_fkey"
+            columns: ["convertido_patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "leads_organization_id_fkey"
             columns: ["organization_id"]
@@ -5322,6 +5785,18 @@ export type Database = {
           },
         ]
       }
+      crm_metricas_leads: {
+        Row: {
+          convertidos: number | null
+          dias_medio_no_funil: number | null
+          estagio: string | null
+          leads_frios: number | null
+          origem: string | null
+          score_medio: number | null
+          total: number | null
+        }
+        Relationships: []
+      }
       eventos_resumo: {
         Row: {
           categoria: string | null
@@ -5504,6 +5979,10 @@ export type Database = {
       }
     }
     Functions: {
+      calcular_lead_score: {
+        Args: { lead_row: Database["public"]["Tables"]["leads"]["Row"] }
+        Returns: number
+      }
       can_view_patient: {
         Args: { _patient_id: string; _user_id: string }
         Returns: boolean
