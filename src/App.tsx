@@ -79,6 +79,7 @@ const FluxoCaixaPage = lazy(() => import("./pages/financeiro/FluxoCaixaPage"));
 const AniversariantesPage = lazy(() => import("./pages/relatorios/AniversariantesPage"));
 
 const LeadsPage = lazy(() => import("./pages/crm/LeadsPage"));
+const CRMDashboard = lazy(() => import("./pages/crm/CRMDashboard"));
 const PatientPortal = lazy(() => import("./pages/PatientPortal"));
 
 // Create a client with performance optimizations
@@ -201,6 +202,7 @@ const App = () => {
                   <Route path="/relatorios/aniversariantes" element={<ProtectedRoute><AniversariantesPage /></ProtectedRoute>} />
                   
                   {/* Marketing/CRM - Fase 6 */}
+                  <Route path="/crm" element={<ProtectedRoute><CRMDashboard /></ProtectedRoute>} />
                   <Route path="/crm/leads" element={<ProtectedRoute><LeadsPage /></ProtectedRoute>} />
                   
                   {/* Portal do Paciente */}
