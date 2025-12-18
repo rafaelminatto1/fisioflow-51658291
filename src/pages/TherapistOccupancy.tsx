@@ -31,10 +31,13 @@ import {
   Lightbulb,
   RefreshCw,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Download
 } from 'lucide-react';
 import { useTherapistOccupancy, type TherapistOccupancyData } from '@/hooks/useTherapistOccupancy';
 import { cn } from '@/lib/utils';
+import { exportOccupancyReport } from '@/lib/export/excelExport';
+import { useToast } from '@/hooks/use-toast';
 
 type PeriodFilter = 'today' | 'week' | 'month';
 
@@ -65,7 +68,36 @@ const getStatusBadge = (status: 'otimo' | 'bom' | 'baixo') => {
 
 export default function TherapistOccupancyPage() {
   const [period, setPeriod] = useState<PeriodFilter>('today');
+  const [isExporting, setIsExporting] = useState(false);
   const { data, isLoading, refetch, isFetching } = useTherapistOccupancy({ period });
+  const { toast } = useToast();
+
+  const handleExport = async () => {
+    if (!data) return;
+    
+    setIsExporting(true);
+    try {
+      await exportOccupancyReport({
+        ocupacaoMedia: data.ocupacaoMedia,
+        totalConsultasHoje: data.totalConsultasHoje,
+        totalHorasTrabalhadas: data.totalHorasTrabalhadas,
+        fisioterapeutasAtivos: data.fisioterapeutasAtivos,
+        therapists: data.therapists
+      });
+      toast({
+        title: 'Exportação concluída',
+        description: 'O arquivo Excel foi gerado com sucesso.'
+      });
+    } catch (error) {
+      toast({
+        title: 'Erro na exportação',
+        description: 'Não foi possível gerar o arquivo.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const StatCard = ({ 
     title, 
@@ -137,6 +169,14 @@ export default function TherapistOccupancyPage() {
                 <SelectItem value="month">Este Mês</SelectItem>
               </SelectContent>
             </Select>
+            <Button 
+              variant="outline"
+              onClick={handleExport}
+              disabled={isExporting || isLoading || !data}
+            >
+              <Download className={cn("h-4 w-4 mr-2", isExporting && "animate-pulse")} />
+              Exportar Excel
+            </Button>
             <Button 
               variant="outline" 
               size="icon"
