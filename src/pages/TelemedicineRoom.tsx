@@ -16,7 +16,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 const TelemedicineRoom = () => {
-  const { roomCode } = useParams<{ roomCode: string }>();
+  const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -29,7 +29,7 @@ const TelemedicineRoom = () => {
 
   // Fetch room data
   const { data: room, isLoading } = useQuery({
-    queryKey: ['telemedicine-room', roomCode],
+    queryKey: ['telemedicine-room', roomId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('telemedicine_rooms')
@@ -38,12 +38,12 @@ const TelemedicineRoom = () => {
           patients:patient_id (name, email, phone),
           profiles:therapist_id (full_name)
         `)
-        .eq('room_code', roomCode)
+        .eq('id', roomId)
         .single();
       if (error) throw error;
       return data;
     },
-    enabled: !!roomCode
+    enabled: !!roomId
   });
 
   // Start session mutation
@@ -55,11 +55,11 @@ const TelemedicineRoom = () => {
           status: 'ativo',
           started_at: new Date().toISOString()
         })
-        .eq('room_code', roomCode);
+        .eq('id', roomId);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['telemedicine-room', roomCode] });
+      queryClient.invalidateQueries({ queryKey: ['telemedicine-room', roomId] });
       setIsConnected(true);
       toast.success('Sessão iniciada!');
     }
@@ -76,7 +76,7 @@ const TelemedicineRoom = () => {
           duration_minutes: Math.floor(elapsedTime / 60),
           notas: notes
         })
-        .eq('room_code', roomCode);
+        .eq('id', roomId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -150,7 +150,7 @@ const TelemedicineRoom = () => {
   };
 
   const copyRoomLink = () => {
-    const url = `${window.location.origin}/telemedicine/room/${roomCode}`;
+    const url = `${window.location.origin}/telemedicine-room/${roomId}`;
     navigator.clipboard.writeText(url);
     toast.success('Link copiado!');
   };
@@ -275,7 +275,7 @@ const TelemedicineRoom = () => {
           <div className="p-4 border-b">
             <h2 className="font-semibold">Teleconsulta</h2>
             <p className="text-sm text-muted-foreground">
-              Sala: {roomCode}
+              Sala: {room.room_code || roomId}
             </p>
           </div>
           
