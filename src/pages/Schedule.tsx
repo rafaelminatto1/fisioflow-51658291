@@ -23,6 +23,7 @@ import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { ScheduleStatsCard } from '@/components/schedule/ScheduleStatsCard';
 import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 // Lazy load CalendarView for better initial load performance
 const CalendarView = lazy(() => import('@/components/schedule/CalendarView').then(mod => ({ default: mod.CalendarView })));
@@ -42,7 +43,7 @@ const Schedule = () => {
   const [modalDefaultDate, setModalDefaultDate] = useState<Date | undefined>();
   const [modalDefaultTime, setModalDefaultTime] = useState<string | undefined>();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewType, setViewType] = useState<CalendarViewType | 'list'>('list');
+  const [viewType, setViewType] = useState<CalendarViewType | 'list'>('week');
   const [filters, setFilters] = useState<FilterType>({
     search: '',
     status: '',
@@ -310,119 +311,80 @@ const Schedule = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-4 sm:space-y-6 animate-fade-in">
-        {/* Header com melhor hierarquia visual e responsividade */}
-        <div className="flex flex-col gap-4 pb-2">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 sm:p-3 bg-gradient-primary rounded-xl shadow-medical hover-lift">
-                <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-                  Agenda
-                </h1>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                  Gerencie seus agendamentos de forma eficiente
-                </p>
-              </div>
+      <div className="space-y-4 animate-fade-in">
+        {/* Header compacto */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-gradient-primary rounded-lg shadow-sm">
+              <Calendar className="h-5 w-5 text-primary-foreground" />
             </div>
-            <div className="flex gap-2">
-              <Link to="/schedule/settings">
-                <Button variant="outline" size="sm">
-                  <SettingsIcon className="mr-2 h-4 w-4" />
-                  Configurações
-                </Button>
-              </Link>
-              <Button
-                onClick={createTestAppointments}
-                variant="outline"
-                size="lg"
-                className="w-full sm:w-auto"
-              >
-                Criar Dados de Teste
-              </Button>
-              <Button 
-                onClick={handleCreateAppointment}
-                size="lg"
-                className="w-full sm:w-auto shadow-medical hover:shadow-hover transition-all duration-300 hover-lift"
-              >
-                <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                Novo Agendamento
-              </Button>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Agenda</h1>
+              <p className="text-xs text-muted-foreground hidden sm:block">
+                {format(currentDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
+              </p>
             </div>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Link to="/schedule/settings">
+              <Button variant="ghost" size="sm" className="h-8">
+                <SettingsIcon className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Button 
+              onClick={handleCreateAppointment}
+              size="sm"
+              className="h-8 shadow-sm"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Novo
+            </Button>
           </div>
         </div>
 
-        {/* Quick Stats */}
-        <QuickStats />
-
-        {/* Statistics Cards - Melhorados e responsivos */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          {loading ? (
-            <>
-              {[...Array(4)].map((_, i) => (
-                <Card key={i} className="border-0 shadow-card overflow-hidden">
-                  <CardContent className="p-4 sm:p-6">
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center justify-between">
-                        <div className="h-4 w-16 skeleton-shimmer rounded" />
-                        <div className="h-10 w-10 skeleton-shimmer rounded-lg" />
-                      </div>
-                      <div className="h-8 w-12 skeleton-shimmer rounded" />
-                      <div className="h-3 w-24 skeleton-shimmer rounded" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </>
-          ) : (
-            <>
-              <ScheduleStatsCard
-                title="Hoje"
-                value={stats.totalToday}
-                description="Total de agendamentos"
-                icon={Calendar}
-                iconColor="bg-primary/10 text-primary"
-                bgGradient="bg-gradient-to-br from-primary/5 to-primary/[0.02]"
-                animationDelay="0s"
-              />
-              <ScheduleStatsCard
-                title="Confirmados"
-                value={stats.confirmedToday}
-                description="Pacientes confirmados"
-                icon={Users}
-                iconColor="bg-success/10 text-success"
-                bgGradient="bg-gradient-to-br from-success/5 to-success/[0.02]"
-                valueColor="text-success"
-                animationDelay="0.1s"
-              />
-              <ScheduleStatsCard
-                title="Concluídos"
-                value={stats.completedToday}
-                description="Atendimentos finalizados"
-                icon={TrendingUp}
-                iconColor="bg-secondary/10 text-secondary"
-                bgGradient="bg-gradient-to-br from-secondary/5 to-secondary/[0.02]"
-                valueColor="text-secondary"
-                animationDelay="0.2s"
-              />
-              <ScheduleStatsCard
-                title="Pendentes"
-                value={stats.pendingToday}
-                description="Aguardando atendimento"
-                icon={Clock}
-                iconColor="bg-warning/10 text-warning"
-                bgGradient="bg-gradient-to-br from-warning/5 to-warning/[0.02]"
-                valueColor="text-warning"
-                animationDelay="0.3s"
-              />
-            </>
-          )}
+        {/* Stats compactos em linha */}
+        <div className="grid grid-cols-4 gap-2">
+          <div className="bg-card border rounded-lg p-2.5 text-center">
+            <div className="text-lg font-bold text-foreground">{stats.totalToday}</div>
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Hoje</div>
+          </div>
+          <div className="bg-card border rounded-lg p-2.5 text-center">
+            <div className="text-lg font-bold text-success">{stats.confirmedToday}</div>
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Confirmados</div>
+          </div>
+          <div className="bg-card border rounded-lg p-2.5 text-center">
+            <div className="text-lg font-bold text-secondary">{stats.completedToday}</div>
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Concluídos</div>
+          </div>
+          <div className="bg-card border rounded-lg p-2.5 text-center">
+            <div className="text-lg font-bold text-warning">{stats.pendingToday}</div>
+            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Pendentes</div>
+          </div>
         </div>
 
-        {/* Search and Advanced Filters */}
-        <div className="flex gap-3 animate-slide-up" style={{animationDelay: '0.1s'}}>
+        {/* View Selector + Search integrado */}
+        <div className="flex flex-col sm:flex-row gap-2">
+          {/* View tabs */}
+          <div className="flex bg-muted/50 p-1 rounded-lg">
+            {(['list', 'day', 'week', 'month'] as const).map(type => (
+              <button
+                key={type}
+                onClick={() => setViewType(type)}
+                className={cn(
+                  "px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                  viewType === type
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {type === 'list' ? 'Lista' : 
+                 type === 'day' ? 'Dia' : 
+                 type === 'week' ? 'Semana' : 'Mês'}
+              </button>
+            ))}
+          </div>
+          
+          {/* Search */}
           <div className="flex-1">
             <AppointmentSearch
               value={filters.search}
@@ -430,6 +392,7 @@ const Schedule = () => {
               onClear={() => setFilters({ ...filters, search: '' })}
             />
           </div>
+          
           <AdvancedFilters
             filters={advancedFilters}
             onChange={setAdvancedFilters}
@@ -437,78 +400,21 @@ const Schedule = () => {
           />
         </div>
 
-        {/* Basic Filters */}
-        <AppointmentFilters
-          filters={filters}
-          onFiltersChange={handleFiltersChange}
-          onClearFilters={handleClearFilters}
-          services={services}
-        />
-
-        {/* Results Summary - Melhorado e responsivo */}
-        {(filters.search || filters.status || filters.service || filters.dateFrom || filters.dateTo) && (
-          <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/[0.02] shadow-card animate-slide-up">
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg">
-                    <Badge variant="secondary" className="bg-primary text-primary-foreground font-semibold text-xs sm:text-sm">
-                      {filteredAppointments.length}
-                    </Badge>
-                  </div>
-                  <span className="text-xs sm:text-sm font-medium">
-                    resultado{filteredAppointments.length !== 1 ? 's' : ''} encontrado{filteredAppointments.length !== 1 ? 's' : ''}
-                  </span>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleClearFilters}
-                  className="w-full sm:w-auto hover-scale text-xs sm:text-sm"
-                >
-                  Limpar filtros
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* View Selector - Melhorado para mobile */}
-        <div className="flex justify-center mb-4 animate-slide-up" style={{animationDelay: '0.15s'}}>
-          <div className="inline-flex items-center gap-1 bg-muted/50 p-1.5 rounded-xl shadow-card">
-            {(['list', 'day', 'week', 'month'] as const).map(type => (
-              <button
-                key={type}
-                onClick={() => setViewType(type)}
-                className={cn(
-                  "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                  viewType === type
-                    ? "bg-primary text-primary-foreground shadow-md scale-105"
-                    : "text-muted-foreground hover:text-foreground hover:bg-background/50"
-                )}
-              >
-                {type === 'list' ? '📱 Lista' : 
-                 type === 'day' ? '📅 Dia' : 
-                 type === 'week' ? '📊 Semana' : 
-                 '📆 Mês'}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Mini Calendar - Apenas no modo lista */}
-        {viewType === 'list' && (
-          <div className="lg:hidden animate-slide-up" style={{animationDelay: '0.2s'}}>
-            <MiniCalendar
-              selectedDate={currentDate}
-              onDateSelect={setCurrentDate}
-              appointmentDates={appointmentDates}
-            />
+        {/* Results Summary compacto */}
+        {(filters.search || filters.status || filters.service || advancedFilters.status.length > 0) && (
+          <div className="flex items-center justify-between px-3 py-2 bg-muted/30 rounded-lg text-xs">
+            <span className="text-muted-foreground">
+              <Badge variant="secondary" className="mr-2">{filteredAppointments.length}</Badge>
+              resultado{filteredAppointments.length !== 1 ? 's' : ''}
+            </span>
+            <Button variant="ghost" size="sm" onClick={handleClearFilters} className="h-6 text-xs">
+              Limpar
+            </Button>
           </div>
         )}
 
-        {/* Calendar/List View - Container melhorado e responsivo */}
-        <div className="animate-slide-up rounded-2xl border border-border/50 bg-card shadow-xl min-h-[600px]" style={{animationDelay: '0.2s'}}>
+        {/* Calendar/List View */}
+        <div className="rounded-xl border bg-card shadow-sm overflow-hidden" style={{ height: 'calc(100vh - 280px)', minHeight: '500px' }}>
           {viewType === 'list' ? (
             <AppointmentListView
               appointments={filteredAppointments}
@@ -519,9 +425,9 @@ const Schedule = () => {
           ) : (
             <Suspense fallback={
               <div className="flex items-center justify-center h-full">
-                <div className="text-center space-y-3">
-                  <div className="h-12 w-12 mx-auto skeleton-shimmer rounded-xl" />
-                  <p className="text-sm text-muted-foreground">Carregando calendário...</p>
+                <div className="text-center space-y-2">
+                  <div className="h-8 w-8 mx-auto border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <p className="text-xs text-muted-foreground">Carregando...</p>
                 </div>
               </div>
             }>
