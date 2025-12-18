@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ScrollArea } from '@/components/ui/scroll-area';
+// ScrollArea removed - using native overflow
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -380,51 +380,63 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
-        <DialogHeader className="px-6 pt-5 pb-4 border-b bg-gradient-to-r from-primary/5 to-transparent">
-          <div className="flex items-center justify-between">
-            <div>
-              <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
-                <CalendarIcon className="h-5 w-5 text-primary" />
-                {currentMode === 'create' ? 'Novo Agendamento' : currentMode === 'edit' ? 'Editar Agendamento' : 'Detalhes'}
+      <DialogContent className="sm:max-w-2xl w-[95vw] max-h-[85vh] sm:max-h-[90vh] flex flex-col p-0">
+        {/* Header - Fixed */}
+        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b bg-gradient-to-r from-primary/5 to-transparent shrink-0">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl font-semibold">
+                <CalendarIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+                <span className="truncate">
+                  {currentMode === 'create' ? 'Novo Agendamento' : currentMode === 'edit' ? 'Editar Agendamento' : 'Detalhes'}
+                </span>
               </DialogTitle>
-              <DialogDescription className="text-sm mt-1">
+              <DialogDescription className="text-xs sm:text-sm mt-1">
                 {watchedDate && watchedTime ? (
                   <span className="flex items-center gap-2">
-                    <Clock className="h-3 w-3" />
-                    {format(watchedDate, "EEEE, d 'de' MMMM", { locale: ptBR })} às {watchedTime}
+                    <Clock className="h-3 w-3 shrink-0" />
+                    <span className="truncate">
+                      {format(watchedDate, "EEEE, d 'de' MMMM", { locale: ptBR })} às {watchedTime}
+                    </span>
                   </span>
                 ) : 'Preencha os dados do agendamento'}
               </DialogDescription>
             </div>
             {watch('status') && (
-              <Badge className={cn("text-white", statusColors[watch('status')])}>
+              <Badge className={cn("text-white text-xs shrink-0", statusColors[watch('status')])}>
                 {statusLabels[watch('status')]}
               </Badge>
             )}
           </div>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-          <div className="px-6 pt-2">
-            <TabsList className="grid w-full grid-cols-3 h-10">
-              <TabsTrigger value="info" className="flex items-center gap-2 text-xs">
-                <User className="h-4 w-4" />
-                Informações
+        {/* Tabs Navigation - Fixed */}
+        <div className="px-4 sm:px-6 pt-2 pb-2 border-b shrink-0">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 h-9 sm:h-10">
+              <TabsTrigger value="info" className="flex items-center gap-1 sm:gap-2 text-xs">
+                <User className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline">Informações</span>
+                <span className="xs:hidden">Info</span>
               </TabsTrigger>
-              <TabsTrigger value="payment" className="flex items-center gap-2 text-xs">
-                <CreditCard className="h-4 w-4" />
-                Pagamento
+              <TabsTrigger value="payment" className="flex items-center gap-1 sm:gap-2 text-xs">
+                <CreditCard className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline">Pagamento</span>
+                <span className="xs:hidden">Pag.</span>
               </TabsTrigger>
-              <TabsTrigger value="options" className="flex items-center gap-2 text-xs">
-                <FileText className="h-4 w-4" />
-                Opções
+              <TabsTrigger value="options" className="flex items-center gap-1 sm:gap-2 text-xs">
+                <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline">Opções</span>
+                <span className="xs:hidden">Opç.</span>
               </TabsTrigger>
             </TabsList>
-          </div>
+          </Tabs>
+        </div>
 
-          <ScrollArea className="flex-1 overflow-auto">
-            <form id="appointment-form" onSubmit={handleSubmit(handleSave)} className="p-6 pt-4">
+        {/* Scrollable Content */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <Tabs value={activeTab} className="h-full">
+            <form id="appointment-form" onSubmit={handleSubmit(handleSave)} className="p-4 sm:p-6 pt-3 sm:pt-4">
               
               {/* Tab: Informações */}
               <TabsContent value="info" className="mt-0 space-y-4">
@@ -445,42 +457,42 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
 
                 {/* Patient Quick Info */}
                 {selectedPatient && (
-                  <div className="bg-muted/30 rounded-lg p-3 border space-y-1">
-                    <p className="text-sm font-medium">{selectedPatient.name}</p>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      {selectedPatient.phone && <span>📱 {selectedPatient.phone}</span>}
-                      {selectedPatient.email && <span>✉️ {selectedPatient.email}</span>}
+                  <div className="bg-muted/30 rounded-lg p-2 sm:p-3 border space-y-1">
+                    <p className="text-sm font-medium truncate">{selectedPatient.name}</p>
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-muted-foreground">
+                      {selectedPatient.phone && <span className="truncate">📱 {selectedPatient.phone}</span>}
+                      {selectedPatient.email && <span className="truncate">✉️ {selectedPatient.email}</span>}
                     </div>
                   </div>
                 )}
 
-                {/* Date and Time - Compact Row */}
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Data *</Label>
+                {/* Date and Time - Responsive Row */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label className="text-xs sm:text-sm font-medium">Data *</Label>
                     <Button
                       type="button"
                       variant="outline"
                       className={cn(
-                        "w-full justify-start text-left font-normal h-10",
+                        "w-full justify-start text-left font-normal h-9 sm:h-10 text-xs sm:text-sm",
                         !watchedDate && "text-muted-foreground"
                       )}
                       disabled={currentMode === 'view'}
                       onClick={() => setIsCalendarOpen(true)}
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <CalendarIcon className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       {watchedDate ? format(watchedDate, 'dd/MM', { locale: ptBR }) : "Data"}
                     </Button>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Horário *</Label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label className="text-xs sm:text-sm font-medium">Horário *</Label>
                     <Select
                       value={watchedTime}
                       onValueChange={(value) => setValue('appointment_time', value)}
                       disabled={currentMode === 'view'}
                     >
-                      <SelectTrigger className="h-10">
+                      <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                         <SelectValue placeholder="Hora" />
                       </SelectTrigger>
                       <SelectContent className="max-h-60">
@@ -491,14 +503,14 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                     </Select>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Duração</Label>
+                  <div className="space-y-1.5 sm:space-y-2 col-span-2 sm:col-span-1">
+                    <Label className="text-xs sm:text-sm font-medium">Duração</Label>
                     <Select
                       value={watchedDuration?.toString()}
                       onValueChange={(value) => setValue('duration', parseInt(value))}
                       disabled={currentMode === 'view'}
                     >
-                      <SelectTrigger className="h-10">
+                      <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -533,15 +545,15 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                 })()}
 
                 {/* Type and Status */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Tipo *</Label>
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label className="text-xs sm:text-sm font-medium">Tipo *</Label>
                     <Select
                       value={watch('type')}
                       onValueChange={(value) => setValue('type', value as AppointmentType)}
                       disabled={currentMode === 'view'}
                     >
-                      <SelectTrigger className="h-10">
+                      <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                         <SelectValue placeholder="Tipo" />
                       </SelectTrigger>
                       <SelectContent>
@@ -552,14 +564,14 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                     </Select>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Status *</Label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label className="text-xs sm:text-sm font-medium">Status *</Label>
                     <Select
                       value={watch('status')}
                       onValueChange={(value) => setValue('status', value as AppointmentStatus)}
                       disabled={currentMode === 'view'}
                     >
-                      <SelectTrigger className="h-10">
+                      <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -577,14 +589,14 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                 </div>
 
                 {/* Notes */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Observações</Label>
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label className="text-xs sm:text-sm font-medium">Observações</Label>
                   <Textarea
                     {...register('notes')}
                     placeholder="Informações importantes sobre o atendimento..."
                     rows={2}
                     disabled={currentMode === 'view'}
-                    className="resize-none"
+                    className="resize-none text-sm"
                   />
                 </div>
               </TabsContent>
@@ -789,12 +801,12 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                 )}
               </TabsContent>
             </form>
-          </ScrollArea>
-        </Tabs>
+          </Tabs>
+        </div>
 
         {/* Fixed Footer */}
-        <div className="flex justify-between gap-3 px-6 py-4 border-t bg-background shrink-0">
-          <div>
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 border-t bg-background shrink-0">
+          <div className="flex justify-center sm:justify-start">
             {currentMode === 'edit' && appointment && (
               <Button
                 type="button"
@@ -809,7 +821,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
             )}
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-2 justify-end">
             {currentMode === 'view' && appointment && (
               <Button
                 type="button"
@@ -836,7 +848,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                 type="submit"
                 form="appointment-form"
                 disabled={isCreating || isUpdating}
-                className="min-w-[100px]"
+                className="min-w-[80px] sm:min-w-[100px]"
                 size="sm"
               >
                 {(isCreating || isUpdating) ? (
