@@ -82,6 +82,7 @@ const FluxoCaixaPage = lazy(() => import("./pages/financeiro/FluxoCaixaPage"));
 // Fase 5: Relatórios
 const AniversariantesPage = lazy(() => import("./pages/relatorios/AniversariantesPage"));
 const AttendanceReport = lazy(() => import("./pages/relatorios/AttendanceReport"));
+const TeamPerformance = lazy(() => import("./pages/relatorios/TeamPerformance"));
 
 const LeadsPage = lazy(() => import("./pages/crm/LeadsPage"));
 const CRMDashboard = lazy(() => import("./pages/crm/CRMDashboard"));
@@ -218,6 +219,7 @@ const App = () => {
                   {/* Relatórios - Fase 5 */}
                   <Route path="/relatorios/aniversariantes" element={<ProtectedRoute><AniversariantesPage /></ProtectedRoute>} />
                   <Route path="/relatorios/comparecimento" element={<ProtectedRoute><AttendanceReport /></ProtectedRoute>} />
+                  <Route path="/performance-equipe" element={<ProtectedRoute><TeamPerformance /></ProtectedRoute>} />
                   
                   {/* Marketing/CRM - Fase 6 */}
                   <Route path="/crm" element={<ProtectedRoute><CRMDashboard /></ProtectedRoute>} />
