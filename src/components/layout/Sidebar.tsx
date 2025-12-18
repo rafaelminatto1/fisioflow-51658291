@@ -35,7 +35,10 @@ import {
   TrendingUp,
   Sparkles,
   Package,
-  Trophy
+  Trophy,
+  Video,
+  UserPlus,
+  LinkIcon
 } from 'lucide-react';
 import {
   Collapsible,
@@ -59,6 +62,8 @@ const menuItems = [
   { icon: ShoppingCart, label: 'Treinos', href: '/vouchers' },
   { icon: Package, label: 'Estoque', href: '/inventory' },
   { icon: Trophy, label: 'Gamificação', href: '/gamification' },
+  { icon: Video, label: 'Telemedicina', href: '/telemedicine' },
+  { icon: LinkIcon, label: 'Pré-Cadastro', href: '/pre-cadastro-admin' },
   { icon: BarChart3, label: 'Analytics Avançado', href: '/analytics' },
   { icon: Lock, label: 'Segurança & LGPD', href: '/security-settings' },
   { icon: Shield, label: 'Monitoramento', href: '/security-monitoring' },

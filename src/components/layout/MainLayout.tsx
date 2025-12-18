@@ -3,6 +3,7 @@ import { Sidebar } from './Sidebar';
 import { MobileHeader } from './MobileHeader';
 import { BottomNavigation } from './BottomNavigation';
 import { OnlineUsersIndicator } from './OnlineUsersIndicator';
+import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { GlobalSearch } from '@/components/eventos/GlobalSearch';
@@ -30,6 +31,9 @@ interface MainLayoutProps {
 export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen flex w-full bg-gradient-to-br from-background via-accent/5 to-background">
+      {/* Onboarding Tour */}
+      <OnboardingTour />
+      
       {/* Header Mobile */}
       <MobileHeader />
       
