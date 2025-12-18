@@ -52,3 +52,10 @@ verify_jwt = true
 # Função administrativa especial - não requer JWT
 [functions.create-demo-users]
 verify_jwt = false
+
+# Stripe functions
+[functions.create-checkout]
+verify_jwt = true
+
+[functions.stripe-webhook]
+verify_jwt = false
