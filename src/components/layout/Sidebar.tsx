@@ -81,6 +81,7 @@ const relatoriosSubmenu = [
 ];
 
 const crmSubmenu = [
+  { icon: LayoutGrid, label: 'Dashboard CRM', href: '/crm' },
   { icon: Users, label: 'Leads', href: '/crm/leads' },
 ];
 
@@ -407,7 +408,7 @@ export function Sidebar() {
         )}
         {collapsed && (
           <Link
-            to="/crm/leads"
+            to="/crm"
             className={cn(
               "flex items-center justify-center px-2 py-2.5 rounded-lg transition-all group relative",
               isCrmActive
