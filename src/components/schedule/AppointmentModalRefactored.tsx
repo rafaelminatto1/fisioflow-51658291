@@ -80,6 +80,7 @@ interface AppointmentModalProps {
   appointment?: AppointmentBase | null;
   defaultDate?: Date;
   defaultTime?: string;
+  defaultPatientId?: string;
   mode?: 'create' | 'edit' | 'view';
 }
 
@@ -141,6 +142,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   appointment,
   defaultDate,
   defaultTime,
+  defaultPatientId,
   mode: initialMode = 'create'
 }) => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -162,7 +164,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const { register, handleSubmit, formState: { errors }, setValue, watch, reset } = useForm<AppointmentSchemaType>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
-      patient_id: (appointment as any)?.patient_id || '',
+      patient_id: (appointment as any)?.patient_id || defaultPatientId || '',
       appointment_date: (appointment as any)?.appointment_date ? new Date((appointment as any).appointment_date) : (defaultDate || new Date()),
       appointment_time: (appointment as any)?.appointment_time || defaultTime || '',
       duration: appointment?.duration || 60,
@@ -202,7 +204,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       setValue('recurring_until', undefined);
     } else {
       reset({
-        patient_id: '',
+        patient_id: defaultPatientId || '',
         appointment_date: defaultDate || new Date(),
         appointment_time: defaultTime || '',
         duration: 60,
