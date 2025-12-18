@@ -59,7 +59,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   onOpenChange,
 }) => {
   const navigate = useNavigate();
-  const { confirmAppointment, cancelAppointment, isConfirming, isCanceling } = useAppointmentActions();
+  const { updateStatus, isUpdatingStatus } = useAppointmentActions();
 
   const canStartAttendance = appointment.status === 'confirmado' || appointment.status === 'agendado';
 
@@ -72,10 +72,8 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   };
 
   const handleStatusChange = (newStatus: string) => {
-    if (newStatus === 'confirmado') {
-      confirmAppointment(appointment.id);
-    } else if (newStatus === 'cancelado') {
-      cancelAppointment(appointment.id);
+    if (newStatus !== appointment.status) {
+      updateStatus({ appointmentId: appointment.id, status: newStatus });
     }
   };
 
@@ -162,7 +160,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
             <Select
               value={appointment.status}
               onValueChange={handleStatusChange}
-              disabled={isConfirming || isCanceling}
+              disabled={isUpdatingStatus}
             >
               <SelectTrigger className="h-8 w-[140px]">
                 <SelectValue>
