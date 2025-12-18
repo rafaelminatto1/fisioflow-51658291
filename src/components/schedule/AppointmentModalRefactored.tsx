@@ -42,6 +42,8 @@ import { useAvailableTimeSlots } from '@/hooks/useAvailableTimeSlots';
 import { EquipmentSelector, SelectedEquipment } from './EquipmentSelector';
 import { AppointmentReminder, AppointmentReminderData } from './AppointmentReminder';
 import { DuplicateAppointmentDialog, DuplicateConfig } from './DuplicateAppointmentDialog';
+import { CapacityExceededDialog } from './CapacityExceededDialog';
+import { WaitlistQuickAdd } from './WaitlistQuickAdd';
 
 const appointmentSchema = z.object({
   patient_id: z.string().min(1, 'Selecione um paciente'),
@@ -154,6 +156,9 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const [selectedEquipments, setSelectedEquipments] = useState<SelectedEquipment[]>([]);
   const [reminders, setReminders] = useState<AppointmentReminderData[]>([]);
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
+  const [capacityDialogOpen, setCapacityDialogOpen] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState<AppointmentSchemaType | null>(null);
+  const [forceOverCapacity, setForceOverCapacity] = useState(false);
   
   const { mutate: createAppointmentMutation, isPending: isCreating } = useCreateAppointment();
   const { mutate: updateAppointmentMutation, isPending: isUpdating } = useUpdateAppointment();
@@ -262,8 +267,91 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     return activePatients.find(p => p.id === watchedPatientId);
   }, [watchedPatientId, activePatients]);
 
+  // Check if over capacity before saving
+  const checkCapacityBeforeSave = (data: AppointmentSchemaType): boolean => {
+    if (forceOverCapacity) return true; // User chose to schedule anyway
+    
+    const dayOfWeek = data.appointment_date.getDay();
+    const maxCapacity = getCapacityForTime(dayOfWeek, data.appointment_time);
+    const conflictCount = conflictCheck?.conflictCount || 0;
+    
+    // If editing, don't count current appointment
+    const adjustedCount = currentMode === 'edit' ? conflictCount : conflictCount;
+    
+    if (adjustedCount >= maxCapacity) {
+      setPendingFormData(data);
+      setCapacityDialogOpen(true);
+      return false;
+    }
+    
+    return true;
+  };
+
+  const executeCreateAppointment = (formData: AppointmentFormData, isOverCapacity: boolean = false) => {
+    // Add over-capacity marker to notes if needed
+    const notesWithMarker = isOverCapacity 
+      ? `[EXCEDENTE] ${formData.notes || ''}`.trim()
+      : formData.notes;
+
+    const finalFormData = {
+      ...formData,
+      notes: notesWithMarker,
+    };
+
+    if (currentMode === 'edit' && appointment) {
+      updateAppointmentMutation({
+        appointmentId: appointment.id,
+        updates: finalFormData
+      }, {
+        onSuccess: () => {
+          toast({
+            title: 'Agendamento atualizado',
+            description: isOverCapacity 
+              ? 'Agendamento salvo como excedente.' 
+              : 'As alterações foram salvas com sucesso.',
+            variant: isOverCapacity ? 'default' : 'default'
+          });
+          setForceOverCapacity(false);
+          onClose();
+        },
+        onError: (error: Error) => {
+          toast({
+            title: 'Erro ao atualizar',
+            description: error.message,
+            variant: 'destructive'
+          });
+        }
+      });
+    } else {
+      createAppointmentMutation(finalFormData, {
+        onSuccess: () => {
+          toast({
+            title: isOverCapacity ? 'Agendamento excedente criado' : 'Agendamento criado',
+            description: isOverCapacity 
+              ? 'Paciente agendado além da capacidade. Ficará destacado na agenda.' 
+              : 'O agendamento foi criado com sucesso.',
+          });
+          setForceOverCapacity(false);
+          onClose();
+        },
+        onError: (error: Error) => {
+          toast({
+            title: 'Erro ao criar',
+            description: error.message,
+            variant: 'destructive'
+          });
+        }
+      });
+    }
+  };
+
   const handleSave = async (data: AppointmentSchemaType) => {
     try {
+      // Check capacity first (unless user already chose to force)
+      if (!checkCapacityBeforeSave(data)) {
+        return; // Dialog will be shown
+      }
+
       const dateStr = format(data.appointment_date, 'yyyy-MM-dd');
 
       const formData: AppointmentFormData = {
@@ -283,44 +371,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         recurring_until: data.recurring_until ? format(data.recurring_until, 'yyyy-MM-dd') : null,
       };
 
-      if (currentMode === 'edit' && appointment) {
-        updateAppointmentMutation({
-          appointmentId: appointment.id,
-          updates: formData
-        }, {
-          onSuccess: () => {
-            toast({
-              title: 'Agendamento atualizado',
-              description: 'As alterações foram salvas com sucesso.',
-            });
-            onClose();
-          },
-          onError: (error: Error) => {
-            toast({
-              title: 'Erro ao atualizar',
-              description: error.message,
-              variant: 'destructive'
-            });
-          }
-        });
-      } else {
-        createAppointmentMutation(formData, {
-          onSuccess: () => {
-            toast({
-              title: 'Agendamento criado',
-              description: 'O agendamento foi criado com sucesso.',
-            });
-            onClose();
-          },
-          onError: (error: Error) => {
-            toast({
-              title: 'Erro ao criar',
-              description: error.message,
-              variant: 'destructive'
-            });
-          }
-        });
-      }
+      executeCreateAppointment(formData, forceOverCapacity);
     } catch (error) {
       console.error('Error saving appointment:', error);
       toast({
@@ -330,6 +381,54 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       });
     }
   };
+
+  // Handle capacity dialog options
+  const handleAddToWaitlistFromCapacity = () => {
+    if (pendingFormData) {
+      setCapacityDialogOpen(false);
+      setWaitlistQuickAddOpen(true);
+    }
+  };
+
+  const handleChooseAnotherTime = () => {
+    setCapacityDialogOpen(false);
+    setPendingFormData(null);
+    setActiveTab('info');
+    toast({
+      title: 'Selecione outro horário',
+      description: 'Escolha um horário com vagas disponíveis.',
+    });
+  };
+
+  const handleScheduleAnyway = () => {
+    if (pendingFormData) {
+      setCapacityDialogOpen(false);
+      setForceOverCapacity(true);
+      
+      const dateStr = format(pendingFormData.appointment_date, 'yyyy-MM-dd');
+      const formData: AppointmentFormData = {
+        patient_id: pendingFormData.patient_id,
+        appointment_date: dateStr,
+        appointment_time: pendingFormData.appointment_time,
+        duration: pendingFormData.duration,
+        type: pendingFormData.type as AppointmentType,
+        status: pendingFormData.status as AppointmentStatus,
+        notes: pendingFormData.notes || null,
+        therapist_id: pendingFormData.therapist_id || null,
+        room: pendingFormData.room || null,
+        payment_status: pendingFormData.payment_status === 'paid_single' || pendingFormData.payment_status === 'paid_package' ? 'paid' : 'pending',
+        payment_amount: pendingFormData.payment_amount || null,
+        session_package_id: pendingFormData.session_package_id || null,
+        is_recurring: pendingFormData.is_recurring,
+        recurring_until: pendingFormData.recurring_until ? format(pendingFormData.recurring_until, 'yyyy-MM-dd') : null,
+      };
+
+      executeCreateAppointment(formData, true);
+      setPendingFormData(null);
+    }
+  };
+
+  const [waitlistQuickAddOpen, setWaitlistQuickAddOpen] = useState(false);
 
   const handleDelete = () => {
     toast({
@@ -968,6 +1067,32 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         appointment={appointment || null}
         onDuplicate={handleDuplicate}
       />
+
+      {/* Capacity Exceeded Dialog */}
+      <CapacityExceededDialog
+        open={capacityDialogOpen}
+        onOpenChange={setCapacityDialogOpen}
+        currentCount={(conflictCheck?.conflictCount || 0) + 1}
+        maxCapacity={watchedDate && watchedTime ? getCapacityForTime(watchedDate.getDay(), watchedTime) : 1}
+        selectedTime={watchedTime || ''}
+        selectedDate={watchedDate || new Date()}
+        onAddToWaitlist={handleAddToWaitlistFromCapacity}
+        onChooseAnotherTime={handleChooseAnotherTime}
+        onScheduleAnyway={handleScheduleAnyway}
+      />
+
+      {/* Waitlist Quick Add from Capacity Dialog */}
+      {waitlistQuickAddOpen && pendingFormData && (
+        <WaitlistQuickAdd
+          open={waitlistQuickAddOpen}
+          onOpenChange={(open) => {
+            setWaitlistQuickAddOpen(open);
+            if (!open) setPendingFormData(null);
+          }}
+          date={pendingFormData.appointment_date}
+          time={pendingFormData.appointment_time}
+        />
+      )}
     </Dialog>
   );
 };
