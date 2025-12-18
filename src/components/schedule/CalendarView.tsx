@@ -454,8 +454,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     return (
       <div className="flex">
         {/* Time column - Sticky e otimizado */}
-        <div className="w-16 sm:w-20 border-r border-border/50 bg-gradient-to-b from-card via-muted/30 to-muted/50 flex-shrink-0 sticky left-0 z-10 shadow-sm">
-          <div className="h-14 sm:h-16 border-b border-border/50 flex items-center justify-center sticky top-0 bg-gradient-primary backdrop-blur-sm z-20 shadow-md">
+        <div className="w-16 sm:w-20 border-r border-border/50 bg-gradient-to-b from-card via-muted/30 to-muted/50 flex-shrink-0">
+          <div className="h-14 sm:h-16 border-b border-border/50 flex items-center justify-center bg-gradient-primary backdrop-blur-sm z-20 shadow-md">
             <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-primary-foreground" />
           </div>
           {timeSlots.map(time => (
