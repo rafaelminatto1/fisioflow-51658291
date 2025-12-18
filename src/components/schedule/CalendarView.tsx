@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths, isSameMonth, isSameDay, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Calendar, Clock, User, GripVertical, Ban } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Clock, User, GripVertical, Ban, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -179,7 +179,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     });
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string, isOverCapacity: boolean = false) => {
+    // Over-capacity appointments get a special amber/orange pulsing style
+    if (isOverCapacity) {
+      return 'bg-gradient-to-br from-amber-600 to-orange-600 border-amber-400 shadow-amber-500/40 ring-2 ring-amber-400/50 ring-offset-1';
+    }
+    
     switch (status.toLowerCase()) {
       case 'confirmado':
       case 'confirmed': 
@@ -217,6 +222,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       default: 
         return 'bg-gradient-to-br from-gray-500 to-gray-600 border-gray-400 shadow-gray-500/30';
     }
+  };
+
+  // Helper to check if appointment is over capacity
+  const isOverCapacity = (apt: Appointment): boolean => {
+    return apt.notes?.includes('[EXCEDENTE]') || false;
   };
 
   // Hook for time slots availability
@@ -358,10 +368,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     onDragEnd={handleDragEnd}
                     className={cn(
                       "absolute left-1 right-1 p-2 rounded-xl text-white cursor-pointer shadow-xl border-l-4 backdrop-blur-sm animate-fade-in overflow-hidden",
-                      getStatusColor(apt.status),
+                      getStatusColor(apt.status, isOverCapacity(apt)),
                       "hover:shadow-2xl hover:scale-[1.02] hover:z-20 transition-all duration-300",
                       isDraggable && "cursor-grab active:cursor-grabbing",
-                      dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50 scale-95"
+                      dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50 scale-95",
+                      isOverCapacity(apt) && "animate-pulse"
                     )}
                     style={{ 
                       top: `${top}px`, 
@@ -369,7 +380,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     }}
                   >
                     <div className="flex items-start justify-between gap-1">
-                      <div className="font-bold text-sm line-clamp-3 leading-tight flex-1">
+                      <div className="font-bold text-sm line-clamp-3 leading-tight flex-1 flex items-center gap-1">
+                        {isOverCapacity(apt) && (
+                          <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 text-white" />
+                        )}
                         {apt.patientName}
                       </div>
                       {isDraggable && (
@@ -379,6 +393,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     <div className="text-xs opacity-90 flex items-center gap-1 mt-1">
                       <Clock className="h-3 w-3 flex-shrink-0" />
                       <span>{apt.time}</span>
+                      {isOverCapacity(apt) && (
+                        <Badge variant="secondary" className="text-[8px] px-1 py-0 h-4 bg-white/20 text-white ml-1">
+                          EXCEDENTE
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </AppointmentQuickView>
@@ -582,10 +601,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                             onDragEnd={handleDragEnd}
                             className={cn(
                               "absolute left-0.5 right-0.5 sm:left-1 sm:right-1 p-1.5 sm:p-2.5 rounded-xl text-white cursor-pointer shadow-xl border-l-[3px] sm:border-l-4 backdrop-blur-sm animate-fade-in overflow-hidden",
-                              getStatusColor(apt.status),
+                              getStatusColor(apt.status, isOverCapacity(apt)),
                               "hover:shadow-2xl hover:scale-[1.02] hover:z-20 transition-all duration-200 group/card",
                               isDraggable && "cursor-grab active:cursor-grabbing",
-                              dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50 scale-95"
+                              dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50 scale-95",
+                              isOverCapacity(apt) && "animate-pulse"
                             )}
                             style={{ 
                               top: `${topMobile}px`,
@@ -604,7 +624,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                               }
                             `}} />
                             <div className="flex items-start justify-between gap-0.5">
-                              <div className="font-extrabold drop-shadow-md leading-tight text-[11px] sm:text-xs line-clamp-3 flex-1">
+                              <div className="font-extrabold drop-shadow-md leading-tight text-[11px] sm:text-xs line-clamp-3 flex-1 flex items-center gap-0.5">
+                                {isOverCapacity(apt) && (
+                                  <AlertTriangle className="h-3 w-3 flex-shrink-0 text-white" />
+                                )}
                                 {apt.patientName}
                               </div>
                               {isDraggable && (
@@ -695,12 +718,16 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                           <div
                             className={cn(
                               "text-xs p-2 rounded-lg text-white cursor-pointer truncate shadow-md border-l-3 transition-all duration-300",
-                              getStatusColor(apt.status),
-                              "hover:shadow-xl hover:scale-110 hover:-translate-x-0.5"
+                              getStatusColor(apt.status, isOverCapacity(apt)),
+                              "hover:shadow-xl hover:scale-110 hover:-translate-x-0.5",
+                              isOverCapacity(apt) && "animate-pulse"
                             )}
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <div className="font-bold truncate drop-shadow-sm">{apt.time}</div>
+                            <div className="font-bold truncate drop-shadow-sm flex items-center gap-1">
+                              {isOverCapacity(apt) && <AlertTriangle className="h-3 w-3 flex-shrink-0" />}
+                              {apt.time}
+                            </div>
                             <div className="truncate opacity-95 text-xs font-medium">{apt.patientName}</div>
                           </div>
                         </AppointmentQuickView>
