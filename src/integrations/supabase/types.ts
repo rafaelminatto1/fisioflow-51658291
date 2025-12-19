@@ -439,11 +439,13 @@ export type Database = {
       audit_log: {
         Row: {
           action: string
+          changes: Json | null
           id: string
           ip_address: unknown
           new_data: Json | null
           old_data: Json | null
           record_id: string | null
+          session_id: string | null
           table_name: string
           timestamp: string
           user_agent: string | null
@@ -451,11 +453,13 @@ export type Database = {
         }
         Insert: {
           action: string
+          changes?: Json | null
           id?: string
           ip_address?: unknown
           new_data?: Json | null
           old_data?: Json | null
           record_id?: string | null
+          session_id?: string | null
           table_name: string
           timestamp?: string
           user_agent?: string | null
@@ -463,15 +467,74 @@ export type Database = {
         }
         Update: {
           action?: string
+          changes?: Json | null
           id?: string
           ip_address?: unknown
           new_data?: Json | null
           old_data?: Json | null
           record_id?: string | null
+          session_id?: string | null
           table_name?: string
           timestamp?: string
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      backup_logs: {
+        Row: {
+          backup_name: string
+          backup_type: string
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          error_message: string | null
+          file_path: string | null
+          file_size_bytes: number | null
+          id: string
+          organization_id: string | null
+          records_count: Json | null
+          restored_at: string | null
+          restored_by: string | null
+          started_at: string | null
+          status: string
+          tables_included: string[] | null
+        }
+        Insert: {
+          backup_name: string
+          backup_type?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          file_path?: string | null
+          file_size_bytes?: number | null
+          id?: string
+          organization_id?: string | null
+          records_count?: Json | null
+          restored_at?: string | null
+          restored_by?: string | null
+          started_at?: string | null
+          status?: string
+          tables_included?: string[] | null
+        }
+        Update: {
+          backup_name?: string
+          backup_type?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          file_path?: string | null
+          file_size_bytes?: number | null
+          id?: string
+          organization_id?: string | null
+          records_count?: Json | null
+          restored_at?: string | null
+          restored_by?: string | null
+          started_at?: string | null
+          status?: string
+          tables_included?: string[] | null
         }
         Relationships: []
       }
@@ -7331,6 +7394,7 @@ export type Database = {
         }
         Returns: Json
       }
+      cleanup_old_audit_logs: { Args: never; Returns: undefined }
       cleanup_old_rate_limits: { Args: never; Returns: undefined }
       create_demo_organization: { Args: never; Returns: string }
       create_user_invitation: {
