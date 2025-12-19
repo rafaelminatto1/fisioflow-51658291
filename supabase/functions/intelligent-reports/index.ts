@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { intelligentReportsSchema, parseAndValidate, errorResponse } from '../_shared/validation.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,11 +13,18 @@ serve(async (req) => {
   }
 
   try {
-    const { patientId, reportType, dateRange } = await req.json();
+    // Validate input
+    const { data, error: validationError } = await parseAndValidate(req, intelligentReportsSchema, corsHeaders);
+    if (validationError) {
+      return validationError;
+    }
+
+    const { patientId, reportType, dateRange } = data;
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY não configurada");
+      console.error("LOVABLE_API_KEY não configurada");
+      return errorResponse("Erro de configuração do servidor", 500, corsHeaders);
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -30,14 +38,18 @@ serve(async (req) => {
       .eq("id", patientId)
       .single();
 
+    if (!patient) {
+      return errorResponse("Paciente não encontrado", 404, corsHeaders);
+    }
+
     // Buscar appointments no período
     const { data: appointments } = await supabase
       .from("appointments")
       .select("*")
       .eq("patient_id", patientId)
-      .gte("start_time", dateRange.start)
-      .lte("start_time", dateRange.end)
-      .order("start_time", { ascending: false });
+      .gte("appointment_date", dateRange.start)
+      .lte("appointment_date", dateRange.end)
+      .order("appointment_date", { ascending: false });
 
     // Buscar SOAP records
     const { data: soapRecords } = await supabase
@@ -64,11 +76,11 @@ serve(async (req) => {
       .eq("patient_id", patientId)
       .single();
 
-    let systemPrompt = `Você é um especialista em fisioterapia e geração de relatórios médicos profissionais.
+    const systemPrompt = `Você é um especialista em fisioterapia e geração de relatórios médicos profissionais.
 Crie um relatório detalhado, técnico e baseado em evidências científicas.
 Use linguagem médica apropriada e estrutura profissional.`;
 
-    let userPrompt = `
+    const userPrompt = `
 RELATÓRIO ${reportType.toUpperCase()}
 
 DADOS DO PACIENTE:
@@ -78,10 +90,10 @@ Período: ${dateRange.start} a ${dateRange.end}
 
 HISTÓRICO DE ATENDIMENTOS:
 Total de sessões: ${appointments?.length || 0}
-${appointments?.map(a => `- ${a.start_time}: ${a.status}`).join("\n") || "Sem atendimentos"}
+${appointments?.slice(0, 10).map(a => `- ${a.appointment_date}: ${a.status}`).join("\n") || "Sem atendimentos"}
 
 EVOLUÇÃO CLÍNICA (SOAP):
-${soapRecords?.map(s => `
+${soapRecords?.slice(0, 5).map(s => `
 Data: ${s.record_date}
 Subjetivo: ${s.subjective || "N/A"}
 Objetivo: ${s.objective || "N/A"}
@@ -90,7 +102,7 @@ Plano: ${s.plan || "N/A"}
 `).join("\n---\n") || "Sem registros SOAP"}
 
 MEDIÇÕES E PROGRESSÃO:
-${measurements?.map(m => `${m.measurement_name}: ${m.value} ${m.unit || ""} (${m.measured_at})`).join("\n") || "Sem medições"}
+${measurements?.slice(0, 10).map(m => `${m.measurement_name}: ${m.value} ${m.unit || ""} (${m.measured_at})`).join("\n") || "Sem medições"}
 
 GAMIFICAÇÃO E ENGAJAMENTO:
 ${gamification ? `
@@ -132,18 +144,13 @@ Formato: Markdown profissional com seções bem estruturadas.
 
     if (!aiResponse.ok) {
       if (aiResponse.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns instantes." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return errorResponse("Limite de requisições excedido. Tente novamente em alguns instantes.", 429, corsHeaders);
       }
       if (aiResponse.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Créditos insuficientes. Entre em contato com o suporte." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return errorResponse("Créditos insuficientes. Entre em contato com o suporte.", 402, corsHeaders);
       }
-      throw new Error(`AI Gateway error: ${aiResponse.status}`);
+      console.error("AI Gateway error:", aiResponse.status);
+      return errorResponse("Erro ao processar requisição de IA", 500, corsHeaders);
     }
 
     const aiData = await aiResponse.json();
@@ -158,7 +165,6 @@ Formato: Markdown profissional com seções bem estruturadas.
         content: report,
         date_range_start: dateRange.start,
         date_range_end: dateRange.end,
-        generated_by: req.headers.get("authorization")?.split(" ")[1] || null,
       })
       .select()
       .single();
@@ -169,9 +175,6 @@ Formato: Markdown profissional com seções bem estruturadas.
     );
   } catch (error) {
     console.error("Erro ao gerar relatório:", error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Erro desconhecido" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return errorResponse("Erro ao processar requisição", 500, corsHeaders);
   }
 });
