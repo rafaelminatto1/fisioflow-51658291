@@ -7087,6 +7087,185 @@ export type Database = {
           },
         ]
       }
+      whatsapp_metrics: {
+        Row: {
+          appointment_id: string | null
+          created_at: string
+          delivered_at: string | null
+          error_message: string | null
+          id: string
+          message_id: string | null
+          message_type: string
+          organization_id: string | null
+          patient_id: string | null
+          phone_number: string
+          read_at: string | null
+          replied_at: string | null
+          reply_content: string | null
+          retry_count: number | null
+          sent_at: string | null
+          status: string
+          template_key: string | null
+        }
+        Insert: {
+          appointment_id?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          message_id?: string | null
+          message_type?: string
+          organization_id?: string | null
+          patient_id?: string | null
+          phone_number: string
+          read_at?: string | null
+          replied_at?: string | null
+          reply_content?: string | null
+          retry_count?: number | null
+          sent_at?: string | null
+          status?: string
+          template_key?: string | null
+        }
+        Update: {
+          appointment_id?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          message_id?: string | null
+          message_type?: string
+          organization_id?: string | null
+          patient_id?: string | null
+          phone_number?: string
+          read_at?: string | null
+          replied_at?: string | null
+          reply_content?: string | null
+          retry_count?: number | null
+          sent_at?: string | null
+          status?: string
+          template_key?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_metrics_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_metrics_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_metrics_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_metrics_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patient_activity_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_metrics_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_templates: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          id: string
+          name: string
+          organization_id: string | null
+          status: string
+          template_key: string
+          updated_at: string
+          variables: string[] | null
+        }
+        Insert: {
+          category?: string
+          content: string
+          created_at?: string
+          id?: string
+          name: string
+          organization_id?: string | null
+          status?: string
+          template_key: string
+          updated_at?: string
+          variables?: string[] | null
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          name?: string
+          organization_id?: string | null
+          status?: string
+          template_key?: string
+          updated_at?: string
+          variables?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_templates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_webhook_logs: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          message_content: string | null
+          message_id: string | null
+          phone_number: string | null
+          processed: boolean | null
+          processing_result: string | null
+          raw_payload: Json | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          message_content?: string | null
+          message_id?: string | null
+          phone_number?: string | null
+          processed?: boolean | null
+          processing_result?: string | null
+          raw_payload?: Json | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          message_content?: string | null
+          message_id?: string | null
+          phone_number?: string | null
+          processed?: boolean | null
+          processing_result?: string | null
+          raw_payload?: Json | null
+        }
+        Relationships: []
+      }
       xp_transactions: {
         Row: {
           created_at: string | null
