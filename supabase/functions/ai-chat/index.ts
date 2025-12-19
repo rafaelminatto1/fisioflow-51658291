@@ -1,5 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { checkRateLimit, createRateLimitResponse, addRateLimitHeaders } from '../_shared/rate-limit.ts';
+import { 
+  aiChatSchema, 
+  parseAndValidate, 
+  validateMessagesForInjection, 
+  validateTokenLimit,
+  errorResponse 
+} from '../_shared/validation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,11 +25,32 @@ serve(async (req) => {
       console.warn(`Rate limit excedido para ai-chat: ${rateLimitResult.current_count}/${rateLimitResult.limit}`);
       return createRateLimitResponse(rateLimitResult, corsHeaders);
     }
-    const { messages } = await req.json();
+
+    // Validate input schema
+    const { data, error: validationError } = await parseAndValidate(req, aiChatSchema, corsHeaders);
+    if (validationError) {
+      return validationError;
+    }
+
+    const { messages } = data;
+
+    // Check for prompt injection
+    const injectionCheck = validateMessagesForInjection(messages);
+    if (!injectionCheck.valid) {
+      return errorResponse(injectionCheck.error!, 400, corsHeaders);
+    }
+
+    // Validate token limit
+    const tokenCheck = validateTokenLimit(messages, 8000);
+    if (!tokenCheck.valid) {
+      return errorResponse(tokenCheck.error!, 400, corsHeaders);
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY não configurado");
+      console.error("LOVABLE_API_KEY não configurado");
+      return errorResponse("Erro de configuração do servidor", 500, corsHeaders);
     }
 
     const systemPrompt = `Você é um assistente especializado em fisioterapia da Activity Fisioterapia. 
@@ -62,32 +90,21 @@ Tom: Profissional, acolhedor e educativo.`;
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns instantes." }), 
-          {
-            status: 429,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
+        return errorResponse(
+          "Limite de requisições excedido. Tente novamente em alguns instantes.",
+          429,
+          corsHeaders
         );
       }
       if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Créditos insuficientes. Entre em contato com o suporte." }), 
-          {
-            status: 402,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
+        return errorResponse(
+          "Créditos insuficientes. Entre em contato com o suporte.",
+          402,
+          corsHeaders
         );
       }
-      const errorText = await response.text();
-      console.error("Erro no gateway AI:", response.status, errorText);
-      return new Response(
-        JSON.stringify({ error: "Erro ao processar requisição" }), 
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      console.error("Erro no gateway AI:", response.status);
+      return errorResponse("Erro ao processar requisição", 500, corsHeaders);
     }
 
     // Adicionar headers de rate limit na resposta
@@ -101,12 +118,6 @@ Tom: Profissional, acolhedor e educativo.`;
     });
   } catch (e) {
     console.error("Erro no chat:", e);
-    return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Erro desconhecido" }), 
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return errorResponse("Erro ao processar requisição", 500, corsHeaders);
   }
 });
