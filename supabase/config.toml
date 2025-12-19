@@ -27,7 +27,6 @@ verify_jwt = true
 [functions.send-mfa-otp]
 verify_jwt = true
 
-# Funções adicionadas com JWT verification
 [functions.notification-status]
 verify_jwt = true
 
@@ -49,13 +48,14 @@ verify_jwt = true
 [functions.ai-transcribe-session]
 verify_jwt = true
 
-# Função administrativa especial - não requer JWT
 [functions.create-demo-users]
 verify_jwt = false
 
-# Stripe functions
 [functions.create-checkout]
 verify_jwt = true
 
 [functions.stripe-webhook]
 verify_jwt = false
+
+[functions.backup-manager]
+verify_jwt = true
