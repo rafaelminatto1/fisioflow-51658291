@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { transcribeSessionSchema, parseAndValidate, errorResponse } from '../_shared/validation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,16 +13,22 @@ serve(async (req) => {
   }
 
   try {
-    const { audioData, patientId } = await req.json();
+    // Validate input
+    const { data, error: validationError } = await parseAndValidate(req, transcribeSessionSchema, corsHeaders);
+    if (validationError) {
+      return validationError;
+    }
+
+    const { audioData, patientId } = data;
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     
     if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY não configurada');
+      console.error('LOVABLE_API_KEY não configurada');
+      return errorResponse('Erro de configuração do servidor', 500, corsHeaders);
     }
 
     // Remove base64 prefix if present
     const base64Audio = audioData.replace(/^data:audio\/\w+;base64,/, '');
-    const audioBuffer = Uint8Array.from(atob(base64Audio), c => c.charCodeAt(0));
 
     // Step 1: Transcribe audio using Gemini
     const transcriptionResponse = await fetch('https://ai.gateway.lovable.dev/v1/audio/transcriptions', {
@@ -32,14 +39,19 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         audio: base64Audio,
-        model: 'google/gemini-2.5-flash', // Using flash for speed
+        model: 'google/gemini-2.5-flash',
       }),
     });
 
     if (!transcriptionResponse.ok) {
-      const errorText = await transcriptionResponse.text();
-      console.error('Erro na transcrição:', errorText);
-      throw new Error('Erro ao transcrever áudio');
+      console.error('Erro na transcrição:', transcriptionResponse.status);
+      if (transcriptionResponse.status === 429) {
+        return errorResponse('Limite de requisições excedido. Tente novamente em alguns instantes.', 429, corsHeaders);
+      }
+      if (transcriptionResponse.status === 402) {
+        return errorResponse('Créditos insuficientes. Entre em contato com o suporte.', 402, corsHeaders);
+      }
+      return errorResponse('Erro ao transcrever áudio', 500, corsHeaders);
     }
 
     const transcriptionData = await transcriptionResponse.json();
@@ -76,16 +88,15 @@ Retorne APENAS um JSON válido no formato:
           },
           {
             role: 'user',
-            content: `Transcrição da sessão: "${transcribedText}"`
+            content: `Transcrição da sessão: "${transcribedText.substring(0, 10000)}"`
           }
         ],
       }),
     });
 
     if (!structureResponse.ok) {
-      const errorText = await structureResponse.text();
-      console.error('Erro na estruturação:', errorText);
-      throw new Error('Erro ao estruturar SOAP');
+      console.error('Erro na estruturação:', structureResponse.status);
+      return errorResponse('Erro ao estruturar SOAP', 500, corsHeaders);
     }
 
     const structureData = await structureResponse.json();
@@ -113,12 +124,6 @@ Retorne APENAS um JSON válido no formato:
 
   } catch (error) {
     console.error('Erro na função:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    return errorResponse('Erro ao processar requisição', 500, corsHeaders);
   }
 });
