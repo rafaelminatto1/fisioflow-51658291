@@ -475,6 +475,107 @@ export type Database = {
         }
         Relationships: []
       }
+      calendar_integrations: {
+        Row: {
+          access_token: string | null
+          auto_send_events: boolean
+          auto_sync_enabled: boolean
+          calendar_email: string | null
+          created_at: string
+          default_calendar_id: string | null
+          events_synced_count: number
+          id: string
+          is_connected: boolean
+          last_synced_at: string | null
+          provider: string
+          refresh_token: string | null
+          token_expires_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          auto_send_events?: boolean
+          auto_sync_enabled?: boolean
+          calendar_email?: string | null
+          created_at?: string
+          default_calendar_id?: string | null
+          events_synced_count?: number
+          id?: string
+          is_connected?: boolean
+          last_synced_at?: string | null
+          provider?: string
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string | null
+          auto_send_events?: boolean
+          auto_sync_enabled?: boolean
+          calendar_email?: string | null
+          created_at?: string
+          default_calendar_id?: string | null
+          events_synced_count?: number
+          id?: string
+          is_connected?: boolean
+          last_synced_at?: string | null
+          provider?: string
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      calendar_sync_logs: {
+        Row: {
+          action: string
+          created_at: string
+          event_id: string | null
+          event_type: string | null
+          external_event_id: string | null
+          id: string
+          integration_id: string
+          message: string | null
+          metadata: Json | null
+          status: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          event_id?: string | null
+          event_type?: string | null
+          external_event_id?: string | null
+          id?: string
+          integration_id: string
+          message?: string | null
+          metadata?: Json | null
+          status: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          event_id?: string | null
+          event_type?: string | null
+          external_event_id?: string | null
+          id?: string
+          integration_id?: string
+          message?: string | null
+          metadata?: Json | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_sync_logs_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "calendar_integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checklist_items: {
         Row: {
           created_at: string
