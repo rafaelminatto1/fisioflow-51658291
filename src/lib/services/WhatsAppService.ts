@@ -1,88 +1,324 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export interface WhatsAppMessage {
-  to: string; // Número do telefone no formato +55XXXXXXXXXXX
+  to: string;
   message: string;
+  templateKey?: string;
+  patientId?: string;
+  appointmentId?: string;
   scheduledFor?: Date;
 }
 
 export interface AppointmentReminder {
   patientName: string;
   patientPhone: string;
+  patientId?: string;
+  appointmentId?: string;
   appointmentDate: Date;
   appointmentTime: string;
   therapistName: string;
   location: string;
 }
 
+export interface WhatsAppTemplate {
+  name: string;
+  template_key: string;
+  content: string;
+  variables: string[];
+}
+
+export interface SendResult {
+  success: boolean;
+  messageId?: string;
+  error?: string;
+}
+
+// Template keys for approved messages
+export const TEMPLATE_KEYS = {
+  CONFIRMACAO_AGENDAMENTO: 'confirmacao_agendamento',
+  LEMBRETE_SESSAO: 'lembrete_sessao',
+  CANCELAMENTO: 'cancelamento',
+  PRESCRICAO: 'prescricao',
+  RESULTADO_EXAME: 'resultado_exame',
+  SOLICITAR_CONFIRMACAO: 'solicitar_confirmacao',
+} as const;
+
 export class WhatsAppService {
+  private static MAX_RETRIES = 3;
+  private static RETRY_DELAY_MS = 2000;
+
   /**
-   * Envia mensagem via WhatsApp usando edge function
+   * Test WhatsApp connection
    */
-  static async sendMessage({ to, message }: WhatsAppMessage): Promise<boolean> {
+  static async testConnection(): Promise<{ connected: boolean; error?: string }> {
     try {
       const { data, error } = await supabase.functions.invoke('send-whatsapp', {
-        body: { to, message }
+        body: { test: true }
       });
 
       if (error) {
-        console.error('Erro ao enviar mensagem WhatsApp:', error);
-        return false;
+        return { connected: false, error: error.message };
       }
 
-      console.log('Mensagem WhatsApp enviada com sucesso:', data);
-      return true;
+      return { connected: true };
     } catch (error) {
-      console.error('Erro ao enviar mensagem WhatsApp:', error);
-      return false;
+      return { connected: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
 
   /**
-   * Envia lembrete de consulta
+   * Send message with retry logic
    */
-  static async sendAppointmentReminder(reminder: AppointmentReminder): Promise<boolean> {
-    const message = this.formatAppointmentReminder(reminder);
+  static async sendMessage(params: WhatsAppMessage): Promise<SendResult> {
+    const { to, message, templateKey, patientId, appointmentId } = params;
+    let lastError: string | undefined;
+
+    for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
+      try {
+        const { data, error } = await supabase.functions.invoke('send-whatsapp', {
+          body: { to, message }
+        });
+
+        if (error) {
+          lastError = error.message;
+          console.error(`Attempt ${attempt} failed:`, error);
+          
+          if (attempt < this.MAX_RETRIES) {
+            await this.delay(this.RETRY_DELAY_MS * attempt);
+            continue;
+          }
+        }
+
+        // Log to metrics table
+        await this.logMessage({
+          phoneNumber: to,
+          patientId,
+          appointmentId,
+          templateKey,
+          messageId: data?.messageId,
+          status: error ? 'falhou' : 'enviado',
+          errorMessage: error?.message,
+          retryCount: attempt - 1,
+        });
+
+        if (!error) {
+          console.log('WhatsApp message sent successfully:', data);
+          return { success: true, messageId: data?.messageId };
+        }
+      } catch (error) {
+        lastError = error instanceof Error ? error.message : 'Unknown error';
+        console.error(`Attempt ${attempt} error:`, error);
+        
+        if (attempt < this.MAX_RETRIES) {
+          await this.delay(this.RETRY_DELAY_MS * attempt);
+        }
+      }
+    }
+
+    // Log failed message
+    await this.logMessage({
+      phoneNumber: to,
+      patientId,
+      appointmentId,
+      templateKey,
+      status: 'falhou',
+      errorMessage: lastError,
+      retryCount: this.MAX_RETRIES,
+    });
+
+    return { success: false, error: lastError };
+  }
+
+  /**
+   * Log message to metrics table
+   */
+  private static async logMessage(params: {
+    phoneNumber: string;
+    patientId?: string;
+    appointmentId?: string;
+    templateKey?: string;
+    messageId?: string;
+    status: string;
+    errorMessage?: string;
+    retryCount: number;
+  }) {
+    try {
+      await supabase.from('whatsapp_metrics').insert({
+        phone_number: params.phoneNumber,
+        patient_id: params.patientId || null,
+        appointment_id: params.appointmentId || null,
+        template_key: params.templateKey || null,
+        message_id: params.messageId || null,
+        message_type: 'outbound',
+        status: params.status,
+        sent_at: params.status === 'enviado' ? new Date().toISOString() : null,
+        error_message: params.errorMessage || null,
+        retry_count: params.retryCount,
+      });
+    } catch (error) {
+      console.error('Error logging WhatsApp message:', error);
+    }
+  }
+
+  /**
+   * Get templates from database
+   */
+  static async getTemplates(): Promise<WhatsAppTemplate[]> {
+    const { data, error } = await supabase
+      .from('whatsapp_templates')
+      .select('name, template_key, content, variables')
+      .eq('status', 'ativo');
+
+    if (error) {
+      console.error('Error fetching templates:', error);
+      return [];
+    }
+
+    return data || [];
+  }
+
+  /**
+   * Send message using template
+   */
+  static async sendFromTemplate(
+    templateKey: string,
+    variables: Record<string, string>,
+    to: string,
+    patientId?: string,
+    appointmentId?: string
+  ): Promise<SendResult> {
+    const templates = await this.getTemplates();
+    const template = templates.find(t => t.template_key === templateKey);
+
+    if (!template) {
+      return { success: false, error: 'Template not found' };
+    }
+
+    let message = template.content;
+    for (const [key, value] of Object.entries(variables)) {
+      message = message.replace(new RegExp(`{{${key}}}`, 'g'), value);
+    }
+
     return this.sendMessage({
-      to: reminder.patientPhone,
-      message
+      to,
+      message,
+      templateKey,
+      patientId,
+      appointmentId,
     });
   }
 
   /**
-   * Formata mensagem de lembrete de consulta
+   * Send appointment confirmation
    */
-  private static formatAppointmentReminder(reminder: AppointmentReminder): string {
+  static async sendAppointmentConfirmation(reminder: AppointmentReminder): Promise<SendResult> {
     const date = reminder.appointmentDate.toLocaleDateString('pt-BR', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
     });
 
-    return `🏥 *Lembrete de Consulta - Activity Fisioterapia*
-
-Olá *${reminder.patientName}*!
-
-Este é um lembrete da sua consulta:
-
-📅 *Data:* ${date}
-⏰ *Horário:* ${reminder.appointmentTime}
-👨‍⚕️ *Fisioterapeuta:* ${reminder.therapistName}
-📍 *Local:* ${reminder.location}
-
-⚠️ Em caso de cancelamento, favor avisar com 24h de antecedência.
-
-Até breve! 💙`;
+    return this.sendFromTemplate(
+      TEMPLATE_KEYS.CONFIRMACAO_AGENDAMENTO,
+      {
+        name: reminder.patientName,
+        therapist: reminder.therapistName,
+        date,
+        time: reminder.appointmentTime,
+      },
+      reminder.patientPhone,
+      reminder.patientId,
+      reminder.appointmentId
+    );
   }
 
   /**
-   * Envia lembrete de exercícios
+   * Send session reminder (24h before)
+   */
+  static async sendSessionReminder(reminder: AppointmentReminder): Promise<SendResult> {
+    return this.sendFromTemplate(
+      TEMPLATE_KEYS.LEMBRETE_SESSAO,
+      {
+        time: reminder.appointmentTime,
+        therapist: reminder.therapistName,
+      },
+      reminder.patientPhone,
+      reminder.patientId,
+      reminder.appointmentId
+    );
+  }
+
+  /**
+   * Send cancellation notification
+   */
+  static async sendCancellationNotification(
+    patientPhone: string,
+    appointmentDate: Date,
+    patientId?: string,
+    appointmentId?: string
+  ): Promise<SendResult> {
+    const date = appointmentDate.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+
+    return this.sendFromTemplate(
+      TEMPLATE_KEYS.CANCELAMENTO,
+      { date },
+      patientPhone,
+      patientId,
+      appointmentId
+    );
+  }
+
+  /**
+   * Send confirmation request (for auto-confirmation)
+   */
+  static async sendConfirmationRequest(reminder: AppointmentReminder): Promise<SendResult> {
+    const date = reminder.appointmentDate.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+    });
+
+    return this.sendFromTemplate(
+      TEMPLATE_KEYS.SOLICITAR_CONFIRMACAO,
+      {
+        name: reminder.patientName,
+        date,
+        time: reminder.appointmentTime,
+      },
+      reminder.patientPhone,
+      reminder.patientId,
+      reminder.appointmentId
+    );
+  }
+
+  /**
+   * Send prescription notification
+   */
+  static async sendPrescriptionNotification(
+    patientPhone: string,
+    prescriptionLink: string,
+    patientId?: string
+  ): Promise<SendResult> {
+    return this.sendFromTemplate(
+      TEMPLATE_KEYS.PRESCRICAO,
+      { link: prescriptionLink },
+      patientPhone,
+      patientId
+    );
+  }
+
+  /**
+   * Send exercise reminder (legacy support)
    */
   static async sendExerciseReminder(
     patientName: string,
     patientPhone: string,
-    exercises: string[]
-  ): Promise<boolean> {
+    exercises: string[],
+    patientId?: string
+  ): Promise<SendResult> {
     const exerciseList = exercises.map((ex, i) => `${i + 1}. ${ex}`).join('\n');
     
     const message = `🏋️ *Lembrete de Exercícios - Activity Fisioterapia*
@@ -99,46 +335,27 @@ Dúvidas? Entre em contato conosco! 💙`;
 
     return this.sendMessage({
       to: patientPhone,
-      message
+      message,
+      patientId,
     });
   }
 
   /**
-   * Envia mensagem de confirmação de agendamento
+   * Send appointment reminder (legacy support)
    */
-  static async sendAppointmentConfirmation(reminder: AppointmentReminder): Promise<boolean> {
-    const date = reminder.appointmentDate.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-
-    const message = `✅ *Agendamento Confirmado - Activity Fisioterapia*
-
-Olá *${reminder.patientName}*!
-
-Sua consulta foi confirmada com sucesso:
-
-📅 *Data:* ${date}
-⏰ *Horário:* ${reminder.appointmentTime}
-👨‍⚕️ *Fisioterapeuta:* ${reminder.therapistName}
-📍 *Local:* ${reminder.location}
-
-Aguardamos você! 💙`;
-
-    return this.sendMessage({
-      to: reminder.patientPhone,
-      message
-    });
+  static async sendAppointmentReminder(reminder: AppointmentReminder): Promise<boolean> {
+    const result = await this.sendSessionReminder(reminder);
+    return result.success;
   }
 
   /**
-   * Envia mensagem de boas-vindas a novo paciente
+   * Send welcome message
    */
   static async sendWelcomeMessage(
     patientName: string,
-    patientPhone: string
-  ): Promise<boolean> {
+    patientPhone: string,
+    patientId?: string
+  ): Promise<SendResult> {
     const message = `👋 *Bem-vindo à Activity Fisioterapia!*
 
 Olá *${patientName}*!
@@ -155,7 +372,72 @@ Bem-vindo! 💙`;
 
     return this.sendMessage({
       to: patientPhone,
-      message
+      message,
+      patientId,
     });
+  }
+
+  /**
+   * Get metrics summary
+   */
+  static async getMetrics(days: number = 30): Promise<{
+    totalSent: number;
+    delivered: number;
+    read: number;
+    failed: number;
+    responseRate: number;
+    avgResponseTime: number;
+  }> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const { data, error } = await supabase
+      .from('whatsapp_metrics')
+      .select('*')
+      .gte('created_at', startDate.toISOString())
+      .eq('message_type', 'outbound');
+
+    if (error || !data) {
+      return {
+        totalSent: 0,
+        delivered: 0,
+        read: 0,
+        failed: 0,
+        responseRate: 0,
+        avgResponseTime: 0,
+      };
+    }
+
+    const totalSent = data.length;
+    const delivered = data.filter(m => m.delivered_at).length;
+    const read = data.filter(m => m.read_at).length;
+    const failed = data.filter(m => m.status === 'falhou').length;
+    const replied = data.filter(m => m.replied_at).length;
+    
+    // Calculate average response time in minutes
+    const responseTimes = data
+      .filter(m => m.sent_at && m.replied_at)
+      .map(m => {
+        const sent = new Date(m.sent_at).getTime();
+        const replied = new Date(m.replied_at).getTime();
+        return (replied - sent) / (1000 * 60);
+      });
+
+    const avgResponseTime = responseTimes.length > 0
+      ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length
+      : 0;
+
+    return {
+      totalSent,
+      delivered,
+      read,
+      failed,
+      responseRate: totalSent > 0 ? (replied / totalSent) * 100 : 0,
+      avgResponseTime: Math.round(avgResponseTime),
+    };
+  }
+
+  private static delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
