@@ -96,6 +96,7 @@ const TelemedicineRoom = lazy(() => import("./pages/TelemedicineRoom"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const TherapistOccupancy = lazy(() => import("./pages/TherapistOccupancy"));
 const CalendarSettings = lazy(() => import("./pages/configuracoes/CalendarSettings"));
+const PublicPrescriptionPage = lazy(() => import("./pages/prescricoes/PublicPrescriptionPage"));
 
 // Create a client with performance optimizations
 const queryClient = new QueryClient({
@@ -161,6 +162,7 @@ const App = () => {
                   <Route path="/create-demo-users" element={<CreateDemoUsers />} />
                   <Route path="/pre-cadastro" element={<PreCadastro />} />
                   <Route path="/pre-cadastro/:token" element={<PreCadastro />} />
+                  <Route path="/prescricoes/publica/:qrCode" element={<PublicPrescriptionPage />} />
                   
                   {/* Protected routes */}
                   <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
