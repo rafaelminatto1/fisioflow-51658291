@@ -2356,6 +2356,106 @@ export type Database = {
           },
         ]
       }
+      exercise_prescriptions: {
+        Row: {
+          completed_exercises: Json | null
+          created_at: string
+          exercises: Json
+          id: string
+          last_viewed_at: string | null
+          notes: string | null
+          organization_id: string | null
+          patient_id: string
+          qr_code: string
+          status: string | null
+          therapist_id: string | null
+          title: string
+          updated_at: string
+          valid_until: string | null
+          validity_days: number | null
+          view_count: number | null
+        }
+        Insert: {
+          completed_exercises?: Json | null
+          created_at?: string
+          exercises?: Json
+          id?: string
+          last_viewed_at?: string | null
+          notes?: string | null
+          organization_id?: string | null
+          patient_id: string
+          qr_code?: string
+          status?: string | null
+          therapist_id?: string | null
+          title?: string
+          updated_at?: string
+          valid_until?: string | null
+          validity_days?: number | null
+          view_count?: number | null
+        }
+        Update: {
+          completed_exercises?: Json | null
+          created_at?: string
+          exercises?: Json
+          id?: string
+          last_viewed_at?: string | null
+          notes?: string | null
+          organization_id?: string | null
+          patient_id?: string
+          qr_code?: string
+          status?: string | null
+          therapist_id?: string | null
+          title?: string
+          updated_at?: string
+          valid_until?: string | null
+          validity_days?: number | null
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercise_prescriptions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercise_prescriptions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "aniversariantes_mes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercise_prescriptions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patient_activity_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercise_prescriptions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercise_prescriptions_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercise_prescriptions_therapist_id_fkey"
+            columns: ["therapist_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exercise_protocols: {
         Row: {
           condition_name: string
