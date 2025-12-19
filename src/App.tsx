@@ -95,6 +95,7 @@ const PreCadastroAdmin = lazy(() => import("./pages/PreCadastroAdmin"));
 const TelemedicineRoom = lazy(() => import("./pages/TelemedicineRoom"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const TherapistOccupancy = lazy(() => import("./pages/TherapistOccupancy"));
+const CalendarSettings = lazy(() => import("./pages/configuracoes/CalendarSettings"));
 
 // Create a client with performance optimizations
 const queryClient = new QueryClient({
@@ -222,6 +223,9 @@ const App = () => {
                   <Route path="/relatorios/aniversariantes" element={<ProtectedRoute><AniversariantesPage /></ProtectedRoute>} />
                   <Route path="/relatorios/comparecimento" element={<ProtectedRoute><AttendanceReport /></ProtectedRoute>} />
                   <Route path="/performance-equipe" element={<ProtectedRoute><TeamPerformance /></ProtectedRoute>} />
+                  
+                  {/* Configurações */}
+                  <Route path="/configuracoes/calendario" element={<ProtectedRoute><CalendarSettings /></ProtectedRoute>} />
                   
                   {/* Marketing/CRM - Fase 6 */}
                   <Route path="/crm" element={<ProtectedRoute><CRMDashboard /></ProtectedRoute>} />
