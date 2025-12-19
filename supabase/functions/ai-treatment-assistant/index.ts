@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { treatmentAssistantSchema, parseAndValidate, errorResponse } from '../_shared/validation.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,11 +13,18 @@ serve(async (req) => {
   }
 
   try {
-    const { patientId, action } = await req.json();
+    // Validate input
+    const { data, error: validationError } = await parseAndValidate(req, treatmentAssistantSchema, corsHeaders);
+    if (validationError) {
+      return validationError;
+    }
+
+    const { patientId, action } = data;
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY não configurada");
+      console.error("LOVABLE_API_KEY não configurada");
+      return errorResponse("Erro de configuração do servidor", 500, corsHeaders);
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -29,6 +37,10 @@ serve(async (req) => {
       .select("*")
       .eq("id", patientId)
       .single();
+
+    if (!patient) {
+      return errorResponse("Paciente não encontrado", 404, corsHeaders);
+    }
 
     // Buscar histórico SOAP
     const { data: soapRecords } = await supabase
@@ -149,18 +161,13 @@ Gere um relatório profissional incluindo:
 
     if (!aiResponse.ok) {
       if (aiResponse.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns instantes." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return errorResponse("Limite de requisições excedido. Tente novamente em alguns instantes.", 429, corsHeaders);
       }
       if (aiResponse.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Créditos insuficientes. Entre em contato com o suporte." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return errorResponse("Créditos insuficientes. Entre em contato com o suporte.", 402, corsHeaders);
       }
-      throw new Error(`AI Gateway error: ${aiResponse.status}`);
+      console.error("AI Gateway error:", aiResponse.status);
+      return errorResponse("Erro ao processar requisição de IA", 500, corsHeaders);
     }
 
     const aiData = await aiResponse.json();
@@ -180,9 +187,6 @@ Gere um relatório profissional incluindo:
     );
   } catch (error) {
     console.error("Erro no assistente de IA:", error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Erro desconhecido" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return errorResponse("Erro ao processar requisição", 500, corsHeaders);
   }
 });
