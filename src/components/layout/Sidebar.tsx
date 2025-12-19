@@ -68,7 +68,6 @@ const menuItems = [
   { icon: BarChart3, label: 'Analytics Avançado', href: '/analytics' },
   { icon: Lock, label: 'Segurança & LGPD', href: '/security-settings' },
   { icon: Shield, label: 'Monitoramento', href: '/security-monitoring' },
-  { icon: Settings, label: 'Configurações', href: '/settings' },
 ];
 
 const cadastrosSubmenu = [
@@ -100,12 +99,18 @@ const crmSubmenu = [
   { icon: Users, label: 'Leads', href: '/crm/leads' },
 ];
 
+const configuracoesSubmenu = [
+  { icon: Settings, label: 'Geral', href: '/settings' },
+  { icon: Calendar, label: 'Google Calendar', href: '/configuracoes/calendario' },
+];
+
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [cadastrosOpen, setCadastrosOpen] = useState(false);
   const [financeiroOpen, setFinanceiroOpen] = useState(false);
   const [relatoriosOpen, setRelatoriosOpen] = useState(false);
   const [crmOpen, setCrmOpen] = useState(false);
+  const [configuracoesOpen, setConfiguracoesOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -115,6 +120,7 @@ export function Sidebar() {
   const isFinanceiroActive = location.pathname.startsWith('/financeiro') || location.pathname === '/financial';
   const isRelatoriosActive = location.pathname.startsWith('/relatorios') || location.pathname === '/reports';
   const isCrmActive = location.pathname.startsWith('/crm');
+  const isConfiguracoesActive = location.pathname.startsWith('/configuracoes') || location.pathname === '/settings';
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -433,6 +439,67 @@ export function Sidebar() {
           >
             <TrendingUp className="h-5 w-5" />
             {isCrmActive && (
+              <div className="absolute left-0 w-1 h-8 bg-primary rounded-r-lg" />
+            )}
+          </Link>
+        )}
+
+        {/* Configurações Submenu */}
+        {!collapsed && (
+          <Collapsible open={configuracoesOpen || isConfiguracoesActive} onOpenChange={setConfiguracoesOpen}>
+            <CollapsibleTrigger asChild>
+              <button
+                className={cn(
+                  "flex items-center justify-between w-full px-4 py-2.5 rounded-lg transition-all group",
+                  isConfiguracoesActive
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <Settings className="h-5 w-5" />
+                  <span className="text-sm">Configurações</span>
+                </div>
+                <ChevronDown className={cn(
+                  "h-4 w-4 transition-transform",
+                  (configuracoesOpen || isConfiguracoesActive) && "rotate-180"
+                )} />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-8 space-y-1 mt-1">
+              {configuracoesSubmenu.map((item) => {
+                const Icon = item.icon;
+                const isSubActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className={cn(
+                      "block px-4 py-2 rounded-lg text-sm transition-all",
+                      isSubActive
+                        ? "bg-primary text-primary-foreground font-medium"
+                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+        {collapsed && (
+          <Link
+            to="/settings"
+            className={cn(
+              "flex items-center justify-center px-2 py-2.5 rounded-lg transition-all group relative",
+              isConfiguracoesActive
+                ? "bg-primary text-primary-foreground font-medium shadow-sm"
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+            )}
+          >
+            <Settings className="h-5 w-5" />
+            {isConfiguracoesActive && (
               <div className="absolute left-0 w-1 h-8 bg-primary rounded-r-lg" />
             )}
           </Link>
