@@ -5,10 +5,12 @@ export interface Surgery {
   patient_id: string;
   surgery_name: string;
   surgery_date: string;
-  affected_side: 'direito' | 'esquerdo' | 'bilateral';
+  affected_side: 'direito' | 'esquerdo' | 'bilateral' | 'nao_aplicavel';
   notes?: string;
   surgeon?: string;
+  surgeon_name?: string;
   hospital?: string;
+  surgery_type?: string;
   complications?: string;
   created_at: string;
   updated_at: string;
