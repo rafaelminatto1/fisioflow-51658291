@@ -1,6 +1,20 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { format, startOfMonth, subMonths } from 'date-fns';
+import { format, startOfMonth, subMonths, subDays, startOfWeek, endOfWeek } from 'date-fns';
+
+export interface TherapistPerformance {
+  id: string;
+  nome: string;
+  atendimentos: number;
+  receita: number;
+  taxaOcupacao: number;
+}
+
+export interface WeeklyTrend {
+  dia: string;
+  agendamentos: number;
+  concluidos: number;
+}
 
 export interface DashboardMetrics {
   totalPacientes: number;
@@ -17,6 +31,11 @@ export interface DashboardMetrics {
   fisioterapeutasAtivos: number;
   mediaSessoesPorPaciente: number;
   pacientesEmRisco: number;
+  receitaPorFisioterapeuta: TherapistPerformance[];
+  tendenciaSemanal: WeeklyTrend[];
+  ticketMedio: number;
+  agendamentosSemana: number;
+  cancelamentosSemana: number;
 }
 
 export const useDashboardMetrics = () => {
@@ -28,6 +47,8 @@ export const useDashboardMetrics = () => {
       const startOfLastMonth = format(startOfMonth(subMonths(new Date(), 1)), 'yyyy-MM-dd');
       const endOfLastMonth = format(startOfMonth(new Date()), 'yyyy-MM-dd');
       const thirtyDaysAgo = format(subMonths(new Date(), 1), 'yyyy-MM-dd');
+      const weekStart = format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd');
+      const weekEnd = format(endOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd');
 
       // Total de pacientes
       const { count: totalPacientes } = await supabase
@@ -81,11 +102,17 @@ export const useDashboardMetrics = () => {
         ? ((noShowCount || 0) / totalAppointments30d) * 100 
         : 0;
 
-      // Fisioterapeutas ativos (buscar de user_roles)
-      const { count: fisioterapeutasAtivos } = await supabase
+      // Fisioterapeutas ativos (buscar de profiles com user_roles)
+      const { data: fisioData } = await supabase
         .from('user_roles')
-        .select('*', { count: 'exact', head: true })
+        .select(`
+          user_id,
+          role,
+          profiles!inner(id, full_name)
+        `)
         .in('role', ['admin', 'fisioterapeuta']);
+
+      const fisioterapeutasAtivos = fisioData?.length || 0;
 
       // Receita mensal atual (usando contas_financeiras)
       const { data: receitaAtualData } = await supabase
@@ -133,6 +160,81 @@ export const useDashboardMetrics = () => {
         ? Math.min(((agendamentosHoje || 0) / (horasDisponiveisDia * (fisioterapeutasAtivos || 1))) * 100, 100)
         : 0;
 
+      // Receita por fisioterapeuta
+      const { data: receitaPorFisio } = await supabase
+        .from('appointments')
+        .select(`
+          therapist_id,
+          payment_amount,
+          status,
+          profiles!appointments_therapist_id_fkey(id, full_name)
+        `)
+        .gte('appointment_date', startOfCurrentMonth)
+        .eq('status', 'concluido');
+
+      const fisioStats = new Map<string, TherapistPerformance>();
+      receitaPorFisio?.forEach((apt) => {
+        const profile = apt.profiles as any;
+        if (!profile?.id) return;
+        
+        const existing = fisioStats.get(profile.id) || {
+          id: profile.id,
+          nome: profile.full_name || 'Sem nome',
+          atendimentos: 0,
+          receita: 0,
+          taxaOcupacao: 0,
+        };
+        
+        existing.atendimentos += 1;
+        existing.receita += Number(apt.payment_amount || 0);
+        fisioStats.set(profile.id, existing);
+      });
+
+      const receitaPorFisioterapeuta = Array.from(fisioStats.values())
+        .sort((a, b) => b.receita - a.receita)
+        .slice(0, 5);
+
+      // Tendência semanal
+      const { data: weeklyData } = await supabase
+        .from('appointments')
+        .select('appointment_date, status')
+        .gte('appointment_date', weekStart)
+        .lte('appointment_date', weekEnd);
+
+      const weekDays = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+      const tendenciaSemanal: WeeklyTrend[] = [];
+      
+      for (let i = 0; i < 7; i++) {
+        const day = subDays(new Date(weekEnd), 6 - i);
+        const dayStr = format(day, 'yyyy-MM-dd');
+        const dayAppointments = weeklyData?.filter(a => a.appointment_date === dayStr) || [];
+        
+        tendenciaSemanal.push({
+          dia: weekDays[i],
+          agendamentos: dayAppointments.length,
+          concluidos: dayAppointments.filter(a => a.status === 'concluido').length,
+        });
+      }
+
+      // Agendamentos e cancelamentos da semana
+      const { count: agendamentosSemana } = await supabase
+        .from('appointments')
+        .select('*', { count: 'exact', head: true })
+        .gte('appointment_date', weekStart)
+        .lte('appointment_date', weekEnd);
+
+      const { count: cancelamentosSemana } = await supabase
+        .from('appointments')
+        .select('*', { count: 'exact', head: true })
+        .gte('appointment_date', weekStart)
+        .lte('appointment_date', weekEnd)
+        .eq('status', 'cancelado');
+
+      // Ticket médio
+      const ticketMedio = totalSessions30d && totalSessions30d > 0
+        ? receitaMensal / totalSessions30d
+        : 0;
+
       return {
         totalPacientes: totalPacientes || 0,
         pacientesAtivos,
@@ -145,9 +247,14 @@ export const useDashboardMetrics = () => {
         receitaMensal,
         receitaMesAnterior,
         crescimentoMensal: Math.round(crescimentoMensal * 10) / 10,
-        fisioterapeutasAtivos: fisioterapeutasAtivos || 0,
+        fisioterapeutasAtivos,
         mediaSessoesPorPaciente: Math.round(mediaSessoesPorPaciente * 10) / 10,
         pacientesEmRisco,
+        receitaPorFisioterapeuta,
+        tendenciaSemanal,
+        ticketMedio: Math.round(ticketMedio * 100) / 100,
+        agendamentosSemana: agendamentosSemana || 0,
+        cancelamentosSemana: cancelamentosSemana || 0,
       };
     },
     staleTime: 1000 * 60 * 5,
