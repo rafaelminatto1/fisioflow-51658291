@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from './card';
 import { Skeleton } from './skeleton';
 
 interface LoadingSkeletonProps {
-  type?: 'table' | 'card' | 'list' | 'form';
+  type?: 'table' | 'card' | 'list' | 'form' | 'stats';
   rows?: number;
   className?: string;
 }
@@ -13,6 +13,25 @@ export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
   rows = 3,
   className = ''
 }) => {
+  if (type === 'stats') {
+    return (
+      <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 ${className}`}>
+        {Array.from({ length: rows }).map((_, i) => (
+          <Card key={i} className="animate-pulse">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-8 w-8 rounded-full" />
+              </div>
+              <Skeleton className="h-8 w-20 mb-1" />
+              <Skeleton className="h-3 w-16" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
   if (type === 'table') {
     return (
       <div className={`space-y-3 ${className}`}>

@@ -8,6 +8,9 @@ import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { GlobalSearch } from '@/components/eventos/GlobalSearch';
+import { PageBreadcrumbs } from '@/components/ui/page-breadcrumbs';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,12 +26,45 @@ import {
   LogOut,
   Stethoscope
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { toast } from '@/hooks/use-toast';
 
 interface MainLayoutProps {
   children: React.ReactNode;
+  showBreadcrumbs?: boolean;
+  customBreadcrumbLabels?: Record<string, string>;
 }
 
-export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
+export const MainLayout: React.FC<MainLayoutProps> = ({ 
+  children,
+  showBreadcrumbs = true,
+  customBreadcrumbLabels,
+}) => {
+  const { profile, loading, getDisplayName, getInitials } = useUserProfile();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: 'Sessão encerrada',
+        description: 'Você foi desconectado com sucesso.',
+      });
+      navigate('/login');
+    } catch (error) {
+      toast({
+        title: 'Erro ao sair',
+        description: 'Não foi possível encerrar a sessão.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const displayName = getDisplayName();
+  const initials = getInitials();
+
   return (
     <div className="min-h-screen flex w-full bg-gradient-to-br from-background via-accent/5 to-background">
       {/* Onboarding Tour */}
@@ -67,27 +103,45 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2 h-9 hover:bg-accent/80 transition-colors">
-                  <Avatar className="w-8 h-8 ring-2 ring-primary/20">
-                    <AvatarImage src="/placeholder-avatar.jpg" />
-                    <AvatarFallback className="bg-gradient-primary text-primary-foreground font-medium">JS</AvatarFallback>
-                  </Avatar>
-                  <span className="hidden lg:block font-medium">Dr. João Silva</span>
+                  {loading ? (
+                    <>
+                      <Skeleton className="w-8 h-8 rounded-full" />
+                      <Skeleton className="hidden lg:block h-4 w-24" />
+                    </>
+                  ) : (
+                    <>
+                      <Avatar className="w-8 h-8 ring-2 ring-primary/20">
+                        <AvatarImage src={profile?.avatar_url || ''} />
+                        <AvatarFallback className="bg-gradient-primary text-primary-foreground font-medium">
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="hidden lg:block font-medium">{displayName}</span>
+                    </>
+                  )}
                   <ChevronDown className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-card/95 backdrop-blur-sm border-border/50">
                 <DropdownMenuLabel className="text-foreground">Minha Conta</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="hover:bg-accent/80">
-                  <User className="w-4 h-4 mr-2 text-primary" />
-                  Perfil
+                <DropdownMenuItem asChild className="hover:bg-accent/80 cursor-pointer">
+                  <Link to="/perfil">
+                    <User className="w-4 h-4 mr-2 text-primary" />
+                    Perfil
+                  </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="hover:bg-accent/80">
-                  <Settings className="w-4 h-4 mr-2 text-primary" />
-                  Configurações
+                <DropdownMenuItem asChild className="hover:bg-accent/80 cursor-pointer">
+                  <Link to="/configuracoes">
+                    <Settings className="w-4 h-4 mr-2 text-primary" />
+                    Configurações
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="hover:bg-destructive/10 text-destructive">
+                <DropdownMenuItem 
+                  onClick={handleLogout}
+                  className="hover:bg-destructive/10 text-destructive cursor-pointer"
+                >
                   <LogOut className="w-4 h-4 mr-2" />
                   Sair
                 </DropdownMenuItem>
@@ -99,6 +153,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         {/* Main Content - Com padding para mobile header e bottom navigation */}
         <main className="flex-1 p-4 md:p-6 pt-16 md:pt-6 pb-20 md:pb-6 overflow-visible bg-gradient-to-b from-transparent to-accent/5">
           <div className="max-w-7xl mx-auto">
+            {showBreadcrumbs && <PageBreadcrumbs customLabels={customBreadcrumbLabels} />}
             {children}
           </div>
         </main>

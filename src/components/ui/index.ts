@@ -8,6 +8,7 @@ export { AspectRatio } from './aspect-ratio';
 export { Avatar, AvatarImage, AvatarFallback } from './avatar';
 export { Badge, badgeVariants } from './badge';
 export * from './breadcrumb';
+export { PageBreadcrumbs } from './page-breadcrumbs';
 export { Button, buttonVariants } from './button';
 export { Calendar } from './calendar';
 export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from './card';
