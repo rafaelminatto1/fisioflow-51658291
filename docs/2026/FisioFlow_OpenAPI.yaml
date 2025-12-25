@@ -1,0 +1,1965 @@
+openapi: 3.1.0
+info:
+  title: FisioFlow v3.0 API
+  description: |
+    API REST do Sistema de Gestão para Clínicas de Fisioterapia Esportiva.
+    
+    ## Autenticação
+    Todas as requisições devem incluir o header `Authorization` com um token JWT válido do Clerk.
+    
+    ## Rate Limiting
+    - 100 requisições por minuto por IP
+    - 1000 requisições por hora por usuário
+    
+    ## Versionamento
+    A versão atual da API é v1. O versionamento é feito via path prefix `/api/v1`.
+    
+    ## Códigos de Erro
+    | Código | Descrição |
+    |--------|-----------|
+    | 400 | Bad Request - Dados inválidos |
+    | 401 | Unauthorized - Token inválido ou expirado |
+    | 403 | Forbidden - Sem permissão para o recurso |
+    | 404 | Not Found - Recurso não encontrado |
+    | 409 | Conflict - Conflito de dados (ex: CPF duplicado) |
+    | 422 | Unprocessable Entity - Validação falhou |
+    | 429 | Too Many Requests - Rate limit excedido |
+    | 500 | Internal Server Error - Erro no servidor |
+  version: 1.0.0
+  contact:
+    name: Activity Fisioterapia
+    email: suporte@activityfisioterapia.com.br
+    url: https://activityfisioterapia.com.br
+  license:
+    name: Proprietary
+    url: https://fisioflow.com/terms
+
+servers:
+  - url: https://app.fisioflow.com/api/v1
+    description: Produção
+  - url: https://staging.fisioflow.com/api/v1
+    description: Staging
+  - url: http://localhost:3000/api/v1
+    description: Desenvolvimento
+
+tags:
+  - name: Patients
+    description: Gerenciamento de pacientes
+  - name: Appointments
+    description: Agendamentos e calendário
+  - name: Sessions
+    description: Evoluções e sessões clínicas
+  - name: PainMaps
+    description: Mapa de dor corporal
+  - name: Waitlist
+    description: Lista de espera
+  - name: Packages
+    description: Pacotes de sessões
+  - name: Payments
+    description: Pagamentos e transações
+  - name: Exercises
+    description: Biblioteca de exercícios
+  - name: Prescriptions
+    description: Prescrições de exercícios
+  - name: WhatsApp
+    description: Integração WhatsApp
+  - name: Reports
+    description: Relatórios e analytics
+  - name: Webhooks
+    description: Endpoints de webhook
+
+security:
+  - BearerAuth: []
+
+paths:
+  # ========== PATIENTS ==========
+  /patients:
+    get:
+      tags: [Patients]
+      summary: Listar pacientes
+      description: Retorna lista paginada de pacientes da organização
+      operationId: listPatients
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: search
+          in: query
+          description: Busca por nome, CPF ou telefone
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filtrar por status
+          schema:
+            type: string
+            enum: [active, inactive, all]
+            default: active
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [name, createdAt, lastVisit]
+            default: name
+      responses:
+        '200':
+          description: Lista de pacientes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Patient'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    
+    post:
+      tags: [Patients]
+      summary: Cadastrar paciente
+      description: Cria um novo paciente na organização
+      operationId: createPatient
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatientCreate'
+      responses:
+        '201':
+          description: Paciente criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: CPF já cadastrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /patients/{patientId}:
+    get:
+      tags: [Patients]
+      summary: Obter paciente
+      operationId: getPatient
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      responses:
+        '200':
+          description: Dados do paciente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    
+    patch:
+      tags: [Patients]
+      summary: Atualizar paciente
+      operationId: updatePatient
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatientUpdate'
+      responses:
+        '200':
+          description: Paciente atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+    
+    delete:
+      tags: [Patients]
+      summary: Desativar paciente
+      description: Soft delete - marca paciente como inativo
+      operationId: deletePatient
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      responses:
+        '204':
+          description: Paciente desativado
+
+  /patients/{patientId}/medical-record:
+    get:
+      tags: [Patients]
+      summary: Obter prontuário
+      operationId: getMedicalRecord
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      responses:
+        '200':
+          description: Prontuário do paciente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MedicalRecord'
+    
+    put:
+      tags: [Patients]
+      summary: Atualizar prontuário
+      operationId: updateMedicalRecord
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MedicalRecordUpdate'
+      responses:
+        '200':
+          description: Prontuário atualizado
+
+  # ========== APPOINTMENTS ==========
+  /appointments:
+    get:
+      tags: [Appointments]
+      summary: Listar agendamentos
+      operationId: listAppointments
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: therapistId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [scheduled, confirmed, completed, cancelled, no_show]
+      responses:
+        '200':
+          description: Lista de agendamentos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Appointment'
+    
+    post:
+      tags: [Appointments]
+      summary: Criar agendamento
+      operationId: createAppointment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentCreate'
+      responses:
+        '201':
+          description: Agendamento criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+        '409':
+          description: Conflito de horário
+
+  /appointments/{appointmentId}:
+    get:
+      tags: [Appointments]
+      summary: Obter agendamento
+      operationId: getAppointment
+      parameters:
+        - $ref: '#/components/parameters/AppointmentId'
+      responses:
+        '200':
+          description: Dados do agendamento
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentDetail'
+    
+    patch:
+      tags: [Appointments]
+      summary: Atualizar agendamento
+      operationId: updateAppointment
+      parameters:
+        - $ref: '#/components/parameters/AppointmentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentUpdate'
+      responses:
+        '200':
+          description: Agendamento atualizado
+
+  /appointments/{appointmentId}/confirm:
+    post:
+      tags: [Appointments]
+      summary: Confirmar agendamento
+      operationId: confirmAppointment
+      parameters:
+        - $ref: '#/components/parameters/AppointmentId'
+      responses:
+        '200':
+          description: Agendamento confirmado
+
+  /appointments/{appointmentId}/cancel:
+    post:
+      tags: [Appointments]
+      summary: Cancelar agendamento
+      operationId: cancelAppointment
+      parameters:
+        - $ref: '#/components/parameters/AppointmentId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                cancelledBy:
+                  type: string
+                  enum: [patient, clinic, system]
+      responses:
+        '200':
+          description: Agendamento cancelado
+
+  /appointments/availability:
+    get:
+      tags: [Appointments]
+      summary: Verificar disponibilidade
+      operationId: checkAvailability
+      parameters:
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: therapistId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: duration
+          in: query
+          schema:
+            type: integer
+            enum: [30, 60, 90]
+            default: 60
+      responses:
+        '200':
+          description: Horários disponíveis
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    time:
+                      type: string
+                      format: time
+                    available:
+                      type: boolean
+                    occupancy:
+                      type: integer
+                    maxCapacity:
+                      type: integer
+
+  # ========== SESSIONS ==========
+  /sessions:
+    get:
+      tags: [Sessions]
+      summary: Listar sessões/evoluções
+      operationId: listSessions
+      parameters:
+        - name: patientId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: therapistId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Lista de sessões
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Session'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+    
+    post:
+      tags: [Sessions]
+      summary: Iniciar sessão
+      operationId: createSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [appointmentId]
+              properties:
+                appointmentId:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: Sessão iniciada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+
+  /sessions/{sessionId}:
+    get:
+      tags: [Sessions]
+      summary: Obter sessão
+      operationId: getSession
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      responses:
+        '200':
+          description: Dados da sessão
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionDetail'
+    
+    patch:
+      tags: [Sessions]
+      summary: Atualizar evolução SOAP
+      operationId: updateSession
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionUpdate'
+      responses:
+        '200':
+          description: Sessão atualizada
+
+  /sessions/{sessionId}/complete:
+    post:
+      tags: [Sessions]
+      summary: Finalizar sessão
+      operationId: completeSession
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      responses:
+        '200':
+          description: Sessão finalizada
+
+  # ========== PAIN MAPS ==========
+  /sessions/{sessionId}/pain-maps:
+    get:
+      tags: [PainMaps]
+      summary: Listar mapas de dor da sessão
+      operationId: listPainMaps
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      responses:
+        '200':
+          description: Mapas de dor
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PainMap'
+    
+    post:
+      tags: [PainMaps]
+      summary: Criar mapa de dor
+      operationId: createPainMap
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PainMapCreate'
+      responses:
+        '201':
+          description: Mapa de dor criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PainMap'
+
+  /pain-maps/{painMapId}:
+    get:
+      tags: [PainMaps]
+      summary: Obter mapa de dor
+      operationId: getPainMap
+      parameters:
+        - name: painMapId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Dados do mapa de dor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PainMapDetail'
+
+  /patients/{patientId}/pain-maps/compare:
+    get:
+      tags: [PainMaps]
+      summary: Comparar mapas de dor
+      operationId: comparePainMaps
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+        - name: mapIds
+          in: query
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+              format: uuid
+            minItems: 2
+            maxItems: 2
+      responses:
+        '200':
+          description: Comparação de mapas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  maps:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PainMap'
+                  evolution:
+                    type: object
+                    properties:
+                      improvementPercentage:
+                        type: number
+                      regionsImproved:
+                        type: array
+                        items:
+                          type: string
+                      regionsWorsened:
+                        type: array
+                        items:
+                          type: string
+
+  # ========== WAITLIST ==========
+  /waitlist:
+    get:
+      tags: [Waitlist]
+      summary: Listar lista de espera
+      operationId: listWaitlist
+      parameters:
+        - name: priority
+          in: query
+          schema:
+            type: string
+            enum: [normal, high, urgent]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [waiting, offered, scheduled, removed]
+            default: waiting
+      responses:
+        '200':
+          description: Lista de espera
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WaitlistEntry'
+    
+    post:
+      tags: [Waitlist]
+      summary: Adicionar à lista de espera
+      operationId: addToWaitlist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WaitlistCreate'
+      responses:
+        '201':
+          description: Adicionado à lista
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WaitlistEntry'
+
+  /waitlist/{waitlistId}:
+    delete:
+      tags: [Waitlist]
+      summary: Remover da lista de espera
+      operationId: removeFromWaitlist
+      parameters:
+        - name: waitlistId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Removido da lista
+
+  /waitlist/{waitlistId}/offer:
+    post:
+      tags: [Waitlist]
+      summary: Oferecer vaga manualmente
+      operationId: offerSlot
+      parameters:
+        - name: waitlistId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [appointmentSlot]
+              properties:
+                appointmentSlot:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Oferta enviada
+
+  # ========== PACKAGES ==========
+  /packages:
+    get:
+      tags: [Packages]
+      summary: Listar pacotes disponíveis
+      operationId: listPackages
+      responses:
+        '200':
+          description: Lista de pacotes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Package'
+    
+    post:
+      tags: [Packages]
+      summary: Criar pacote
+      operationId: createPackage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PackageCreate'
+      responses:
+        '201':
+          description: Pacote criado
+
+  # ========== PAYMENTS ==========
+  /payments:
+    get:
+      tags: [Payments]
+      summary: Listar pagamentos
+      operationId: listPayments
+      parameters:
+        - name: patientId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, completed, failed, refunded]
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Lista de pagamentos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Payment'
+    
+    post:
+      tags: [Payments]
+      summary: Registrar pagamento
+      operationId: createPayment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentCreate'
+      responses:
+        '201':
+          description: Pagamento registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+
+  /payments/checkout:
+    post:
+      tags: [Payments]
+      summary: Criar checkout Stripe
+      operationId: createCheckout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [patientId, items]
+              properties:
+                patientId:
+                  type: string
+                  format: uuid
+                items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum: [session, package]
+                      id:
+                        type: string
+                        format: uuid
+                      quantity:
+                        type: integer
+                successUrl:
+                  type: string
+                  format: uri
+                cancelUrl:
+                  type: string
+                  format: uri
+      responses:
+        '200':
+          description: URL de checkout
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  checkoutUrl:
+                    type: string
+                    format: uri
+                  sessionId:
+                    type: string
+
+  # ========== EXERCISES ==========
+  /exercises:
+    get:
+      tags: [Exercises]
+      summary: Listar exercícios
+      operationId: listExercises
+      parameters:
+        - name: categoryId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de exercícios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Exercise'
+    
+    post:
+      tags: [Exercises]
+      summary: Criar exercício
+      operationId: createExercise
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExerciseCreate'
+      responses:
+        '201':
+          description: Exercício criado
+
+  # ========== PRESCRIPTIONS ==========
+  /prescriptions:
+    get:
+      tags: [Prescriptions]
+      summary: Listar prescrições
+      operationId: listPrescriptions
+      parameters:
+        - name: patientId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Lista de prescrições
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Prescription'
+    
+    post:
+      tags: [Prescriptions]
+      summary: Criar prescrição
+      operationId: createPrescription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrescriptionCreate'
+      responses:
+        '201':
+          description: Prescrição criada
+
+  # ========== WHATSAPP ==========
+  /whatsapp/send:
+    post:
+      tags: [WhatsApp]
+      summary: Enviar mensagem WhatsApp
+      operationId: sendWhatsApp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [patientId, message]
+              properties:
+                patientId:
+                  type: string
+                  format: uuid
+                message:
+                  type: string
+                  maxLength: 4096
+      responses:
+        '200':
+          description: Mensagem enviada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messageId:
+                    type: string
+                  status:
+                    type: string
+                    enum: [sent, delivered, failed]
+
+  /whatsapp/status:
+    get:
+      tags: [WhatsApp]
+      summary: Status da conexão WhatsApp
+      operationId: getWhatsAppStatus
+      responses:
+        '200':
+          description: Status da conexão
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  connected:
+                    type: boolean
+                  phoneNumber:
+                    type: string
+                  lastSeen:
+                    type: string
+                    format: date-time
+
+  # ========== REPORTS ==========
+  /reports/dashboard:
+    get:
+      tags: [Reports]
+      summary: KPIs do dashboard
+      operationId: getDashboard
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [today, week, month, quarter, year]
+            default: month
+      responses:
+        '200':
+          description: KPIs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardKPIs'
+
+  /reports/financial:
+    get:
+      tags: [Reports]
+      summary: Relatório financeiro
+      operationId: getFinancialReport
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Relatório financeiro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialReport'
+
+  /reports/patient/{patientId}/evolution:
+    get:
+      tags: [Reports]
+      summary: Relatório de evolução do paciente
+      operationId: getPatientEvolution
+      parameters:
+        - $ref: '#/components/parameters/PatientId'
+      responses:
+        '200':
+          description: Relatório de evolução
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientEvolutionReport'
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+
+  # ========== WEBHOOKS ==========
+  /webhooks/clerk:
+    post:
+      tags: [Webhooks]
+      summary: Webhook do Clerk
+      operationId: clerkWebhook
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Webhook processado
+
+  /webhooks/stripe:
+    post:
+      tags: [Webhooks]
+      summary: Webhook do Stripe
+      operationId: stripeWebhook
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Webhook processado
+
+  /webhooks/evolution:
+    post:
+      tags: [Webhooks]
+      summary: Webhook do Evolution API (WhatsApp)
+      operationId: evolutionWebhook
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Webhook processado
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT do Clerk
+
+  parameters:
+    PatientId:
+      name: patientId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    AppointmentId:
+      name: appointmentId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    SessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  responses:
+    BadRequest:
+      description: Dados inválidos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Recurso não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+
+    # Patient Schemas
+    Patient:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        cpf:
+          type: string
+          pattern: '^\d{11}$'
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+        birthDate:
+          type: string
+          format: date
+        photoUrl:
+          type: string
+          format: uri
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    PatientDetail:
+      allOf:
+        - $ref: '#/components/schemas/Patient'
+        - type: object
+          properties:
+            address:
+              $ref: '#/components/schemas/Address'
+            emergencyContact:
+              $ref: '#/components/schemas/EmergencyContact'
+            insurance:
+              $ref: '#/components/schemas/Insurance'
+            medicalRecord:
+              $ref: '#/components/schemas/MedicalRecord'
+            packageBalance:
+              type: integer
+            upcomingAppointments:
+              type: array
+              items:
+                $ref: '#/components/schemas/Appointment'
+
+    PatientCreate:
+      type: object
+      required: [name, cpf, phone, email, birthDate]
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 100
+        cpf:
+          type: string
+          pattern: '^\d{11}$'
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+        birthDate:
+          type: string
+          format: date
+        gender:
+          type: string
+          enum: [M, F, O]
+        address:
+          $ref: '#/components/schemas/Address'
+        emergencyContact:
+          $ref: '#/components/schemas/EmergencyContact'
+        insurance:
+          $ref: '#/components/schemas/Insurance'
+        origin:
+          type: string
+        notes:
+          type: string
+
+    PatientUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          format: email
+        address:
+          $ref: '#/components/schemas/Address'
+        emergencyContact:
+          $ref: '#/components/schemas/EmergencyContact'
+        insurance:
+          $ref: '#/components/schemas/Insurance'
+        notes:
+          type: string
+
+    Address:
+      type: object
+      properties:
+        zipCode:
+          type: string
+        street:
+          type: string
+        number:
+          type: string
+        complement:
+          type: string
+        neighborhood:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+
+    EmergencyContact:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        relationship:
+          type: string
+
+    Insurance:
+      type: object
+      properties:
+        provider:
+          type: string
+        planName:
+          type: string
+        cardNumber:
+          type: string
+        validUntil:
+          type: string
+          format: date
+
+    MedicalRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        chiefComplaint:
+          type: string
+        historyCurrent:
+          type: string
+        historyPast:
+          type: string
+        medications:
+          type: array
+          items:
+            type: string
+        allergies:
+          type: array
+          items:
+            type: string
+        physicalActivity:
+          type: string
+        pathologies:
+          type: array
+          items:
+            $ref: '#/components/schemas/Pathology'
+        surgeries:
+          type: array
+          items:
+            $ref: '#/components/schemas/Surgery'
+        goals:
+          type: array
+          items:
+            $ref: '#/components/schemas/Goal'
+
+    MedicalRecordUpdate:
+      type: object
+      properties:
+        chiefComplaint:
+          type: string
+        historyCurrent:
+          type: string
+        historyPast:
+          type: string
+        medications:
+          type: array
+          items:
+            type: string
+        allergies:
+          type: array
+          items:
+            type: string
+        physicalActivity:
+          type: string
+
+    Pathology:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        icdCode:
+          type: string
+        status:
+          type: string
+          enum: [active, treated, monitoring]
+        diagnosedAt:
+          type: string
+          format: date
+
+    Surgery:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        surgeryDate:
+          type: string
+          format: date
+        surgeon:
+          type: string
+        hospital:
+          type: string
+
+    Goal:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        description:
+          type: string
+        status:
+          type: string
+          enum: [pending, in_progress, achieved]
+        targetDate:
+          type: string
+          format: date
+
+    # Appointment Schemas
+    Appointment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        patientId:
+          type: string
+          format: uuid
+        patientName:
+          type: string
+        therapistId:
+          type: string
+          format: uuid
+        therapistName:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        duration:
+          type: integer
+        status:
+          type: string
+          enum: [scheduled, confirmed, completed, cancelled, no_show]
+        reminderSent:
+          type: boolean
+
+    AppointmentDetail:
+      allOf:
+        - $ref: '#/components/schemas/Appointment'
+        - type: object
+          properties:
+            patient:
+              $ref: '#/components/schemas/Patient'
+            session:
+              $ref: '#/components/schemas/Session'
+            notes:
+              type: string
+
+    AppointmentCreate:
+      type: object
+      required: [patientId, startTime, duration]
+      properties:
+        patientId:
+          type: string
+          format: uuid
+        therapistId:
+          type: string
+          format: uuid
+        startTime:
+          type: string
+          format: date-time
+        duration:
+          type: integer
+          enum: [30, 60, 90]
+          default: 60
+        notes:
+          type: string
+
+    AppointmentUpdate:
+      type: object
+      properties:
+        startTime:
+          type: string
+          format: date-time
+        duration:
+          type: integer
+        therapistId:
+          type: string
+          format: uuid
+        notes:
+          type: string
+
+    # Session Schemas
+    Session:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        appointmentId:
+          type: string
+          format: uuid
+        patientId:
+          type: string
+          format: uuid
+        therapistId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [draft, completed]
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+
+    SessionDetail:
+      allOf:
+        - $ref: '#/components/schemas/Session'
+        - type: object
+          properties:
+            subjective:
+              type: string
+            objective:
+              type: string
+            assessment:
+              type: string
+            plan:
+              type: string
+            evaScore:
+              type: integer
+              minimum: 0
+              maximum: 10
+            attachments:
+              type: array
+              items:
+                type: string
+                format: uri
+            painMaps:
+              type: array
+              items:
+                $ref: '#/components/schemas/PainMap'
+
+    SessionUpdate:
+      type: object
+      properties:
+        subjective:
+          type: string
+        objective:
+          type: string
+        assessment:
+          type: string
+        plan:
+          type: string
+        evaScore:
+          type: integer
+          minimum: 0
+          maximum: 10
+
+    # Pain Map Schemas
+    PainMap:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sessionId:
+          type: string
+          format: uuid
+        view:
+          type: string
+          enum: [front, back]
+        points:
+          type: array
+          items:
+            $ref: '#/components/schemas/PainPoint'
+        createdAt:
+          type: string
+          format: date-time
+
+    PainMapDetail:
+      allOf:
+        - $ref: '#/components/schemas/PainMap'
+        - type: object
+          properties:
+            session:
+              $ref: '#/components/schemas/Session'
+
+    PainMapCreate:
+      type: object
+      required: [view, points]
+      properties:
+        view:
+          type: string
+          enum: [front, back]
+        points:
+          type: array
+          items:
+            $ref: '#/components/schemas/PainPointCreate'
+
+    PainPoint:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        region:
+          type: string
+        regionCode:
+          type: string
+        intensity:
+          type: integer
+          minimum: 0
+          maximum: 10
+        painType:
+          type: string
+          enum: [sharp, throbbing, burning, tingling, numbness, stiffness]
+        notes:
+          type: string
+
+    PainPointCreate:
+      type: object
+      required: [regionCode, intensity, painType]
+      properties:
+        regionCode:
+          type: string
+        intensity:
+          type: integer
+          minimum: 0
+          maximum: 10
+        painType:
+          type: string
+          enum: [sharp, throbbing, burning, tingling, numbness, stiffness]
+        notes:
+          type: string
+
+    # Waitlist Schemas
+    WaitlistEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        patientId:
+          type: string
+          format: uuid
+        patientName:
+          type: string
+        preferredDays:
+          type: array
+          items:
+            type: string
+            enum: [MON, TUE, WED, THU, FRI, SAT]
+        preferredPeriods:
+          type: array
+          items:
+            type: string
+            enum: [morning, afternoon, evening]
+        priority:
+          type: string
+          enum: [normal, high, urgent]
+        status:
+          type: string
+          enum: [waiting, offered, scheduled, removed]
+        refusalCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    WaitlistCreate:
+      type: object
+      required: [patientId, preferredDays, preferredPeriods]
+      properties:
+        patientId:
+          type: string
+          format: uuid
+        preferredDays:
+          type: array
+          items:
+            type: string
+            enum: [MON, TUE, WED, THU, FRI, SAT]
+        preferredPeriods:
+          type: array
+          items:
+            type: string
+            enum: [morning, afternoon, evening]
+        preferredTherapistId:
+          type: string
+          format: uuid
+        priority:
+          type: string
+          enum: [normal, high, urgent]
+          default: normal
+        notes:
+          type: string
+
+    # Package Schemas
+    Package:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        sessionsCount:
+          type: integer
+        price:
+          type: number
+          format: decimal
+        validityDays:
+          type: integer
+        isActive:
+          type: boolean
+
+    PackageCreate:
+      type: object
+      required: [name, sessionsCount, price, validityDays]
+      properties:
+        name:
+          type: string
+        sessionsCount:
+          type: integer
+          minimum: 1
+        price:
+          type: number
+          format: decimal
+          minimum: 0
+        validityDays:
+          type: integer
+          minimum: 1
+
+    # Payment Schemas
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        patientId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: decimal
+        method:
+          type: string
+          enum: [pix, credit_card, debit_card, cash, transfer]
+        status:
+          type: string
+          enum: [pending, completed, failed, refunded]
+        receiptUrl:
+          type: string
+          format: uri
+        paidAt:
+          type: string
+          format: date-time
+
+    PaymentCreate:
+      type: object
+      required: [patientId, amount, method]
+      properties:
+        patientId:
+          type: string
+          format: uuid
+        transactionId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: decimal
+          minimum: 0
+        method:
+          type: string
+          enum: [pix, credit_card, debit_card, cash, transfer]
+
+    # Exercise Schemas
+    Exercise:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        categoryId:
+          type: string
+          format: uuid
+        categoryName:
+          type: string
+        videoUrl:
+          type: string
+          format: uri
+        thumbnailUrl:
+          type: string
+          format: uri
+        difficulty:
+          type: string
+          enum: [easy, medium, hard]
+
+    ExerciseCreate:
+      type: object
+      required: [name, categoryId, videoUrl]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        categoryId:
+          type: string
+          format: uuid
+        videoUrl:
+          type: string
+          format: uri
+        thumbnailUrl:
+          type: string
+          format: uri
+        difficulty:
+          type: string
+          enum: [easy, medium, hard]
+
+    # Prescription Schemas
+    Prescription:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        patientId:
+          type: string
+          format: uuid
+        therapistId:
+          type: string
+          format: uuid
+        frequency:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PrescriptionItem'
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    PrescriptionItem:
+      type: object
+      properties:
+        exerciseId:
+          type: string
+          format: uuid
+        exerciseName:
+          type: string
+        sets:
+          type: integer
+        reps:
+          type: integer
+        holdSeconds:
+          type: integer
+        notes:
+          type: string
+
+    PrescriptionCreate:
+      type: object
+      required: [patientId, frequency, items]
+      properties:
+        patientId:
+          type: string
+          format: uuid
+        frequency:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            required: [exerciseId, sets, reps]
+            properties:
+              exerciseId:
+                type: string
+                format: uuid
+              sets:
+                type: integer
+                minimum: 1
+              reps:
+                type: integer
+                minimum: 1
+              holdSeconds:
+                type: integer
+              notes:
+                type: string
+
+    # Report Schemas
+    DashboardKPIs:
+      type: object
+      properties:
+        activePatients:
+          type: integer
+        monthlyRevenue:
+          type: number
+          format: decimal
+        occupancyRate:
+          type: number
+          format: percent
+        noShowRate:
+          type: number
+          format: percent
+        confirmationRate:
+          type: number
+          format: percent
+        npsScore:
+          type: number
+        appointmentsToday:
+          type: integer
+        revenueChart:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              revenue:
+                type: number
+
+    FinancialReport:
+      type: object
+      properties:
+        totalRevenue:
+          type: number
+        totalExpenses:
+          type: number
+        netIncome:
+          type: number
+        revenueByMethod:
+          type: object
+          additionalProperties:
+            type: number
+        revenueByTherapist:
+          type: array
+          items:
+            type: object
+            properties:
+              therapistId:
+                type: string
+              therapistName:
+                type: string
+              revenue:
+                type: number
+        delinquencyRate:
+          type: number
+
+    PatientEvolutionReport:
+      type: object
+      properties:
+        patientId:
+          type: string
+          format: uuid
+        patientName:
+          type: string
+        totalSessions:
+          type: integer
+        treatmentDuration:
+          type: string
+        painEvolution:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              averageEva:
+                type: number
+        exerciseAdherence:
+          type: number
+          format: percent
+        recommendations:
+          type: string

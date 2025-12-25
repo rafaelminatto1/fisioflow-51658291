@@ -55,6 +55,22 @@ Deno.serve(async (req) => {
 
   const requestId = crypto.randomUUID()
 
+  // Block in production environment for security
+  const environment = Deno.env.get('ENVIRONMENT') || Deno.env.get('NODE_ENV');
+  if (environment === 'production') {
+    console.warn(`[create-demo-users] Blocked in production environment: ${requestId}`);
+    return new Response(
+      JSON.stringify({ 
+        error: 'Esta função não está disponível em ambiente de produção.',
+        requestId 
+      }),
+      { 
+        status: 403, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
+  }
+
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');

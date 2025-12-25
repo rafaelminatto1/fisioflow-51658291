@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { checkRateLimit, createRateLimitResponse } from '../_shared/rate-limit.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,6 +24,13 @@ serve(async (req) => {
   );
 
   try {
+    // Rate limiting
+    const rateLimitResult = await checkRateLimit(req, 'verify-voucher-payment');
+    if (!rateLimitResult.allowed) {
+      console.warn(`Rate limit excedido para verify-voucher-payment: ${rateLimitResult.current_count}/${rateLimitResult.limit}`);
+      return createRateLimitResponse(rateLimitResult, corsHeaders);
+    }
+
     logStep("Function started");
 
     const authHeader = req.headers.get("Authorization");

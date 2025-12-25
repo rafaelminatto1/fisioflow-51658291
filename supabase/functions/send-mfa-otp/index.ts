@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.74.0";
 import { Resend } from "npm:resend@2.0.0";
+import { checkRateLimit, createRateLimitResponse } from '../_shared/rate-limit.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,6 +19,12 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Rate limiting - strict for OTP to prevent brute force
+    const rateLimitResult = await checkRateLimit(req, 'send-mfa-otp');
+    if (!rateLimitResult.allowed) {
+      console.warn(`Rate limit excedido para send-mfa-otp: ${rateLimitResult.current_count}/${rateLimitResult.limit}`);
+      return createRateLimitResponse(rateLimitResult, corsHeaders);
+    }
     const resendKey = Deno.env.get("RESEND_API_KEY");
     if (!resendKey) {
       console.error("RESEND_API_KEY não configurada");

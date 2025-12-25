@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { checkRateLimit, createRateLimitResponse } from '../_shared/rate-limit.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -53,6 +54,13 @@ serve(async (req) => {
   const requestId = crypto.randomUUID()
 
   try {
+    // Rate limiting
+    const rateLimitResult = await checkRateLimit(req, 'ai-suggest-conduct');
+    if (!rateLimitResult.allowed) {
+      console.warn(`Rate limit excedido para ai-suggest-conduct: ${rateLimitResult.current_count}/${rateLimitResult.limit}`);
+      return createRateLimitResponse(rateLimitResult, corsHeaders);
+    }
+
     // Parse and validate payload
     let payload
     try {
