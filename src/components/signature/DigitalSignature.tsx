@@ -145,24 +145,22 @@ export function DigitalSignature({
     setSignedAt(null);
   };
 
-  const generateHash = (data: string): string => {
-    // Simple hash for demo - in production use crypto API
-    let hash = 0;
-    for (let i = 0; i < data.length; i++) {
-      const char = data.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return Math.abs(hash).toString(16).toUpperCase().padStart(8, '0');
+  const generateHash = async (data: string): Promise<string> => {
+    // Use Web Crypto API for SHA-256 hash
+    const encoder = new TextEncoder();
+    const dataBuffer = encoder.encode(data);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
   };
 
-  const handleSign = () => {
+  const handleSign = async () => {
     const canvas = canvasRef.current;
     if (!canvas || !name.trim()) return;
 
     const imageData = canvas.toDataURL('image/png');
     const timestamp = new Date().toISOString();
-    const hash = generateHash(`${documentId}-${name}-${timestamp}-${imageData.slice(0, 100)}`);
+    const hash = await generateHash(`${documentId}-${name}-${timestamp}-${imageData.slice(0, 100)}`);
 
     const signatureData: SignatureData = {
       imageData,

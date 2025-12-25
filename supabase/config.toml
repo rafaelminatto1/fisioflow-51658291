@@ -62,3 +62,9 @@ verify_jwt = true
 
 [functions.whatsapp-webhook]
 verify_jwt = false
+
+[functions.smart-reminders]
+verify_jwt = true
+
+[functions.weekly-report]
+verify_jwt = true
