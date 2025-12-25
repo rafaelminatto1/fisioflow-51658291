@@ -68,3 +68,49 @@ verify_jwt = true
 
 [functions.weekly-report]
 verify_jwt = true
+
+# ========== API REST v3.0 ==========
+
+[functions.api-patients]
+verify_jwt = true
+
+[functions.api-appointments]
+verify_jwt = true
+
+[functions.api-sessions]
+verify_jwt = true
+
+[functions.api-pain-maps]
+verify_jwt = true
+
+[functions.api-waitlist]
+verify_jwt = true
+
+[functions.api-packages]
+verify_jwt = true
+
+[functions.api-payments]
+verify_jwt = true
+
+[functions.api-exercises]
+verify_jwt = true
+
+[functions.api-prescriptions]
+verify_jwt = true
+
+[functions.api-whatsapp]
+verify_jwt = true
+
+[functions.api-reports]
+verify_jwt = true
+
+# ========== Webhooks v3.0 ==========
+
+[functions.webhook-stripe]
+verify_jwt = false
+
+[functions.webhook-whatsapp]
+verify_jwt = false
+
+[functions.webhook-clerk]
+verify_jwt = false

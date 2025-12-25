@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { treatmentAssistantSchema, parseAndValidate, errorResponse } from '../_shared/validation.ts';
+import { checkRateLimit, createRateLimitResponse } from '../_shared/rate-limit.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,6 +14,13 @@ serve(async (req) => {
   }
 
   try {
+    // Rate limiting
+    const rateLimitResult = await checkRateLimit(req, 'ai-treatment-assistant');
+    if (!rateLimitResult.allowed) {
+      console.warn(`Rate limit excedido para ai-treatment-assistant: ${rateLimitResult.current_count}/${rateLimitResult.limit}`);
+      return createRateLimitResponse(rateLimitResult, corsHeaders);
+    }
+
     // Validate input
     const { data, error: validationError } = await parseAndValidate(req, treatmentAssistantSchema, corsHeaders);
     if (validationError) {

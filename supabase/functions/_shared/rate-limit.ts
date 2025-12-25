@@ -15,12 +15,39 @@ interface RateLimitResult {
 
 // Configurações padrão por endpoint
 export const RATE_LIMITS: Record<string, RateLimitConfig> = {
-  'ai-chat': { maxRequests: 30, windowMinutes: 5 }, // 30 requests por 5 minutos
-  'send-whatsapp': { maxRequests: 10, windowMinutes: 5 }, // 10 requests por 5 minutos
-  'send-notification': { maxRequests: 50, windowMinutes: 5 }, // 50 requests por 5 minutos
-  'schedule-notifications': { maxRequests: 20, windowMinutes: 5 }, // 20 requests por 5 minutos
-  'notification-status': { maxRequests: 100, windowMinutes: 5 }, // 100 requests por 5 minutos
-  'default': { maxRequests: 60, windowMinutes: 5 }, // Default: 60 requests por 5 minutos
+  // Chat IA
+  'ai-chat': { maxRequests: 30, windowMinutes: 5 },
+  
+  // Funções de IA
+  'ai-treatment-assistant': { maxRequests: 20, windowMinutes: 5 },
+  'ai-exercise-prescription': { maxRequests: 20, windowMinutes: 5 },
+  'ai-transcribe-session': { maxRequests: 10, windowMinutes: 5 },
+  'ai-suggest-conduct': { maxRequests: 20, windowMinutes: 5 },
+  'intelligent-reports': { maxRequests: 15, windowMinutes: 5 },
+  
+  // Funções de pagamento
+  'create-checkout': { maxRequests: 10, windowMinutes: 5 },
+  'create-voucher-checkout': { maxRequests: 10, windowMinutes: 5 },
+  'verify-voucher-payment': { maxRequests: 20, windowMinutes: 5 },
+  
+  // Funções de comunicação
+  'send-whatsapp': { maxRequests: 10, windowMinutes: 5 },
+  'send-notification': { maxRequests: 50, windowMinutes: 5 },
+  'send-appointment-email': { maxRequests: 30, windowMinutes: 5 },
+  'send-mfa-otp': { maxRequests: 5, windowMinutes: 5 },
+  
+  // Funções de notificação/agendamento
+  'schedule-notifications': { maxRequests: 20, windowMinutes: 5 },
+  'notification-status': { maxRequests: 100, windowMinutes: 5 },
+  'smart-reminders': { maxRequests: 30, windowMinutes: 5 },
+  'schedule-reminders': { maxRequests: 20, windowMinutes: 5 },
+  
+  // Funções administrativas
+  'backup-manager': { maxRequests: 5, windowMinutes: 5 },
+  'weekly-report': { maxRequests: 10, windowMinutes: 5 },
+  
+  // Default
+  'default': { maxRequests: 60, windowMinutes: 5 },
 };
 
 /**

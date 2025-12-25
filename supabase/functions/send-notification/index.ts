@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { checkRateLimit, createRateLimitResponse } from '../_shared/rate-limit.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -63,6 +64,13 @@ serve(async (req) => {
   const requestId = crypto.randomUUID()
 
   try {
+    // Rate limiting
+    const rateLimitResult = await checkRateLimit(req, 'send-notification')
+    if (!rateLimitResult.allowed) {
+      console.warn(`Rate limit excedido para send-notification: ${rateLimitResult.current_count}/${rateLimitResult.limit}`)
+      return createRateLimitResponse(rateLimitResult, corsHeaders)
+    }
+
     // Initialize Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
