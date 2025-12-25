@@ -102,17 +102,22 @@ export const useDashboardMetrics = () => {
         ? ((noShowCount || 0) / totalAppointments30d) * 100 
         : 0;
 
-      // Fisioterapeutas ativos (buscar de profiles com user_roles)
-      const { data: fisioData } = await supabase
+      // Fisioterapeutas ativos (buscar de user_roles e depois profiles)
+      const { data: userRolesData } = await supabase
         .from('user_roles')
-        .select(`
-          user_id,
-          role,
-          profiles!inner(id, full_name)
-        `)
+        .select('user_id, role')
         .in('role', ['admin', 'fisioterapeuta']);
 
-      const fisioterapeutasAtivos = fisioData?.length || 0;
+      const uniqueTherapistUserIds = [...new Set((userRolesData || []).map(ur => ur.user_id))];
+      
+      let fisioterapeutasAtivos = 0;
+      if (uniqueTherapistUserIds.length > 0) {
+        const { count: profilesCount } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .in('user_id', uniqueTherapistUserIds);
+        fisioterapeutasAtivos = profilesCount || 0;
+      }
 
       // Receita mensal atual (usando contas_financeiras)
       const { data: receitaAtualData } = await supabase

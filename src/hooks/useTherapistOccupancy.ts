@@ -94,23 +94,32 @@ export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { 
       // Buscar agendamentos do período (usando therapist_id que é o profile id)
       const therapistIds = therapists.map(t => t.id);
       
-      const { data: appointments, error: appointmentsError } = await supabase
-        .from('appointments')
-        .select('id, therapist_id, appointment_date, appointment_time, duration, status')
-        .gte('appointment_date', format(start, 'yyyy-MM-dd'))
-        .lte('appointment_date', format(end, 'yyyy-MM-dd'))
-        .not('status', 'eq', 'cancelado')
-        .in('therapist_id', therapistIds.length > 0 ? therapistIds : ['no-match']);
+      // Se não há therapists, retornar arrays vazios
+      let appointments: typeof appointmentsError extends null ? any[] : null = [];
+      let todayAppointments: any[] = [];
       
-      if (appointmentsError) throw appointmentsError;
-      
-      // Buscar agendamentos de hoje para dados horários
-      const { data: todayAppointments } = await supabase
-        .from('appointments')
-        .select('id, therapist_id, appointment_time, duration, status')
-        .eq('appointment_date', today)
-        .not('status', 'eq', 'cancelado')
-        .in('therapist_id', therapistIds.length > 0 ? therapistIds : ['no-match']);
+      if (therapistIds.length > 0) {
+        const { data: appointmentsData, error: appointmentsError } = await supabase
+          .from('appointments')
+          .select('id, therapist_id, appointment_date, appointment_time, duration, status')
+          .gte('appointment_date', format(start, 'yyyy-MM-dd'))
+          .lte('appointment_date', format(end, 'yyyy-MM-dd'))
+          .not('status', 'eq', 'cancelado')
+          .in('therapist_id', therapistIds);
+        
+        if (appointmentsError) throw appointmentsError;
+        appointments = appointmentsData || [];
+        
+        // Buscar agendamentos de hoje para dados horários
+        const { data: todayData } = await supabase
+          .from('appointments')
+          .select('id, therapist_id, appointment_time, duration, status')
+          .eq('appointment_date', today)
+          .not('status', 'eq', 'cancelado')
+          .in('therapist_id', therapistIds);
+        
+        todayAppointments = todayData || [];
+      }
       
       // Calcular métricas por fisioterapeuta
       const therapistMetrics: TherapistOccupancyData[] = therapists.map(therapist => {

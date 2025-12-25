@@ -101,13 +101,17 @@ export const useTeamPerformance = (filters: PerformanceFilters = { period: 'mont
       const therapists = profiles || [];
       const therapistIds = therapists.map(t => t.id);
       
-      // Get appointments with payment info
-      const { data: appointments } = await supabase
-        .from('appointments')
-        .select('id, therapist_id, patient_id, status, payment_amount, payment_status, appointment_date')
-        .gte('appointment_date', format(start, 'yyyy-MM-dd'))
-        .lte('appointment_date', format(end, 'yyyy-MM-dd'))
-        .in('therapist_id', therapistIds.length > 0 ? therapistIds : ['no-match']);
+      // Get appointments with payment info (apenas se houver therapists)
+      let appointments: any[] = [];
+      if (therapistIds.length > 0) {
+        const { data: appointmentsData } = await supabase
+          .from('appointments')
+          .select('id, therapist_id, patient_id, status, payment_amount, payment_status, appointment_date')
+          .gte('appointment_date', format(start, 'yyyy-MM-dd'))
+          .lte('appointment_date', format(end, 'yyyy-MM-dd'))
+          .in('therapist_id', therapistIds);
+        appointments = appointmentsData || [];
+      }
       
       // Get NPS data if available
       const { data: npsData } = await supabase
@@ -116,13 +120,17 @@ export const useTeamPerformance = (filters: PerformanceFilters = { period: 'mont
         .gte('created_at', start.toISOString())
         .lte('created_at', end.toISOString());
       
-      // Get patient first appointments to calculate retention
-      const { data: allPatientAppointments } = await supabase
-        .from('appointments')
-        .select('patient_id, appointment_date, status, therapist_id')
-        .in('therapist_id', therapistIds.length > 0 ? therapistIds : ['no-match'])
-        .eq('status', 'concluido')
-        .order('appointment_date', { ascending: true });
+      // Get patient first appointments to calculate retention (apenas se houver therapists)
+      let allPatientAppointments: any[] = [];
+      if (therapistIds.length > 0) {
+        const { data: patientAppointmentsData } = await supabase
+          .from('appointments')
+          .select('patient_id, appointment_date, status, therapist_id')
+          .in('therapist_id', therapistIds)
+          .eq('status', 'concluido')
+          .order('appointment_date', { ascending: true });
+        allPatientAppointments = patientAppointmentsData || [];
+      }
       
       // Calculate retention (patients with 2+ completed sessions)
       const patientSessionCounts = new Map<string, { count: number; therapistId: string }>();
