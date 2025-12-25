@@ -24,7 +24,7 @@ export interface WaitlistMatch {
 }
 
 export const useWaitlistMatch = () => {
-  const { waitlist, loading } = useWaitlist();
+  const { data: waitlist = [], isLoading: loading } = useWaitlist();
 
   /**
    * Finds waitlist entries that match a specific date and time
@@ -47,7 +47,8 @@ export const useWaitlistMatch = () => {
       const matches: WaitlistMatch[] = [];
 
       for (const entry of waitlist) {
-        if (entry.status !== 'active') continue;
+        // Use 'waiting' status (from useWaitlist) instead of 'active'
+        if (entry.status !== 'waiting') continue;
 
         let matchScore = 0;
 
@@ -61,8 +62,8 @@ export const useWaitlistMatch = () => {
           matchScore += 20;
         }
 
-        // Check time slot preference
-        const prefersTimeSlots = entry.preferred_time_slots || [];
+        // Check time slot preference - use preferred_periods from useWaitlist
+        const prefersTimeSlots = entry.preferred_periods || [];
         const timeMatches = prefersTimeSlots.length === 0 || prefersTimeSlots.includes(timeSlotMatch);
         if (!timeMatches) continue;
 
@@ -83,14 +84,14 @@ export const useWaitlistMatch = () => {
             matchScore += 10;
         }
 
-        // Waiting time bonus (longer wait = higher score)
+        // Waiting time bonus (longer wait = higher score) - use created_at from useWaitlist
         const waitingDays = Math.floor(
-          (new Date().getTime() - new Date(entry.added_at).getTime()) / (1000 * 60 * 60 * 24)
+          (new Date().getTime() - new Date(entry.created_at).getTime()) / (1000 * 60 * 60 * 24)
         );
         matchScore += Math.min(waitingDays, 30); // Cap at 30 days bonus
 
-        // Less rejections = higher score
-        matchScore -= entry.rejection_count * 5;
+        // Less rejections = higher score - use refusal_count from useWaitlist
+        matchScore -= (entry.refusal_count || 0) * 5;
 
         matches.push({ entry, matchScore });
       }
