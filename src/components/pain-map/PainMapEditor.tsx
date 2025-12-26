@@ -8,8 +8,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Save, RotateCcw, Trash2 } from 'lucide-react';
+import { Save, RotateCcw, Trash2, List } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import { PainGauge } from './PainGauge';
+import { EvaScaleBar } from './EvaScaleBar';
+import { PainPointsBottomSheet } from './PainPointsBottomSheet';
+import { PainPointModal } from './PainPointModal';
 
 interface PainMapEditorProps {
   sessionId: string;
@@ -44,6 +48,9 @@ export function PainMapEditor({
   const [selectedPainType, setSelectedPainType] = useState<PainPoint['painType']>('sharp');
   const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedPoint, setSelectedPoint] = useState<PainPoint | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
 
   const currentPoints = activeView === 'front' ? frontPoints : backPoints;
   const setCurrentPoints = activeView === 'front' ? setFrontPoints : setBackPoints;
@@ -53,10 +60,13 @@ export function PainMapEditor({
     const newPoint: PainPoint = {
       ...point,
       id: uuidv4(),
-      notes,
+      notes: notes || undefined,
     };
     setCurrentPoints(prev => [...prev, newPoint]);
     setNotes('');
+    // Abrir modal para edição após adicionar
+    setSelectedPoint(newPoint);
+    setModalOpen(true);
   }, [setCurrentPoints, notes]);
 
   // Remover ponto
@@ -67,7 +77,15 @@ export function PainMapEditor({
   // Atualizar ponto
   const handlePointUpdate = useCallback((point: PainPoint) => {
     setCurrentPoints(prev => prev.map(p => p.id === point.id ? point : p));
+    setSelectedPoint(null);
+    setModalOpen(false);
   }, [setCurrentPoints]);
+
+  // Editar ponto
+  const handlePointEdit = useCallback((point: PainPoint) => {
+    setSelectedPoint(point);
+    setModalOpen(true);
+  }, []);
 
   // Limpar todos os pontos
   const handleClearAll = useCallback(() => {
@@ -100,7 +118,7 @@ export function PainMapEditor({
     : 0;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
       {/* Painel de controles */}
       <Card className="lg:col-span-1">
         <CardHeader>
@@ -113,30 +131,26 @@ export function PainMapEditor({
             <p className="font-medium">{patientName}</p>
           </div>
 
-          {/* Intensidade */}
-          <div className="space-y-3">
-            <Label>Intensidade da Dor</Label>
-            <div className="flex items-center gap-4">
-              <Slider
-                value={[selectedIntensity]}
-                onValueChange={([value]) => setSelectedIntensity(value)}
-                min={0}
-                max={10}
-                step={1}
-                className="flex-1"
+          {/* Gauge de Score Total */}
+          {totalPoints > 0 && (
+            <div className="flex flex-col items-center justify-center py-4 bg-muted/30 rounded-lg border border-border">
+              <PainGauge 
+                score={avgIntensity * 10} 
+                intensity={Math.round(avgIntensity)}
+                size="md"
               />
-              <Badge 
-                variant="outline" 
-                className="w-12 justify-center"
-                style={{ 
-                  borderColor: getIntensityColor(selectedIntensity),
-                  color: getIntensityColor(selectedIntensity),
-                }}
-              >
-                {selectedIntensity}
-              </Badge>
             </div>
-            <p className="text-xs text-muted-foreground">
+          )}
+
+          {/* Intensidade - Escala EVA */}
+          <div className="space-y-3">
+            <Label>Intensidade da Dor (EVA)</Label>
+            <EvaScaleBar
+              value={selectedIntensity}
+              onChange={setSelectedIntensity}
+              showLabels={true}
+            />
+            <p className="text-xs text-muted-foreground text-center">
               {getIntensityLabel(selectedIntensity)}
             </p>
           </div>
@@ -191,6 +205,18 @@ export function PainMapEditor({
                 <span className="text-muted-foreground">Intensidade média:</span>
                 <Badge variant="outline">{avgIntensity}/10</Badge>
               </div>
+            )}
+            
+            {/* Botão para abrir lista de pontos */}
+            {totalPoints > 0 && (
+              <Button
+                variant="outline"
+                className="w-full mt-3"
+                onClick={() => setBottomSheetOpen(true)}
+              >
+                <List className="w-4 h-4 mr-2" />
+                Ver Todos os Pontos ({totalPoints})
+              </Button>
             )}
           </div>
 
@@ -256,7 +282,7 @@ export function PainMapEditor({
             </TabsList>
 
             <TabsContent value="front" className="mt-0">
-              <div className="aspect-[3/4] max-h-[600px] border rounded-lg bg-muted/20">
+              <div className="aspect-[3/4] max-h-[400px] sm:max-h-[500px] lg:max-h-[600px] border rounded-lg bg-muted/20">
                 <BodyMap
                   view="front"
                   points={frontPoints}
@@ -270,7 +296,7 @@ export function PainMapEditor({
             </TabsContent>
 
             <TabsContent value="back" className="mt-0">
-              <div className="aspect-[3/4] max-h-[600px] border rounded-lg bg-muted/20">
+              <div className="aspect-[3/4] max-h-[400px] sm:max-h-[500px] lg:max-h-[600px] border rounded-lg bg-muted/20">
                 <BodyMap
                   view="back"
                   points={backPoints}
@@ -285,6 +311,23 @@ export function PainMapEditor({
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* Bottom Sheet - Lista de Pontos */}
+      <PainPointsBottomSheet
+        points={[...frontPoints, ...backPoints]}
+        onPointEdit={handlePointEdit}
+        onPointRemove={handlePointRemove}
+        open={bottomSheetOpen}
+        onOpenChange={setBottomSheetOpen}
+      />
+
+      {/* Modal de Edição */}
+      <PainPointModal
+        point={selectedPoint}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        onSave={handlePointUpdate}
+      />
     </div>
   );
 }

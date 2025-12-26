@@ -73,6 +73,24 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Pain Map / EVA Scale Colors
+				pain: {
+					0: '#9ca3af',
+					1: '#bef264',
+					2: '#84cc16',
+					3: '#fde047',
+					4: '#facc15',
+					5: '#fdba74',
+					6: '#fb923c',
+					7: '#f87171',
+					8: '#ef4444',
+					9: '#b91c1c',
+					10: '#7f1d1d',
+					'gauge-low': '#22c55e',
+					'gauge-med': '#eab308',
+					'gauge-high': '#ef4444',
+					'gauge-severe': '#7f1d1d',
 				}
 			},
 			borderRadius: {
@@ -159,6 +177,24 @@ export default {
 					'60%': {
 						transform: 'rotate(-5deg)'
 					}
+				},
+				'pulse-ring': {
+					'0%': {
+						transform: 'scale(0.8)',
+						opacity: '0.5'
+					},
+					'100%': {
+						transform: 'scale(2.0)',
+						opacity: '0'
+					}
+				},
+				'gauge-rotate': {
+					'0%': {
+						transform: 'rotate(-90deg)'
+					},
+					'100%': {
+						transform: 'rotate(90deg)'
+					}
 				}
 			},
 			animation: {
@@ -169,7 +205,9 @@ export default {
 				'fade-in': 'fade-in 0.3s ease-out',
 				'scale-in': 'scale-in 0.3s ease-out',
 				'slide-up': 'slide-up 0.4s ease-out',
-				'wiggle': 'wiggle 0.5s ease-in-out'
+				'wiggle': 'wiggle 0.5s ease-in-out',
+				'pulse-ring': 'pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite',
+				'gauge-rotate': 'gauge-rotate 0.5s ease-out'
 			},
 			backgroundImage: {
 				'gradient-primary': 'var(--gradient-primary)',
