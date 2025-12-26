@@ -247,11 +247,14 @@ export function BodyMap({
               y={region.y - region.height / 2}
               width={region.width}
               height={region.height}
-              fill={isHovered ? 'rgba(59, 130, 246, 0.2)' : 'transparent'}
-              stroke={isHovered ? 'rgba(59, 130, 246, 0.5)' : 'transparent'}
-              strokeWidth="0.5"
-              rx="1"
-              className="cursor-pointer transition-colors"
+              fill={isHovered ? 'rgba(59, 130, 246, 0.15)' : 'transparent'}
+              stroke={isHovered ? 'rgba(59, 130, 246, 0.6)' : 'transparent'}
+              strokeWidth={isHovered ? '1' : '0.5'}
+              rx="2"
+              className={cn(
+                'cursor-pointer transition-all duration-200',
+                isHovered && 'transform scale-105'
+              )}
               onMouseEnter={() => setHoveredRegion(region.code)}
               onMouseLeave={() => setHoveredRegion(null)}
             />
@@ -262,23 +265,60 @@ export function BodyMap({
         {points.map(point => {
           const isSelected = selectedPoint === point.id;
           const color = getIntensityColor(point.intensity);
+          const radius = isSelected ? 4 : 3;
+          const glowRadius = radius * 2.5;
 
           return (
-            <g key={point.id}>
+            <g key={point.id} className="pain-point-group">
+              {/* Pulse Ring Animation - apenas para pontos de alta intensidade */}
+              {point.intensity >= 7 && (
+                <circle
+                  cx={point.x}
+                  cy={point.y}
+                  r={glowRadius}
+                  fill={color}
+                  opacity="0.3"
+                  className="animate-pulse-ring pointer-events-none"
+                  style={{
+                    animation: 'pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite',
+                  }}
+                />
+              )}
+              
+              {/* Glow Effect */}
+              <circle
+                cx={point.x}
+                cy={point.y}
+                r={radius + 1}
+                fill={color}
+                opacity="0.2"
+                className="pointer-events-none"
+              />
+              
               {/* Círculo do ponto */}
               <circle
                 cx={point.x}
                 cy={point.y}
-                r={isSelected ? 4 : 3}
+                r={radius}
                 fill={color}
-                stroke={isSelected ? '#fff' : 'transparent'}
-                strokeWidth="0.5"
-                className="cursor-pointer transition-all"
+                stroke={isSelected ? '#fff' : color}
+                strokeWidth={isSelected ? '1.5' : '1'}
+                className={cn(
+                  'cursor-pointer transition-all hover:scale-125',
+                  isSelected && 'ring-2 ring-offset-2 ring-offset-background',
+                  'drop-shadow-lg'
+                )}
+                style={{
+                  filter: `drop-shadow(0 0 ${radius}px ${color}80)`,
+                  transition: 'all 0.2s ease-out',
+                  ringColor: color,
+                }}
                 onClick={(e) => {
                   e.stopPropagation();
                   setSelectedPoint(isSelected ? null : point.id);
                 }}
               />
+              
               {/* Ícone do tipo de dor */}
               <text
                 x={point.x}
@@ -286,18 +326,25 @@ export function BodyMap({
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fontSize="2.5"
-                className="pointer-events-none select-none"
+                className="pointer-events-none select-none drop-shadow-sm"
+                style={{
+                  filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.3))',
+                }}
               >
                 {PAIN_TYPE_ICONS[point.painType]}
               </text>
+              
               {/* Intensidade */}
               <text
-                x={point.x + 4}
+                x={point.x + (isSelected ? 5 : 4)}
                 y={point.y}
-                fontSize="2.5"
+                fontSize={isSelected ? '3' : '2.5'}
                 fill={color}
                 fontWeight="bold"
-                className="pointer-events-none"
+                className="pointer-events-none transition-all"
+                style={{
+                  filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.3))',
+                }}
               >
                 {point.intensity}
               </text>

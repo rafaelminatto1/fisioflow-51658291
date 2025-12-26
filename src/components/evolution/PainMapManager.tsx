@@ -3,8 +3,9 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PainMapCanvas } from './PainMapCanvas';
-import { PainEvolutionChart } from './PainEvolutionChart';
+import { PainEvolutionChart } from '@/components/pain-map/PainEvolutionChart';
 import { PainMapHistory } from './PainMapHistory';
+import { PainGauge } from '@/components/pain-map/PainGauge';
 import { usePainMaps, usePainEvolution, usePainStatistics, useCreatePainMap, useUpdatePainMap } from '@/hooks/usePainMaps';
 import { useAuth } from '@/hooks/useAuth';
 import type { PainMapPoint, PainIntensity } from '@/types/painMap';
@@ -161,50 +162,56 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
           />
           
           {!readOnly && (
-            <Card className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">Nível Global de Dor</p>
-                  <p className="text-3xl font-bold text-primary">{globalPainLevel}/10</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Score Total</p>
+                    <div className="flex items-center gap-4">
+                      <PainGauge 
+                        score={globalPainLevel * 10} 
+                        intensity={globalPainLevel}
+                        size="md"
+                      />
+                    </div>
+                  </div>
                 </div>
-                
-                {/* Auto-save status indicator */}
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  {saveStatus === 'saving' && (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Salvando...</span>
-                    </>
-                  )}
-                  {saveStatus === 'saved' && (
-                    <>
-                      <CheckCircle2 className="w-4 h-4 text-green-600" />
-                      <span className="text-green-600">Salvo automaticamente</span>
-                    </>
-                  )}
-                  {saveStatus === 'idle' && painPoints.length > 0 && (
-                    <span className="text-xs">Auto-save ativo</span>
-                  )}
+              </Card>
+              
+              <Card className="p-4">
+                <div className="flex flex-col justify-between h-full">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">Status</p>
+                  <div className="flex items-center gap-2 text-sm">
+                    {saveStatus === 'saving' && (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                        <span className="text-foreground">Salvando...</span>
+                      </>
+                    )}
+                    {saveStatus === 'saved' && (
+                      <>
+                        <CheckCircle2 className="w-4 h-4 text-green-600" />
+                        <span className="text-green-600">Salvo automaticamente</span>
+                      </>
+                    )}
+                    {saveStatus === 'idle' && painPoints.length > 0 && (
+                      <span className="text-muted-foreground">Auto-save ativo</span>
+                    )}
+                  </div>
+                  <div className="mt-4 text-xs text-muted-foreground">
+                    {painPoints.length} {painPoints.length === 1 ? 'ponto registrado' : 'pontos registrados'}
+                  </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            </div>
           )}
         </TabsContent>
 
         <TabsContent value="evolution" className="space-y-4 mt-6">
-          <div className="flex justify-end">
-            <Select value={chartType} onValueChange={(v: any) => setChartType(v)}>
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="line">Linha</SelectItem>
-                <SelectItem value="area">Área</SelectItem>
-                <SelectItem value="bar">Barras</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <PainEvolutionChart data={painEvolution} chartType={chartType} />
+          <PainEvolutionChart 
+            evolutionData={painEvolution} 
+            showStats={true}
+          />
         </TabsContent>
 
         <TabsContent value="history" className="mt-6">
