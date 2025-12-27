@@ -1,5 +1,5 @@
 -- Tabela para armazenar configurações de integração com calendários externos
-CREATE TABLE public.calendar_integrations (
+CREATE TABLE IF NOT EXISTS public.calendar_integrations (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   provider TEXT NOT NULL DEFAULT 'google',
@@ -19,7 +19,7 @@ CREATE TABLE public.calendar_integrations (
 );
 
 -- Tabela para armazenar logs de sincronização
-CREATE TABLE public.calendar_sync_logs (
+CREATE TABLE IF NOT EXISTS public.calendar_sync_logs (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   integration_id UUID NOT NULL REFERENCES public.calendar_integrations(id) ON DELETE CASCADE,
   action TEXT NOT NULL, -- 'sync', 'create', 'update', 'delete'
@@ -37,27 +37,32 @@ ALTER TABLE public.calendar_integrations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.calendar_sync_logs ENABLE ROW LEVEL SECURITY;
 
 -- Policies para calendar_integrations
+DROP POLICY IF EXISTS "Users can view their own calendar integrations" ON public.calendar_integrations;
 CREATE POLICY "Users can view their own calendar integrations"
   ON public.calendar_integrations
   FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert their own calendar integrations" ON public.calendar_integrations;
 CREATE POLICY "Users can insert their own calendar integrations"
   ON public.calendar_integrations
   FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own calendar integrations" ON public.calendar_integrations;
 CREATE POLICY "Users can update their own calendar integrations"
   ON public.calendar_integrations
   FOR UPDATE
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete their own calendar integrations" ON public.calendar_integrations;
 CREATE POLICY "Users can delete their own calendar integrations"
   ON public.calendar_integrations
   FOR DELETE
   USING (auth.uid() = user_id);
 
 -- Policies para calendar_sync_logs (via integration)
+DROP POLICY IF EXISTS "Users can view their own sync logs" ON public.calendar_sync_logs;
 CREATE POLICY "Users can view their own sync logs"
   ON public.calendar_sync_logs
   FOR SELECT
@@ -68,6 +73,7 @@ CREATE POLICY "Users can view their own sync logs"
     )
   );
 
+DROP POLICY IF EXISTS "Users can insert their own sync logs" ON public.calendar_sync_logs;
 CREATE POLICY "Users can insert their own sync logs"
   ON public.calendar_sync_logs
   FOR INSERT
@@ -79,12 +85,13 @@ CREATE POLICY "Users can insert their own sync logs"
   );
 
 -- Trigger para atualizar updated_at
+DROP TRIGGER IF EXISTS update_calendar_integrations_updated_at ON public.calendar_integrations;
 CREATE TRIGGER update_calendar_integrations_updated_at
   BEFORE UPDATE ON public.calendar_integrations
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
 -- Índices para performance
-CREATE INDEX idx_calendar_integrations_user_id ON public.calendar_integrations(user_id);
-CREATE INDEX idx_calendar_sync_logs_integration_id ON public.calendar_sync_logs(integration_id);
-CREATE INDEX idx_calendar_sync_logs_created_at ON public.calendar_sync_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_calendar_integrations_user_id ON public.calendar_integrations(user_id);
+CREATE INDEX IF NOT EXISTS idx_calendar_sync_logs_integration_id ON public.calendar_sync_logs(integration_id);
+CREATE INDEX IF NOT EXISTS idx_calendar_sync_logs_created_at ON public.calendar_sync_logs(created_at DESC);

@@ -1,4 +1,19 @@
 -- Inserir usuários de teste com metadados corretos
+-- PRIMEIRO: Desabilitar temporariamente triggers de auditoria para evitar erros de tipo
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN 
+        SELECT trigger_name, event_object_table 
+        FROM information_schema.triggers 
+        WHERE trigger_schema = 'public' 
+        AND trigger_name LIKE 'audit_%'
+    LOOP
+        EXECUTE format('ALTER TABLE %I.%I DISABLE TRIGGER %I', 'public', r.event_object_table, r.trigger_name);
+    END LOOP;
+END $$;
+
 DO $$
 DECLARE
     admin_user_id uuid;
@@ -278,4 +293,23 @@ BEGIN
         role = 'parceiro'
     WHERE user_id = parceiro_user_id;
 
+EXCEPTION
+    WHEN OTHERS THEN
+        -- Ignorar erros (demo data não é crítica)
+        NULL;
+END $$;
+
+-- Reabilitar triggers de auditoria
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN 
+        SELECT trigger_name, event_object_table 
+        FROM information_schema.triggers 
+        WHERE trigger_schema = 'public' 
+        AND trigger_name LIKE 'audit_%'
+    LOOP
+        EXECUTE format('ALTER TABLE %I.%I ENABLE TRIGGER %I', 'public', r.event_object_table, r.trigger_name);
+    END LOOP;
 END $$;

@@ -22,18 +22,21 @@ CREATE INDEX IF NOT EXISTS idx_test_results_created_at ON public.standardized_te
 ALTER TABLE public.standardized_test_results ENABLE ROW LEVEL SECURITY;
 
 -- Admins e fisios podem ver todos os testes
+DROP POLICY IF EXISTS "Admins e fisios veem testes padronizados" ON public.standardized_test_results;
 CREATE POLICY "Admins e fisios veem testes padronizados"
   ON public.standardized_test_results
   FOR SELECT
   USING (user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 
 -- Admins e fisios podem criar testes
+DROP POLICY IF EXISTS "Admins e fisios criam testes padronizados" ON public.standardized_test_results;
 CREATE POLICY "Admins e fisios criam testes padronizados"
   ON public.standardized_test_results
   FOR INSERT
   WITH CHECK (user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 
 -- Estagiários podem ver e criar testes de pacientes atribuídos
+DROP POLICY IF EXISTS "Estagiários veem testes de pacientes atribuídos" ON public.standardized_test_results;
 CREATE POLICY "Estagiários veem testes de pacientes atribuídos"
   ON public.standardized_test_results
   FOR SELECT
@@ -42,6 +45,7 @@ CREATE POLICY "Estagiários veem testes de pacientes atribuídos"
     AND estagiario_pode_acessar_paciente(auth.uid(), patient_id)
   );
 
+DROP POLICY IF EXISTS "Estagiários criam testes de pacientes atribuídos" ON public.standardized_test_results;
 CREATE POLICY "Estagiários criam testes de pacientes atribuídos"
   ON public.standardized_test_results
   FOR INSERT
@@ -59,6 +63,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_standardized_test_results_updated_at ON public.standardized_test_results;
 CREATE TRIGGER update_standardized_test_results_updated_at
   BEFORE UPDATE ON public.standardized_test_results
   FOR EACH ROW

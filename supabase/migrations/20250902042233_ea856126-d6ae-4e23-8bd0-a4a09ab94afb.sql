@@ -23,26 +23,35 @@ DROP POLICY IF EXISTS "Admins can view audit log" ON public.audit_log;
 DROP POLICY IF EXISTS "Admins can manage clinic settings" ON public.clinic_settings;
 DROP POLICY IF EXISTS "Staff can view clinic settings" ON public.clinic_settings;
 
--- 4. Adicionar nova coluna role_new com tipo enum
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS role_new public.user_role;
-
--- 5. Migrar dados da coluna role antiga para a nova
-UPDATE public.profiles 
-SET role_new = CASE 
-  WHEN role = 'admin' THEN 'admin'::public.user_role
-  WHEN role = 'fisioterapeuta' THEN 'fisioterapeuta'::public.user_role
-  WHEN role = 'estagiario' THEN 'estagiario'::public.user_role
-  WHEN role = 'paciente' THEN 'paciente'::public.user_role
-  WHEN role = 'parceiro' THEN 'parceiro'::public.user_role
-  ELSE 'fisioterapeuta'::public.user_role
-END
-WHERE role_new IS NULL;
-
--- 6. Remover coluna antiga e renomear nova
-ALTER TABLE public.profiles DROP COLUMN IF EXISTS role;
-ALTER TABLE public.profiles RENAME COLUMN role_new TO role;
-ALTER TABLE public.profiles ALTER COLUMN role SET DEFAULT 'fisioterapeuta'::public.user_role;
-ALTER TABLE public.profiles ALTER COLUMN role SET NOT NULL;
+-- 4. Adicionar nova coluna role_new com tipo enum (apenas se role não existir ou precisar ser migrada)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'role') THEN
+        -- Adicionar coluna role_new
+        ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS role_new public.user_role;
+        
+        -- Migrar dados da coluna role antiga para a nova
+        EXECUTE 'UPDATE public.profiles 
+        SET role_new = CASE 
+          WHEN role::text = ''admin'' THEN ''admin''::public.user_role
+          WHEN role::text = ''fisioterapeuta'' THEN ''fisioterapeuta''::public.user_role
+          WHEN role::text = ''estagiario'' THEN ''estagiario''::public.user_role
+          WHEN role::text = ''paciente'' THEN ''paciente''::public.user_role
+          WHEN role::text = ''parceiro'' THEN ''parceiro''::public.user_role
+          ELSE ''fisioterapeuta''::public.user_role
+        END
+        WHERE role_new IS NULL';
+        
+        -- Remover coluna antiga e renomear nova
+        ALTER TABLE public.profiles DROP COLUMN IF EXISTS role;
+        ALTER TABLE public.profiles RENAME COLUMN role_new TO role;
+        ALTER TABLE public.profiles ALTER COLUMN role SET DEFAULT 'fisioterapeuta'::public.user_role;
+        ALTER TABLE public.profiles ALTER COLUMN role SET NOT NULL;
+    ELSIF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'role') THEN
+        -- Se role não existir, criar diretamente
+        ALTER TABLE public.profiles ADD COLUMN role public.user_role DEFAULT 'fisioterapeuta'::public.user_role NOT NULL;
+    END IF;
+END $$;
 
 -- 7. Adicionar novas colunas se não existirem
 DO $$ BEGIN
@@ -93,85 +102,76 @@ EXCEPTION
   WHEN duplicate_column THEN null;
 END $$;
 
--- 8. Recriar políticas removidas com o novo tipo enum
-CREATE POLICY "Admins can view audit log" 
-ON public.audit_log 
-FOR SELECT 
-USING (
-  EXISTS (
-    SELECT 1
-    FROM profiles
-    WHERE profiles.user_id = auth.uid() 
-    AND profiles.role = 'admin'::public.user_role
-  )
-);
-
-CREATE POLICY "Admins can manage clinic settings" 
-ON public.clinic_settings 
-FOR ALL 
-USING (
-  EXISTS (
-    SELECT 1
-    FROM profiles
-    WHERE profiles.user_id = auth.uid() 
-    AND profiles.role = 'admin'::public.user_role
-  )
-);
-
-CREATE POLICY "Staff can view clinic settings" 
-ON public.clinic_settings 
-FOR SELECT 
-USING (
-  EXISTS (
-    SELECT 1
-    FROM profiles
-    WHERE profiles.user_id = auth.uid() 
-    AND profiles.role = ANY(ARRAY['fisioterapeuta'::public.user_role, 'estagiario'::public.user_role])
-  )
-);
-
--- 9. Criar políticas RLS para avatars
-DO $$ BEGIN
-  CREATE POLICY "Avatar images are publicly accessible" 
-  ON storage.objects 
-  FOR SELECT 
-  USING (bucket_id = 'avatars');
-EXCEPTION
-  WHEN duplicate_object THEN null;
+-- 8. Recriar políticas removidas com o novo tipo enum (usando EXECUTE)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'role') THEN
+        EXECUTE 'CREATE POLICY "Admins can view audit log" 
+        ON public.audit_log 
+        FOR SELECT 
+        USING (
+          EXISTS (
+            SELECT 1
+            FROM profiles
+            WHERE profiles.user_id = auth.uid() 
+            AND profiles.role = ''admin''::public.user_role
+          )
+          OR EXISTS (
+            SELECT 1 FROM public.organization_members
+            WHERE user_id = auth.uid() AND role = ''admin''
+          )
+        )';
+        EXECUTE 'CREATE POLICY "Admins can manage clinic settings" 
+        ON public.clinic_settings 
+        FOR ALL 
+        USING (
+          EXISTS (
+            SELECT 1
+            FROM profiles
+            WHERE profiles.user_id = auth.uid() 
+            AND profiles.role = ''admin''::public.user_role
+          )
+          OR EXISTS (
+            SELECT 1 FROM public.organization_members
+            WHERE user_id = auth.uid() AND role = ''admin''
+          )
+        )';
+        EXECUTE 'CREATE POLICY "Staff can view clinic settings" 
+        ON public.clinic_settings 
+        FOR SELECT 
+        USING (
+          EXISTS (
+            SELECT 1
+            FROM profiles
+            WHERE profiles.user_id = auth.uid() 
+            AND profiles.role = ANY(ARRAY[''fisioterapeuta''::public.user_role, ''estagiario''::public.user_role])
+          )
+        )';
+    ELSE
+        EXECUTE 'CREATE POLICY "Admins can view audit log" 
+        ON public.audit_log 
+        FOR SELECT 
+        USING (
+          EXISTS (
+            SELECT 1 FROM public.organization_members
+            WHERE user_id = auth.uid() AND role = ''admin''
+          )
+        )';
+        EXECUTE 'CREATE POLICY "Admins can manage clinic settings" 
+        ON public.clinic_settings 
+        FOR ALL 
+        USING (
+          EXISTS (
+            SELECT 1 FROM public.organization_members
+            WHERE user_id = auth.uid() AND role = ''admin''
+          )
+        )';
+        EXECUTE 'CREATE POLICY "Staff can view clinic settings" 
+        ON public.clinic_settings 
+        FOR SELECT 
+        USING (true)';
+    END IF;
 END $$;
 
-DO $$ BEGIN
-  CREATE POLICY "Users can upload their own avatar" 
-  ON storage.objects 
-  FOR INSERT 
-  WITH CHECK (
-    bucket_id = 'avatars' 
-    AND auth.uid()::text = (storage.foldername(name))[1]
-  );
-EXCEPTION
-  WHEN duplicate_object THEN null;
-END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "Users can update their own avatar" 
-  ON storage.objects 
-  FOR UPDATE 
-  USING (
-    bucket_id = 'avatars' 
-    AND auth.uid()::text = (storage.foldername(name))[1]
-  );
-EXCEPTION
-  WHEN duplicate_object THEN null;
-END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "Users can delete their own avatar" 
-  ON storage.objects 
-  FOR DELETE 
-  USING (
-    bucket_id = 'avatars' 
-    AND auth.uid()::text = (storage.foldername(name))[1]
-  );
-EXCEPTION
-  WHEN duplicate_object THEN null;
-END $$;
+-- 9. Criar políticas RLS para avatars (comentado - requer permissões de owner)
+-- As políticas de storage devem ser criadas manualmente no dashboard do Supabase

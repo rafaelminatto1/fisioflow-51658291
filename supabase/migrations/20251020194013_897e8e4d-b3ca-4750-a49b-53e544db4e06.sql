@@ -20,6 +20,7 @@ CREATE INDEX IF NOT EXISTS idx_transacoes_tipo ON public.transacoes(tipo);
 CREATE INDEX IF NOT EXISTS idx_transacoes_created_at ON public.transacoes(created_at DESC);
 
 -- Trigger para updated_at
+DROP TRIGGER IF EXISTS update_transacoes_updated_at ON public.transacoes;
 CREATE TRIGGER update_transacoes_updated_at
   BEFORE UPDATE ON public.transacoes
   FOR EACH ROW
@@ -28,16 +29,19 @@ CREATE TRIGGER update_transacoes_updated_at
 -- RLS Policies para transacoes
 ALTER TABLE public.transacoes ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Usuários veem suas transações" ON public.transacoes;
 CREATE POLICY "Usuários veem suas transações"
   ON public.transacoes FOR SELECT
   TO authenticated
   USING (user_id = auth.uid() OR public.user_is_admin(auth.uid()));
 
+DROP POLICY IF EXISTS "Apenas admins inserem transações" ON public.transacoes;
 CREATE POLICY "Apenas admins inserem transações"
   ON public.transacoes FOR INSERT
   TO authenticated
   WITH CHECK (public.user_is_admin(auth.uid()));
 
+DROP POLICY IF EXISTS "Apenas admins atualizam transações" ON public.transacoes;
 CREATE POLICY "Apenas admins atualizam transações"
   ON public.transacoes FOR UPDATE
   TO authenticated

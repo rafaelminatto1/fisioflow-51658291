@@ -48,8 +48,9 @@ CREATE TABLE IF NOT EXISTS notification_history (
   status VARCHAR(20) DEFAULT 'sent' CHECK (status IN ('sent', 'delivered', 'clicked', 'failed')),
   error_message TEXT,
   retry_count INTEGER DEFAULT 0
-);-
-- Notification templates table
+);
+
+-- Notification templates table
 CREATE TABLE IF NOT EXISTS notification_templates (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   type VARCHAR(50) NOT NULL UNIQUE,
@@ -99,18 +100,22 @@ END;
 $$ language 'plpgsql';
 
 -- Add updated_at triggers
+DROP TRIGGER IF EXISTS update_push_subscriptions_updated_at ON push_subscriptions;
 CREATE TRIGGER update_push_subscriptions_updated_at 
     BEFORE UPDATE ON push_subscriptions 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_notification_preferences_updated_at ON notification_preferences;
 CREATE TRIGGER update_notification_preferences_updated_at 
     BEFORE UPDATE ON notification_preferences 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_notification_templates_updated_at ON notification_templates;
 CREATE TRIGGER update_notification_templates_updated_at 
     BEFORE UPDATE ON notification_templates 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_notification_triggers_updated_at ON notification_triggers;
 CREATE TRIGGER update_notification_triggers_updated_at 
     BEFORE UPDATE ON notification_triggers 
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

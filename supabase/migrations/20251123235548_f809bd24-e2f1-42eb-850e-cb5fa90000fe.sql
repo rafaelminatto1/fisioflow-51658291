@@ -68,16 +68,19 @@ CREATE INDEX IF NOT EXISTS idx_security_audit_events_user_id ON public.security_
 CREATE INDEX IF NOT EXISTS idx_security_audit_events_created_at ON public.security_audit_events(created_at DESC);
 
 -- 6. Triggers para updated_at
+DROP TRIGGER IF EXISTS update_lgpd_consents_updated_at ON public.lgpd_consents;
 CREATE TRIGGER update_lgpd_consents_updated_at
   BEFORE UPDATE ON public.lgpd_consents
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_data_export_requests_updated_at ON public.data_export_requests;
 CREATE TRIGGER update_data_export_requests_updated_at
   BEFORE UPDATE ON public.data_export_requests
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_mfa_settings_updated_at ON public.mfa_settings;
 CREATE TRIGGER update_mfa_settings_updated_at
   BEFORE UPDATE ON public.mfa_settings
   FOR EACH ROW
@@ -86,18 +89,22 @@ CREATE TRIGGER update_mfa_settings_updated_at
 -- 7. RLS Policies - LGPD Consents
 ALTER TABLE public.lgpd_consents ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Usuários veem seus próprios consentimentos" ON public.lgpd_consents;
 CREATE POLICY "Usuários veem seus próprios consentimentos"
   ON public.lgpd_consents FOR SELECT
   USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Usuários podem atualizar seus consentimentos" ON public.lgpd_consents;
 CREATE POLICY "Usuários podem atualizar seus consentimentos"
   ON public.lgpd_consents FOR UPDATE
   USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Usuários podem criar consentimentos" ON public.lgpd_consents;
 CREATE POLICY "Usuários podem criar consentimentos"
   ON public.lgpd_consents FOR INSERT
   WITH CHECK (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Admins veem todos os consentimentos" ON public.lgpd_consents;
 CREATE POLICY "Admins veem todos os consentimentos"
   ON public.lgpd_consents FOR SELECT
   USING (public.user_is_admin(auth.uid()));
@@ -105,14 +112,17 @@ CREATE POLICY "Admins veem todos os consentimentos"
 -- 8. RLS Policies - Data Export Requests
 ALTER TABLE public.data_export_requests ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Usuários veem suas solicitações" ON public.data_export_requests;
 CREATE POLICY "Usuários veem suas solicitações"
   ON public.data_export_requests FOR SELECT
   USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Usuários podem criar solicitações" ON public.data_export_requests;
 CREATE POLICY "Usuários podem criar solicitações"
   ON public.data_export_requests FOR INSERT
   WITH CHECK (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Admins gerenciam todas as solicitações" ON public.data_export_requests;
 CREATE POLICY "Admins gerenciam todas as solicitações"
   ON public.data_export_requests FOR ALL
   USING (public.user_is_admin(auth.uid()));
@@ -120,10 +130,12 @@ CREATE POLICY "Admins gerenciam todas as solicitações"
 -- 9. RLS Policies - MFA Settings
 ALTER TABLE public.mfa_settings ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Usuários gerenciam seu próprio MFA" ON public.mfa_settings;
 CREATE POLICY "Usuários gerenciam seu próprio MFA"
   ON public.mfa_settings FOR ALL
   USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Admins veem configurações MFA" ON public.mfa_settings;
 CREATE POLICY "Admins veem configurações MFA"
   ON public.mfa_settings FOR SELECT
   USING (public.user_is_admin(auth.uid()));
@@ -131,14 +143,17 @@ CREATE POLICY "Admins veem configurações MFA"
 -- 10. RLS Policies - Security Audit Events
 ALTER TABLE public.security_audit_events ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Usuários veem seus eventos" ON public.security_audit_events;
 CREATE POLICY "Usuários veem seus eventos"
   ON public.security_audit_events FOR SELECT
   USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Sistema cria eventos de segurança" ON public.security_audit_events;
 CREATE POLICY "Sistema cria eventos de segurança"
   ON public.security_audit_events FOR INSERT
   WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Admins veem todos os eventos" ON public.security_audit_events;
 CREATE POLICY "Admins veem todos os eventos"
   ON public.security_audit_events FOR SELECT
   USING (public.user_is_admin(auth.uid()));

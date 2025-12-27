@@ -120,11 +120,13 @@ TO authenticated
 USING (true);
 
 -- Triggers para updated_at
+DROP TRIGGER IF EXISTS update_patient_documents_updated_at ON public.patient_documents;
 CREATE TRIGGER update_patient_documents_updated_at
   BEFORE UPDATE ON public.patient_documents
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_soap_records_updated_at ON public.soap_records;
 CREATE TRIGGER update_soap_records_updated_at
   BEFORE UPDATE ON public.soap_records
   FOR EACH ROW
@@ -132,7 +134,13 @@ CREATE TRIGGER update_soap_records_updated_at
 
 -- Índices para performance
 CREATE INDEX IF NOT EXISTS idx_patient_documents_patient_id ON public.patient_documents(patient_id);
-CREATE INDEX IF NOT EXISTS idx_patient_documents_type ON public.patient_documents(type);
+-- Criar índice apenas se a coluna existir
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'patient_documents' AND column_name = 'type') THEN
+        CREATE INDEX IF NOT EXISTS idx_patient_documents_type ON public.patient_documents(type);
+    END IF;
+END $$;
 CREATE INDEX IF NOT EXISTS idx_patient_consents_patient_id ON public.patient_consents(patient_id);
 CREATE INDEX IF NOT EXISTS idx_soap_records_patient_id ON public.soap_records(patient_id);
 CREATE INDEX IF NOT EXISTS idx_patients_cpf ON public.patients(cpf);

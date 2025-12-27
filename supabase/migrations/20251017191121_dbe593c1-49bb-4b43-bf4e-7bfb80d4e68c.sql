@@ -15,27 +15,32 @@ CREATE TABLE IF NOT EXISTS public.evento_templates (
 ALTER TABLE public.evento_templates ENABLE ROW LEVEL SECURITY;
 
 -- Políticas RLS
+DROP POLICY IF EXISTS "Admins e fisios podem ver templates" ON public.evento_templates;
 CREATE POLICY "Admins e fisios podem ver templates"
   ON public.evento_templates
   FOR SELECT
   USING (user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 
+DROP POLICY IF EXISTS "Admins e fisios podem criar templates" ON public.evento_templates;
 CREATE POLICY "Admins e fisios podem criar templates"
   ON public.evento_templates
   FOR INSERT
   WITH CHECK (user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 
+DROP POLICY IF EXISTS "Admins e fisios podem atualizar templates" ON public.evento_templates;
 CREATE POLICY "Admins e fisios podem atualizar templates"
   ON public.evento_templates
   FOR UPDATE
   USING (user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 
+DROP POLICY IF EXISTS "Admins e fisios podem deletar templates" ON public.evento_templates;
 CREATE POLICY "Admins e fisios podem deletar templates"
   ON public.evento_templates
   FOR DELETE
   USING (user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 
 -- Trigger para updated_at
+DROP TRIGGER IF EXISTS update_evento_templates_updated_at ON public.evento_templates;
 CREATE TRIGGER update_evento_templates_updated_at
   BEFORE UPDATE ON public.evento_templates
   FOR EACH ROW

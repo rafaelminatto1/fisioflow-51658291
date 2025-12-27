@@ -1,7 +1,7 @@
 -- Fase 3: Cadastros Clínicos
 
 -- 3.1 Padrão de Evolução (Evolution Templates)
-CREATE TABLE public.evolution_templates (
+CREATE TABLE IF NOT EXISTS public.evolution_templates (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   nome text NOT NULL,
   tipo text NOT NULL DEFAULT 'fisioterapia', -- fisioterapia, pilates, rpg, etc
@@ -16,7 +16,7 @@ CREATE TABLE public.evolution_templates (
 );
 
 -- 3.2 Fichas de Avaliação Personalizáveis
-CREATE TABLE public.evaluation_forms (
+CREATE TABLE IF NOT EXISTS public.evaluation_forms (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   nome text NOT NULL,
   descricao text,
@@ -29,7 +29,7 @@ CREATE TABLE public.evaluation_forms (
 );
 
 -- Campos/perguntas das fichas de avaliação
-CREATE TABLE public.evaluation_form_fields (
+CREATE TABLE IF NOT EXISTS public.evaluation_form_fields (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   form_id uuid NOT NULL REFERENCES public.evaluation_forms(id) ON DELETE CASCADE,
   grupo text, -- Group/section name
@@ -43,7 +43,7 @@ CREATE TABLE public.evaluation_form_fields (
 );
 
 -- Respostas das fichas de avaliação dos pacientes
-CREATE TABLE public.patient_evaluation_responses (
+CREATE TABLE IF NOT EXISTS public.patient_evaluation_responses (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   patient_id uuid NOT NULL REFERENCES public.patients(id) ON DELETE CASCADE,
   form_id uuid NOT NULL REFERENCES public.evaluation_forms(id),
@@ -54,7 +54,7 @@ CREATE TABLE public.patient_evaluation_responses (
 );
 
 -- 3.4 Interesses/Objetivos do Paciente
-CREATE TABLE public.patient_objectives (
+CREATE TABLE IF NOT EXISTS public.patient_objectives (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   nome text NOT NULL,
   descricao text,
@@ -65,7 +65,7 @@ CREATE TABLE public.patient_objectives (
 );
 
 -- Vinculação de objetivos aos pacientes
-CREATE TABLE public.patient_objective_assignments (
+CREATE TABLE IF NOT EXISTS public.patient_objective_assignments (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   patient_id uuid NOT NULL REFERENCES public.patients(id) ON DELETE CASCADE,
   objective_id uuid NOT NULL REFERENCES public.patient_objectives(id) ON DELETE CASCADE,
@@ -84,9 +84,11 @@ ALTER TABLE public.patient_objectives ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.patient_objective_assignments ENABLE ROW LEVEL SECURITY;
 
 -- Evolution Templates Policies
+DROP POLICY IF EXISTS "Membros veem templates de evolução" ON public.evolution_templates;
 CREATE POLICY "Membros veem templates de evolução" ON public.evolution_templates
   FOR SELECT USING (organization_id IS NULL OR user_belongs_to_organization(auth.uid(), organization_id));
 
+DROP POLICY IF EXISTS "Admins e fisios gerenciam templates de evolução" ON public.evolution_templates;
 CREATE POLICY "Admins e fisios gerenciam templates de evolução" ON public.evolution_templates
   FOR ALL USING (
     user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role])
@@ -94,9 +96,11 @@ CREATE POLICY "Admins e fisios gerenciam templates de evolução" ON public.evol
   );
 
 -- Evaluation Forms Policies
+DROP POLICY IF EXISTS "Membros veem fichas de avaliação" ON public.evaluation_forms;
 CREATE POLICY "Membros veem fichas de avaliação" ON public.evaluation_forms
   FOR SELECT USING (organization_id IS NULL OR user_belongs_to_organization(auth.uid(), organization_id));
 
+DROP POLICY IF EXISTS "Admins e fisios gerenciam fichas de avaliação" ON public.evaluation_forms;
 CREATE POLICY "Admins e fisios gerenciam fichas de avaliação" ON public.evaluation_forms
   FOR ALL USING (
     user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role])
@@ -104,27 +108,32 @@ CREATE POLICY "Admins e fisios gerenciam fichas de avaliação" ON public.evalua
   );
 
 -- Evaluation Form Fields Policies
+DROP POLICY IF EXISTS "Membros veem campos de fichas" ON public.evaluation_form_fields;
 CREATE POLICY "Membros veem campos de fichas" ON public.evaluation_form_fields
   FOR SELECT USING (
     form_id IN (SELECT id FROM public.evaluation_forms)
   );
 
+DROP POLICY IF EXISTS "Admins e fisios gerenciam campos de fichas" ON public.evaluation_form_fields;
 CREATE POLICY "Admins e fisios gerenciam campos de fichas" ON public.evaluation_form_fields
   FOR ALL USING (
     user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role])
   );
 
 -- Patient Evaluation Responses Policies
+DROP POLICY IF EXISTS "Admins e fisios veem respostas" ON public.patient_evaluation_responses;
 CREATE POLICY "Admins e fisios veem respostas" ON public.patient_evaluation_responses
   FOR SELECT USING (
     user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role])
   );
 
+DROP POLICY IF EXISTS "Admins e fisios gerenciam respostas" ON public.patient_evaluation_responses;
 CREATE POLICY "Admins e fisios gerenciam respostas" ON public.patient_evaluation_responses
   FOR ALL USING (
     user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role])
   );
 
+DROP POLICY IF EXISTS "Estagiários gerenciam respostas de pacientes atribuídos" ON public.patient_evaluation_responses;
 CREATE POLICY "Estagiários gerenciam respostas de pacientes atribuídos" ON public.patient_evaluation_responses
   FOR ALL USING (
     user_has_role(auth.uid(), 'estagiario'::app_role) 
@@ -132,9 +141,11 @@ CREATE POLICY "Estagiários gerenciam respostas de pacientes atribuídos" ON pub
   );
 
 -- Patient Objectives Policies
+DROP POLICY IF EXISTS "Membros veem objetivos" ON public.patient_objectives;
 CREATE POLICY "Membros veem objetivos" ON public.patient_objectives
   FOR SELECT USING (organization_id IS NULL OR user_belongs_to_organization(auth.uid(), organization_id));
 
+DROP POLICY IF EXISTS "Admins e fisios gerenciam objetivos" ON public.patient_objectives;
 CREATE POLICY "Admins e fisios gerenciam objetivos" ON public.patient_objectives
   FOR ALL USING (
     user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role])
@@ -142,25 +153,30 @@ CREATE POLICY "Admins e fisios gerenciam objetivos" ON public.patient_objectives
   );
 
 -- Patient Objective Assignments Policies
+DROP POLICY IF EXISTS "Admins e fisios veem atribuições de objetivos" ON public.patient_objective_assignments;
 CREATE POLICY "Admins e fisios veem atribuições de objetivos" ON public.patient_objective_assignments
   FOR SELECT USING (
     user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role])
   );
 
+DROP POLICY IF EXISTS "Admins e fisios gerenciam atribuições de objetivos" ON public.patient_objective_assignments;
 CREATE POLICY "Admins e fisios gerenciam atribuições de objetivos" ON public.patient_objective_assignments
   FOR ALL USING (
     user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role])
   );
 
 -- Triggers for updated_at
+DROP TRIGGER IF EXISTS update_evolution_templates_updated_at ON public.evolution_templates;
 CREATE TRIGGER update_evolution_templates_updated_at
   BEFORE UPDATE ON public.evolution_templates
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_evaluation_forms_updated_at ON public.evaluation_forms;
 CREATE TRIGGER update_evaluation_forms_updated_at
   BEFORE UPDATE ON public.evaluation_forms
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_patient_evaluation_responses_updated_at ON public.patient_evaluation_responses;
 CREATE TRIGGER update_patient_evaluation_responses_updated_at
   BEFORE UPDATE ON public.patient_evaluation_responses
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -178,4 +194,5 @@ INSERT INTO public.patient_objectives (nome, categoria, descricao) VALUES
   ('Condicionamento', 'cardio', 'Melhorar capacidade cardiovascular'),
   ('Reabilitação Pós-Cirúrgica', 'reabilitação', 'Recuperação após procedimento cirúrgico'),
   ('Prevenção de Lesões', 'prevenção', 'Prevenir lesões esportivas ou ocupacionais'),
-  ('Qualidade de Vida', 'bem-estar', 'Melhorar bem-estar geral e qualidade de vida');
+  ('Qualidade de Vida', 'bem-estar', 'Melhorar bem-estar geral e qualidade de vida')
+ON CONFLICT DO NOTHING;

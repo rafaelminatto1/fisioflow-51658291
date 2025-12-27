@@ -14,19 +14,21 @@ CREATE TABLE IF NOT EXISTS public.pain_maps (
 );
 
 -- Create indexes for better query performance
-CREATE INDEX idx_pain_maps_patient_id ON public.pain_maps(patient_id);
-CREATE INDEX idx_pain_maps_recorded_at ON public.pain_maps(recorded_at DESC);
-CREATE INDEX idx_pain_maps_session_id ON public.pain_maps(session_id);
+CREATE INDEX IF NOT EXISTS idx_pain_maps_patient_id ON public.pain_maps(patient_id);
+CREATE INDEX IF NOT EXISTS idx_pain_maps_recorded_at ON public.pain_maps(recorded_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pain_maps_session_id ON public.pain_maps(session_id);
 
 -- Enable RLS
 ALTER TABLE public.pain_maps ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
+DROP POLICY IF EXISTS "Admins e fisios gerenciam mapas de dor" ON public.pain_maps;
 CREATE POLICY "Admins e fisios gerenciam mapas de dor"
   ON public.pain_maps
   FOR ALL
   USING (user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 
+DROP POLICY IF EXISTS "Estagiários gerenciam mapas de pacientes atribuídos" ON public.pain_maps;
 CREATE POLICY "Estagiários gerenciam mapas de pacientes atribuídos"
   ON public.pain_maps
   FOR ALL
@@ -35,6 +37,7 @@ CREATE POLICY "Estagiários gerenciam mapas de pacientes atribuídos"
     AND estagiario_pode_acessar_paciente(auth.uid(), patient_id)
   );
 
+DROP POLICY IF EXISTS "Pacientes visualizam seus mapas de dor" ON public.pain_maps;
 CREATE POLICY "Pacientes visualizam seus mapas de dor"
   ON public.pain_maps
   FOR SELECT
@@ -48,6 +51,7 @@ CREATE POLICY "Pacientes visualizam seus mapas de dor"
   );
 
 -- Trigger for updated_at
+DROP TRIGGER IF EXISTS update_pain_maps_updated_at ON public.pain_maps;
 CREATE TRIGGER update_pain_maps_updated_at
   BEFORE UPDATE ON public.pain_maps
   FOR EACH ROW

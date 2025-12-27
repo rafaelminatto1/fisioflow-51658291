@@ -64,9 +64,11 @@ ALTER TABLE report_exports ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view adherence reports for their patients" ON adherence_reports
   FOR SELECT USING (
     EXISTS (
-      SELECT 1 FROM patients 
-      WHERE patients.id = adherence_reports.patient_id 
-      AND patients.created_by = auth.uid()
+      SELECT 1 FROM patients
+      WHERE patients.id = adherence_reports.patient_id
+      AND patients.organization_id IN (
+        SELECT organization_id FROM profiles WHERE user_id = auth.uid()
+      )
     )
   );
 
@@ -75,7 +77,9 @@ CREATE POLICY "Users can create adherence reports for their patients" ON adheren
     EXISTS (
       SELECT 1 FROM patients 
       WHERE patients.id = adherence_reports.patient_id 
-      AND patients.created_by = auth.uid()
+      AND patients.organization_id IN (
+        SELECT organization_id FROM profiles WHERE user_id = auth.uid()
+      )
     )
   );
 
@@ -84,7 +88,9 @@ CREATE POLICY "Users can update adherence reports for their patients" ON adheren
     EXISTS (
       SELECT 1 FROM patients 
       WHERE patients.id = adherence_reports.patient_id 
-      AND patients.created_by = auth.uid()
+      AND patients.organization_id IN (
+        SELECT organization_id FROM profiles WHERE user_id = auth.uid()
+      )
     )
   );
 
@@ -93,7 +99,9 @@ CREATE POLICY "Users can delete adherence reports for their patients" ON adheren
     EXISTS (
       SELECT 1 FROM patients 
       WHERE patients.id = adherence_reports.patient_id 
-      AND patients.created_by = auth.uid()
+      AND patients.organization_id IN (
+        SELECT organization_id FROM profiles WHERE user_id = auth.uid()
+      )
     )
   );
 
@@ -103,7 +111,9 @@ CREATE POLICY "Users can view progress reports for their patients" ON progress_r
     EXISTS (
       SELECT 1 FROM patients 
       WHERE patients.id = progress_reports.patient_id 
-      AND patients.created_by = auth.uid()
+      AND patients.organization_id IN (
+        SELECT organization_id FROM profiles WHERE user_id = auth.uid()
+      )
     )
   );
 
@@ -112,7 +122,9 @@ CREATE POLICY "Users can create progress reports for their patients" ON progress
     EXISTS (
       SELECT 1 FROM patients 
       WHERE patients.id = progress_reports.patient_id 
-      AND patients.created_by = auth.uid()
+      AND patients.organization_id IN (
+        SELECT organization_id FROM profiles WHERE user_id = auth.uid()
+      )
     )
   );
 
@@ -121,7 +133,9 @@ CREATE POLICY "Users can update progress reports for their patients" ON progress
     EXISTS (
       SELECT 1 FROM patients 
       WHERE patients.id = progress_reports.patient_id 
-      AND patients.created_by = auth.uid()
+      AND patients.organization_id IN (
+        SELECT organization_id FROM profiles WHERE user_id = auth.uid()
+      )
     )
   );
 
@@ -130,7 +144,9 @@ CREATE POLICY "Users can delete progress reports for their patients" ON progress
     EXISTS (
       SELECT 1 FROM patients 
       WHERE patients.id = progress_reports.patient_id 
-      AND patients.created_by = auth.uid()
+      AND patients.organization_id IN (
+        SELECT organization_id FROM profiles WHERE user_id = auth.uid()
+      )
     )
   );
 

@@ -214,16 +214,20 @@ ALTER TABLE public.reports ENABLE ROW LEVEL SECURITY;
 -- ================================
 
 -- Profiles: users can view and update their own profile
+DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
 CREATE POLICY "Users can view own profile" ON public.profiles
   FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 CREATE POLICY "Users can update own profile" ON public.profiles
   FOR UPDATE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
 CREATE POLICY "Users can insert own profile" ON public.profiles
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Patients: therapists can view all, patients can view their own
+DROP POLICY IF EXISTS "Therapists can view all patients" ON public.patients;
 CREATE POLICY "Therapists can view all patients" ON public.patients
   FOR SELECT USING (
     EXISTS (
@@ -233,6 +237,7 @@ CREATE POLICY "Therapists can view all patients" ON public.patients
     )
   );
 
+DROP POLICY IF EXISTS "Patients can view own data" ON public.patients;
 CREATE POLICY "Patients can view own data" ON public.patients
   FOR SELECT USING (
     profile_id IN (
@@ -240,6 +245,7 @@ CREATE POLICY "Patients can view own data" ON public.patients
     )
   );
 
+DROP POLICY IF EXISTS "Therapists can create patients" ON public.patients;
 CREATE POLICY "Therapists can create patients" ON public.patients
   FOR INSERT WITH CHECK (
     EXISTS (
@@ -249,6 +255,7 @@ CREATE POLICY "Therapists can create patients" ON public.patients
     )
   );
 
+DROP POLICY IF EXISTS "Therapists can update patients" ON public.patients;
 CREATE POLICY "Therapists can update patients" ON public.patients
   FOR UPDATE USING (
     EXISTS (
@@ -259,6 +266,7 @@ CREATE POLICY "Therapists can update patients" ON public.patients
   );
 
 -- Appointments: therapists and patients can view their own
+DROP POLICY IF EXISTS "Users can view own appointments" ON public.appointments;
 CREATE POLICY "Users can view own appointments" ON public.appointments
   FOR SELECT USING (
     therapist_id IN (SELECT id FROM public.profiles WHERE user_id = auth.uid())
@@ -269,6 +277,7 @@ CREATE POLICY "Users can view own appointments" ON public.appointments
     )
   );
 
+DROP POLICY IF EXISTS "Therapists can manage appointments" ON public.appointments;
 CREATE POLICY "Therapists can manage appointments" ON public.appointments
   FOR ALL USING (
     EXISTS (
@@ -279,6 +288,7 @@ CREATE POLICY "Therapists can manage appointments" ON public.appointments
   );
 
 -- Medical records, SOAP, exercises, etc: therapists can manage, patients can view their own
+DROP POLICY IF EXISTS "Therapists can manage medical records" ON public.medical_records;
 CREATE POLICY "Therapists can manage medical records" ON public.medical_records
   FOR ALL USING (
     EXISTS (
@@ -288,6 +298,7 @@ CREATE POLICY "Therapists can manage medical records" ON public.medical_records
     )
   );
 
+DROP POLICY IF EXISTS "Patients can view own medical records" ON public.medical_records;
 CREATE POLICY "Patients can view own medical records" ON public.medical_records
   FOR SELECT USING (
     patient_id IN (
@@ -298,9 +309,11 @@ CREATE POLICY "Patients can view own medical records" ON public.medical_records
   );
 
 -- Exercises: all authenticated users can view
+DROP POLICY IF EXISTS "All users can view exercises" ON public.exercises;
 CREATE POLICY "All users can view exercises" ON public.exercises
   FOR SELECT USING (auth.uid() IS NOT NULL);
 
+DROP POLICY IF EXISTS "Therapists can manage exercises" ON public.exercises;
 CREATE POLICY "Therapists can manage exercises" ON public.exercises
   FOR ALL USING (
     EXISTS (
@@ -311,6 +324,7 @@ CREATE POLICY "Therapists can manage exercises" ON public.exercises
   );
 
 -- Exercise plans
+DROP POLICY IF EXISTS "Therapists can manage exercise plans" ON public.exercise_plans;
 CREATE POLICY "Therapists can manage exercise plans" ON public.exercise_plans
   FOR ALL USING (
     EXISTS (
@@ -320,6 +334,7 @@ CREATE POLICY "Therapists can manage exercise plans" ON public.exercise_plans
     )
   );
 
+DROP POLICY IF EXISTS "Patients can view own exercise plans" ON public.exercise_plans;
 CREATE POLICY "Patients can view own exercise plans" ON public.exercise_plans
   FOR SELECT USING (
     patient_id IN (
@@ -330,11 +345,13 @@ CREATE POLICY "Patients can view own exercise plans" ON public.exercise_plans
   );
 
 -- Exercise plan items inherit from exercise plans
+DROP POLICY IF EXISTS "Users can view exercise plan items" ON public.exercise_plan_items;
 CREATE POLICY "Users can view exercise plan items" ON public.exercise_plan_items
   FOR SELECT USING (
     plan_id IN (SELECT id FROM public.exercise_plans)
   );
 
+DROP POLICY IF EXISTS "Therapists can manage exercise plan items" ON public.exercise_plan_items;
 CREATE POLICY "Therapists can manage exercise plan items" ON public.exercise_plan_items
   FOR ALL USING (
     EXISTS (
@@ -345,6 +362,7 @@ CREATE POLICY "Therapists can manage exercise plan items" ON public.exercise_pla
   );
 
 -- Treatment sessions, progress, reports: similar pattern
+DROP POLICY IF EXISTS "Therapists can manage treatment sessions" ON public.treatment_sessions;
 CREATE POLICY "Therapists can manage treatment sessions" ON public.treatment_sessions
   FOR ALL USING (
     EXISTS (
@@ -354,6 +372,7 @@ CREATE POLICY "Therapists can manage treatment sessions" ON public.treatment_ses
     )
   );
 
+DROP POLICY IF EXISTS "Therapists can manage patient progress" ON public.patient_progress;
 CREATE POLICY "Therapists can manage patient progress" ON public.patient_progress
   FOR ALL USING (
     EXISTS (
@@ -363,6 +382,7 @@ CREATE POLICY "Therapists can manage patient progress" ON public.patient_progres
     )
   );
 
+DROP POLICY IF EXISTS "Therapists can manage reports" ON public.reports;
 CREATE POLICY "Therapists can manage reports" ON public.reports
   FOR ALL USING (
     EXISTS (
@@ -384,27 +404,35 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON public.profiles;
 CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_patients_updated_at ON public.patients;
 CREATE TRIGGER update_patients_updated_at BEFORE UPDATE ON public.patients
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_appointments_updated_at ON public.appointments;
 CREATE TRIGGER update_appointments_updated_at BEFORE UPDATE ON public.appointments
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_medical_records_updated_at ON public.medical_records;
 CREATE TRIGGER update_medical_records_updated_at BEFORE UPDATE ON public.medical_records
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_soap_records_updated_at ON public.soap_records;
 CREATE TRIGGER update_soap_records_updated_at BEFORE UPDATE ON public.soap_records
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_exercises_updated_at ON public.exercises;
 CREATE TRIGGER update_exercises_updated_at BEFORE UPDATE ON public.exercises
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_exercise_plans_updated_at ON public.exercise_plans;
 CREATE TRIGGER update_exercise_plans_updated_at BEFORE UPDATE ON public.exercise_plans
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_treatment_sessions_updated_at ON public.treatment_sessions;
 CREATE TRIGGER update_treatment_sessions_updated_at BEFORE UPDATE ON public.treatment_sessions
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 

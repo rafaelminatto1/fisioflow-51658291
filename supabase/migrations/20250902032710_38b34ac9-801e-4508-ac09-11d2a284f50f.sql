@@ -1,5 +1,5 @@
 -- Create profiles table for user management
-CREATE TABLE public.profiles (
+CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
   full_name TEXT NOT NULL,
@@ -13,7 +13,7 @@ CREATE TABLE public.profiles (
 );
 
 -- Create patients table
-CREATE TABLE public.patients (
+CREATE TABLE IF NOT EXISTS public.patients (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   email TEXT,
@@ -32,7 +32,7 @@ CREATE TABLE public.patients (
 );
 
 -- Create appointments table
-CREATE TABLE public.appointments (
+CREATE TABLE IF NOT EXISTS public.appointments (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   patient_id UUID NOT NULL REFERENCES public.patients(id) ON DELETE CASCADE,
   appointment_date DATE NOT NULL,
@@ -47,7 +47,7 @@ CREATE TABLE public.appointments (
 );
 
 -- Create exercises table
-CREATE TABLE public.exercises (
+CREATE TABLE IF NOT EXISTS public.exercises (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   category TEXT NOT NULL CHECK (category IN ('fortalecimento', 'alongamento', 'mobilidade', 'cardio', 'equilibrio', 'respiratorio')),
@@ -64,7 +64,7 @@ CREATE TABLE public.exercises (
 );
 
 -- Create exercise_plans table
-CREATE TABLE public.exercise_plans (
+CREATE TABLE IF NOT EXISTS public.exercise_plans (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT,
@@ -76,7 +76,7 @@ CREATE TABLE public.exercise_plans (
 );
 
 -- Create exercise_plan_items table
-CREATE TABLE public.exercise_plan_items (
+CREATE TABLE IF NOT EXISTS public.exercise_plan_items (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   exercise_plan_id UUID NOT NULL REFERENCES public.exercise_plans(id) ON DELETE CASCADE,
   exercise_id UUID NOT NULL REFERENCES public.exercises(id) ON DELETE CASCADE,
@@ -88,7 +88,7 @@ CREATE TABLE public.exercise_plan_items (
 );
 
 -- Create medical_records table
-CREATE TABLE public.medical_records (
+CREATE TABLE IF NOT EXISTS public.medical_records (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   patient_id UUID NOT NULL REFERENCES public.patients(id) ON DELETE CASCADE,
   type TEXT NOT NULL CHECK (type IN ('Anamnese', 'Evolução', 'Avaliação', 'Exame', 'Receituário')),
@@ -100,7 +100,7 @@ CREATE TABLE public.medical_records (
 );
 
 -- Create treatment_sessions table
-CREATE TABLE public.treatment_sessions (
+CREATE TABLE IF NOT EXISTS public.treatment_sessions (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   patient_id UUID NOT NULL REFERENCES public.patients(id) ON DELETE CASCADE,
   appointment_id UUID REFERENCES public.appointments(id) ON DELETE SET NULL,
@@ -115,7 +115,7 @@ CREATE TABLE public.treatment_sessions (
 );
 
 -- Create patient_progress table
-CREATE TABLE public.patient_progress (
+CREATE TABLE IF NOT EXISTS public.patient_progress (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   patient_id UUID NOT NULL REFERENCES public.patients(id) ON DELETE CASCADE,
   progress_date DATE NOT NULL DEFAULT CURRENT_DATE,
@@ -139,116 +139,151 @@ ALTER TABLE public.treatment_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.patient_progress ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies for profiles
+DROP POLICY IF EXISTS "Users can view their own profile" ON public.profiles;
 CREATE POLICY "Users can view their own profile" ON public.profiles
 FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
 CREATE POLICY "Users can update their own profile" ON public.profiles
 FOR UPDATE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert their own profile" ON public.profiles;
 CREATE POLICY "Users can insert their own profile" ON public.profiles
 FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Create RLS policies for patients (authenticated users can manage)
+DROP POLICY IF EXISTS "Authenticated users can view patients" ON public.patients;
 CREATE POLICY "Authenticated users can view patients" ON public.patients
 FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can create patients" ON public.patients;
 CREATE POLICY "Authenticated users can create patients" ON public.patients
 FOR INSERT TO authenticated WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Authenticated users can update patients" ON public.patients;
 CREATE POLICY "Authenticated users can update patients" ON public.patients
 FOR UPDATE TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can delete patients" ON public.patients;
 CREATE POLICY "Authenticated users can delete patients" ON public.patients
 FOR DELETE TO authenticated USING (true);
 
 -- Create RLS policies for appointments
+DROP POLICY IF EXISTS "Authenticated users can view appointments" ON public.appointments;
 CREATE POLICY "Authenticated users can view appointments" ON public.appointments
 FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can create appointments" ON public.appointments;
 CREATE POLICY "Authenticated users can create appointments" ON public.appointments
 FOR INSERT TO authenticated WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Authenticated users can update appointments" ON public.appointments;
 CREATE POLICY "Authenticated users can update appointments" ON public.appointments
 FOR UPDATE TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can delete appointments" ON public.appointments;
 CREATE POLICY "Authenticated users can delete appointments" ON public.appointments
 FOR DELETE TO authenticated USING (true);
 
 -- Create RLS policies for exercises
+DROP POLICY IF EXISTS "Authenticated users can view exercises" ON public.exercises;
 CREATE POLICY "Authenticated users can view exercises" ON public.exercises
 FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can create exercises" ON public.exercises;
 CREATE POLICY "Authenticated users can create exercises" ON public.exercises
 FOR INSERT TO authenticated WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Authenticated users can update exercises" ON public.exercises;
 CREATE POLICY "Authenticated users can update exercises" ON public.exercises
 FOR UPDATE TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can delete exercises" ON public.exercises;
 CREATE POLICY "Authenticated users can delete exercises" ON public.exercises
 FOR DELETE TO authenticated USING (true);
 
 -- Create RLS policies for exercise_plans
+DROP POLICY IF EXISTS "Authenticated users can view exercise plans" ON public.exercise_plans;
 CREATE POLICY "Authenticated users can view exercise plans" ON public.exercise_plans
 FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can create exercise plans" ON public.exercise_plans;
 CREATE POLICY "Authenticated users can create exercise plans" ON public.exercise_plans
 FOR INSERT TO authenticated WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Authenticated users can update exercise plans" ON public.exercise_plans;
 CREATE POLICY "Authenticated users can update exercise plans" ON public.exercise_plans
 FOR UPDATE TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can delete exercise plans" ON public.exercise_plans;
 CREATE POLICY "Authenticated users can delete exercise plans" ON public.exercise_plans
 FOR DELETE TO authenticated USING (true);
 
 -- Create RLS policies for exercise_plan_items
+DROP POLICY IF EXISTS "Authenticated users can view exercise plan items" ON public.exercise_plan_items;
 CREATE POLICY "Authenticated users can view exercise plan items" ON public.exercise_plan_items
 FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can create exercise plan items" ON public.exercise_plan_items;
 CREATE POLICY "Authenticated users can create exercise plan items" ON public.exercise_plan_items
 FOR INSERT TO authenticated WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Authenticated users can update exercise plan items" ON public.exercise_plan_items;
 CREATE POLICY "Authenticated users can update exercise plan items" ON public.exercise_plan_items
 FOR UPDATE TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can delete exercise plan items" ON public.exercise_plan_items;
 CREATE POLICY "Authenticated users can delete exercise plan items" ON public.exercise_plan_items
 FOR DELETE TO authenticated USING (true);
 
 -- Create RLS policies for medical_records
+DROP POLICY IF EXISTS "Authenticated users can view medical records" ON public.medical_records;
 CREATE POLICY "Authenticated users can view medical records" ON public.medical_records
 FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can create medical records" ON public.medical_records;
 CREATE POLICY "Authenticated users can create medical records" ON public.medical_records
 FOR INSERT TO authenticated WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Authenticated users can update medical records" ON public.medical_records;
 CREATE POLICY "Authenticated users can update medical records" ON public.medical_records
 FOR UPDATE TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can delete medical records" ON public.medical_records;
 CREATE POLICY "Authenticated users can delete medical records" ON public.medical_records
 FOR DELETE TO authenticated USING (true);
 
 -- Create RLS policies for treatment_sessions
+DROP POLICY IF EXISTS "Authenticated users can view treatment sessions" ON public.treatment_sessions;
 CREATE POLICY "Authenticated users can view treatment sessions" ON public.treatment_sessions
 FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can create treatment sessions" ON public.treatment_sessions;
 CREATE POLICY "Authenticated users can create treatment sessions" ON public.treatment_sessions
 FOR INSERT TO authenticated WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Authenticated users can update treatment sessions" ON public.treatment_sessions;
 CREATE POLICY "Authenticated users can update treatment sessions" ON public.treatment_sessions
 FOR UPDATE TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can delete treatment sessions" ON public.treatment_sessions;
 CREATE POLICY "Authenticated users can delete treatment sessions" ON public.treatment_sessions
 FOR DELETE TO authenticated USING (true);
 
 -- Create RLS policies for patient_progress
+DROP POLICY IF EXISTS "Authenticated users can view patient progress" ON public.patient_progress;
 CREATE POLICY "Authenticated users can view patient progress" ON public.patient_progress
 FOR SELECT TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can create patient progress" ON public.patient_progress;
 CREATE POLICY "Authenticated users can create patient progress" ON public.patient_progress
 FOR INSERT TO authenticated WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Authenticated users can update patient progress" ON public.patient_progress;
 CREATE POLICY "Authenticated users can update patient progress" ON public.patient_progress
 FOR UPDATE TO authenticated USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can delete patient progress" ON public.patient_progress;
 CREATE POLICY "Authenticated users can delete patient progress" ON public.patient_progress
 FOR DELETE TO authenticated USING (true);
 
@@ -267,6 +302,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Create trigger to auto-create profile on user signup
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
@@ -281,30 +317,37 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create triggers for automatic timestamp updates
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON public.profiles;
 CREATE TRIGGER update_profiles_updated_at
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_patients_updated_at ON public.patients;
 CREATE TRIGGER update_patients_updated_at
   BEFORE UPDATE ON public.patients
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_appointments_updated_at ON public.appointments;
 CREATE TRIGGER update_appointments_updated_at
   BEFORE UPDATE ON public.appointments
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_exercises_updated_at ON public.exercises;
 CREATE TRIGGER update_exercises_updated_at
   BEFORE UPDATE ON public.exercises
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_exercise_plans_updated_at ON public.exercise_plans;
 CREATE TRIGGER update_exercise_plans_updated_at
   BEFORE UPDATE ON public.exercise_plans
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_medical_records_updated_at ON public.medical_records;
 CREATE TRIGGER update_medical_records_updated_at
   BEFORE UPDATE ON public.medical_records
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_treatment_sessions_updated_at ON public.treatment_sessions;
 CREATE TRIGGER update_treatment_sessions_updated_at
   BEFORE UPDATE ON public.treatment_sessions
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();

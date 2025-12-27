@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { checkRateLimitUpstash, getIdentifierForRateLimit } from './rate-limit-upstash.ts';
 
 interface RateLimitConfig {
   maxRequests: number;
@@ -61,11 +62,20 @@ export async function checkRateLimit(
 ): Promise<RateLimitResult> {
   try {
     // Obter identificador (IP ou user_id)
-    const identifier = await getIdentifier(req);
+    const identifier = await getIdentifierForRateLimit(req);
     
     // Obter configuração
     const config = customConfig || RATE_LIMITS[endpoint] || RATE_LIMITS['default'];
     
+    // Tentar usar Upstash primeiro (se configurado)
+    const upstashResult = await checkRateLimitUpstash(identifier, config);
+    
+    // Se Upstash estiver funcionando, usar resultado
+    if (upstashResult.limit > 0) {
+      return upstashResult;
+    }
+    
+    // Fallback para implementação via banco de dados
     // Criar cliente Supabase com service role
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -112,72 +122,8 @@ export async function checkRateLimit(
   }
 }
 
-/**
- * Obtém identificador único para rate limiting
- * Prioriza user_id, depois IP
- */
-async function getIdentifier(req: Request): Promise<string> {
-  // Tentar obter user_id do JWT
-  const authHeader = req.headers.get('authorization');
-  if (authHeader) {
-    try {
-      const token = authHeader.replace('Bearer ', '');
-      const payload = parseJwt(token);
-      if (payload?.sub) {
-        return `user:${payload.sub}`;
-      }
-    } catch (e) {
-      // Ignora erro de parse
-    }
-  }
-
-  // Fallback para IP
-  const ip = getClientIP(req);
-  return `ip:${ip}`;
-}
-
-/**
- * Parse simples de JWT (não valida assinatura)
- */
-function parseJwt(token: string): any {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    );
-    return JSON.parse(jsonPayload);
-  } catch (e) {
-    return null;
-  }
-}
-
-/**
- * Obtém IP do cliente
- */
-function getClientIP(req: Request): string {
-  // Tentar headers comuns de proxy
-  const forwarded = req.headers.get('x-forwarded-for');
-  if (forwarded) {
-    return forwarded.split(',')[0].trim();
-  }
-
-  const realIP = req.headers.get('x-real-ip');
-  if (realIP) {
-    return realIP;
-  }
-
-  const cfIP = req.headers.get('cf-connecting-ip');
-  if (cfIP) {
-    return cfIP;
-  }
-
-  // Fallback
-  return 'unknown';
-}
+// Funções getIdentifier, parseJwt e getClientIP foram movidas para rate-limit-upstash.ts
+// Mantidas aqui apenas para compatibilidade, mas devem usar as de rate-limit-upstash.ts
 
 /**
  * Cria resposta de rate limit excedido

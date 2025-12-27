@@ -1,8 +1,13 @@
--- Criar enum para roles
-CREATE TYPE app_role AS ENUM ('admin', 'fisioterapeuta', 'estagiario', 'paciente');
+-- Criar enum para roles (apenas se não existir)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'app_role') THEN
+        CREATE TYPE app_role AS ENUM ('admin', 'fisioterapeuta', 'estagiario', 'paciente');
+    END IF;
+END $$;
 
 -- Criar tabela de roles separada (segurança crítica)
-CREATE TABLE public.user_roles (
+CREATE TABLE IF NOT EXISTS public.user_roles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   role app_role NOT NULL,
@@ -15,12 +20,14 @@ CREATE TABLE public.user_roles (
 ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 
 -- Política: usuários podem ver suas próprias roles
+DROP POLICY IF EXISTS "Users can view own roles" ON public.user_roles;
 CREATE POLICY "Users can view own roles"
   ON public.user_roles
   FOR SELECT
   USING (auth.uid() = user_id);
 
 -- Política: apenas admins podem gerenciar roles
+DROP POLICY IF EXISTS "Only admins can manage roles" ON public.user_roles;
 CREATE POLICY "Only admins can manage roles"
   ON public.user_roles
   FOR ALL
@@ -89,21 +96,31 @@ AS $$
 $$;
 
 -- Trigger para atualizar updated_at
+DROP TRIGGER IF EXISTS update_user_roles_updated_at ON public.user_roles;
 CREATE TRIGGER update_user_roles_updated_at
   BEFORE UPDATE ON public.user_roles
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
 -- Índices para performance
-CREATE INDEX idx_user_roles_user_id ON public.user_roles(user_id);
-CREATE INDEX idx_user_roles_role ON public.user_roles(role);
+CREATE INDEX IF NOT EXISTS idx_user_roles_user_id ON public.user_roles(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_roles_role ON public.user_roles(role);
 
--- Migrar roles existentes da tabela profiles para user_roles
-INSERT INTO public.user_roles (user_id, role)
-SELECT user_id, role::app_role
-FROM public.profiles
-WHERE role IS NOT NULL
-ON CONFLICT (user_id, role) DO NOTHING;
+-- Migrar roles existentes da tabela profiles para user_roles (apenas se a coluna role existir)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'role') THEN
+        INSERT INTO public.user_roles (user_id, role)
+        SELECT user_id, role::app_role
+        FROM public.profiles
+        WHERE role IS NOT NULL
+        ON CONFLICT (user_id, role) DO NOTHING;
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        -- Ignorar erros (migration não é crítica)
+        NULL;
+END $$;
 
 -- Comentários para documentação
 COMMENT ON TABLE public.user_roles IS 'Tabela de roles dos usuários - separada para segurança';

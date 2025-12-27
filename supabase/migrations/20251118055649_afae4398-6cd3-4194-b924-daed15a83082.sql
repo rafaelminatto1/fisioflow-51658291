@@ -6,9 +6,11 @@ VALUES (
   false,
   10485760, -- 10MB
   ARRAY['application/pdf', 'image/jpeg', 'image/png', 'image/jpg', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
-);
+)
+ON CONFLICT (id) DO NOTHING;
 
 -- Políticas RLS para patient-documents
+DROP POLICY IF EXISTS "Terapeutas podem fazer upload de documentos" ON storage.objects;
 CREATE POLICY "Terapeutas podem fazer upload de documentos"
 ON storage.objects
 FOR INSERT
@@ -18,6 +20,7 @@ WITH CHECK (
   user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role])
 );
 
+DROP POLICY IF EXISTS "Terapeutas podem ver documentos" ON storage.objects;
 CREATE POLICY "Terapeutas podem ver documentos"
 ON storage.objects
 FOR SELECT
@@ -27,6 +30,7 @@ USING (
   user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role])
 );
 
+DROP POLICY IF EXISTS "Terapeutas podem atualizar documentos" ON storage.objects;
 CREATE POLICY "Terapeutas podem atualizar documentos"
 ON storage.objects
 FOR UPDATE
@@ -36,6 +40,7 @@ USING (
   user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role])
 );
 
+DROP POLICY IF EXISTS "Terapeutas podem deletar documentos" ON storage.objects;
 CREATE POLICY "Terapeutas podem deletar documentos"
 ON storage.objects
 FOR DELETE
@@ -46,7 +51,7 @@ USING (
 );
 
 -- Tabela para metadados de documentos
-CREATE TABLE public.patient_documents (
+CREATE TABLE IF NOT EXISTS public.patient_documents (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   patient_id UUID NOT NULL REFERENCES public.patients(id) ON DELETE CASCADE,
   file_name TEXT NOT NULL,
@@ -63,6 +68,7 @@ CREATE TABLE public.patient_documents (
 -- RLS para patient_documents
 ALTER TABLE public.patient_documents ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Terapeutas gerenciam documentos" ON public.patient_documents;
 CREATE POLICY "Terapeutas gerenciam documentos"
 ON public.patient_documents
 FOR ALL
@@ -72,17 +78,18 @@ USING (
 );
 
 -- Índices
-CREATE INDEX idx_patient_documents_patient_id ON public.patient_documents(patient_id);
-CREATE INDEX idx_patient_documents_category ON public.patient_documents(category);
+CREATE INDEX IF NOT EXISTS idx_patient_documents_patient_id ON public.patient_documents(patient_id);
+CREATE INDEX IF NOT EXISTS idx_patient_documents_category ON public.patient_documents(category);
 
 -- Trigger para updated_at
+DROP TRIGGER IF EXISTS update_patient_documents_updated_at ON public.patient_documents;
 CREATE TRIGGER update_patient_documents_updated_at
   BEFORE UPDATE ON public.patient_documents
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
 -- Tabela para biblioteca de condutas comuns
-CREATE TABLE public.conduct_library (
+CREATE TABLE IF NOT EXISTS public.conduct_library (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   description TEXT,
@@ -97,6 +104,7 @@ CREATE TABLE public.conduct_library (
 -- RLS para conduct_library
 ALTER TABLE public.conduct_library ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Terapeutas veem condutas da org" ON public.conduct_library;
 CREATE POLICY "Terapeutas veem condutas da org"
 ON public.conduct_library
 FOR SELECT
@@ -106,6 +114,7 @@ USING (
   user_belongs_to_organization(auth.uid(), organization_id)
 );
 
+DROP POLICY IF EXISTS "Terapeutas gerenciam condutas da org" ON public.conduct_library;
 CREATE POLICY "Terapeutas gerenciam condutas da org"
 ON public.conduct_library
 FOR ALL
@@ -116,10 +125,11 @@ USING (
 );
 
 -- Índices
-CREATE INDEX idx_conduct_library_category ON public.conduct_library(category);
-CREATE INDEX idx_conduct_library_org ON public.conduct_library(organization_id);
+CREATE INDEX IF NOT EXISTS idx_conduct_library_category ON public.conduct_library(category);
+CREATE INDEX IF NOT EXISTS idx_conduct_library_org ON public.conduct_library(organization_id);
 
 -- Trigger para updated_at
+DROP TRIGGER IF EXISTS update_conduct_library_updated_at ON public.conduct_library;
 CREATE TRIGGER update_conduct_library_updated_at
   BEFORE UPDATE ON public.conduct_library
   FOR EACH ROW

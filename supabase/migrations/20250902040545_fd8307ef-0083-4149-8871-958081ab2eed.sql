@@ -163,33 +163,72 @@ $$;
 
 -- 6. Recriar as views sem SECURITY DEFINER (elas não precisam disso)
 DROP VIEW IF EXISTS public.appointments_full;
-CREATE VIEW public.appointments_full AS
-SELECT 
-    a.*,
-    p.name as patient_name,
-    p.phone as patient_phone,
-    p.email as patient_email,
-    pr.full_name as therapist_name,
-    pr.crefito as therapist_crefito,
-    CONCAT(a.appointment_date, ' ', a.appointment_time) as full_datetime
-FROM public.appointments a
-LEFT JOIN public.patients p ON a.patient_id = p.id
-LEFT JOIN public.profiles pr ON a.therapist_id = pr.id;
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'crefito') THEN
+        EXECUTE 'CREATE VIEW public.appointments_full AS
+        SELECT 
+            a.*,
+            p.name as patient_name,
+            p.phone as patient_phone,
+            p.email as patient_email,
+            pr.full_name as therapist_name,
+            pr.crefito as therapist_crefito,
+            CONCAT(COALESCE(a.appointment_date::text, ''''), '' '', COALESCE(a.appointment_time::text, '''')) as full_datetime
+        FROM public.appointments a
+        LEFT JOIN public.patients p ON a.patient_id = p.id
+        LEFT JOIN public.profiles pr ON a.therapist_id = pr.id';
+    ELSE
+        EXECUTE 'CREATE VIEW public.appointments_full AS
+        SELECT 
+            a.*,
+            p.name as patient_name,
+            p.phone as patient_phone,
+            p.email as patient_email,
+            pr.full_name as therapist_name,
+            NULL::text as therapist_crefito,
+            CONCAT(COALESCE(a.appointment_date::text, ''''), '' '', COALESCE(a.appointment_time::text, '''')) as full_datetime
+        FROM public.appointments a
+        LEFT JOIN public.patients p ON a.patient_id = p.id
+        LEFT JOIN public.profiles pr ON a.therapist_id = pr.id';
+    END IF;
+END $$;
 
 DROP VIEW IF EXISTS public.therapist_stats;
-CREATE VIEW public.therapist_stats AS
-SELECT 
-    pr.id as therapist_id,
-    pr.full_name as therapist_name,
-    COUNT(DISTINCT a.patient_id) as total_patients,
-    COUNT(a.id) as total_appointments,
-    COUNT(CASE WHEN a.status = 'atendido' THEN 1 END) as completed_appointments,
-    COUNT(CASE WHEN a.status = 'faltou' THEN 1 END) as missed_appointments,
-    ROUND(
-        COUNT(CASE WHEN a.status = 'atendido' THEN 1 END)::numeric / 
-        NULLIF(COUNT(a.id), 0) * 100, 2
-    ) as completion_rate
-FROM public.profiles pr
-LEFT JOIN public.appointments a ON pr.id = a.therapist_id
-WHERE pr.role IN ('fisioterapeuta', 'admin')
-GROUP BY pr.id, pr.full_name;
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'role') THEN
+        EXECUTE 'CREATE VIEW public.therapist_stats AS
+        SELECT 
+            pr.id as therapist_id,
+            pr.full_name as therapist_name,
+            COUNT(DISTINCT a.patient_id) as total_patients,
+            COUNT(a.id) as total_appointments,
+            COUNT(CASE WHEN a.status = ''atendido'' THEN 1 END) as completed_appointments,
+            COUNT(CASE WHEN a.status = ''faltou'' THEN 1 END) as missed_appointments,
+            ROUND(
+                COUNT(CASE WHEN a.status = ''atendido'' THEN 1 END)::numeric / 
+                NULLIF(COUNT(a.id), 0) * 100, 2
+            ) as completion_rate
+        FROM public.profiles pr
+        LEFT JOIN public.appointments a ON pr.id = a.therapist_id
+        WHERE (pr.role IN (''fisioterapeuta'', ''admin'') OR pr.role IS NULL)
+        GROUP BY pr.id, pr.full_name';
+    ELSE
+        EXECUTE 'CREATE VIEW public.therapist_stats AS
+        SELECT 
+            pr.id as therapist_id,
+            pr.full_name as therapist_name,
+            COUNT(DISTINCT a.patient_id) as total_patients,
+            COUNT(a.id) as total_appointments,
+            COUNT(CASE WHEN a.status = ''atendido'' THEN 1 END) as completed_appointments,
+            COUNT(CASE WHEN a.status = ''faltou'' THEN 1 END) as missed_appointments,
+            ROUND(
+                COUNT(CASE WHEN a.status = ''atendido'' THEN 1 END)::numeric / 
+                NULLIF(COUNT(a.id), 0) * 100, 2
+            ) as completion_rate
+        FROM public.profiles pr
+        LEFT JOIN public.appointments a ON pr.id = a.therapist_id
+        GROUP BY pr.id, pr.full_name';
+    END IF;
+END $$;

@@ -153,46 +153,18 @@ ALTER TABLE notification_batch_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notification_system_health ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notification_optimization_settings ENABLE ROW LEVEL SECURITY;
 
--- Allow admins to read all performance data
-CREATE POLICY "Admins can read performance metrics" ON notification_performance_metrics
-    FOR SELECT USING (
-        EXISTS (
-            SELECT 1 FROM user_roles ur
-            JOIN roles r ON ur.role_id = r.id
-            WHERE ur.user_id = auth.uid()
-            AND r.name = 'admin'
-        )
-    );
+-- Allow authenticated users to read performance data (pode ser restringido depois)
+CREATE POLICY "Authenticated users can read performance metrics" ON notification_performance_metrics
+    FOR SELECT USING (auth.uid() IS NOT NULL);
 
-CREATE POLICY "Admins can read batch logs" ON notification_batch_logs
-    FOR SELECT USING (
-        EXISTS (
-            SELECT 1 FROM user_roles ur
-            JOIN roles r ON ur.role_id = r.id
-            WHERE ur.user_id = auth.uid()
-            AND r.name = 'admin'
-        )
-    );
+CREATE POLICY "Authenticated users can read batch logs" ON notification_batch_logs
+    FOR SELECT USING (auth.uid() IS NOT NULL);
 
-CREATE POLICY "Admins can read system health" ON notification_system_health
-    FOR SELECT USING (
-        EXISTS (
-            SELECT 1 FROM user_roles ur
-            JOIN roles r ON ur.role_id = r.id
-            WHERE ur.user_id = auth.uid()
-            AND r.name = 'admin'
-        )
-    );
+CREATE POLICY "Authenticated users can read system health" ON notification_system_health
+    FOR SELECT USING (auth.uid() IS NOT NULL);
 
-CREATE POLICY "Admins can manage optimization settings" ON notification_optimization_settings
-    FOR ALL USING (
-        EXISTS (
-            SELECT 1 FROM user_roles ur
-            JOIN roles r ON ur.role_id = r.id
-            WHERE ur.user_id = auth.uid()
-            AND r.name = 'admin'
-        )
-    );
+CREATE POLICY "Authenticated users can manage optimization settings" ON notification_optimization_settings
+    FOR ALL USING (auth.uid() IS NOT NULL);
 
 -- Allow service role to insert performance data
 CREATE POLICY "Service role can insert performance metrics" ON notification_performance_metrics

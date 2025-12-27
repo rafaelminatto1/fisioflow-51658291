@@ -124,11 +124,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_update_waitlist_updated_at ON waitlist;
 CREATE TRIGGER trigger_update_waitlist_updated_at
 BEFORE UPDATE ON waitlist
 FOR EACH ROW
 EXECUTE FUNCTION update_waitlist_updated_at();
 
+DROP TRIGGER IF EXISTS trigger_update_waitlist_offers_updated_at ON waitlist_offers;
 CREATE TRIGGER trigger_update_waitlist_offers_updated_at
 BEFORE UPDATE ON waitlist_offers
 FOR EACH ROW
@@ -141,6 +143,7 @@ EXECUTE FUNCTION update_waitlist_updated_at();
 -- WhatsApp Messages
 ALTER TABLE whatsapp_messages ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Terapeutas veem mensagens da org" ON whatsapp_messages;
 CREATE POLICY "Terapeutas veem mensagens da org"
 ON whatsapp_messages FOR SELECT
 USING (
@@ -153,6 +156,7 @@ USING (
   )
 );
 
+DROP POLICY IF EXISTS "Sistema cria mensagens" ON whatsapp_messages;
 CREATE POLICY "Sistema cria mensagens"
 ON whatsapp_messages FOR INSERT
 WITH CHECK (true);
@@ -160,6 +164,7 @@ WITH CHECK (true);
 -- Waitlist
 ALTER TABLE waitlist ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Membros da org veem lista de espera" ON waitlist;
 CREATE POLICY "Membros da org veem lista de espera"
 ON waitlist FOR SELECT
 USING (
@@ -167,6 +172,7 @@ USING (
   OR user_belongs_to_organization(auth.uid(), organization_id)
 );
 
+DROP POLICY IF EXISTS "Terapeutas gerenciam lista de espera" ON waitlist;
 CREATE POLICY "Terapeutas gerenciam lista de espera"
 ON waitlist FOR ALL
 USING (
@@ -177,6 +183,7 @@ USING (
 -- Waitlist Offers
 ALTER TABLE waitlist_offers ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Membros da org veem ofertas" ON waitlist_offers;
 CREATE POLICY "Membros da org veem ofertas"
 ON waitlist_offers FOR SELECT
 USING (
@@ -188,6 +195,7 @@ USING (
   )
 );
 
+DROP POLICY IF EXISTS "Sistema gerencia ofertas" ON waitlist_offers;
 CREATE POLICY "Sistema gerencia ofertas"
 ON waitlist_offers FOR ALL
 USING (true);

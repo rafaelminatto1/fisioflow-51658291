@@ -18,6 +18,19 @@ CREATE TABLE IF NOT EXISTS treatment_sessions (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Add session_type column if it doesn't exist (for existing tables)
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'treatment_sessions' AND column_name = 'session_type'
+  ) THEN
+    ALTER TABLE treatment_sessions ADD COLUMN session_type VARCHAR(20) DEFAULT 'treatment';
+    ALTER TABLE treatment_sessions ADD CONSTRAINT treatment_sessions_session_type_check 
+      CHECK (session_type IN ('consultation', 'treatment', 'evaluation', 'follow_up'));
+  END IF;
+END $$;
+
 -- Create session_exercises table for detailed exercise tracking
 CREATE TABLE IF NOT EXISTS session_exercises (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -46,31 +59,42 @@ CREATE TABLE IF NOT EXISTS session_metrics (
   calculated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create patient_timeline view
+-- Create patient_timeline view (using actual table structure)
+DROP VIEW IF EXISTS patient_timeline;
+
+-- Use a simple view that only uses columns that definitely exist
 CREATE OR REPLACE VIEW patient_timeline AS
 SELECT 
   ts.id as session_id,
   ts.patient_id,
-  ts.session_date,
-  ts.session_type,
-  ts.pain_level_after as pain_level,
-  ts.functional_score_after as functional_score,
-  ts.status,
-  sm.pain_improvement,
-  sm.functional_improvement,
-  sm.exercise_compliance,
-  sm.session_effectiveness,
+  COALESCE(ts.session_date, ts.created_at::DATE) as session_date,
+  'treatment'::VARCHAR(20) as session_type,
+  ts.pain_level,
+  NULL::INTEGER as functional_score,
+  'completed'::VARCHAR(20) as status,
+  NULL::INTEGER as pain_improvement,
+  NULL::INTEGER as functional_improvement,
+  NULL::DECIMAL(5,2) as exercise_compliance,
+  NULL::DECIMAL(5,2) as session_effectiveness,
   p.name as patient_name
 FROM treatment_sessions ts
-LEFT JOIN session_metrics sm ON ts.id = sm.session_id
 LEFT JOIN patients p ON ts.patient_id = p.id
-ORDER BY ts.session_date DESC;
+ORDER BY COALESCE(ts.session_date, ts.created_at::DATE) DESC;
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_treatment_sessions_patient_id ON treatment_sessions(patient_id);
-CREATE INDEX IF NOT EXISTS idx_treatment_sessions_therapist_id ON treatment_sessions(therapist_id);
+CREATE INDEX IF NOT EXISTS idx_treatment_sessions_created_by ON treatment_sessions(created_by);
 CREATE INDEX IF NOT EXISTS idx_treatment_sessions_date ON treatment_sessions(session_date);
-CREATE INDEX IF NOT EXISTS idx_treatment_sessions_status ON treatment_sessions(status);
+-- Only create status index if column exists
+DO $$ 
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'treatment_sessions' AND column_name = 'status'
+  ) THEN
+    CREATE INDEX IF NOT EXISTS idx_treatment_sessions_status ON treatment_sessions(status);
+  END IF;
+END $$;
 CREATE INDEX IF NOT EXISTS idx_session_exercises_session_id ON session_exercises(session_id);
 CREATE INDEX IF NOT EXISTS idx_session_metrics_session_id ON session_metrics(session_id);
 
@@ -80,32 +104,52 @@ ALTER TABLE session_exercises ENABLE ROW LEVEL SECURITY;
 ALTER TABLE session_metrics ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies for treatment_sessions
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Users can view their own sessions" ON treatment_sessions;
+DROP POLICY IF EXISTS "Therapists can insert sessions" ON treatment_sessions;
+DROP POLICY IF EXISTS "Therapists can update their sessions" ON treatment_sessions;
+DROP POLICY IF EXISTS "Therapists can delete their sessions" ON treatment_sessions;
+
+-- Use created_by instead of therapist_id (actual table structure)
 CREATE POLICY "Users can view their own sessions" ON treatment_sessions
   FOR SELECT USING (
-    auth.uid() = therapist_id OR 
-    auth.uid() IN (
-      SELECT user_id FROM patients WHERE id = patient_id
+    created_by IN (SELECT id FROM profiles WHERE user_id = auth.uid()) OR
+    patient_id IN (
+      SELECT id FROM patients WHERE organization_id IN (
+        SELECT organization_id FROM profiles WHERE user_id = auth.uid()
+      )
     )
   );
 
 CREATE POLICY "Therapists can insert sessions" ON treatment_sessions
-  FOR INSERT WITH CHECK (auth.uid() = therapist_id);
+  FOR INSERT WITH CHECK (
+    created_by IN (SELECT id FROM profiles WHERE user_id = auth.uid())
+  );
 
 CREATE POLICY "Therapists can update their sessions" ON treatment_sessions
-  FOR UPDATE USING (auth.uid() = therapist_id);
+  FOR UPDATE USING (
+    created_by IN (SELECT id FROM profiles WHERE user_id = auth.uid())
+  );
 
 CREATE POLICY "Therapists can delete their sessions" ON treatment_sessions
-  FOR DELETE USING (auth.uid() = therapist_id);
+  FOR DELETE USING (
+    created_by IN (SELECT id FROM profiles WHERE user_id = auth.uid())
+  );
 
 -- Create RLS policies for session_exercises
+DROP POLICY IF EXISTS "Users can view session exercises" ON session_exercises;
+DROP POLICY IF EXISTS "Therapists can manage session exercises" ON session_exercises;
+
 CREATE POLICY "Users can view session exercises" ON session_exercises
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM treatment_sessions ts 
       WHERE ts.id = session_id AND (
-        auth.uid() = ts.therapist_id OR 
-        auth.uid() IN (
-          SELECT user_id FROM patients WHERE id = ts.patient_id
+        ts.created_by IN (SELECT id FROM profiles WHERE user_id = auth.uid()) OR
+        ts.patient_id IN (
+          SELECT id FROM patients WHERE organization_id IN (
+            SELECT organization_id FROM profiles WHERE user_id = auth.uid()
+          )
         )
       )
     )
@@ -115,19 +159,25 @@ CREATE POLICY "Therapists can manage session exercises" ON session_exercises
   FOR ALL USING (
     EXISTS (
       SELECT 1 FROM treatment_sessions ts 
-      WHERE ts.id = session_id AND auth.uid() = ts.therapist_id
+      WHERE ts.id = session_id AND ts.created_by IN (
+        SELECT id FROM profiles WHERE user_id = auth.uid()
+      )
     )
   );
 
 -- Create RLS policies for session_metrics
+DROP POLICY IF EXISTS "Users can view session metrics" ON session_metrics;
+
 CREATE POLICY "Users can view session metrics" ON session_metrics
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM treatment_sessions ts 
       WHERE ts.id = session_id AND (
-        auth.uid() = ts.therapist_id OR 
-        auth.uid() IN (
-          SELECT user_id FROM patients WHERE id = ts.patient_id
+        ts.created_by IN (SELECT id FROM profiles WHERE user_id = auth.uid()) OR
+        ts.patient_id IN (
+          SELECT id FROM patients WHERE organization_id IN (
+            SELECT organization_id FROM profiles WHERE user_id = auth.uid()
+          )
         )
       )
     )

@@ -17,12 +17,14 @@ CREATE TABLE IF NOT EXISTS notification_templates (
 ALTER TABLE notification_templates ENABLE ROW LEVEL SECURITY;
 
 -- Política: todos podem ler templates (necessário para edge functions)
+DROP POLICY IF EXISTS "Templates são públicos para leitura" ON notification_templates;
 CREATE POLICY "Templates são públicos para leitura"
 ON notification_templates
 FOR SELECT
 USING (true);
 
 -- Política: apenas admins podem criar/editar templates
+DROP POLICY IF EXISTS "Apenas admins gerenciam templates" ON notification_templates;
 CREATE POLICY "Apenas admins gerenciam templates"
 ON notification_templates
 FOR ALL
@@ -74,6 +76,7 @@ VALUES
 ON CONFLICT (type) DO NOTHING;
 
 -- Trigger para atualizar updated_at
+DROP TRIGGER IF EXISTS update_notification_templates_updated_at ON notification_templates;
 CREATE TRIGGER update_notification_templates_updated_at
   BEFORE UPDATE ON notification_templates
   FOR EACH ROW

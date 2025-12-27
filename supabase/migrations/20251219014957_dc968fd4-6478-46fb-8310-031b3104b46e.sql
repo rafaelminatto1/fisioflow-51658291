@@ -52,29 +52,37 @@ ALTER TABLE public.whatsapp_metrics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.whatsapp_webhook_logs ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for templates
+DROP POLICY IF EXISTS "Admins and fisios can view templates" ON public.whatsapp_templates;
 CREATE POLICY "Admins and fisios can view templates" ON public.whatsapp_templates
   FOR SELECT USING (public.user_is_fisio_or_admin(auth.uid()));
 
+DROP POLICY IF EXISTS "Admins can manage templates" ON public.whatsapp_templates;
 CREATE POLICY "Admins can manage templates" ON public.whatsapp_templates
   FOR ALL USING (public.user_is_admin(auth.uid()));
 
 -- RLS Policies for metrics
+DROP POLICY IF EXISTS "Admins and fisios can view metrics" ON public.whatsapp_metrics;
 CREATE POLICY "Admins and fisios can view metrics" ON public.whatsapp_metrics
   FOR SELECT USING (public.user_is_fisio_or_admin(auth.uid()));
 
+DROP POLICY IF EXISTS "System can insert metrics" ON public.whatsapp_metrics;
 CREATE POLICY "System can insert metrics" ON public.whatsapp_metrics
   FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "System can update metrics" ON public.whatsapp_metrics;
 CREATE POLICY "System can update metrics" ON public.whatsapp_metrics
   FOR UPDATE USING (true);
 
 -- RLS Policies for webhook logs
+DROP POLICY IF EXISTS "Admins can view webhook logs" ON public.whatsapp_webhook_logs;
 CREATE POLICY "Admins can view webhook logs" ON public.whatsapp_webhook_logs
   FOR SELECT USING (public.user_is_admin(auth.uid()));
 
+DROP POLICY IF EXISTS "System can insert webhook logs" ON public.whatsapp_webhook_logs;
 CREATE POLICY "System can insert webhook logs" ON public.whatsapp_webhook_logs
   FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "System can update webhook logs" ON public.whatsapp_webhook_logs;
 CREATE POLICY "System can update webhook logs" ON public.whatsapp_webhook_logs
   FOR UPDATE USING (true);
 
@@ -109,7 +117,8 @@ CREATE INDEX IF NOT EXISTS idx_whatsapp_webhook_created ON public.whatsapp_webho
 CREATE INDEX IF NOT EXISTS idx_whatsapp_webhook_processed ON public.whatsapp_webhook_logs(processed);
 
 -- Trigger for updated_at
-CREATE OR REPLACE TRIGGER update_whatsapp_templates_updated_at
+DROP TRIGGER IF EXISTS update_whatsapp_templates_updated_at ON public.whatsapp_templates;
+CREATE TRIGGER update_whatsapp_templates_updated_at
   BEFORE UPDATE ON public.whatsapp_templates
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();

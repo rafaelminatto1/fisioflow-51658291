@@ -42,12 +42,15 @@ CREATE TABLE IF NOT EXISTS public.backup_logs (
 -- RLS para backup_logs
 ALTER TABLE public.backup_logs ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Admins podem ver backups" ON public.backup_logs;
 CREATE POLICY "Admins podem ver backups" ON public.backup_logs
   FOR SELECT USING (public.user_is_admin(auth.uid()));
 
+DROP POLICY IF EXISTS "Admins podem criar backups" ON public.backup_logs;
 CREATE POLICY "Admins podem criar backups" ON public.backup_logs
   FOR INSERT WITH CHECK (public.user_is_admin(auth.uid()));
 
+DROP POLICY IF EXISTS "Admins podem atualizar backups" ON public.backup_logs;
 CREATE POLICY "Admins podem atualizar backups" ON public.backup_logs
   FOR UPDATE USING (public.user_is_admin(auth.uid()));
 
@@ -64,7 +67,7 @@ DECLARE
   _old_data JSONB;
   _new_data JSONB;
   _changes JSONB;
-  _record_id TEXT;
+  _record_id UUID;
   _action TEXT;
 BEGIN
   -- Determinar a ação
@@ -72,13 +75,13 @@ BEGIN
     _action := 'DELETE';
     _old_data := to_jsonb(OLD);
     _new_data := NULL;
-    _record_id := OLD.id::TEXT;
+    _record_id := OLD.id::UUID;
     _changes := NULL;
   ELSIF TG_OP = 'UPDATE' THEN
     _action := 'UPDATE';
     _old_data := to_jsonb(OLD);
     _new_data := to_jsonb(NEW);
-    _record_id := NEW.id::TEXT;
+    _record_id := NEW.id::UUID;
     -- Calcular diferenças
     SELECT jsonb_object_agg(key, jsonb_build_object('old', _old_data->key, 'new', value))
     INTO _changes
@@ -88,30 +91,32 @@ BEGIN
     _action := 'INSERT';
     _old_data := NULL;
     _new_data := to_jsonb(NEW);
-    _record_id := NEW.id::TEXT;
+    _record_id := NEW.id::UUID;
     _changes := NULL;
   END IF;
 
-  -- Inserir no log
-  INSERT INTO public.audit_log (
-    user_id,
-    action,
-    table_name,
-    record_id,
-    old_data,
-    new_data,
-    changes,
-    timestamp
-  ) VALUES (
-    auth.uid(),
-    _action,
-    TG_TABLE_NAME,
-    _record_id,
-    _old_data,
-    _new_data,
-    _changes,
-    now()
-  );
+  -- Inserir no log (apenas se record_id for válido)
+  IF _record_id IS NOT NULL THEN
+    INSERT INTO public.audit_log (
+      user_id,
+      action,
+      table_name,
+      record_id,
+      old_data,
+      new_data,
+      changes,
+      timestamp
+    ) VALUES (
+      auth.uid(),
+      _action,
+      TG_TABLE_NAME,
+      _record_id,
+      _old_data,
+      _new_data,
+      _changes,
+      now()
+    );
+  END IF;
 
   -- Retornar o registro apropriado
   IF TG_OP = 'DELETE' THEN

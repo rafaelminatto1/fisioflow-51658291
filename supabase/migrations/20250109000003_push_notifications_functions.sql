@@ -78,8 +78,9 @@ BEGIN
     
     RETURN TRUE;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;-- Functio
-n to log notification delivery
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to log notification delivery
 CREATE OR REPLACE FUNCTION log_notification(
     p_user_id UUID,
     p_type VARCHAR(50),
@@ -101,6 +102,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Function to update notification status
+DROP FUNCTION IF EXISTS update_notification_status(UUID, VARCHAR, TEXT);
 CREATE OR REPLACE FUNCTION update_notification_status(
     p_notification_id UUID,
     p_status VARCHAR(20),

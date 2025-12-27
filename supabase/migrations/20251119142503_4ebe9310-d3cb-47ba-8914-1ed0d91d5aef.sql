@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS schedule_capacity_config (
 -- RLS policies
 ALTER TABLE schedule_capacity_config ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Admins e fisios gerenciam capacidade" ON schedule_capacity_config;
 CREATE POLICY "Admins e fisios gerenciam capacidade"
   ON schedule_capacity_config
   FOR ALL
@@ -22,6 +23,7 @@ CREATE POLICY "Admins e fisios gerenciam capacidade"
     AND (organization_id IS NULL OR user_belongs_to_organization(auth.uid(), organization_id))
   );
 
+DROP POLICY IF EXISTS "Todos veem capacidade da org" ON schedule_capacity_config;
 CREATE POLICY "Todos veem capacidade da org"
   ON schedule_capacity_config
   FOR SELECT
@@ -54,6 +56,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_update_schedule_capacity_config_updated_at ON schedule_capacity_config;
 CREATE TRIGGER trigger_update_schedule_capacity_config_updated_at
   BEFORE UPDATE ON schedule_capacity_config
   FOR EACH ROW

@@ -1,4 +1,15 @@
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { initSentry, captureException, captureMessage, addBreadcrumb } from './sentry.ts';
+
+// Inicializar Sentry se DSN estiver configurado
+const SENTRY_DSN = Deno.env.get('SENTRY_DSN');
+if (SENTRY_DSN) {
+  initSentry({
+    dsn: SENTRY_DSN,
+    environment: Deno.env.get('ENVIRONMENT') || 'production',
+    tracesSampleRate: 0.1,
+  });
+}
 
 // CORS Headers padrão
 const ALLOWED_ORIGINS = [

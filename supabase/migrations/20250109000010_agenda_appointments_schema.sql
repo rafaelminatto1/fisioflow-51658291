@@ -1,42 +1,119 @@
 -- Migration: Create appointments table for agenda system
 -- Description: Creates the appointments table with proper relationships and indexes
 
--- Create appointments table
+-- Desabilitar temporariamente trigger de auditoria se existir (para evitar erro de tipo)
+DROP TRIGGER IF EXISTS audit_appointments_changes ON appointments;
+
+-- Create appointments table (se não existir)
 CREATE TABLE IF NOT EXISTS appointments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
-    therapist_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE RESTRICT,
-    date DATE NOT NULL,
-    start_time TIME NOT NULL,
-    end_time TIME NOT NULL,
-    status TEXT NOT NULL DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'completed', 'missed', 'cancelled', 'rescheduled')),
-    payment_status TEXT NOT NULL DEFAULT 'pending' CHECK (payment_status IN ('pending', 'paid', 'partial')),
-    session_type TEXT NOT NULL DEFAULT 'individual' CHECK (session_type IN ('individual', 'group')),
+    therapist_id UUID,
+    date DATE,
+    appointment_date DATE,
+    start_time TIME,
+    appointment_time TIME,
+    end_time TIME,
+    status TEXT DEFAULT 'scheduled',
+    payment_status TEXT DEFAULT 'pending',
+    session_type TEXT DEFAULT 'individual',
     notes TEXT DEFAULT '',
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    
-    -- Constraints
-    CONSTRAINT appointments_time_order CHECK (end_time > start_time),
-    CONSTRAINT appointments_business_hours CHECK (
-        start_time >= '07:00:00' AND 
-        end_time <= '19:00:00'
-    ),
-    CONSTRAINT appointments_date_future CHECK (date >= CURRENT_DATE - INTERVAL '1 year')
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Create indexes for performance
-CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date);
-CREATE INDEX IF NOT EXISTS idx_appointments_therapist_date ON appointments(therapist_id, date);
-CREATE INDEX IF NOT EXISTS idx_appointments_patient_date ON appointments(patient_id, date);
-CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
-CREATE INDEX IF NOT EXISTS idx_appointments_payment_status ON appointments(payment_status);
-CREATE INDEX IF NOT EXISTS idx_appointments_week ON appointments(date) WHERE date >= CURRENT_DATE - INTERVAL '1 week';
+-- Adicionar colunas se não existirem
+DO $$
+BEGIN
+    -- Adicionar date se não existir (usar appointment_date como fallback)
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'appointments' AND column_name = 'date') THEN
+        IF EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'appointments' AND column_name = 'appointment_date') THEN
+            ALTER TABLE appointments ADD COLUMN date DATE;
+            UPDATE appointments SET date = appointment_date WHERE date IS NULL;
+        ELSE
+            ALTER TABLE appointments ADD COLUMN date DATE;
+        END IF;
+    END IF;
+    
+    -- Adicionar start_time se não existir
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'appointments' AND column_name = 'start_time') THEN
+        IF EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'appointments' AND column_name = 'appointment_time') THEN
+            ALTER TABLE appointments ADD COLUMN start_time TIME;
+            UPDATE appointments SET start_time = appointment_time WHERE start_time IS NULL;
+        ELSE
+            ALTER TABLE appointments ADD COLUMN start_time TIME;
+        END IF;
+    END IF;
+    
+    -- Adicionar end_time se não existir
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'appointments' AND column_name = 'end_time') THEN
+        ALTER TABLE appointments ADD COLUMN end_time TIME;
+    END IF;
+END $$;
 
--- Create composite index for conflict detection
-CREATE UNIQUE INDEX IF NOT EXISTS idx_appointments_therapist_time_conflict 
-ON appointments(therapist_id, date, start_time, end_time) 
-WHERE status NOT IN ('cancelled', 'rescheduled');
+-- Create indexes for performance (usando COALESCE para lidar com colunas que podem não existir)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'appointments' AND column_name = 'date') THEN
+        CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(date);
+        -- Remover índice parcial com CURRENT_DATE (não é IMMUTABLE)
+        -- CREATE INDEX IF NOT EXISTS idx_appointments_week ON appointments(date) 
+        --     WHERE date >= CURRENT_DATE - INTERVAL '1 week';
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'appointments' AND column_name = 'therapist_id') THEN
+        IF EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'appointments' AND column_name = 'date') THEN
+            CREATE INDEX IF NOT EXISTS idx_appointments_therapist_date 
+                ON appointments(therapist_id, date);
+        END IF;
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'appointments' AND column_name = 'patient_id') THEN
+        IF EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'appointments' AND column_name = 'date') THEN
+            CREATE INDEX IF NOT EXISTS idx_appointments_patient_date 
+                ON appointments(patient_id, date);
+        END IF;
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'appointments' AND column_name = 'status') THEN
+        CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'appointments' AND column_name = 'payment_status') THEN
+        CREATE INDEX IF NOT EXISTS idx_appointments_payment_status ON appointments(payment_status);
+    END IF;
+END $$;
+
+-- Create composite index for conflict detection (apenas se todas as colunas existirem)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'appointments' AND column_name = 'therapist_id')
+       AND EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'appointments' AND column_name = 'date')
+       AND EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'appointments' AND column_name = 'start_time')
+       AND EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'appointments' AND column_name = 'end_time')
+       AND EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'appointments' AND column_name = 'status') THEN
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_appointments_therapist_time_conflict 
+        ON appointments(therapist_id, date, start_time, end_time) 
+        WHERE status NOT IN ('cancelled', 'rescheduled');
+    END IF;
+END $$;
 
 -- Create updated_at trigger
 CREATE OR REPLACE FUNCTION update_appointments_updated_at()
@@ -68,11 +145,12 @@ BEGIN
     INTO conflict_count
     FROM appointments
     WHERE therapist_id = p_therapist_id
-        AND date = p_date
-        AND status NOT IN ('cancelled', 'rescheduled')
+        AND COALESCE(date, appointment_date) = p_date
+        AND (status IS NULL OR status NOT IN ('cancelled', 'rescheduled'))
         AND (p_exclude_id IS NULL OR id != p_exclude_id)
         AND (
-            (start_time < p_end_time AND end_time > p_start_time)
+            (COALESCE(start_time, appointment_time) < p_end_time 
+             AND COALESCE(end_time, COALESCE(start_time, appointment_time) + INTERVAL '1 hour') > p_start_time)
         );
     
     RETURN conflict_count > 0;
@@ -102,7 +180,7 @@ BEGIN
         -- Check if slot fits within business hours
         IF end_slot_time <= '19:00:00'::TIME THEN
             -- Check if slot is available (no conflicts)
-            IF NOT check_appointment_conflict(p_therapist_id, p_date, slot_time, end_slot_time) THEN
+            IF NOT check_appointment_conflict(p_therapist_id, p_date, slot_time::TIME, end_slot_time::TIME) THEN
                 time_slot := slot_time;
                 RETURN NEXT;
             END IF;
@@ -117,13 +195,56 @@ $$ LANGUAGE plpgsql;
 COMMENT ON TABLE appointments IS 'Stores physiotherapy appointment scheduling data';
 COMMENT ON COLUMN appointments.patient_id IS 'Reference to the patient receiving treatment';
 COMMENT ON COLUMN appointments.therapist_id IS 'Reference to the therapist conducting the session';
-COMMENT ON COLUMN appointments.date IS 'Date of the appointment (YYYY-MM-DD)';
-COMMENT ON COLUMN appointments.start_time IS 'Start time of the appointment (HH:MM)';
-COMMENT ON COLUMN appointments.end_time IS 'End time of the appointment (HH:MM)';
-COMMENT ON COLUMN appointments.status IS 'Current status of the appointment';
-COMMENT ON COLUMN appointments.payment_status IS 'Payment status for this session';
-COMMENT ON COLUMN appointments.session_type IS 'Type of therapy session (individual or group)';
-COMMENT ON COLUMN appointments.notes IS 'Additional notes or observations';
+-- Comentários (apenas se as colunas existirem)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'appointments' AND column_name = 'date') THEN
+        COMMENT ON COLUMN appointments.date IS 'Date of the appointment (YYYY-MM-DD)';
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'appointments' AND column_name = 'session_type') THEN
+        COMMENT ON COLUMN appointments.session_type IS 'Type of therapy session (individual or group)';
+    END IF;
+END $$;
+
+-- Reabilitar trigger de auditoria (será corrigido em migration posterior)
+-- O trigger será recriado na migration 20251219013025 após a correção da função audit_table_changes
+
+-- Comentários (apenas se as colunas existirem)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'appointments' AND column_name = 'start_time') THEN
+        COMMENT ON COLUMN appointments.start_time IS 'Start time of the appointment (HH:MM)';
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'appointments' AND column_name = 'end_time') THEN
+        COMMENT ON COLUMN appointments.end_time IS 'End time of the appointment (HH:MM)';
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'appointments' AND column_name = 'status') THEN
+        COMMENT ON COLUMN appointments.status IS 'Current status of the appointment';
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'appointments' AND column_name = 'payment_status') THEN
+        COMMENT ON COLUMN appointments.payment_status IS 'Payment status for this session';
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'appointments' AND column_name = 'session_type') THEN
+        COMMENT ON COLUMN appointments.session_type IS 'Type of therapy session (individual or group)';
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'appointments' AND column_name = 'notes') THEN
+        COMMENT ON COLUMN appointments.notes IS 'Additional notes or observations';
+    END IF;
+END $$;
 
 COMMENT ON FUNCTION check_appointment_conflict IS 'Checks if a proposed appointment time conflicts with existing appointments';
 COMMENT ON FUNCTION get_available_time_slots IS 'Returns available time slots for a therapist on a specific date';

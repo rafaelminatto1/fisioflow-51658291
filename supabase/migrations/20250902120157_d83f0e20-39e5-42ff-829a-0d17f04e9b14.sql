@@ -112,6 +112,7 @@ CREATE POLICY "Authenticated users can delete prescriptions" ON patient_exercise
   FOR DELETE USING (true);
 
 -- Trigger para updated_at
+DROP TRIGGER IF EXISTS update_exercise_protocols_updated_at ON exercise_protocols;
 CREATE TRIGGER update_exercise_protocols_updated_at
   BEFORE UPDATE ON exercise_protocols
   FOR EACH ROW

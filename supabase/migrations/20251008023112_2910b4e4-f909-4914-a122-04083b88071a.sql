@@ -38,6 +38,7 @@ AS $$
 $$;
 
 -- Política de visualização mais restritiva
+DROP POLICY IF EXISTS "Acesso controlado para visualizar pacientes" ON public.patients;
 CREATE POLICY "Acesso controlado para visualizar pacientes"
 ON public.patients
 FOR SELECT
@@ -45,6 +46,7 @@ TO authenticated
 USING (public.can_view_patient(auth.uid(), id));
 
 -- Apenas admins e fisios podem atualizar dados sensíveis
+DROP POLICY IF EXISTS "Apenas admins e fisios podem atualizar pacientes" ON public.patients;
 CREATE POLICY "Apenas admins e fisios podem atualizar pacientes"
 ON public.patients
 FOR UPDATE
@@ -88,6 +90,7 @@ AS $$
 $$;
 
 -- Aplicar política restritiva
+DROP POLICY IF EXISTS "Acesso controlado a perfis" ON public.profiles;
 CREATE POLICY "Acesso controlado a perfis"
 ON public.profiles
 FOR SELECT
@@ -136,6 +139,7 @@ CREATE TRIGGER audit_sensitive_patient_changes
 -- 4. POLÍTICAS RLS PARA audit_log (tabela base, não a view)
 -- Apenas admins podem visualizar logs de auditoria
 DROP POLICY IF EXISTS "Admins can view audit logs" ON public.audit_log;
+DROP POLICY IF EXISTS "Admins podem visualizar logs de auditoria" ON public.audit_log;
 
 CREATE POLICY "Admins podem visualizar logs de auditoria"
 ON public.audit_log

@@ -102,11 +102,13 @@ AS $$
 $$;
 
 -- 6. Trigger para atualizar updated_at
+DROP TRIGGER IF EXISTS update_organizations_updated_at ON public.organizations;
 CREATE TRIGGER update_organizations_updated_at
   BEFORE UPDATE ON public.organizations
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_organization_members_updated_at ON public.organization_members;
 CREATE TRIGGER update_organization_members_updated_at
   BEFORE UPDATE ON public.organization_members
   FOR EACH ROW
@@ -115,6 +117,7 @@ CREATE TRIGGER update_organization_members_updated_at
 -- 7. RLS para organizations
 ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Membros podem ver sua organização" ON public.organizations;
 CREATE POLICY "Membros podem ver sua organização"
   ON public.organizations
   FOR SELECT
@@ -126,11 +129,13 @@ CREATE POLICY "Membros podem ver sua organização"
     )
   );
 
+DROP POLICY IF EXISTS "Admins da org podem atualizar" ON public.organizations;
 CREATE POLICY "Admins da org podem atualizar"
   ON public.organizations
   FOR UPDATE
   USING (is_organization_admin(auth.uid(), id));
 
+DROP POLICY IF EXISTS "Sistema pode criar organizações" ON public.organizations;
 CREATE POLICY "Sistema pode criar organizações"
   ON public.organizations
   FOR INSERT
@@ -139,6 +144,7 @@ CREATE POLICY "Sistema pode criar organizações"
 -- 8. RLS para organization_members
 ALTER TABLE public.organization_members ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Membros veem membros da mesma org" ON public.organization_members;
 CREATE POLICY "Membros veem membros da mesma org"
   ON public.organization_members
   FOR SELECT
@@ -150,6 +156,7 @@ CREATE POLICY "Membros veem membros da mesma org"
     )
   );
 
+DROP POLICY IF EXISTS "Admins da org gerenciam membros" ON public.organization_members;
 CREATE POLICY "Admins da org gerenciam membros"
   ON public.organization_members
   FOR ALL
@@ -176,6 +183,7 @@ CREATE POLICY "Acesso controlado para visualizar pacientes"
   );
 
 DROP POLICY IF EXISTS "Terapeutas e estagiários podem criar pacientes" ON public.patients;
+DROP POLICY IF EXISTS "Membros podem criar pacientes da org" ON public.patients;
 CREATE POLICY "Membros podem criar pacientes da org"
   ON public.patients
   FOR INSERT
@@ -185,6 +193,7 @@ CREATE POLICY "Membros podem criar pacientes da org"
   );
 
 DROP POLICY IF EXISTS "Apenas admins e fisios podem atualizar pacientes" ON public.patients;
+DROP POLICY IF EXISTS "Membros podem atualizar pacientes da org" ON public.patients;
 CREATE POLICY "Membros podem atualizar pacientes da org"
   ON public.patients
   FOR UPDATE
@@ -195,6 +204,7 @@ CREATE POLICY "Membros podem atualizar pacientes da org"
 
 -- 11. Atualizar RLS de appointments
 DROP POLICY IF EXISTS "Admins e fisios gerenciam agendamentos" ON public.appointments;
+DROP POLICY IF EXISTS "Membros da org gerenciam agendamentos" ON public.appointments;
 CREATE POLICY "Membros da org gerenciam agendamentos"
   ON public.appointments
   FOR ALL
@@ -205,6 +215,7 @@ CREATE POLICY "Membros da org gerenciam agendamentos"
 
 -- 12. Atualizar RLS de exercises
 DROP POLICY IF EXISTS "All users can view exercises" ON public.exercises;
+DROP POLICY IF EXISTS "Membros veem exercícios da org ou públicos" ON public.exercises;
 CREATE POLICY "Membros veem exercícios da org ou públicos"
   ON public.exercises
   FOR SELECT
@@ -214,6 +225,7 @@ CREATE POLICY "Membros veem exercícios da org ou públicos"
   );
 
 DROP POLICY IF EXISTS "Therapists can manage exercises" ON public.exercises;
+DROP POLICY IF EXISTS "Terapeutas gerenciam exercícios da org" ON public.exercises;
 CREATE POLICY "Terapeutas gerenciam exercícios da org"
   ON public.exercises
   FOR ALL
@@ -224,6 +236,7 @@ CREATE POLICY "Terapeutas gerenciam exercícios da org"
 
 -- 13. Atualizar RLS de eventos
 DROP POLICY IF EXISTS "Admins e fisios podem ver todos os eventos" ON public.eventos;
+DROP POLICY IF EXISTS "Membros veem eventos da org" ON public.eventos;
 CREATE POLICY "Membros veem eventos da org"
   ON public.eventos
   FOR SELECT
@@ -232,6 +245,7 @@ CREATE POLICY "Membros veem eventos da org"
   );
 
 DROP POLICY IF EXISTS "Admins e fisios podem criar eventos" ON public.eventos;
+DROP POLICY IF EXISTS "Membros podem criar eventos da org" ON public.eventos;
 CREATE POLICY "Membros podem criar eventos da org"
   ON public.eventos
   FOR INSERT
@@ -241,6 +255,7 @@ CREATE POLICY "Membros podem criar eventos da org"
   );
 
 DROP POLICY IF EXISTS "Admins e fisios podem atualizar eventos" ON public.eventos;
+DROP POLICY IF EXISTS "Membros podem atualizar eventos da org" ON public.eventos;
 CREATE POLICY "Membros podem atualizar eventos da org"
   ON public.eventos
   FOR UPDATE

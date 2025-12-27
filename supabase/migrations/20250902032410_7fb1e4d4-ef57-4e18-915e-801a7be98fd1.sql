@@ -1,5 +1,5 @@
--- Create profiles table for user management
-CREATE TABLE public.profiles (
+-- Create profiles table for user management (se não existir)
+CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
   full_name TEXT NOT NULL,
@@ -12,8 +12,8 @@ CREATE TABLE public.profiles (
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
--- Create patients table
-CREATE TABLE public.patients (
+-- Create patients table (se não existir)
+CREATE TABLE IF NOT EXISTS public.patients (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   email TEXT,
@@ -31,8 +31,8 @@ CREATE TABLE public.patients (
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
--- Create appointments table
-CREATE TABLE public.appointments (
+-- Create appointments table (se não existir)
+CREATE TABLE IF NOT EXISTS public.appointments (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   patient_id UUID NOT NULL REFERENCES public.patients(id) ON DELETE CASCADE,
   appointment_date DATE NOT NULL,
@@ -47,7 +47,7 @@ CREATE TABLE public.appointments (
 );
 
 -- Create exercises table
-CREATE TABLE public.exercises (
+CREATE TABLE IF NOT EXISTS public.exercises (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   category TEXT NOT NULL CHECK (category IN ('fortalecimento', 'alongamento', 'mobilidade', 'cardio', 'equilibrio', 'respiratorio')),
@@ -64,7 +64,7 @@ CREATE TABLE public.exercises (
 );
 
 -- Create exercise_plans table
-CREATE TABLE public.exercise_plans (
+CREATE TABLE IF NOT EXISTS public.exercise_plans (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT,
@@ -76,7 +76,7 @@ CREATE TABLE public.exercise_plans (
 );
 
 -- Create exercise_plan_items table
-CREATE TABLE public.exercise_plan_items (
+CREATE TABLE IF NOT EXISTS public.exercise_plan_items (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   exercise_plan_id UUID NOT NULL REFERENCES public.exercise_plans(id) ON DELETE CASCADE,
   exercise_id UUID NOT NULL REFERENCES public.exercises(id) ON DELETE CASCADE,
@@ -88,7 +88,7 @@ CREATE TABLE public.exercise_plan_items (
 );
 
 -- Create medical_records table
-CREATE TABLE public.medical_records (
+CREATE TABLE IF NOT EXISTS public.medical_records (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   patient_id UUID NOT NULL REFERENCES public.patients(id) ON DELETE CASCADE,
   type TEXT NOT NULL CHECK (type IN ('Anamnese', 'Evolução', 'Avaliação', 'Exame', 'Receituário')),
@@ -100,7 +100,7 @@ CREATE TABLE public.medical_records (
 );
 
 -- Create treatment_sessions table
-CREATE TABLE public.treatment_sessions (
+CREATE TABLE IF NOT EXISTS public.treatment_sessions (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   patient_id UUID NOT NULL REFERENCES public.patients(id) ON DELETE CASCADE,
   appointment_id UUID REFERENCES public.appointments(id) ON DELETE SET NULL,
@@ -115,7 +115,7 @@ CREATE TABLE public.treatment_sessions (
 );
 
 -- Create patient_progress table
-CREATE TABLE public.patient_progress (
+CREATE TABLE IF NOT EXISTS public.patient_progress (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   patient_id UUID NOT NULL REFERENCES public.patients(id) ON DELETE CASCADE,
   progress_date DATE NOT NULL DEFAULT CURRENT_DATE,
@@ -267,6 +267,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Create trigger to auto-create profile on user signup
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
@@ -281,30 +282,37 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create triggers for automatic timestamp updates
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON public.profiles;
 CREATE TRIGGER update_profiles_updated_at
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_patients_updated_at ON public.patients;
 CREATE TRIGGER update_patients_updated_at
   BEFORE UPDATE ON public.patients
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_appointments_updated_at ON public.appointments;
 CREATE TRIGGER update_appointments_updated_at
   BEFORE UPDATE ON public.appointments
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_exercises_updated_at ON public.exercises;
 CREATE TRIGGER update_exercises_updated_at
   BEFORE UPDATE ON public.exercises
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_exercise_plans_updated_at ON public.exercise_plans;
 CREATE TRIGGER update_exercise_plans_updated_at
   BEFORE UPDATE ON public.exercise_plans
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_medical_records_updated_at ON public.medical_records;
 CREATE TRIGGER update_medical_records_updated_at
   BEFORE UPDATE ON public.medical_records
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_treatment_sessions_updated_at ON public.treatment_sessions;
 CREATE TRIGGER update_treatment_sessions_updated_at
   BEFORE UPDATE ON public.treatment_sessions
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();

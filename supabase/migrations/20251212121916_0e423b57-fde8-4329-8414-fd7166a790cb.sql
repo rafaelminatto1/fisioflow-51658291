@@ -3,7 +3,7 @@
 -- ============================================
 
 -- 2.1 Tabela de Serviços/Preços
-CREATE TABLE public.servicos (
+CREATE TABLE IF NOT EXISTS public.servicos (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   organization_id UUID REFERENCES public.organizations(id),
   nome TEXT NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE public.servicos (
 );
 
 -- 2.2 Modelos de Atestados
-CREATE TABLE public.atestado_templates (
+CREATE TABLE IF NOT EXISTS public.atestado_templates (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   organization_id UUID REFERENCES public.organizations(id),
   nome TEXT NOT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE public.atestado_templates (
 );
 
 -- 2.3 Modelos de Contratos
-CREATE TABLE public.contrato_templates (
+CREATE TABLE IF NOT EXISTS public.contrato_templates (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   organization_id UUID REFERENCES public.organizations(id),
   nome TEXT NOT NULL,
@@ -49,7 +49,7 @@ CREATE TABLE public.contrato_templates (
 );
 
 -- 2.4 Gestão de Fornecedores
-CREATE TABLE public.fornecedores (
+CREATE TABLE IF NOT EXISTS public.fornecedores (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   organization_id UUID REFERENCES public.organizations(id),
   tipo_pessoa TEXT NOT NULL DEFAULT 'pj' CHECK (tipo_pessoa IN ('pf', 'pj')),
@@ -72,7 +72,7 @@ CREATE TABLE public.fornecedores (
 );
 
 -- 2.5 Gestão de Feriados
-CREATE TABLE public.feriados (
+CREATE TABLE IF NOT EXISTS public.feriados (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   organization_id UUID REFERENCES public.organizations(id),
   nome TEXT NOT NULL,
@@ -93,11 +93,13 @@ ALTER TABLE public.fornecedores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.feriados ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for servicos
+DROP POLICY IF EXISTS "Membros veem serviços da org" ON public.servicos;
 CREATE POLICY "Membros veem serviços da org" ON public.servicos
   FOR SELECT USING (
     organization_id IS NULL OR user_belongs_to_organization(auth.uid(), organization_id)
   );
 
+DROP POLICY IF EXISTS "Admins e fisios gerenciam serviços" ON public.servicos;
 CREATE POLICY "Admins e fisios gerenciam serviços" ON public.servicos
   FOR ALL USING (
     user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role])
@@ -105,11 +107,13 @@ CREATE POLICY "Admins e fisios gerenciam serviços" ON public.servicos
   );
 
 -- RLS Policies for atestado_templates
+DROP POLICY IF EXISTS "Membros veem templates de atestados" ON public.atestado_templates;
 CREATE POLICY "Membros veem templates de atestados" ON public.atestado_templates
   FOR SELECT USING (
     organization_id IS NULL OR user_belongs_to_organization(auth.uid(), organization_id)
   );
 
+DROP POLICY IF EXISTS "Admins e fisios gerenciam templates de atestados" ON public.atestado_templates;
 CREATE POLICY "Admins e fisios gerenciam templates de atestados" ON public.atestado_templates
   FOR ALL USING (
     user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role])
@@ -117,11 +121,13 @@ CREATE POLICY "Admins e fisios gerenciam templates de atestados" ON public.atest
   );
 
 -- RLS Policies for contrato_templates
+DROP POLICY IF EXISTS "Membros veem templates de contratos" ON public.contrato_templates;
 CREATE POLICY "Membros veem templates de contratos" ON public.contrato_templates
   FOR SELECT USING (
     organization_id IS NULL OR user_belongs_to_organization(auth.uid(), organization_id)
   );
 
+DROP POLICY IF EXISTS "Admins e fisios gerenciam templates de contratos" ON public.contrato_templates;
 CREATE POLICY "Admins e fisios gerenciam templates de contratos" ON public.contrato_templates
   FOR ALL USING (
     user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role])
@@ -129,11 +135,13 @@ CREATE POLICY "Admins e fisios gerenciam templates de contratos" ON public.contr
   );
 
 -- RLS Policies for fornecedores
+DROP POLICY IF EXISTS "Membros veem fornecedores da org" ON public.fornecedores;
 CREATE POLICY "Membros veem fornecedores da org" ON public.fornecedores
   FOR SELECT USING (
     organization_id IS NULL OR user_belongs_to_organization(auth.uid(), organization_id)
   );
 
+DROP POLICY IF EXISTS "Admins e fisios gerenciam fornecedores" ON public.fornecedores;
 CREATE POLICY "Admins e fisios gerenciam fornecedores" ON public.fornecedores
   FOR ALL USING (
     user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role])
@@ -141,11 +149,13 @@ CREATE POLICY "Admins e fisios gerenciam fornecedores" ON public.fornecedores
   );
 
 -- RLS Policies for feriados
+DROP POLICY IF EXISTS "Membros veem feriados" ON public.feriados;
 CREATE POLICY "Membros veem feriados" ON public.feriados
   FOR SELECT USING (
     organization_id IS NULL OR user_belongs_to_organization(auth.uid(), organization_id)
   );
 
+DROP POLICY IF EXISTS "Admins e fisios gerenciam feriados" ON public.feriados;
 CREATE POLICY "Admins e fisios gerenciam feriados" ON public.feriados
   FOR ALL USING (
     user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role])
@@ -153,18 +163,23 @@ CREATE POLICY "Admins e fisios gerenciam feriados" ON public.feriados
   );
 
 -- Trigger for updated_at
+DROP TRIGGER IF EXISTS update_servicos_updated_at ON public.servicos;
 CREATE TRIGGER update_servicos_updated_at BEFORE UPDATE ON public.servicos
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
   
+DROP TRIGGER IF EXISTS update_atestado_templates_updated_at ON public.atestado_templates;
 CREATE TRIGGER update_atestado_templates_updated_at BEFORE UPDATE ON public.atestado_templates
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
   
+DROP TRIGGER IF EXISTS update_contrato_templates_updated_at ON public.contrato_templates;
 CREATE TRIGGER update_contrato_templates_updated_at BEFORE UPDATE ON public.contrato_templates
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
   
+DROP TRIGGER IF EXISTS update_fornecedores_updated_at ON public.fornecedores;
 CREATE TRIGGER update_fornecedores_updated_at BEFORE UPDATE ON public.fornecedores
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
   
+DROP TRIGGER IF EXISTS update_feriados_updated_at ON public.feriados;
 CREATE TRIGGER update_feriados_updated_at BEFORE UPDATE ON public.feriados
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
@@ -181,4 +196,5 @@ INSERT INTO public.feriados (nome, data, tipo, recorrente, bloqueia_agenda, orga
   ('Nossa Senhora Aparecida', '2025-10-12', 'nacional', true, true, NULL),
   ('Finados', '2025-11-02', 'nacional', true, true, NULL),
   ('Proclamação da República', '2025-11-15', 'nacional', true, true, NULL),
-  ('Natal', '2025-12-25', 'nacional', true, true, NULL);
+  ('Natal', '2025-12-25', 'nacional', true, true, NULL)
+ON CONFLICT (organization_id, data, nome) DO NOTHING;
