@@ -208,18 +208,31 @@ ALTER TABLE public.inventory_movements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.staff_performance_metrics ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for authenticated users
+DROP POLICY IF EXISTS "Users can view their org data" ON public.appointment_predictions;
 CREATE POLICY "Users can view their org data" ON public.appointment_predictions FOR ALL USING (true);
+DROP POLICY IF EXISTS "Users can manage levels" ON public.patient_levels;
 CREATE POLICY "Users can manage levels" ON public.patient_levels FOR ALL USING (true);
+DROP POLICY IF EXISTS "Anyone can view rewards" ON public.gamification_rewards;
 CREATE POLICY "Anyone can view rewards" ON public.gamification_rewards FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Users can manage achievements" ON public.patient_achievements;
 CREATE POLICY "Users can manage achievements" ON public.patient_achievements FOR ALL USING (true);
+DROP POLICY IF EXISTS "Users can manage whatsapp queue" ON public.whatsapp_exercise_queue;
 CREATE POLICY "Users can manage whatsapp queue" ON public.whatsapp_exercise_queue FOR ALL USING (true);
+DROP POLICY IF EXISTS "Users can manage preferences" ON public.patient_scheduling_preferences;
 CREATE POLICY "Users can manage preferences" ON public.patient_scheduling_preferences FOR ALL USING (true);
+DROP POLICY IF EXISTS "Users can view predictions" ON public.patient_outcome_predictions;
 CREATE POLICY "Users can view predictions" ON public.patient_outcome_predictions FOR ALL USING (true);
+DROP POLICY IF EXISTS "Users can manage ai sessions" ON public.ai_clinical_sessions;
 CREATE POLICY "Users can manage ai sessions" ON public.ai_clinical_sessions FOR ALL USING (true);
+DROP POLICY IF EXISTS "Users can manage assessments" ON public.patient_self_assessments;
 CREATE POLICY "Users can manage assessments" ON public.patient_self_assessments FOR ALL USING (true);
+DROP POLICY IF EXISTS "Users can view forecasts" ON public.revenue_forecasts;
 CREATE POLICY "Users can view forecasts" ON public.revenue_forecasts FOR ALL USING (true);
+DROP POLICY IF EXISTS "Users can manage inventory" ON public.clinic_inventory;
 CREATE POLICY "Users can manage inventory" ON public.clinic_inventory FOR ALL USING (true);
+DROP POLICY IF EXISTS "Users can manage movements" ON public.inventory_movements;
 CREATE POLICY "Users can manage movements" ON public.inventory_movements FOR ALL USING (true);
+DROP POLICY IF EXISTS "Users can view performance" ON public.staff_performance_metrics;
 CREATE POLICY "Users can view performance" ON public.staff_performance_metrics FOR ALL USING (true);
 
 -- Seed Gamification Rewards

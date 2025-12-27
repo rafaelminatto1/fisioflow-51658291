@@ -1,5 +1,5 @@
 -- Create tasks table for Kanban board
-CREATE TABLE public.tarefas (
+CREATE TABLE IF NOT EXISTS public.tarefas (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   titulo TEXT NOT NULL,
   descricao TEXT,
@@ -19,23 +19,28 @@ CREATE TABLE public.tarefas (
 ALTER TABLE public.tarefas ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
+DROP POLICY IF EXISTS "Membros veem tarefas da org" ON public.tarefas;
 CREATE POLICY "Membros veem tarefas da org"
 ON public.tarefas FOR SELECT
 USING (user_belongs_to_organization(auth.uid(), organization_id));
 
+DROP POLICY IF EXISTS "Membros podem criar tarefas" ON public.tarefas;
 CREATE POLICY "Membros podem criar tarefas"
 ON public.tarefas FOR INSERT
 WITH CHECK (user_belongs_to_organization(auth.uid(), organization_id));
 
+DROP POLICY IF EXISTS "Membros podem atualizar tarefas" ON public.tarefas;
 CREATE POLICY "Membros podem atualizar tarefas"
 ON public.tarefas FOR UPDATE
 USING (user_belongs_to_organization(auth.uid(), organization_id));
 
+DROP POLICY IF EXISTS "Admins e fisios podem deletar tarefas" ON public.tarefas;
 CREATE POLICY "Admins e fisios podem deletar tarefas"
 ON public.tarefas FOR DELETE
 USING (user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 
 -- Trigger for updated_at
+DROP TRIGGER IF EXISTS update_tarefas_updated_at ON public.tarefas;
 CREATE TRIGGER update_tarefas_updated_at
 BEFORE UPDATE ON public.tarefas
 FOR EACH ROW

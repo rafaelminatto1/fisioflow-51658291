@@ -25,13 +25,13 @@ CREATE TABLE IF NOT EXISTS notification_audit_log (
   details JSONB DEFAULT '{}',
   ip_address INET,
   user_agent TEXT,
-  timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  
-  -- Index for efficient querying
-  INDEX idx_notification_audit_user_id ON notification_audit_log(user_id),
-  INDEX idx_notification_audit_timestamp ON notification_audit_log(timestamp),
-  INDEX idx_notification_audit_action ON notification_audit_log(action)
+  timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Indexes for efficient querying
+CREATE INDEX IF NOT EXISTS idx_notification_audit_user_id ON notification_audit_log(user_id);
+CREATE INDEX IF NOT EXISTS idx_notification_audit_timestamp ON notification_audit_log(timestamp);
+CREATE INDEX IF NOT EXISTS idx_notification_audit_action ON notification_audit_log(action);
 
 -- Data retention policy table
 CREATE TABLE IF NOT EXISTS notification_data_retention (

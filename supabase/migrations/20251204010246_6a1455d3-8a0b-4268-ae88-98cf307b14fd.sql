@@ -63,11 +63,13 @@ CREATE TABLE IF NOT EXISTS public.schedule_blocked_times (
 -- RLS para schedule_business_hours
 ALTER TABLE public.schedule_business_hours ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Membros veem horários da org" ON schedule_business_hours;
 CREATE POLICY "Membros veem horários da org" ON schedule_business_hours
   FOR SELECT USING (
     organization_id IS NULL OR user_belongs_to_organization(auth.uid(), organization_id)
   );
 
+DROP POLICY IF EXISTS "Admins gerenciam horários" ON schedule_business_hours;
 CREATE POLICY "Admins gerenciam horários" ON schedule_business_hours
   FOR ALL USING (
     user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role])
@@ -77,11 +79,13 @@ CREATE POLICY "Admins gerenciam horários" ON schedule_business_hours
 -- RLS para schedule_cancellation_rules
 ALTER TABLE public.schedule_cancellation_rules ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Membros veem regras da org" ON schedule_cancellation_rules;
 CREATE POLICY "Membros veem regras da org" ON schedule_cancellation_rules
   FOR SELECT USING (
     organization_id IS NULL OR user_belongs_to_organization(auth.uid(), organization_id)
   );
 
+DROP POLICY IF EXISTS "Admins gerenciam regras" ON schedule_cancellation_rules;
 CREATE POLICY "Admins gerenciam regras" ON schedule_cancellation_rules
   FOR ALL USING (
     user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role])
@@ -91,11 +95,13 @@ CREATE POLICY "Admins gerenciam regras" ON schedule_cancellation_rules
 -- RLS para schedule_notification_settings
 ALTER TABLE public.schedule_notification_settings ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Membros veem config notificações" ON schedule_notification_settings;
 CREATE POLICY "Membros veem config notificações" ON schedule_notification_settings
   FOR SELECT USING (
     organization_id IS NULL OR user_belongs_to_organization(auth.uid(), organization_id)
   );
 
+DROP POLICY IF EXISTS "Admins gerenciam notificações" ON schedule_notification_settings;
 CREATE POLICY "Admins gerenciam notificações" ON schedule_notification_settings
   FOR ALL USING (
     user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role])
@@ -105,11 +111,13 @@ CREATE POLICY "Admins gerenciam notificações" ON schedule_notification_setting
 -- RLS para schedule_blocked_times
 ALTER TABLE public.schedule_blocked_times ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Membros veem bloqueios" ON schedule_blocked_times;
 CREATE POLICY "Membros veem bloqueios" ON schedule_blocked_times
   FOR SELECT USING (
     organization_id IS NULL OR user_belongs_to_organization(auth.uid(), organization_id)
   );
 
+DROP POLICY IF EXISTS "Admins gerenciam bloqueios" ON schedule_blocked_times;
 CREATE POLICY "Admins gerenciam bloqueios" ON schedule_blocked_times
   FOR ALL USING (
     user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role])
@@ -125,18 +133,22 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_schedule_business_hours_updated_at ON schedule_business_hours;
 CREATE TRIGGER update_schedule_business_hours_updated_at
   BEFORE UPDATE ON schedule_business_hours
   FOR EACH ROW EXECUTE FUNCTION update_schedule_settings_updated_at();
 
+DROP TRIGGER IF EXISTS update_schedule_cancellation_rules_updated_at ON schedule_cancellation_rules;
 CREATE TRIGGER update_schedule_cancellation_rules_updated_at
   BEFORE UPDATE ON schedule_cancellation_rules
   FOR EACH ROW EXECUTE FUNCTION update_schedule_settings_updated_at();
 
+DROP TRIGGER IF EXISTS update_schedule_notification_settings_updated_at ON schedule_notification_settings;
 CREATE TRIGGER update_schedule_notification_settings_updated_at
   BEFORE UPDATE ON schedule_notification_settings
   FOR EACH ROW EXECUTE FUNCTION update_schedule_settings_updated_at();
 
+DROP TRIGGER IF EXISTS update_schedule_blocked_times_updated_at ON schedule_blocked_times;
 CREATE TRIGGER update_schedule_blocked_times_updated_at
   BEFORE UPDATE ON schedule_blocked_times
   FOR EACH ROW EXECUTE FUNCTION update_schedule_settings_updated_at();

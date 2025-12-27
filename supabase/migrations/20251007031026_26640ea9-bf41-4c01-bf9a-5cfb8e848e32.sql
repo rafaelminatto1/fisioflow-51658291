@@ -19,6 +19,7 @@ DROP POLICY IF EXISTS "Anyone can view invitation by token" ON user_invitations;
 
 -- Nova política: apenas consultas com token específico (via função)
 -- Isso previne enumeração de todos os convites
+DROP POLICY IF EXISTS "Users can validate specific invitation tokens" ON user_invitations;
 CREATE POLICY "Users can validate specific invitation tokens"
 ON user_invitations
 FOR SELECT
@@ -45,6 +46,7 @@ TO authenticated
 USING (user_is_admin(auth.uid()));
 
 -- Ninguém pode modificar logs manualmente (apenas via função log_audit_event)
+DROP POLICY IF EXISTS "No manual modifications to audit logs" ON audit_log;
 CREATE POLICY "No manual modifications to audit logs"
 ON audit_log
 FOR ALL
@@ -60,6 +62,7 @@ DROP POLICY IF EXISTS "Patients can view own soap records" ON soap_records;
 DROP POLICY IF EXISTS "Therapists can view soap records" ON soap_records;
 
 -- Criar política consolidada de SELECT
+DROP POLICY IF EXISTS "Comprehensive SOAP records viewing" ON soap_records;
 CREATE POLICY "Comprehensive SOAP records viewing"
 ON soap_records
 FOR SELECT

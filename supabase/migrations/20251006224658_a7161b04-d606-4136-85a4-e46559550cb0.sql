@@ -20,15 +20,16 @@ CREATE TABLE IF NOT EXISTS public.audit_log (
 ALTER TABLE public.audit_log ENABLE ROW LEVEL SECURITY;
 
 -- Apenas admins podem visualizar logs de auditoria
+DROP POLICY IF EXISTS "Admins can view audit logs" ON public.audit_log;
 CREATE POLICY "Admins can view audit logs"
 ON public.audit_log FOR SELECT
 USING (public.user_is_admin(auth.uid()));
 
 -- Criar índices para performance
-CREATE INDEX idx_audit_log_user_id ON public.audit_log(user_id);
-CREATE INDEX idx_audit_log_table_name ON public.audit_log(table_name);
-CREATE INDEX idx_audit_log_timestamp ON public.audit_log(timestamp DESC);
-CREATE INDEX idx_audit_log_action ON public.audit_log(action);
+CREATE INDEX IF NOT EXISTS idx_audit_log_user_id ON public.audit_log(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_log_table_name ON public.audit_log(table_name);
+CREATE INDEX IF NOT EXISTS idx_audit_log_timestamp ON public.audit_log(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_log_action ON public.audit_log(action);
 
 -- 2. Função para registrar eventos de auditoria
 CREATE OR REPLACE FUNCTION public.log_audit_event(
@@ -123,20 +124,22 @@ CREATE TABLE IF NOT EXISTS public.user_invitations (
 ALTER TABLE public.user_invitations ENABLE ROW LEVEL SECURITY;
 
 -- Admins podem gerenciar convites
+DROP POLICY IF EXISTS "Admins can manage invitations" ON public.user_invitations;
 CREATE POLICY "Admins can manage invitations"
 ON public.user_invitations FOR ALL
 USING (public.user_is_admin(auth.uid()))
 WITH CHECK (public.user_is_admin(auth.uid()));
 
 -- Qualquer um pode visualizar convite pelo token (para validação)
+DROP POLICY IF EXISTS "Anyone can view invitation by token" ON public.user_invitations;
 CREATE POLICY "Anyone can view invitation by token"
 ON public.user_invitations FOR SELECT
 USING (true);
 
 -- Criar índice
-CREATE INDEX idx_user_invitations_token ON public.user_invitations(token);
-CREATE INDEX idx_user_invitations_email ON public.user_invitations(email);
-CREATE INDEX idx_user_invitations_expires_at ON public.user_invitations(expires_at);
+CREATE INDEX IF NOT EXISTS idx_user_invitations_token ON public.user_invitations(token);
+CREATE INDEX IF NOT EXISTS idx_user_invitations_email ON public.user_invitations(email);
+CREATE INDEX IF NOT EXISTS idx_user_invitations_expires_at ON public.user_invitations(expires_at);
 
 -- 5. Função para criar convite
 CREATE OR REPLACE FUNCTION public.create_user_invitation(

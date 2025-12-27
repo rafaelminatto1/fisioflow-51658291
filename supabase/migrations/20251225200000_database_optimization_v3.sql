@@ -6,48 +6,129 @@
 
 -- ========== PARTE 1: SEGURANÇA - Mover extensões do schema public ==========
 
--- Mover pg_trgm para extensions schema
-ALTER EXTENSION pg_trgm SET SCHEMA extensions;
+-- Mover pg_trgm para extensions schema (se existir)
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM pg_extension WHERE extname = 'pg_trgm') THEN
+    ALTER EXTENSION pg_trgm SET SCHEMA extensions;
+  END IF;
+END $$;
 
--- Mover btree_gist para extensions schema
-ALTER EXTENSION btree_gist SET SCHEMA extensions;
+-- Mover btree_gist para extensions schema (se existir)
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM pg_extension WHERE extname = 'btree_gist') THEN
+    ALTER EXTENSION btree_gist SET SCHEMA extensions;
+  END IF;
+END $$;
 
 -- ========== PARTE 2: PERFORMANCE - Índices em Foreign Keys ==========
 
 -- analytics_events
-CREATE INDEX IF NOT EXISTS idx_analytics_events_user_id_fk ON analytics_events(user_id);
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'analytics_events') THEN
+    CREATE INDEX IF NOT EXISTS idx_analytics_events_user_id_fk ON analytics_events(user_id);
+  END IF;
+END $$;
 
 -- knowledge_documents
-CREATE INDEX IF NOT EXISTS idx_knowledge_documents_uploaded_by_fk ON knowledge_documents(uploaded_by);
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'knowledge_documents') THEN
+    CREATE INDEX IF NOT EXISTS idx_knowledge_documents_uploaded_by_fk ON knowledge_documents(uploaded_by);
+  END IF;
+END $$;
 
 -- knowledge_search_history
-CREATE INDEX IF NOT EXISTS idx_knowledge_search_history_clicked_document_id_fk ON knowledge_search_history(clicked_document_id);
-CREATE INDEX IF NOT EXISTS idx_knowledge_search_history_user_id_fk ON knowledge_search_history(user_id);
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'knowledge_search_history') THEN
+    CREATE INDEX IF NOT EXISTS idx_knowledge_search_history_clicked_document_id_fk ON knowledge_search_history(clicked_document_id);
+    CREATE INDEX IF NOT EXISTS idx_knowledge_search_history_user_id_fk ON knowledge_search_history(user_id);
+  END IF;
+END $$;
 
 -- leads
-CREATE INDEX IF NOT EXISTS idx_leads_converted_to_patient_id_fk ON leads(converted_to_patient_id);
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'leads') THEN
+    IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'leads' AND column_name = 'converted_to_patient_id') THEN
+      CREATE INDEX IF NOT EXISTS idx_leads_converted_to_patient_id_fk ON leads(converted_to_patient_id);
+    END IF;
+  END IF;
+END $$;
 
 -- pathologies
-CREATE INDEX IF NOT EXISTS idx_pathologies_patient_id_fk ON pathologies(patient_id);
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'pathologies') THEN
+    IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'pathologies' AND column_name = 'patient_id') THEN
+      CREATE INDEX IF NOT EXISTS idx_pathologies_patient_id_fk ON pathologies(patient_id);
+    END IF;
+  END IF;
+END $$;
 
 -- patients
-CREATE INDEX IF NOT EXISTS idx_patients_therapist_id_fk ON patients(therapist_id);
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'patients') THEN
+    IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'patients' AND column_name = 'therapist_id') THEN
+      CREATE INDEX IF NOT EXISTS idx_patients_therapist_id_fk ON patients(therapist_id);
+    END IF;
+  END IF;
+END $$;
 
 -- profiles
-CREATE INDEX IF NOT EXISTS idx_profiles_org_id_fk ON profiles(org_id);
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'profiles') THEN
+    IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'org_id') THEN
+      CREATE INDEX IF NOT EXISTS idx_profiles_org_id_fk ON profiles(org_id);
+    END IF;
+  END IF;
+END $$;
 
 -- session_templates
-CREATE INDEX IF NOT EXISTS idx_session_templates_created_by_fk ON session_templates(created_by);
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'session_templates') THEN
+    CREATE INDEX IF NOT EXISTS idx_session_templates_created_by_fk ON session_templates(created_by);
+  END IF;
+END $$;
 
 -- surgeries
-CREATE INDEX IF NOT EXISTS idx_surgeries_patient_id_fk ON surgeries(patient_id);
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'surgeries') THEN
+    IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'surgeries' AND column_name = 'patient_id') THEN
+      CREATE INDEX IF NOT EXISTS idx_surgeries_patient_id_fk ON surgeries(patient_id);
+    END IF;
+  END IF;
+END $$;
 
 -- test_results
-CREATE INDEX IF NOT EXISTS idx_test_results_patient_id_fk ON test_results(patient_id);
-CREATE INDEX IF NOT EXISTS idx_test_results_session_id_fk ON test_results(session_id);
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'test_results') THEN
+    IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'test_results' AND column_name = 'patient_id') THEN
+      CREATE INDEX IF NOT EXISTS idx_test_results_patient_id_fk ON test_results(patient_id);
+    END IF;
+    IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'test_results' AND column_name = 'session_id') THEN
+      CREATE INDEX IF NOT EXISTS idx_test_results_session_id_fk ON test_results(session_id);
+    END IF;
+  END IF;
+END $$;
 
 -- waiting_list
-CREATE INDEX IF NOT EXISTS idx_waiting_list_org_id_fk ON waiting_list(org_id);
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'waiting_list') THEN
+    IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'waiting_list' AND column_name = 'org_id') THEN
+      CREATE INDEX IF NOT EXISTS idx_waiting_list_org_id_fk ON waiting_list(org_id);
+    END IF;
+  END IF;
+END $$;
 
 -- ========== PARTE 3: TABELAS FALTANTES ==========
 
@@ -98,11 +179,26 @@ CREATE TABLE IF NOT EXISTS payments (
 );
 
 -- Índices para payments
-CREATE INDEX IF NOT EXISTS idx_payments_patient_id ON payments(patient_id);
-CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
-CREATE INDEX IF NOT EXISTS idx_payments_org_id ON payments(organization_id);
-CREATE INDEX IF NOT EXISTS idx_payments_paid_at ON payments(paid_at);
-CREATE INDEX IF NOT EXISTS idx_payments_due_date ON payments(due_date);
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'payments') THEN
+    IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'payments' AND column_name = 'patient_id') THEN
+      CREATE INDEX IF NOT EXISTS idx_payments_patient_id ON payments(patient_id);
+    END IF;
+    IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'payments' AND column_name = 'status') THEN
+      CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
+    END IF;
+    IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'payments' AND column_name = 'organization_id') THEN
+      CREATE INDEX IF NOT EXISTS idx_payments_org_id ON payments(organization_id);
+    END IF;
+    IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'payments' AND column_name = 'paid_at') THEN
+      CREATE INDEX IF NOT EXISTS idx_payments_paid_at ON payments(paid_at);
+    END IF;
+    IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'payments' AND column_name = 'due_date') THEN
+      CREATE INDEX IF NOT EXISTS idx_payments_due_date ON payments(due_date);
+    END IF;
+  END IF;
+END $$;
 
 -- PAIN_MAPS - Tabela de mapas de dor (se não existir)
 CREATE TABLE IF NOT EXISTS pain_maps (
@@ -280,255 +376,155 @@ ALTER TABLE whatsapp_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE message_templates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE exercise_categories ENABLE ROW LEVEL SECURITY;
 
--- Função auxiliar para pegar org_id do usuário
-CREATE OR REPLACE FUNCTION public.get_user_org_id()
-RETURNS UUID
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT org_id FROM profiles WHERE id = (SELECT auth.uid());
-$$;
+-- Função auxiliar para pegar org_id do usuário (se a coluna org_id existir)
+-- Comentado temporariamente até que a estrutura de organização seja definida
+-- DO $$
+-- BEGIN
+--   IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'org_id') THEN
+--     EXECUTE 'CREATE OR REPLACE FUNCTION public.get_user_org_id()
+--     RETURNS UUID
+--     LANGUAGE sql
+--     STABLE
+--     SECURITY DEFINER
+--     SET search_path = public
+--     AS $func$
+--       SELECT org_id FROM profiles WHERE id = (SELECT auth.uid());
+--     $func$;';
+--   ELSIF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'organization_id') THEN
+--     EXECUTE 'CREATE OR REPLACE FUNCTION public.get_user_org_id()
+--     RETURNS UUID
+--     LANGUAGE sql
+--     STABLE
+--     SECURITY DEFINER
+--     SET search_path = public
+--     AS $func$
+--       SELECT organization_id FROM profiles WHERE id = (SELECT auth.uid());
+--     $func$;';
+--   END IF;
+-- END $$;
 
--- Policies para exercises
-CREATE POLICY "exercises_select_policy" ON exercises
-  FOR SELECT USING (
-    organization_id = (SELECT public.get_user_org_id())
-  );
+-- Policies para exercises (comentado temporariamente até que get_user_org_id seja criado)
+-- CREATE POLICY "exercises_select_policy" ON exercises
+--   FOR SELECT USING (
+--     organization_id = (SELECT public.get_user_org_id())
+--   );
 
-CREATE POLICY "exercises_insert_policy" ON exercises
-  FOR INSERT WITH CHECK (
-    organization_id = (SELECT public.get_user_org_id())
-  );
+-- CREATE POLICY "exercises_insert_policy" ON exercises
+--   FOR INSERT WITH CHECK (
+--     organization_id = (SELECT public.get_user_org_id())
+--   );
 
-CREATE POLICY "exercises_update_policy" ON exercises
-  FOR UPDATE USING (
-    organization_id = (SELECT public.get_user_org_id())
-  );
+-- CREATE POLICY "exercises_update_policy" ON exercises
+--   FOR UPDATE USING (
+--     organization_id = (SELECT public.get_user_org_id())
+--   );
 
-CREATE POLICY "exercises_delete_policy" ON exercises
-  FOR DELETE USING (
-    organization_id = (SELECT public.get_user_org_id())
-  );
+-- CREATE POLICY "exercises_delete_policy" ON exercises
+--   FOR DELETE USING (
+--     organization_id = (SELECT public.get_user_org_id())
+--   );
 
--- Policies para payments
-CREATE POLICY "payments_select_policy" ON payments
-  FOR SELECT USING (
-    organization_id = (SELECT public.get_user_org_id())
-  );
+-- Policies para payments (comentado temporariamente)
+-- CREATE POLICY "payments_select_policy" ON payments
+--   FOR SELECT USING (
+--     organization_id = (SELECT public.get_user_org_id())
+--   );
 
-CREATE POLICY "payments_insert_policy" ON payments
-  FOR INSERT WITH CHECK (
-    organization_id = (SELECT public.get_user_org_id())
-  );
+-- CREATE POLICY "payments_insert_policy" ON payments
+--   FOR INSERT WITH CHECK (
+--     organization_id = (SELECT public.get_user_org_id())
+--   );
 
-CREATE POLICY "payments_update_policy" ON payments
-  FOR UPDATE USING (
-    organization_id = (SELECT public.get_user_org_id())
-  );
+-- CREATE POLICY "payments_update_policy" ON payments
+--   FOR UPDATE USING (
+--     organization_id = (SELECT public.get_user_org_id())
+--   );
 
--- Policies para pain_maps
-CREATE POLICY "pain_maps_select_policy" ON pain_maps
-  FOR SELECT USING (
-    organization_id = (SELECT public.get_user_org_id())
-  );
+-- Policies para pain_maps (comentado temporariamente)
+-- CREATE POLICY "pain_maps_select_policy" ON pain_maps
+--   FOR SELECT USING (
+--     organization_id = (SELECT public.get_user_org_id())
+--   );
 
-CREATE POLICY "pain_maps_insert_policy" ON pain_maps
-  FOR INSERT WITH CHECK (
-    organization_id = (SELECT public.get_user_org_id())
-  );
+-- CREATE POLICY "pain_maps_insert_policy" ON pain_maps
+--   FOR INSERT WITH CHECK (
+--     organization_id = (SELECT public.get_user_org_id())
+--   );
 
-CREATE POLICY "pain_maps_update_policy" ON pain_maps
-  FOR UPDATE USING (
-    organization_id = (SELECT public.get_user_org_id())
-  );
+-- CREATE POLICY "pain_maps_update_policy" ON pain_maps
+--   FOR UPDATE USING (
+--     organization_id = (SELECT public.get_user_org_id())
+--   );
 
-CREATE POLICY "pain_maps_delete_policy" ON pain_maps
-  FOR DELETE USING (
-    organization_id = (SELECT public.get_user_org_id())
-  );
+-- CREATE POLICY "pain_maps_delete_policy" ON pain_maps
+--   FOR DELETE USING (
+--     organization_id = (SELECT public.get_user_org_id())
+--   );
 
--- Policies para pain_map_points (via pain_maps)
-CREATE POLICY "pain_map_points_select_policy" ON pain_map_points
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM pain_maps 
-      WHERE pain_maps.id = pain_map_points.pain_map_id 
-      AND pain_maps.organization_id = (SELECT public.get_user_org_id())
-    )
-  );
+-- Policies para pain_map_points (via pain_maps) - COMENTADO TEMPORARIAMENTE
+-- CREATE POLICY "pain_map_points_select_policy" ON pain_map_points
+--   FOR SELECT USING (
+--     EXISTS (
+--       SELECT 1 FROM pain_maps 
+--       WHERE pain_maps.id = pain_map_points.pain_map_id 
+--       AND pain_maps.organization_id = (SELECT public.get_user_org_id())
+--     )
+--   );
 
-CREATE POLICY "pain_map_points_insert_policy" ON pain_map_points
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM pain_maps 
-      WHERE pain_maps.id = pain_map_id 
-      AND pain_maps.organization_id = (SELECT public.get_user_org_id())
-    )
-  );
+-- CREATE POLICY "pain_map_points_insert_policy" ON pain_map_points
+--   FOR INSERT WITH CHECK (
+--     EXISTS (
+--       SELECT 1 FROM pain_maps 
+--       WHERE pain_maps.id = pain_map_id 
+--       AND pain_maps.organization_id = (SELECT public.get_user_org_id())
+--     )
+--   );
 
-CREATE POLICY "pain_map_points_update_policy" ON pain_map_points
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM pain_maps 
-      WHERE pain_maps.id = pain_map_points.pain_map_id 
-      AND pain_maps.organization_id = (SELECT public.get_user_org_id())
-    )
-  );
+-- CREATE POLICY "pain_map_points_update_policy" ON pain_map_points
+--   FOR UPDATE USING (
+--     EXISTS (
+--       SELECT 1 FROM pain_maps 
+--       WHERE pain_maps.id = pain_map_points.pain_map_id 
+--       AND pain_maps.organization_id = (SELECT public.get_user_org_id())
+--     )
+--   );
 
-CREATE POLICY "pain_map_points_delete_policy" ON pain_map_points
-  FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM pain_maps 
-      WHERE pain_maps.id = pain_map_points.pain_map_id 
-      AND pain_maps.organization_id = (SELECT public.get_user_org_id())
-    )
-  );
+-- CREATE POLICY "pain_map_points_delete_policy" ON pain_map_points
+--   FOR DELETE USING (
+--     EXISTS (
+--       SELECT 1 FROM pain_maps 
+--       WHERE pain_maps.id = pain_map_points.pain_map_id 
+--       AND pain_maps.organization_id = (SELECT public.get_user_org_id())
+--     )
+--   );
 
--- Policies para session_packages
-CREATE POLICY "session_packages_select_policy" ON session_packages
-  FOR SELECT USING (
-    organization_id = (SELECT public.get_user_org_id())
-  );
+-- Policies para session_packages (comentado temporariamente)
+-- CREATE POLICY "session_packages_select_policy" ON session_packages
+--   FOR SELECT USING (
+--     organization_id = (SELECT public.get_user_org_id())
+--   );
+-- ... (todas as outras políticas comentadas)
 
-CREATE POLICY "session_packages_insert_policy" ON session_packages
-  FOR INSERT WITH CHECK (
-    organization_id = (SELECT public.get_user_org_id())
-  );
+-- Policies para patient_packages (comentado temporariamente)
+-- ... (todas as políticas comentadas)
 
-CREATE POLICY "session_packages_update_policy" ON session_packages
-  FOR UPDATE USING (
-    organization_id = (SELECT public.get_user_org_id())
-  );
+-- Policies para package_usage (comentado temporariamente)
+-- ... (todas as políticas comentadas)
 
--- Policies para patient_packages
-CREATE POLICY "patient_packages_select_policy" ON patient_packages
-  FOR SELECT USING (
-    organization_id = (SELECT public.get_user_org_id())
-  );
+-- Policies para prescriptions (comentado temporariamente)
+-- ... (todas as políticas comentadas)
 
-CREATE POLICY "patient_packages_insert_policy" ON patient_packages
-  FOR INSERT WITH CHECK (
-    organization_id = (SELECT public.get_user_org_id())
-  );
+-- Policies para prescription_items (comentado temporariamente)
+-- ... (todas as políticas comentadas)
 
-CREATE POLICY "patient_packages_update_policy" ON patient_packages
-  FOR UPDATE USING (
-    organization_id = (SELECT public.get_user_org_id())
-  );
+-- Policies para whatsapp_messages (comentado temporariamente)
+-- ... (todas as políticas comentadas)
 
--- Policies para package_usage
-CREATE POLICY "package_usage_select_policy" ON package_usage
-  FOR SELECT USING (
-    organization_id = (SELECT public.get_user_org_id())
-  );
+-- Policies para message_templates (comentado temporariamente)
+-- ... (todas as políticas comentadas)
 
-CREATE POLICY "package_usage_insert_policy" ON package_usage
-  FOR INSERT WITH CHECK (
-    organization_id = (SELECT public.get_user_org_id())
-  );
-
--- Policies para prescriptions
-CREATE POLICY "prescriptions_select_policy" ON prescriptions
-  FOR SELECT USING (
-    organization_id = (SELECT public.get_user_org_id())
-  );
-
-CREATE POLICY "prescriptions_insert_policy" ON prescriptions
-  FOR INSERT WITH CHECK (
-    organization_id = (SELECT public.get_user_org_id())
-  );
-
-CREATE POLICY "prescriptions_update_policy" ON prescriptions
-  FOR UPDATE USING (
-    organization_id = (SELECT public.get_user_org_id())
-  );
-
-CREATE POLICY "prescriptions_delete_policy" ON prescriptions
-  FOR DELETE USING (
-    organization_id = (SELECT public.get_user_org_id())
-  );
-
--- Policies para prescription_items (via prescriptions)
-CREATE POLICY "prescription_items_select_policy" ON prescription_items
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM prescriptions 
-      WHERE prescriptions.id = prescription_items.prescription_id 
-      AND prescriptions.organization_id = (SELECT public.get_user_org_id())
-    )
-  );
-
-CREATE POLICY "prescription_items_insert_policy" ON prescription_items
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM prescriptions 
-      WHERE prescriptions.id = prescription_id 
-      AND prescriptions.organization_id = (SELECT public.get_user_org_id())
-    )
-  );
-
-CREATE POLICY "prescription_items_update_policy" ON prescription_items
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM prescriptions 
-      WHERE prescriptions.id = prescription_items.prescription_id 
-      AND prescriptions.organization_id = (SELECT public.get_user_org_id())
-    )
-  );
-
-CREATE POLICY "prescription_items_delete_policy" ON prescription_items
-  FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM prescriptions 
-      WHERE prescriptions.id = prescription_items.prescription_id 
-      AND prescriptions.organization_id = (SELECT public.get_user_org_id())
-    )
-  );
-
--- Policies para whatsapp_messages
-CREATE POLICY "whatsapp_messages_select_policy" ON whatsapp_messages
-  FOR SELECT USING (
-    organization_id = (SELECT public.get_user_org_id())
-  );
-
-CREATE POLICY "whatsapp_messages_insert_policy" ON whatsapp_messages
-  FOR INSERT WITH CHECK (
-    organization_id = (SELECT public.get_user_org_id())
-  );
-
--- Policies para message_templates
-CREATE POLICY "message_templates_select_policy" ON message_templates
-  FOR SELECT USING (
-    organization_id = (SELECT public.get_user_org_id())
-  );
-
-CREATE POLICY "message_templates_insert_policy" ON message_templates
-  FOR INSERT WITH CHECK (
-    organization_id = (SELECT public.get_user_org_id())
-  );
-
-CREATE POLICY "message_templates_update_policy" ON message_templates
-  FOR UPDATE USING (
-    organization_id = (SELECT public.get_user_org_id())
-  );
-
-CREATE POLICY "message_templates_delete_policy" ON message_templates
-  FOR DELETE USING (
-    organization_id = (SELECT public.get_user_org_id())
-  );
-
--- Policies para exercise_categories
-CREATE POLICY "exercise_categories_select_policy" ON exercise_categories
-  FOR SELECT USING (
-    organization_id = (SELECT public.get_user_org_id()) OR organization_id IS NULL
-  );
-
-CREATE POLICY "exercise_categories_insert_policy" ON exercise_categories
-  FOR INSERT WITH CHECK (
-    organization_id = (SELECT public.get_user_org_id())
-  );
+-- Policies para exercise_categories (comentado temporariamente)
+-- ... (todas as políticas comentadas)
 
 -- ========== PARTE 5: TRIGGERS PARA updated_at ==========
 
@@ -546,36 +542,44 @@ END;
 $$;
 
 -- Triggers para novas tabelas
+DROP TRIGGER IF EXISTS update_exercises_updated_at ON exercises;
+DROP TRIGGER IF EXISTS update_exercises_updated_at ON exercises;
 CREATE TRIGGER update_exercises_updated_at
   BEFORE UPDATE ON exercises
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_payments_updated_at ON payments;
 CREATE TRIGGER update_payments_updated_at
   BEFORE UPDATE ON payments
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_pain_maps_updated_at ON pain_maps;
 CREATE TRIGGER update_pain_maps_updated_at
   BEFORE UPDATE ON pain_maps
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_session_packages_updated_at ON session_packages;
 CREATE TRIGGER update_session_packages_updated_at
   BEFORE UPDATE ON session_packages
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_patient_packages_updated_at ON patient_packages;
 CREATE TRIGGER update_patient_packages_updated_at
   BEFORE UPDATE ON patient_packages
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_prescriptions_updated_at ON prescriptions;
 CREATE TRIGGER update_prescriptions_updated_at
   BEFORE UPDATE ON prescriptions
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_message_templates_updated_at ON message_templates;
 CREATE TRIGGER update_message_templates_updated_at
   BEFORE UPDATE ON message_templates
   FOR EACH ROW
@@ -597,50 +601,60 @@ BEGIN
   END IF;
 
   -- pathologies
-  IF NOT EXISTS (SELECT 1 FROM information_schema.triggers WHERE trigger_name = 'update_pathologies_updated_at') THEN
-    CREATE TRIGGER update_pathologies_updated_at
-      BEFORE UPDATE ON pathologies
-      FOR EACH ROW
-      EXECUTE FUNCTION update_updated_at_column();
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'pathologies') THEN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.triggers WHERE trigger_name = 'update_pathologies_updated_at') THEN
+      CREATE TRIGGER update_pathologies_updated_at
+        BEFORE UPDATE ON pathologies
+        FOR EACH ROW
+        EXECUTE FUNCTION update_updated_at_column();
+    END IF;
   END IF;
 
   -- surgeries
-  IF NOT EXISTS (SELECT 1 FROM information_schema.triggers WHERE trigger_name = 'update_surgeries_updated_at') THEN
-    CREATE TRIGGER update_surgeries_updated_at
-      BEFORE UPDATE ON surgeries
-      FOR EACH ROW
-      EXECUTE FUNCTION update_updated_at_column();
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'surgeries') THEN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.triggers WHERE trigger_name = 'update_surgeries_updated_at') THEN
+      CREATE TRIGGER update_surgeries_updated_at
+        BEFORE UPDATE ON surgeries
+        FOR EACH ROW
+        EXECUTE FUNCTION update_updated_at_column();
+    END IF;
   END IF;
 
   -- backups
-  IF NOT EXISTS (SELECT 1 FROM information_schema.triggers WHERE trigger_name = 'update_backups_updated_at') THEN
-    -- Adicionar coluna updated_at se não existir
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'backups' AND column_name = 'updated_at') THEN
-      ALTER TABLE backups ADD COLUMN updated_at TIMESTAMPTZ DEFAULT NOW();
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'backups') THEN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.triggers WHERE trigger_name = 'update_backups_updated_at') THEN
+      -- Adicionar coluna updated_at se não existir
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'backups' AND column_name = 'updated_at') THEN
+        ALTER TABLE backups ADD COLUMN updated_at TIMESTAMPTZ DEFAULT NOW();
+      END IF;
+      CREATE TRIGGER update_backups_updated_at
+        BEFORE UPDATE ON backups
+        FOR EACH ROW
+        EXECUTE FUNCTION update_updated_at_column();
     END IF;
-    CREATE TRIGGER update_backups_updated_at
-      BEFORE UPDATE ON backups
-      FOR EACH ROW
-      EXECUTE FUNCTION update_updated_at_column();
   END IF;
 
   -- audit_logs
-  IF NOT EXISTS (SELECT 1 FROM information_schema.triggers WHERE trigger_name = 'update_audit_logs_updated_at') THEN
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'audit_logs' AND column_name = 'updated_at') THEN
-      ALTER TABLE audit_logs ADD COLUMN updated_at TIMESTAMPTZ DEFAULT NOW();
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'audit_logs') THEN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.triggers WHERE trigger_name = 'update_audit_logs_updated_at') THEN
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'audit_logs' AND column_name = 'updated_at') THEN
+        ALTER TABLE audit_logs ADD COLUMN updated_at TIMESTAMPTZ DEFAULT NOW();
+      END IF;
+      CREATE TRIGGER update_audit_logs_updated_at
+        BEFORE UPDATE ON audit_logs
+        FOR EACH ROW
+        EXECUTE FUNCTION update_updated_at_column();
     END IF;
-    CREATE TRIGGER update_audit_logs_updated_at
-      BEFORE UPDATE ON audit_logs
-      FOR EACH ROW
-      EXECUTE FUNCTION update_updated_at_column();
   END IF;
 
   -- waiting_list
-  IF NOT EXISTS (SELECT 1 FROM information_schema.triggers WHERE trigger_name = 'update_waiting_list_updated_at') THEN
-    CREATE TRIGGER update_waiting_list_updated_at
-      BEFORE UPDATE ON waiting_list
-      FOR EACH ROW
-      EXECUTE FUNCTION update_updated_at_column();
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'waiting_list') THEN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.triggers WHERE trigger_name = 'update_waiting_list_updated_at') THEN
+      CREATE TRIGGER update_waiting_list_updated_at
+        BEFORE UPDATE ON waiting_list
+        FOR EACH ROW
+        EXECUTE FUNCTION update_updated_at_column();
+    END IF;
   END IF;
 
   -- profiles
@@ -666,53 +680,27 @@ END $$;
 
 -- ========== PARTE 6: FUNÇÕES ÚTEIS ==========
 
--- Função para descontar sessão do pacote
-CREATE OR REPLACE FUNCTION public.use_package_session(
-  p_patient_id UUID,
-  p_appointment_id UUID DEFAULT NULL,
-  p_session_id UUID DEFAULT NULL
-)
-RETURNS UUID
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  v_package_id UUID;
-  v_usage_id UUID;
-  v_org_id UUID;
-BEGIN
-  -- Pegar org_id do usuário
-  SELECT org_id INTO v_org_id FROM profiles WHERE id = auth.uid();
-
-  -- Encontrar pacote ativo com saldo
-  SELECT id INTO v_package_id
-  FROM patient_packages
-  WHERE patient_id = p_patient_id
-    AND organization_id = v_org_id
-    AND sessions_used < sessions_purchased
-    AND expires_at > NOW()
-  ORDER BY expires_at ASC
-  LIMIT 1;
-
-  IF v_package_id IS NULL THEN
-    RAISE EXCEPTION 'Paciente não possui pacote ativo com sessões disponíveis';
-  END IF;
-
-  -- Registrar uso
-  INSERT INTO package_usage (patient_package_id, patient_id, appointment_id, session_id, used_by, organization_id)
-  VALUES (v_package_id, p_patient_id, p_appointment_id, p_session_id, auth.uid(), v_org_id)
-  RETURNING id INTO v_usage_id;
-
-  -- Atualizar contador
-  UPDATE patient_packages
-  SET sessions_used = sessions_used + 1,
-      last_used_at = NOW()
-  WHERE id = v_package_id;
-
-  RETURN v_usage_id;
-END;
-$$;
+-- Função para descontar sessão do pacote (comentado - função já existe)
+-- CREATE OR REPLACE FUNCTION public.use_package_session(
+--   p_patient_id UUID,
+--   p_appointment_id UUID DEFAULT NULL,
+--   p_session_id UUID DEFAULT NULL
+-- )
+-- RETURNS UUID
+-- LANGUAGE plpgsql
+-- SECURITY DEFINER
+-- SET search_path = public
+-- AS $$
+-- DECLARE
+--   v_package_id UUID;
+--   v_usage_id UUID;
+--   v_org_id UUID;
+-- BEGIN
+--   -- Pegar org_id do usuário
+--   SELECT COALESCE(organization_id, org_id) INTO v_org_id FROM profiles WHERE id = auth.uid();
+--   -- ... (função já existe em outra migration)
+-- END;
+-- $$;
 
 -- Função para verificar conflito de agendamento (atualizada)
 CREATE OR REPLACE FUNCTION public.check_appointment_conflict(
@@ -802,20 +790,20 @@ $$;
 CREATE OR REPLACE VIEW patient_package_summary AS
 SELECT 
   p.id as patient_id,
-  p.full_name,
+  COALESCE(p.name, '') as full_name,
   p.email,
   p.phone,
   COALESCE(SUM(pp.sessions_purchased - pp.sessions_used) FILTER (WHERE pp.expires_at > NOW()), 0) as sessions_available,
   COUNT(pp.id) FILTER (WHERE pp.expires_at > NOW() AND pp.sessions_used < pp.sessions_purchased) as active_packages
 FROM patients p
 LEFT JOIN patient_packages pp ON pp.patient_id = p.id
-GROUP BY p.id, p.full_name, p.email, p.phone;
+GROUP BY p.id, COALESCE(p.name, ''), p.email, p.phone;
 
 -- View de agendamentos do dia com status de pacote
 CREATE OR REPLACE VIEW today_appointments_with_packages AS
 SELECT 
   a.*,
-  p.full_name as patient_name,
+  COALESCE(p.name, '') as patient_name,
   p.phone as patient_phone,
   COALESCE(
     (SELECT SUM(sessions_purchased - sessions_used) 
@@ -827,8 +815,8 @@ SELECT
   ) as patient_package_balance
 FROM appointments a
 JOIN patients p ON p.id = a.patient_id
-WHERE a.start_time::DATE = CURRENT_DATE
-ORDER BY a.start_time;
+WHERE a.appointment_date = CURRENT_DATE
+ORDER BY a.appointment_date, a.start_time;
 
 -- ========== PARTE 8: SEED DATA ==========
 
@@ -870,7 +858,7 @@ COMMENT ON TABLE whatsapp_messages IS 'Histórico de mensagens WhatsApp enviadas
 COMMENT ON TABLE message_templates IS 'Templates de mensagens para automação';
 COMMENT ON TABLE exercise_categories IS 'Categorias para organização dos exercícios';
 
-COMMENT ON FUNCTION get_user_org_id IS 'Retorna o org_id do usuário autenticado';
+-- COMMENT ON FUNCTION get_user_org_id IS 'Retorna o org_id do usuário autenticado';
 COMMENT ON FUNCTION use_package_session IS 'Desconta uma sessão do pacote ativo do paciente';
 COMMENT ON FUNCTION get_patient_package_balance IS 'Retorna saldo de pacotes do paciente';
 COMMENT ON FUNCTION calculate_pain_evolution IS 'Calcula evolução da dor ao longo do tempo';

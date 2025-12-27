@@ -1,6 +1,7 @@
 -- Add RLS policies for soap_records table to protect sensitive medical data
 
 -- Policy 1: Patients can view their own SOAP records
+DROP POLICY IF EXISTS "Patients can view own soap records" ON public.soap_records;
 CREATE POLICY "Patients can view own soap records"
 ON public.soap_records
 FOR SELECT
@@ -14,6 +15,7 @@ USING (
 );
 
 -- Policy 2: Therapists can view all SOAP records
+DROP POLICY IF EXISTS "Therapists can view soap records" ON public.soap_records;
 CREATE POLICY "Therapists can view soap records"
 ON public.soap_records
 FOR SELECT
@@ -27,6 +29,7 @@ USING (
 );
 
 -- Policy 3: Therapists can create SOAP records
+DROP POLICY IF EXISTS "Therapists can create soap records" ON public.soap_records;
 CREATE POLICY "Therapists can create soap records"
 ON public.soap_records
 FOR INSERT
@@ -40,6 +43,7 @@ WITH CHECK (
 );
 
 -- Policy 4: Therapists can update unsigned SOAP records
+DROP POLICY IF EXISTS "Therapists can update unsigned soap records" ON public.soap_records;
 CREATE POLICY "Therapists can update unsigned soap records"
 ON public.soap_records
 FOR UPDATE
@@ -54,6 +58,7 @@ USING (
 );
 
 -- Policy 5: Only admins can delete SOAP records (for compliance/audit purposes)
+DROP POLICY IF EXISTS "Admins can delete soap records" ON public.soap_records;
 CREATE POLICY "Admins can delete soap records"
 ON public.soap_records
 FOR DELETE

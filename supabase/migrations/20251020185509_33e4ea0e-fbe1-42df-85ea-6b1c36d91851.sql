@@ -18,6 +18,7 @@ CREATE INDEX IF NOT EXISTS idx_rate_limit_composite ON public.rate_limit_request
 -- RLS: apenas service role pode acessar
 ALTER TABLE public.rate_limit_requests ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Service role apenas" ON public.rate_limit_requests;
 CREATE POLICY "Service role apenas"
 ON public.rate_limit_requests
 FOR ALL

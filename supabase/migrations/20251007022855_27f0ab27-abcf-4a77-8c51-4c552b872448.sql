@@ -1,5 +1,5 @@
 -- Tabela para rastrear tentativas de login
-CREATE TABLE public.login_attempts (
+CREATE TABLE IF NOT EXISTS public.login_attempts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   email text NOT NULL,
   success boolean NOT NULL,
@@ -9,12 +9,13 @@ CREATE TABLE public.login_attempts (
 );
 
 -- Index para performance
-CREATE INDEX idx_login_attempts_email ON public.login_attempts(email);
-CREATE INDEX idx_login_attempts_created_at ON public.login_attempts(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_login_attempts_email ON public.login_attempts(email);
+CREATE INDEX IF NOT EXISTS idx_login_attempts_created_at ON public.login_attempts(created_at DESC);
 
 -- RLS: Apenas admins podem ver login attempts
 ALTER TABLE public.login_attempts ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Admins can view login attempts" ON public.login_attempts;
 CREATE POLICY "Admins can view login attempts"
 ON public.login_attempts
 FOR SELECT
@@ -50,6 +51,7 @@ END;
 $$;
 
 -- View para sessões suspeitas (múltiplas falhas seguidas)
+DROP VIEW IF EXISTS public.suspicious_login_activity;
 CREATE OR REPLACE VIEW public.suspicious_login_activity AS
 SELECT 
   email,

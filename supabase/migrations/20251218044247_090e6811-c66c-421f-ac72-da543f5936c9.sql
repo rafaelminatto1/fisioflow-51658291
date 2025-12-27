@@ -146,33 +146,42 @@ ALTER TABLE public.crm_automacoes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.crm_automacao_logs ENABLE ROW LEVEL SECURITY;
 
 -- Policies para tarefas
+DROP POLICY IF EXISTS "Membros gerenciam tarefas CRM" ON public.crm_tarefas;
 CREATE POLICY "Membros gerenciam tarefas CRM" ON public.crm_tarefas
   FOR ALL USING (user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 
 -- Policies para campanhas
+DROP POLICY IF EXISTS "Admins e fisios gerenciam campanhas" ON public.crm_campanhas;
 CREATE POLICY "Admins e fisios gerenciam campanhas" ON public.crm_campanhas
   FOR ALL USING (user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 
+DROP POLICY IF EXISTS "Membros veem envios de campanhas" ON public.crm_campanha_envios;
 CREATE POLICY "Membros veem envios de campanhas" ON public.crm_campanha_envios
   FOR SELECT USING (user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 
+DROP POLICY IF EXISTS "Sistema gerencia envios" ON public.crm_campanha_envios;
 CREATE POLICY "Sistema gerencia envios" ON public.crm_campanha_envios
   FOR ALL USING (true);
 
 -- Policies para NPS
+DROP POLICY IF EXISTS "Membros veem pesquisas NPS" ON public.crm_pesquisas_nps;
 CREATE POLICY "Membros veem pesquisas NPS" ON public.crm_pesquisas_nps
   FOR SELECT USING (user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 
+DROP POLICY IF EXISTS "Qualquer um pode responder NPS" ON public.crm_pesquisas_nps;
 CREATE POLICY "Qualquer um pode responder NPS" ON public.crm_pesquisas_nps
   FOR INSERT WITH CHECK (true);
 
 -- Policies para automações
+DROP POLICY IF EXISTS "Admins gerenciam automações" ON public.crm_automacoes;
 CREATE POLICY "Admins gerenciam automações" ON public.crm_automacoes
   FOR ALL USING (user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 
+DROP POLICY IF EXISTS "Membros veem logs de automação" ON public.crm_automacao_logs;
 CREATE POLICY "Membros veem logs de automação" ON public.crm_automacao_logs
   FOR SELECT USING (user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 
+DROP POLICY IF EXISTS "Sistema cria logs" ON public.crm_automacao_logs;
 CREATE POLICY "Sistema cria logs" ON public.crm_automacao_logs
   FOR INSERT WITH CHECK (true);
 

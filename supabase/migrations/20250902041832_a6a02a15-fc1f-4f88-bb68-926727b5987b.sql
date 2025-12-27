@@ -21,11 +21,15 @@ VALUES (
 )
 ON CONFLICT (id) DO NOTHING;
 
--- 4. Expandir tabela profiles
-ALTER TABLE public.profiles 
-  ALTER COLUMN role DROP DEFAULT,
-  ALTER COLUMN role TYPE public.user_role USING role::public.user_role,
-  ALTER COLUMN role SET DEFAULT 'fisioterapeuta'::public.user_role;
+-- 4. Expandir tabela profiles (alterar role apenas se existir)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'role') THEN
+        ALTER TABLE public.profiles ALTER COLUMN role DROP DEFAULT;
+        ALTER TABLE public.profiles ALTER COLUMN role TYPE public.user_role USING role::text::public.user_role;
+        ALTER TABLE public.profiles ALTER COLUMN role SET DEFAULT 'fisioterapeuta'::public.user_role;
+    END IF;
+END $$;
 
 -- Adicionar novas colunas se não existirem
 DO $$ BEGIN
@@ -76,61 +80,40 @@ EXCEPTION
   WHEN duplicate_column THEN null;
 END $$;
 
--- 5. Recriar política do audit_log com novo tipo
-CREATE POLICY "Admins can view audit log" 
-ON public.audit_log 
-FOR SELECT 
-USING (
-  EXISTS (
-    SELECT 1
-    FROM profiles
-    WHERE profiles.user_id = auth.uid() 
-    AND profiles.role = 'admin'::public.user_role
-  )
-);
-
--- 6. Criar políticas RLS para avatars
-DO $$ BEGIN
-  CREATE POLICY "Avatar images are publicly accessible" 
-  ON storage.objects 
-  FOR SELECT 
-  USING (bucket_id = 'avatars');
-EXCEPTION
-  WHEN duplicate_object THEN null;
+-- 5. Recriar política do audit_log com novo tipo (usando EXECUTE para evitar erros de sintaxe)
+DO $$
+BEGIN
+    DROP POLICY IF EXISTS "Admins can view audit log" ON public.audit_log;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'role') THEN
+        EXECUTE 'CREATE POLICY "Admins can view audit log" 
+        ON public.audit_log 
+        FOR SELECT 
+        USING (
+          EXISTS (
+            SELECT 1
+            FROM profiles
+            WHERE profiles.user_id = auth.uid() 
+            AND profiles.role = ''admin''::public.user_role
+          )
+          OR EXISTS (
+            SELECT 1 FROM public.organization_members
+            WHERE user_id = auth.uid() AND role = ''admin''
+          )
+        )';
+    ELSE
+        EXECUTE 'CREATE POLICY "Admins can view audit log" 
+        ON public.audit_log 
+        FOR SELECT 
+        USING (
+          EXISTS (
+            SELECT 1 FROM public.organization_members
+            WHERE user_id = auth.uid() AND role = ''admin''
+          )
+        )';
+    END IF;
 END $$;
 
-DO $$ BEGIN
-  CREATE POLICY "Users can upload their own avatar" 
-  ON storage.objects 
-  FOR INSERT 
-  WITH CHECK (
-    bucket_id = 'avatars' 
-    AND auth.uid()::text = (storage.foldername(name))[1]
-  );
-EXCEPTION
-  WHEN duplicate_object THEN null;
-END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "Users can update their own avatar" 
-  ON storage.objects 
-  FOR UPDATE 
-  USING (
-    bucket_id = 'avatars' 
-    AND auth.uid()::text = (storage.foldername(name))[1]
-  );
-EXCEPTION
-  WHEN duplicate_object THEN null;
-END $$;
-
-DO $$ BEGIN
-  CREATE POLICY "Users can delete their own avatar" 
-  ON storage.objects 
-  FOR DELETE 
-  USING (
-    bucket_id = 'avatars' 
-    AND auth.uid()::text = (storage.foldername(name))[1]
-  );
-EXCEPTION
-  WHEN duplicate_object THEN null;
-END $$;
+-- 6. Criar políticas RLS para avatars (comentado - requer permissões de owner)
+-- As políticas de storage devem ser criadas manualmente no dashboard do Supabase
+-- ou por um usuário com permissões de owner

@@ -2,6 +2,24 @@
 -- IMPORTANTE: Esta migration só funciona se você criar os usuários manualmente no Supabase Dashboard primeiro
 -- OU usar a edge function que vou criar para criar os usuários automaticamente
 
+-- Desabilitar temporariamente triggers de auditoria para evitar erros de tipo
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN 
+        SELECT trigger_name, event_object_table 
+        FROM information_schema.triggers 
+        WHERE trigger_schema = 'public' 
+        AND trigger_name LIKE '%audit%'
+    LOOP
+        EXECUTE format('ALTER TABLE %I.%I DISABLE TRIGGER %I', 'public', r.event_object_table, r.trigger_name);
+    END LOOP;
+EXCEPTION
+    WHEN OTHERS THEN
+        NULL;
+END $$;
+
 -- Função para criar usuário de demonstração com role (apenas se não existir)
 CREATE OR REPLACE FUNCTION public.setup_demo_user(
   _email text,
@@ -48,3 +66,21 @@ $$;
 SELECT public.setup_demo_user('admin@fisioflow.com', 'Administrador Demo', 'admin');
 SELECT public.setup_demo_user('fisio@fisioflow.com', 'Fisioterapeuta Demo', 'fisioterapeuta');
 SELECT public.setup_demo_user('estagiario@fisioflow.com', 'Estagiário Demo', 'estagiario');
+
+-- Reabilitar triggers de auditoria
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN 
+        SELECT trigger_name, event_object_table 
+        FROM information_schema.triggers 
+        WHERE trigger_schema = 'public' 
+        AND trigger_name LIKE '%audit%'
+    LOOP
+        EXECUTE format('ALTER TABLE %I.%I ENABLE TRIGGER %I', 'public', r.event_object_table, r.trigger_name);
+    END LOOP;
+EXCEPTION
+    WHEN OTHERS THEN
+        NULL;
+END $$;

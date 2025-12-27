@@ -10,6 +10,9 @@ DROP POLICY IF EXISTS "Membros org acessam inventário" ON public.clinic_invento
 DROP POLICY IF EXISTS "Admins gerenciam inventário" ON public.clinic_inventory;
 DROP POLICY IF EXISTS "clinic_inventory_select" ON public.clinic_inventory;
 DROP POLICY IF EXISTS "clinic_inventory_all" ON public.clinic_inventory;
+DROP POLICY IF EXISTS "clinic_inventory_insert" ON public.clinic_inventory;
+DROP POLICY IF EXISTS "clinic_inventory_update" ON public.clinic_inventory;
+DROP POLICY IF EXISTS "clinic_inventory_delete" ON public.clinic_inventory;
 
 -- 3. Política SELECT: Admin e Fisioterapeutas da organização podem visualizar
 CREATE POLICY "clinic_inventory_select"

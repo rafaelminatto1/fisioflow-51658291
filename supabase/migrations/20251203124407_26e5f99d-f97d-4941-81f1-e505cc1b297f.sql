@@ -189,25 +189,32 @@ ALTER TABLE public.mfa_otp_codes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.data_anonymization_requests ENABLE ROW LEVEL SECURITY;
 
 -- Políticas RLS
+DROP POLICY IF EXISTS "Admins e fisios podem ver métricas" ON public.daily_metrics;
 CREATE POLICY "Admins e fisios podem ver métricas" ON public.daily_metrics
   FOR SELECT USING (
     public.user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role])
   );
 
+DROP POLICY IF EXISTS "Usuários podem ver seus OTPs" ON public.mfa_otp_codes;
 CREATE POLICY "Usuários podem ver seus OTPs" ON public.mfa_otp_codes
   FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Sistema pode inserir OTPs" ON public.mfa_otp_codes;
 CREATE POLICY "Sistema pode inserir OTPs" ON public.mfa_otp_codes
   FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Sistema pode atualizar OTPs" ON public.mfa_otp_codes;
 CREATE POLICY "Sistema pode atualizar OTPs" ON public.mfa_otp_codes
   FOR UPDATE USING (true);
 
+DROP POLICY IF EXISTS "Usuários podem ver suas solicitações" ON public.data_anonymization_requests;
 CREATE POLICY "Usuários podem ver suas solicitações" ON public.data_anonymization_requests
   FOR SELECT USING (auth.uid() = user_id OR public.user_is_admin(auth.uid()));
 
+DROP POLICY IF EXISTS "Usuários podem criar solicitações" ON public.data_anonymization_requests;
 CREATE POLICY "Usuários podem criar solicitações" ON public.data_anonymization_requests
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Admins podem atualizar solicitações" ON public.data_anonymization_requests;
 CREATE POLICY "Admins podem atualizar solicitações" ON public.data_anonymization_requests
   FOR UPDATE USING (public.user_is_admin(auth.uid()));

@@ -135,39 +135,50 @@ ALTER TABLE public.retencao_cancelamentos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.leads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.lead_historico ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Admins e fisios gerenciam contas" ON public.contas_financeiras;
 CREATE POLICY "Admins e fisios gerenciam contas" ON public.contas_financeiras
   FOR ALL USING (user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 
+DROP POLICY IF EXISTS "Admins e fisios gerenciam recibos" ON public.recibos;
 CREATE POLICY "Admins e fisios gerenciam recibos" ON public.recibos
   FOR ALL USING (user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 
+DROP POLICY IF EXISTS "Admins gerenciam comissões" ON public.comissoes;
 CREATE POLICY "Admins gerenciam comissões" ON public.comissoes
   FOR ALL USING (user_is_admin(auth.uid()));
 
+DROP POLICY IF EXISTS "Profissionais veem próprias comissões" ON public.comissoes;
 CREATE POLICY "Profissionais veem próprias comissões" ON public.comissoes
   FOR SELECT USING (profissional_id IN (SELECT id FROM profiles WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "Admins e fisios gerenciam caixa" ON public.movimentacoes_caixa;
 CREATE POLICY "Admins e fisios gerenciam caixa" ON public.movimentacoes_caixa
   FOR ALL USING (user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 
+DROP POLICY IF EXISTS "Admins e fisios gerenciam retenção" ON public.retencao_cancelamentos;
 CREATE POLICY "Admins e fisios gerenciam retenção" ON public.retencao_cancelamentos
   FOR ALL USING (user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 
+DROP POLICY IF EXISTS "Admins e fisios gerenciam leads" ON public.leads;
 CREATE POLICY "Admins e fisios gerenciam leads" ON public.leads
   FOR ALL USING (user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 
+DROP POLICY IF EXISTS "Admins e fisios gerenciam histórico de leads" ON public.lead_historico;
 CREATE POLICY "Admins e fisios gerenciam histórico de leads" ON public.lead_historico
   FOR ALL USING (user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 
 -- Triggers
+DROP TRIGGER IF EXISTS update_contas_financeiras_updated_at ON public.contas_financeiras;
 CREATE TRIGGER update_contas_financeiras_updated_at
   BEFORE UPDATE ON public.contas_financeiras
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_comissoes_updated_at ON public.comissoes;
 CREATE TRIGGER update_comissoes_updated_at
   BEFORE UPDATE ON public.comissoes
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_leads_updated_at ON public.leads;
 CREATE TRIGGER update_leads_updated_at
   BEFORE UPDATE ON public.leads
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();

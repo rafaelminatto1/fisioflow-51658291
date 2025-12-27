@@ -54,10 +54,12 @@ CREATE TABLE IF NOT EXISTS public.vouchers (
 -- RLS para vouchers
 ALTER TABLE public.vouchers ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Todos podem ver vouchers ativos" ON public.vouchers;
 CREATE POLICY "Todos podem ver vouchers ativos"
 ON public.vouchers FOR SELECT
 USING (ativo = true);
 
+DROP POLICY IF EXISTS "Admins podem gerenciar vouchers" ON public.vouchers;
 CREATE POLICY "Admins podem gerenciar vouchers"
 ON public.vouchers FOR ALL
 USING (public.user_is_admin(auth.uid()));
@@ -87,18 +89,22 @@ CREATE INDEX IF NOT EXISTS idx_user_vouchers_ativo ON public.user_vouchers(ativo
 -- RLS para user_vouchers
 ALTER TABLE public.user_vouchers ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Usuários veem seus próprios vouchers" ON public.user_vouchers;
 CREATE POLICY "Usuários veem seus próprios vouchers"
 ON public.user_vouchers FOR SELECT
 USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Admins e fisios veem todos vouchers" ON public.user_vouchers;
 CREATE POLICY "Admins e fisios veem todos vouchers"
 ON public.user_vouchers FOR SELECT
 USING (public.user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 
+DROP POLICY IF EXISTS "Sistema pode criar vouchers" ON public.user_vouchers;
 CREATE POLICY "Sistema pode criar vouchers"
 ON public.user_vouchers FOR INSERT
 WITH CHECK (true); -- Será controlado via edge function
 
+DROP POLICY IF EXISTS "Sistema pode atualizar vouchers" ON public.user_vouchers;
 CREATE POLICY "Sistema pode atualizar vouchers"
 ON public.user_vouchers FOR UPDATE
 USING (true); -- Será controlado via edge function
@@ -120,6 +126,7 @@ CREATE TABLE IF NOT EXISTS public.empresas_parceiras (
 -- RLS para empresas_parceiras
 ALTER TABLE public.empresas_parceiras ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Admins e fisios podem gerenciar parceiros" ON public.empresas_parceiras;
 CREATE POLICY "Admins e fisios podem gerenciar parceiros"
 ON public.empresas_parceiras FOR ALL
 USING (public.user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
@@ -131,14 +138,17 @@ ADD COLUMN IF NOT EXISTS parceiro_id uuid REFERENCES public.empresas_parceiras(i
 CREATE INDEX IF NOT EXISTS idx_eventos_parceiro_id ON public.eventos(parceiro_id);
 
 -- 7. TRIGGERS PARA updated_at
+DROP TRIGGER IF EXISTS update_vouchers_updated_at ON public.vouchers;
 CREATE TRIGGER update_vouchers_updated_at
 BEFORE UPDATE ON public.vouchers
 FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_user_vouchers_updated_at ON public.user_vouchers;
 CREATE TRIGGER update_user_vouchers_updated_at
 BEFORE UPDATE ON public.user_vouchers
 FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_empresas_parceiras_updated_at ON public.empresas_parceiras;
 CREATE TRIGGER update_empresas_parceiras_updated_at
 BEFORE UPDATE ON public.empresas_parceiras
 FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -207,6 +217,24 @@ GROUP BY e.id;
 ALTER VIEW public.eventos_resumo SET (security_invoker = on);
 
 -- 10. INSERIR VOUCHERS PADRÃO (Exemplos)
+-- Desabilitar temporariamente triggers de auditoria para evitar erros de tipo
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN 
+        SELECT trigger_name, event_object_table 
+        FROM information_schema.triggers 
+        WHERE trigger_schema = 'public' 
+        AND trigger_name LIKE '%audit%'
+    LOOP
+        EXECUTE format('ALTER TABLE %I.%I DISABLE TRIGGER %I', 'public', r.event_object_table, r.trigger_name);
+    END LOOP;
+EXCEPTION
+    WHEN OTHERS THEN
+        NULL;
+END $$;
+
 INSERT INTO public.vouchers (nome, descricao, tipo, sessoes, validade_dias, preco, ativo)
 VALUES 
   ('Pacote 4 Sessões', 'Pacote avulso de 4 sessões de fisioterapia', 'pacote', 4, 60, 240.00, true),
@@ -214,3 +242,21 @@ VALUES
   ('Plano Mensal', 'Acesso ilimitado por 30 dias', 'mensal', NULL, 30, 350.00, true),
   ('Plano Trimestral', 'Acesso ilimitado por 90 dias', 'trimestral', NULL, 90, 900.00, true)
 ON CONFLICT DO NOTHING;
+
+-- Reabilitar triggers de auditoria
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN 
+        SELECT trigger_name, event_object_table 
+        FROM information_schema.triggers 
+        WHERE trigger_schema = 'public' 
+        AND trigger_name LIKE '%audit%'
+    LOOP
+        EXECUTE format('ALTER TABLE %I.%I ENABLE TRIGGER %I', 'public', r.event_object_table, r.trigger_name);
+    END LOOP;
+EXCEPTION
+    WHEN OTHERS THEN
+        NULL;
+END $$;

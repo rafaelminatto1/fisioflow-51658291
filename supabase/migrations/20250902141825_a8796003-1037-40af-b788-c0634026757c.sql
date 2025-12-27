@@ -1,5 +1,5 @@
 -- Create analytics snapshots table for historical metrics
-CREATE TABLE public.analytics_snapshots (
+CREATE TABLE IF NOT EXISTS public.analytics_snapshots (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   snapshot_date DATE NOT NULL,
   metric_type TEXT NOT NULL,
@@ -9,6 +9,7 @@ CREATE TABLE public.analytics_snapshots (
 );
 
 -- Create materialized views for performance
+DROP MATERIALIZED VIEW IF EXISTS public.monthly_metrics;
 CREATE MATERIALIZED VIEW public.monthly_metrics AS
 SELECT 
   DATE_TRUNC('month', appointment_date) as month,
@@ -23,6 +24,7 @@ GROUP BY 1
 ORDER BY 1;
 
 -- Create financial metrics view
+DROP MATERIALIZED VIEW IF EXISTS public.financial_metrics;
 CREATE MATERIALIZED VIEW public.financial_metrics AS
 SELECT 
   DATE_TRUNC('month', purchase_date) as month,
@@ -36,7 +38,8 @@ WHERE status = 'active'
 GROUP BY 1
 ORDER BY 1;
 
--- Create clinical metrics view  
+-- Create clinical metrics view
+DROP MATERIALIZED VIEW IF EXISTS public.clinical_metrics;
 CREATE MATERIALIZED VIEW public.clinical_metrics AS
 SELECT 
   DATE_TRUNC('month', created_at) as month,
@@ -50,6 +53,7 @@ GROUP BY 1
 ORDER BY 1;
 
 -- Create patient analytics view
+DROP MATERIALIZED VIEW IF EXISTS public.patient_analytics;
 CREATE MATERIALIZED VIEW public.patient_analytics AS
 SELECT 
   status,
@@ -59,18 +63,28 @@ FROM patients
 GROUP BY status;
 
 -- Create refresh function for materialized views
-CREATE OR REPLACE FUNCTION public.refresh_analytics_views()
-RETURNS void AS $$
-BEGIN
-  REFRESH MATERIALIZED VIEW CONCURRENTLY monthly_metrics;
-  REFRESH MATERIALIZED VIEW CONCURRENTLY financial_metrics;
-  REFRESH MATERIALIZED VIEW CONCURRENTLY clinical_metrics;
-  REFRESH MATERIALIZED VIEW CONCURRENTLY patient_analytics;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+-- NOTE: Skipped due to conflict with existing function that returns TRIGGER
+-- This function can be created manually if needed
+-- DO $$
+-- BEGIN
+--     EXECUTE '
+--     CREATE OR REPLACE FUNCTION public.refresh_analytics_views()
+--     RETURNS void AS $func$
+--     BEGIN
+--       REFRESH MATERIALIZED VIEW CONCURRENTLY monthly_metrics;
+--       REFRESH MATERIALIZED VIEW CONCURRENTLY financial_metrics;
+--       REFRESH MATERIALIZED VIEW CONCURRENTLY clinical_metrics;
+--       REFRESH MATERIALIZED VIEW CONCURRENTLY patient_analytics;
+--     END;
+--     $func$ LANGUAGE plpgsql SECURITY DEFINER;
+--     ';
+-- EXCEPTION
+--     WHEN OTHERS THEN
+--         NULL;
+-- END $$;
 
 -- Create reports table
-CREATE TABLE public.reports (
+CREATE TABLE IF NOT EXISTS public.reports (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT,
@@ -84,7 +98,7 @@ CREATE TABLE public.reports (
 );
 
 -- Create report executions table
-CREATE TABLE public.report_executions (
+CREATE TABLE IF NOT EXISTS public.report_executions (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   report_id UUID REFERENCES reports(id) ON DELETE CASCADE,
   executed_by UUID REFERENCES auth.users(id),
@@ -131,7 +145,9 @@ CREATE INDEX idx_reports_created_by ON reports(created_by);
 CREATE INDEX idx_report_executions_report_id ON report_executions(report_id);
 
 -- Add trigger to refresh views daily
-CREATE TRIGGER refresh_analytics_trigger
-  AFTER INSERT OR UPDATE OR DELETE ON appointments
-  FOR EACH STATEMENT
-  EXECUTE FUNCTION refresh_analytics_views();
+-- NOTE: Skipped due to function signature conflict
+-- DROP TRIGGER IF EXISTS refresh_analytics_trigger ON appointments;
+-- CREATE TRIGGER refresh_analytics_trigger
+--   AFTER INSERT OR UPDATE OR DELETE ON appointments
+--   FOR EACH STATEMENT
+--   EXECUTE FUNCTION refresh_analytics_views();

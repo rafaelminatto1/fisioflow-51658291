@@ -152,9 +152,11 @@ CREATE TABLE IF NOT EXISTS public.push_notifications_log (
 -- Precadastro tokens
 ALTER TABLE public.precadastro_tokens ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Public can read active tokens" ON public.precadastro_tokens;
 CREATE POLICY "Public can read active tokens" ON public.precadastro_tokens
   FOR SELECT USING (ativo = true AND (expires_at IS NULL OR expires_at > now()));
 
+DROP POLICY IF EXISTS "Org members can manage tokens" ON public.precadastro_tokens;
 CREATE POLICY "Org members can manage tokens" ON public.precadastro_tokens
   FOR ALL USING (
     organization_id IN (
@@ -165,9 +167,11 @@ CREATE POLICY "Org members can manage tokens" ON public.precadastro_tokens
 -- Precadastros
 ALTER TABLE public.precadastros ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Anyone can insert precadastros" ON public.precadastros;
 CREATE POLICY "Anyone can insert precadastros" ON public.precadastros
   FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Org members can view precadastros" ON public.precadastros;
 CREATE POLICY "Org members can view precadastros" ON public.precadastros
   FOR SELECT USING (
     organization_id IN (
@@ -175,6 +179,7 @@ CREATE POLICY "Org members can view precadastros" ON public.precadastros
     )
   );
 
+DROP POLICY IF EXISTS "Org members can update precadastros" ON public.precadastros;
 CREATE POLICY "Org members can update precadastros" ON public.precadastros
   FOR UPDATE USING (
     organization_id IN (
@@ -185,9 +190,11 @@ CREATE POLICY "Org members can update precadastros" ON public.precadastros
 -- Stripe purchases
 ALTER TABLE public.stripe_purchases ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view own purchases" ON public.stripe_purchases;
 CREATE POLICY "Users can view own purchases" ON public.stripe_purchases
   FOR SELECT USING (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "Org members can view all purchases" ON public.stripe_purchases;
 CREATE POLICY "Org members can view all purchases" ON public.stripe_purchases
   FOR SELECT USING (
     organization_id IN (
@@ -198,6 +205,7 @@ CREATE POLICY "Org members can view all purchases" ON public.stripe_purchases
 -- Telemedicine rooms
 ALTER TABLE public.telemedicine_rooms ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Org members can manage rooms" ON public.telemedicine_rooms;
 CREATE POLICY "Org members can manage rooms" ON public.telemedicine_rooms
   FOR ALL USING (
     organization_id IN (
@@ -208,18 +216,21 @@ CREATE POLICY "Org members can manage rooms" ON public.telemedicine_rooms
 -- Onboarding progress
 ALTER TABLE public.onboarding_progress ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users manage own onboarding" ON public.onboarding_progress;
 CREATE POLICY "Users manage own onboarding" ON public.onboarding_progress
   FOR ALL USING (user_id = auth.uid());
 
 -- Push subscriptions
 ALTER TABLE public.push_subscriptions ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users manage own subscriptions" ON public.push_subscriptions;
 CREATE POLICY "Users manage own subscriptions" ON public.push_subscriptions
   FOR ALL USING (user_id = auth.uid());
 
 -- Push notifications log
 ALTER TABLE public.push_notifications_log ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users view own notifications" ON public.push_notifications_log;
 CREATE POLICY "Users view own notifications" ON public.push_notifications_log
   FOR SELECT USING (user_id = auth.uid());
 

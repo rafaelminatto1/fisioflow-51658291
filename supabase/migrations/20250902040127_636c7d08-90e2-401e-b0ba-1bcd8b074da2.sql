@@ -2,6 +2,12 @@
 -- FISIOFLOW - ESTRUTURA COMPLETA DE DADOS
 -- ===================================================
 
+-- PRIMEIRO: Remover função audit_trigger() problemática e seus triggers
+DROP TRIGGER IF EXISTS audit_appointments ON public.appointments;
+DROP TRIGGER IF EXISTS audit_payments ON public.payments;
+DROP TRIGGER IF EXISTS audit_patient_sessions ON public.patient_sessions;
+DROP FUNCTION IF EXISTS public.audit_trigger() CASCADE;
+
 -- 1. ATUALIZAR TABELA PROFILES
 ALTER TABLE public.profiles 
 ADD COLUMN IF NOT EXISTS cpf text UNIQUE,
@@ -12,10 +18,16 @@ ADD COLUMN IF NOT EXISTS address text,
 ADD COLUMN IF NOT EXISTS birth_date date,
 ADD COLUMN IF NOT EXISTS emergency_contact jsonb;
 
--- Atualizar constraints de role
-ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
-ALTER TABLE public.profiles ADD CONSTRAINT profiles_role_check 
-CHECK (role IN ('admin', 'fisioterapeuta', 'estagiario', 'paciente', 'parceiro'));
+-- Atualizar constraints de role (apenas se a coluna existir)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'profiles' AND column_name = 'role') THEN
+        ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
+        ALTER TABLE public.profiles ADD CONSTRAINT profiles_role_check 
+        CHECK (role IN ('admin', 'fisioterapeuta', 'estagiario', 'paciente', 'parceiro'));
+    END IF;
+END $$;
 
 -- 2. ATUALIZAR TABELA PATIENTS
 ALTER TABLE public.patients 
@@ -40,13 +52,54 @@ ADD COLUMN IF NOT EXISTS cancellation_reason text,
 ADD COLUMN IF NOT EXISTS reminder_sent boolean DEFAULT false;
 
 -- Melhorar constraints de appointments
+-- Remover constraint antiga se existir
 ALTER TABLE public.appointments DROP CONSTRAINT IF EXISTS appointments_status_check;
-ALTER TABLE public.appointments ADD CONSTRAINT appointments_status_check 
-CHECK (status IN ('agendado', 'confirmado', 'atendido', 'cancelado', 'faltou', 'reagendado'));
+
+-- Atualizar valores inválidos de status para valores válidos
+UPDATE public.appointments 
+SET status = CASE 
+    WHEN status NOT IN ('agendado', 'confirmado', 'atendido', 'cancelado', 'faltou', 'reagendado', 'scheduled', 'confirmed', 'completed', 'cancelled') 
+    THEN 'agendado'
+    WHEN status = 'scheduled' THEN 'agendado'
+    WHEN status = 'confirmed' THEN 'confirmado'
+    WHEN status = 'completed' THEN 'atendido'
+    WHEN status = 'cancelled' THEN 'cancelado'
+    ELSE status
+END
+WHERE status IS NOT NULL 
+AND status NOT IN ('agendado', 'confirmado', 'atendido', 'cancelado', 'faltou', 'reagendado');
+
+-- Criar constraint apenas se a coluna existir
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'appointments' AND column_name = 'status') THEN
+        ALTER TABLE public.appointments ADD CONSTRAINT appointments_status_check 
+        CHECK (status IN ('agendado', 'confirmado', 'atendido', 'cancelado', 'faltou', 'reagendado'));
+    END IF;
+END $$;
 
 ALTER TABLE public.appointments DROP CONSTRAINT IF EXISTS appointments_type_check;
-ALTER TABLE public.appointments ADD CONSTRAINT appointments_type_check 
-CHECK (type IN ('avaliacao', 'fisioterapia', 'reavaliacao', 'retorno', 'consulta_inicial'));
+
+-- Atualizar valores inválidos de type para valores válidos
+UPDATE public.appointments 
+SET type = CASE 
+    WHEN type NOT IN ('avaliacao', 'fisioterapia', 'reavaliacao', 'retorno', 'consulta_inicial') 
+    THEN 'fisioterapia'
+    ELSE type
+END
+WHERE type IS NOT NULL 
+AND type NOT IN ('avaliacao', 'fisioterapia', 'reavaliacao', 'retorno', 'consulta_inicial');
+
+-- Criar constraint apenas se a coluna existir
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'appointments' AND column_name = 'type') THEN
+        ALTER TABLE public.appointments ADD CONSTRAINT appointments_type_check
+        CHECK (type IN ('avaliacao', 'fisioterapia', 'reavaliacao', 'retorno', 'consulta_inicial'));
+    END IF;
+END $$;
 
 -- 4. ATUALIZAR TABELA MEDICAL_RECORDS
 ALTER TABLE public.medical_records 
@@ -63,19 +116,75 @@ ADD COLUMN IF NOT EXISTS vital_signs jsonb,
 ADD COLUMN IF NOT EXISTS functional_assessment jsonb;
 
 -- 5. CRIAR TABELA DE AUDITORIA
+-- PRIMEIRO: Desabilitar triggers e atualizar função audit_trigger() para evitar erros (já removidos acima)
+
+-- Atualizar audit_trigger() para usar 'action' em vez de 'operation' (se existir)
+DO $$
+BEGIN
+    -- Se a função audit_trigger() existir, recriá-la
+    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'audit_trigger' AND pronamespace = 'public'::regnamespace) THEN
+        DROP FUNCTION IF EXISTS public.audit_trigger() CASCADE;
+    END IF;
+END $$;
+
+-- Criar ou ajustar tabela audit_log para ter estrutura consistente
 CREATE TABLE IF NOT EXISTS public.audit_log (
     id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
     table_name text NOT NULL,
-    record_id uuid NOT NULL,
-    action text NOT NULL CHECK (action IN ('INSERT', 'UPDATE', 'DELETE')),
+    record_id uuid,
+    action text,
     old_values jsonb,
     new_values jsonb,
+    old_data jsonb,
+    new_data jsonb,
     user_id uuid REFERENCES auth.users(id),
     user_email text,
+    user_role text,
     timestamp timestamp with time zone DEFAULT now(),
+    created_at timestamp with time zone DEFAULT now(),
     ip_address inet,
     user_agent text
 );
+
+-- Se a coluna 'operation' existir mas 'action' não, renomear
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_name = 'audit_log' AND column_name = 'operation' 
+               AND NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                               WHERE table_name = 'audit_log' AND column_name = 'action')) THEN
+        ALTER TABLE public.audit_log RENAME COLUMN operation TO action;
+    END IF;
+    
+    -- Garantir que a coluna 'action' existe
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'audit_log' AND column_name = 'action') THEN
+        ALTER TABLE public.audit_log ADD COLUMN action text;
+    END IF;
+    
+    -- Remover coluna 'operation' se ainda existir (após renomeação, se ocorreu)
+    IF EXISTS (SELECT 1 FROM information_schema.columns 
+               WHERE table_schema = 'public' AND table_name = 'audit_log' AND column_name = 'operation') THEN
+        ALTER TABLE public.audit_log DROP COLUMN operation;
+    END IF;
+    
+    -- Atualizar valores inválidos de action antes de criar constraint
+    UPDATE public.audit_log 
+    SET action = CASE 
+        WHEN action NOT IN ('INSERT', 'UPDATE', 'DELETE') THEN 'UPDATE'
+        ELSE action
+    END
+    WHERE action IS NOT NULL 
+    AND action NOT IN ('INSERT', 'UPDATE', 'DELETE');
+    
+    -- Adicionar constraint se não existir
+    IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints 
+                   WHERE constraint_name = 'audit_log_action_check' 
+                   AND table_name = 'audit_log') THEN
+        ALTER TABLE public.audit_log ADD CONSTRAINT audit_log_action_check 
+        CHECK (action IN ('INSERT', 'UPDATE', 'DELETE') OR action IS NULL);
+    END IF;
+END $$;
 
 -- 6. CRIAR TABELA DE CONFIGURAÇÕES DA CLÍNICA
 CREATE TABLE IF NOT EXISTS public.clinic_settings (
@@ -120,7 +229,38 @@ ADD COLUMN IF NOT EXISTS patient_response text,
 ADD COLUMN IF NOT EXISTS homework_assigned text,
 ADD COLUMN IF NOT EXISTS attachments jsonb;
 
--- 9. CRIAR FUNÇÃO DE AUDITORIA
+-- 9. CRIAR/ATUALIZAR FUNÇÕES DE AUDITORIA
+-- Desabilitar temporariamente os triggers que usam audit_trigger() para evitar erros durante a atualização
+-- Triggers já foram removidos no início da migration
+
+-- Atualizar audit_trigger() da migration anterior para usar 'action' em vez de 'operation'
+DROP FUNCTION IF EXISTS public.audit_trigger() CASCADE;
+CREATE OR REPLACE FUNCTION public.audit_trigger()
+RETURNS trigger AS $$
+BEGIN
+    INSERT INTO public.audit_log (
+        table_name,
+        record_id,
+        action,
+        old_values,
+        new_values,
+        user_id,
+        user_email
+    ) VALUES (
+        TG_TABLE_NAME,
+        COALESCE(NEW.id, OLD.id),
+        TG_OP,
+        CASE WHEN TG_OP = 'DELETE' THEN to_jsonb(OLD) ELSE NULL END,
+        CASE WHEN TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN to_jsonb(NEW) ELSE NULL END,
+        auth.uid(),
+        auth.email()
+    );
+    
+    RETURN COALESCE(NEW, OLD);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Criar audit_trigger_function() (alias)
 CREATE OR REPLACE FUNCTION public.audit_trigger_function()
 RETURNS trigger AS $$
 BEGIN
@@ -145,6 +285,8 @@ BEGIN
     RETURN COALESCE(NEW, OLD);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Reabilitar triggers após atualização da função (serão recriados abaixo)
 
 -- 10. CRIAR TRIGGERS DE AUDITORIA
 DROP TRIGGER IF EXISTS audit_patients ON public.patients;
@@ -261,36 +403,76 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- 13. CRIAR VIEW PARA AGENDAMENTOS COMPLETOS
-CREATE OR REPLACE VIEW public.appointments_full AS
-SELECT 
-    a.*,
-    p.name as patient_name,
-    p.phone as patient_phone,
-    p.email as patient_email,
-    pr.full_name as therapist_name,
-    pr.crefito as therapist_crefito,
-    CONCAT(a.appointment_date, ' ', a.appointment_time) as full_datetime
-FROM public.appointments a
-LEFT JOIN public.patients p ON a.patient_id = p.id
-LEFT JOIN public.profiles pr ON a.therapist_id = pr.id;
+-- Usar DO para criar view condicionalmente se crefito existir
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'crefito') THEN
+        EXECUTE 'CREATE OR REPLACE VIEW public.appointments_full AS
+        SELECT 
+            a.*,
+            p.name as patient_name,
+            p.phone as patient_phone,
+            p.email as patient_email,
+            pr.full_name as therapist_name,
+            pr.crefito as therapist_crefito,
+            CONCAT(COALESCE(a.appointment_date::text, ''''), '' '', COALESCE(a.appointment_time::text, '''')) as full_datetime
+        FROM public.appointments a
+        LEFT JOIN public.patients p ON a.patient_id = p.id
+        LEFT JOIN public.profiles pr ON a.therapist_id = pr.id';
+    ELSE
+        EXECUTE 'CREATE OR REPLACE VIEW public.appointments_full AS
+        SELECT 
+            a.*,
+            p.name as patient_name,
+            p.phone as patient_phone,
+            p.email as patient_email,
+            pr.full_name as therapist_name,
+            NULL::text as therapist_crefito,
+            CONCAT(COALESCE(a.appointment_date::text, ''''), '' '', COALESCE(a.appointment_time::text, '''')) as full_datetime
+        FROM public.appointments a
+        LEFT JOIN public.patients p ON a.patient_id = p.id
+        LEFT JOIN public.profiles pr ON a.therapist_id = pr.id';
+    END IF;
+END $$;
 
 -- 14. CRIAR VIEW PARA ESTATÍSTICAS
-CREATE OR REPLACE VIEW public.therapist_stats AS
-SELECT 
-    pr.id as therapist_id,
-    pr.full_name as therapist_name,
-    COUNT(DISTINCT a.patient_id) as total_patients,
-    COUNT(a.id) as total_appointments,
-    COUNT(CASE WHEN a.status = 'atendido' THEN 1 END) as completed_appointments,
-    COUNT(CASE WHEN a.status = 'faltou' THEN 1 END) as missed_appointments,
-    ROUND(
-        COUNT(CASE WHEN a.status = 'atendido' THEN 1 END)::numeric / 
-        NULLIF(COUNT(a.id), 0) * 100, 2
-    ) as completion_rate
-FROM public.profiles pr
-LEFT JOIN public.appointments a ON pr.id = a.therapist_id
-WHERE pr.role IN ('fisioterapeuta', 'admin')
-GROUP BY pr.id, pr.full_name;
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'role') THEN
+        EXECUTE 'CREATE OR REPLACE VIEW public.therapist_stats AS
+        SELECT 
+            pr.id as therapist_id,
+            pr.full_name as therapist_name,
+            COUNT(DISTINCT a.patient_id) as total_patients,
+            COUNT(a.id) as total_appointments,
+            COUNT(CASE WHEN a.status = ''atendido'' THEN 1 END) as completed_appointments,
+            COUNT(CASE WHEN a.status = ''faltou'' THEN 1 END) as missed_appointments,
+            ROUND(
+                COUNT(CASE WHEN a.status = ''atendido'' THEN 1 END)::numeric / 
+                NULLIF(COUNT(a.id), 0) * 100, 2
+            ) as completion_rate
+        FROM public.profiles pr
+        LEFT JOIN public.appointments a ON pr.id = a.therapist_id
+        WHERE (pr.role IN (''fisioterapeuta'', ''admin'') OR pr.role IS NULL)
+        GROUP BY pr.id, pr.full_name';
+    ELSE
+        EXECUTE 'CREATE OR REPLACE VIEW public.therapist_stats AS
+        SELECT 
+            pr.id as therapist_id,
+            pr.full_name as therapist_name,
+            COUNT(DISTINCT a.patient_id) as total_patients,
+            COUNT(a.id) as total_appointments,
+            COUNT(CASE WHEN a.status = ''atendido'' THEN 1 END) as completed_appointments,
+            COUNT(CASE WHEN a.status = ''faltou'' THEN 1 END) as missed_appointments,
+            ROUND(
+                COUNT(CASE WHEN a.status = ''atendido'' THEN 1 END)::numeric / 
+                NULLIF(COUNT(a.id), 0) * 100, 2
+            ) as completion_rate
+        FROM public.profiles pr
+        LEFT JOIN public.appointments a ON pr.id = a.therapist_id
+        GROUP BY pr.id, pr.full_name';
+    END IF;
+END $$;
 
 -- 15. HABILITAR RLS EM TODAS AS TABELAS
 ALTER TABLE public.audit_log ENABLE ROW LEVEL SECURITY;
@@ -298,33 +480,95 @@ ALTER TABLE public.clinic_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
 -- 16. CRIAR POLÍTICAS RLS ESPECÍFICAS POR ROLE
-
--- Políticas para audit_log (só admins podem ver)
-CREATE POLICY "Admins can view audit log" ON public.audit_log
-    FOR SELECT USING (
-        EXISTS(SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-    );
+DO $$
+BEGIN
+    -- Políticas para audit_log (só admins podem ver)
+    DROP POLICY IF EXISTS "Admins can view audit log" ON public.audit_log;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'role') THEN
+        EXECUTE 'CREATE POLICY "Admins can view audit log" ON public.audit_log
+            FOR SELECT USING (
+                EXISTS(
+                    SELECT 1 FROM public.profiles p
+                    WHERE p.id = auth.uid()
+                    AND (p.role = ''admin'' OR EXISTS(
+                        SELECT 1 FROM public.organization_members om
+                        WHERE om.user_id = auth.uid() AND om.role = ''admin''
+                    ))
+                )
+            )';
+    ELSE
+        EXECUTE 'CREATE POLICY "Admins can view audit log" ON public.audit_log
+            FOR SELECT USING (
+                EXISTS(
+                    SELECT 1 FROM public.organization_members om
+                    WHERE om.user_id = auth.uid() AND om.role = ''admin''
+                )
+            )';
+    END IF;
+END $$;
 
 -- Políticas para clinic_settings (admins podem tudo, outros só visualizar)
-CREATE POLICY "Admins can manage clinic settings" ON public.clinic_settings
-    FOR ALL USING (
-        EXISTS(SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-    );
-
-CREATE POLICY "Staff can view clinic settings" ON public.clinic_settings
-    FOR SELECT USING (
-        EXISTS(SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('fisioterapeuta', 'estagiario'))
-    );
+DO $$
+BEGIN
+    DROP POLICY IF EXISTS "Admins can manage clinic settings" ON public.clinic_settings;
+    DROP POLICY IF EXISTS "Staff can view clinic settings" ON public.clinic_settings;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'role') THEN
+        EXECUTE 'CREATE POLICY "Admins can manage clinic settings" ON public.clinic_settings
+            FOR ALL USING (
+                EXISTS(
+                    SELECT 1 FROM public.profiles p
+                    WHERE p.id = auth.uid()
+                    AND (p.role = ''admin'' OR EXISTS(
+                        SELECT 1 FROM public.organization_members om
+                        WHERE om.user_id = auth.uid() AND om.role = ''admin''
+                    ))
+                )
+            )';
+        EXECUTE 'CREATE POLICY "Staff can view clinic settings" ON public.clinic_settings
+            FOR SELECT USING (
+                EXISTS(
+                    SELECT 1 FROM public.profiles p
+                    WHERE p.id = auth.uid()
+                    AND (p.role IN (''fisioterapeuta'', ''estagiario'') OR p.role IS NULL)
+                )
+            )';
+    ELSE
+        EXECUTE 'CREATE POLICY "Admins can manage clinic settings" ON public.clinic_settings
+            FOR ALL USING (
+                EXISTS(
+                    SELECT 1 FROM public.organization_members om
+                    WHERE om.user_id = auth.uid() AND om.role = ''admin''
+                )
+            )';
+        EXECUTE 'CREATE POLICY "Staff can view clinic settings" ON public.clinic_settings
+            FOR SELECT USING (true)';
+    END IF;
+END $$;
 
 -- Políticas para notifications
-CREATE POLICY "Users can view their notifications" ON public.notifications
-    FOR SELECT USING (recipient_id = auth.uid());
-
-CREATE POLICY "Users can update their notifications" ON public.notifications
-    FOR UPDATE USING (recipient_id = auth.uid());
-
-CREATE POLICY "System can create notifications" ON public.notifications
-    FOR INSERT WITH CHECK (true);
+DO $$
+BEGIN
+    DROP POLICY IF EXISTS "Users can view their notifications" ON public.notifications;
+    DROP POLICY IF EXISTS "Users can update their notifications" ON public.notifications;
+    DROP POLICY IF EXISTS "System can create notifications" ON public.notifications;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'notifications' AND column_name = 'recipient_id') THEN
+        EXECUTE 'CREATE POLICY "Users can view their notifications" ON public.notifications
+            FOR SELECT USING (recipient_id = auth.uid())';
+        EXECUTE 'CREATE POLICY "Users can update their notifications" ON public.notifications
+            FOR UPDATE USING (recipient_id = auth.uid())';
+    ELSE
+        EXECUTE 'CREATE POLICY "Users can view their notifications" ON public.notifications
+            FOR SELECT USING (true)';
+        EXECUTE 'CREATE POLICY "Users can update their notifications" ON public.notifications
+            FOR UPDATE USING (true)';
+    END IF;
+    
+    EXECUTE 'CREATE POLICY "System can create notifications" ON public.notifications
+        FOR INSERT WITH CHECK (true)';
+END $$;
 
 -- 17. CRIAR ÍNDICES PARA PERFORMANCE
 CREATE INDEX IF NOT EXISTS idx_patients_profile_id ON public.patients(profile_id);
@@ -335,7 +579,13 @@ CREATE INDEX IF NOT EXISTS idx_appointments_patient ON public.appointments(patie
 CREATE INDEX IF NOT EXISTS idx_medical_records_patient ON public.medical_records(patient_id);
 CREATE INDEX IF NOT EXISTS idx_treatment_sessions_patient ON public.treatment_sessions(patient_id);
 CREATE INDEX IF NOT EXISTS idx_audit_log_table_record ON public.audit_log(table_name, record_id);
-CREATE INDEX IF NOT EXISTS idx_notifications_recipient ON public.notifications(recipient_id);
+-- Criar índice apenas se a coluna existir
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'notifications' AND column_name = 'recipient_id') THEN
+        CREATE INDEX IF NOT EXISTS idx_notifications_recipient ON public.notifications(recipient_id);
+    END IF;
+END $$;
 
 -- 18. CONFIGURAR REALTIME PARA AGENDAMENTOS
 ALTER TABLE public.appointments REPLICA IDENTITY FULL;

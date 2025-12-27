@@ -1,9 +1,15 @@
 -- Fase 1: Infraestrutura de Banco de Dados
 
 -- 1. Criar enum para roles
-CREATE TYPE public.user_role AS ENUM ('admin', 'fisioterapeuta', 'estagiario', 'paciente', 'parceiro');
+-- Criar tipo apenas se não existir
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
+        CREATE TYPE public.user_role AS ENUM ('admin', 'fisioterapeuta', 'estagiario', 'paciente', 'parceiro');
+    END IF;
+END $$;
 
--- 2. Criar bucket para avatars
+-- 2. Criar bucket para avatars (apenas se não existir)
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
   'avatars', 
@@ -11,13 +17,11 @@ VALUES (
   true, 
   5242880, -- 5MB limit
   ARRAY['image/jpeg', 'image/png', 'image/webp']::text[]
-);
+)
+ON CONFLICT (id) DO NOTHING;
 
 -- 3. Expandir tabela profiles
 ALTER TABLE public.profiles 
-  ALTER COLUMN role DROP DEFAULT,
-  ALTER COLUMN role TYPE public.user_role USING role::public.user_role,
-  ALTER COLUMN role SET DEFAULT 'fisioterapeuta'::public.user_role,
   ADD COLUMN IF NOT EXISTS bio text,
   ADD COLUMN IF NOT EXISTS experience_years integer,
   ADD COLUMN IF NOT EXISTS consultation_fee numeric(10,2),
@@ -27,12 +31,24 @@ ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS last_login_at timestamp with time zone,
   ADD COLUMN IF NOT EXISTS timezone text DEFAULT 'America/Sao_Paulo';
 
+-- Alterar coluna role apenas se existir
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'role') THEN
+        ALTER TABLE public.profiles ALTER COLUMN role DROP DEFAULT;
+        ALTER TABLE public.profiles ALTER COLUMN role TYPE public.user_role USING role::text::public.user_role;
+        ALTER TABLE public.profiles ALTER COLUMN role SET DEFAULT 'fisioterapeuta'::public.user_role;
+    END IF;
+END $$;
+
 -- 4. Criar políticas RLS para avatars
+DROP POLICY IF EXISTS "Avatar images are publicly accessible" ON storage.objects;
 CREATE POLICY "Avatar images are publicly accessible" 
 ON storage.objects 
 FOR SELECT 
 USING (bucket_id = 'avatars');
 
+DROP POLICY IF EXISTS "Users can upload their own avatar" ON storage.objects;
 CREATE POLICY "Users can upload their own avatar" 
 ON storage.objects 
 FOR INSERT 
@@ -41,6 +57,7 @@ WITH CHECK (
   AND auth.uid()::text = (storage.foldername(name))[1]
 );
 
+DROP POLICY IF EXISTS "Users can update their own avatar" ON storage.objects;
 CREATE POLICY "Users can update their own avatar" 
 ON storage.objects 
 FOR UPDATE 
@@ -49,6 +66,7 @@ USING (
   AND auth.uid()::text = (storage.foldername(name))[1]
 );
 
+DROP POLICY IF EXISTS "Users can delete their own avatar" ON storage.objects;
 CREATE POLICY "Users can delete their own avatar" 
 ON storage.objects 
 FOR DELETE 
@@ -57,7 +75,7 @@ USING (
   AND auth.uid()::text = (storage.foldername(name))[1]
 );
 
--- 5. Atualizar função handle_new_user para incluir role
+-- 5. Atualizar função handle_new_user para incluir role (se existir)
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -65,20 +83,35 @@ SECURITY DEFINER
 SET search_path = 'public'
 AS $function$
 BEGIN
-  INSERT INTO public.profiles (
-    user_id, 
-    full_name, 
-    role,
-    onboarding_completed,
-    last_login_at
-  )
-  VALUES (
-    NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
-    COALESCE((NEW.raw_user_meta_data->>'role')::public.user_role, 'paciente'::public.user_role),
-    false,
-    now()
-  );
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'role') THEN
+    INSERT INTO public.profiles (
+      user_id, 
+      full_name, 
+      role,
+      onboarding_completed,
+      last_login_at
+    )
+    VALUES (
+      NEW.id,
+      COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
+      COALESCE((NEW.raw_user_meta_data->>'role')::public.user_role, 'paciente'::public.user_role),
+      false,
+      now()
+    );
+  ELSE
+    INSERT INTO public.profiles (
+      user_id, 
+      full_name,
+      onboarding_completed,
+      last_login_at
+    )
+    VALUES (
+      NEW.id,
+      COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
+      false,
+      now()
+    );
+  END IF;
   RETURN NEW;
 END;
 $function$;
@@ -120,6 +153,7 @@ BEGIN
 END;
 $function$;
 
+DROP TRIGGER IF EXISTS on_auth_user_login ON auth.users;
 CREATE TRIGGER on_auth_user_login
   AFTER UPDATE OF last_sign_in_at ON auth.users
   FOR EACH ROW 

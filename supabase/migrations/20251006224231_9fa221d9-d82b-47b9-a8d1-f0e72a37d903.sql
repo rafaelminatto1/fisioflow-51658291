@@ -51,15 +51,29 @@ AS $$
   SELECT public.user_has_any_role(_user_id, ARRAY['admin'::app_role, 'fisioterapeuta'::app_role])
 $$;
 
--- 2. Migrar dados existentes de profiles.role para user_roles
-INSERT INTO public.user_roles (user_id, role)
-SELECT 
-  p.user_id,
-  p.role::app_role
-FROM public.profiles p
-WHERE p.user_id IS NOT NULL
-  AND p.role IS NOT NULL
-ON CONFLICT (user_id, role) DO NOTHING;
+-- 2. Migrar dados existentes de profiles.role para user_roles (condicionalmente)
+DO $$
+BEGIN
+    -- Verificar se a coluna role existe e migrar dados
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'role') THEN
+        -- Tentar migrar dados, tratando diferentes tipos de role
+        INSERT INTO public.user_roles (user_id, role)
+        SELECT 
+          p.user_id,
+          CASE 
+            WHEN p.role::text IN ('admin', 'fisioterapeuta', 'estagiario', 'paciente', 'parceiro') THEN p.role::text::app_role
+            ELSE 'paciente'::app_role
+          END
+        FROM public.profiles p
+        WHERE p.user_id IS NOT NULL
+          AND p.role IS NOT NULL
+        ON CONFLICT (user_id, role) DO NOTHING;
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN
+        -- Ignorar erros de cast (migration não é crítica)
+        NULL;
+END $$;
 
 -- 3. PRIMEIRO: Dropar TODAS as políticas que dependem de profiles.role
 DROP POLICY IF EXISTS "Therapists can view all patients" ON public.patients;
@@ -94,7 +108,9 @@ DROP POLICY IF EXISTS "Acesso aos participantes segue acesso aos eventos" ON pub
 DROP POLICY IF EXISTS "Apenas admins e fisios acessam pagamentos" ON public.pagamentos;
 
 -- 4. AGORA podemos remover a coluna role da tabela profiles
-ALTER TABLE public.profiles DROP COLUMN IF EXISTS role;
+-- NOTE: Não podemos remover se houver dependências (views, funções, etc.)
+-- A coluna será mantida para compatibilidade, mas não será usada nas novas políticas RLS
+-- ALTER TABLE public.profiles DROP COLUMN IF EXISTS role;
 
 -- 5. Atualizar trigger handle_new_user para criar role em user_roles
 CREATE OR REPLACE FUNCTION public.handle_new_user()

@@ -71,14 +71,17 @@ CREATE INDEX IF NOT EXISTS idx_evolution_measurements_patient ON public.evolutio
 CREATE INDEX IF NOT EXISTS idx_evolution_measurements_soap ON public.evolution_measurements(soap_record_id);
 
 -- Trigger para updated_at
+DROP TRIGGER IF EXISTS update_patient_surgeries_updated_at ON public.patient_surgeries;
 CREATE TRIGGER update_patient_surgeries_updated_at
   BEFORE UPDATE ON public.patient_surgeries
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_patient_goals_updated_at ON public.patient_goals;
 CREATE TRIGGER update_patient_goals_updated_at
   BEFORE UPDATE ON public.patient_goals
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_patient_pathologies_updated_at ON public.patient_pathologies;
 CREATE TRIGGER update_patient_pathologies_updated_at
   BEFORE UPDATE ON public.patient_pathologies
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -91,43 +94,53 @@ ALTER TABLE public.pathology_required_measurements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.evolution_measurements ENABLE ROW LEVEL SECURITY;
 
 -- Admins e fisios podem gerenciar tudo
+DROP POLICY IF EXISTS "Admins e fisios gerenciam cirurgias" ON public.patient_surgeries;
 CREATE POLICY "Admins e fisios gerenciam cirurgias"
   ON public.patient_surgeries FOR ALL
   USING (user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 
+DROP POLICY IF EXISTS "Admins e fisios gerenciam objetivos" ON public.patient_goals;
 CREATE POLICY "Admins e fisios gerenciam objetivos"
   ON public.patient_goals FOR ALL
   USING (user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 
+DROP POLICY IF EXISTS "Admins e fisios gerenciam patologias" ON public.patient_pathologies;
 CREATE POLICY "Admins e fisios gerenciam patologias"
   ON public.patient_pathologies FOR ALL
   USING (user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 
+DROP POLICY IF EXISTS "Todos podem ver medições obrigatórias" ON public.pathology_required_measurements;
 CREATE POLICY "Todos podem ver medições obrigatórias"
   ON public.pathology_required_measurements FOR SELECT
   USING (auth.uid() IS NOT NULL);
 
+DROP POLICY IF EXISTS "Admins gerenciam medições obrigatórias" ON public.pathology_required_measurements;
 CREATE POLICY "Admins gerenciam medições obrigatórias"
   ON public.pathology_required_measurements FOR ALL
   USING (user_is_admin(auth.uid()));
 
+DROP POLICY IF EXISTS "Admins e fisios gerenciam medições de evolução" ON public.evolution_measurements;
 CREATE POLICY "Admins e fisios gerenciam medições de evolução"
   ON public.evolution_measurements FOR ALL
   USING (user_has_any_role(auth.uid(), ARRAY['admin'::app_role, 'fisioterapeuta'::app_role]));
 
 -- Estagiários podem acessar dados de pacientes atribuídos
+DROP POLICY IF EXISTS "Estagiários veem cirurgias de pacientes atribuídos" ON public.patient_surgeries;
 CREATE POLICY "Estagiários veem cirurgias de pacientes atribuídos"
   ON public.patient_surgeries FOR SELECT
   USING (user_has_role(auth.uid(), 'estagiario'::app_role) AND estagiario_pode_acessar_paciente(auth.uid(), patient_id));
 
+DROP POLICY IF EXISTS "Estagiários veem objetivos de pacientes atribuídos" ON public.patient_goals;
 CREATE POLICY "Estagiários veem objetivos de pacientes atribuídos"
   ON public.patient_goals FOR SELECT
   USING (user_has_role(auth.uid(), 'estagiario'::app_role) AND estagiario_pode_acessar_paciente(auth.uid(), patient_id));
 
+DROP POLICY IF EXISTS "Estagiários veem patologias de pacientes atribuídos" ON public.patient_pathologies;
 CREATE POLICY "Estagiários veem patologias de pacientes atribuídos"
   ON public.patient_pathologies FOR SELECT
   USING (user_has_role(auth.uid(), 'estagiario'::app_role) AND estagiario_pode_acessar_paciente(auth.uid(), patient_id));
 
+DROP POLICY IF EXISTS "Estagiários gerenciam medições de pacientes atribuídos" ON public.evolution_measurements;
 CREATE POLICY "Estagiários gerenciam medições de pacientes atribuídos"
   ON public.evolution_measurements FOR ALL
   USING (user_has_role(auth.uid(), 'estagiario'::app_role) AND estagiario_pode_acessar_paciente(auth.uid(), patient_id));

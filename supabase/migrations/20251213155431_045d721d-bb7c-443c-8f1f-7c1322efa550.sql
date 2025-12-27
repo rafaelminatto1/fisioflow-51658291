@@ -55,6 +55,7 @@ DROP POLICY IF EXISTS "Estagiários criam prontuários de pacientes atribuídos"
 DROP POLICY IF EXISTS "Estagiários atualizam prontuários de pacientes atribuídos" ON medical_records;
 
 -- Estagiários podem criar apenas drafts
+DROP POLICY IF EXISTS "Estagiários criam drafts de prontuários" ON medical_records;
 CREATE POLICY "Estagiários criam drafts de prontuários"
 ON medical_records FOR INSERT
 WITH CHECK (
@@ -65,6 +66,7 @@ WITH CHECK (
 );
 
 -- Estagiários podem atualizar apenas seus próprios drafts
+DROP POLICY IF EXISTS "Estagiários atualizam próprios drafts" ON medical_records;
 CREATE POLICY "Estagiários atualizam próprios drafts"
 ON medical_records FOR UPDATE
 USING (
@@ -78,6 +80,7 @@ WITH CHECK (
 );
 
 -- Supervisores (fisioterapeutas/admins) podem aprovar prontuários
+DROP POLICY IF EXISTS "Supervisores aprovam prontuários" ON medical_records;
 CREATE POLICY "Supervisores aprovam prontuários"
 ON medical_records FOR UPDATE
 USING (

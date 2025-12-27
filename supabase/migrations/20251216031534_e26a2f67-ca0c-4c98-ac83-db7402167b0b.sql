@@ -24,6 +24,7 @@ CREATE INDEX IF NOT EXISTS idx_document_signatures_hash ON public.document_signa
 ALTER TABLE public.document_signatures ENABLE ROW LEVEL SECURITY;
 
 -- Políticas RLS
+DROP POLICY IF EXISTS "Users can view signatures from their organization" ON public.document_signatures;
 CREATE POLICY "Users can view signatures from their organization"
 ON public.document_signatures
 FOR SELECT
@@ -33,6 +34,7 @@ USING (
   )
 );
 
+DROP POLICY IF EXISTS "Fisio and admin can create signatures" ON public.document_signatures;
 CREATE POLICY "Fisio and admin can create signatures"
 ON public.document_signatures
 FOR INSERT
@@ -69,21 +71,25 @@ CREATE TABLE IF NOT EXISTS public.xp_transactions (
 ALTER TABLE public.patient_gamification ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.xp_transactions ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Anyone can view patient gamification" ON public.patient_gamification;
 CREATE POLICY "Anyone can view patient gamification"
 ON public.patient_gamification
 FOR SELECT
 USING (true);
 
+DROP POLICY IF EXISTS "Fisio and admin can manage gamification" ON public.patient_gamification;
 CREATE POLICY "Fisio and admin can manage gamification"
 ON public.patient_gamification
 FOR ALL
 USING (public.user_is_fisio_or_admin(auth.uid()));
 
+DROP POLICY IF EXISTS "Anyone can view xp transactions" ON public.xp_transactions;
 CREATE POLICY "Anyone can view xp transactions"
 ON public.xp_transactions
 FOR SELECT
 USING (true);
 
+DROP POLICY IF EXISTS "Fisio and admin can create xp transactions" ON public.xp_transactions;
 CREATE POLICY "Fisio and admin can create xp transactions"
 ON public.xp_transactions
 FOR INSERT

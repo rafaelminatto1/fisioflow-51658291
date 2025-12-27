@@ -6,6 +6,7 @@ DROP POLICY IF EXISTS "Estagiários gerenciam agendamentos de pacientes atribuí
 DROP POLICY IF EXISTS "Users can view own appointments" ON appointments;
 
 -- Criar política mais permissiva para INSERT
+DROP POLICY IF EXISTS "Membros podem criar agendamentos" ON appointments;
 CREATE POLICY "Membros podem criar agendamentos"
 ON appointments
 FOR INSERT
@@ -22,6 +23,7 @@ WITH CHECK (
 );
 
 -- Política para SELECT
+DROP POLICY IF EXISTS "Membros veem agendamentos da org" ON appointments;
 CREATE POLICY "Membros veem agendamentos da org"
 ON appointments
 FOR SELECT
@@ -53,6 +55,7 @@ USING (
 );
 
 -- Política para UPDATE
+DROP POLICY IF EXISTS "Membros podem atualizar agendamentos" ON appointments;
 CREATE POLICY "Membros podem atualizar agendamentos"
 ON appointments
 FOR UPDATE
@@ -72,6 +75,7 @@ USING (
 );
 
 -- Política para DELETE
+DROP POLICY IF EXISTS "Apenas admins podem deletar agendamentos" ON appointments;
 CREATE POLICY "Apenas admins podem deletar agendamentos"
 ON appointments
 FOR DELETE

@@ -79,26 +79,31 @@ CREATE INDEX IF NOT EXISTS idx_participantes_evento_id ON public.participantes(e
 CREATE INDEX IF NOT EXISTS idx_pagamentos_evento_id ON public.pagamentos(evento_id);
 
 -- Criar triggers para updated_at
+DROP TRIGGER IF EXISTS update_eventos_updated_at ON public.eventos;
 CREATE TRIGGER update_eventos_updated_at
 BEFORE UPDATE ON public.eventos
 FOR EACH ROW
 EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_prestadores_updated_at ON public.prestadores;
 CREATE TRIGGER update_prestadores_updated_at
 BEFORE UPDATE ON public.prestadores
 FOR EACH ROW
 EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_checklist_items_updated_at ON public.checklist_items;
 CREATE TRIGGER update_checklist_items_updated_at
 BEFORE UPDATE ON public.checklist_items
 FOR EACH ROW
 EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_participantes_updated_at ON public.participantes;
 CREATE TRIGGER update_participantes_updated_at
 BEFORE UPDATE ON public.participantes
 FOR EACH ROW
 EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_pagamentos_updated_at ON public.pagamentos;
 CREATE TRIGGER update_pagamentos_updated_at
 BEFORE UPDATE ON public.pagamentos
 FOR EACH ROW
@@ -112,6 +117,7 @@ ALTER TABLE public.participantes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.pagamentos ENABLE ROW LEVEL SECURITY;
 
 -- Políticas RLS para eventos
+DROP POLICY IF EXISTS "Admins e fisios podem ver todos os eventos" ON public.eventos;
 CREATE POLICY "Admins e fisios podem ver todos os eventos"
 ON public.eventos FOR SELECT
 USING (
@@ -122,6 +128,7 @@ USING (
   )
 );
 
+DROP POLICY IF EXISTS "Admins e fisios podem criar eventos" ON public.eventos;
 CREATE POLICY "Admins e fisios podem criar eventos"
 ON public.eventos FOR INSERT
 WITH CHECK (
@@ -132,6 +139,7 @@ WITH CHECK (
   )
 );
 
+DROP POLICY IF EXISTS "Admins e fisios podem atualizar eventos" ON public.eventos;
 CREATE POLICY "Admins e fisios podem atualizar eventos"
 ON public.eventos FOR UPDATE
 USING (
@@ -142,6 +150,7 @@ USING (
   )
 );
 
+DROP POLICY IF EXISTS "Apenas admins podem deletar eventos" ON public.eventos;
 CREATE POLICY "Apenas admins podem deletar eventos"
 ON public.eventos FOR DELETE
 USING (
@@ -153,6 +162,7 @@ USING (
 );
 
 -- Políticas RLS para prestadores (herdam acesso dos eventos)
+DROP POLICY IF EXISTS "Acesso a prestadores segue acesso aos eventos" ON public.prestadores;
 CREATE POLICY "Acesso a prestadores segue acesso aos eventos"
 ON public.prestadores FOR ALL
 USING (
@@ -164,6 +174,7 @@ USING (
 );
 
 -- Políticas RLS para checklist (herdam acesso dos eventos)
+DROP POLICY IF EXISTS "Acesso ao checklist segue acesso aos eventos" ON public.checklist_items;
 CREATE POLICY "Acesso ao checklist segue acesso aos eventos"
 ON public.checklist_items FOR ALL
 USING (
@@ -175,6 +186,7 @@ USING (
 );
 
 -- Políticas RLS para participantes (herdam acesso dos eventos)
+DROP POLICY IF EXISTS "Acesso aos participantes segue acesso aos eventos" ON public.participantes;
 CREATE POLICY "Acesso aos participantes segue acesso aos eventos"
 ON public.participantes FOR ALL
 USING (
@@ -186,6 +198,7 @@ USING (
 );
 
 -- Políticas RLS para pagamentos (apenas admin e fisio)
+DROP POLICY IF EXISTS "Apenas admins e fisios acessam pagamentos" ON public.pagamentos;
 CREATE POLICY "Apenas admins e fisios acessam pagamentos"
 ON public.pagamentos FOR ALL
 USING (

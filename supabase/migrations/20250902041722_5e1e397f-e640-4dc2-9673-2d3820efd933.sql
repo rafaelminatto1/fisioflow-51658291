@@ -1,7 +1,12 @@
 -- Fase 1: Infraestrutura de Banco de Dados
 
--- 1. Criar enum para roles
-CREATE TYPE public.user_role AS ENUM ('admin', 'fisioterapeuta', 'estagiario', 'paciente', 'parceiro');
+-- 1. Criar enum para roles (apenas se não existir)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
+        CREATE TYPE public.user_role AS ENUM ('admin', 'fisioterapeuta', 'estagiario', 'paciente', 'parceiro');
+    END IF;
+END $$;
 
 -- 2. Criar bucket para avatars
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
@@ -15,9 +20,6 @@ VALUES (
 
 -- 3. Expandir tabela profiles
 ALTER TABLE public.profiles 
-  ALTER COLUMN role DROP DEFAULT,
-  ALTER COLUMN role TYPE public.user_role USING role::public.user_role,
-  ALTER COLUMN role SET DEFAULT 'fisioterapeuta'::public.user_role,
   ADD COLUMN IF NOT EXISTS bio text,
   ADD COLUMN IF NOT EXISTS experience_years integer,
   ADD COLUMN IF NOT EXISTS consultation_fee numeric(10,2),
@@ -26,6 +28,19 @@ ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS onboarding_completed boolean DEFAULT false,
   ADD COLUMN IF NOT EXISTS last_login_at timestamp with time zone,
   ADD COLUMN IF NOT EXISTS timezone text DEFAULT 'America/Sao_Paulo';
+
+-- Alterar coluna role apenas se existir
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'role') THEN
+        ALTER TABLE public.profiles 
+          ALTER COLUMN role DROP DEFAULT;
+        ALTER TABLE public.profiles 
+          ALTER COLUMN role TYPE public.user_role USING role::text::public.user_role;
+        ALTER TABLE public.profiles 
+          ALTER COLUMN role SET DEFAULT 'fisioterapeuta'::public.user_role;
+    END IF;
+END $$;
 
 -- 4. Criar políticas RLS para avatars
 CREATE POLICY "Avatar images are publicly accessible" 
@@ -57,7 +72,7 @@ USING (
   AND auth.uid()::text = (storage.foldername(name))[1]
 );
 
--- 5. Atualizar função handle_new_user para incluir role
+-- 5. Atualizar função handle_new_user para incluir role (se existir)
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -65,20 +80,35 @@ SECURITY DEFINER
 SET search_path = 'public'
 AS $function$
 BEGIN
-  INSERT INTO public.profiles (
-    user_id, 
-    full_name, 
-    role,
-    onboarding_completed,
-    last_login_at
-  )
-  VALUES (
-    NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
-    COALESCE((NEW.raw_user_meta_data->>'role')::public.user_role, 'paciente'::public.user_role),
-    false,
-    now()
-  );
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'profiles' AND column_name = 'role') THEN
+    INSERT INTO public.profiles (
+      user_id, 
+      full_name, 
+      role,
+      onboarding_completed,
+      last_login_at
+    )
+    VALUES (
+      NEW.id,
+      COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
+      COALESCE((NEW.raw_user_meta_data->>'role')::public.user_role, 'paciente'::public.user_role),
+      false,
+      now()
+    );
+  ELSE
+    INSERT INTO public.profiles (
+      user_id, 
+      full_name,
+      onboarding_completed,
+      last_login_at
+    )
+    VALUES (
+      NEW.id,
+      COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
+      false,
+      now()
+    );
+  END IF;
   RETURN NEW;
 END;
 $function$;

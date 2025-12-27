@@ -2,14 +2,19 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { PainMapCanvas } from './PainMapCanvas';
 import { PainEvolutionChart } from '@/components/pain-map/PainEvolutionChart';
 import { PainMapHistory } from './PainMapHistory';
 import { PainGauge } from '@/components/pain-map/PainGauge';
+import { EvaScaleBar } from '@/components/pain-map/EvaScaleBar';
+import { PainPointsBottomSheet } from '@/components/pain-map/PainPointsBottomSheet';
+import { PainPointDetailPanel } from '@/components/pain-map/PainPointDetailPanel';
 import { usePainMaps, usePainEvolution, usePainStatistics, useCreatePainMap, useUpdatePainMap } from '@/hooks/usePainMaps';
 import { useAuth } from '@/hooks/useAuth';
 import type { PainMapPoint, PainIntensity } from '@/types/painMap';
-import { TrendingDown, TrendingUp, Minus, CheckCircle2, Loader2 } from 'lucide-react';
+import type { PainPoint } from '@/components/pain-map/BodyMap';
+import { TrendingDown, TrendingUp, Minus, CheckCircle2, Loader2, List } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface PainMapManagerProps {
@@ -28,11 +33,15 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
   const lastSavedRef = useRef<string>('');
   
-  const { data: painMaps = [], isLoading } = usePainMaps(patientId);
+  const { patientMaps: painMaps = [], isLoading } = usePainMaps({ patientId });
   const { data: painEvolution = [] } = usePainEvolution(patientId);
   const { data: stats } = usePainStatistics(patientId);
   const createPainMap = useCreatePainMap();
   const updatePainMap = useUpdatePainMap();
+  
+  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
+  const [selectedPointForDetail, setSelectedPointForDetail] = useState<PainPoint | null>(null);
+  const [selectedIntensity, setSelectedIntensity] = useState<PainIntensity>(5);
 
   const globalPainLevel = painPoints.length > 0 
     ? Math.round(painPoints.reduce((sum, p) => sum + p.intensity, 0) / painPoints.length) as PainIntensity
@@ -40,26 +49,31 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
 
   // Auto-save function
   const autoSave = useCallback(async () => {
-    if (!user || painPoints.length === 0 || readOnly) return;
+    if (!user || painPoints.length === 0 || readOnly || !sessionId) return;
 
     const currentData = JSON.stringify(painPoints);
     if (currentData === lastSavedRef.current) return;
 
     setSaveStatus('saving');
 
-    const painMapData = {
-      patient_id: patientId,
-      session_id: sessionId,
-      appointment_id: appointmentId,
-      recorded_at: new Date().toISOString(),
-      pain_points: painPoints,
-      global_pain_level: globalPainLevel,
-      notes: notes || null,
-      created_by: user.id
-    };
+    // Converter PainMapPoint para formato do BodyMap (PainPoint)
+    const bodyMapPoints: Omit<import('@/components/pain-map/BodyMap').PainPoint, 'id'>[] = painPoints.map(p => ({
+      regionCode: p.region,
+      region: p.region,
+      intensity: p.intensity,
+      painType: p.painType as any,
+      notes: p.description,
+      x: p.x,
+      y: p.y,
+    }));
 
     try {
-      await createPainMap.mutateAsync(painMapData);
+      // Usar 'front' como view padrão (pode ser melhorado para detectar automaticamente)
+      await createPainMap.mutateAsync({
+        sessionId,
+        view: 'front',
+        points: bodyMapPoints,
+      });
       lastSavedRef.current = currentData;
       setSaveStatus('saved');
       
@@ -69,7 +83,7 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
       console.error('Erro ao salvar mapa de dor:', error);
       setSaveStatus('idle');
     }
-  }, [user, painPoints, patientId, sessionId, appointmentId, globalPainLevel, notes, createPainMap, readOnly]);
+  }, [user, painPoints, sessionId, createPainMap, readOnly]);
 
   // Auto-save effect with debounce
   useEffect(() => {
@@ -118,6 +132,54 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
     }
   };
 
+  // Converter PainMapPoint para PainPoint (BodyMap)
+  const convertToBodyMapPoint = useCallback((point: PainMapPoint): PainPoint => {
+    return {
+      id: `point-${point.x}-${point.y}`,
+      regionCode: point.region,
+      region: point.region,
+      intensity: point.intensity,
+      painType: point.painType as PainPoint['painType'],
+      notes: point.description,
+      x: point.x,
+      y: point.y,
+    };
+  }, []);
+
+  const handlePointUpdate = useCallback((point: PainPoint) => {
+    const updatedPoint: PainMapPoint = {
+      region: point.region as PainMapPoint['region'],
+      intensity: point.intensity,
+      painType: point.painType as PainMapPoint['painType'],
+      description: point.notes,
+      x: point.x,
+      y: point.y,
+    };
+    
+    setPainPoints(prev => {
+      const index = prev.findIndex(p => p.x === point.x && p.y === point.y);
+      if (index >= 0) {
+        const newPoints = [...prev];
+        newPoints[index] = updatedPoint;
+        return newPoints;
+      }
+      return prev;
+    });
+    
+    if (selectedPointForDetail?.id === point.id) {
+      setSelectedPointForDetail(point);
+    }
+  }, [selectedPointForDetail]);
+
+  const handlePointRemove = useCallback((pointId: string) => {
+    setPainPoints(prev => prev.filter((p, index) => `point-${p.x}-${p.y}` !== pointId));
+    if (selectedPointForDetail?.id === pointId) {
+      setSelectedPointForDetail(null);
+    }
+  }, [selectedPointForDetail]);
+
+  const bodyMapPoints: PainPoint[] = painPoints.map(convertToBodyMapPoint);
+
   return (
     <div className="space-y-6">
       {/* Statistics Overview */}
@@ -155,59 +217,84 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
         </TabsList>
 
         <TabsContent value="current" className="space-y-4 mt-6">
-          <PainMapCanvas 
-            painPoints={painPoints}
-            onPainPointsChange={setPainPoints}
-            readOnly={readOnly}
-          />
-          
-          {!readOnly && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-              <Card className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-muted-foreground mb-2">Score Total</p>
-                    <div className="flex items-center gap-4">
-                      <PainGauge 
-                        score={globalPainLevel * 10} 
-                        intensity={globalPainLevel}
-                        size="md"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </Card>
-              
-              <Card className="p-4">
-                <div className="flex flex-col justify-between h-full">
-                  <p className="text-sm font-medium text-muted-foreground mb-2">Status</p>
-                  <div className="flex items-center gap-2 text-sm">
-                    {saveStatus === 'saving' && (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                        <span className="text-foreground">Salvando...</span>
-                      </>
-                    )}
-                    {saveStatus === 'saved' && (
-                      <>
-                        <CheckCircle2 className="w-4 h-4 text-green-600" />
-                        <span className="text-green-600">Salvo automaticamente</span>
-                      </>
-                    )}
-                    {saveStatus === 'idle' && painPoints.length > 0 && (
-                      <span className="text-muted-foreground">Auto-save ativo</span>
-                    )}
-                  </div>
-                  <div className="mt-4 text-xs text-muted-foreground">
-                    {painPoints.length} {painPoints.length === 1 ? 'ponto registrado' : 'pontos registrados'}
-                  </div>
-                </div>
-              </Card>
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="lg:w-2/3">
+              <PainMapCanvas 
+                painPoints={painPoints}
+                onPainPointsChange={setPainPoints}
+                readOnly={readOnly}
+              />
             </div>
-          )}
+            
+            <Card className="lg:w-1/3 p-4 flex flex-col justify-between gap-4">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-sm font-medium">Nível Global de Dor</p>
+                  <PainGauge 
+                    score={globalPainLevel * 10} 
+                    intensity={globalPainLevel}
+                    size="md"
+                  />
+                </div>
+                
+                <div className="mb-4">
+                  <EvaScaleBar
+                    value={selectedIntensity}
+                    onChange={(v) => setSelectedIntensity(v as PainIntensity)}
+                    readOnly={readOnly}
+                  />
+                </div>
+                
+                <div className="mb-4">
+                  <Button 
+                    onClick={() => setIsBottomSheetOpen(true)} 
+                    className="w-full"
+                    variant="outline"
+                    disabled={painPoints.length === 0}
+                  >
+                    <List className="w-4 h-4 mr-2" />
+                    Ver Pontos ({painPoints.length})
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Auto-save status indicator */}
+              {!readOnly && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mt-auto pt-4 border-t">
+                  {saveStatus === 'saving' && (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Salvando...</span>
+                    </>
+                  )}
+                  {saveStatus === 'saved' && (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                      <span className="text-green-600">Salvo automaticamente</span>
+                    </>
+                  )}
+                  {saveStatus === 'idle' && painPoints.length > 0 && (
+                    <span className="text-xs">Auto-save ativo</span>
+                  )}
+                </div>
+              )}
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="evolution" className="space-y-4 mt-6">
+          <div className="flex justify-end">
+            <Select value={chartType} onValueChange={(v: any) => setChartType(v)}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="line">Linha</SelectItem>
+                <SelectItem value="area">Área</SelectItem>
+                <SelectItem value="bar">Barras</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <PainEvolutionChart 
             evolutionData={painEvolution} 
             showStats={true}
@@ -221,6 +308,27 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
           />
         </TabsContent>
       </Tabs>
+
+      {/* Bottom Sheet para lista de pontos */}
+      <PainPointsBottomSheet
+        points={bodyMapPoints}
+        onPointEdit={(point) => setSelectedPointForDetail(point)}
+        onPointRemove={handlePointRemove}
+        open={isBottomSheetOpen}
+        onOpenChange={setIsBottomSheetOpen}
+      />
+
+      {/* Painel de detalhes do ponto */}
+      {selectedPointForDetail && (
+        <div className="fixed right-4 top-20 z-50 w-96 max-w-[calc(100vw-2rem)]">
+          <PainPointDetailPanel
+            point={selectedPointForDetail}
+            onUpdate={handlePointUpdate}
+            onDelete={handlePointRemove}
+            onClose={() => setSelectedPointForDetail(null)}
+          />
+        </div>
+      )}
     </div>
   );
 }

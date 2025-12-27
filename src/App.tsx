@@ -64,6 +64,7 @@ const Inventory = lazy(() => import("./pages/Inventory"));
 const PatientGamificationPage = lazy(() => import("./pages/PatientGamificationPage"));
 const PainMapHistoryPage = lazy(() => import("./pages/patients/PainMapHistoryPage"));
 const SessionEvolutionPage = lazy(() => import("./pages/SessionEvolutionPage"));
+const ApiDocs = lazy(() => import("./pages/ApiDocs"));
 
 // Fase 2: Cadastros Gerais
 const ServicosPage = lazy(() => import("./pages/cadastros/ServicosPage"));
@@ -144,7 +145,8 @@ const App = () => {
   }, []);
 
   return (
-    <ErrorBoundary>
+    <SentryErrorBoundary>
+      <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <AuthProvider>
@@ -178,6 +180,8 @@ const App = () => {
                   <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
                   <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                   <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                  <Route path="/api-docs" element={<ProtectedRoute><ApiDocs /></ProtectedRoute>} />
+                  <Route path="/mobile" element={<ProtectedRoute><PatientApp /></ProtectedRoute>} />
                   <Route path="/medical-record" element={<ProtectedRoute><MedicalRecord /></ProtectedRoute>} />
                   <Route path="/smart-ai" element={<ProtectedRoute><SmartAI /></ProtectedRoute>} />
                   <Route path="/physiotherapy" element={<ProtectedRoute><PhysiotherapyHub /></ProtectedRoute>} />
@@ -259,7 +263,8 @@ const App = () => {
           </AuthProvider>
         </TooltipProvider>
       </QueryClientProvider>
-    </ErrorBoundary>
+      </ErrorBoundary>
+    </SentryErrorBoundary>
   );
 };
 

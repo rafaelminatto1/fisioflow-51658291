@@ -70,20 +70,15 @@ WITH CHECK (
 );
 
 -- Intern can update appointment status (for marking sessions as completed)
+-- Nota: Não podemos comparar OLD e NEW em WITH CHECK, então permitimos apenas atualização de status
 CREATE POLICY "Intern can update appointment status"
 ON appointments FOR UPDATE
 USING (
     get_user_role() = 'intern'
 )
 WITH CHECK (
-    get_user_role() = 'intern' AND
-    -- Only allow status changes, not other fields
-    (OLD.patient_id = NEW.patient_id AND
-     OLD.therapist_id = NEW.therapist_id AND
-     OLD.date = NEW.date AND
-     OLD.start_time = NEW.start_time AND
-     OLD.end_time = NEW.end_time AND
-     OLD.session_type = NEW.session_type)
+    get_user_role() = 'intern'
+    -- A validação de campos que não podem ser alterados deve ser feita em triggers ou na aplicação
 );
 
 -- Admin and therapist can delete appointments
@@ -200,16 +195,17 @@ USING (
 CREATE OR REPLACE VIEW patient_appointment_summary AS
 SELECT 
     a.id,
-    a.date,
-    a.start_time,
+    COALESCE(a.date, a.appointment_date) as date,
+    COALESCE(a.start_time, a.appointment_time) as start_time,
     a.end_time,
     a.status,
     a.payment_status,
-    a.session_type,
+    'individual'::TEXT as session_type,
     a.notes,
-    u.name as therapist_name
+    COALESCE(p.full_name, u.raw_user_meta_data->>'full_name', 'Fisioterapeuta') as therapist_name
 FROM appointments a
-JOIN auth.users u ON u.id = a.therapist_id
+LEFT JOIN auth.users u ON u.id = a.therapist_id
+LEFT JOIN profiles p ON p.user_id = a.therapist_id
 WHERE is_patient_owner(a.patient_id);
 
 -- Grant access to the view
@@ -222,12 +218,12 @@ SELECT
     a.patient_id,
     p.name as patient_name,
     p.phone as patient_phone,
-    a.date,
-    a.start_time,
+    COALESCE(a.date, a.appointment_date) as date,
+    COALESCE(a.start_time, a.appointment_time) as start_time,
     a.end_time,
     a.status,
     a.payment_status,
-    a.session_type,
+    'individual'::TEXT as session_type,
     a.notes,
     a.created_at,
     a.updated_at

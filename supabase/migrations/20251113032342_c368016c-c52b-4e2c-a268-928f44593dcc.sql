@@ -54,6 +54,7 @@ CREATE INDEX IF NOT EXISTS idx_exercise_protocols_condition ON public.exercise_p
 -- RLS Policies para exercise_templates
 ALTER TABLE public.exercise_templates ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Membros veem templates da org ou públicos" ON public.exercise_templates;
 CREATE POLICY "Membros veem templates da org ou públicos"
   ON public.exercise_templates FOR SELECT
   USING (
@@ -61,6 +62,7 @@ CREATE POLICY "Membros veem templates da org ou públicos"
     user_belongs_to_organization(auth.uid(), organization_id)
   );
 
+DROP POLICY IF EXISTS "Terapeutas gerenciam templates da org" ON public.exercise_templates;
 CREATE POLICY "Terapeutas gerenciam templates da org"
   ON public.exercise_templates FOR ALL
   USING (
@@ -71,6 +73,7 @@ CREATE POLICY "Terapeutas gerenciam templates da org"
 -- RLS Policies para exercise_template_items
 ALTER TABLE public.exercise_template_items ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Membros veem itens de templates" ON public.exercise_template_items;
 CREATE POLICY "Membros veem itens de templates"
   ON public.exercise_template_items FOR SELECT
   USING (
@@ -79,6 +82,7 @@ CREATE POLICY "Membros veem itens de templates"
     )
   );
 
+DROP POLICY IF EXISTS "Terapeutas gerenciam itens de templates" ON public.exercise_template_items;
 CREATE POLICY "Terapeutas gerenciam itens de templates"
   ON public.exercise_template_items FOR ALL
   USING (
@@ -92,6 +96,7 @@ CREATE POLICY "Terapeutas gerenciam itens de templates"
 -- RLS Policies para exercise_protocols
 ALTER TABLE public.exercise_protocols ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Todos podem ver protocolos" ON public.exercise_protocols;
 CREATE POLICY "Todos podem ver protocolos"
   ON public.exercise_protocols FOR SELECT
   USING (
@@ -99,6 +104,7 @@ CREATE POLICY "Todos podem ver protocolos"
     user_belongs_to_organization(auth.uid(), organization_id)
   );
 
+DROP POLICY IF EXISTS "Terapeutas gerenciam protocolos" ON public.exercise_protocols;
 CREATE POLICY "Terapeutas gerenciam protocolos"
   ON public.exercise_protocols FOR ALL
   USING (
@@ -107,11 +113,13 @@ CREATE POLICY "Terapeutas gerenciam protocolos"
   );
 
 -- Trigger para updated_at
+DROP TRIGGER IF EXISTS update_exercise_templates_updated_at ON public.exercise_templates;
 CREATE TRIGGER update_exercise_templates_updated_at
   BEFORE UPDATE ON public.exercise_templates
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_exercise_protocols_updated_at ON public.exercise_protocols;
 CREATE TRIGGER update_exercise_protocols_updated_at
   BEFORE UPDATE ON public.exercise_protocols
   FOR EACH ROW

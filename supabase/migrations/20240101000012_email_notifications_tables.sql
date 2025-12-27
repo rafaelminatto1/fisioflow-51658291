@@ -78,14 +78,18 @@ CREATE POLICY "Authenticated users can manage email templates" ON email_template
 CREATE POLICY "Users can view their email notifications" ON email_notifications
   FOR SELECT TO authenticated USING (
     patient_id IN (
-      SELECT id FROM patients WHERE created_by = auth.uid()
+      SELECT id FROM patients WHERE organization_id IN (
+        SELECT organization_id FROM profiles WHERE user_id = auth.uid()
+      )
     )
   );
 
 CREATE POLICY "Users can manage their email notifications" ON email_notifications
   FOR ALL TO authenticated USING (
     patient_id IN (
-      SELECT id FROM patients WHERE created_by = auth.uid()
+      SELECT id FROM patients WHERE organization_id IN (
+        SELECT organization_id FROM profiles WHERE user_id = auth.uid()
+      )
     )
   );
 

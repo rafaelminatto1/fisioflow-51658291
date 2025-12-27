@@ -1,5 +1,56 @@
 -- Populando sistema com dados demo
 
+-- Habilitar extensão pgcrypto (necessária para triggers de hash de CPF)
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- Desabilitar temporariamente triggers para inserção de dados demo
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    -- Desabilitar trigger de hash de CPF
+    ALTER TABLE public.patients DISABLE TRIGGER encrypt_patient_cpf_trigger;
+EXCEPTION
+    WHEN OTHERS THEN
+        NULL; -- Trigger pode não existir ainda
+END $$;
+
+-- Desabilitar todos os triggers que usam encrypt_sensitive_data
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN 
+        SELECT trigger_name, event_object_table 
+        FROM information_schema.triggers 
+        WHERE trigger_schema = 'public' 
+        AND (trigger_name LIKE '%encrypt%' OR trigger_name LIKE '%cpf%')
+    LOOP
+        EXECUTE format('ALTER TABLE %I.%I DISABLE TRIGGER %I', 'public', r.event_object_table, r.trigger_name);
+    END LOOP;
+EXCEPTION
+    WHEN OTHERS THEN
+        NULL;
+END $$;
+
+-- Desabilitar triggers de auditoria que podem ter colunas incompatíveis
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN 
+        SELECT trigger_name, event_object_table 
+        FROM information_schema.triggers 
+        WHERE trigger_schema = 'public' 
+        AND trigger_name LIKE '%audit%'
+    LOOP
+        EXECUTE format('ALTER TABLE %I.%I DISABLE TRIGGER %I', 'public', r.event_object_table, r.trigger_name);
+    END LOOP;
+EXCEPTION
+    WHEN OTHERS THEN
+        NULL;
+END $$;
+
 -- Inserir pacientes demo
 INSERT INTO public.patients (id, name, email, phone, birth_date, cpf, address, city, state, zip_code, health_insurance, insurance_number, emergency_contact, emergency_phone, observations, status)
 VALUES
@@ -52,9 +103,9 @@ BEGIN
           (TIME '09:00:00' + (hour_offset * INTERVAL '2 hours'))::time,
           60,
           CASE (day_offset + hour_offset) % 3
-            WHEN 0 THEN 'Fisioterapia'
-            WHEN 1 THEN 'Avaliação'
-            ELSE 'Retorno'
+            WHEN 0 THEN 'fisioterapia'
+            WHEN 1 THEN 'avaliacao'
+            ELSE 'retorno'
           END,
           CASE 
             WHEN day_offset = 0 AND hour_offset = 0 THEN 'confirmado'
@@ -148,4 +199,40 @@ BEGIN
       (evento_ids[2], 'prestador', 'Pagamento Dr. Marcos', 600.00, CURRENT_DATE - 2),
       (evento_ids[3], 'prestador', 'Pagamento Fisio Team', 800.00, CURRENT_DATE - 1);
   END IF;
+END $$;
+
+-- Reabilitar triggers de auditoria
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN 
+        SELECT trigger_name, event_object_table 
+        FROM information_schema.triggers 
+        WHERE trigger_schema = 'public' 
+        AND trigger_name LIKE '%audit%'
+    LOOP
+        EXECUTE format('ALTER TABLE %I.%I ENABLE TRIGGER %I', 'public', r.event_object_table, r.trigger_name);
+    END LOOP;
+EXCEPTION
+    WHEN OTHERS THEN
+        NULL;
+END $$;
+
+-- Reabilitar todos os triggers que usam encrypt_sensitive_data
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN 
+        SELECT trigger_name, event_object_table 
+        FROM information_schema.triggers 
+        WHERE trigger_schema = 'public' 
+        AND (trigger_name LIKE '%encrypt%' OR trigger_name LIKE '%cpf%')
+    LOOP
+        EXECUTE format('ALTER TABLE %I.%I ENABLE TRIGGER %I', 'public', r.event_object_table, r.trigger_name);
+    END LOOP;
+EXCEPTION
+    WHEN OTHERS THEN
+        NULL;
 END $$;
