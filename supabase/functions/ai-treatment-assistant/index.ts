@@ -17,7 +17,7 @@ serve(async (req) => {
     // Rate limiting
     const rateLimitResult = await checkRateLimit(req, 'ai-treatment-assistant');
     if (!rateLimitResult.allowed) {
-      console.warn(`Rate limit excedido para ai-treatment-assistant: ${rateLimitResult.current_count}/${rateLimitResult.limit}`);
+      await captureMessage(`Rate limit excedido para ai-treatment-assistant: ${rateLimitResult.current_count}/${rateLimitResult.limit}`, 'warning');
       return createRateLimitResponse(rateLimitResult, corsHeaders);
     }
 
@@ -31,7 +31,7 @@ serve(async (req) => {
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
-      console.error("LOVABLE_API_KEY não configurada");
+      await captureException(new Error("LOVABLE_API_KEY não configurada"), { function: 'ai-treatment-assistant' });
       return errorResponse("Erro de configuração do servidor", 500, corsHeaders);
     }
 
@@ -194,7 +194,8 @@ Gere um relatório profissional incluindo:
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("Erro no assistente de IA:", error);
+    const err = error instanceof Error ? error : new Error(String(error));
+    await captureException(err, { function: 'ai-treatment-assistant' });
     return errorResponse("Erro ao processar requisição", 500, corsHeaders);
   }
 });

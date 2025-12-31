@@ -20,6 +20,7 @@ import {
 } from '../_shared/api-helpers.ts';
 import { patientCreateSchema, patientUpdateSchema, medicalRecordUpdateSchema, validateSchema } from '../_shared/schemas.ts';
 import { checkRateLimit, createRateLimitResponse, addRateLimitHeaders } from '../_shared/rate-limit.ts';
+import { captureException } from '../_shared/sentry.ts';
 
 const BASE_PATH = '/api-patients';
 
@@ -88,7 +89,8 @@ serve(async (req: Request) => {
         return methodNotAllowed(['GET', 'POST']);
     }
   } catch (error) {
-    console.error('Patients API Error:', error);
+    const err = error instanceof Error ? error : new Error(String(error));
+    await captureException(err, { function: 'api-patients' });
     return errorResponse('Erro interno do servidor', 500);
   }
 });

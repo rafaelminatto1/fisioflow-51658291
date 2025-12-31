@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { AlertTriangle, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/errors/logger';
 
 const quickPatientSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -85,7 +86,7 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
         .eq('user_id', user.id);
 
       if (rolesError) {
-        console.warn('Falha ao buscar papéis do usuário:', rolesError);
+        logger.warn('Falha ao buscar papéis do usuário', rolesError, 'QuickPatientModal');
       }
 
       const allowed = ['admin', 'fisioterapeuta', 'estagiario'];
@@ -100,7 +101,7 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
         return;
       }
 
-      console.log('Creating quick patient:', data);
+      logger.info('Criando paciente rápido', { name: data.name }, 'QuickPatientModal');
       
       const { data: newPatient, error } = await supabase
         .from('patients')
@@ -116,11 +117,11 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
         .single();
 
       if (error) {
-        console.error('Supabase error:', error);
+        logger.error('Erro do Supabase ao criar paciente', error, 'QuickPatientModal');
         throw error;
       }
 
-      console.log('Patient created successfully:', newPatient);
+      logger.info('Paciente criado com sucesso', { patientId: newPatient.id }, 'QuickPatientModal');
 
       toast({
         title: 'Paciente criado!',
@@ -131,7 +132,7 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
       onOpenChange(false);
       onPatientCreated(newPatient.id, newPatient.name);
     } catch (error: any) {
-      console.error('Error creating quick patient:', error);
+      logger.error('Erro ao criar paciente rápido', error, 'QuickPatientModal');
 
       let description = error?.message || 'Não foi possível criar o paciente.';
       if (error?.code === '42501' || /row-level security/i.test(description) || error?.status === 401) {

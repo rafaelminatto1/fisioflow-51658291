@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './card';
 
 interface Column<T> {
@@ -16,13 +16,19 @@ interface ResponsiveTableProps<T> {
   emptyMessage?: string;
 }
 
-export function ResponsiveTable<T extends Record<string, any>>({
+function ResponsiveTableComponent<T extends Record<string, any>>({
   data,
   columns,
   keyExtractor,
   onRowClick,
   emptyMessage = 'Nenhum item encontrado'
 }: ResponsiveTableProps<T>) {
+  const handleRowClick = useCallback((item: T) => {
+    onRowClick?.(item);
+  }, [onRowClick]);
+
+  const memoizedColumns = useMemo(() => columns, [columns]);
+
   if (data.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
@@ -38,7 +44,7 @@ export function ResponsiveTable<T extends Record<string, any>>({
         <table className="w-full">
           <thead>
             <tr className="border-b">
-              {columns.map((col) => (
+              {memoizedColumns.map((col) => (
                 <th
                   key={col.key}
                   className="text-left py-3 px-4 font-medium text-sm text-muted-foreground"
@@ -52,12 +58,12 @@ export function ResponsiveTable<T extends Record<string, any>>({
             {data.map((item) => (
               <tr
                 key={keyExtractor(item)}
-                onClick={() => onRowClick?.(item)}
+                onClick={() => handleRowClick(item)}
                 className={`border-b hover:bg-muted/50 transition-colors ${
                   onRowClick ? 'cursor-pointer' : ''
                 }`}
               >
-                {columns.map((col) => (
+                {memoizedColumns.map((col) => (
                   <td key={col.key} className="py-3 px-4">
                     {col.render ? col.render(item) : item[col.key]}
                   </td>
@@ -73,11 +79,11 @@ export function ResponsiveTable<T extends Record<string, any>>({
         {data.map((item) => (
           <Card
             key={keyExtractor(item)}
-            onClick={() => onRowClick?.(item)}
+            onClick={() => handleRowClick(item)}
             className={onRowClick ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}
           >
             <CardContent className="p-4 space-y-2">
-              {columns.map((col) => (
+              {memoizedColumns.map((col) => (
                 <div key={col.key} className="flex justify-between items-start">
                   <span className="text-sm font-medium text-muted-foreground">
                     {col.mobileLabel || col.label}:
@@ -94,3 +100,5 @@ export function ResponsiveTable<T extends Record<string, any>>({
     </>
   );
 }
+
+export const ResponsiveTable = React.memo(ResponsiveTableComponent) as typeof ResponsiveTableComponent;

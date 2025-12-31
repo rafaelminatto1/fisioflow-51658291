@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+import { logger } from '@/lib/errors/logger';
 
 interface DashboardStats {
   totalPatients: number;
@@ -69,8 +70,9 @@ export const useDashboardStats = () => {
         newPatients: newPatients || 0
       });
     } catch (err) {
-      setError(err as Error);
-      console.error('Error loading dashboard stats:', err);
+      const error = err instanceof Error ? err : new Error(String(err));
+      setError(error);
+      logger.error('Erro ao carregar estatísticas do dashboard', error, 'useDashboardStats');
     } finally {
       setLoading(false);
     }
@@ -84,11 +86,19 @@ export const useDashboardStats = () => {
       .channel('dashboard-stats')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'appointments' },
-        () => loadStats()
+        () => {
+          loadStats().catch((err) => {
+            logger.error('Erro ao recarregar estatísticas após mudança em appointments', err, 'useDashboardStats');
+          });
+        }
       )
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'patients' },
-        () => loadStats()
+        () => {
+          loadStats().catch((err) => {
+            logger.error('Erro ao recarregar estatísticas após mudança em patients', err, 'useDashboardStats');
+          });
+        }
       )
       .subscribe();
 

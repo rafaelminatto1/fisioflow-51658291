@@ -17,6 +17,7 @@ import {
 } from '../_shared/api-helpers.ts';
 import { paymentCreateSchema, checkoutCreateSchema, validateSchema } from '../_shared/schemas.ts';
 import { checkRateLimit, createRateLimitResponse } from '../_shared/rate-limit.ts';
+import { captureException } from '../_shared/sentry.ts';
 
 const BASE_PATH = '/api-payments';
 
@@ -73,7 +74,8 @@ serve(async (req: Request) => {
         return methodNotAllowed(['GET', 'POST']);
     }
   } catch (error) {
-    console.error('Payments API Error:', error);
+    const err = error instanceof Error ? error : new Error(String(error));
+    await captureException(err, { function: 'api-payments' });
     return errorResponse('Erro interno do servidor', 500);
   }
 });
@@ -231,7 +233,8 @@ async function createCheckout(req: Request, user: { id: string; organization_id?
 
     return successResponse(result);
   } catch (error) {
-    console.error('Checkout Error:', error);
+    const err = error instanceof Error ? error : new Error(String(error));
+    await captureException(err, { function: 'api-payments', action: 'checkout' });
     return errorResponse('Erro ao criar checkout', 500);
   }
 }

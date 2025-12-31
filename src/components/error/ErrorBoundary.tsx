@@ -43,7 +43,7 @@ class ErrorBoundary extends Component<Props, State> {
       errorInfo,
     });
 
-    console.error('ErrorBoundary capturou um erro:', error, errorInfo);
+    // Error is already tracked by trackError function
   }
 
   handleReload = () => {

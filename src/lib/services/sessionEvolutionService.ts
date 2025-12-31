@@ -2,6 +2,17 @@ import { supabase } from '@/integrations/supabase/client';
 import type { SessionEvolution, SessionEvolutionFormData } from '@/types/evolution';
 
 export class SessionEvolutionService {
+  static async calculateSessionNumber(patientId: string, recordDate: string): Promise<number> {
+    const { data: previousRecords } = await supabase
+      .from('soap_records')
+      .select('record_date')
+      .eq('patient_id', patientId)
+      .lt('record_date', recordDate)
+      .order('record_date', { ascending: true });
+
+    return (previousRecords?.length || 0) + 1;
+  }
+
   static async getSessionEvolution(sessionId: string): Promise<SessionEvolution | null> {
     const { data, error } = await supabase
       .from('soap_records')
@@ -34,12 +45,14 @@ export class SessionEvolutionService {
       created_at: m.created_at
     }));
 
+    const sessionNumber = await this.calculateSessionNumber(data.patient_id, data.record_date);
+
     return {
       id: data.id,
       session_id: data.appointment_id || sessionId,
       patient_id: data.patient_id,
       session_date: data.record_date,
-      session_number: 1, // TODO: Calculate based on patient history
+      session_number: sessionNumber,
       subjective: data.subjective || '',
       objective: data.objective || '',
       assessment: data.assessment || '',

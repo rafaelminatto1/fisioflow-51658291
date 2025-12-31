@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/errors/logger';
 
 export interface WhatsAppMessage {
   to: string;
@@ -81,7 +82,7 @@ export class WhatsAppService {
 
         if (error) {
           lastError = error.message;
-          console.error(`Attempt ${attempt} failed:`, error);
+          logger.error(`Tentativa ${attempt} de envio WhatsApp falhou`, error, 'WhatsAppService');
           
           if (attempt < this.MAX_RETRIES) {
             await this.delay(this.RETRY_DELAY_MS * attempt);
@@ -102,12 +103,12 @@ export class WhatsAppService {
         });
 
         if (!error) {
-          console.log('WhatsApp message sent successfully:', data);
+          logger.info('Mensagem WhatsApp enviada com sucesso', { messageId: data?.messageId }, 'WhatsAppService');
           return { success: true, messageId: data?.messageId };
         }
       } catch (error) {
         lastError = error instanceof Error ? error.message : 'Unknown error';
-        console.error(`Attempt ${attempt} error:`, error);
+        logger.error(`Erro na tentativa ${attempt} de envio WhatsApp`, error, 'WhatsAppService');
         
         if (attempt < this.MAX_RETRIES) {
           await this.delay(this.RETRY_DELAY_MS * attempt);
@@ -156,7 +157,7 @@ export class WhatsAppService {
         retry_count: params.retryCount,
       });
     } catch (error) {
-      console.error('Error logging WhatsApp message:', error);
+      logger.error('Erro ao registrar mensagem WhatsApp', error, 'WhatsAppService');
     }
   }
 
@@ -170,7 +171,7 @@ export class WhatsAppService {
       .eq('status', 'ativo');
 
     if (error) {
-      console.error('Error fetching templates:', error);
+      logger.error('Erro ao buscar templates WhatsApp', error, 'WhatsAppService');
       return [];
     }
 

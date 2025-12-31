@@ -12,8 +12,8 @@ export const userRoleSchema = z.enum(['admin', 'therapist', 'intern', 'patient']
 const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 
-export const timeSchema = z.string().regex(timeRegex, "Time must be in HH:MM format");
-export const dateSchema = z.string().regex(dateRegex, "Date must be in YYYY-MM-DD format");
+export const timeSchema = z.string().regex(timeRegex, "Horário deve estar no formato HH:MM");
+export const dateSchema = z.string().regex(dateRegex, "Data deve estar no formato YYYY-MM-DD");
 
 // Base schemas
 export const appointmentSchema = z.object({
@@ -26,7 +26,7 @@ export const appointmentSchema = z.object({
   status: sessionStatusSchema,
   payment_status: paymentStatusSchema,
   session_type: sessionTypeSchema,
-  notes: z.string().max(1000, "Notes must be less than 1000 characters"),
+  notes: z.string().max(1000, "Observações não podem ter mais de 1000 caracteres"),
   created_at: z.string().datetime(),
   updated_at: z.string().datetime(),
 }).refine((data) => {
@@ -37,19 +37,19 @@ export const appointmentSchema = z.object({
   const endMinutes = endHour * 60 + endMin;
   return endMinutes > startMinutes;
 }, {
-  message: "End time must be after start time",
+  message: "Horário de término deve ser posterior ao horário de início",
   path: ["end_time"]
 });
 
 export const patientSchema = z.object({
   id: z.string().uuid(),
-  name: z.string().min(2, "Name must be at least 2 characters").max(100, "Name must be less than 100 characters"),
-  phone: z.string().min(10, "Phone must be at least 10 characters").max(15, "Phone must be less than 15 characters"),
-  email: z.string().email("Invalid email format").max(255, "Email must be less than 255 characters"),
-  session_price: z.number().min(0, "Session price must be positive").max(9999.99, "Session price too high"),
-  package_sessions: z.number().int().min(0, "Package sessions must be non-negative").max(999, "Package sessions too high"),
-  remaining_sessions: z.number().int().min(0, "Remaining sessions must be non-negative").max(999, "Remaining sessions too high"),
-  important_notes: z.string().max(2000, "Important notes must be less than 2000 characters"),
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100, "Nome não pode ter mais de 100 caracteres"),
+  phone: z.string().min(10, "Telefone deve ter pelo menos 10 caracteres").max(15, "Telefone não pode ter mais de 15 caracteres"),
+  email: z.string().email("Formato de email inválido").max(255, "Email não pode ter mais de 255 caracteres"),
+  session_price: z.number().min(0, "Preço da sessão deve ser positivo").max(9999.99, "Preço da sessão muito alto"),
+  package_sessions: z.number().int().min(0, "Sessões do pacote devem ser não negativas").max(999, "Sessões do pacote muito altas"),
+  remaining_sessions: z.number().int().min(0, "Sessões restantes devem ser não negativas").max(999, "Sessões restantes muito altas"),
+  important_notes: z.string().max(2000, "Observações importantes não podem ter mais de 2000 caracteres"),
   status: z.enum(['active', 'inactive']),
   created_at: z.string().datetime(),
   updated_at: z.string().datetime(),
@@ -58,12 +58,12 @@ export const patientSchema = z.object({
 export const paymentSchema = z.object({
   id: z.string().uuid(),
   appointment_id: z.string().uuid(),
-  amount: z.number().min(0, "Amount must be positive").max(99999.99, "Amount too high"),
+  amount: z.number().min(0, "Valor deve ser positivo").max(99999.99, "Valor muito alto"),
   payment_type: paymentTypeSchema,
-  sessions_count: z.number().int().min(1, "Sessions count must be at least 1").max(999, "Sessions count too high").optional(),
+  sessions_count: z.number().int().min(1, "Quantidade de sessões deve ser pelo menos 1").max(999, "Quantidade de sessões muito alta").optional(),
   payment_method: paymentMethodSchema,
   paid_at: z.string().datetime(),
-  notes: z.string().max(500, "Payment notes must be less than 500 characters"),
+  notes: z.string().max(500, "Observações do pagamento não podem ter mais de 500 caracteres"),
   created_at: z.string().datetime(),
 }).refine((data) => {
   // If payment_type is 'package', sessions_count is required
@@ -72,14 +72,14 @@ export const paymentSchema = z.object({
   }
   return true;
 }, {
-  message: "Sessions count is required for package payments",
+  message: "Quantidade de sessões é obrigatória para pagamentos de pacote",
   path: ["sessions_count"]
 });
 
 export const userSchema = z.object({
   id: z.string().uuid(),
-  name: z.string().min(2, "Name must be at least 2 characters").max(100, "Name must be less than 100 characters"),
-  email: z.string().email("Invalid email format").max(255, "Email must be less than 255 characters"),
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").max(100, "Nome não pode ter mais de 100 caracteres"),
+  email: z.string().email("Formato de email inválido").max(255, "Email não pode ter mais de 255 caracteres"),
   role: userRoleSchema,
   created_at: z.string().datetime(),
 });
@@ -92,7 +92,7 @@ export const createAppointmentSchema = z.object({
   start_time: timeSchema,
   end_time: timeSchema,
   session_type: sessionTypeSchema,
-  notes: z.string().max(1000, "Notes must be less than 1000 characters").optional().default(""),
+  notes: z.string().max(1000, "Observações não podem ter mais de 1000 caracteres").optional().default(""),
 }).refine((data) => {
   // Validate that end_time is after start_time
   const [startHour, startMin] = data.start_time.split(':').map(Number);
@@ -101,7 +101,7 @@ export const createAppointmentSchema = z.object({
   const endMinutes = endHour * 60 + endMin;
   return endMinutes > startMinutes;
 }, {
-  message: "End time must be after start time",
+  message: "Horário de término deve ser posterior ao horário de início",
   path: ["end_time"]
 }).refine((data) => {
   // Validate business hours (7:00 - 19:00)
@@ -109,7 +109,7 @@ export const createAppointmentSchema = z.object({
   const [endHour] = data.end_time.split(':').map(Number);
   return startHour >= 7 && endHour <= 19;
 }, {
-  message: "Appointments must be between 7:00 and 19:00",
+  message: "Agendamentos devem estar entre 7:00 e 19:00",
   path: ["start_time"]
 });
 
@@ -120,7 +120,7 @@ export const updateAppointmentSchema = z.object({
   status: sessionStatusSchema.optional(),
   payment_status: paymentStatusSchema.optional(),
   session_type: sessionTypeSchema.optional(),
-  notes: z.string().max(1000, "Notes must be less than 1000 characters").optional(),
+  notes: z.string().max(1000, "Observações não podem ter mais de 1000 caracteres").optional(),
 }).refine((data) => {
   // If both start_time and end_time are provided, validate them
   if (data.start_time && data.end_time) {
@@ -132,17 +132,17 @@ export const updateAppointmentSchema = z.object({
   }
   return true;
 }, {
-  message: "End time must be after start time",
+  message: "Horário de término deve ser posterior ao horário de início",
   path: ["end_time"]
 });
 
 export const createPaymentSchema = z.object({
   appointment_id: z.string().uuid(),
-  amount: z.number().min(0, "Amount must be positive").max(99999.99, "Amount too high"),
+  amount: z.number().min(0, "Valor deve ser positivo").max(99999.99, "Valor muito alto"),
   payment_type: paymentTypeSchema,
-  sessions_count: z.number().int().min(1, "Sessions count must be at least 1").max(999, "Sessions count too high").optional(),
+  sessions_count: z.number().int().min(1, "Quantidade de sessões deve ser pelo menos 1").max(999, "Quantidade de sessões muito alta").optional(),
   payment_method: paymentMethodSchema,
-  notes: z.string().max(500, "Payment notes must be less than 500 characters").optional().default(""),
+  notes: z.string().max(500, "Observações do pagamento não podem ter mais de 500 caracteres").optional().default(""),
 }).refine((data) => {
   // If payment_type is 'package', sessions_count is required
   if (data.payment_type === 'package' && !data.sessions_count) {
@@ -150,7 +150,7 @@ export const createPaymentSchema = z.object({
   }
   return true;
 }, {
-  message: "Sessions count is required for package payments",
+  message: "Quantidade de sessões é obrigatória para pagamentos de pacote",
   path: ["sessions_count"]
 });
 
@@ -168,7 +168,7 @@ export const agendaFiltersSchema = z.object({
   }
   return true;
 }, {
-  message: "Date from must be before or equal to date to",
+  message: "Data inicial deve ser anterior ou igual à data final",
   path: ["date_to"]
 });
 

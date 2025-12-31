@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/errors/logger';
 
 export function useRealtimeEventos() {
   const queryClient = useQueryClient();
@@ -18,7 +19,7 @@ export function useRealtimeEventos() {
           table: 'eventos'
         },
         (payload) => {
-          console.log('Novo evento criado:', payload);
+          logger.info('Novo evento criado', { eventId: payload.new.id, nome: payload.new.nome }, 'useRealtimeEventos');
           queryClient.invalidateQueries({ queryKey: ['eventos'] });
           queryClient.invalidateQueries({ queryKey: ['eventos-stats'] });
           
@@ -36,7 +37,7 @@ export function useRealtimeEventos() {
           table: 'eventos'
         },
         (payload) => {
-          console.log('Evento atualizado:', payload);
+          logger.info('Evento atualizado', { eventId: payload.new.id }, 'useRealtimeEventos');
           queryClient.invalidateQueries({ queryKey: ['eventos'] });
           queryClient.invalidateQueries({ queryKey: ['eventos-stats'] });
           queryClient.invalidateQueries({ queryKey: ['eventos', payload.new.id] });
@@ -50,7 +51,7 @@ export function useRealtimeEventos() {
           table: 'eventos'
         },
         (payload) => {
-          console.log('Evento deletado:', payload);
+          logger.info('Evento deletado', { eventId: payload.old.id }, 'useRealtimeEventos');
           queryClient.invalidateQueries({ queryKey: ['eventos'] });
           queryClient.invalidateQueries({ queryKey: ['eventos-stats'] });
           

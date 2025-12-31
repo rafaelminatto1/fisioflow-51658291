@@ -42,6 +42,9 @@ export const RATE_LIMITS: Record<string, RateLimitConfig> = {
   'notification-status': { maxRequests: 100, windowMinutes: 5 },
   'smart-reminders': { maxRequests: 30, windowMinutes: 5 },
   'schedule-reminders': { maxRequests: 20, windowMinutes: 5 },
+  'send-birthday-message': { maxRequests: 10, windowMinutes: 60 }, // Cron job
+  'send-expiring-vouchers-reminder': { maxRequests: 10, windowMinutes: 60 }, // Cron job
+  'send-nps-survey': { maxRequests: 30, windowMinutes: 5 },
   
   // Funções administrativas
   'backup-manager': { maxRequests: 5, windowMinutes: 5 },

@@ -17,6 +17,7 @@ import {
 } from '../_shared/api-helpers.ts';
 import { sessionCreateSchema, sessionUpdateSchema, validateSchema } from '../_shared/schemas.ts';
 import { checkRateLimit, createRateLimitResponse } from '../_shared/rate-limit.ts';
+import { captureException } from '../_shared/sentry.ts';
 
 const BASE_PATH = '/api-sessions';
 
@@ -75,7 +76,8 @@ serve(async (req: Request) => {
         return methodNotAllowed(['GET', 'POST']);
     }
   } catch (error) {
-    console.error('Sessions API Error:', error);
+    const err = error instanceof Error ? error : new Error(String(error));
+    await captureException(err, { function: 'api-sessions' });
     return errorResponse('Erro interno do servidor', 500);
   }
 });

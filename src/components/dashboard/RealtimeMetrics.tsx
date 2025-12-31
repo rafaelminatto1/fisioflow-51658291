@@ -1,8 +1,9 @@
 // Componente de métricas em tempo real usando Supabase Realtime
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Activity, Users, DollarSign, Calendar } from 'lucide-react';
+import { logger } from '@/lib/errors/logger';
 
 interface RealtimeMetrics {
   totalAppointments: number;
@@ -24,57 +25,7 @@ export function RealtimeMetrics() {
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Carregar métricas iniciais
-    loadMetrics();
-
-    // Configurar subscription para mudanças em tempo real
-    const channel = supabase
-      .channel('dashboard-metrics')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'appointments',
-        },
-        (payload) => {
-          console.log('Mudança em appointments:', payload);
-          loadMetrics(); // Recarregar métricas quando houver mudança
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'sessions',
-        },
-        (payload) => {
-          console.log('Mudança em sessions:', payload);
-          loadMetrics();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'payments',
-        },
-        (payload) => {
-          console.log('Mudança em payments:', payload);
-          loadMetrics();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  async function loadMetrics() {
+  const loadMetrics = useCallback(async () => {
     try {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -124,10 +75,67 @@ export function RealtimeMetrics() {
 
       setLoading(false);
     } catch (error) {
-      console.error('Erro ao carregar métricas:', error);
+      logger.error('Erro ao carregar métricas', error, 'RealtimeMetrics');
       setLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    // Carregar métricas iniciais
+    loadMetrics();
+
+    // Configurar subscription para mudanças em tempo real
+    const channel = supabase
+      .channel('dashboard-metrics')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'appointments',
+        },
+        () => {
+          loadMetrics(); // Recarregar métricas quando houver mudança
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'sessions',
+        },
+        () => {
+          loadMetrics();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'payments',
+        },
+        () => {
+          loadMetrics();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [loadMetrics]);
+
+  const formattedRevenue = useMemo(() => 
+    metrics.todayRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
+    [metrics.todayRevenue]
+  );
+
+  const occupancyRateFormatted = useMemo(() => 
+    metrics.occupancyRate.toFixed(1),
+    [metrics.occupancyRate]
+  );
 
   if (loading) {
     return (
@@ -179,7 +187,7 @@ export function RealtimeMetrics() {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            R$ {metrics.todayRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            R$ {formattedRevenue}
           </div>
           <CardDescription className="text-xs">Receita do dia</CardDescription>
         </CardContent>
@@ -191,7 +199,7 @@ export function RealtimeMetrics() {
           <Activity className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{metrics.occupancyRate.toFixed(1)}%</div>
+          <div className="text-2xl font-bold">{occupancyRateFormatted}%</div>
           <CardDescription className="text-xs">Ocupação do dia</CardDescription>
         </CardContent>
       </Card>

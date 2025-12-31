@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/lib/errors/logger';
 
 export interface WaitlistEntry {
   id: string;
@@ -181,7 +182,7 @@ export function useAddToWaitlist() {
       toast.success(`${data.patient?.name} adicionado à lista de espera`);
     },
     onError: (error: any) => {
-      console.error('Erro ao adicionar à lista:', error);
+      logger.error('Erro ao adicionar à lista de espera', error, 'useWaitlist');
       toast.error(error.message || 'Erro ao adicionar à lista de espera');
     },
   });
@@ -205,7 +206,7 @@ export function useRemoveFromWaitlist() {
       toast.success('Removido da lista de espera');
     },
     onError: (error) => {
-      console.error('Erro ao remover da lista:', error);
+      logger.error('Erro ao remover da lista de espera', error, 'useWaitlist');
       toast.error('Erro ao remover da lista de espera');
     },
   });
@@ -261,7 +262,7 @@ export function useOfferSlot() {
       toast.success(`Vaga oferecida para ${data.patient?.name}`);
     },
     onError: (error: any) => {
-      console.error('Erro ao oferecer vaga:', error);
+      logger.error('Erro ao oferecer vaga', error, 'useWaitlist');
       toast.error(error.message || 'Erro ao oferecer vaga');
     },
   });
@@ -299,7 +300,7 @@ export function useAcceptOffer() {
       toast.success('Oferta aceita! Agendamento confirmado.');
     },
     onError: (error) => {
-      console.error('Erro ao aceitar oferta:', error);
+      logger.error('Erro ao aceitar oferta', error, 'useWaitlist');
       toast.error('Erro ao aceitar oferta');
     },
   });
@@ -359,7 +360,7 @@ export function useRejectOffer() {
       }
     },
     onError: (error) => {
-      console.error('Erro ao recusar oferta:', error);
+      logger.error('Erro ao recusar oferta', error, 'useWaitlist');
       toast.error('Erro ao recusar oferta');
     },
   });
@@ -392,7 +393,7 @@ export function useUpdatePriority() {
       toast.success('Prioridade atualizada');
     },
     onError: (error) => {
-      console.error('Erro ao atualizar prioridade:', error);
+      logger.error('Erro ao atualizar prioridade', error, 'useWaitlist');
       toast.error('Erro ao atualizar prioridade');
     },
   });

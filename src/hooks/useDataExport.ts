@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logger } from "@/lib/errors/logger";
 
 export type DataExportRequestType = 'export' | 'deletion';
 export type DataExportStatus = 'pending' | 'processing' | 'completed' | 'failed';
@@ -56,7 +57,7 @@ export function useDataExport() {
       );
     },
     onError: (error) => {
-      console.error("Erro ao solicitar exportação:", error);
+      logger.error("Erro ao solicitar exportação", error, 'useDataExport');
       toast.error("Erro ao criar solicitação");
     },
   });

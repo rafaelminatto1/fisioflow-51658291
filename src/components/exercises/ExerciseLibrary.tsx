@@ -239,7 +239,7 @@ function ExerciseCard({
   );
 }
 
-function ExerciseListItem({ 
+const ExerciseListItem = React.memo(function ExerciseListItem({ 
   exercise, 
   isFavorite, 
   onToggleFavorite, 
@@ -348,7 +348,7 @@ function ExerciseListItem({
       </div>
     </Card>
   );
-}
+});
 
 export function ExerciseLibrary({ onSelectExercise, onEditExercise }: ExerciseLibraryProps) {
   const [searchTerm, setSearchTerm] = useState('');

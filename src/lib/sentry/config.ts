@@ -1,11 +1,12 @@
 // Configuração do Sentry para o frontend
 import * as Sentry from '@sentry/react';
+import { logger } from '@/lib/errors/logger';
 
 export function initSentry() {
   const dsn = import.meta.env.VITE_SENTRY_DSN;
   
   if (!dsn) {
-    console.warn('Sentry DSN não configurado. Monitoramento de erros desabilitado.');
+    logger.warn('Sentry DSN não configurado. Monitoramento de erros desabilitado.', {}, 'Sentry');
     return;
   }
 

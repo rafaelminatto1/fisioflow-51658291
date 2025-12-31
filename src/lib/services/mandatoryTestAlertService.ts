@@ -2,6 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { MandatoryTestAlert, AssessmentTestConfig } from '@/types/evolution';
 import { TestEvolutionService } from './testEvolutionService';
 import { PathologyService } from './pathologyService';
+import { logger } from '@/lib/errors/logger';
 
 export interface AlertCheckResult {
   canSave: boolean;
@@ -54,7 +55,7 @@ export class MandatoryTestAlertService {
         allCompleted,
       };
     } catch (error) {
-      console.error('Erro ao verificar testes obrigatórios:', error);
+      logger.error('Erro ao verificar testes obrigatórios', error, 'MandatoryTestAlertService');
       // Em caso de erro, permite salvar para não bloquear o fluxo
       return {
         canSave: true,
@@ -90,7 +91,7 @@ export class MandatoryTestAlertService {
     });
 
     if (error) {
-      console.error('Erro ao registrar exceção:', error);
+      logger.error('Erro ao registrar exceção de teste obrigatório', error, 'MandatoryTestAlertService');
       throw error;
     }
   }

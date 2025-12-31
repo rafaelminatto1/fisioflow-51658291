@@ -2,19 +2,25 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { checkRateLimit, createRateLimitResponse } from '../_shared/rate-limit.ts';
+import { parseAndValidate, errorResponse } from '../_shared/validation.ts';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
+import { captureException, captureMessage } from '../_shared/sentry.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface CheckoutRequest {
-  voucher_id: string;
-  price_id?: string;
-  quantity?: number;
-  success_url?: string;
-  cancel_url?: string;
-}
+const checkoutRequestSchema = z.object({
+  voucher_id: z.string().uuid('ID do voucher inválido').optional(),
+  price_id: z.string().min(1, 'ID do preço é obrigatório se voucher_id não for fornecido').optional(),
+  quantity: z.number().int().min(1, 'Quantidade deve ser pelo menos 1').max(100, 'Quantidade muito alta').default(1),
+  success_url: z.string().url('URL de sucesso inválida').optional(),
+  cancel_url: z.string().url('URL de cancelamento inválida').optional(),
+}).refine((data) => data.voucher_id || data.price_id, {
+  message: 'voucher_id ou price_id deve ser fornecido',
+  path: ['voucher_id'],
+});
 
 serve(async (req) => {
   // Handle CORS preflight
@@ -26,7 +32,7 @@ serve(async (req) => {
     // Rate limiting
     const rateLimitResult = await checkRateLimit(req, 'create-checkout');
     if (!rateLimitResult.allowed) {
-      console.warn(`Rate limit excedido para create-checkout: ${rateLimitResult.current_count}/${rateLimitResult.limit}`);
+      await captureMessage(`Rate limit excedido para create-checkout: ${rateLimitResult.current_count}/${rateLimitResult.limit}`, 'warning');
       return createRateLimitResponse(rateLimitResult, corsHeaders);
     }
 
@@ -48,8 +54,12 @@ serve(async (req) => {
       throw new Error("User not authenticated");
     }
 
-    // Parse request body
-    const body: CheckoutRequest = await req.json();
+    // Validate input
+    const { data: body, error: validationError } = await parseAndValidate(req, checkoutRequestSchema, corsHeaders);
+    if (validationError) {
+      return validationError;
+    }
+
     const { voucher_id, price_id, quantity = 1, success_url, cancel_url } = body;
 
     // Initialize Stripe
@@ -169,13 +179,8 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("Checkout error:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      }
-    );
+    const err = error instanceof Error ? error : new Error(String(error));
+    await captureException(err, { function: 'create-checkout' });
+    return errorResponse(err.message || 'Erro ao criar checkout', 500, corsHeaders);
   }
 });

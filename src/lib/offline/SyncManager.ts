@@ -1,6 +1,7 @@
 // Gerenciador de sincronização offline
 import { dbStore } from './IndexedDBStore';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/errors/logger';
 
 export interface SyncResult {
   success: boolean;
@@ -9,13 +10,28 @@ export interface SyncResult {
   errors: string[];
 }
 
+interface SyncQueueItem {
+  id: number;
+  type: 'patient' | 'appointment' | 'session';
+  action: 'create' | 'update' | 'delete';
+  store: string;
+  data: Record<string, unknown>;
+  timestamp: string;
+  status: 'pending' | 'completed' | 'failed';
+  retry_count?: number;
+  last_retry_at?: string;
+  error_message?: string;
+}
+
 export class SyncManager {
   private isSyncing = false;
   private syncListeners: Array<(result: SyncResult) => void> = [];
 
   constructor() {
     // Inicializar IndexedDB
-    dbStore.init().catch(console.error);
+    dbStore.init().catch((error) => {
+      logger.error('Erro ao inicializar IndexedDB', error, 'SyncManager');
+    });
 
     // Sincronizar quando voltar online
     if (typeof window !== 'undefined') {
@@ -105,7 +121,7 @@ export class SyncManager {
   /**
    * Processa um item da fila de sincronização
    */
-  private async processSyncItem(item: any): Promise<void> {
+  private async processSyncItem(item: SyncQueueItem): Promise<void> {
     const { type, action, store, data } = item;
 
     switch (type) {
@@ -164,9 +180,13 @@ export class SyncManager {
 
       if (appointments) {
         // Extrair pacientes únicos
-        const patients = appointments
-          .map((apt: any) => apt.patients)
-          .filter((p: any, index: number, self: any[]) => self.findIndex((x: any) => x?.id === p?.id) === index);
+        interface AppointmentWithPatient {
+          patients?: { id: string; [key: string]: unknown };
+        }
+        const patients = (appointments as AppointmentWithPatient[])
+          .map((apt) => apt.patients)
+          .filter((p, index, self) => p && self.findIndex((x) => x?.id === p?.id) === index)
+          .filter((p): p is NonNullable<typeof p> => p !== null && p !== undefined);
 
         await dbStore.putAll('patients', patients);
         await dbStore.putAll('appointments', appointments);
@@ -182,7 +202,7 @@ export class SyncManager {
         await dbStore.putAll('exercises', exercises);
       }
     } catch (error) {
-      console.error('Erro ao cachear dados críticos:', error);
+      logger.error('Erro ao cachear dados críticos', error, 'SyncManager');
     }
   }
 
@@ -197,10 +217,10 @@ export class SyncManager {
    * Adiciona operação à fila de sincronização
    */
   async queueOperation(
-    type: string,
+    type: 'patient' | 'appointment' | 'session',
     action: 'create' | 'update' | 'delete',
     store: string,
-    data: any
+    data: Record<string, unknown>
   ): Promise<void> {
     await dbStore.addToSyncQueue({
       type,
@@ -212,7 +232,9 @@ export class SyncManager {
 
     // Tentar sincronizar imediatamente se online
     if (navigator.onLine) {
-      this.sync().catch(console.error);
+      this.sync().catch((error) => {
+        logger.error('Erro ao sincronizar automaticamente', error, 'SyncManager');
+      });
     }
   }
 }

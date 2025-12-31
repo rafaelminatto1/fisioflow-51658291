@@ -66,6 +66,12 @@ verify_jwt = false
 [functions.smart-reminders]
 verify_jwt = true
 
+[functions.send-birthday-message]
+verify_jwt = false
+
+[functions.send-expiring-vouchers-reminder]
+verify_jwt = false
+
 [functions.weekly-report]
 verify_jwt = true
 

@@ -299,7 +299,7 @@ const Schedule = () => {
         description: '10 agendamentos de teste criados com diferentes status!' 
       });
     } catch (error) {
-      console.error('Erro ao criar agendamentos de teste:', error);
+      logger.error('Erro ao criar agendamentos de teste', error, 'Schedule');
       toast({ 
         title: '❌ Erro', 
         description: 'Não foi possível criar os agendamentos de teste.', 

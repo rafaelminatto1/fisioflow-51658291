@@ -35,6 +35,7 @@ interface PrestadoresTabProps {
 }
 
 export function PrestadoresTab({ eventoId }: PrestadoresTabProps) {
+  const { data: evento } = useEvento(eventoId);
   const [open, setOpen] = useState(false);
   const { data: prestadores, isLoading } = usePrestadores(eventoId);
   const createPrestador = useCreatePrestador();
@@ -91,7 +92,7 @@ export function PrestadoresTab({ eventoId }: PrestadoresTabProps) {
         valor_acordado: Number(p.valor_acordado),
         status_pagamento: p.status_pagamento
       })),
-      'Evento' // TODO: passar nome do evento
+      evento?.nome || 'Evento'
     );
     
     toast({

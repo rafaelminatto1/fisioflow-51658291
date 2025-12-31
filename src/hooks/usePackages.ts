@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/lib/errors/logger';
 
 export interface SessionPackage {
   id: string;
@@ -145,7 +146,7 @@ export function useCreatePackage() {
       toast.success('Pacote criado com sucesso!');
     },
     onError: (error) => {
-      console.error('Erro ao criar pacote:', error);
+      logger.error('Erro ao criar pacote', error, 'usePackages');
       toast.error('Erro ao criar pacote');
     },
   });
@@ -200,7 +201,7 @@ export function usePurchasePackage() {
       toast.success(`Pacote "${data.package?.name}" adquirido com sucesso!`);
     },
     onError: (error: any) => {
-      console.error('Erro ao comprar pacote:', error);
+      logger.error('Erro ao comprar pacote', error, 'usePackages');
       toast.error(error.message || 'Erro ao adquirir pacote');
     },
   });
@@ -269,7 +270,7 @@ export function useUsePackageSession() {
       toast.success(`Sessão utilizada. Restam ${data.sessions_remaining} sessões.`);
     },
     onError: (error: any) => {
-      console.error('Erro ao usar sessão:', error);
+      logger.error('Erro ao usar sessão do pacote', error, 'usePackages');
       toast.error(error.message || 'Erro ao usar sessão do pacote');
     },
   });
@@ -299,7 +300,7 @@ export function useUpdatePackage() {
       toast.success('Pacote atualizado!');
     },
     onError: (error) => {
-      console.error('Erro ao atualizar pacote:', error);
+      logger.error('Erro ao atualizar pacote', error, 'usePackages');
       toast.error('Erro ao atualizar pacote');
     },
   });
@@ -323,7 +324,7 @@ export function useDeactivatePackage() {
       toast.success('Pacote desativado');
     },
     onError: (error) => {
-      console.error('Erro ao desativar pacote:', error);
+      logger.error('Erro ao desativar pacote', error, 'usePackages');
       toast.error('Erro ao desativar pacote');
     },
   });

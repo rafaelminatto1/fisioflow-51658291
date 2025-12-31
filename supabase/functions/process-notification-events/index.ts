@@ -1,5 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { errorResponse, successResponse } from '../_shared/api-helpers.ts'
+import { captureException, captureMessage } from '../_shared/sentry.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -29,16 +31,10 @@ serve(async (req) => {
 
     // Validate required fields
     if (!payload.eventType || !payload.data) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields: eventType, data' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+      return errorResponse('Campos obrigatórios ausentes: eventType, data', 400);
     }
 
-    console.log(`Processing event: ${payload.eventType}`, payload.data)
+    await captureMessage(`Processando evento: ${payload.eventType}`, 'info', { eventType: payload.eventType });
 
     // Get active triggers for this event type
     const { data: triggers, error: triggersError } = await supabaseClient
@@ -52,14 +48,8 @@ serve(async (req) => {
     }
 
     if (!triggers || triggers.length === 0) {
-      console.log(`No active triggers found for event: ${payload.eventType}`)
-      return new Response(
-        JSON.stringify({ message: 'No triggers found for event type' }),
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+      await captureMessage(`Nenhum trigger ativo encontrado para evento: ${payload.eventType}`, 'info');
+      return successResponse({ message: 'Nenhum trigger encontrado para este tipo de evento' });
     }
 
     const processedTriggers = []
@@ -69,13 +59,13 @@ serve(async (req) => {
       try {
         // Check if trigger conditions are met
         if (!evaluateConditions(trigger.conditions, payload.data)) {
-          console.log(`Trigger conditions not met: ${trigger.name}`)
+          await captureMessage(`Condições do trigger não atendidas: ${trigger.name}`, 'info');
           continue
         }
 
         const template = trigger.notification_templates
         if (!template || !template.active) {
-          console.log(`Template not found or inactive: ${trigger.template_type}`)
+          await captureMessage(`Template não encontrado ou inativo: ${trigger.template_type}`, 'info');
           continue
         }
 
@@ -142,32 +132,22 @@ serve(async (req) => {
         })
 
       } catch (error) {
-        console.error(`Error processing trigger ${trigger.name}:`, error)
+        const err = error instanceof Error ? error : new Error(String(error));
+        await captureException(err, { trigger: trigger.name, eventType: payload.eventType });
       }
     }
 
-    return new Response(
-      JSON.stringify({
-        message: 'Event processed',
-        eventType: payload.eventType,
-        processedTriggers
-      }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
+    return successResponse({
+      message: 'Evento processado',
+      eventType: payload.eventType,
+      processedTriggers
+    });
 
   } catch (error) {
-    console.error('Error in process-notification-events function:', error)
+    const err = error instanceof Error ? error : new Error(String(error));
+    await captureException(err, { function: 'process-notification-events' });
     
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
+    return errorResponse('Erro ao processar eventos de notificação', 500);
   }
 })
 
@@ -283,7 +263,7 @@ async function getTargetUsers(supabaseClient: any, payload: EventPayload, trigge
       return users ? users.map((u: any) => u.id) : []
       
     default:
-      console.log(`Unknown event type: ${payload.eventType}`)
+      await captureMessage(`Tipo de evento desconhecido: ${payload.eventType}`, 'warning', { eventType: payload.eventType });
       return []
   }
   

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
+import { logger } from '@/lib/errors/logger';
 
 export type UserRole = 'admin' | 'fisioterapeuta' | 'estagiario' | 'paciente';
 
@@ -34,7 +35,7 @@ export const useUserProfile = () => {
         .single();
 
       if (profileError) {
-        console.error('Erro ao buscar perfil:', profileError);
+        logger.error('Erro ao buscar perfil', profileError, 'useUserProfile');
         setError(profileError.message);
         return null;
       }
@@ -54,7 +55,7 @@ export const useUserProfile = () => {
         role,
       } as UserProfile;
     } catch (err) {
-      console.error('Erro ao buscar perfil:', err);
+      logger.error('Erro ao buscar perfil', err, 'useUserProfile');
       return null;
     }
   };
@@ -77,7 +78,7 @@ export const useUserProfile = () => {
           setProfile(profileData);
         }
       } catch (err) {
-        console.error('Erro na inicialização:', err);
+        logger.error('Erro na inicialização do perfil', err, 'useUserProfile');
       } finally {
         setLoading(false);
       }
