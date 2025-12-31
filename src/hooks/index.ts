@@ -19,7 +19,7 @@ export const useAuth = () => ({
   userProfile: { role: 'admin', full_name: 'Admin', avatar_url: '' },
   initialized: true,
   sessionCheckFailed: false,
-  role: 'admin' as 'admin',
+  role: 'admin' as const,
   refreshProfile: () => Promise.resolve(),
   signIn: () => Promise.resolve({ data: {}, error: null }),
   signOut: () => Promise.resolve()

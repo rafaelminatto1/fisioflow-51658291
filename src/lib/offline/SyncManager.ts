@@ -10,18 +10,7 @@ export interface SyncResult {
   errors: string[];
 }
 
-interface SyncQueueItem {
-  id: number;
-  type: 'patient' | 'appointment' | 'session';
-  action: 'create' | 'update' | 'delete';
-  store: string;
-  data: Record<string, unknown>;
-  timestamp: string;
-  status: 'pending' | 'completed' | 'failed';
-  retry_count?: number;
-  last_retry_at?: string;
-  error_message?: string;
-}
+import type { SyncQueueItem } from './IndexedDBStore';
 
 export class SyncManager {
   private isSyncing = false;

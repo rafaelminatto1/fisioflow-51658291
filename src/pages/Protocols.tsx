@@ -789,7 +789,7 @@ export default function ProtocolsPage() {
   const { protocols, loading } = useExerciseProtocols(activeTab);
 
   const filteredAndSortedProtocols = useMemo(() => {
-    let result = protocols.filter(p => 
+    const result = protocols.filter(p => 
       (p.name?.toLowerCase().includes(search.toLowerCase()) ||
       p.condition_name?.toLowerCase().includes(search.toLowerCase())) &&
       (categoryFilter === 'all' || getProtocolCategory(p.condition_name) === categoryFilter) &&

@@ -62,7 +62,7 @@ export const useIntelligentConductSuggestions = (patientId: string) => {
       const suggestions: ConductSuggestion[] = conducts
         .map(conduct => {
           let score = 0;
-          let reasons: string[] = [];
+          const reasons: string[] = [];
 
           const conductText = `${conduct.title} ${conduct.description || ''} ${conduct.conduct_text}`.toLowerCase();
 

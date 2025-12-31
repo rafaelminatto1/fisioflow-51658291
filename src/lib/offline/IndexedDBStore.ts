@@ -1,4 +1,19 @@
 // Store IndexedDB para cache offline
+export interface SyncQueueItem {
+  id: number;
+  type: string;
+  action: 'create' | 'update' | 'delete';
+  store: string;
+  data: Record<string, unknown>;
+  timestamp: string;
+  status: 'pending' | 'completed' | 'failed';
+  retry_count?: number;
+  last_retry_at?: string;
+  error_message?: string;
+  created_at?: string;
+  completed_at?: string;
+}
+
 export class IndexedDBStore {
   private dbName: string;
   private version: number;
@@ -157,7 +172,7 @@ export class IndexedDBStore {
     type: string;
     action: 'create' | 'update' | 'delete';
     store: string;
-    data: any;
+    data: Record<string, unknown>;
     timestamp: string;
   }): Promise<void> {
     if (!this.db) await this.init();
@@ -177,11 +192,11 @@ export class IndexedDBStore {
     });
   }
 
-  async getSyncQueue(): Promise<any[]> {
-    return this.getAll('sync_queue', 'status', 'pending');
+  async getSyncQueue(): Promise<SyncQueueItem[]> {
+    return this.getAll<SyncQueueItem>('sync_queue', 'status', 'pending');
   }
 
-  async updateSyncQueueItem(id: number, updates: Partial<any>): Promise<void> {
+  async updateSyncQueueItem(id: number, updates: Partial<SyncQueueItem>): Promise<void> {
     if (!this.db) await this.init();
 
     return new Promise((resolve, reject) => {
@@ -207,4 +222,3 @@ export class IndexedDBStore {
 
 // Instância singleton
 export const dbStore = new IndexedDBStore();
-

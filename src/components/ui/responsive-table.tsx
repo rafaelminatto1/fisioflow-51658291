@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from './card';
+import { Card, CardContent } from './card';
 
 interface Column<T> {
   key: string;
@@ -16,7 +16,7 @@ interface ResponsiveTableProps<T> {
   emptyMessage?: string;
 }
 
-function ResponsiveTableComponent<T extends Record<string, any>>({
+function ResponsiveTableComponent<T extends Record<string, unknown>>({
   data,
   columns,
   keyExtractor,

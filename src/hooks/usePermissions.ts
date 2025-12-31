@@ -41,7 +41,7 @@ export function usePermissions(): PermissionsResult {
   const isEstagiario = roles.includes('estagiario');
   const isPaciente = roles.includes('paciente');
 
-  const canWrite = (resource: string): boolean => {
+  const canWrite = (_resource: string): boolean => {
     if (isAdmin || isFisio) return true;
     if (isEstagiario) {
       return ['participantes', 'checklist'].includes(resource);
