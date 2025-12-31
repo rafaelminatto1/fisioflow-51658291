@@ -4,6 +4,8 @@
  * Tracks metrics, errors, and user interactions
  */
 
+import { logger } from './errors/logger';
+
 export interface MetricData {
   value: number;
   timestamp?: number;
@@ -32,9 +34,9 @@ export const trackMetric = (metric: string, data: number | MetricData) => {
     window.va('track', metric, { value, ...metadata });
   }
 
-  // Console log in development
+  // Log in development
   if (import.meta.env.DEV) {
-    console.log(`[Metric] ${metric}:`, { value, ...metadata });
+    logger.info(`Métrica: ${metric}`, { value, ...metadata }, 'Monitoring');
   }
 
   // Custom analytics endpoint (opcional)
@@ -50,7 +52,9 @@ export const trackMetric = (metric: string, data: number | MetricData) => {
         url: window.location.href,
         userAgent: navigator.userAgent,
       }),
-    }).catch(console.error);
+    }).catch((error) => {
+      logger.error('Erro ao enviar métrica para endpoint', error, 'Monitoring');
+    });
   }
 };
 
@@ -105,10 +109,8 @@ export const trackError = (error: Error, context?: Record<string, any>) => {
     },
   });
 
-  // Log to console in development
-  if (import.meta.env.DEV) {
-    console.error('[Error Tracked]', error, context);
-  }
+  // Log error
+  logger.error('Erro rastreado', error, 'Monitoring', context);
 };
 
 /**

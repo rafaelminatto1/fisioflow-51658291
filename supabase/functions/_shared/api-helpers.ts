@@ -375,7 +375,10 @@ export function handleSupabaseError(error: { code?: string; message: string }): 
     return errorResponse('Recurso não encontrado', 404, 'NOT_FOUND');
   }
 
-  console.error('Supabase Error:', error);
+  // Log error using Sentry if available
+  if (typeof captureException !== 'undefined') {
+    captureException(new Error(error.message), { extra: { code: error.code } });
+  }
   return errorResponse('Erro interno do servidor', status);
 }
 

@@ -45,6 +45,7 @@ const EventosAnalytics = lazy(() => import("./pages/EventosAnalytics"));
 const FileUploadTest = lazy(() => import("./pages/FileUploadTest"));
 const UserManagement = lazy(() => import("./pages/UserManagement"));
 const Waitlist = lazy(() => import("./pages/Waitlist"));
+const Surveys = lazy(() => import("./pages/Surveys"));
 const AuditLogs = lazy(() => import("./pages/AuditLogs"));
 const InvitationManagement = lazy(() => import("./pages/InvitationManagement"));
 const SecurityMonitoring = lazy(() => import("./pages/SecurityMonitoring"));
@@ -195,6 +196,7 @@ const App = () => {
           <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
           <Route path="/partner" element={<ProtectedRoute><Partner /></ProtectedRoute>} />
           <Route path="/waitlist" element={<ProtectedRoute><Waitlist /></ProtectedRoute>} />
+          <Route path="/surveys" element={<ProtectedRoute><Surveys /></ProtectedRoute>} />
           <Route path="/vouchers" element={<ProtectedRoute><Vouchers /></ProtectedRoute>} />
                   <Route path="/install" element={<Install />} />
           <Route path="/eventos" element={<ProtectedRoute><Eventos /></ProtectedRoute>} />

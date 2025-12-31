@@ -8,6 +8,7 @@ import { Brain, Send, User, Bot, Sparkles, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
+import { logger } from '@/lib/errors/logger';
 
 interface Message {
   id: string;
@@ -178,7 +179,7 @@ const SmartAI = () => {
       }
 
     } catch (error) {
-      console.error('Erro no chat:', error);
+      logger.error('Erro no chat AI', error, 'SmartAI');
       toast({
         title: "Erro",
         description: "Não foi possível processar sua mensagem. Tente novamente.",

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParticipantes, useCreateParticipante, useDeleteParticipante, useExportParticipantes } from '@/hooks/useParticipantes';
+import { useEvento } from '@/hooks/useEventos';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,6 +38,7 @@ interface ParticipantesTabProps {
 export function ParticipantesTab({ eventoId }: ParticipantesTabProps) {
   const [open, setOpen] = useState(false);
   const { data: participantes, isLoading } = useParticipantes(eventoId);
+  const { data: evento } = useEvento(eventoId);
   const createParticipante = useCreateParticipante();
   const deleteParticipante = useDeleteParticipante();
   const exportParticipantes = useExportParticipantes();
@@ -84,7 +86,7 @@ export function ParticipantesTab({ eventoId }: ParticipantesTabProps) {
         segue_perfil: p.segue_perfil,
         observacoes: p.observacoes
       })),
-      'Evento' // TODO: passar nome do evento
+      evento?.nome || 'Evento'
     );
     
     toast({

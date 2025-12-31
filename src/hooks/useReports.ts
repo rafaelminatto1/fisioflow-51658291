@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/errors/logger';
 
 export interface DashboardKPIs {
   activePatients: number;
@@ -40,6 +41,58 @@ export interface OccupancyReport {
   period: { startDate: string; endDate: string };
   occupancyByDay: { day: string; rate: number; appointments: number }[];
   averageOccupancy: number;
+}
+
+// Função auxiliar para calcular NPS
+async function calculateNPS(): Promise<number> {
+  try {
+    const { data: surveys, error } = await supabase
+      .from('satisfaction_surveys')
+      .select('nps_score')
+      .not('nps_score', 'is', null)
+      .not('responded_at', 'is', null);
+
+    if (error || !surveys || surveys.length === 0) {
+      return 0;
+    }
+
+    const total = surveys.length;
+    const promotores = surveys.filter(s => s.nps_score && s.nps_score >= 9).length;
+    const detratores = surveys.filter(s => s.nps_score && s.nps_score <= 6).length;
+
+    const nps = total > 0 ? Math.round(((promotores - detratores) / total) * 100) : 0;
+    return nps;
+  } catch (error) {
+    logger.error('Erro ao calcular NPS', error, 'useReports');
+    return 0;
+  }
+}
+
+// Função auxiliar para calcular adesão de exercícios
+async function calculateExerciseAdherence(patientId?: string): Promise<number> {
+  try {
+    let query = supabase
+      .from('prescription_exercises')
+      .select('completed, total_sessions');
+
+    if (patientId) {
+      query = query.eq('patient_id', patientId);
+    }
+
+    const { data: exercises, error } = await query;
+
+    if (error || !exercises || exercises.length === 0) {
+      return 0;
+    }
+
+    const totalCompleted = exercises.reduce((sum, e) => sum + (e.completed || 0), 0);
+    const totalSessions = exercises.reduce((sum, e) => sum + (e.total_sessions || 0), 0);
+
+    return totalSessions > 0 ? Math.round((totalCompleted / totalSessions) * 100) : 0;
+  } catch (error) {
+    logger.error('Erro ao calcular adesão de exercícios', error, 'useReports');
+    return 0;
+  }
 }
 
 // Hook para KPIs do Dashboard
@@ -99,7 +152,7 @@ export function useDashboardKPIs(period: string = 'month') {
         occupancyRate: Math.round(occupancyRate * 10) / 10,
         noShowRate: Math.round(noShowRate * 10) / 10,
         confirmationRate: Math.round(confirmationRate * 10) / 10,
-        npsScore: 8.5, // TODO: Implementar NPS real
+        npsScore: await calculateNPS(),
         appointmentsToday: appointmentsToday || 0,
         revenueChart,
       } as DashboardKPIs;
@@ -263,7 +316,7 @@ export function usePatientEvolution(patientId: string | undefined) {
         totalSessions,
         treatmentDuration,
         painEvolution,
-        exerciseAdherence: 75, // TODO: Calcular real
+        exerciseAdherence: await calculateExerciseAdherence(),
         recommendations,
       } as PatientEvolutionReport;
     },

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Patient } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/errors/logger';
 
 export const useActivePatients = () => {
   const [data, setData] = useState<Patient[]>([]);
@@ -42,7 +43,7 @@ export const useActivePatients = () => {
         }
         setIsLoading(false);
       } catch (err) {
-        console.error('Error loading patients:', err);
+        logger.error('Erro ao carregar pacientes', err, 'usePatients');
         // Fallback to mock data on error
         try {
           const { mockPatients } = await import('@/lib/mockData');

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { logger } from '@/lib/errors/logger';
 
 export interface CalendarIntegration {
   id: string;
@@ -97,7 +98,7 @@ export function useCalendarIntegration() {
       if (error) throw error;
     },
     onError: (error) => {
-      console.error('Erro ao conectar Google Calendar:', error);
+      logger.error('Erro ao conectar Google Calendar', error, 'useCalendarIntegration');
       toast.error('Erro ao conectar com Google Calendar');
     },
   });
@@ -135,7 +136,7 @@ export function useCalendarIntegration() {
       toast.success('Google Calendar desconectado com sucesso');
     },
     onError: (error) => {
-      console.error('Erro ao desconectar:', error);
+      logger.error('Erro ao desconectar Google Calendar', error, 'useCalendarIntegration');
       toast.error('Erro ao desconectar Google Calendar');
     },
   });
@@ -181,7 +182,7 @@ export function useCalendarIntegration() {
       toast.success('Calendário sincronizado com sucesso');
     },
     onError: (error) => {
-      console.error('Erro ao sincronizar:', error);
+      logger.error('Erro ao sincronizar calendário', error, 'useCalendarIntegration');
       toast.error('Erro ao sincronizar calendário');
     },
   });
@@ -229,7 +230,7 @@ export function useCalendarIntegration() {
       toast.success('Configurações atualizadas');
     },
     onError: (error) => {
-      console.error('Erro ao atualizar configurações:', error);
+      logger.error('Erro ao atualizar configurações do calendário', error, 'useCalendarIntegration');
       toast.error('Erro ao atualizar configurações');
     },
   });

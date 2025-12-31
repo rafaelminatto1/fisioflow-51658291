@@ -1,10 +1,21 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { checkRateLimit, createRateLimitResponse, addRateLimitHeaders } from '../_shared/rate-limit.ts';
+import { parseAndValidate, errorResponse } from '../_shared/validation.ts';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
+import { captureException, captureMessage } from '../_shared/sentry.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const whatsappMessageSchema = z.object({
+  to: z.string().min(10, 'Telefone deve ter pelo menos 10 dígitos').max(20, 'Telefone muito longo'),
+  message: z.string().min(1, 'Mensagem não pode ser vazia').max(4096, 'Mensagem muito longa (máx 4096 caracteres)'),
+  templateKey: z.string().optional(),
+  patientId: z.string().uuid().optional(),
+  appointmentId: z.string().uuid().optional(),
+});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -15,30 +26,31 @@ serve(async (req) => {
     // Rate limiting
     const rateLimitResult = await checkRateLimit(req, 'send-whatsapp');
     if (!rateLimitResult.allowed) {
-      console.warn(`Rate limit excedido para send-whatsapp: ${rateLimitResult.current_count}/${rateLimitResult.limit}`);
+      await captureMessage(`Rate limit excedido para send-whatsapp: ${rateLimitResult.current_count}/${rateLimitResult.limit}`, 'warning');
       return createRateLimitResponse(rateLimitResult, corsHeaders);
     }
 
-    const { to, message } = await req.json();
-    
-    // Validação básica
-    if (!to || !message) {
-      throw new Error("Telefone e mensagem são obrigatórios");
+    // Validate input
+    const { data, error: validationError } = await parseAndValidate(req, whatsappMessageSchema, corsHeaders);
+    if (validationError) {
+      return validationError;
     }
+
+    const { to, message } = data;
 
     // Obter credenciais do WhatsApp Business API
     const accessToken = Deno.env.get('WHATSAPP_ACCESS_TOKEN');
     const phoneNumberId = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID');
 
     if (!accessToken || !phoneNumberId) {
-      console.error('Credenciais do WhatsApp Business não configuradas');
-      throw new Error("Credenciais do WhatsApp Business não configuradas");
+      await captureException(new Error('Credenciais do WhatsApp Business não configuradas'), { function: 'send-whatsapp' });
+      return errorResponse('Credenciais do WhatsApp Business não configuradas', 500, corsHeaders);
     }
 
     // Formatar número de telefone (remover caracteres especiais)
     const formattedPhone = to.replace(/\D/g, '');
     
-    console.log(`Enviando mensagem WhatsApp para ${formattedPhone}`);
+    await captureMessage(`Enviando mensagem WhatsApp para ${formattedPhone}`, 'info');
 
     // Chamar API do WhatsApp Business
     const whatsappResponse = await fetch(
@@ -65,11 +77,12 @@ serve(async (req) => {
     const responseData = await whatsappResponse.json();
     
     if (!whatsappResponse.ok) {
-      console.error('Erro da API WhatsApp:', responseData);
-      throw new Error(responseData.error?.message || 'Erro ao enviar mensagem via WhatsApp');
+      const error = new Error(responseData.error?.message || 'Erro ao enviar mensagem via WhatsApp');
+      await captureException(error, { function: 'send-whatsapp', responseData });
+      throw error;
     }
 
-    console.log('Mensagem enviada com sucesso:', responseData);
+    await captureMessage('Mensagem WhatsApp enviada com sucesso', 'info', { messageId: responseData.messages?.[0]?.id });
     
     const enhancedHeaders = addRateLimitHeaders(
       { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -89,16 +102,8 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Erro ao enviar mensagem WhatsApp:', error);
-    return new Response(
-      JSON.stringify({ 
-        success: false,
-        error: error instanceof Error ? error.message : "Erro desconhecido" 
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    const err = error instanceof Error ? error : new Error(String(error));
+    await captureException(err, { function: 'send-whatsapp' });
+    return errorResponse(err.message || 'Erro ao enviar mensagem WhatsApp', 500, corsHeaders);
   }
 });

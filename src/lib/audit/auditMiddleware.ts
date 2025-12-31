@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/errors/logger';
 
 export type AuditAction = 'INSERT' | 'UPDATE' | 'DELETE';
 
@@ -6,21 +7,21 @@ export interface AuditEntry {
   action: AuditAction;
   table_name: string;
   record_id?: string;
-  old_data?: any;
-  new_data?: any;
-  changes?: Record<string, { old: any; new: any }>;
+  old_data?: Record<string, unknown>;
+  new_data?: Record<string, unknown>;
+  changes?: Record<string, { old: unknown; new: unknown }>;
 }
 
 /**
  * Calcula as diferenças entre dois objetos
  */
 export function calculateDiff(
-  oldData: Record<string, any> | null,
-  newData: Record<string, any> | null
-): Record<string, { old: any; new: any }> {
+  oldData: Record<string, unknown> | null,
+  newData: Record<string, unknown> | null
+): Record<string, { old: unknown; new: unknown }> {
   if (!oldData || !newData) return {};
 
-  const changes: Record<string, { old: any; new: any }> = {};
+  const changes: Record<string, { old: unknown; new: unknown }> = {};
 
   // Check all keys in newData
   for (const key of Object.keys(newData)) {
@@ -65,13 +66,13 @@ export async function logAuditEntry(entry: AuditEntry): Promise<boolean> {
     });
 
     if (error) {
-      console.error('[Audit] Error logging entry:', error);
+      logger.error('Erro ao registrar entrada de auditoria', error, 'AuditMiddleware');
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('[Audit] Error:', error);
+    logger.error('Erro no middleware de auditoria', error, 'AuditMiddleware');
     return false;
   }
 }
@@ -82,8 +83,8 @@ export async function logAuditEntry(entry: AuditEntry): Promise<boolean> {
  */
 export function withAudit<T>(
   tableName: string,
-  operation: () => Promise<{ data: T | null; error: any; oldData?: any }>
-): Promise<{ data: T | null; error: any }> {
+  operation: () => Promise<{ data: T | null; error: Error | null; oldData?: Record<string, unknown> }>
+): Promise<{ data: T | null; error: Error | null }> {
   return operation().then(async (result) => {
     // Log is handled by database triggers
     // This wrapper is for future extensibility

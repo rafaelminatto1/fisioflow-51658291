@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import { logger } from '@/lib/errors/logger';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -113,17 +114,17 @@ const Reports = () => {
     }
   ];
 
-  const generateReport = (templateId: string) => {
-    console.log('Generating report:', templateId);
+  const generateReport = useCallback((templateId: string) => {
+    logger.info('Gerando relatório', { templateId }, 'Reports');
     setSelectedReport(templateId);
     // Simular geração de relatório
     setTimeout(() => {
       alert('Relatório gerado com sucesso!');
       setSelectedReport(null);
     }, 2000);
-  };
+  }, []);
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = useCallback((status: string) => {
     switch (status) {
       case 'Concluído':
         return 'bg-green-100 text-green-800';

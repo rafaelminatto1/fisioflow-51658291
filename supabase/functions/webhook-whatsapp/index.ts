@@ -1,5 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { errorResponse, successResponse } from '../_shared/api-helpers.ts';
+import { captureException, captureMessage } from '../_shared/sentry.ts';
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL') || '',
@@ -17,8 +19,26 @@ serve(async (req: Request) => {
   }
 
   try {
+    // Validar origem do webhook (opcional, mas recomendado)
+    // Em produção, valide a assinatura do webhook se o provedor suportar
+    const webhookSecret = Deno.env.get('WHATSAPP_WEBHOOK_SECRET');
+    if (webhookSecret) {
+      const signature = req.headers.get('x-webhook-signature');
+      if (signature && signature !== webhookSecret) {
+        await captureMessage('Tentativa de webhook não autorizado', 'warning', { signature: signature.substring(0, 10) });
+        return errorResponse('Não autorizado', 401);
+      }
+    }
+
     const body = await req.json();
-    console.log('WhatsApp Webhook received:', JSON.stringify(body, null, 2));
+    
+    // Validar estrutura básica do payload
+    if (!body.event && !body.entry) {
+      await captureMessage('Webhook recebido sem estrutura válida', 'warning');
+      return errorResponse('Payload inválido', 400);
+    }
+    
+    await captureMessage('WhatsApp Webhook recebido', 'info', { hasEvent: !!body.event, hasEntry: !!body.entry });
 
     // Evolution API webhook format
     if (body.event) {
@@ -29,16 +49,11 @@ serve(async (req: Request) => {
       await handleMetaEvent(body);
     }
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return successResponse({ success: true });
   } catch (error) {
-    console.error('WhatsApp Webhook error:', error);
-    return new Response(JSON.stringify({ error: 'Webhook processing failed' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    const err = error instanceof Error ? error : new Error(String(error));
+    await captureException(err, { function: 'webhook-whatsapp' });
+    return errorResponse('Erro ao processar webhook do WhatsApp', 500);
   }
 });
 
@@ -98,7 +113,7 @@ async function handleIncomingMessage(data: any, instance: string) {
   await supabase.from('whatsapp_messages').insert({
     patient_id: patient?.id,
     phone,
-    message: messageContent,
+    message: sanitizedContent,
     direction: 'inbound',
     status: 'received',
     message_id: message.key?.id,
@@ -106,9 +121,9 @@ async function handleIncomingMessage(data: any, instance: string) {
   });
 
   // Processar respostas automáticas
-  await processAutoResponse(phone, messageContent, patient);
+  await processAutoResponse(phone, sanitizedContent, patient);
 
-  console.log(`Incoming message from ${phone}: ${messageContent}`);
+  console.log(`Incoming message from ${phone}: ${sanitizedContent.substring(0, 100)}`);
 }
 
 async function handleMessageStatusUpdate(data: any, instance: string) {

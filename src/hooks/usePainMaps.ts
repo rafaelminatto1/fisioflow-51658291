@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/lib/errors/logger';
 import type { PainPoint } from '@/components/pain-map';
 
 interface PainMap {
@@ -164,7 +165,7 @@ export function useCreatePainMap() {
       toast.success('Mapa de dor salvo com sucesso!');
     },
     onError: (error) => {
-      console.error('Erro ao criar mapa de dor:', error);
+      logger.error('Erro ao criar mapa de dor', error, 'usePainMaps');
       toast.error('Erro ao salvar mapa de dor');
     },
   });
@@ -188,7 +189,7 @@ export function useDeletePainMap() {
       toast.success('Mapa de dor removido');
     },
     onError: (error) => {
-      console.error('Erro ao deletar mapa de dor:', error);
+      logger.error('Erro ao deletar mapa de dor', error, 'usePainMaps');
       toast.error('Erro ao remover mapa de dor');
     },
   });
@@ -318,7 +319,7 @@ export function useUpdatePainMap() {
       toast.success('Mapa de dor atualizado!');
     },
     onError: (error) => {
-      console.error('Erro ao atualizar mapa de dor:', error);
+      logger.error('Erro ao atualizar mapa de dor', error, 'usePainMaps');
       toast.error('Erro ao atualizar mapa de dor');
     },
   });

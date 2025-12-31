@@ -11,6 +11,7 @@ import { Loader2, Heart, Shield, CheckCircle, XCircle, Mail } from 'lucide-react
 import { useToast } from '@/hooks/use-toast';
 import { passwordSchema, emailSchema, fullNameSchema } from '@/lib/validations/auth';
 import { Separator } from '@/components/ui/separator';
+import { logger } from '@/lib/errors/logger';
 
 // Credenciais de demonstração
 const DEMO_CREDENTIALS = [
@@ -75,7 +76,7 @@ export default function Auth() {
           description: `Você foi convidado como ${data.role}`,
         });
       } catch (err) {
-        console.error('Error checking invitation:', err);
+        logger.error('Erro ao verificar convite', err, 'Auth');
       }
     };
 
@@ -103,7 +104,7 @@ export default function Auth() {
         });
       }
     } catch (err: unknown) {
-      console.error('Google sign in error:', err);
+      logger.error('Erro no login com Google', err, 'Auth');
       setError('Erro ao conectar com Google.');
     } finally {
       setLoading(false);
@@ -131,7 +132,7 @@ export default function Auth() {
         navigate('/');
       }
     } catch (err: unknown) {
-      console.error('Sign in error:', err);
+      logger.error('Erro no login', err, 'Auth');
       setError('Erro inesperado. Tente novamente.');
     } finally {
       setLoading(false);
@@ -209,7 +210,7 @@ export default function Auth() {
         );
 
         if (validationError || !validationResult) {
-          console.error('Erro ao validar convite:', validationError);
+          logger.error('Erro ao validar convite', validationError, 'Auth');
           toast({
             title: 'Aviso',
             description: 'Conta criada, mas houve erro ao processar o convite',
@@ -228,7 +229,7 @@ export default function Auth() {
         });
       }
     } catch (err: unknown) {
-      console.error('Sign up error:', err);
+      logger.error('Erro no cadastro', err, 'Auth');
       setError('Erro inesperado. Tente novamente.');
     } finally {
       setLoading(false);

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logger } from "@/lib/errors/logger";
 
 export type MFAMethod = 'totp' | 'sms' | 'email';
 
@@ -69,7 +70,7 @@ export function useMFASettings() {
       toast.success("MFA ativado com sucesso! Guarde seus códigos de backup.");
     },
     onError: (error) => {
-      console.error("Erro ao ativar MFA:", error);
+      logger.error("Erro ao ativar MFA", error, 'useMFASettings');
       toast.error("Erro ao ativar autenticação de dois fatores");
     },
   });
@@ -102,7 +103,7 @@ export function useMFASettings() {
       toast.success("MFA desativado");
     },
     onError: (error) => {
-      console.error("Erro ao desativar MFA:", error);
+      logger.error("Erro ao desativar MFA", error, 'useMFASettings');
       toast.error("Erro ao desativar autenticação de dois fatores");
     },
   });
@@ -123,7 +124,7 @@ export function useMFASettings() {
       toast.success("Código enviado para seu email");
     },
     onError: (error) => {
-      console.error("Erro ao enviar OTP:", error);
+      logger.error("Erro ao enviar OTP", error, 'useMFASettings');
       toast.error("Erro ao enviar código de verificação");
     },
   });
@@ -147,7 +148,7 @@ export function useMFASettings() {
       toast.success("Código verificado com sucesso");
     },
     onError: (error) => {
-      console.error("Erro ao verificar OTP:", error);
+      logger.error("Erro ao verificar OTP", error, 'useMFASettings');
       toast.error("Código inválido ou expirado");
     },
   });

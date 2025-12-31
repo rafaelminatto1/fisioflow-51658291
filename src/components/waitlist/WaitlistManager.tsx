@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -66,34 +66,34 @@ export function WaitlistManager() {
     });
   }, [waitlist, searchQuery, priorityFilter]);
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = useCallback((priority: string) => {
     switch (priority) {
       case 'urgent': return 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30';
       case 'high': return 'bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/30';
       default: return 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/30';
     }
-  };
+  }, []);
 
-  const getPriorityLabel = (priority: string) => {
+  const getPriorityLabel = useCallback((priority: string) => {
     switch (priority) {
       case 'urgent': return 'Urgente';
       case 'high': return 'Alta';
       default: return 'Normal';
     }
-  };
+  }, []);
 
-  const handleChangePriority = (id: string, priority: 'normal' | 'high' | 'urgent') => {
+  const handleChangePriority = useCallback((id: string, priority: 'normal' | 'high' | 'urgent') => {
     updateWaitlist({ id, priority });
-  };
+  }, [updateWaitlist]);
 
-  const handleDelete = () => {
+  const handleDelete = useCallback(() => {
     if (deleteId) {
       removeFromWaitlist(deleteId);
       setDeleteId(null);
     }
-  };
+  }, [deleteId, removeFromWaitlist]);
 
-  const stats = {
+  const stats = useMemo(() => ({
     total: waitlist.length,
     urgent: waitlist.filter(w => w.priority === 'urgent').length,
     high: waitlist.filter(w => w.priority === 'high').length,
@@ -107,7 +107,7 @@ export function WaitlistManager() {
           }, 0) / waitlist.length
         )
       : 0,
-  };
+  }), [waitlist]);
 
   return (
     <div className="space-y-4 sm:space-y-6">

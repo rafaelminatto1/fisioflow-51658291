@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/errors/logger';
 import { SOAPFormPanel } from './SOAPFormPanel';
 import { SessionHistoryPanel } from './SessionHistoryPanel';
 import { TestEvolutionPanel } from './TestEvolutionPanel';
@@ -163,7 +164,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
         setShowMandatoryAlert(!result.canSave);
       }
     } catch (error) {
-      console.error('Error loading session data:', error);
+      logger.error('Erro ao carregar dados da sessão', error, 'SessionEvolutionContainer');
       toast({
         title: 'Erro ao carregar dados',
         description: 'Não foi possível carregar os dados da sessão.',
@@ -277,7 +278,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
         navigate('/agenda');
       }
     } catch (error) {
-      console.error('Error saving session:', error);
+      logger.error('Erro ao salvar sessão', error, 'SessionEvolutionContainer');
       toast({
         title: 'Erro ao salvar',
         description: 'Não foi possível salvar a evolução.',

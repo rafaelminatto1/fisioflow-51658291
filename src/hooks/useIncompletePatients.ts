@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/errors/logger';
 
 interface IncompletePatient {
   id: string;
@@ -27,7 +28,7 @@ export const useIncompletePatients = () => {
         setData(patients || []);
         setError(null);
       } catch (err: any) {
-        console.error('Error fetching incomplete patients:', err);
+        logger.error('Erro ao buscar pacientes incompletos', err, 'useIncompletePatients');
         setError(err.message);
       } finally {
         setIsLoading(false);

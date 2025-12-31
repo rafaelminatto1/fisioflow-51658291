@@ -112,17 +112,50 @@ export const moneySchema = z
   .max(9999999.99, 'Valor muito alto');
 
 // ============= Sanitization =============
-export const sanitizeString = (str: string): string => {
-  return str.trim().replace(/[<>]/g, '');
+/**
+ * Sanitiza string removendo caracteres perigosos e limitando tamanho
+ */
+export const sanitizeString = (str: string, maxLength: number = 10000): string => {
+  if (typeof str !== 'string') return '';
+  return str
+    .trim()
+    .substring(0, maxLength)
+    .replace(/[<>]/g, '') // Remove tags HTML básicas
+    .replace(/javascript:/gi, '') // Remove protocolos javascript
+    .replace(/on\w+=/gi, ''); // Remove event handlers
 };
 
+/**
+ * Sanitiza HTML escapando caracteres especiais
+ */
 export const sanitizeHtml = (str: string): string => {
+  if (typeof str !== 'string') return '';
   return str
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+};
+
+/**
+ * Sanitiza número de telefone removendo caracteres não numéricos
+ */
+export const sanitizePhone = (phone: string): string => {
+  if (typeof phone !== 'string') return '';
+  return phone.replace(/\D/g, '').substring(0, 20);
+};
+
+/**
+ * Sanitiza email removendo caracteres perigosos
+ */
+export const sanitizeEmail = (email: string): string => {
+  if (typeof email !== 'string') return '';
+  return email
+    .trim()
+    .toLowerCase()
+    .substring(0, 255)
+    .replace(/[<>]/g, '');
 };
 
 // ============= Time Slot Validation =============

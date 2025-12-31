@@ -1,5 +1,7 @@
+import { logger } from '@/lib/errors/logger';
+
 export class NotificationErrorHandler {
   static handleError(error: Error, context: string) {
-    console.error('Notification error:', error, context);
+    logger.error('Erro de notificação', error, 'NotificationErrorHandler', { context });
   }
 }

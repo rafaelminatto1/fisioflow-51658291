@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/lib/errors/logger';
 
 interface PushSubscription {
   endpoint: string;
@@ -62,7 +63,7 @@ export const usePushNotifications = () => {
         return false;
       }
     } catch (error) {
-      console.error('Error requesting permission:', error);
+      logger.error('Erro ao solicitar permissão de notificações', error, 'usePushNotifications');
       toast.error('Erro ao solicitar permissão');
       return false;
     }
@@ -131,7 +132,7 @@ export const usePushNotifications = () => {
       toast.success('Notificações push ativadas!');
     },
     onError: (error) => {
-      console.error('Subscribe error:', error);
+      logger.error('Erro ao inscrever em notificações push', error, 'usePushNotifications');
       toast.error('Erro ao ativar notificações');
     }
   });
@@ -177,7 +178,7 @@ export const usePushNotifications = () => {
         tag: 'test-notification',
       });
     } catch (error) {
-      console.error('Error sending test notification:', error);
+      logger.error('Erro ao enviar notificação de teste', error, 'usePushNotifications');
     }
   };
 

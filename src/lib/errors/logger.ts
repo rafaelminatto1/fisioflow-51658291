@@ -3,7 +3,7 @@ interface LogEntry {
   timestamp: string;
   level: 'error' | 'warn' | 'info' | 'debug' | 'performance';
   message: string;
-  data?: any;
+  data?: unknown;
   component?: string;
   userId?: string;
   sessionId: string;
@@ -24,7 +24,7 @@ class Logger {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  private createLogEntry(level: LogEntry['level'], message: string, data?: any, component?: string): LogEntry {
+  private createLogEntry(level: LogEntry['level'], message: string, data?: unknown, component?: string): LogEntry {
     return {
       timestamp: new Date().toISOString(),
       level,
@@ -98,25 +98,25 @@ class Logger {
     }
   }
 
-  error(message: string, error?: any, component?: string) {
+  error(message: string, error?: unknown, component?: string) {
     this.addLog(this.createLogEntry('error', message, error, component));
   }
 
-  warn(message: string, data?: any, component?: string) {
+  warn(message: string, data?: unknown, component?: string) {
     this.addLog(this.createLogEntry('warn', message, data, component));
   }
 
-  info(message: string, data?: any, component?: string) {
+  info(message: string, data?: unknown, component?: string) {
     this.addLog(this.createLogEntry('info', message, data, component));
   }
 
-  debug(message: string, data?: any, component?: string) {
+  debug(message: string, data?: unknown, component?: string) {
     if (this.isDevelopment) {
       this.addLog(this.createLogEntry('debug', message, data, component));
     }
   }
 
-  performance(message: string, data?: any, component?: string) {
+  performance(message: string, data?: unknown, component?: string) {
     this.addLog(this.createLogEntry('performance', message, data, component));
   }
 

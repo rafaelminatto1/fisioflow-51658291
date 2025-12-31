@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { logger } from '@/lib/errors/logger';
 
 // Interfaces para Computer Vision
 interface PoseKeypoint {
@@ -275,7 +276,7 @@ export const useComputerVision = () => {
         });
       }
     } catch (error) {
-      console.error('Erro ao acessar câmera:', error);
+      logger.error('Erro ao acessar câmera', error, 'useComputerVision');
       setCameraPermission('denied');
       throw error;
     }
@@ -296,7 +297,7 @@ export const useComputerVision = () => {
       
       setModelLoaded(true);
     } catch (error) {
-      console.error('Erro ao carregar modelo:', error);
+      logger.error('Erro ao carregar modelo de pose detection', error, 'useComputerVision');
       throw error;
     }
   }, []);
@@ -710,7 +711,7 @@ export const useComputerVision = () => {
       await initializeCamera();
       await loadPoseModel();
     } catch (error) {
-      console.error('Erro ao inicializar sistema:', error);
+      logger.error('Erro ao inicializar sistema de computer vision', error, 'useComputerVision');
       throw error;
     }
   }, [initializeCamera, loadPoseModel]);
