@@ -22,7 +22,8 @@ import {
   Play, FileText, Users, TrendingUp, Zap, Heart, Star, StarOff,
   Filter, SortAsc, Grid3X3, List, Copy, Share2, Printer, BookOpen,
   Sparkles, BarChart3, PlusCircle, Eye, ArrowLeft, Download,
-  Bookmark, BookmarkCheck, RefreshCw, Brain, Layers, GraduationCap
+  Bookmark, BookmarkCheck, RefreshCw, Brain, Layers, GraduationCap,
+  Edit, Trash2, MoreVertical
 } from 'lucide-react';
 import { useExerciseProtocols, type ExerciseProtocol } from '@/hooks/useExerciseProtocols';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -47,7 +48,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
+import { NewProtocolModal } from '@/components/modals/NewProtocolModal';
 
 // Dados clínicos detalhados dos protocolos
 const PROTOCOL_DETAILS: Record<string, {
@@ -186,13 +198,15 @@ const QUICK_TEMPLATES = [
 interface ProtocolCardEnhancedProps {
   protocol: ExerciseProtocol;
   onClick: () => void;
-  onFavorite: (id: string) => void;
+  onEdit: (protocol: ExerciseProtocol) => void;
+  onDelete: (id: string) => void;
   onDuplicate: (protocol: ExerciseProtocol) => void;
+  onFavorite: (id: string) => void;
   isFavorite: boolean;
   viewMode: 'grid' | 'list';
 }
 
-function ProtocolCardEnhanced({ protocol, onClick, onFavorite, onDuplicate, isFavorite, viewMode }: ProtocolCardEnhancedProps) {
+function ProtocolCardEnhanced({ protocol, onClick, onEdit, onDelete, onDuplicate, onFavorite, isFavorite, viewMode }: ProtocolCardEnhancedProps) {
   const getMilestones = () => {
     if (!protocol.milestones) return [];
     if (Array.isArray(protocol.milestones)) return protocol.milestones;
@@ -249,39 +263,39 @@ function ProtocolCardEnhanced({ protocol, onClick, onFavorite, onDuplicate, isFa
           {protocol.protocol_type === 'pos_operatorio' ? 'Pós-Op' : 'Patologia'}
         </Badge>
 
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={(e) => { e.stopPropagation(); onFavorite(protocol.id); }}
-                >
-                  {isFavorite ? <Star className="h-4 w-4 text-amber-500 fill-amber-500" /> : <StarOff className="h-4 w-4" />}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{isFavorite ? 'Remover favorito' : 'Favoritar'}</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={(e) => { e.stopPropagation(); onDuplicate(protocol); }}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Duplicar</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onClick(); }}>
+              <Eye className="h-4 w-4 mr-2" />
+              Ver Detalhes
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(protocol); }}>
+              <Edit className="h-4 w-4 mr-2" />
+              Editar
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDuplicate(protocol); }}>
+              <Copy className="h-4 w-4 mr-2" />
+              Duplicar
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onFavorite(protocol.id); }}>
+              {isFavorite ? <StarOff className="h-4 w-4 mr-2" /> : <Star className="h-4 w-4 mr-2" />}
+              {isFavorite ? 'Remover Favorito' : 'Favoritar'}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem 
+              onClick={(e) => { e.stopPropagation(); onDelete(protocol.id); }}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Excluir
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
       </Card>
@@ -315,6 +329,40 @@ function ProtocolCardEnhanced({ protocol, onClick, onFavorite, onDuplicate, isFa
             </h3>
             <p className="text-sm text-muted-foreground line-clamp-1">{protocol.condition_name}</p>
           </div>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onClick(); }}>
+                <Eye className="h-4 w-4 mr-2" />
+                Ver Detalhes
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(protocol); }}>
+                <Edit className="h-4 w-4 mr-2" />
+                Editar
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDuplicate(protocol); }}>
+                <Copy className="h-4 w-4 mr-2" />
+                Duplicar
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onFavorite(protocol.id); }}>
+                {isFavorite ? <StarOff className="h-4 w-4 mr-2" /> : <Star className="h-4 w-4 mr-2" />}
+                {isFavorite ? 'Remover Favorito' : 'Favoritar'}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={(e) => { e.stopPropagation(); onDelete(protocol.id); }}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Excluir
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Duration bar */}
@@ -354,26 +402,6 @@ function ProtocolCardEnhanced({ protocol, onClick, onFavorite, onDuplicate, isFa
           <Badge variant={protocol.protocol_type === 'pos_operatorio' ? 'default' : 'secondary'} className="text-xs">
             {protocol.protocol_type === 'pos_operatorio' ? 'Pós-Operatório' : 'Patologia'}
           </Badge>
-          
-          {/* Quick actions */}
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={(e) => { e.stopPropagation(); onFavorite(protocol.id); }}
-            >
-              {isFavorite ? <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" /> : <StarOff className="h-3.5 w-3.5" />}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={(e) => { e.stopPropagation(); onDuplicate(protocol); }}
-            >
-              <Copy className="h-3.5 w-3.5" />
-            </Button>
-          </div>
         </div>
       </div>
 
@@ -388,7 +416,14 @@ function ProtocolCardEnhanced({ protocol, onClick, onFavorite, onDuplicate, isFa
   );
 }
 
-function ProtocolDetailView({ protocol, onBack }: { protocol: ExerciseProtocol; onBack: () => void }) {
+interface ProtocolDetailViewProps {
+  protocol: ExerciseProtocol;
+  onBack: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: ProtocolDetailViewProps) {
   const details = PROTOCOL_DETAILS[protocol.condition_name];
   const [expandedPhases, setExpandedPhases] = useState<string[]>(['Fase 1']);
   const [showApplyModal, setShowApplyModal] = useState(false);
@@ -462,6 +497,10 @@ function ProtocolDetailView({ protocol, onBack }: { protocol: ExerciseProtocol; 
           <Play className="h-4 w-4" />
           Aplicar a Paciente
         </Button>
+        <Button variant="outline" onClick={onEdit} className="gap-2">
+          <Edit className="h-4 w-4" />
+          Editar Protocolo
+        </Button>
         <Button variant="outline" onClick={handleExportPDF} className="gap-2">
           <Download className="h-4 w-4" />
           Exportar PDF
@@ -470,9 +509,9 @@ function ProtocolDetailView({ protocol, onBack }: { protocol: ExerciseProtocol; 
           <Share2 className="h-4 w-4" />
           Compartilhar
         </Button>
-        <Button variant="outline" className="gap-2">
-          <Printer className="h-4 w-4" />
-          Imprimir
+        <Button variant="outline" onClick={onDelete} className="gap-2 text-destructive hover:text-destructive">
+          <Trash2 className="h-4 w-4" />
+          Excluir
         </Button>
       </div>
 
@@ -681,19 +720,49 @@ function ProtocolDetailView({ protocol, onBack }: { protocol: ExerciseProtocol; 
           <CheckCircle2 className="h-5 w-5 text-green-500" />
           Marcos de Progressão
         </h3>
-        <div className="grid md:grid-cols-2 gap-4">
-          {getMilestones().map((milestone: any, i: number) => (
-            <div key={i} className="flex items-start gap-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl border border-green-200/50">
-              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 text-white flex items-center justify-center font-bold flex-shrink-0 shadow-lg">
-                {milestone.week}
+        {getMilestones().length === 0 ? (
+          <p className="text-muted-foreground text-center py-8">Nenhum marco definido para este protocolo.</p>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-4">
+            {getMilestones().map((milestone: any, i: number) => (
+              <div key={i} className="flex items-start gap-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl border border-green-200/50">
+                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 text-white flex items-center justify-center font-bold flex-shrink-0 shadow-lg">
+                  {milestone.week}
+                </div>
+                <div>
+                  <p className="font-semibold">Semana {milestone.week}</p>
+                  <p className="text-sm text-muted-foreground">{milestone.description}</p>
+                </div>
               </div>
-              <div>
-                <p className="font-semibold">Semana {milestone.week}</p>
-                <p className="text-sm text-muted-foreground">{milestone.description}</p>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* Restrictions from DB */}
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <AlertTriangle className="h-5 w-5 text-amber-500" />
+          Restrições
+        </h3>
+        {getRestrictions().length === 0 ? (
+          <p className="text-muted-foreground text-center py-8">Nenhuma restrição definida para este protocolo.</p>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-4">
+            {getRestrictions().map((restriction: any, i: number) => (
+              <div key={i} className="flex items-start gap-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-xl border border-amber-200/50">
+                <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0" />
+                <div>
+                  <p className="font-semibold">
+                    Semana {restriction.week_start}
+                    {restriction.week_end && ` - ${restriction.week_end}`}
+                  </p>
+                  <p className="text-sm text-muted-foreground">{restriction.description}</p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </Card>
 
       {/* Contraindications & Expected Outcomes */}
@@ -785,8 +854,22 @@ export default function ProtocolsPage() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [favorites, setFavorites] = useState<string[]>([]);
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
+  
+  // CRUD State
+  const [showModal, setShowModal] = useState(false);
+  const [editingProtocol, setEditingProtocol] = useState<ExerciseProtocol | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const { protocols, loading } = useExerciseProtocols(activeTab);
+  const { 
+    protocols, 
+    loading, 
+    createProtocol, 
+    updateProtocol, 
+    deleteProtocol,
+    isCreating,
+    isUpdating,
+    isDeleting
+  } = useExerciseProtocols(activeTab);
 
   const filteredAndSortedProtocols = useMemo(() => {
     const result = protocols.filter(p => 
@@ -817,8 +900,52 @@ export default function ProtocolsPage() {
     );
   };
 
+  const handleNewProtocol = () => {
+    setEditingProtocol(null);
+    setShowModal(true);
+  };
+
+  const handleEditProtocol = (protocol: ExerciseProtocol) => {
+    setEditingProtocol(protocol);
+    setSelectedProtocol(null);
+    setShowModal(true);
+  };
+
   const handleDuplicate = (protocol: ExerciseProtocol) => {
-    toast.success(`Protocolo "${protocol.name}" duplicado com sucesso!`);
+    const duplicatedData = {
+      name: `${protocol.name} (Cópia)`,
+      condition_name: protocol.condition_name,
+      protocol_type: protocol.protocol_type,
+      weeks_total: protocol.weeks_total,
+      milestones: protocol.milestones,
+      restrictions: protocol.restrictions,
+      progression_criteria: protocol.progression_criteria,
+    };
+    createProtocol(duplicatedData);
+  };
+
+  const handleSubmit = (data: Omit<ExerciseProtocol, 'id' | 'created_at' | 'updated_at'>) => {
+    if (editingProtocol) {
+      updateProtocol({ id: editingProtocol.id, ...data });
+    } else {
+      createProtocol(data);
+    }
+    setShowModal(false);
+    setEditingProtocol(null);
+  };
+
+  const handleDelete = () => {
+    if (deleteId) {
+      deleteProtocol(deleteId);
+      setDeleteId(null);
+      setSelectedProtocol(null);
+    }
+  };
+
+  const handleDeleteFromDetail = () => {
+    if (selectedProtocol) {
+      setDeleteId(selectedProtocol.id);
+    }
   };
 
   if (selectedProtocol) {
@@ -827,9 +954,41 @@ export default function ProtocolsPage() {
         <div className="p-6 max-w-6xl mx-auto">
           <ProtocolDetailView 
             protocol={selectedProtocol} 
-            onBack={() => setSelectedProtocol(null)} 
+            onBack={() => setSelectedProtocol(null)}
+            onEdit={() => handleEditProtocol(selectedProtocol)}
+            onDelete={handleDeleteFromDetail}
           />
         </div>
+        
+        {/* Delete Confirmation */}
+        <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir este protocolo? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                {isDeleting ? 'Excluindo...' : 'Excluir'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        
+        {/* Edit Modal */}
+        <NewProtocolModal
+          open={showModal}
+          onOpenChange={(open) => {
+            setShowModal(open);
+            if (!open) setEditingProtocol(null);
+          }}
+          onSubmit={handleSubmit}
+          protocol={editingProtocol || undefined}
+          isLoading={isCreating || isUpdating}
+        />
       </MainLayout>
     );
   }
@@ -858,7 +1017,7 @@ export default function ProtocolsPage() {
                 <Brain className="h-4 w-4" />
                 Sugestão IA
               </Button>
-              <Button className="gap-2">
+              <Button className="gap-2" onClick={handleNewProtocol}>
                 <PlusCircle className="h-4 w-4" />
                 Novo Protocolo
               </Button>
@@ -982,6 +1141,9 @@ export default function ProtocolsPage() {
                   </Badge>
                 </TabsTrigger>
               </TabsList>
+                  </Badge>
+                </TabsTrigger>
+              </Tabs>
 
               <div className="flex items-center gap-3 flex-wrap">
                 {/* Search */}
@@ -1072,7 +1234,7 @@ export default function ProtocolsPage() {
                   <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                     {search ? 'Tente uma busca diferente ou remova os filtros' : 'Comece criando seu primeiro protocolo de reabilitação'}
                   </p>
-                  <Button className="gap-2">
+                  <Button className="gap-2" onClick={handleNewProtocol}>
                     <PlusCircle className="h-4 w-4" />
                     Criar Protocolo
                   </Button>
@@ -1087,6 +1249,8 @@ export default function ProtocolsPage() {
                       key={protocol.id} 
                       protocol={protocol} 
                       onClick={() => setSelectedProtocol(protocol)}
+                      onEdit={handleEditProtocol}
+                      onDelete={(id) => setDeleteId(id)}
                       onFavorite={toggleFavorite}
                       onDuplicate={handleDuplicate}
                       isFavorite={favorites.includes(protocol.id)}
@@ -1099,6 +1263,36 @@ export default function ProtocolsPage() {
           </Tabs>
         </Card>
       </div>
+      
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este protocolo? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {isDeleting ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Create/Edit Modal */}
+      <NewProtocolModal
+        open={showModal}
+        onOpenChange={(open) => {
+          setShowModal(open);
+          if (!open) setEditingProtocol(null);
+        }}
+        onSubmit={handleSubmit}
+        protocol={editingProtocol || undefined}
+        isLoading={isCreating || isUpdating}
+      />
     </MainLayout>
   );
 }

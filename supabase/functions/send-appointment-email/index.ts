@@ -1,8 +1,25 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
 import { checkRateLimit, createRateLimitResponse } from '../_shared/rate-limit.ts';
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+interface ResendEmailRequest {
+  from: string;
+  to: string[];
+  subject: string;
+  html: string;
+}
+
+async function sendEmail(data: ResendEmailRequest) {
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+  return response.json();
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -297,7 +314,7 @@ const handler = async (req: Request): Promise<Response> => {
         break;
     }
 
-    const emailResponse = await resend.emails.send({
+    const emailResponse = await sendEmail({
       from: `${clinicName} <agendamentos@activityfisioterapia.com.br>`,
       to: [patientEmail],
       subject: subject,
