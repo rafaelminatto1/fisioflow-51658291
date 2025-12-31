@@ -10,7 +10,7 @@ const corsHeaders = {
 
 interface EventPayload {
   eventType: string
-  data: Record<string, any>
+  data: Record<string, unknown>
   userId?: string
 }
 
@@ -152,7 +152,7 @@ serve(async (req) => {
 })
 
 // Helper function to render templates
-function renderTemplate(template: string, data: Record<string, any>): string {
+function renderTemplate(template: string, data: Record<string, unknown>): string {
   let rendered = template
   
   // Simple template rendering - replace {{key}} with data[key]
@@ -165,7 +165,7 @@ function renderTemplate(template: string, data: Record<string, any>): string {
 }
 
 // Evaluate trigger conditions
-function evaluateConditions(conditions: Record<string, any>, eventData: Record<string, any>): boolean {
+function evaluateConditions(conditions: Record<string, unknown>, eventData: Record<string, unknown>): boolean {
   if (!conditions || Object.keys(conditions).length === 0) {
     return true // No conditions means always trigger
   }
@@ -200,7 +200,7 @@ function evaluateConditions(conditions: Record<string, any>, eventData: Record<s
 }
 
 // Check if exercise completion represents a milestone
-function checkExerciseMilestone(eventData: Record<string, any>): boolean {
+function checkExerciseMilestone(eventData: Record<string, unknown>): boolean {
   // This would implement milestone logic based on your exercise system
   // For example: completed 7 days in a row, reached 50 exercises, etc.
   const completedCount = eventData.completedCount || 0
@@ -213,7 +213,7 @@ function checkExerciseMilestone(eventData: Record<string, any>): boolean {
 }
 
 // Get target users for notification
-async function getTargetUsers(supabaseClient: any, payload: EventPayload, trigger: any): Promise<string[]> {
+async function getTargetUsers(supabaseClient: SupabaseClient, payload: EventPayload, trigger: Record<string, unknown>): Promise<string[]> {
   // If userId is specified in payload, use that
   if (payload.userId) {
     return [payload.userId]
@@ -253,14 +253,15 @@ async function getTargetUsers(supabaseClient: any, payload: EventPayload, trigge
       break
       
     case 'system_maintenance':
-    case 'system_alert':
+    case 'system_alert': {
       // Broadcast to all active users
       const { data: users } = await supabaseClient
         .from('profiles')
         .select('id')
-        .eq('active', true)
+        .eq('active', true);
       
-      return users ? users.map((u: any) => u.id) : []
+      return users ? users.map((u: { id: string }) => u.id) : [];
+    }
       
     default:
       await captureMessage(`Tipo de evento desconhecido: ${payload.eventType}`, 'warning', { eventType: payload.eventType });

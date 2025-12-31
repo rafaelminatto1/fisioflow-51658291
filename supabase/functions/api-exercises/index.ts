@@ -89,7 +89,7 @@ async function listExercises(url: URL, supabase: any, organizationId?: string) {
   const search = getSearchParam(url);
   const difficulty = url.searchParams.get('difficulty');
 
-  let query = supabase
+      const query = supabase
     .from('exercises')
     .select(`
       *,
@@ -126,7 +126,7 @@ async function listExercises(url: URL, supabase: any, organizationId?: string) {
 
 // ========== GET EXERCISE ==========
 async function getExercise(supabase: any, exerciseId: string, organizationId?: string) {
-  let query = supabase
+  const query = supabase
     .from('exercises')
     .select(`
       *,
@@ -184,7 +184,7 @@ async function updateExercise(req: Request, supabase: any, exerciseId: string, o
   const { data: body, error: parseError } = await parseJsonBody(req);
   if (parseError) return parseError;
 
-  let query = supabase
+      const query = supabase
     .from('exercises')
     .update({ ...body, updated_at: new Date().toISOString() })
     .eq('id', exerciseId);
@@ -207,7 +207,7 @@ async function updateExercise(req: Request, supabase: any, exerciseId: string, o
 
 // ========== DELETE EXERCISE ==========
 async function deleteExercise(supabase: any, exerciseId: string, organizationId?: string) {
-  let query = supabase
+      const query = supabase
     .from('exercises')
     .update({ is_active: false, deleted_at: new Date().toISOString() })
     .eq('id', exerciseId);
@@ -227,7 +227,7 @@ async function deleteExercise(supabase: any, exerciseId: string, organizationId?
 
 // ========== LIST CATEGORIES ==========
 async function listCategories(supabase: any, organizationId?: string) {
-  let query = supabase
+      const query = supabase
     .from('exercise_categories')
     .select(`
       *,

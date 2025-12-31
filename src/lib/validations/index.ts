@@ -122,7 +122,7 @@ export const sanitizeString = (str: string, maxLength: number = 10000): string =
     .substring(0, maxLength)
     .replace(/[<>]/g, '') // Remove tags HTML básicas
     .replace(/javascript:/gi, '') // Remove protocolos javascript
-    .replace(/on\w+=/gi, ''); // Remove event handlers
+    .replace(/on\w+\s*=/gi, ''); // Remove event handlers
 };
 
 /**

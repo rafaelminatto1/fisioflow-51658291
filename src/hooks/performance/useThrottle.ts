@@ -31,7 +31,7 @@ export function useThrottle<T>(value: T, limit: number = 100): T {
  * Hook para throttle de callbacks
  * Limita a frequência de execução de uma função
  */
-export function useThrottledCallback<T extends (...args: any[]) => any>(
+export function useThrottledCallback<T extends (...args: unknown[]) => unknown>(
   callback: T,
   limit: number = 100
 ): (...args: Parameters<T>) => void {

@@ -156,7 +156,7 @@ const SmartAI = () => {
 
       // Flush final
       if (textBuffer.trim()) {
-        for (let raw of textBuffer.split('\n')) {
+        for (const raw of textBuffer.split('\n')) {
           if (!raw || raw.startsWith(':') || raw.trim() === '' || !raw.startsWith('data: ')) continue;
           const jsonStr = raw.slice(6).trim();
           if (jsonStr === '[DONE]') continue;

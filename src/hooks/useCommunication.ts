@@ -232,7 +232,7 @@ export const useCommunication = () => {
         });
         
         setError(null);
-      } catch (err) {
+      } catch {
         setError('Erro ao carregar dados de comunicação');
       } finally {
         setLoading(false);
@@ -242,7 +242,7 @@ export const useCommunication = () => {
     loadData();
   }, []);
 
-  const sendCommunication = async (templateId: string, patientIds: string[], variables: Record<string, string>) => {
+  const sendCommunication = async (templateId: string, patientIds: string[], _variables: Record<string, string>) => {
     try {
       // Simular envio
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -270,7 +270,7 @@ export const useCommunication = () => {
         sent_count: newHistory.filter(h => h.status === 'sent').length,
         failed_count: newHistory.filter(h => h.status === 'failed').length
       };
-    } catch (err) {
+    } catch {
       throw new Error('Erro ao enviar comunicação');
     }
   };
@@ -286,7 +286,7 @@ export const useCommunication = () => {
       
       setTemplates(prev => [newTemplate, ...prev]);
       return newTemplate;
-    } catch (err) {
+    } catch {
       throw new Error('Erro ao criar template');
     }
   };
@@ -296,7 +296,7 @@ export const useCommunication = () => {
       setTemplates(prev => prev.map(t => 
         t.id === templateId ? { ...t, ...updates } : t
       ));
-    } catch (err) {
+    } catch {
       throw new Error('Erro ao atualizar template');
     }
   };
@@ -304,7 +304,7 @@ export const useCommunication = () => {
   const deleteTemplate = async (templateId: string) => {
     try {
       setTemplates(prev => prev.filter(t => t.id !== templateId));
-    } catch (err) {
+    } catch {
       throw new Error('Erro ao excluir template');
     }
   };
@@ -322,7 +322,7 @@ export const useCommunication = () => {
       
       setBulkCommunications(prev => [newBulk, ...prev]);
       return newBulk;
-    } catch (err) {
+    } catch {
       throw new Error('Erro ao criar comunicação em massa');
     }
   };

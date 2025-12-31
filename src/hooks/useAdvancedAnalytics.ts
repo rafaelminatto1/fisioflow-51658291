@@ -30,7 +30,7 @@ interface DashboardWidget {
   type: 'metric' | 'chart' | 'table' | 'progress' | 'gauge';
   title: string;
   position: { x: number; y: number; w: number; h: number };
-  config: any;
+  config: Record<string, unknown>;
   isVisible: boolean;
   refreshInterval?: number; // em segundos
 }
@@ -67,7 +67,7 @@ interface PredictiveInsight {
   impact: 'high' | 'medium' | 'low';
   actionable: boolean;
   suggestedActions: string[];
-  dataPoints: any[];
+  dataPoints: unknown[];
   createdAt: Date;
 }
 
@@ -428,7 +428,7 @@ export const useAdvancedAnalytics = () => {
         name: `${dashboard.name} (Importado)`,
         isDefault: false
       });
-    } catch (error) {
+    } catch {
       setError('Erro ao importar dashboard');
       return null;
     }
