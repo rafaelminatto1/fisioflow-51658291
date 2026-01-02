@@ -311,7 +311,6 @@ export function BodyMap({
                 style={{
                   filter: `drop-shadow(0 0 ${radius}px ${color}80)`,
                   transition: 'all 0.2s ease-out',
-                  ringColor: color,
                 }}
                 onClick={(e) => {
                   e.stopPropagation();

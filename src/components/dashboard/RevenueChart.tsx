@@ -30,11 +30,7 @@ export function RevenueChart() {
 
       if (payments) {
         // Agrupar por dia
-        interface Payment {
-          created_at: string;
-          amount: number;
-        }
-        const grouped = (payments as Payment[]).reduce((acc: Record<string, number>, payment) => {
+        const grouped = (payments as any[]).reduce((acc: Record<string, number>, payment: any) => {
           const date = format(new Date(payment.created_at), 'yyyy-MM-dd');
           acc[date] = (acc[date] || 0) + (payment.amount || 0);
           return acc;

@@ -7,11 +7,14 @@ import type { PainPoint } from '@/components/pain-map';
 
 interface PainMap {
   id: string;
-  session_id: string;
+  session_id?: string;
   patient_id: string;
-  view: 'front' | 'back';
   created_at: string;
-  points: PainMapPoint[];
+  updated_at?: string;
+  global_pain_level?: number;
+  pain_points?: any;
+  notes?: string;
+  points?: PainMapPoint[];
 }
 
 interface PainMapPoint {
@@ -47,7 +50,7 @@ export function usePainMapsBySession(sessionId: string | undefined) {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      return data as PainMap[];
+      return (data || []) as unknown as PainMap[];
     },
     enabled: !!sessionId,
   });
@@ -64,14 +67,13 @@ export function usePainMapsByPatient(patientId: string | undefined) {
         .from('pain_maps')
         .select(`
           *,
-          points:pain_map_points(*),
-          session:sessions(id, started_at)
+          points:pain_map_points(*)
         `)
         .eq('patient_id', patientId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      return data as (PainMap & { session: { id: string; started_at: string } })[];
+      return (data || []) as unknown as (PainMap & { session?: { id: string; started_at: string } })[];
     },
     enabled: !!patientId,
   });
@@ -122,15 +124,21 @@ export function useCreatePainMap() {
 
       if (sessionError) throw sessionError;
 
+      // Calcular nível global de dor
+      const globalPainLevel = points.length > 0
+        ? Math.round(points.reduce((sum, p) => sum + p.intensity, 0) / points.length)
+        : 0;
+
       // Criar mapa de dor
       const { data: painMap, error: mapError } = await supabase
         .from('pain_maps')
         .insert({
           session_id: sessionId,
           patient_id: session.patient_id,
-          view,
           organization_id: session.organization_id,
-        })
+          global_pain_level: globalPainLevel,
+          pain_points: points,
+        } as any)
         .select()
         .single();
 
@@ -337,7 +345,6 @@ export function usePainEvolution(patientId: string | undefined) {
         .select(`
           id,
           created_at,
-          view,
           pain_points,
           global_pain_level
         `)
@@ -347,7 +354,7 @@ export function usePainEvolution(patientId: string | undefined) {
       if (error) throw error;
 
       // Calcular média de intensidade por mapa
-      return (data || []).map(map => {
+      return (data || []).map((map: any) => {
         // pain_points pode ser JSONB array ou null
         const points = (map.pain_points as any[] || []);
         const totalIntensity = points.reduce((sum: number, p: any) => sum + (p.intensity || 0), 0);
@@ -358,9 +365,10 @@ export function usePainEvolution(patientId: string | undefined) {
         return {
           id: map.id,
           date: map.created_at,
-          view: map.view,
           averageIntensity: Math.round(avgIntensity * 10) / 10,
           pointCount: points.length,
+          globalPainLevel: map.global_pain_level || avgIntensity,
+          regionCount: points.length,
         };
       });
     },

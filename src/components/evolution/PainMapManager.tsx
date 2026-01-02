@@ -149,7 +149,7 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
   const handlePointUpdate = useCallback((point: PainPoint) => {
     const updatedPoint: PainMapPoint = {
       region: point.region as PainMapPoint['region'],
-      intensity: point.intensity,
+      intensity: Math.min(10, Math.max(0, point.intensity)) as PainIntensity,
       painType: point.painType as PainMapPoint['painType'],
       description: point.notes,
       x: point.x,
@@ -241,7 +241,7 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
                   <EvaScaleBar
                     value={selectedIntensity}
                     onChange={(v) => setSelectedIntensity(v as PainIntensity)}
-                    readOnly={readOnly}
+                    disabled={readOnly}
                   />
                 </div>
                 
@@ -296,14 +296,14 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
             </Select>
           </div>
           <PainEvolutionChart 
-            evolutionData={painEvolution} 
+            evolutionData={painEvolution as any} 
             showStats={true}
           />
         </TabsContent>
 
         <TabsContent value="history" className="mt-6">
           <PainMapHistory 
-            painMaps={painMaps}
+            painMaps={painMaps as any}
             isLoading={isLoading}
           />
         </TabsContent>
