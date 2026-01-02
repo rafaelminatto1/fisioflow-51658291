@@ -13,12 +13,7 @@ import { passwordSchema, emailSchema, fullNameSchema } from '@/lib/validations/a
 import { Separator } from '@/components/ui/separator';
 import { logger } from '@/lib/errors/logger';
 
-// Credenciais de demonstração
-const DEMO_CREDENTIALS = [
-  { email: 'admin@fisioflow.com', password: 'Admin@2025', role: 'Administrador', description: 'Acesso completo ao sistema' },
-  { email: 'fisio@fisioflow.com', password: 'Fisio@2025', role: 'Fisioterapeuta', description: 'Gerenciar pacientes e eventos' },
-  { email: 'estagiario@fisioflow.com', password: 'Estag@2025', role: 'Estagiário', description: 'Acesso limitado' },
-];
+// Demo credentials removed for security - no hardcoded credentials in production
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -139,10 +134,6 @@ export default function Auth() {
     }
   };
 
-  const fillDemoCredentials = (demoEmail: string, demoPassword: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPassword);
-  };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -280,34 +271,6 @@ export default function Auth() {
               
               <TabsContent value="login">
                 <form onSubmit={handleSignIn} className="space-y-4">
-                  {/* Credenciais de Demonstração */}
-                  <Alert className="bg-primary/5 border-primary/20">
-                    <Shield className="h-4 w-4 text-primary" />
-                    <AlertDescription className="text-sm">
-                      <strong className="block mb-2">Credenciais para Demonstração:</strong>
-                      <div className="space-y-2">
-                        {DEMO_CREDENTIALS.map((cred, idx) => (
-                          <div key={idx} className="flex items-center justify-between p-2 bg-background/50 rounded border border-border/50">
-                            <div className="text-xs">
-                              <div className="font-semibold text-primary">{cred.role}</div>
-                              <div className="text-muted-foreground">{cred.email}</div>
-                              <div className="text-muted-foreground">{cred.password}</div>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => fillDemoCredentials(cred.email, cred.password)}
-                            >
-                              Usar
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </AlertDescription>
-                  </Alert>
-
-                  <Separator className="my-4" />
 
                   <div className="space-y-2">
                     <Label htmlFor="login-email">Email</Label>
