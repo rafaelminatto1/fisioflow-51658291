@@ -56,7 +56,7 @@ export function WaitlistQuickViewModal({
   onSchedulePatient,
 }: WaitlistQuickViewModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const { waitlist, loading } = useWaitlist();
+  const { data: waitlist = [], isLoading: loading } = useWaitlist();
 
   const filteredWaitlist = waitlist.filter((entry) => {
     if (!searchQuery) return true;
@@ -173,7 +173,7 @@ export function WaitlistQuickViewModal({
                             )}
                             <span className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              {formatDistanceToNow(new Date(entry.added_at), {
+                              {formatDistanceToNow(new Date(entry.created_at), {
                                 addSuffix: true,
                                 locale: ptBR,
                               })}
@@ -199,11 +199,11 @@ export function WaitlistQuickViewModal({
                           )}
 
                           {/* Preferred Time Slots */}
-                          {entry.preferred_time_slots && entry.preferred_time_slots.length > 0 && (
+                          {entry.preferred_periods && entry.preferred_periods.length > 0 && (
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <Clock className="h-3 w-3 text-muted-foreground" />
                               <div className="flex gap-1">
-                                {entry.preferred_time_slots.map((slot) => {
+                                {entry.preferred_periods.map((slot) => {
                                   const config = TIME_SLOT_CONFIG[slot];
                                   const Icon = config?.icon || Clock;
                                   return (

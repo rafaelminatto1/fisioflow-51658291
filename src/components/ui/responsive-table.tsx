@@ -65,7 +65,7 @@ function ResponsiveTableComponent<T extends Record<string, unknown>>({
               >
                 {memoizedColumns.map((col) => (
                   <td key={col.key} className="py-3 px-4">
-                    {col.render ? col.render(item) : item[col.key]}
+                    {col.render ? col.render(item) : String(item[col.key] ?? '')}
                   </td>
                 ))}
               </tr>
@@ -89,7 +89,7 @@ function ResponsiveTableComponent<T extends Record<string, unknown>>({
                     {col.mobileLabel || col.label}:
                   </span>
                   <span className="text-sm text-right">
-                    {col.render ? col.render(item) : item[col.key]}
+                    {col.render ? col.render(item) : String(item[col.key] ?? '')}
                   </span>
                 </div>
               ))}

@@ -16,7 +16,7 @@ import {
   Phone,
   Mail
 } from 'lucide-react';
-import { useWaitlist, type WaitlistEntry } from '@/hooks/useWaitlist';
+import { useWaitlist, useRemoveFromWaitlist, useUpdatePriority, type WaitlistEntry } from '@/hooks/useWaitlist';
 import { WaitlistEntryModal } from './WaitlistEntryModal';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -53,7 +53,9 @@ export function WaitlistManager() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   
-  const { waitlist, loading, removeFromWaitlist, updateWaitlist, isRemoving } = useWaitlist();
+  const { data: waitlist = [], isLoading: loading } = useWaitlist();
+  const { mutate: removeFromWaitlist, isPending: isRemoving } = useRemoveFromWaitlist();
+  const { mutate: updatePriorityMutation } = useUpdatePriority();
 
   const filteredWaitlist = useMemo(() => {
     return waitlist.filter(entry => {
@@ -83,8 +85,8 @@ export function WaitlistManager() {
   }, []);
 
   const handleChangePriority = useCallback((id: string, priority: 'normal' | 'high' | 'urgent') => {
-    updateWaitlist({ id, priority });
-  }, [updateWaitlist]);
+    updatePriorityMutation({ waitlistId: id, priority });
+  }, [updatePriorityMutation]);
 
   const handleDelete = useCallback(() => {
     if (deleteId) {
@@ -101,7 +103,7 @@ export function WaitlistManager() {
       ? Math.round(
           waitlist.reduce((acc, entry) => {
             const days = Math.floor(
-              (new Date().getTime() - new Date(entry.added_at).getTime()) / (1000 * 60 * 60 * 24)
+              (new Date().getTime() - new Date(entry.created_at).getTime()) / (1000 * 60 * 60 * 24)
             );
             return acc + days;
           }, 0) / waitlist.length
@@ -246,7 +248,7 @@ export function WaitlistManager() {
                               <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
                                 <span className="flex items-center gap-1">
                                   <Clock className="h-3 w-3" />
-                                  {formatDistanceToNow(new Date(entry.added_at), {
+                                  {formatDistanceToNow(new Date(entry.created_at), {
                                     addSuffix: true,
                                     locale: ptBR,
                                   })}
@@ -273,22 +275,10 @@ export function WaitlistManager() {
                                   </span>
                                 )}
 
-                                {entry.notification_count > 0 && (
-                                  <span className="flex items-center gap-1">
-                                    <AlertCircle className="h-3 w-3" />
-                                    {entry.notification_count} notificações
-                                  </span>
-                                )}
                               </div>
 
-                              {entry.priority_reason && (
-                                <p className="text-sm text-muted-foreground mt-2 italic">
-                                  {entry.priority_reason}
-                                </p>
-                              )}
-
                               {entry.notes && (
-                                <p className="text-xs text-muted-foreground mt-2">
+                                <p className="text-sm text-muted-foreground mt-2 italic">
                                   {entry.notes}
                                 </p>
                               )}
