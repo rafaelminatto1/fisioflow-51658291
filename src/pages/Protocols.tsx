@@ -1141,9 +1141,6 @@ export default function ProtocolsPage() {
                   </Badge>
                 </TabsTrigger>
               </TabsList>
-                  </Badge>
-                </TabsTrigger>
-              </Tabs>
 
               <div className="flex items-center gap-3 flex-wrap">
                 {/* Search */}
