@@ -156,8 +156,8 @@ describe('SyncManager', () => {
   describe('getQueueLength', () => {
     it('should return the number of pending items', async () => {
       const mockItems = [
-        { id: 1, type: 'patient', action: 'create', store: 'patients', data: {}, timestamp: new Date().toISOString(), status: 'pending' },
-        { id: 2, type: 'patient', action: 'update', store: 'patients', data: {}, timestamp: new Date().toISOString(), status: 'pending' },
+        { id: 1, type: 'patient' as const, action: 'create' as const, store: 'patients', data: {}, timestamp: new Date().toISOString(), status: 'pending' as const },
+        { id: 2, type: 'patient' as const, action: 'update' as const, store: 'patients', data: {}, timestamp: new Date().toISOString(), status: 'pending' as const },
       ];
 
       vi.mocked(dbStore.getSyncQueue).mockResolvedValue(mockItems);

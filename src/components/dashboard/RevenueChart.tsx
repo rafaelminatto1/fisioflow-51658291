@@ -21,7 +21,7 @@ export function RevenueChart() {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - 7); // Últimos 7 dias
 
-      const { data: payments } = await supabase
+      const { data: payments } = await (supabase as any)
         .from('payments')
         .select('amount, created_at')
         .eq('status', 'completed')
