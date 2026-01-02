@@ -95,11 +95,11 @@ export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { 
       const therapistIds = therapists.map(t => t.id);
       
       // Se não há therapists, retornar arrays vazios
-      let appointments: typeof appointmentsError extends null ? any[] : null = [];
+      let appointments: any[] = [];
       let todayAppointments: any[] = [];
       
       if (therapistIds.length > 0) {
-        const { data: appointmentsData, error: appointmentsError } = await supabase
+        const { data: appointmentsData, error: aptsError } = await supabase
           .from('appointments')
           .select('id, therapist_id, appointment_date, appointment_time, duration, status')
           .gte('appointment_date', format(start, 'yyyy-MM-dd'))
@@ -107,7 +107,7 @@ export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { 
           .not('status', 'eq', 'cancelado')
           .in('therapist_id', therapistIds);
         
-        if (appointmentsError) throw appointmentsError;
+        if (aptsError) throw aptsError;
         appointments = appointmentsData || [];
         
         // Buscar agendamentos de hoje para dados horários

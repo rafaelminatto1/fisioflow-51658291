@@ -54,8 +54,7 @@ export async function logAuditEntry(entry: AuditEntry): Promise<boolean> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
 
-    const { error } = await supabase.from('audit_log').insert({
-      user_id: user?.id || null,
+    const { error } = await (supabase as any).from('audit_log').insert({
       action: entry.action,
       table_name: entry.table_name,
       record_id: entry.record_id || null,

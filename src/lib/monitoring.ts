@@ -110,7 +110,7 @@ export const trackError = (error: Error, context?: Record<string, any>) => {
   });
 
   // Log error
-  logger.error('Erro rastreado', error, 'Monitoring', context);
+  logger.error('Erro rastreado', error, 'Monitoring');
 };
 
 /**

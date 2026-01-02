@@ -111,34 +111,36 @@ export class SyncManager {
    * Processa um item da fila de sincronização
    */
   private async processSyncItem(item: SyncQueueItem): Promise<void> {
-    const { type, action, store, data } = item;
+    const { type, action, data } = item;
+    const typedData = data as any;
+    const recordId = typedData?.id as string;
 
     switch (type) {
       case 'patient':
         if (action === 'create') {
-          await supabase.from('patients').insert(data);
+          await supabase.from('patients').insert(typedData as any);
         } else if (action === 'update') {
-          await supabase.from('patients').update(data).eq('id', data.id);
+          await supabase.from('patients').update(typedData as any).eq('id', recordId);
         } else if (action === 'delete') {
-          await supabase.from('patients').delete().eq('id', data.id);
+          await supabase.from('patients').delete().eq('id', recordId);
         }
         break;
 
       case 'appointment':
         if (action === 'create') {
-          await supabase.from('appointments').insert(data);
+          await supabase.from('appointments').insert(typedData as any);
         } else if (action === 'update') {
-          await supabase.from('appointments').update(data).eq('id', data.id);
+          await supabase.from('appointments').update(typedData as any).eq('id', recordId);
         } else if (action === 'delete') {
-          await supabase.from('appointments').delete().eq('id', data.id);
+          await supabase.from('appointments').delete().eq('id', recordId);
         }
         break;
 
       case 'session':
         if (action === 'create') {
-          await supabase.from('sessions').insert(data);
+          await supabase.from('sessions').insert(typedData as any);
         } else if (action === 'update') {
-          await supabase.from('sessions').update(data).eq('id', data.id);
+          await supabase.from('sessions').update(typedData as any).eq('id', recordId);
         }
         break;
 

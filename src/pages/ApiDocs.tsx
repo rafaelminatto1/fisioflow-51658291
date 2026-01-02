@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
-import SwaggerUI from 'swagger-ui-react';
-import 'swagger-ui-react/swagger-ui.css';
 import { generateOpenAPISpec } from '@/lib/openapi/generator';
 
 export default function ApiDocs() {
@@ -89,31 +87,15 @@ export default function ApiDocs() {
 
         <TabsContent value="swagger" className="mt-4">
           <Card>
-            <CardContent className="p-0">
+            <CardContent className="p-4">
               {openApiSpec && (
                 <div className="swagger-ui-wrapper">
-                  <SwaggerUI
-                    spec={openApiSpec}
-                    docExpansion="list"
-                    defaultModelsExpandDepth={1}
-                    defaultModelExpandDepth={1}
-                    tryItOutEnabled={true}
-                    requestInterceptor={(request) => {
-                      // Adicionar token de autenticação se disponível
-                      const token = localStorage.getItem('supabase.auth.token');
-                      if (token) {
-                        try {
-                          const parsed = JSON.parse(token);
-                          if (parsed.access_token) {
-                            request.headers['Authorization'] = `Bearer ${parsed.access_token}`;
-                          }
-                        } catch (e) {
-                          // Ignorar erro de parse
-                        }
-                      }
-                      return request;
-                    }}
-                  />
+                  <pre className="text-xs overflow-auto max-h-96 bg-muted p-4 rounded">
+                    {JSON.stringify(openApiSpec, null, 2)}
+                  </pre>
+                  <p className="text-sm text-muted-foreground mt-4">
+                    Para visualização interativa do Swagger UI, instale o pacote swagger-ui-react.
+                  </p>
                 </div>
               )}
             </CardContent>

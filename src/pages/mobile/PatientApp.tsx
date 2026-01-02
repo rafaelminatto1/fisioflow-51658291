@@ -23,18 +23,18 @@ export default function PatientApp() {
 
   async function loadAppointments() {
     try {
-      // Buscar agendamentos do paciente
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('patient_id')
-        .eq('id', user?.id)
+      // Buscar paciente pelo user_id
+      const { data: patient } = await supabase
+        .from('patients')
+        .select('id')
+        .eq('profile_id', user?.id)
         .single();
 
-      if (profile?.patient_id) {
+      if (patient?.id) {
         const { data } = await supabase
           .from('appointments')
           .select('*, therapists:profiles(name)')
-          .eq('patient_id', profile.patient_id)
+          .eq('patient_id', patient.id)
           .gte('start_time', new Date().toISOString())
           .order('start_time', { ascending: true });
 
