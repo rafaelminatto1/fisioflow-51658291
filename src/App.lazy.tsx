@@ -59,4 +59,3 @@ export const NotFound = lazy(() => import('@/pages/NotFound'));
 
 // Páginas de desenvolvimento/teste (menor prioridade)
 export const FileUploadTest = lazy(() => import('@/pages/FileUploadTest'));
-export const CreateDemoUsers = lazy(() => import('@/pages/CreateDemoUsers'));
