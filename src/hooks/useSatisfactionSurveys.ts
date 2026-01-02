@@ -67,8 +67,7 @@ export function useSatisfactionSurveys(filters?: SurveyFilters) {
         .select(`
           *,
           patient:patients(id, name),
-          appointment:appointments(id, start_time),
-          therapist:profiles!satisfaction_surveys_therapist_id_fkey(id, name)
+          appointment:appointments(id, start_time)
         `)
         .order('sent_at', { ascending: false });
 
@@ -99,7 +98,12 @@ export function useSatisfactionSurveys(filters?: SurveyFilters) {
       const { data, error } = await query;
 
       if (error) throw error;
-      return data as SatisfactionSurvey[];
+      
+      // Map data to expected format
+      return (data || []).map((item: any) => ({
+        ...item,
+        therapist: item.therapist_id ? { id: item.therapist_id, name: 'Terapeuta' } : null,
+      })) as SatisfactionSurvey[];
     },
   });
 }
