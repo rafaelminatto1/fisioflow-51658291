@@ -146,7 +146,6 @@ const App = () => {
   }, []);
 
   return (
-    <SentryErrorBoundary>
       <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
@@ -182,7 +181,7 @@ const App = () => {
                   <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                   <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                   <Route path="/api-docs" element={<ProtectedRoute><ApiDocs /></ProtectedRoute>} />
-                  <Route path="/mobile" element={<ProtectedRoute><PatientApp /></ProtectedRoute>} />
+                  {/* Mobile route disabled - PatientApp not implemented */}
                   <Route path="/medical-record" element={<ProtectedRoute><MedicalRecord /></ProtectedRoute>} />
                   <Route path="/smart-ai" element={<ProtectedRoute><SmartAI /></ProtectedRoute>} />
                   <Route path="/physiotherapy" element={<ProtectedRoute><PhysiotherapyHub /></ProtectedRoute>} />
@@ -266,7 +265,6 @@ const App = () => {
         </TooltipProvider>
       </QueryClientProvider>
       </ErrorBoundary>
-    </SentryErrorBoundary>
   );
 };
 

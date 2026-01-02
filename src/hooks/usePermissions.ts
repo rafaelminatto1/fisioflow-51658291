@@ -41,10 +41,10 @@ export function usePermissions(): PermissionsResult {
   const isEstagiario = roles.includes('estagiario');
   const isPaciente = roles.includes('paciente');
 
-  const canWrite = (_resource: string): boolean => {
+  const canWrite = (resourceType: string): boolean => {
     if (isAdmin || isFisio) return true;
     if (isEstagiario) {
-      return ['participantes', 'checklist'].includes(resource);
+      return ['participantes', 'checklist'].includes(resourceType);
     }
     return false;
   };

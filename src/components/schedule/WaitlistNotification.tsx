@@ -22,7 +22,6 @@ import {
   Send
 } from 'lucide-react';
 import { useWaitlistMatch, type WaitlistMatch } from '@/hooks/useWaitlistMatch';
-import { useWaitlist } from '@/hooks/useWaitlist';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -43,7 +42,6 @@ export function WaitlistNotification({
 }: WaitlistNotificationProps) {
   const [sentNotifications, setSentNotifications] = useState<Set<string>>(new Set());
   const { findMatchingEntries } = useWaitlistMatch();
-  const { updateWaitlist } = useWaitlist();
 
   const targetDate = typeof date === 'string' ? new Date(date) : date;
   const matches = findMatchingEntries(targetDate, time);
@@ -91,13 +89,6 @@ export function WaitlistNotification({
     
     // Mark as notified
     setSentNotifications(prev => new Set([...prev, match.entry.id]));
-    
-    // Update waitlist entry
-    updateWaitlist({
-      id: match.entry.id,
-      last_notification_sent_at: new Date().toISOString(),
-      notification_count: (match.entry.notification_count || 0) + 1,
-    });
 
     toast.success(`Mensagem enviada para ${match.entry.patient?.name}`);
   };
@@ -105,14 +96,6 @@ export function WaitlistNotification({
   const handleSchedulePatient = (match: WaitlistMatch) => {
     if (onSchedulePatient) {
       onSchedulePatient(match.entry.patient_id);
-      
-      // Mark as scheduled in waitlist
-      updateWaitlist({
-        id: match.entry.id,
-        status: 'scheduled',
-        scheduled_at: new Date().toISOString(),
-      });
-      
       onOpenChange(false);
     }
   };

@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Clock, Calendar, AlertCircle, User } from 'lucide-react';
-import { useWaitlist } from '@/hooks/useWaitlist';
+import { useAddToWaitlist } from '@/hooks/useWaitlist';
 import { usePatients } from '@/hooks/usePatients';
 import { toast } from 'sonner';
 
@@ -53,7 +53,7 @@ export function WaitlistQuickAdd({ open, onOpenChange, date, time }: WaitlistQui
   const [priority, setPriority] = useState<'normal' | 'high' | 'urgent'>('normal');
   const [notes, setNotes] = useState('');
 
-  const { addToWaitlist, isAdding } = useWaitlist();
+  const { mutate: addToWaitlist, isPending: isAdding } = useAddToWaitlist();
   const { data: patients = [] } = usePatients();
 
   const dayOfWeek = DAY_MAP[date.getDay()];
@@ -68,9 +68,8 @@ export function WaitlistQuickAdd({ open, onOpenChange, date, time }: WaitlistQui
     addToWaitlist({
       patient_id: patientId,
       preferred_days: [dayOfWeek],
-      preferred_time_slots: [timeSlot],
+      preferred_periods: [timeSlot],
       priority,
-      priority_reason: priority !== 'normal' ? `Interesse em ${format(date, 'dd/MM/yyyy')} às ${time}` : undefined,
       notes: notes || `Interesse registrado para ${format(date, "EEEE, d 'de' MMMM", { locale: ptBR })} às ${time}`,
     });
 
