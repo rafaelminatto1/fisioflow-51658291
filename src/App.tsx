@@ -17,7 +17,7 @@ import { initMonitoring } from '@/lib/monitoring';
 // Lazy load pages for better performance
 const Welcome = lazy(() => import("./pages/Welcome"));
 const Auth = lazy(() => import("./pages/Auth"));
-const CreateDemoUsers = lazy(() => import("./pages/CreateDemoUsers"));
+
 const Index = lazy(() => import("./pages/Index"));
 const Patients = lazy(() => import("./pages/Patients"));
 const Schedule = lazy(() => import("./pages/Schedule"));
@@ -162,7 +162,7 @@ const App = () => {
                   <Route path="/welcome" element={<Welcome />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/auth/login" element={<Auth />} />
-                  <Route path="/create-demo-users" element={<CreateDemoUsers />} />
+                  
                   <Route path="/pre-cadastro" element={<PreCadastro />} />
                   <Route path="/pre-cadastro/:token" element={<PreCadastro />} />
                   <Route path="/prescricoes/publica/:qrCode" element={<PublicPrescriptionPage />} />
