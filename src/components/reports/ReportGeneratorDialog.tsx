@@ -51,9 +51,9 @@ export function ReportGeneratorDialog({ patientId, patientName, trigger }: Repor
       const therapistName = profile?.full_name || 'Fisioterapeuta';
       const reportDate = new Date().toLocaleDateString('pt-BR');
       
-      // Get initial and current assessment data (mock for now)
-      const initialPain = painEvolution.length > 0 ? painEvolution[painEvolution.length - 1].globalPainLevel : 0;
-      const currentPain = painEvolution.length > 0 ? painEvolution[0].globalPainLevel : 0;
+      // Get initial and current assessment data
+      const initialPain = painEvolution.length > 0 ? (painEvolution[painEvolution.length - 1] as any).globalPainLevel || painEvolution[painEvolution.length - 1].averageIntensity : 0;
+      const currentPain = painEvolution.length > 0 ? (painEvolution[0] as any).globalPainLevel || painEvolution[0].averageIntensity : 0;
 
       if (reportType === 'medical') {
         // Relatório Médico Técnico
@@ -75,10 +75,10 @@ export function ReportGeneratorDialog({ patientId, patientName, trigger }: Repor
             name: p.pathology_name,
             status: p.status === 'em_tratamento' ? 'Em tratamento' : 'Tratada'
           })),
-          painEvolution: painEvolution.slice(0, 10).map(pe => ({
+          painEvolution: painEvolution.slice(0, 10).map((pe: any) => ({
             date: new Date(pe.date).toLocaleDateString('pt-BR'),
-            level: pe.globalPainLevel,
-            regions: pe.regionCount
+            level: pe.globalPainLevel || pe.averageIntensity,
+            regions: pe.regionCount || pe.pointCount
           })),
           initialAssessment: {
             date: painEvolution[painEvolution.length - 1]?.date || reportDate,

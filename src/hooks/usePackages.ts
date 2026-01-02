@@ -53,11 +53,21 @@ export function useSessionPackages() {
       const { data, error } = await supabase
         .from('session_packages')
         .select('*')
-        .eq('is_active', true)
-        .order('sessions_count', { ascending: true });
+        .order('total_sessions', { ascending: true });
 
       if (error) throw error;
-      return data as SessionPackage[];
+      // Mapear para a interface esperada
+      return (data || []).map((pkg: any) => ({
+        id: pkg.id,
+        name: pkg.package_name,
+        description: pkg.notes,
+        sessions_count: pkg.total_sessions,
+        price: pkg.final_value,
+        validity_days: pkg.validity_months ? pkg.validity_months * 30 : 365,
+        is_active: pkg.status === 'ativo',
+        organization_id: pkg.organization_id,
+        created_at: pkg.created_at,
+      })) as SessionPackage[];
     },
   });
 }
@@ -73,20 +83,35 @@ export function usePatientPackages(patientId: string | undefined) {
         .from('patient_packages')
         .select(`
           *,
-          package:session_packages(id, name, sessions_count, price)
+          package:session_packages(id, package_name, total_sessions, final_value)
         `)
         .eq('patient_id', patientId)
         .order('purchased_at', { ascending: false });
 
       if (error) throw error;
 
-      // Calcular campos adicionais
+      // Calcular campos adicionais e mapear
       const enrichedData = (data || []).map(pp => {
         const remaining = pp.sessions_purchased - pp.sessions_used;
         const isExpired = pp.expires_at && new Date(pp.expires_at) < new Date();
+        const pkg = pp.package as any;
         
         return {
-          ...pp,
+          id: pp.id,
+          patient_id: pp.patient_id,
+          package_id: pp.package_id,
+          sessions_purchased: pp.sessions_purchased,
+          sessions_used: pp.sessions_used,
+          price_paid: pp.price_paid,
+          purchased_at: pp.purchased_at,
+          expires_at: pp.expires_at,
+          last_used_at: pp.last_used_at,
+          package: pkg ? {
+            id: pkg.id,
+            name: pkg.package_name,
+            sessions_count: pkg.total_sessions,
+            price: pkg.final_value,
+          } : undefined,
           sessions_remaining: remaining,
           is_expired: isExpired,
           status: isExpired ? 'expired' : remaining <= 0 ? 'depleted' : 'active',
@@ -132,9 +157,13 @@ export function useCreatePackage() {
       const { data, error } = await supabase
         .from('session_packages')
         .insert({
-          ...input,
-          is_active: true,
-        })
+          package_name: input.name,
+          notes: input.description,
+          total_sessions: input.sessions_count,
+          final_value: input.price,
+          validity_months: Math.ceil(input.validity_days / 30),
+          status: 'active',
+        } as any)
         .select()
         .single();
 
@@ -165,15 +194,15 @@ export function usePurchasePackage() {
         .from('session_packages')
         .select('*')
         .eq('id', package_id)
-        .eq('is_active', true)
         .single();
 
       if (packageError) throw new Error('Pacote não encontrado');
       if (!packageTemplate) throw new Error('Pacote não disponível');
 
-      // Calcular data de expiração
+      // Calcular data de expiração (usar validity_months ou padrão de 12 meses)
+      const validityDays = ((packageTemplate as any).validity_months || 12) * 30;
       const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + packageTemplate.validity_days);
+      expiresAt.setDate(expiresAt.getDate() + validityDays);
 
       // Criar pacote do paciente
       const { data, error } = await supabase
@@ -181,24 +210,25 @@ export function usePurchasePackage() {
         .insert({
           patient_id,
           package_id,
-          sessions_purchased: packageTemplate.sessions_count,
+          sessions_purchased: packageTemplate.total_sessions,
           sessions_used: 0,
-          price_paid: packageTemplate.price,
+          price_paid: packageTemplate.final_value,
           purchased_at: new Date().toISOString(),
           expires_at: expiresAt.toISOString(),
-        })
+        } as any)
         .select(`
           *,
-          package:session_packages(id, name, sessions_count)
+          package:session_packages(id, package_name, total_sessions)
         `)
         .single();
 
       if (error) throw error;
-      return data;
+      const pkg = (data as any).package;
+      return { ...data, package: pkg ? { name: pkg.package_name } : null };
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (data: any, variables) => {
       queryClient.invalidateQueries({ queryKey: ['patient-packages', variables.patient_id] });
-      toast.success(`Pacote "${data.package?.name}" adquirido com sucesso!`);
+      toast.success(`Pacote "${data.package?.name || 'Novo'}" adquirido com sucesso!`);
     },
     onError: (error: any) => {
       logger.error('Erro ao comprar pacote', error, 'usePackages');
@@ -283,11 +313,24 @@ export function useUpdatePackage() {
   return useMutation({
     mutationFn: async ({ 
       id, 
-      ...data 
+      name,
+      description,
+      sessions_count,
+      price,
+      validity_days,
+      is_active,
     }: Partial<SessionPackage> & { id: string }) => {
+      const updateData: Record<string, any> = {};
+      if (name !== undefined) updateData.package_name = name;
+      if (description !== undefined) updateData.notes = description;
+      if (sessions_count !== undefined) updateData.total_sessions = sessions_count;
+      if (price !== undefined) updateData.final_value = price;
+      if (validity_days !== undefined) updateData.validity_months = Math.ceil(validity_days / 30);
+      if (is_active !== undefined) updateData.status = is_active ? 'active' : 'inactive';
+
       const { data: updated, error } = await supabase
         .from('session_packages')
-        .update(data)
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
@@ -314,7 +357,7 @@ export function useDeactivatePackage() {
     mutationFn: async (packageId: string) => {
       const { error } = await supabase
         .from('session_packages')
-        .update({ is_active: false })
+        .update({ status: 'cancelado' } as any)
         .eq('id', packageId);
 
       if (error) throw error;
