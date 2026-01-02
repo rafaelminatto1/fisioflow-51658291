@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { useWaitlist, type WaitlistEntry } from '@/hooks/useWaitlist';
+import { useWaitlist, useAddToWaitlist, useUpdatePriority, type WaitlistEntry } from '@/hooks/useWaitlist';
 import { usePatients } from '@/hooks/usePatients';
 import {
   Select,
@@ -53,18 +53,20 @@ export function WaitlistEntryModal({ open, onOpenChange, entry }: WaitlistEntryM
   const [selectedTimeSlots, setSelectedTimeSlots] = useState<string[]>(['morning', 'afternoon']);
 
   const { data: patients = [] } = usePatients();
-  const { addToWaitlist, updateWaitlist, isAdding, isUpdating } = useWaitlist();
+  const { mutate: addToWaitlist, isPending: isAdding } = useAddToWaitlist();
+  const { mutate: updatePriority, isPending: isUpdating } = useUpdatePriority();
   const isEditing = !!entry;
+
   const isPending = isAdding || isUpdating;
 
   useEffect(() => {
     if (entry) {
       setPatientId(entry.patient_id);
       setPriority(entry.priority);
-      setPriorityReason(entry.priority_reason || '');
+      setPriorityReason('');
       setNotes(entry.notes || '');
       setSelectedDays(entry.preferred_days || ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']);
-      setSelectedTimeSlots(entry.preferred_time_slots || ['morning', 'afternoon']);
+      setSelectedTimeSlots(entry.preferred_periods || ['morning', 'afternoon']);
     } else {
       setPatientId('');
       setPriority('normal');
@@ -89,14 +91,13 @@ export function WaitlistEntryModal({ open, onOpenChange, entry }: WaitlistEntryM
     const data = {
       patient_id: patientId,
       priority,
-      priority_reason: priority !== 'normal' ? priorityReason : undefined,
       notes,
       preferred_days: selectedDays,
-      preferred_time_slots: selectedTimeSlots,
+      preferred_periods: selectedTimeSlots,
     };
 
-    if (isEditing) {
-      updateWaitlist({ id: entry.id, ...data }, { onSuccess: () => onOpenChange(false) });
+    if (isEditing && entry) {
+      updatePriority({ waitlistId: entry.id, priority }, { onSuccess: () => onOpenChange(false) });
     } else {
       addToWaitlist(data, { onSuccess: () => onOpenChange(false) });
     }

@@ -332,7 +332,7 @@ export const useAdvancedAnalytics = () => {
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
       setError('Erro ao atualizar métricas');
-      logger.error('Erro ao atualizar métricas de analytics', error, 'useAdvancedAnalytics');
+      console.error('Erro ao atualizar métricas de analytics', error);
     } finally {
       setLoading(false);
     }
