@@ -14,7 +14,7 @@ describe('Logger', () => {
       debug: vi.fn(),
     };
     // Mock import.meta.env.DEV
-    vi.stubEnv('DEV', 'true');
+    vi.stubEnv('DEV', true);
   });
 
   describe('error', () => {

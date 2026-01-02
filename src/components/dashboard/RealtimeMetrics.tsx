@@ -51,7 +51,7 @@ export function RealtimeMetrics() {
       const patientsInSession = new Set(activeSessions?.map((s) => s.patient_id) || []).size;
 
       // Receita do dia
-      const { data: payments } = await supabase
+      const { data: payments } = await (supabase as any)
         .from('payments')
         .select('amount')
         .eq('status', 'completed')
