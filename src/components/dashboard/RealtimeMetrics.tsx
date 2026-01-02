@@ -36,11 +36,11 @@ export function RealtimeMetrics() {
       const { data: appointments, count: appointmentsCount } = await supabase
         .from('appointments')
         .select('*', { count: 'exact' })
-        .gte('start_time', today.toISOString())
-        .lt('start_time', tomorrow.toISOString());
+        .gte('appointment_date', today.toISOString().split('T')[0])
+        .lt('appointment_date', tomorrow.toISOString().split('T')[0]);
 
-      const confirmed = appointments?.filter((apt) => apt.status === 'confirmed').length || 0;
-      const cancelled = appointments?.filter((apt) => apt.status === 'cancelled').length || 0;
+      const confirmed = (appointments as any[])?.filter((apt) => apt.status === 'confirmed').length || 0;
+      const cancelled = (appointments as any[])?.filter((apt) => apt.status === 'cancelled').length || 0;
 
       // Pacientes em sessão
       const { data: activeSessions } = await supabase
@@ -58,7 +58,7 @@ export function RealtimeMetrics() {
         .gte('created_at', today.toISOString())
         .lt('created_at', tomorrow.toISOString());
 
-      const todayRevenue = payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+      const todayRevenue = (payments || []).reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
 
       // Taxa de ocupação (simplificada)
       const totalSlots = 20; // Assumindo 20 slots disponíveis por dia

@@ -71,24 +71,25 @@ async function calculateNPS(): Promise<number> {
 // Função auxiliar para calcular adesão de exercícios
 async function calculateExerciseAdherence(patientId?: string): Promise<number> {
   try {
+    // Usar exercise_executions para calcular adesão
     let query = supabase
-      .from('prescription_exercises')
-      .select('completed, total_sessions');
+      .from('exercise_executions')
+      .select('completed');
 
     if (patientId) {
       query = query.eq('patient_id', patientId);
     }
 
-    const { data: exercises, error } = await query;
+    const { data: executions, error } = await query;
 
-    if (error || !exercises || exercises.length === 0) {
+    if (error || !executions || executions.length === 0) {
       return 0;
     }
 
-    const totalCompleted = exercises.reduce((sum, e) => sum + (e.completed || 0), 0);
-    const totalSessions = exercises.reduce((sum, e) => sum + (e.total_sessions || 0), 0);
+    const totalCompleted = executions.filter((e: any) => e.completed).length;
+    const totalExercises = executions.length;
 
-    return totalSessions > 0 ? Math.round((totalCompleted / totalSessions) * 100) : 0;
+    return totalExercises > 0 ? Math.round((totalCompleted / totalExercises) * 100) : 0;
   } catch (error) {
     logger.error('Erro ao calcular adesão de exercícios', error, 'useReports');
     return 0;
