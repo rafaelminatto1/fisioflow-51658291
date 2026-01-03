@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/errors/logger';
+import { useOrganizations } from '@/hooks/useOrganizations';
 import { SOAPFormPanel } from './SOAPFormPanel';
 import { SessionHistoryPanel } from './SessionHistoryPanel';
 import { TestEvolutionPanel } from './TestEvolutionPanel';
@@ -36,6 +37,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   const params = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { currentOrganization } = useOrganizations();
   
   const appointmentId = propAppointmentId || params.appointmentId;
   const [patientId, setPatientId] = useState(propPatientId || '');
@@ -223,6 +225,31 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   };
 
   const handleSave = async () => {
+    // Validar organização
+    if (!currentOrganization?.id) {
+      toast({
+        title: 'Organização não encontrada',
+        description: 'Você precisa estar vinculado a uma organização para salvar evoluções.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Validar dados SOAP (verificar após trim para considerar apenas espaços como vazio)
+    const trimmedSubjective = soapData.subjective?.trim() || '';
+    const trimmedObjective = soapData.objective?.trim() || '';
+    const trimmedAssessment = soapData.assessment?.trim() || '';
+    const trimmedPlan = soapData.plan?.trim() || '';
+
+    if (!trimmedSubjective || !trimmedObjective || !trimmedAssessment || !trimmedPlan) {
+      toast({
+        title: 'Dados incompletos',
+        description: 'Preencha todos os campos do SOAP (Subjetivo, Objetivo, Avaliação e Plano).',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     // Check for critical mandatory tests
     if (mandatoryTestsResult && !mandatoryTestsResult.canSave) {
       setShowMandatoryAlert(true);
@@ -236,23 +263,29 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
 
     setIsSaving(true);
     try {
-      // Save SOAP record
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuário não autenticado');
+
+      // Save SOAP record (RLS garante isolamento multi-tenancy via patient_id, que tem organization_id)
       const { data: soapRecord, error: soapError } = await supabase
         .from('soap_records')
         .insert({
           patient_id: patientId,
-          appointment_id: appointmentId,
-          subjective: soapData.subjective,
-          objective: soapData.objective,
-          assessment: soapData.assessment,
-          plan: soapData.plan,
-          session_number: sessionNumber,
-          created_by: (await supabase.auth.getUser()).data.user?.id
+          appointment_id: appointmentId || null,
+          subjective: trimmedSubjective,
+          objective: trimmedObjective,
+          assessment: trimmedAssessment,
+          plan: trimmedPlan,
+          created_by: user.id,
+          record_date: new Date().toISOString().split('T')[0]
         })
         .select()
         .single();
 
-      if (soapError) throw soapError;
+      if (soapError) {
+        logger.error('Erro ao salvar registro SOAP', soapError, 'SessionEvolutionContainer');
+        throw soapError;
+      }
 
       // Update appointment status
       if (appointmentId) {
@@ -262,10 +295,16 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
             status: 'Realizado',
             notes: JSON.stringify({ soap: soapData, soapRecordId: soapRecord.id })
           })
-          .eq('id', appointmentId);
+          .eq('id', appointmentId)
+          .eq('organization_id', currentOrganization.id); // Garantir que só atualiza da própria organização
 
-        if (appointmentError) throw appointmentError;
+        if (appointmentError) {
+          logger.error('Erro ao atualizar agendamento', appointmentError, 'SessionEvolutionContainer');
+          throw appointmentError;
+        }
       }
+
+      logger.info('Evolução salva com sucesso', { soapRecordId: soapRecord.id, patientId }, 'SessionEvolutionContainer');
 
       toast({
         title: 'Evolução salva',
@@ -277,11 +316,24 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
       } else if (mode === 'page') {
         navigate('/agenda');
       }
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Erro ao salvar sessão', error, 'SessionEvolutionContainer');
+      
+      let errorMessage = 'Não foi possível salvar a evolução.';
+      
+      if (error?.code === '42501') {
+        errorMessage = 'Você não tem permissão para salvar evoluções.';
+      } else if (error?.code === '23503') {
+        errorMessage = 'Erro de referência: verifique se o paciente e agendamento existem.';
+      } else if (error?.code === '23505') {
+        errorMessage = 'Já existe uma evolução para este agendamento.';
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+
       toast({
         title: 'Erro ao salvar',
-        description: 'Não foi possível salvar a evolução.',
+        description: errorMessage,
         variant: 'destructive'
       });
     } finally {
