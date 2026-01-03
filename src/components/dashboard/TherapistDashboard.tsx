@@ -52,7 +52,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
           patients!inner(name, phone)
         `)
         .eq('appointment_date', today)
-        .eq('therapist_id', profile.user_id)
+        .eq('therapist_id', profile.id)
         .order('appointment_time');
 
       if (appointmentsError) throw appointmentsError;
@@ -70,7 +70,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
       const { data: sessions, error: sessionsError } = await supabase
         .from('treatment_sessions')
         .select('*')
-        .eq('created_by', profile.user_id);
+        .eq('created_by', profile.id);
 
       if (sessionsError) throw sessionsError;
 
@@ -125,7 +125,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
     } finally {
       setLoading(false);
     }
-  }, [profile.user_id]);
+  }, [profile.id]);
 
   useEffect(() => {
     loadDashboardData();
