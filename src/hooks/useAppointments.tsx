@@ -6,6 +6,7 @@ import { checkAppointmentConflict } from '@/utils/appointmentValidation';
 import { logger } from '@/lib/errors/logger';
 import { useEffect } from 'react';
 import { AppointmentNotificationService } from '@/lib/services/AppointmentNotificationService';
+import { requireUserOrganizationId } from '@/utils/userHelpers';
 
 // Fetch all appointments
 async function fetchAppointments(): Promise<AppointmentBase[]> {
@@ -120,6 +121,9 @@ export function useCreateAppointment() {
     mutationFn: async (data: AppointmentFormData) => {
       logger.info('Criando novo agendamento', { patientId: data.patient_id, date: data.appointment_date }, 'useAppointments');
 
+      // Obter organization_id do usuário
+      const organizationId = await requireUserOrganizationId();
+
       // Check for conflicts with current data
       const currentAppointments = queryClient.getQueryData<AppointmentBase[]>(['appointments']) || [];
       const conflict = checkAppointmentConflict({
@@ -143,7 +147,10 @@ export function useCreateAppointment() {
           duration: data.duration,
           type: data.type,
           status: data.status || 'agendado',
-          notes: data.notes || null
+          notes: data.notes || null,
+          therapist_id: data.therapist_id || null,
+          room: data.room || null,
+          organization_id: organizationId,
         })
         .select(`
           *,
@@ -199,19 +206,21 @@ export function useCreateAppointment() {
     onError: (error: Error) => {
       logger.error('Erro ao criar agendamento', error, 'useAppointments');
       
+      let errorMessage = 'Não foi possível criar o agendamento.';
+      
       if (error.message === 'Conflito de horário') {
-        toast({
-          title: 'Conflito de Horário',
-          description: 'Já existe um agendamento neste horário',
-          variant: 'destructive'
-        });
-      } else {
-        toast({
-          title: 'Erro',
-          description: 'Não foi possível criar o agendamento',
-          variant: 'destructive'
-        });
+        errorMessage = 'Já existe um agendamento neste horário.';
+      } else if (error.message.includes('Organização não encontrada')) {
+        errorMessage = 'Organização não encontrada. Você precisa estar vinculado a uma organização.';
+      } else if (error.message.includes('não autenticado')) {
+        errorMessage = 'Sessão expirada. Por favor, faça login novamente.';
       }
+      
+      toast({
+        title: error.message === 'Conflito de horário' ? 'Conflito de Horário' : 'Erro',
+        description: errorMessage,
+        variant: 'destructive'
+      });
     }
   });
 }
@@ -224,6 +233,9 @@ export function useUpdateAppointment() {
   return useMutation({
     mutationFn: async ({ appointmentId, updates }: { appointmentId: string; updates: Partial<AppointmentFormData> }) => {
       logger.info('Atualizando agendamento', { appointmentId, updates }, 'useAppointments');
+
+      // Obter organization_id do usuário para garantir segurança
+      const organizationId = await requireUserOrganizationId();
 
       // Check for conflicts if date/time is being changed
       if (updates.appointment_date || updates.appointment_time || updates.duration) {
@@ -253,11 +265,14 @@ export function useUpdateAppointment() {
       if (updates.type) updateData.type = updates.type;
       if (updates.status) updateData.status = updates.status;
       if (updates.notes !== undefined) updateData.notes = updates.notes || null;
+      if (updates.therapist_id !== undefined) updateData.therapist_id = updates.therapist_id;
+      if (updates.room !== undefined) updateData.room = updates.room;
 
       const { data: updatedAppointment, error } = await supabase
         .from('appointments')
         .update(updateData)
         .eq('id', appointmentId)
+        .eq('organization_id', organizationId) // Garantir que só atualiza da própria organização
         .select(`
           *,
           patients!inner(
@@ -314,19 +329,21 @@ export function useUpdateAppointment() {
     onError: (error: Error) => {
       logger.error('Erro ao atualizar agendamento', error, 'useAppointments');
       
+      let errorMessage = 'Não foi possível atualizar o agendamento.';
+      
       if (error.message === 'Conflito de horário') {
-        toast({
-          title: 'Conflito de Horário',
-          description: 'Já existe um agendamento neste horário',
-          variant: 'destructive'
-        });
-      } else {
-        toast({
-          title: 'Erro',
-          description: 'Não foi possível atualizar o agendamento',
-          variant: 'destructive'
-        });
+        errorMessage = 'Já existe um agendamento neste horário.';
+      } else if (error.message.includes('Organização não encontrada')) {
+        errorMessage = 'Organização não encontrada. Você precisa estar vinculado a uma organização.';
+      } else if (error.message.includes('não autenticado')) {
+        errorMessage = 'Sessão expirada. Por favor, faça login novamente.';
       }
+      
+      toast({
+        title: error.message === 'Conflito de horário' ? 'Conflito de Horário' : 'Erro',
+        description: errorMessage,
+        variant: 'destructive'
+      });
     }
   });
 }
