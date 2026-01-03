@@ -17,7 +17,11 @@ import { useQuery } from '@tanstack/react-query';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
-export const AdminDashboard: React.FC = () => {
+interface AdminDashboardProps {
+  period?: string;
+}
+
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = 'hoje' }) => {
   const navigate = useNavigate();
   const { data: metrics, isLoading: metricsLoading } = useDashboardMetrics();
 
@@ -74,95 +78,73 @@ export const AdminDashboard: React.FC = () => {
       {loading ? (
         <LoadingSkeleton type="stats" rows={4} />
       ) : (
-        <div className="grid gap-4 sm:gap-6 grid-cols-2 lg:grid-cols-4">
-          <Card className="bg-gradient-card border-border/50 hover:shadow-hover transition-all duration-300 group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-                Total de Pacientes
-              </CardTitle>
-              <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
-                <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+        <div className="grid grid-cols-2 gap-3">
+          <Card className="flex flex-col gap-1 rounded-xl bg-white dark:bg-card p-4 border border-slate-200 dark:border-border shadow-sm">
+            <div className="flex items-center justify-between">
+              <p className="text-slate-500 dark:text-slate-400 text-xs font-medium truncate">Pacientes Ativos</p>
+              <Users className="h-[18px] w-[18px] text-primary" />
+            </div>
+            <div className="flex items-baseline gap-2 mt-1">
+              <p className="text-2xl font-bold tracking-tight">{metrics?.totalPacientes || 0}</p>
+              <div className="flex items-center text-success text-xs font-bold bg-success/10 dark:bg-success/20 px-1.5 py-0.5 rounded-full">
+                <TrendingUp className="h-[10px] w-[10px] mr-0.5" />
+                {metrics?.pacientesNovos || 0}%
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                {metrics?.totalPacientes || 0}
-              </div>
-              <p className="text-xs sm:text-sm text-success font-medium mt-1">
-                +{metrics?.pacientesNovos || 0} novos este mês
-              </p>
-            </CardContent>
+            </div>
           </Card>
 
-          <Card className="bg-gradient-card border-border/50 hover:shadow-hover transition-all duration-300 group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-                Agendamentos Hoje
-              </CardTitle>
-              <div className="p-1.5 sm:p-2 bg-secondary/50 rounded-lg group-hover:bg-secondary/70 transition-colors">
-                <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl sm:text-3xl font-bold text-foreground">
-                {metrics?.agendamentosHoje || 0}
-              </div>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                {metrics?.agendamentosRestantes || 0} restantes
+          <Card className="flex flex-col gap-1 rounded-xl bg-white dark:bg-card p-4 border border-slate-200 dark:border-border shadow-sm">
+            <div className="flex items-center justify-between">
+              <p className="text-slate-500 dark:text-slate-400 text-xs font-medium truncate">Ocupação</p>
+              <Calendar className="h-[18px] w-[18px] text-primary" />
+            </div>
+            <div className="flex items-baseline gap-2 mt-1">
+              <p className="text-2xl font-bold tracking-tight">
+                {metrics?.agendamentosHoje ? Math.round((metrics.agendamentosHoje / (metrics.agendamentosHoje + metrics.agendamentosRestantes)) * 100) : 0}%
               </p>
-            </CardContent>
+              <div className="flex items-center text-slate-500 dark:text-slate-400 text-xs font-medium bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-full">
+                <span>{(metrics?.agendamentosHoje || 0) + (metrics?.agendamentosRestantes || 0)} total</span>
+              </div>
+            </div>
           </Card>
 
-          <Card className="bg-gradient-card border-border/50 hover:shadow-hover transition-all duration-300 group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-                Receita Mensal
-              </CardTitle>
-              <div className="p-1.5 sm:p-2 bg-success/10 rounded-lg group-hover:bg-success/20 transition-colors">
-                <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-success" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl sm:text-3xl font-bold text-success">
-                R$ {(metrics?.receitaMensal || 0).toLocaleString('pt-BR')}
-              </div>
-              <div className="flex items-center gap-1 mt-1">
-                {(metrics?.crescimentoMensal || 0) >= 0 ? (
-                  <>
-                    <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-success" />
-                    <span className="text-xs sm:text-sm text-success font-medium">
-                      +{metrics?.crescimentoMensal || 0}%
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-destructive" />
-                    <span className="text-xs sm:text-sm text-destructive font-medium">
-                      {metrics?.crescimentoMensal || 0}%
-                    </span>
-                  </>
-                )}
-              </div>
-            </CardContent>
+          <Card className="flex flex-col gap-1 rounded-xl bg-white dark:bg-card p-4 border border-slate-200 dark:border-border shadow-sm">
+            <div className="flex items-center justify-between">
+              <p className="text-slate-500 dark:text-slate-400 text-xs font-medium truncate">Receita Mensal</p>
+              <DollarSign className="h-[18px] w-[18px] text-primary" />
+            </div>
+            <div className="flex items-baseline gap-2 mt-1">
+              <p className="text-2xl font-bold tracking-tight">
+                {(metrics?.receitaMensal || 0) >= 1000 
+                  ? `${((metrics?.receitaMensal || 0) / 1000).toFixed(1)}k`
+                  : (metrics?.receitaMensal || 0).toLocaleString('pt-BR')
+                }
+              </p>
+              {(metrics?.crescimentoMensal || 0) >= 0 ? (
+                <div className="flex items-center text-success text-xs font-bold bg-success/10 dark:bg-success/20 px-1.5 py-0.5 rounded-full">
+                  <TrendingUp className="h-[10px] w-[10px] mr-0.5" />
+                  +{metrics?.crescimentoMensal || 0}%
+                </div>
+              ) : (
+                <div className="flex items-center text-destructive text-xs font-bold bg-destructive/10 dark:bg-destructive/20 px-1.5 py-0.5 rounded-full">
+                  <TrendingDown className="h-[10px] w-[10px] mr-0.5" />
+                  {metrics?.crescimentoMensal || 0}%
+                </div>
+              )}
+            </div>
           </Card>
 
-          <Card className="bg-gradient-card border-border/50 hover:shadow-hover transition-all duration-300 group">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-                Ticket Médio
-              </CardTitle>
-              <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
-                <Receipt className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+          <Card className="flex flex-col gap-1 rounded-xl bg-white dark:bg-card p-4 border border-slate-200 dark:border-border shadow-sm">
+            <div className="flex items-center justify-between">
+              <p className="text-slate-500 dark:text-slate-400 text-xs font-medium truncate">No-Shows</p>
+              <XCircle className="h-[18px] w-[18px] text-primary" />
+            </div>
+            <div className="flex items-baseline gap-2 mt-1">
+              <p className="text-2xl font-bold tracking-tight">{metrics?.taxaNoShow || 0}%</p>
+              <div className="flex items-center text-slate-500 dark:text-slate-400 text-xs font-medium bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-full">
+                <span>0%</span>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl sm:text-3xl font-bold text-foreground">
-                R$ {(metrics?.ticketMedio || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0 })}
-              </div>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                por atendimento
-              </p>
-            </CardContent>
+            </div>
           </Card>
         </div>
       )}

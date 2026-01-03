@@ -31,8 +31,10 @@ import {
   Filter,
   Download,
   Trash2,
-  TrendingUp
+  TrendingUp,
+  ChevronRight
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
@@ -357,115 +359,39 @@ const Patients = () => {
             {filteredPatients.map((patient, index) => (
               <Card 
                 key={patient.id} 
-                className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                className="group flex items-center gap-4 p-3 rounded-xl bg-card hover:bg-slate-50 dark:hover:bg-slate-800/50 active:bg-slate-100 dark:active:bg-slate-800 transition-colors cursor-pointer border border-transparent hover:border-border dark:hover:border-slate-700"
                 style={{ animationDelay: `${index * 50}ms` }}
+                onClick={() => setViewingPatient(patient.id)}
               >
-                <CardHeader className="pb-4">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-4 flex-1 min-w-0">
-                      <Avatar className="h-14 w-14 ring-2 ring-primary/20 shrink-0">
-                        <AvatarFallback className="bg-gradient-primary text-primary-foreground text-lg font-semibold">
-                          {patient.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="text-xl mb-1">{patient.name}</CardTitle>
-                        <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
-                          <span className="flex items-center gap-1">
-                            👤 {getPatientAge(patient.birth_date)} anos
-                          </span>
-                          <span>•</span>
-                          <span>{patient.gender || 'Não informado'}</span>
-                          {patient.main_condition && (
-                            <>
-                              <span>•</span>
-                              <span className="font-medium text-foreground">
-                                {patient.main_condition}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <Badge className={getStatusColor(patient.status || '')}>
+                <div className="relative shrink-0">
+                  <Avatar className="h-12 w-12 ring-2 ring-border dark:ring-slate-700 shrink-0">
+                    <AvatarFallback className={cn(
+                      "text-sm font-bold",
+                      patient.status === 'Em Tratamento' ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400" :
+                      patient.status === 'Inicial' ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" :
+                      "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                    )}>
+                      {patient.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+                <div className="flex flex-col flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{patient.name}</p>
+                    <Badge className={cn(
+                      "inline-flex items-center rounded-full border border-transparent text-[10px] font-semibold px-2 py-0.5",
+                      patient.status === 'Em Tratamento' ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" :
+                      patient.status === 'Inicial' ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400" :
+                      "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                    )}>
                       {patient.status || 'Inicial'}
                     </Badge>
                   </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  {/* Contact Info */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                    {patient.email && (
-                      <div className="flex items-center gap-3 p-3 bg-accent/50 rounded-lg">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                          <Mail className="w-4 h-4 text-primary" />
-                        </div>
-                        <span className="text-sm truncate">{patient.email}</span>
-                      </div>
-                    )}
-                    {patient.phone && (
-                      <div className="flex items-center gap-3 p-3 bg-accent/50 rounded-lg">
-                        <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center shrink-0">
-                          <Phone className="w-4 h-4 text-foreground" />
-                        </div>
-                        <span className="text-sm">{patient.phone}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Progress Bar */}
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Progresso do Tratamento</span>
-                      <span className="font-bold text-primary">{patient.progress || 0}%</span>
-                    </div>
-                    <div className="h-3 bg-accent rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-primary rounded-full transition-all duration-500"
-                        style={{ width: `${patient.progress || 0}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-2 pt-4 border-t">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="flex-1 shadow-md hover:shadow-lg transition-all"
-                      onClick={() => navigate(`/patient-evolution-report/${patient.id}`)}
-                    >
-                      <TrendingUp className="w-4 h-4 mr-2" />
-                      <span className="hidden sm:inline">Dashboard 360º</span>
-                      <span className="sm:hidden">360º</span>
-                    </Button>
-                    <Button 
-                      variant="default" 
-                      size="sm"
-                      className="shadow-md hover:shadow-lg transition-all"
-                      onClick={() => setViewingPatient(patient.id)}
-                    >
-                      <Eye className="w-4 h-4 sm:mr-2" />
-                      <span className="hidden sm:inline">Ver</span>
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setEditingPatient(patient.id)}
-                    >
-                      <Edit className="w-4 h-4 sm:mr-2" />
-                      <span className="hidden sm:inline">Editar</span>
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => setDeletingPatient(patient)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">{patient.phone || patient.email || `${getPatientAge(patient.birth_date)} anos`}</p>
+                </div>
+                <div className="shrink-0 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
+                  <ChevronRight className="w-5 h-5" />
+                </div>
               </Card>
             ))}
           </div>

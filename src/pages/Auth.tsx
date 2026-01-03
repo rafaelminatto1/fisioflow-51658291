@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Heart, Shield, CheckCircle, XCircle, Mail } from 'lucide-react';
+import { Loader2, Heart, Shield, CheckCircle, XCircle, Mail, Stethoscope, LogIn } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { passwordSchema, emailSchema, fullNameSchema } from '@/lib/validations/auth';
 import { Separator } from '@/components/ui/separator';
@@ -240,71 +240,73 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-primary flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <div className="flex items-center gap-2 text-white">
-              <Heart className="h-8 w-8" />
-              <span className="text-2xl font-bold">FisioFlow</span>
-            </div>
-          </div>
-          <p className="text-white/80">Sistema de Gestão para Fisioterapeutas</p>
+    <div className="min-h-screen gradient-background-login flex items-center justify-center p-4">
+      <div className="w-full max-w-md p-8 space-y-8 bg-white dark:bg-background-dark/80 rounded-xl shadow-xl m-4 transform transition duration-500 hover:scale-[1.01]">
+        <div className="text-center">
+          <h1 className="text-4xl font-extrabold text-primary dark:text-white flex items-center justify-center gap-2">
+            <Stethoscope className="h-10 w-10" />
+            FisioFlow
+          </h1>
+          <p className="mt-4 text-md text-gray-700 dark:text-gray-300">Bem-vindo à sua nova jornada conosco!</p>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Faça login para desbloquear seu perfil.</p>
         </div>
 
-        <Card className="border-0 shadow-medical">
-          <CardHeader className="space-y-1">
-            <div className="flex items-center justify-center mb-2">
-              <Shield className="h-6 w-6 text-primary" />
-            </div>
-            <CardTitle className="text-2xl text-center">Acesso Seguro</CardTitle>
-            <CardDescription className="text-center">
-              Entre com suas credenciais ou crie uma nova conta
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="register">Cadastro</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="login">
-                <form onSubmit={handleSignIn} className="space-y-4">
+        <Tabs defaultValue="login" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="login">Login</TabsTrigger>
+            <TabsTrigger value="register">Cadastro</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="login" className="mt-8">
+            <form onSubmit={handleSignIn} className="space-y-6">
 
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <Input
-                      id="login-email"
-                      type="email"
-                      placeholder="seu@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password">Senha</Label>
-                    <Input
-                      id="login-password"
-                      type="password"
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                  
-                  {error && (
-                    <Alert variant="destructive">
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                  )}
-                  
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <div className="rounded-md shadow-sm -space-y-px">
+                <div>
+                  <Label htmlFor="login-email" className="sr-only">Email</Label>
+                  <Input
+                    id="login-email"
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="rounded-t-xl relative block w-full px-4 py-3 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-gray-50 dark:bg-background-dark/20 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 transition duration-300"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="login-password" className="sr-only">Senha</Label>
+                  <Input
+                    id="login-password"
+                    type="password"
+                    placeholder="Senha"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="rounded-b-xl relative block w-full px-4 py-3 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-gray-50 dark:bg-background-dark/20 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 transition duration-300"
+                    required
+                  />
+                </div>
+              </div>
+              
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              
+              <Button 
+                type="submit" 
+                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-lg font-bold rounded-xl text-white bg-gradient-to-r from-primary to-blue-400 hover:from-primary/90 hover:to-blue-400/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-300 transform hover:-translate-y-0.5" 
+                disabled={loading}
+              >
+                {loading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <>
                     Entrar
-                  </Button>
+                    <LogIn className="ml-2 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </>
+                )}
+              </Button>
 
                   <div className="relative my-4">
                     <Separator />
@@ -343,8 +345,8 @@ export default function Auth() {
                 </form>
               </TabsContent>
               
-              <TabsContent value="register">
-                <form onSubmit={handleSignUp} className="space-y-4">
+              <TabsContent value="register" className="mt-8">
+                <form onSubmit={handleSignUp} className="space-y-6">
                   {invitationData && (
                     <Alert>
                       <Mail className="h-4 w-4" />
@@ -448,15 +450,23 @@ export default function Auth() {
                     </Alert>
                   )}
                   
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Criar Conta
+                  <Button 
+                    type="submit" 
+                    className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-lg font-bold rounded-xl text-white bg-gradient-to-r from-primary to-blue-400 hover:from-primary/90 hover:to-blue-400/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-300 transform hover:-translate-y-0.5" 
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <>
+                        Criar Conta
+                        <LogIn className="ml-2 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      </>
+                    )}
                   </Button>
                 </form>
               </TabsContent>
             </Tabs>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

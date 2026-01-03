@@ -18,11 +18,11 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 47.4% 11.2%;
     
-    /* Primary - Purple/Blue from FisioFlow brand */
-    --primary: 255 90% 72%;
+    /* Primary - Blue from Stich design (#0d7ff2) */
+    --primary: 210 90% 51%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 255 90% 65%;
-    --primary-glow: 255 95% 80%;
+    --primary-hover: 210 90% 45%;
+    --primary-glow: 210 95% 60%;
     
     /* Secondary - Neutral grays */
     --secondary: 220 13% 95%;
@@ -51,10 +51,10 @@ All colors MUST be HSL.
     /* Borders & Inputs */
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 255 90% 72%;
+    --ring: 210 90% 51%;
 
     /* Modern gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(255 90% 72%), hsl(255 95% 80%));
+    --gradient-primary: linear-gradient(135deg, hsl(210 90% 51%), hsl(210 95% 60%));
     --gradient-success: linear-gradient(135deg, hsl(158 64% 52%), hsl(158 74% 62%));
     --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(220 13% 98%));
     --gradient-background: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 13% 98%));
@@ -64,7 +64,7 @@ All colors MUST be HSL.
     --shadow-md: 0 4px 6px -1px hsl(220 13% 91% / 0.3);
     --shadow-lg: 0 10px 15px -3px hsl(220 13% 91% / 0.2);
     --shadow-card: 0 2px 8px -2px hsl(220 13% 20% / 0.08);
-    --shadow-hover: 0 8px 24px -8px hsl(255 90% 72% / 0.25);
+    --shadow-hover: 0 8px 24px -8px hsl(210 90% 51% / 0.25);
     
   /* Transitions */
   --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -79,12 +79,12 @@ All colors MUST be HSL.
     /* Sidebar - Clean and professional */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222.2 47.4% 11.2%;
-    --sidebar-primary: 255 90% 72%;
+    --sidebar-primary: 210 90% 51%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 13% 95%;
     --sidebar-accent-foreground: 222.2 47.4% 11.2%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 255 90% 72%;
+    --sidebar-ring: 210 90% 51%;
 
     /* Appointment Status Colors */
     --apt-confirmed: 142 71% 45%;
@@ -115,10 +115,10 @@ All colors MUST be HSL.
     --popover-foreground: 210 40% 98%;
     
     /* Primary - Slightly brighter in dark mode */
-    --primary: 255 90% 72%;
+    --primary: 210 90% 55%;
     --primary-foreground: 222.2 47.4% 11.2%;
-    --primary-hover: 255 90% 78%;
-    --primary-glow: 255 95% 85%;
+    --primary-hover: 210 90% 60%;
+    --primary-glow: 210 95% 65%;
     
     /* Secondary - Dark grays */
     --secondary: 217.2 32.6% 17.5%;
@@ -150,10 +150,10 @@ All colors MUST be HSL.
     /* Borders & Inputs */
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 255 90% 72%;
+    --ring: 210 90% 55%;
     
     /* Dark mode gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(255 90% 72%), hsl(255 95% 80%));
+    --gradient-primary: linear-gradient(135deg, hsl(210 90% 55%), hsl(210 95% 65%));
     --gradient-success: linear-gradient(135deg, hsl(158 64% 52%), hsl(158 74% 62%));
     --gradient-card: linear-gradient(145deg, hsl(222.2 47.4% 11.2%), hsl(217.2 32.6% 14%));
     --gradient-background: linear-gradient(180deg, hsl(222.2 47.4% 11.2%), hsl(217.2 32.6% 13%));
@@ -163,17 +163,17 @@ All colors MUST be HSL.
     --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.3);
     --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.2);
     --shadow-card: 0 2px 8px -2px hsl(0 0% 0% / 0.3);
-    --shadow-hover: 0 8px 24px -8px hsl(255 90% 72% / 0.3);
+    --shadow-hover: 0 8px 24px -8px hsl(210 90% 55% / 0.3);
 
     /* Sidebar dark */
     --sidebar-background: 222.2 47.4% 11.2%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 255 90% 72%;
+    --sidebar-primary: 210 90% 55%;
     --sidebar-primary-foreground: 222.2 47.4% 11.2%;
     --sidebar-accent: 217.2 32.6% 17.5%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-ring: 255 90% 72%;
+    --sidebar-ring: 210 90% 55%;
   }
 }
 
@@ -203,6 +203,15 @@ All colors MUST be HSL.
   
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-muted-foreground/50;
+  }
+
+  /* Login page gradient background */
+  .gradient-background-login {
+    background: linear-gradient(135deg, #e0f2fe 0%, #bbdefb 100%);
+  }
+
+  .dark .gradient-background-login {
+    background: linear-gradient(135deg, #1f3d53 0%, #1a2c3a 100%);
   }
 }
 

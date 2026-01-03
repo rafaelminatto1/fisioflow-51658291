@@ -28,30 +28,67 @@ export function RealtimeActivityFeed() {
 
   const loadRecentActivities = async () => {
     try {
-      // Load recent appointments
-      const { data: appointments } = await supabase
-        .from('appointments')
-        .select('*, patients(name)')
-        .order('created_at', { ascending: false })
-        .limit(5);
+      setIsLoading(true);
+      
+      // Função auxiliar para timeout
+      const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
+        return Promise.race([
+          promise,
+          new Promise<T>((_, reject) =>
+            setTimeout(() => reject(new Error(`Timeout após ${timeoutMs}ms`)), timeoutMs)
+          ),
+        ]);
+      };
+
+      // Tentar carregar com retry
+      let appointments = null;
+      let retries = 0;
+      const maxRetries = 3;
+
+      while (retries < maxRetries && !appointments) {
+        try {
+          const result = await withTimeout(
+            supabase
+              .from('appointments')
+              .select('*, patients(name)')
+              .order('created_at', { ascending: false })
+              .limit(5),
+            8000
+          );
+          
+          if (result.data) {
+            appointments = result.data;
+            break;
+          }
+        } catch (error) {
+          retries++;
+          if (retries < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * retries));
+          }
+        }
+      }
 
       const activityList: ActivityEvent[] = [];
 
-      appointments?.forEach(apt => {
-        activityList.push({
-          id: apt.id,
-          type: 'appointment',
-          title: 'Novo Agendamento',
-          description: `${apt.patients?.name} - ${format(new Date(apt.appointment_date), 'dd/MM/yyyy HH:mm')}`,
-          timestamp: new Date(apt.created_at),
-          icon: Calendar,
-          variant: 'default',
+      if (appointments) {
+        appointments.forEach(apt => {
+          activityList.push({
+            id: apt.id,
+            type: 'appointment',
+            title: 'Novo Agendamento',
+            description: `${apt.patients?.name || 'Paciente'} - ${format(new Date(apt.appointment_date), 'dd/MM/yyyy HH:mm')}`,
+            timestamp: new Date(apt.created_at),
+            icon: Calendar,
+            variant: 'default',
+          });
         });
-      });
+      }
 
       setActivities(activityList.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()));
     } catch (error) {
       console.error('Error loading activities:', error);
+      // Manter lista vazia em caso de erro
+      setActivities([]);
     } finally {
       setIsLoading(false);
     }

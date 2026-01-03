@@ -62,7 +62,7 @@ export function MobileHeader() {
   };
 
   return (
-    <header className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-gradient-card border-b border-border/50 backdrop-blur-lg shadow-card">
+    <header className="md:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-white/95 dark:bg-background-dark/95 border-b border-border backdrop-blur-md shadow-sm">
       <div className="flex items-center justify-between h-full px-4">
         {/* Menu Hambúrguer */}
         <Sheet>

@@ -145,7 +145,7 @@ export function Sidebar() {
       collapsed ? "w-16" : "w-64"
     )}>
       {/* Header */}
-      <div className="p-6 border-b border-border/50">
+      <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between">
           {!collapsed && (
             <div className="flex items-center gap-3 group">
@@ -175,7 +175,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.href;
@@ -185,16 +185,16 @@ export function Sidebar() {
               key={item.href}
               to={item.href}
               className={cn(
-                "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all group relative",
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all group relative",
                 isActive
                   ? "bg-primary text-primary-foreground font-medium shadow-sm"
-                  : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                  : "text-muted-foreground hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-foreground",
                 collapsed && "justify-center px-2"
               )}
             >
               <Icon className={cn(
                 "h-5 w-5 transition-transform",
-                !isActive && "group-hover:scale-110"
+                !isActive && "group-hover:scale-105"
               )} />
               {!collapsed && <span className="text-sm">{item.label}</span>}
               {collapsed && isActive && (

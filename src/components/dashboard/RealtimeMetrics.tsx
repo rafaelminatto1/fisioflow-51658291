@@ -27,55 +27,97 @@ export function RealtimeMetrics() {
 
   const loadMetrics = useCallback(async () => {
     try {
+      setLoading(true);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
 
-      // Agendamentos do dia
-      const { data: appointments, count: appointmentsCount } = await supabase
-        .from('appointments')
-        .select('*', { count: 'exact' })
-        .gte('appointment_date', today.toISOString().split('T')[0])
-        .lt('appointment_date', tomorrow.toISOString().split('T')[0]);
+      const todayStr = today.toISOString().split('T')[0];
+      const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
-      const confirmed = (appointments as any[])?.filter((apt) => apt.status === 'confirmed').length || 0;
-      const cancelled = (appointments as any[])?.filter((apt) => apt.status === 'cancelled').length || 0;
+      // Função auxiliar para timeout
+      const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
+        return Promise.race([
+          promise,
+          new Promise<T>((_, reject) =>
+            setTimeout(() => reject(new Error(`Timeout após ${timeoutMs}ms`)), timeoutMs)
+          ),
+        ]);
+      };
 
-      // Pacientes em sessão
-      const { data: activeSessions } = await supabase
-        .from('sessions')
-        .select('patient_id')
-        .eq('status', 'in_progress');
+      // Carregar dados em paralelo com timeout
+      const [appointmentsResult, sessionsResult, paymentsResult] = await Promise.allSettled([
+        withTimeout(
+          supabase
+            .from('appointments')
+            .select('*', { count: 'exact' })
+            .gte('appointment_date', todayStr)
+            .lt('appointment_date', tomorrowStr),
+          8000
+        ),
+        withTimeout(
+          supabase
+            .from('sessions')
+            .select('patient_id')
+            .eq('status', 'in_progress'),
+          8000
+        ),
+        withTimeout(
+          (supabase as any)
+            .from('payments')
+            .select('amount')
+            .eq('status', 'completed')
+            .gte('created_at', today.toISOString())
+            .lt('created_at', tomorrow.toISOString()),
+          8000
+        ).catch(() => ({ data: null })), // Ignorar erro se tabela não existir
+      ]);
 
-      const patientsInSession = new Set(activeSessions?.map((s) => s.patient_id) || []).size;
+      // Processar resultados com fallback
+      let appointmentsCount = 0;
+      let confirmed = 0;
+      let cancelled = 0;
+      
+      if (appointmentsResult.status === 'fulfilled') {
+        const appointments = appointmentsResult.value.data as any[];
+        appointmentsCount = appointmentsResult.value.count || 0;
+        confirmed = appointments?.filter((apt) => apt.status === 'confirmed' || apt.status === 'confirmado').length || 0;
+        cancelled = appointments?.filter((apt) => apt.status === 'cancelled' || apt.status === 'cancelado').length || 0;
+      }
 
-      // Receita do dia
-      const { data: payments } = await (supabase as any)
-        .from('payments')
-        .select('amount')
-        .eq('status', 'completed')
-        .gte('created_at', today.toISOString())
-        .lt('created_at', tomorrow.toISOString());
+      const patientsInSession = sessionsResult.status === 'fulfilled'
+        ? new Set(sessionsResult.value.data?.map((s: any) => s.patient_id) || []).size
+        : 0;
 
-      const todayRevenue = (payments || []).reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+      const todayRevenue = paymentsResult.status === 'fulfilled' && paymentsResult.value.data
+        ? (paymentsResult.value.data || []).reduce((sum: number, p: any) => sum + (p.amount || 0), 0)
+        : 0;
 
       // Taxa de ocupação (simplificada)
       const totalSlots = 20; // Assumindo 20 slots disponíveis por dia
       const occupancyRate = appointmentsCount ? (appointmentsCount / totalSlots) * 100 : 0;
 
       setMetrics({
-        totalAppointments: appointmentsCount || 0,
+        totalAppointments: appointmentsCount,
         confirmedAppointments: confirmed,
         cancelledAppointments: cancelled,
         patientsInSession,
         todayRevenue,
         occupancyRate: Math.min(occupancyRate, 100),
       });
-
-      setLoading(false);
     } catch (error) {
       logger.error('Erro ao carregar métricas', error, 'RealtimeMetrics');
+      // Manter valores padrão em caso de erro
+      setMetrics({
+        totalAppointments: 0,
+        confirmedAppointments: 0,
+        cancelledAppointments: 0,
+        patientsInSession: 0,
+        todayRevenue: 0,
+        occupancyRate: 0,
+      });
+    } finally {
       setLoading(false);
     }
   }, []);

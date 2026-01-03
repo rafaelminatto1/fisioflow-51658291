@@ -108,9 +108,21 @@ const queryClient = new QueryClient({
       staleTime: 1000 * 60 * 5, // 5 minutes
       gcTime: 1000 * 60 * 10, // 10 minutes
       retry: (failureCount, error) => {
+        // Não retry para erros 4xx (client errors)
+        if (error && typeof error === 'object' && 'status' in error) {
+          const status = (error as any).status;
+          if (status >= 400 && status < 500) {
+            return false;
+          }
+        }
         logger.warn('Query retry', { failureCount, error }, 'QueryClient');
         return failureCount < 3;
       },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Backoff exponencial
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
+      // Timeout padrão de 10 segundos para queries
+      networkMode: 'online',
     },
   },
 });
