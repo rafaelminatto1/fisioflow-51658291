@@ -509,9 +509,10 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
           </div>
         </DialogHeader>
 
-        {/* Tabs Navigation - Fixed */}
-        <div className="px-4 sm:px-6 py-1.5 border-b shrink-0">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        {/* Scrollable Content with Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
+          {/* Tabs Navigation - Fixed */}
+          <div className="px-4 sm:px-6 py-1.5 border-b shrink-0">
             <TabsList className="grid w-full grid-cols-3 h-8">
               <TabsTrigger value="info" className="flex items-center gap-1 sm:gap-2 text-xs">
                 <User className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -529,12 +530,10 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                 <span className="xs:hidden">Opç.</span>
               </TabsTrigger>
             </TabsList>
-          </Tabs>
-        </div>
+          </div>
 
-        {/* Scrollable Content */}
-        <div className="flex-1 min-h-0 overflow-y-auto">
-          <Tabs value={activeTab} className="h-full">
+          {/* Scrollable Content */}
+          <div className="flex-1 min-h-0 overflow-y-auto">
             <form id="appointment-form" onSubmit={handleSubmit(handleSave)} className="px-4 sm:px-6 py-3">
               
               {/* Tab: Informações */}
@@ -926,8 +925,8 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                 )}
               </TabsContent>
             </form>
-          </Tabs>
-        </div>
+          </div>
+        </Tabs>
 
         {/* Fixed Footer */}
         <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2 px-4 sm:px-6 py-2.5 sm:py-3 border-t bg-background shrink-0">
