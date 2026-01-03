@@ -105,6 +105,49 @@ export function useScheduleCapacity() {
     },
   });
 
+  // Criar múltiplas configurações (uma para cada dia selecionado)
+  const createMultipleCapacities = useMutation({
+    mutationFn: async (formDataArray: CapacityFormData[]) => {
+      if (!organizationId) {
+        throw new Error('Organização não encontrada. Tente novamente.');
+      }
+
+      const insertData = formDataArray.map(formData => {
+        const validated = capacitySchema.parse(formData);
+        return {
+          day_of_week: validated.day_of_week,
+          start_time: validated.start_time,
+          end_time: validated.end_time,
+          max_patients: validated.max_patients,
+          organization_id: organizationId,
+        };
+      });
+
+      const { data, error } = await supabase
+        .from('schedule_capacity_config')
+        .insert(insertData as any)
+        .select();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['schedule-capacity', organizationId] });
+      const count = data?.length || 0;
+      toast({
+        title: 'Configurações salvas',
+        description: `${count} configuração(ões) de capacidade foram salvas com sucesso.`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao salvar configurações',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
   const updateCapacity = useMutation({
     mutationFn: async ({ id, ...data }: Partial<CapacityFormData> & { id: string }) => {
       const { error } = await supabase
@@ -155,22 +198,90 @@ export function useScheduleCapacity() {
     },
   });
 
+  // Helper para converter horário em minutos
+  const timeToMinutes = (time: string): number => {
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
+
+  // Verifica se dois intervalos de tempo se sobrepõem
+  const checkTimeOverlap = (
+    start1: string,
+    end1: string,
+    start2: string,
+    end2: string
+  ): boolean => {
+    const start1Min = timeToMinutes(start1);
+    const end1Min = timeToMinutes(end1);
+    const start2Min = timeToMinutes(start2);
+    const end2Min = timeToMinutes(end2);
+
+    // Dois intervalos se sobrepõem se:
+    // - O início do novo está dentro do existente, OU
+    // - O fim do novo está dentro do existente, OU
+    // - O novo contém completamente o existente
+    return (
+      (start2Min >= start1Min && start2Min < end1Min) ||
+      (end2Min > start1Min && end2Min <= end1Min) ||
+      (start2Min <= start1Min && end2Min >= end1Min)
+    );
+  };
+
+  // Verifica conflitos com configurações existentes
+  const checkConflicts = (
+    selectedDays: number[],
+    startTime: string,
+    endTime: string
+  ): { hasConflict: boolean; conflicts: Array<{ day: number; dayLabel: string; start: string; end: string }> } => {
+    if (!capacities || capacities.length === 0) {
+      return { hasConflict: false, conflicts: [] };
+    }
+
+    const conflicts: Array<{ day: number; dayLabel: string; start: string; end: string }> = [];
+    const dayLabels: Record<number, string> = {
+      0: 'Domingo',
+      1: 'Segunda-feira',
+      2: 'Terça-feira',
+      3: 'Quarta-feira',
+      4: 'Quinta-feira',
+      5: 'Sexta-feira',
+      6: 'Sábado',
+    };
+
+    for (const day of selectedDays) {
+      const existingConfigs = capacities.filter(c => c.day_of_week === day);
+      
+      for (const config of existingConfigs) {
+        if (checkTimeOverlap(config.start_time, config.end_time, startTime, endTime)) {
+          conflicts.push({
+            day,
+            dayLabel: dayLabels[day],
+            start: config.start_time,
+            end: config.end_time,
+          });
+        }
+      }
+    }
+
+    return {
+      hasConflict: conflicts.length > 0,
+      conflicts,
+    };
+  };
+
   // Helper para obter capacidade de um horário específico
   const getCapacityForTime = (dayOfWeek: number, time: string): number => {
     if (!capacities) return 1; // Default: 1 paciente por horário
 
-    const timeMinutes = time.split(':').map(Number);
-    const checkTime = timeMinutes[0] * 60 + timeMinutes[1];
+    const timeMinutes = timeToMinutes(time);
 
     const matchingConfig = capacities.find(config => {
       if (config.day_of_week !== dayOfWeek) return false;
 
-      const startMinutes = config.start_time.split(':').map(Number);
-      const endMinutes = config.end_time.split(':').map(Number);
-      const startTime = startMinutes[0] * 60 + startMinutes[1];
-      const endTime = endMinutes[0] * 60 + endMinutes[1];
+      const startTime = timeToMinutes(config.start_time);
+      const endTime = timeToMinutes(config.end_time);
 
-      return checkTime >= startTime && checkTime < endTime;
+      return timeMinutes >= startTime && timeMinutes < endTime;
     });
 
     return matchingConfig?.max_patients || 1;
@@ -192,10 +303,12 @@ export function useScheduleCapacity() {
     daysOfWeek,
     organizationId,
     createCapacity: createCapacity.mutate,
+    createMultipleCapacities: createMultipleCapacities.mutate,
     updateCapacity: updateCapacity.mutate,
     deleteCapacity: deleteCapacity.mutate,
     getCapacityForTime,
-    isCreating: createCapacity.isPending,
+    checkConflicts,
+    isCreating: createCapacity.isPending || createMultipleCapacities.isPending,
     isUpdating: updateCapacity.isPending,
     isDeleting: deleteCapacity.isPending,
   };
