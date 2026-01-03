@@ -481,18 +481,18 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-2xl w-[95vw] max-h-[80vh] sm:max-h-[85vh] flex flex-col p-0 overflow-hidden">
         {/* Header - Fixed */}
-        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b bg-gradient-to-r from-primary/5 to-transparent shrink-0">
+        <DialogHeader className="px-4 sm:px-6 pt-3 sm:pt-4 pb-2 sm:pb-3 border-b bg-gradient-to-r from-primary/5 to-transparent shrink-0">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl font-semibold">
-                <CalendarIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+              <DialogTitle className="flex items-center gap-2 text-base sm:text-lg font-semibold">
+                <CalendarIcon className="h-4 w-4 text-primary shrink-0" />
                 <span className="truncate">
                   {currentMode === 'create' ? 'Novo Agendamento' : currentMode === 'edit' ? 'Editar Agendamento' : 'Detalhes'}
                 </span>
               </DialogTitle>
-              <DialogDescription className="text-xs sm:text-sm mt-1">
+              <DialogDescription className="text-xs mt-0.5">
                 {watchedDate && watchedTime ? (
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center gap-1.5">
                     <Clock className="h-3 w-3 shrink-0" />
                     <span className="truncate">
                       {format(watchedDate, "EEEE, d 'de' MMMM", { locale: ptBR })} às {watchedTime}
@@ -510,9 +510,9 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         </DialogHeader>
 
         {/* Tabs Navigation - Fixed */}
-        <div className="px-4 sm:px-6 pt-2 pb-2 border-b shrink-0">
+        <div className="px-4 sm:px-6 py-1.5 border-b shrink-0">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 h-9 sm:h-10">
+            <TabsList className="grid w-full grid-cols-3 h-8">
               <TabsTrigger value="info" className="flex items-center gap-1 sm:gap-2 text-xs">
                 <User className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="hidden xs:inline">Informações</span>
@@ -535,10 +535,10 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         {/* Scrollable Content */}
         <div className="flex-1 min-h-0 overflow-y-auto">
           <Tabs value={activeTab} className="h-full">
-            <form id="appointment-form" onSubmit={handleSubmit(handleSave)} className="p-4 sm:p-6 pt-3 sm:pt-4">
+            <form id="appointment-form" onSubmit={handleSubmit(handleSave)} className="px-4 sm:px-6 py-3">
               
               {/* Tab: Informações */}
-              <TabsContent value="info" className="mt-0 space-y-3 sm:space-y-4">
+              <TabsContent value="info" className="mt-0 space-y-2.5 sm:space-y-3">
                 {/* Patient Selection */}
                 <div className="space-y-1.5">
                   <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
@@ -556,25 +556,6 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                     <p className="text-xs text-destructive">{errors.patient_id.message}</p>
                   )}
                 </div>
-
-                {/* Patient Quick Info */}
-                {selectedPatient && (
-                  <div className="bg-gradient-to-r from-primary/5 to-transparent rounded-lg p-2.5 sm:p-3 border border-primary/10 space-y-1">
-                    <p className="text-sm font-medium truncate text-foreground">{selectedPatient.name}</p>
-                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-muted-foreground">
-                      {selectedPatient.phone && (
-                        <span className="flex items-center gap-1 bg-background/50 px-2 py-0.5 rounded-full">
-                          📱 {selectedPatient.phone}
-                        </span>
-                      )}
-                      {selectedPatient.email && (
-                        <span className="flex items-center gap-1 bg-background/50 px-2 py-0.5 rounded-full truncate max-w-[180px]">
-                          ✉️ {selectedPatient.email}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
 
                 {/* Date and Time - Responsive Row */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
@@ -724,20 +705,20 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                 </div>
 
                 {/* Notes */}
-                <div className="space-y-1.5 sm:space-y-2">
-                  <Label className="text-xs sm:text-sm font-medium">Observações</Label>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium">Observações</Label>
                   <Textarea
                     {...register('notes')}
                     placeholder="Informações importantes sobre o atendimento..."
                     rows={2}
                     disabled={currentMode === 'view'}
-                    className="resize-none text-sm"
+                    className="resize-none text-sm min-h-[60px]"
                   />
                 </div>
               </TabsContent>
 
               {/* Tab: Pagamento */}
-              <TabsContent value="payment" className="mt-0 space-y-3 sm:space-y-4">
+              <TabsContent value="payment" className="mt-0 space-y-2.5 sm:space-y-3">
                 <div className="space-y-2">
                   <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
                     <CreditCard className="h-3.5 w-3.5 text-primary" />
@@ -949,7 +930,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         </div>
 
         {/* Fixed Footer */}
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 border-t bg-background shrink-0">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2 px-4 sm:px-6 py-2.5 sm:py-3 border-t bg-background shrink-0">
           <div className="flex justify-center sm:justify-start">
             {currentMode === 'edit' && appointment && (
               <Button
