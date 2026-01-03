@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Trash2, Plus, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -19,11 +19,11 @@ const DAYS_OF_WEEK = [
 ];
 
 export function ScheduleCapacityManager() {
-  const { capacities, isLoading, createCapacity, updateCapacity, deleteCapacity, organizationId, isCreating } = useScheduleCapacity();
+  const { capacities, isLoading, createMultipleCapacities, updateCapacity, deleteCapacity, organizationId, isCreating, checkConflicts } = useScheduleCapacity();
   const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
   const [newCapacity, setNewCapacity] = useState({
-    day_of_week: 'monday',
+    selectedDays: [] as string[],
     start_time: '07:00',
     end_time: '13:00',
     max_patients: 3,
@@ -34,27 +34,67 @@ export function ScheduleCapacityManager() {
       toast({ title: 'Erro', description: 'Organização não carregada. Aguarde.', variant: 'destructive' });
       return;
     }
+
+    // Validações
+    if (newCapacity.selectedDays.length === 0) {
+      toast({ title: 'Erro', description: 'Selecione pelo menos um dia da semana', variant: 'destructive' });
+      return;
+    }
     
     if (!newCapacity.start_time || !newCapacity.end_time) {
       toast({ title: 'Erro', description: 'Preencha horário de início e fim', variant: 'destructive' });
       return;
     }
 
-    // Converter day_of_week string para número
+    // Verificar se horário de início é anterior ao fim
+    const startMinutes = newCapacity.start_time.split(':').map(Number);
+    const endMinutes = newCapacity.end_time.split(':').map(Number);
+    const startTime = startMinutes[0] * 60 + startMinutes[1];
+    const endTime = endMinutes[0] * 60 + endMinutes[1];
+
+    if (startTime >= endTime) {
+      toast({ title: 'Erro', description: 'Horário de início deve ser anterior ao horário de fim', variant: 'destructive' });
+      return;
+    }
+
+    // Converter dias selecionados para números
     const dayMap: Record<string, number> = {
       'sunday': 0, 'monday': 1, 'tuesday': 2, 'wednesday': 3,
       'thursday': 4, 'friday': 5, 'saturday': 6
     };
+    const selectedDaysNumbers = newCapacity.selectedDays.map(day => dayMap[day]);
 
-    createCapacity({
-      day_of_week: dayMap[newCapacity.day_of_week],
+    // Verificar conflitos
+    const conflictCheck = checkConflicts(
+      selectedDaysNumbers,
+      newCapacity.start_time,
+      newCapacity.end_time
+    );
+
+    if (conflictCheck.hasConflict) {
+      const conflictMessages = conflictCheck.conflicts.map(
+        conflict => `${conflict.dayLabel} (${conflict.start}-${conflict.end})`
+      ).join(', ');
+      toast({
+        title: 'Conflito detectado',
+        description: `Já existe uma configuração que se sobrepõe: ${conflictMessages}. Por favor, ajuste os horários.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Criar configurações para cada dia selecionado
+    const formDataArray = selectedDaysNumbers.map(day => ({
+      day_of_week: day,
       start_time: newCapacity.start_time,
       end_time: newCapacity.end_time,
-      max_patients: newCapacity.max_patients
-    });
+      max_patients: newCapacity.max_patients,
+    }));
+
+    createMultipleCapacities(formDataArray);
     
     setIsAdding(false);
-    setNewCapacity({ day_of_week: 'monday', start_time: '07:00', end_time: '13:00', max_patients: 3 });
+    setNewCapacity({ selectedDays: [], start_time: '07:00', end_time: '13:00', max_patients: 3 });
   };
 
   const handleUpdate = async (id: string, max_patients: number) => {
@@ -142,25 +182,39 @@ export function ScheduleCapacityManager() {
         {/* Formulário de adicionar */}
         {isAdding ? (
           <div className="p-4 border rounded-lg space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Dia da Semana</Label>
-                <Select
-                  value={newCapacity.day_of_week}
-                  onValueChange={(value) => setNewCapacity({ ...newCapacity, day_of_week: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DAYS_OF_WEEK.map((day) => (
-                      <SelectItem key={day.value} value={day.value}>
-                        {day.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div>
+              <Label className="mb-2 block">Dias da Semana</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {DAYS_OF_WEEK.map((day) => (
+                  <div key={day.value} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`day-${day.value}`}
+                      checked={newCapacity.selectedDays.includes(day.value)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setNewCapacity({
+                            ...newCapacity,
+                            selectedDays: [...newCapacity.selectedDays, day.value],
+                          });
+                        } else {
+                          setNewCapacity({
+                            ...newCapacity,
+                            selectedDays: newCapacity.selectedDays.filter(d => d !== day.value),
+                          });
+                        }
+                      }}
+                    />
+                    <Label
+                      htmlFor={`day-${day.value}`}
+                      className="text-sm font-normal cursor-pointer"
+                    >
+                      {day.label}
+                    </Label>
+                  </div>
+                ))}
               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label>Pacientes por Horário</Label>
                 <Input
@@ -168,7 +222,7 @@ export function ScheduleCapacityManager() {
                   min={1}
                   max={10}
                   value={newCapacity.max_patients}
-                  onChange={(e) => setNewCapacity({ ...newCapacity, max_patients: parseInt(e.target.value) })}
+                  onChange={(e) => setNewCapacity({ ...newCapacity, max_patients: parseInt(e.target.value) || 1 })}
                 />
               </div>
             </div>
@@ -191,10 +245,25 @@ export function ScheduleCapacityManager() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button onClick={handleAdd} disabled={isCreating || !organizationId}>
+              <Button
+                onClick={handleAdd}
+                disabled={
+                  isCreating ||
+                  !organizationId ||
+                  newCapacity.selectedDays.length === 0 ||
+                  !newCapacity.start_time ||
+                  !newCapacity.end_time
+                }
+              >
                 {isCreating ? 'Salvando...' : 'Adicionar'}
               </Button>
-              <Button variant="outline" onClick={() => setIsAdding(false)}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsAdding(false);
+                  setNewCapacity({ selectedDays: [], start_time: '07:00', end_time: '13:00', max_patients: 3 });
+                }}
+              >
                 Cancelar
               </Button>
             </div>
