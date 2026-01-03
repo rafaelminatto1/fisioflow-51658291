@@ -479,7 +479,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl w-[95vw] max-h-[85vh] sm:max-h-[90vh] flex flex-col p-0">
+      <DialogContent className="sm:max-w-2xl w-[95vw] max-h-[80vh] sm:max-h-[85vh] flex flex-col p-0 overflow-hidden">
         {/* Header - Fixed */}
         <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b bg-gradient-to-r from-primary/5 to-transparent shrink-0">
           <div className="flex items-center justify-between gap-2">
