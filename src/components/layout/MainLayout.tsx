@@ -80,7 +80,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
       
       <div className="flex-1 flex flex-col">
         {/* Header Desktop */}
-        <header className="hidden md:flex h-16 bg-gradient-card border-b border-border/50 items-center justify-between px-6 shadow-card backdrop-blur-sm">
+        <header className="hidden md:flex h-14 bg-white/95 dark:bg-background-dark/95 border-b border-border items-center justify-between px-4 shadow-sm backdrop-blur-md">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-gradient-primary rounded-xl flex items-center justify-center shadow-medical">

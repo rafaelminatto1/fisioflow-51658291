@@ -42,28 +42,45 @@ export function CustomizableDashboard() {
   const visibleWidgets = widgets.filter(w => w.visible).sort((a, b) => a.position - b.position);
 
   const getWidgetData = (type: string) => {
-    if (isLoading) return { value: '...', description: 'Carregando...' };
+    // Sempre retornar valores válidos, mesmo durante carregamento
+    const safeSummary = summary || {
+      totalAppointments: 0,
+      appointmentGrowth: 0,
+      activePatients: 0,
+      patientGrowth: 0,
+      monthlyRevenue: 0,
+      revenueGrowth: 0,
+      occupancyRate: 0,
+    };
 
     switch (type) {
       case 'appointments-today':
         return {
-          value: summary?.totalAppointments || 0,
-          description: `${summary?.appointmentGrowth || 0}% vs. mês anterior`,
+          value: isLoading ? '...' : safeSummary.totalAppointments,
+          description: isLoading 
+            ? 'Carregando...' 
+            : `${safeSummary.appointmentGrowth}% vs. mês anterior`,
         };
       case 'revenue-month':
         return {
-          value: `R$ ${summary?.monthlyRevenue?.toFixed(2) || '0,00'}`,
-          description: `${summary?.revenueGrowth || 0}% vs. mês anterior`,
+          value: isLoading 
+            ? '...' 
+            : `R$ ${safeSummary.monthlyRevenue.toFixed(2).replace('.', ',')}`,
+          description: isLoading 
+            ? 'Carregando...' 
+            : `${safeSummary.revenueGrowth}% vs. mês anterior`,
         };
       case 'patients-active':
         return {
-          value: summary?.activePatients || 0,
-          description: `${summary?.patientGrowth || 0}% vs. mês anterior`,
+          value: isLoading ? '...' : safeSummary.activePatients,
+          description: isLoading 
+            ? 'Carregando...' 
+            : `${safeSummary.patientGrowth}% vs. mês anterior`,
         };
       case 'ocupancy-rate':
         return {
-          value: `${summary?.occupancyRate || 0}%`,
-          description: 'Capacidade utilizada',
+          value: isLoading ? '...' : `${safeSummary.occupancyRate}%`,
+          description: isLoading ? 'Carregando...' : 'Capacidade utilizada',
         };
       default:
         return { value: 'N/A', description: 'Sem dados' };

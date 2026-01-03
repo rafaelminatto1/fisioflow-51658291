@@ -29,50 +29,139 @@ export const useDashboardStats = () => {
       setLoading(true);
       setError(null);
 
-      // Total patients
-      const { count: totalPatients } = await supabase
-        .from('patients')
-        .select('*', { count: 'exact', head: true });
+      // Função auxiliar para timeout
+      const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
+        return Promise.race([
+          promise,
+          new Promise<T>((_, reject) =>
+            setTimeout(() => reject(new Error(`Timeout após ${timeoutMs}ms`)), timeoutMs)
+          ),
+        ]);
+      };
 
-      // New patients this month
+      // Função auxiliar para retry
+      const retryWithBackoff = async <T,>(
+        fn: () => Promise<T>,
+        maxRetries: number = 2,
+        initialDelay: number = 1000
+      ): Promise<T> => {
+        let lastError: Error | unknown;
+        
+        for (let attempt = 0; attempt < maxRetries; attempt++) {
+          try {
+            return await fn();
+          } catch (error) {
+            lastError = error;
+            if (attempt < maxRetries - 1) {
+              const delay = initialDelay * Math.pow(2, attempt);
+              await new Promise(resolve => setTimeout(resolve, delay));
+            }
+          }
+        }
+        
+        throw lastError;
+      };
+
+      const today = format(new Date(), 'yyyy-MM-dd');
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
-      const { count: newPatients } = await supabase
-        .from('patients')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', startOfMonth.toISOString());
 
-      // Today's appointments
-      const today = format(new Date(), 'yyyy-MM-dd');
-      const { count: todayAppointments } = await supabase
-        .from('appointments')
-        .select('*', { count: 'exact', head: true })
-        .eq('appointment_date', today);
+      // Carregar todos os dados em paralelo com timeout e retry
+      const [
+        totalPatientsResult,
+        newPatientsResult,
+        todayAppointmentsResult,
+        completedTodayResult,
+        activeTherapistsResult,
+      ] = await Promise.allSettled([
+        retryWithBackoff(() =>
+          withTimeout(
+            supabase
+              .from('patients')
+              .select('*', { count: 'exact', head: true }),
+            8000
+          )
+        ),
+        retryWithBackoff(() =>
+          withTimeout(
+            supabase
+              .from('patients')
+              .select('*', { count: 'exact', head: true })
+              .gte('created_at', startOfMonth.toISOString()),
+            8000
+          )
+        ),
+        retryWithBackoff(() =>
+          withTimeout(
+            supabase
+              .from('appointments')
+              .select('*', { count: 'exact', head: true })
+              .eq('appointment_date', today),
+            8000
+          )
+        ),
+        retryWithBackoff(() =>
+          withTimeout(
+            supabase
+              .from('appointments')
+              .select('*', { count: 'exact', head: true })
+              .eq('appointment_date', today)
+              .eq('status', 'concluido'),
+            8000
+          )
+        ),
+        retryWithBackoff(() =>
+          withTimeout(
+            supabase
+              .from('profiles')
+              .select('*', { count: 'exact', head: true }),
+            8000
+          )
+        ),
+      ]);
 
-      // Completed appointments today
-      const { count: completedToday } = await supabase
-        .from('appointments')
-        .select('*', { count: 'exact', head: true })
-        .eq('appointment_date', today)
-        .eq('status', 'concluido');
+      // Extrair dados com fallback
+      const totalPatients = totalPatientsResult.status === 'fulfilled'
+        ? totalPatientsResult.value.count || 0
+        : 0;
 
-      // Active therapists
-      const { count: activeTherapists } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
+      const newPatients = newPatientsResult.status === 'fulfilled'
+        ? newPatientsResult.value.count || 0
+        : 0;
+
+      const todayAppointments = todayAppointmentsResult.status === 'fulfilled'
+        ? todayAppointmentsResult.value.count || 0
+        : 0;
+
+      const completedToday = completedTodayResult.status === 'fulfilled'
+        ? completedTodayResult.value.count || 0
+        : 0;
+
+      const activeTherapists = activeTherapistsResult.status === 'fulfilled'
+        ? activeTherapistsResult.value.count || 0
+        : 0;
 
       setStats({
-        totalPatients: totalPatients || 0,
-        todayAppointments: todayAppointments || 0,
+        totalPatients,
+        todayAppointments,
         monthlyRevenue: 18500, // Mock - implement when financial table exists
-        activeTherapists: activeTherapists || 0,
-        remainingAppointments: (todayAppointments || 0) - (completedToday || 0),
-        newPatients: newPatients || 0
+        activeTherapists,
+        remainingAppointments: todayAppointments - completedToday,
+        newPatients
       });
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
       setError(error);
       logger.error('Erro ao carregar estatísticas do dashboard', error, 'useDashboardStats');
+      // Manter valores padrão em caso de erro
+      setStats({
+        totalPatients: 0,
+        todayAppointments: 0,
+        monthlyRevenue: 0,
+        activeTherapists: 0,
+        remainingAppointments: 0,
+        newPatients: 0
+      });
     } finally {
       setLoading(false);
     }
