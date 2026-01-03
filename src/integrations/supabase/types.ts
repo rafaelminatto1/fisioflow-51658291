@@ -11838,6 +11838,7 @@ export type Database = {
           treated_patients: number
         }[]
       }
+      get_current_user_org_id: { Args: never; Returns: string }
       get_email_stats: {
         Args: never
         Returns: {
@@ -12057,6 +12058,10 @@ export type Database = {
       use_package_session: { Args: { _package_id: string }; Returns: boolean }
       user_belongs_to_organization: {
         Args: { _org_id: string; _user_id: string }
+        Returns: boolean
+      }
+      user_belongs_to_organization_check: {
+        Args: { _org_id: string }
         Returns: boolean
       }
       user_has_any_role: {
