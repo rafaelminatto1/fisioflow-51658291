@@ -98,13 +98,37 @@ npx playwright test
 
 ## Próximos Passos Recomendados
 
-1. **Criar Usuários de Teste**: Criar os usuários de teste no Supabase com as credenciais definidas em `e2e/fixtures/test-data.ts`
+1. **Criar Usuários de Teste**: 
+   - Criar os usuários de teste no Supabase Auth Dashboard ou via API
+   - Usuários necessários:
+     - `admin@activityfisio.com` (senha: `Admin@123`, role: `admin`)
+     - `fisio@activityfisio.com` (senha: `Fisio@123`, role: `fisioterapeuta`)
+     - `estagiario@activityfisio.com` (senha: `Estagiario@123`, role: `estagiario`)
+   - Após criar os usuários, criar os profiles correspondentes na tabela `profiles` com `organization_id` da organização de teste
+   - A organização de teste foi criada via migration: `activity-fisio-test`
 
 2. **Executar Testes E2E**: Após criar os usuários, executar os testes E2E para validar completamente
 
 3. **Validar RLS**: Verificar se as políticas RLS estão funcionando corretamente no banco
 
 4. **Testar em Produção**: Após validação local, testar em ambiente de produção/staging
+
+## Como Criar Usuários de Teste
+
+### Opção 1: Via Supabase Dashboard
+1. Acesse o Supabase Dashboard
+2. Vá em Authentication > Users
+3. Clique em "Add User" e crie cada usuário manualmente
+4. Após criar, atualize a tabela `profiles` para incluir `organization_id` e `role`
+
+### Opção 2: Via Supabase CLI
+```bash
+# Usar o Supabase CLI para criar usuários (se disponível)
+supabase auth users create admin@activityfisio.com --password Admin@123
+```
+
+### Opção 3: Via API/Script
+Criar um script que use a API do Supabase Auth para criar os usuários programaticamente.
 
 ## Estrutura de Testes Criada
 
