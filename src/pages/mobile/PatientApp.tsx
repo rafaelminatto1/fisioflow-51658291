@@ -23,27 +23,83 @@ export default function PatientApp() {
 
   async function loadAppointments() {
     try {
-      // Buscar paciente pelo user_id
-      const { data: patient } = await supabase
-        .from('patients')
-        .select('id')
-        .eq('profile_id', user?.id)
-        .single();
+      setLoading(true);
+      
+      // Função auxiliar para timeout
+      const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
+        return Promise.race([
+          promise,
+          new Promise<T>((_, reject) =>
+            setTimeout(() => reject(new Error(`Timeout após ${timeoutMs}ms`)), timeoutMs)
+          ),
+        ]);
+      };
 
-      if (patient?.id) {
-        const { data } = await supabase
-          .from('appointments')
-          .select('*, therapists:profiles(name)')
-          .eq('patient_id', patient.id)
-          .gte('start_time', new Date().toISOString())
-          .order('start_time', { ascending: true });
+      // Buscar paciente pelo user_id com retry
+      let patient = null;
+      let retries = 0;
+      const maxRetries = 3;
 
-        setAppointments(data || []);
+      while (retries < maxRetries && !patient) {
+        try {
+          const result = await withTimeout(
+            supabase
+              .from('patients')
+              .select('id')
+              .eq('profile_id', user?.id)
+              .single(),
+            8000
+          );
+          
+          if (result.data) {
+            patient = result.data;
+            break;
+          }
+        } catch (error) {
+          retries++;
+          if (retries < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * retries));
+          }
+        }
       }
 
-      setLoading(false);
+      if (patient?.id) {
+        // Carregar agendamentos com retry
+        retries = 0;
+        let appointmentsData = null;
+
+        while (retries < maxRetries && !appointmentsData) {
+          try {
+            const result = await withTimeout(
+              supabase
+                .from('appointments')
+                .select('*, therapists:profiles(name)')
+                .eq('patient_id', patient.id)
+                .gte('start_time', new Date().toISOString())
+                .order('start_time', { ascending: true }),
+              8000
+            );
+            
+            if (result.data) {
+              appointmentsData = result.data;
+              break;
+            }
+          } catch (error) {
+            retries++;
+            if (retries < maxRetries) {
+              await new Promise(resolve => setTimeout(resolve, 1000 * retries));
+            }
+          }
+        }
+
+        setAppointments(appointmentsData || []);
+      } else {
+        setAppointments([]);
+      }
     } catch (error) {
       console.error('Erro ao carregar agendamentos:', error);
+      setAppointments([]);
+    } finally {
       setLoading(false);
     }
   }

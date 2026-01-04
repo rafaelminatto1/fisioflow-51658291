@@ -54,31 +54,68 @@ export function LiveAppointmentsFeed() {
 
   async function loadAppointments() {
     try {
+      setLoading(true);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const { data } = await supabase
-        .from('appointments')
-        .select('id, start_time, status, type, patients(name)')
-        .gte('start_time', today.toISOString())
-        .order('start_time', { ascending: true })
-        .limit(10);
+      // Função auxiliar para timeout
+      const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
+        return Promise.race([
+          promise,
+          new Promise<T>((_, reject) =>
+            setTimeout(() => reject(new Error(`Timeout após ${timeoutMs}ms`)), timeoutMs)
+          ),
+        ]);
+      };
+
+      // Tentar carregar com retry
+      let data = null;
+      let retries = 0;
+      const maxRetries = 3;
+
+      while (retries < maxRetries && !data) {
+        try {
+          const result = await withTimeout(
+            supabase
+              .from('appointments')
+              .select('id, start_time, status, type, patients(name)')
+              .gte('start_time', today.toISOString())
+              .order('start_time', { ascending: true })
+              .limit(10),
+            8000
+          );
+          
+          if (result.data) {
+            data = result.data;
+            break;
+          }
+        } catch (error) {
+          retries++;
+          if (retries < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * retries));
+          }
+        }
+      }
 
       if (data) {
         setAppointments(
           data.map((apt: any) => ({
             id: apt.id,
             start_time: apt.start_time,
-            patient: apt.patients,
+            patient: apt.patients || { name: 'Paciente' },
             status: apt.status,
             type: apt.type,
           }))
         );
+      } else {
+        // Manter lista vazia em caso de erro
+        setAppointments([]);
       }
-
-      setLoading(false);
     } catch (error) {
       console.error('Erro ao carregar agendamentos:', error);
+      // Manter lista vazia em caso de erro
+      setAppointments([]);
+    } finally {
       setLoading(false);
     }
   }
