@@ -37,9 +37,9 @@ export function RealtimeMetrics() {
       const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
       // Função auxiliar para timeout
-      const withTimeout = <T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
+      const withTimeout = <T,>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> => {
         return Promise.race([
-          promise,
+          Promise.resolve(promise),
           new Promise<T>((_, reject) =>
             setTimeout(() => reject(new Error(`Timeout após ${timeoutMs}ms`)), timeoutMs)
           ),
@@ -71,7 +71,7 @@ export function RealtimeMetrics() {
             .gte('created_at', today.toISOString())
             .lt('created_at', tomorrow.toISOString()),
           8000
-        ).catch(() => ({ data: null })), // Ignorar erro se tabela não existir
+        ).catch(() => ({ data: null })),
       ]);
 
       // Processar resultados com fallback
@@ -87,11 +87,11 @@ export function RealtimeMetrics() {
       }
 
       const patientsInSession = sessionsResult.status === 'fulfilled'
-        ? new Set(sessionsResult.value.data?.map((s: any) => s.patient_id) || []).size
+        ? new Set((sessionsResult.value as any).data?.map((s: any) => s.patient_id) || []).size
         : 0;
 
-      const todayRevenue = paymentsResult.status === 'fulfilled' && paymentsResult.value.data
-        ? (paymentsResult.value.data || []).reduce((sum: number, p: any) => sum + (p.amount || 0), 0)
+      const todayRevenue = paymentsResult.status === 'fulfilled' && (paymentsResult.value as any).data
+        ? ((paymentsResult.value as any).data || []).reduce((sum: number, p: any) => sum + (p.amount || 0), 0)
         : 0;
 
       // Taxa de ocupação (simplificada)

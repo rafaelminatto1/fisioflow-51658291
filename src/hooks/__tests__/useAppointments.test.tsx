@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useCreateAppointment, useUpdateAppointment } from '../useAppointments';
@@ -84,7 +84,7 @@ describe('useAppointments', () => {
         appointment_date: '2024-12-25',
         appointment_time: '10:00',
         duration: 60,
-        type: 'consulta' as const,
+        type: 'Fisioterapia' as const,
         status: 'agendado' as const,
       };
 
@@ -143,7 +143,7 @@ describe('useAppointments', () => {
         appointment_date: '2024-12-25',
         appointment_time: '10:00',
         duration: 60,
-        type: 'consulta' as const,
+        type: 'Fisioterapia' as const,
         status: 'agendado' as const,
       };
 
@@ -183,7 +183,7 @@ describe('useAppointments', () => {
         appointment_date: '2024-12-25',
         appointment_time: '10:00',
         duration: 60,
-        type: 'consulta' as const,
+        type: 'Fisioterapia' as const,
         status: 'agendado' as const,
       };
 
