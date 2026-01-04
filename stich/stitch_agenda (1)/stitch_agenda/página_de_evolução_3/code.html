@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MED-TERMINAL // PATIENT DATA</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        // Crisp & Analytical Color Scheme (UNCHANGED per user request)
+                        // Primary accent: Clean, vibrant but controlled true blue
+                        "primary": "#007BFF", // True blue
+                        "primary-hover": "#0056B3", // Slightly darker blue for hover
+                        // Background: Very stark, pure cool gray
+                        "background-light": "#F0F2F5", // Stark, pure cool gray
+                        // Dark mode background: Adjusted for crispness and dark clarity
+                        "background-dark": "#1E2A3B", // Dark blue-gray for dark mode background
+                        // Surfaces: Brilliant white (kept as requested)
+                        "surface-light": "#FFFFFF",
+                        // Dark mode surfaces: Darker, cool gray for surfaces
+                        "surface-dark": "#2B3A4D", // Darker cool gray for dark mode surfaces
+                        // Borders: Thin, precise blue-gray borders
+                        "border-light": "#CDD5DF", // Blue-gray border for light mode
+                        "border-dark": "#495C73", // Darker blue-gray border for dark mode
+                        // Text: Sharp, high-contrast black text
+                        "text-main-light": "#000000", // Sharp black for readability
+                        "text-main-dark": "#E0E6EB", // Brilliant white-off for dark mode
+                        "text-secondary-light": "#5A677F", // Medium blue-gray for secondary text
+                        "text-secondary-dark": "#9EB3C9", // Lighter blue-gray for dark mode secondary text
+                        // Custom colors for specific elements that were blue-toned
+                        "tag-blue-bg-light": "#E6F0FF", // Lighter blue background for tags
+                        "tag-blue-text-light": "#0056B3", // Darker blue text for tags
+                        "tag-blue-border-light": "#94C4FF", // Blue border for tags
+                        "tag-blue-bg-dark": "#0B2D59", // Darker blue background for dark mode tags
+                        "tag-blue-text-dark": "#82BFFF", // Lighter blue text for dark mode tags
+                        "tag-blue-border-dark": "#306BB3", // Blue border for dark mode tags
+                    },
+                    fontFamily: {
+                        "display": ["Space Mono", "monospace"], // Changed to monospace
+                        "sans": ["Space Mono", "monospace"],
+                    },
+                    borderRadius: { // Removed custom border-radius to enforce sharp corners
+                        "DEFAULT": "0",
+                        "lg": "0",
+                        "xl": "0",
+                        "2xl": "0",
+                        "full": "0",
+                    },
+                },
+            },
+        }
+    </script>
+<style>::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 0px;}
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }.panel-border {
+            border: 2px solid var(--tw-border-light);}
+        .dark .panel-border {
+            border: 2px solid var(--tw-border-dark);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-text-main-light dark:text-text-main-dark transition-colors duration-200">
+<div class="relative flex min-h-screen w-full flex-col overflow-hidden">
+<header class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b-2 border-solid border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark px-6 py-3 transition-colors">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-2 text-text-main-light dark:text-text-main-dark">
+<div class="size-6 text-primary">
+<span class="material-symbols-outlined text-[24px]">monitor_heart</span>
+</div>
+<h2 class="text-base font-bold leading-tight tracking-wide">MED-TERMINAL</h2>
+</div>
+<label class="hidden md:flex flex-col min-w-40 !h-8 max-w-48">
+<div class="flex w-full flex-1 items-stretch border-2 border-border-light dark:border-border-dark h-full group">
+<div class="text-text-secondary-light dark:text-text-secondary-dark flex border-none bg-background-light dark:bg-background-dark items-center justify-center pl-2">
+<span class="material-symbols-outlined text-[18px]">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden text-text-main-light dark:text-text-main-dark focus:outline-0 focus:ring-0 border-none bg-background-light dark:bg-background-dark focus:border-none h-full placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark px-2 text-sm font-normal leading-normal transition-colors" placeholder="SEARCH PATIENT ID..." value=""/>
+</div>
+</label>
+</div>
+<div class="flex flex-1 justify-end gap-6 items-center">
+<nav class="hidden lg:flex items-center gap-7">
+<a class="text-text-main-light dark:text-text-main-dark text-xs font-medium leading-normal hover:text-primary transition-colors" href="#">DASHBOARD</a>
+<a class="text-text-main-light dark:text-text-main-dark text-xs font-medium leading-normal hover:text-primary transition-colors" href="#">SCHEDULE</a>
+<a class="text-text-main-light dark:text-text-main-dark text-xs font-medium leading-normal hover:text-primary transition-colors" href="#">PATIENTS</a>
+<a class="text-text-main-light dark:text-text-main-dark text-xs font-medium leading-normal hover:text-primary transition-colors" href="#">FINANCE</a>
+</nav>
+<div class="flex gap-1">
+<button class="flex items-center justify-center size-8 bg-background-light dark:bg-background-dark text-text-main-light dark:text-text-main-dark hover:bg-primary/20 hover:text-primary transition-colors panel-border">
+<span class="material-symbols-outlined text-[18px]">notifications</span>
+</button>
+<button class="flex items-center justify-center size-8 bg-background-light dark:bg-background-dark text-text-main-light dark:text-text-main-dark hover:bg-primary/20 hover:text-primary transition-colors panel-border">
+<span class="material-symbols-outlined text-[18px]">chat_bubble</span>
+</button>
+</div>
+<div class="size-8 bg-surface-light dark:bg-surface-dark panel-border flex items-center justify-center">
+<img alt="[PIXEL ART] Doctor Avatar" class="size-6 opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGDNvqXkNCOGjIvaabSHSd2NsIqzQT6pgG35ywJQmzm83ThLdLGzbkUERj1A_SHA-SS3nkIeuwkvyiyHftiRqT4JIWJ-w8KVZ-vkvLfmkl_mf-SXv7oqdxoCr5S_op5Za9J73jkne-qCejZuCId6KJMLzWpnXhLmhjuHthyaKut_efUApV1sl9_-7vQQai6yJNoNOQ_40K_b_d8qpnJJIajQUro82bOjsY2qqjC6OoWoi3qXoBl5-gHpxwbvDJZA6l7C3vlyiXU_c" style="image-rendering: pixelated;"/>
+</div>
+</div>
+</header>
+<main class="flex flex-1 justify-center py-4 px-4 md:px-6 lg:px-8 xl:px-10">
+<div class="flex flex-col w-full max-w-[1200px] flex-1 gap-4">
+<div class="flex flex-wrap gap-2 text-xs px-2">
+<a class="text-text-secondary-light dark:text-text-secondary-dark font-medium hover:text-primary" href="#">PATIENTS</a>
+<span class="text-text-secondary-light dark:text-text-secondary-dark font-medium">/</span>
+<a class="text-text-secondary-light dark:text-text-secondary-dark font-medium hover:text-primary" href="#">PAT_007A</a>
+<span class="text-text-secondary-light dark:text-text-secondary-dark font-medium">/</span>
+<span class="text-text-main-light dark:text-text-main-dark font-medium">CLINICAL_PROG</span>
+</div>
+<div class="flex flex-wrap justify-between items-end gap-3 px-2">
+<div class="flex min-w-64 flex-col gap-1">
+<div class="flex items-center gap-2">
+<h1 class="text-text-main-light dark:text-text-main-dark text-2xl md:text-3xl font-bold tracking-wide">PAT_007A: J. SILVA</h1>
+<span class="px-2 py-0.5 panel-border bg-tag-blue-bg-light dark:bg-tag-blue-bg-dark text-tag-blue-text-light dark:text-tag-blue-text-dark text-xs font-bold uppercase tracking-wider">ACTIVE</span>
+</div>
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-sm font-normal">DIAGNOSIS: ACL_REHAB (RIGHT_KNEE)</p>
+</div>
+<div class="flex gap-2">
+<button class="flex items-center justify-center h-8 px-3 panel-border bg-surface-light dark:bg-surface-dark text-text-main-light dark:text-text-main-dark hover:bg-background-light dark:hover:bg-background-dark text-xs font-bold transition-colors">
+<span class="material-symbols-outlined mr-2 text-[16px]">print</span>
+                            REPORT_GEN
+                        </button>
+<button class="flex items-center justify-center h-8 px-3 bg-primary hover:bg-primary-hover text-white text-xs font-bold shadow-lg shadow-primary/20 transition-all transform hover:scale-105 panel-border">
+<span class="material-symbols-outlined mr-2 text-[18px]">add</span>
+                            NEW_RECORD
+                        </button>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-2">
+<div class="flex flex-col gap-2 p-4 bg-surface-light dark:bg-surface-dark panel-border shadow-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark text-[18px]">event</span>
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-xs font-medium">SESSIONS_TOTAL</p>
+</div>
+<div class="flex items-baseline gap-2">
+<p class="text-text-main-light dark:text-text-main-dark text-xl font-bold">12</p>
+<p class="text-primary text-xs font-bold">+2_THIS_WK</p>
+</div>
+</div>
+<div class="flex flex-col gap-2 p-4 bg-surface-light dark:bg-surface-dark panel-border shadow-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark text-[18px]">schedule</span>
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-xs font-medium">LAST_VISIT</p>
+</div>
+<p class="text-text-main-light dark:text-text-main-dark text-xl font-bold">2_DAYS_AGO</p>
+</div>
+<div class="flex flex-col gap-2 p-4 bg-surface-light dark:bg-surface-dark panel-border shadow-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark text-[18px]">calendar_add_on</span>
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-xs font-medium">NEXT_SESSION</p>
+</div>
+<p class="text-text-main-light dark:text-text-main-dark text-xl font-bold">TOMORROW, 14:00Z</p>
+</div>
+<div class="flex flex-col gap-2 p-4 bg-surface-light dark:bg-surface-dark panel-border shadow-sm relative overflow-hidden">
+<div class="absolute right-0 top-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-6xl text-primary">analytics</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark text-[18px]">medical_information</span>
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-xs font-medium">PAIN_LEVEL</p>
+</div>
+<div class="flex items-baseline gap-2">
+<p class="text-text-main-light dark:text-text-main-dark text-xl font-bold">3/10</p>
+<div class="flex items-center text-primary text-xs font-bold bg-primary/10 px-1 py-0.5 panel-border">
+<span class="material-symbols-outlined text-[12px] mr-1">trending_down</span>
+                                -20%
+                            </div>
+</div>
+</div>
+</div>
+<div class="px-2 border-b-2 border-border-light dark:border-border-dark">
+<div class="flex gap-6 overflow-x-auto text-sm">
+<a class="group flex items-center justify-center border-b-2 border-b-primary pb-[10px] pt-3 min-w-fit cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-2 text-[18px] text-primary group-hover:text-primary-hover">view_timeline</span>
+<p class="text-text-main-light dark:text-text-main-dark text-sm font-bold tracking-[0.015em]">EVENT_LOG &amp; PROG</p>
+</a>
+<a class="group flex items-center justify-center border-b-2 border-b-transparent pb-[10px] pt-3 min-w-fit cursor-pointer hover:border-b-border-light dark:hover:border-b-border-dark transition-colors" href="#">
+<span class="material-symbols-outlined mr-2 text-[18px] text-text-secondary-light dark:text-text-secondary-dark group-hover:text-text-main-light dark:group-hover:text-text-main-dark">data_thresholding</span>
+<p class="text-text-secondary-light dark:text-text-secondary-dark group-hover:text-text-main-light dark:group-hover:text-text-main-dark text-sm font-bold tracking-[0.015em] transition-colors">CHARTS</p>
+</a>
+<a class="group flex items-center justify-center border-b-2 border-b-transparent pb-[10px] pt-3 min-w-fit cursor-pointer hover:border-b-border-light dark:hover:border-b-border-dark transition-colors" href="#">
+<span class="material-symbols-outlined mr-2 text-[18px] text-text-secondary-light dark:text-text-secondary-dark group-hover:text-text-main-light dark:group-hover:text-text-main-dark">folder_open</span>
+<p class="text-text-secondary-light dark:text-text-secondary-dark group-hover:text-text-main-light dark:group-hover:text-text-main-dark text-sm font-bold tracking-[0.015em] transition-colors">ATTACHMENTS</p>
+</a>
+<a class="group flex items-center justify-center border-b-2 border-b-transparent pb-[10px] pt-3 min-w-fit cursor-pointer hover:border-b-border-light dark:hover:border-b-border-dark transition-colors" href="#">
+<span class="material-symbols-outlined mr-2 text-[18px] text-text-secondary-light dark:text-text-secondary-dark group-hover:text-text-main-light dark:group-hover:text-text-main-dark">flag</span>
+<p class="text-text-secondary-light dark:text-text-secondary-dark group-hover:text-text-main-light dark:group-hover:text-text-main-dark text-sm font-bold tracking-[0.015em] transition-colors">TARGETS</p>
+</a>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 px-2 pb-8">
+<div class="lg:col-span-2 flex flex-col gap-4">
+<div class="bg-surface-light dark:bg-surface-dark panel-border p-4 shadow-sm">
+<h3 class="text-xs font-bold text-text-main-light dark:text-text-main-dark mb-3 uppercase tracking-wider flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[16px]">edit_note</span>
+                                RAPID_ENTRY (SOAP)
+                            </h3>
+<div class="flex gap-3">
+<div class="size-8 bg-surface-light dark:bg-surface-dark panel-border flex items-center justify-center shrink-0">
+<img alt="[PIXEL ART] Physiotherapist Avatar" class="size-6 opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmfyONRsuTpGmLLDxtqcgrFIME_OFvEXPZz8NBzIfuZfl_-NkYaBEUyeFHBxrGqAjx_eIX9F-7yfQ-xawKX2wH09FMiD1WaN6QjQOiuyuljs4jSon9OSzpdyQC22wVgyH0UrZyuK81egu74PRjRuq2-d0ThR2DTMl6toc25XISg56-VViqVOXRFN6_m58tr-7ezcGYDk68fl1PX-AQrI1R-_cOsv47kOWynQbjj-NFBDxEmhMCw1_25WoIc5WLvL7aTYvewlkS5DY" style="image-rendering: pixelated;"/>
+</div>
+<div class="flex-1 flex flex-col gap-2">
+<textarea class="w-full bg-background-light dark:bg-background-dark border-2 border-border-light dark:border-border-dark focus:border-primary focus:ring-0 text-text-main-light dark:text-text-main-dark placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-2 text-xs min-h-[80px]" placeholder="INPUT_DATA..."></textarea>
+<div class="flex flex-wrap justify-between items-center gap-2">
+<div class="flex gap-1">
+<button class="p-1 panel-border hover:bg-background-light dark:hover:bg-background-dark text-text-secondary-light dark:text-text-secondary-dark transition-colors" title="ATTACH_IMAGE">
+<span class="material-symbols-outlined text-[18px]">image</span>
+</button>
+<button class="p-1 panel-border hover:bg-background-light dark:hover:bg-background-dark text-text-secondary-light dark:text-text-secondary-dark transition-colors" title="ADD_PAIN_SCALE">
+<span class="material-symbols-outlined text-[18px]">sentiment_satisfied</span>
+</button>
+</div>
+<button class="px-4 py-1.5 panel-border bg-text-main-light dark:bg-text-main-dark text-background-light dark:text-background-dark font-bold text-xs hover:opacity-90 transition-opacity">
+                                            SAVE_ENTRY
+                                        </button>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-4 relative pl-3">
+<div class="absolute left-[20px] top-3 bottom-0 w-px bg-border-light dark:bg-border-dark"></div>
+<div class="relative flex gap-3">
+<div class="z-10 mt-1 flex h-5 w-5 shrink-0 items-center justify-center bg-primary ring-2 ring-white dark:ring-surface-dark panel-border">
+<div class="h-1.5 w-1.5 bg-background-dark"></div>
+</div>
+<div class="flex-1 bg-surface-light dark:bg-surface-dark panel-border p-4 shadow-sm">
+<div class="flex flex-wrap justify-between items-start mb-2 gap-2">
+<div class="flex items-center gap-2">
+<p class="text-xs font-bold text-text-main-light dark:text-text-main-dark">SESSION_12: KINESIO</p>
+<span class="px-1.5 py-0.5 panel-border bg-tag-blue-bg-light dark:bg-tag-blue-bg-dark text-tag-blue-text-light dark:text-tag-blue-text-dark text-[10px] font-bold">CONFIRMED</span>
+</div>
+<p class="text-[10px] text-text-secondary-light dark:text-text-secondary-dark font-medium">TODAY, 10:30Z</p>
+</div>
+<p class="text-xs text-text-main-light dark:text-text-main-dark leading-relaxed mb-3">
+                                        PT_REPORT: LOW_PAIN (3/10) START_SESSION. PERFORMED: KNEE_MOB_GRD3 (RIGHT) &amp; QUAD_STR_CKC. LOAD_TOLERANCE: GOOD.
+                                    </p>
+<div class="flex flex-wrap gap-1 mb-3">
+<span class="inline-flex items-center gap-1 panel-border bg-background-light dark:bg-background-dark px-1.5 py-0.5 text-[10px] font-medium text-text-secondary-light dark:text-text-secondary-dark">
+<span class="material-symbols-outlined text-[12px]">fitness_center</span> ISO_SQUAT (3x30s)
+                                        </span>
+<span class="inline-flex items-center gap-1 panel-border bg-background-light dark:bg-background-dark px-1.5 py-0.5 text-[10px] font-medium text-text-secondary-light dark:text-text-secondary-dark">
+<span class="material-symbols-outlined text-[12px]">fitness_center</span> KNEE_EXT (3x12)
+                                        </span>
+</div>
+<div class="flex items-center gap-2 pt-2 border-t border-border-light dark:border-border-dark">
+<div class="size-5 bg-surface-light dark:bg-surface-dark panel-border flex items-center justify-center">
+<img alt="[PIXEL ART] Dr. Silva Avatar" class="size-4 opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdBHoAKjHuzH5EUeR5b8naDHe749o7ofYNaCH_iuuwP2RQ82AKF2xg-U-teQvKTiyQePxVmzbY8zIZ1d_ukSU0kdJz0evCLAYuiOUmONmKtlajDQcDQbVoZdufbZ7RizODgvZ6szjZa4f7cYW3Zp3wOTQm2Olx74o1VJUMitiJ5_4UORjnzO9aRadteLJSMmdsT009WkHwlETG4rLMFRsHcYjoqU8I3tEEftdCdPtZcEF-84u-AAQQkGdyXDB_9KfEwgI0MtTzcuM" style="image-rendering: pixelated;"/>
+</div>
+<p class="text-[10px] font-bold text-text-main-light dark:text-text-main-dark">DR.A.SILVA <span class="text-text-secondary-light dark:text-text-secondary-dark font-normal mx-1">•</span> PHYSIO</p>
+</div>
+</div>
+</div>
+<div class="relative flex gap-3">
+<div class="z-10 mt-1 flex h-5 w-5 shrink-0 items-center justify-center bg-border-light dark:bg-border-dark ring-2 ring-white dark:ring-surface-dark panel-border">
+<div class="h-1.5 w-1.5 bg-text-secondary-light"></div>
+</div>
+<div class="flex-1 bg-surface-light dark:bg-surface-dark panel-border p-4 shadow-sm opacity-90">
+<div class="flex flex-wrap justify-between items-start mb-2 gap-2">
+<div class="flex items-center gap-2">
+<p class="text-xs font-bold text-text-main-light dark:text-text-main-dark">SESSION_11: ELECTROTHERAPY</p>
+</div>
+<p class="text-[10px] text-text-secondary-light dark:text-text-secondary-dark font-medium">22_OCT, 15:00Z</p>
+</div>
+<p class="text-xs text-text-main-light dark:text-text-main-dark leading-relaxed mb-3">
+                                        TENS_APPLIED (BURST, 20MIN) FOR_ANALGESIA. PT_ARRIVAL_PAIN: 5/10 (POST_LONG_WALK). PT_DEPARTURE_PAIN: 3/10. RELATIVE_REST_RX.
+                                    </p>
+<div class="flex items-center gap-2 pt-2 border-t border-border-light dark:border-border-dark">
+<div class="size-5 bg-surface-light dark:bg-surface-dark panel-border flex items-center justify-center">
+<img alt="[PIXEL ART] Dr. Silva Avatar" class="size-4 opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAiqnprmaRV8AbkUW1kVdgoi-WKOz2WeryXn621Zb3Y39bidLrJQ-LiRRQrQ9AV5THNRbsXJHy48T6i6N5LjSuQz7zHHr_n9SFWIlC7Tj_-cJbaqTzckEAUJKgpuvWkEh7PrATx9y5aflwLbi1lJf_T73zfZMKIkjiw_MKuTw7LMqEg4wQ6DwcaNB8Hk4691UgGCtMuaB8c0lkr4Ghu9fHV9S-fHIreZ4js_Uy7VxAE_zBNyG8i6CP-1ThVGt-LVU92hZ7hnPSbVeA" style="image-rendering: pixelated;"/>
+</div>
+<p class="text-[10px] font-bold text-text-main-light dark:text-text-main-dark">DR.A.SILVA</p>
+</div>
+</div>
+</div>
+<div class="relative flex gap-3">
+<div class="z-10 mt-1 flex h-5 w-5 shrink-0 items-center justify-center bg-border-light dark:bg-border-dark ring-2 ring-white dark:ring-surface-dark panel-border">
+<div class="h-1.5 w-1.5 bg-text-secondary-light"></div>
+</div>
+<div class="flex-1 bg-surface-light dark:bg-surface-dark panel-border p-4 shadow-sm opacity-80">
+<div class="flex flex-wrap justify-between items-start mb-2 gap-2">
+<div class="flex items-center gap-2">
+<p class="text-xs font-bold text-text-main-light dark:text-text-main-dark">SESSION_10: PROGRESS_EVAL</p>
+</div>
+<p class="text-[10px] text-text-secondary-light dark:text-text-secondary-dark font-medium">20_OCT, 09:00Z</p>
+</div>
+<p class="text-xs text-text-main-light dark:text-text-main-dark leading-relaxed mb-2">
+                                        ROM_REASSESSMENT. KNEE_FLEXION: 110º (PREV_MEAS +10º).
+                                    </p>
+<div class="flex gap-1 mb-3">
+<div class="size-14 bg-surface-light dark:bg-surface-dark panel-border flex items-center justify-center cursor-pointer hover:opacity-80">
+<img alt="[X-RAY] Knee joint image" class="size-12 opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcAyU1N_r-jzrtQ6zjYxlwDiS1qf5BHX0DyznR9ujxe5oEwdlkDEeXgbvnZaAA7N8qoS3r0khdRkDjqevCtL8Dl7-fU7Y5I_dwKwss7QcfJhsSeeIKK1Fv6SkU9Eac9lfSh34_-u_7uGxhfmNtAThPjYQ1d5RGT7fYOkMGC2aE2dV1ie2j6_zNHAcbXAoRUoqVHl4FMpOJuCo3s-zgUt4NETkpD3u1S7GfzEXo0ndepM9MU_Z5L1v2CAcU3Kg2euGxZ4TFzMibeXU" style="image-rendering: pixelated;"/>
+</div>
+<div class="size-14 flex items-center justify-center bg-background-light dark:bg-background-dark panel-border cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+<span class="text-xs font-bold text-primary">+2_IMG</span>
+</div>
+</div>
+<div class="flex items-center gap-2 pt-2 border-t border-border-light dark:border-border-dark">
+<div class="size-5 bg-surface-light dark:bg-surface-dark panel-border flex items-center justify-center">
+<img alt="[PIXEL ART] Dr. Silva Avatar" class="size-4 opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2T7FRWW1R1ouwEmQBeTS-Fl9SjhiwZrtyb5XC57jTvBeIyjY-Q9UZRfgYO0zkohhdhgSyyoo9jnWDSddAt5snQR1PFDfeXnXAEr4DGWhvnggw4HaMRs0jDCxiA1Y5byS7Afvx0UJkbRhFG_p3kuk9JHVHkQXxg2of9DOa-djYRU6y_3p4InwmIv4XtX63EkaSp59FPSki3FmtiAp16ndFBo8CRZT5rlobfeObR98NQ5n6kB3aMajNLEr7kKezvYa0ycf6T_GuMmI" style="image-rendering: pixelated;"/>
+</div>
+<p class="text-[10px] font-bold text-text-main-light dark:text-text-main-dark">DR.A.SILVA</p>
+</div>
+</div>
+</div>
+<button class="ml-8 py-2 text-xs text-text-secondary-light dark:text-text-secondary-dark font-medium hover:text-primary transition-colors self-start">
+                                LOAD_PREV_LOGS...
+                            </button>
+</div>
+</div>
+<div class="flex flex-col gap-4">
+<div class="bg-surface-light dark:bg-surface-dark panel-border p-4 shadow-sm">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-xs font-bold text-text-main-light dark:text-text-main-dark">PAIN_HISTORY</h3>
+<button class="text-[10px] text-primary font-bold hover:underline">VIEW_DETAILS</button>
+</div>
+<div class="relative h-40 w-full flex items-end justify-between gap-1 px-1">
+<div class="absolute inset-0 flex flex-col justify-between pointer-events-none z-0">
+<div class="w-full h-px bg-border-light dark:bg-border-dark border-dashed border-b"></div>
+<div class="w-full h-px bg-border-light dark:bg-border-dark border-dashed border-b"></div>
+<div class="w-full h-px bg-border-light dark:bg-border-dark border-dashed border-b"></div>
+<div class="w-full h-px bg-border-light dark:bg-border-dark border-dashed border-b"></div>
+<div class="w-full h-px bg-border-light dark:bg-border-dark"></div>
+</div>
+<div class="relative z-10 w-1/6 bg-tag-blue-bg-light dark:bg-tag-blue-bg-dark panel-border flex flex-col justify-end group cursor-pointer" style="height: 80%;">
+<div class="w-full h-0.5 bg-primary"></div>
+<div class="absolute -top-5 left-1/2 -translate-x-1/2 bg-text-main-light dark:bg-surface-light text-white dark:text-text-main-light text-[9px] px-1 panel-border opacity-0 group-hover:opacity-100 transition-opacity">8/10</div>
+</div>
+<div class="relative z-10 w-1/6 bg-tag-blue-bg-light dark:bg-tag-blue-bg-dark panel-border flex flex-col justify-end group cursor-pointer" style="height: 70%;">
+<div class="w-full h-0.5 bg-primary"></div>
+</div>
+<div class="relative z-10 w-1/6 bg-tag-blue-bg-light dark:bg-tag-blue-bg-dark panel-border flex flex-col justify-end group cursor-pointer" style="height: 50%;">
+<div class="w-full h-0.5 bg-primary"></div>
+</div>
+<div class="relative z-10 w-1/6 bg-tag-blue-bg-light dark:bg-tag-blue-bg-dark panel-border flex flex-col justify-end group cursor-pointer" style="height: 60%;">
+<div class="w-full h-0.5 bg-primary"></div>
+</div>
+<div class="relative z-10 w-1/6 bg-tag-blue-bg-light dark:bg-tag-blue-bg-dark panel-border flex flex-col justify-end group cursor-pointer" style="height: 40%;">
+<div class="w-full h-0.5 bg-primary"></div>
+</div>
+<div class="relative z-10 w-1/6 bg-tag-blue-bg-light dark:bg-tag-blue-bg-dark panel-border flex flex-col justify-end group cursor-pointer" style="height: 30%;">
+<div class="w-full h-0.5 bg-primary"></div>
+<div class="absolute -top-5 left-1/2 -translate-x-1/2 bg-text-main-light dark:bg-surface-light text-white dark:text-text-main-light text-[9px] px-1 panel-border opacity-0 group-hover:opacity-100 transition-opacity">3/10</div>
+</div>
+</div>
+<div class="flex justify-between text-[9px] text-text-secondary-light dark:text-text-secondary-dark mt-2 px-1">
+<span>10_OCT</span>
+<span>TODAY</span>
+</div>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark panel-border p-4 shadow-sm">
+<div class="flex justify-between items-center mb-3">
+<h3 class="text-xs font-bold text-text-main-light dark:text-text-main-dark">RECENT_ATTACH</h3>
+<button class="hover:bg-background-light dark:hover:bg-background-dark p-1 panel-border">
+<span class="material-symbols-outlined text-[18px] text-text-secondary-light">add</span>
+</button>
+</div>
+<div class="space-y-2">
+<div class="flex items-center gap-3 p-2 hover:bg-background-light dark:hover:bg-background-dark transition-colors cursor-pointer group panel-border">
+<div class="size-8 bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0 panel-border">
+<span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+</div>
+<div class="overflow-hidden">
+<p class="text-xs font-bold text-text-main-light dark:text-text-main-dark truncate">REPORT_MRI.PDF</p>
+<p class="text-[10px] text-text-secondary-light dark:text-text-secondary-dark">15_OCT_2023 • 2.4MB</p>
+</div>
+<span class="material-symbols-outlined ml-auto text-text-secondary-light opacity-0 group-hover:opacity-100 text-[18px]">download</span>
+</div>
+<div class="flex items-center gap-3 p-2 hover:bg-background-light dark:hover:bg-background-dark transition-colors cursor-pointer group panel-border">
+<div class="size-8 bg-tag-blue-bg-light dark:bg-tag-blue-bg-dark text-tag-blue-text-light dark:text-tag-blue-text-dark flex items-center justify-center shrink-0 panel-border">
+<span class="material-symbols-outlined text-[18px]">image</span>
+</div>
+<div class="overflow-hidden">
+<p class="text-xs font-bold text-text-main-light dark:text-text-main-dark truncate">XRAY_KNEES.JPG</p>
+<p class="text-[10px] text-text-secondary-light dark:text-text-secondary-dark">10_OCT_2023 • 4.1MB</p>
+</div>
+<span class="material-symbols-outlined ml-auto text-text-secondary-light opacity-0 group-hover:opacity-100 text-[18px]">download</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark panel-border p-4 shadow-sm">
+<h3 class="text-xs font-bold text-text-main-light dark:text-text-main-dark mb-3">SHORT_TERM_TARGETS</h3>
+<div class="space-y-3">
+<div class="flex items-start gap-2">
+<div class="mt-0.5 text-primary">
+<span class="material-symbols-outlined text-[18px]">check_box</span>
+</div>
+<div>
+<p class="text-xs font-medium text-text-main-light dark:text-text-main-dark line-through opacity-50">REDUCE_PAIN_5/10</p>
+</div>
+</div>
+<div class="flex items-start gap-2">
+<div class="mt-0.5 text-text-secondary-light dark:text-text-secondary-dark">
+<span class="material-symbols-outlined text-[18px]">check_box_outline_blank</span>
+</div>
+<div>
+<p class="text-xs font-medium text-text-main-light dark:text-text-main-dark">ACHIEVE_120º_KNEE_FLEX</p>
+<p class="text-[10px] text-text-secondary-light dark:text-text-secondary-dark mt-1">CURRENT: 110º</p>
+<div class="w-full bg-background-light dark:bg-background-dark panel-border h-1 mt-1 overflow-hidden">
+<div class="bg-primary h-1" style="width: 90%"></div>
+</div>
+</div>
+</div>
+<div class="flex items-start gap-2">
+<div class="mt-0.5 text-text-secondary-light dark:text-text-secondary-dark">
+<span class="material-symbols-outlined text-[18px]">check_box_outline_blank</span>
+</div>
+<div>
+<p class="text-xs font-medium text-text-main-light dark:text-text-main-dark">WALK_ASSIST_FREE</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div></main>
+</div>
+
+</body></html>

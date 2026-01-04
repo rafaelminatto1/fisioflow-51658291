@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Módulo Financeiro - FisioFlow</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#0d7ff2",
+              "primary-dark": "#0b6bcb",
+              "background-light": "#f8fafc","background-dark": "#101922",
+              "surface": "#ffffff",
+              "border": "#e2e8f0",
+              "muted": "#64748b",
+            },
+            fontFamily: {
+              "display": ["Inter", "sans-serif"]
+            },
+            borderRadius: {
+              "DEFAULT": "0.375rem","lg": "0.5rem",
+              "xl": "0.75rem",
+              "2xl": "1rem",
+              "3xl": "1.5rem",
+              "full": "9999px"
+            },
+          },
+        },
+      }
+    </script>
+<style>.no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }.swipe-container {
+          position: relative;
+          overflow: hidden;
+        }
+        .swipe-action-left {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding-left: 1rem;
+            color: white;
+            z-index: 0;border-radius: 0.75rem;transform: translateX(-100%);transition: transform 0.2s ease-out;}
+        .swipe-container.swiping-right .swipe-action-left {
+            transform: translateX(0);width: fit-content;min-width: 4rem;background-color: theme('colors.primary');}
+        .swipe-content {
+          position: relative;
+          z-index: 1;transition: transform 0.2s ease-out;}
+        .swipe-container.swiping-right .swipe-content {
+            transform: translateX(4rem);}
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display bg-background-light text-slate-900 overflow-hidden h-screen w-full relative">
+<div class="h-full w-full overflow-y-auto pb-32">
+<header class="sticky top-0 z-20 bg-surface/80 backdrop-blur-md border-b border-border px-4 py-3 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="flex items-center justify-center size-8 bg-primary/10 rounded-lg text-primary">
+<span class="material-symbols-outlined text-xl">account_balance_wallet</span>
+</div>
+<h1 class="text-lg font-bold tracking-tight text-slate-900">Financeiro</h1>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center justify-center size-9 rounded-full hover:bg-slate-100 text-slate-600">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="flex items-center justify-center size-9 rounded-full bg-slate-100 text-slate-600 relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border border-white"></span>
+</button>
+</div>
+</header>
+<section class="p-4">
+<div class="grid grid-cols-3 gap-3">
+<div class="flex flex-col gap-1 rounded-xl bg-white p-3 border border-border shadow-sm">
+<p class="text-xs font-medium text-slate-500">Recebido</p>
+<p class="text-sm font-bold text-emerald-600 tracking-tight">R$ 12.4k</p>
+</div>
+<div class="flex flex-col gap-1 rounded-xl bg-white p-3 border border-border shadow-sm">
+<p class="text-xs font-medium text-slate-500">Pendente</p>
+<p class="text-sm font-bold text-amber-600 tracking-tight">R$ 3.2k</p>
+</div>
+<div class="flex flex-col gap-1 rounded-xl bg-white p-3 border border-border shadow-sm">
+<p class="text-xs font-medium text-slate-500">Atrasado</p>
+<p class="text-sm font-bold text-rose-600 tracking-tight">R$ 450</p>
+</div>
+</div>
+</section>
+<section class="px-4 pb-2">
+<div class="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+<button class="flex h-8 shrink-0 items-center justify-center px-4 rounded-full bg-slate-900 text-white shadow-sm">
+<span class="text-xs font-semibold">Este Mês</span>
+</button>
+<button class="flex h-8 shrink-0 items-center justify-center px-4 rounded-full bg-white border border-border text-slate-600 shadow-sm whitespace-nowrap">
+<span class="text-xs font-medium">Todos Status</span>
+</button>
+<button class="flex h-8 shrink-0 items-center justify-center px-4 rounded-full bg-white border border-border text-slate-600 shadow-sm whitespace-nowrap">
+<span class="text-xs font-medium">Entradas</span>
+</button>
+<button class="flex h-8 shrink-0 items-center justify-center px-4 rounded-full bg-white border border-border text-slate-600 shadow-nowrap">
+<span class="text-xs font-medium">Saídas</span>
+</button>
+</div>
+</section>
+<section class="px-4 flex flex-col gap-3">
+<div class="flex items-center justify-between pt-2">
+<h3 class="text-sm font-semibold text-slate-900">Transações Recentes</h3>
+<span class="text-xs text-primary font-medium">Ver tudo</span>
+</div>
+<div class="swipe-container group" data-status="pending">
+<div class="swipe-action-left bg-primary rounded-xl flex items-center justify-start pl-4 text-white">
+<span class="material-symbols-outlined text-2xl">payment</span>
+</div>
+<div class="swipe-content flex bg-white p-3 rounded-xl border border-border shadow-sm items-center gap-3 active:scale-[0.99] transition-transform group-hover:shadow-lg">
+<div class="relative shrink-0">
+<div class="size-10 rounded-full bg-slate-100 bg-cover bg-center" data-alt="Portrait of Ana Costa" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDlcYleowfLRS8Sv4Mccf_RgCbsWcKeniXbbrlgtmUvXCBw9hD0Y2Rmu23JKKEGDmQ3OHyIG-xGoDPCsRHRr7nWTvyNCwshaiCwOsx-_hPJy6QIs-q7P1PRKyh6ZJupa2lYa43ly3eDIWDYatpcrKdGXrHbLom51qpef0da44y8miZtEaNu1rGkkxoD-JXP6RgqdDg_loc66IN7_FEbR5nhyt7HF2aWUwa215Qos2JnoncZiOIe7bMSuCUxuQkgbTDr8cm7rCwGzgec");'></div>
+<div class="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm border border-slate-100">
+<span class="material-symbols-outlined text-[14px] text-amber-600 block">credit_card</span>
+</div>
+</div>
+<div class="flex flex-1 flex-col gap-0.5 overflow-hidden">
+<div class="flex justify-between items-center">
+<p class="text-sm font-bold text-slate-900 truncate pr-2">Ana Costa</p>
+<p class="text-sm font-bold text-slate-900 whitespace-nowrap">R$ 1.200</p>
+</div>
+<div class="flex justify-between items-center">
+<p class="text-xs text-slate-500 truncate flex items-center gap-1">
+                            23 Out • Pacote 10x
+                        </p>
+<div class="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-50 border border-amber-100">
+<span class="size-1.5 rounded-full bg-amber-500 mr-1.5"></span>
+<span class="text-[10px] font-semibold text-amber-700 uppercase tracking-wide">Pendente</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="swipe-container group" data-status="paid">
+<div class="swipe-content flex bg-white p-3 rounded-xl border border-border shadow-sm items-center gap-3">
+<div class="relative shrink-0">
+<div class="size-10 rounded-full bg-slate-100 bg-cover bg-center" data-alt="Portrait of João Silva" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCSA0gP-LJe0XoQQNIYvItX0fTzdxtPN8P-ldIz6CGWeFBFEE7RKjlYIk7ikfmmTc7CNWvqCGEZSO8gGcb7whpu_SDVyYE1cT5T9TKPjEniNgjFlwOyzesCEJGWHHyJymZmloI5PolNYCC9lG57ChNl3H2KLHzqRp2Vx5H8gNRsRcROsDgbNqx_hLiOYkRqWPcNBpDnl7vywY8f0oS9pmymDaSG0Jz03J1n09BQZDl0NG1A_Ro876ABN9n6ySDwPN3dc5ynY3suxWWy");'></div>
+<div class="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm border border-slate-100">
+<span class="material-symbols-outlined text-[14px] text-emerald-600 block">qr_code_2</span>
+</div>
+</div>
+<div class="flex flex-1 flex-col gap-0.5 overflow-hidden">
+<div class="flex justify-between items-center">
+<p class="text-sm font-bold text-slate-900 truncate pr-2">João Silva</p>
+<p class="text-sm font-bold text-slate-900 whitespace-nowrap">R$ 150</p>
+</div>
+<div class="flex justify-between items-center">
+<p class="text-xs text-slate-500 truncate flex items-center gap-1">
+                            24 Out • Sessão Avulsa
+                        </p>
+<div class="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-100">
+<span class="size-1.5 rounded-full bg-emerald-500 mr-1.5"></span>
+<span class="text-[10px] font-semibold text-emerald-700 uppercase tracking-wide">Pago</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="swipe-container group" data-status="overdue">
+<div class="swipe-action-left bg-primary rounded-xl flex items-center justify-start pl-4 text-white">
+<span class="material-symbols-outlined text-2xl">payment</span>
+</div>
+<div class="swipe-content flex bg-white p-3 rounded-xl border border-border shadow-sm items-center gap-3 active:scale-[0.99] transition-transform group-hover:shadow-lg">
+<div class="relative shrink-0">
+<div class="size-10 rounded-full bg-slate-100 bg-cover bg-center" data-alt="Portrait of Carlos Souza" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCGrTglYqJ6UfEl6Zk_bejOhmgm0lMsF4whS97ftkOppPMrgp36B41ReEAi5IIQy0MbeMokNjIqU_ML4AVFVog6i2AtS7BQk9XkYVl55-BJXnCJQwd91LmY6wASds3W_ToT3vPdy_-r-VskmDWVOzLb3BxuunG33rM8j7K3_vBcd8f2NRoFxbpPJ60Q4m52LdxS-nS5ftoxMD5fPjooYGwBJCOL_FIvwLPpx2NH4DQ24LTCbkU_gjM1k3p7K9Sd9qOJY98qKnlUX69q");'></div>
+<div class="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm border border-slate-100">
+<span class="material-symbols-outlined text-[14px] text-rose-600 block">credit_card</span>
+</div>
+</div>
+<div class="flex flex-1 flex-col gap-0.5 overflow-hidden">
+<div class="flex justify-between items-center">
+<p class="text-sm font-bold text-slate-900 truncate pr-2">Carlos Souza</p>
+<p class="text-sm font-bold text-slate-900 whitespace-nowrap">R$ 200</p>
+</div>
+<div class="flex justify-between items-center">
+<p class="text-xs text-slate-500 truncate flex items-center gap-1">
+                            20 Out • Avaliação
+                        </p>
+<div class="inline-flex items-center px-2 py-0.5 rounded-full bg-rose-50 border border-rose-100">
+<span class="size-1.5 rounded-full bg-rose-500 mr-1.5"></span>
+<span class="text-[10px] font-semibold text-rose-700 uppercase tracking-wide">Atrasado</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="swipe-container group" data-status="paid">
+<div class="swipe-content flex bg-white p-3 rounded-xl border border-border shadow-sm items-center gap-3 opacity-70">
+<div class="relative shrink-0">
+<div class="size-10 rounded-full bg-slate-100 bg-cover bg-center" data-alt="Portrait of Maria Oliveira" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAVxvPt-lgyA4jwmpyrhPaT3_tIMev-JskpEH7XPXbmqtiNF0bH5aK4msv0_cgaMGnhShXeo5ySFg2MivRxyU51NgIF3XPYGMlM7UlrzmralO-OLhsIwzTchkgACrDT1irDiFEvpUAtgZtyW9lO1PtLtKu14tEcX7XOlO6W7W6C7t9KqEa1ajm5TvYyaze-luC9GjTdKU4m8DlZqWvabSzCy9_RLxX9jf0GbsY0AN7y_bSVeGweAvb1iTiQ3yA-uAVWXj4dLT-Mlhwp");'></div>
+<div class="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm border border-slate-100">
+<span class="material-symbols-outlined text-[14px] text-emerald-600 block">qr_code_2</span>
+</div>
+</div>
+<div class="flex flex-1 flex-col gap-0.5 overflow-hidden">
+<div class="flex justify-between items-center">
+<p class="text-sm font-bold text-slate-900 truncate pr-2">Maria Oliveira</p>
+<p class="text-sm font-bold text-slate-900 whitespace-nowrap">R$ 150</p>
+</div>
+<div class="flex justify-between items-center">
+<p class="text-xs text-slate-500 truncate flex items-center gap-1">
+                            19 Out • Sessão Avulsa
+                        </p>
+<div class="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-100">
+<span class="size-1.5 rounded-full bg-emerald-500 mr-1.5"></span>
+<span class="text-[10px] font-semibold text-emerald-700 uppercase tracking-wide">Pago</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<div class="fixed bottom-6 right-4 z-10">
+<button class="flex items-center justify-center size-16 bg-primary hover:bg-primary-dark text-white rounded-full shadow-lg shadow-primary/30 transition-all active:scale-95">
+<span class="material-symbols-outlined text-3xl">qr_code_scanner</span>
+<span class="sr-only">Novo Cliente - Escanear</span>
+</button>
+</div>
+<div class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background-light p-6 transition-all duration-300 opacity-0 pointer-events-none data-[state=open]:opacity-100 data-[state=open]:pointer-events-auto" data-modal-state="closed" id="payment-modal">
+<button class="absolute top-6 left-4 size-10 flex items-center justify-center rounded-full bg-white text-slate-600 shadow-md hover:bg-slate-100 active:scale-95">
+<span class="material-symbols-outlined text-2xl">arrow_back</span>
+<span class="sr-only">Voltar</span>
+</button>
+<div class="flex flex-col items-center justify-center h-full w-full max-w-sm text-center gap-6">
+<div class="size-24 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-5xl">payments</span>
+</div>
+<h2 class="text-3xl font-extrabold text-slate-900 leading-tight" id="modal-client-name">Confirmar Pagamento</h2>
+<p class="text-xl text-slate-500 font-medium leading-relaxed" id="modal-service-value">
+                R$ 150,00 • Sessão Avulsa
+            </p>
+<div class="flex items-center gap-3 bg-white p-4 rounded-xl border border-border shadow-sm w-full">
+<span class="material-symbols-outlined text-3xl text-primary">qr_code_2</span>
+<div>
+<p class="text-sm text-slate-500">Método Padrão</p>
+<p class="text-base font-semibold text-slate-900">Pix</p>
+</div>
+<button class="ml-auto text-primary text-sm font-semibold">Alterar</button>
+</div>
+<button class="w-full bg-primary hover:bg-primary-dark text-white font-bold text-lg py-4 rounded-2xl shadow-lg shadow-primary/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-auto mb-8">
+<span class="material-symbols-outlined">check_circle</span>
+                Finalizar Pagamento
+            </button>
+</div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const transactionItems = document.querySelectorAll('.swipe-container');
+        const paymentModal = document.getElementById('payment-modal');
+        const modalClientName = document.getElementById('modal-client-name');
+        const modalServiceValue = document.getElementById('modal-service-value');
+        const closeModalButton = paymentModal.querySelector('button');
+        transactionItems.forEach(item => {
+            const status = item.dataset.status;
+            if (status !== 'pending' && status !== 'overdue') { // Only make pending/overdue swipeable
+                return;
+            }
+            const swipeContent = item.querySelector('.swipe-content');
+            let startX = 0;
+            let currentX = 0;
+            let isSwiping = false;
+            item.addEventListener('touchstart', (e) => {
+                startX = e.touches[0].clientX;
+                currentX = 0;
+                isSwiping = false;
+                item.classList.remove('swiping-right'); // Reset any prior swipe state
+                swipeContent.style.transition = 'none'; // Disable transition during swipe
+            }, { passive: true });
+            item.addEventListener('touchmove', (e) => {
+                if (e.touches.length > 1) return; // Ignore multi-touch
+                currentX = e.touches[0].clientX - startX;
+                if (currentX > 20) { // Start swipe gesture if moved enough to the right
+                    isSwiping = true;
+                    item.classList.add('swiping-right'); // Add class to reveal action bar
+                    swipeContent.style.transform = `translateX(${Math.min(currentX, 80)}px)`; // Limit swipe distance
+                } else if (currentX < -20) { // If swiping left, close any active swipe
+                    isSwiping = true;
+                    item.classList.remove('swiping-right');
+                    swipeContent.style.transform = `translateX(0px)`;
+                }
+            }, { passive: true });
+            item.addEventListener('touchend', () => {
+                swipeContent.style.transition = ''; // Re-enable transition
+                if (isSwiping && currentX > 60) { // If swiped right past a threshold
+                    item.classList.add('swiping-right'); // Ensure the action is shown
+                    // Populate and show the full-screen modal
+                    const clientName = swipeContent.querySelector('p:first-child').textContent.trim();
+                    const value = swipeContent.querySelector('p:last-child').textContent.trim();
+                    const serviceType = swipeContent.querySelector('.text-xs.text-slate-500').textContent.split('•')[1].trim();
+                    modalClientName.textContent = `Confirmar pagamento para ${clientName}`;
+                    modalServiceValue.textContent = `${value} • ${serviceType}`;
+                    paymentModal.dataset.modalState = 'open'; // Show modal
+                } else {
+                    item.classList.remove('swiping-right');
+                    swipeContent.style.transform = 'translateX(0px)';
+                }
+                isSwiping = false;
+            });
+        });
+        closeModalButton.addEventListener('click', () => {
+            paymentModal.dataset.modalState = 'closed'; // Hide modal
+            // Reset any active swipe on the item that triggered it (optional, could be more specific)
+            document.querySelectorAll('.swipe-container').forEach(item => {
+                item.classList.remove('swiping-right');
+                item.querySelector('.swipe-content').style.transform = 'translateX(0px)';
+            });
+        });
+        // Prevent body scroll when modal is open
+        const body = document.body;
+        const observer = new MutationObserver((mutationsList) => {
+            for (const mutation of mutationsList) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'data-modal-state') {
+                    if (paymentModal.dataset.modalState === 'open') {
+                        body.classList.add('overflow-hidden');
+                    } else {
+                        body.classList.remove('overflow-hidden');
+                    }
+                }
+            }
+        });
+        observer.observe(paymentModal, { attributes: true });
+    });
+</script>
+</body></html>

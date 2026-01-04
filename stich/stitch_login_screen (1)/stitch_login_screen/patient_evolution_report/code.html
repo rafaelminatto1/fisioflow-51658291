@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FisioFlow - Patient Evolution Report</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0aa3f0",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#101c22",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings:
+                'FILL' 0,
+                'wght' 400,
+                'GRAD' 0,
+                'opsz' 24
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="flex min-h-screen">
+<aside class="w-64 bg-background-light dark:bg-background-dark p-6 hidden lg:flex flex-col justify-between border-r border-primary/20 dark:border-primary/30">
+<div class="flex flex-col gap-8">
+<div class="flex items-center gap-3">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-12" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDa9vU4-qp6QJ7cqypTEgUgIgOa4m5dXNklEfqlKkQCKaJN6cQM2-x0XdZv2uVQdRALh1mlGn0mcSaFlQkU5QTRIxXsV5P3LFsFxGOHUkF1mLXMNnyQkwgfT2rRih7dCFVgnWCVPftkCWk33CJ6igfn4urC1N67hfniEK9dX4zPtQRfvH24--jdXGro21Hg3wjpy9n0i1Bx5vLrjc1AxWBseEsmL_PO86yZ33-Byfv0g6H7ak2WPIKDm-4U_i2C8n65cfiQ3Ot2NMz0");'></div>
+<div>
+<h1 class="text-black dark:text-white font-bold text-lg">Dr. Amelia</h1>
+<p class="text-black/60 dark:text-white/60 text-sm">Orthopedic Specialist</p>
+</div>
+</div>
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-black/80 dark:text-white/80 hover:bg-primary/10 dark:hover:bg-primary/20" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg bg-primary/20 dark:bg-primary/30 text-primary font-bold" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">groups</span>
+<span>Patients</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-black/80 dark:text-white/80 hover:bg-primary/10 dark:hover:bg-primary/20" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="font-medium">Appointments</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-black/80 dark:text-white/80 hover:bg-primary/10 dark:hover:bg-primary/20" href="#">
+<span class="material-symbols-outlined">fitness_center</span>
+<span class="font-medium">Exercises</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-black/80 dark:text-white/80 hover:bg-primary/10 dark:hover:bg-primary/20" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-medium">Finances</span>
+</a>
+</nav>
+</div>
+<button class="flex items-center justify-center gap-2 w-full h-12 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary font-bold hover:bg-primary/20 dark:hover:bg-primary/30">
+<span class="material-symbols-outlined">logout</span>
+<span>Logout</span>
+</button>
+</aside>
+<main class="flex-1 p-6 lg:p-10">
+<div class="max-w-4xl mx-auto">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+<div>
+<h1 class="text-3xl font-bold text-black dark:text-white">Patient Evolution Report</h1>
+<p class="text-black/60 dark:text-white/60 mt-1">Detailed progress for Laura Evans.</p>
+</div>
+<button class="flex items-center justify-center gap-2 h-10 px-5 bg-primary text-white rounded-lg font-semibold text-sm shadow-lg shadow-primary/30 hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined">picture_as_pdf</span>
+<span>Generate PDF</span>
+</button>
+</div>
+<div class="border-b border-black/10 dark:border-white/10 mb-8">
+<nav aria-label="Tabs" class="flex gap-8">
+<a class="pb-3 border-b-2 border-primary text-primary font-semibold" href="#">Overview</a>
+<a class="pb-3 border-b-2 border-transparent text-black/60 dark:text-white/60 hover:text-primary dark:hover:text-primary font-medium" href="#">Sessions</a>
+<a class="pb-3 border-b-2 border-transparent text-black/60 dark:text-white/60 hover:text-primary dark:hover:text-primary font-medium" href="#">Exercises</a>
+</nav>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+<div class="xl:col-span-2">
+<section class="mb-8">
+<h2 class="text-xl font-bold text-black dark:text-white mb-6">Pain Evolution Timeline</h2>
+<div class="relative pl-8">
+<div class="absolute left-4 top-2 bottom-2 w-0.5 bg-primary/20 dark:bg-primary/30"></div>
+<div class="flex items-start gap-6 mb-8 relative">
+<div class="absolute left-[-8px] top-1.5 flex items-center justify-center size-8 bg-primary text-white rounded-full z-10">
+<span class="material-symbols-outlined text-base">flag</span>
+</div>
+<div>
+<p class="font-semibold text-black dark:text-white">Initial Assessment</p>
+<p class="text-sm text-black/60 dark:text-white/60">2024-01-15</p>
+</div>
+</div>
+<div class="flex items-start gap-6 mb-8 relative">
+<div class="absolute left-[-8px] top-1.5 flex items-center justify-center size-8 bg-primary/20 dark:bg-primary/30 text-primary rounded-full z-10">
+<span class="material-symbols-outlined text-base">route</span>
+</div>
+<div>
+<p class="font-semibold text-black dark:text-white">Mid-Treatment Review</p>
+<p class="text-sm text-black/60 dark:text-white/60">2024-02-15</p>
+</div>
+</div>
+<div class="flex items-start gap-6 relative">
+<div class="absolute left-[-8px] top-1.5 flex items-center justify-center size-8 bg-primary/20 dark:bg-primary/30 text-primary rounded-full z-10">
+<span class="material-symbols-outlined text-base">check_circle</span>
+</div>
+<div>
+<p class="font-semibold text-black dark:text-white">Final Assessment</p>
+<p class="text-sm text-black/60 dark:text-white/60">2024-03-15</p>
+</div>
+</div>
+</div>
+</section>
+<section>
+<h2 class="text-xl font-bold text-black dark:text-white mb-6">Session Notes</h2>
+<div class="space-y-4">
+<div class="p-5 rounded-lg border border-black/10 dark:border-white/10 bg-background-light dark:bg-background-dark hover:shadow-lg hover:border-primary/30 transition-all">
+<div class="flex justify-between items-center mb-1">
+<p class="font-bold text-black dark:text-white">Session 1</p>
+<p class="text-sm text-black/60 dark:text-white/60">2024-01-15</p>
+</div>
+<p class="text-black/80 dark:text-white/80">Patient reported initial pain level of 7/10. Limited range of motion in the right shoulder. Treatment plan initiated with stretching and strengthening exercises.</p>
+</div>
+<div class="p-5 rounded-lg border border-black/10 dark:border-white/10 bg-background-light dark:bg-background-dark hover:shadow-lg hover:border-primary/30 transition-all">
+<div class="flex justify-between items-center mb-1">
+<p class="font-bold text-black dark:text-white">Session 2</p>
+<p class="text-sm text-black/60 dark:text-white/60">2024-02-15</p>
+</div>
+<p class="text-black/80 dark:text-white/80">Pain level reduced to 4/10. Improved range of motion. Introduced resistance band exercises. Patient reported good adherence to home exercises.</p>
+</div>
+<div class="p-5 rounded-lg border border-black/10 dark:border-white/10 bg-background-light dark:bg-background-dark hover:shadow-lg hover:border-primary/30 transition-all">
+<div class="flex justify-between items-center mb-1">
+<p class="font-bold text-black dark:text-white">Session 3</p>
+<p class="text-sm text-black/60 dark:text-white/60">2024-03-15</p>
+</div>
+<p class="text-black/80 dark:text-white/80">Pain level at 2/10. Full range of motion restored. Continued maintenance exercises. Patient discharged with home exercise program.</p>
+</div>
+</div>
+</section>
+</div>
+<div class="xl:col-span-1">
+<div class="p-6 rounded-xl bg-primary/10 dark:bg-primary/20 border border-primary/20 dark:border-primary/30">
+<h3 class="font-bold text-black dark:text-white text-lg mb-1">Exercise Adherence</h3>
+<p class="text-sm text-black/60 dark:text-white/60 mb-4">Last 3 Months</p>
+<div class="flex items-baseline gap-2">
+<p class="text-4xl font-extrabold text-primary">85%</p>
+<p class="text-green-500 font-semibold text-sm flex items-center">
+<span class="material-symbols-outlined text-base">arrow_upward</span>
+<span>10%</span>
+</p>
+</div>
+<div class="h-40 mt-6 flex items-end gap-4">
+<div class="flex-1 h-full flex flex-col items-center justify-end gap-2">
+<div class="w-full bg-primary/20 dark:bg-primary/40 rounded" style="height: 75%"></div>
+<p class="text-xs font-medium text-black/60 dark:text-white/60">Jan</p>
+</div>
+<div class="flex-1 h-full flex flex-col items-center justify-end gap-2">
+<div class="w-full bg-primary/20 dark:bg-primary/40 rounded" style="height: 80%"></div>
+<p class="text-xs font-medium text-black/60 dark:text-white/60">Feb</p>
+</div>
+<div class="flex-1 h-full flex flex-col items-center justify-end gap-2">
+<div class="w-full bg-primary rounded" style="height: 85%"></div>
+<p class="text-xs font-bold text-primary">Mar</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>

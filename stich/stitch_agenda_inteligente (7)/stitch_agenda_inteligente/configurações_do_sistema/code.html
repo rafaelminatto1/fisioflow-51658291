@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Configurações do Sistema - FisioFlow</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Config -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0d7ff2",
+                        "primary-foreground": "#ffffff",
+                        "background-light": "#F3F4F6", // slate-100/gray-100 feel
+                        "background-dark": "#101922",
+                        "card": "#ffffff",
+                        "card-foreground": "#0f172a",
+                        "muted": "#f1f5f9",
+                        "muted-foreground": "#64748b",
+                        "border": "#e2e8f0",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.375rem", // rounded-md (~6px)
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        "sm": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar to keep it clean */
+        ::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+        
+        /* Simulating shadcn input focus ring */
+        .shadcn-input:focus {
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+            box-shadow: 0 0 0 2px #0d7ff2; /* ring-primary */
+        }
+
+        /* Toggle switch base styles */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #0d7ff2;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #0d7ff2;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-card-foreground antialiased selection:bg-primary/20">
+<div class="relative mx-auto flex h-full min-h-screen w-full max-w-md flex-col overflow-x-hidden pb-12 shadow-2xl">
+<!-- Top App Bar -->
+<header class="sticky top-0 z-50 flex h-14 items-center justify-between border-b border-border bg-card/80 px-4 backdrop-blur-md">
+<button class="flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-primary">
+<span class="material-symbols-outlined text-[24px]">arrow_back_ios_new</span>
+</button>
+<h1 class="text-base font-semibold leading-tight tracking-tight text-card-foreground">Configurações</h1>
+<button class="flex h-9 items-center justify-center rounded-md px-3 text-sm font-semibold text-primary hover:bg-primary/10">
+                Salvar
+            </button>
+</header>
+<!-- Main Content Scroll Area -->
+<main class="flex-1 space-y-6 p-4">
+<!-- Profile Section -->
+<section class="flex flex-col gap-3">
+<div class="flex items-center gap-4 rounded-xl border border-border bg-card p-4 shadow-sm">
+<div class="relative">
+<div class="h-16 w-16 overflow-hidden rounded-full border border-border bg-muted" data-alt="Portrait of a male physiotherapist smiling" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAqaF9Y2TVQsquZLf2zsR73afIaISruje_X2VX7uO6aFNP4l5xGjqFv17JbUCY9xeQnCXnHYbhrN-6joY9NSRbW33NMVH0GiOCFQvXOZn3v32fUb0T84fpATwSnTaFzEhmSSBTQeFugZnfAC2pYkV2bTNWD-AQ239mlURLH4XmMUjEqvEQRtRI9DFnSzmY4GMeG9IAeDNIvX4pOa_ObT3oOl4rDqbBloPFOEQTNEVSv0ktkltSymw1JUzKp9uhmQUlk0rsCJXX8kCyL'); background-size: cover; background-position: center;"></div>
+<button class="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border border-card bg-primary text-white shadow-sm hover:bg-primary/90">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+</button>
+</div>
+<div class="flex flex-1 flex-col">
+<h2 class="text-lg font-bold leading-tight text-card-foreground">Dr. Roberto Silva</h2>
+<p class="text-sm font-medium text-muted-foreground">Fisioterapeuta • Admin</p>
+<p class="mt-1 text-xs text-muted-foreground">CREFITO-3/12345-F</p>
+</div>
+</div>
+<!-- Profile Fields (Compact) -->
+<div class="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+<div class="flex items-center justify-between border-b border-border p-3 hover:bg-muted/30">
+<span class="text-sm font-medium text-muted-foreground">E-mail</span>
+<span class="text-sm font-semibold text-card-foreground">roberto@fisioflow.com</span>
+</div>
+<div class="flex items-center justify-between p-3 hover:bg-muted/30">
+<span class="text-sm font-medium text-muted-foreground">Senha</span>
+<div class="flex items-center gap-2">
+<span class="text-sm font-semibold text-card-foreground">••••••••</span>
+<span class="material-symbols-outlined cursor-pointer text-[18px] text-muted-foreground">edit</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Clinic Settings Section -->
+<section class="flex flex-col gap-3">
+<h3 class="px-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">Configurações da Clínica</h3>
+<div class="space-y-4 rounded-xl border border-border bg-card p-4 shadow-sm">
+<!-- Clinic Name -->
+<div class="space-y-1.5">
+<label class="text-xs font-medium text-muted-foreground">Nome da Clínica</label>
+<input class="shadcn-input h-10 w-full rounded-md border border-border bg-background-light px-3 py-2 text-sm text-card-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:ring-offset-1" placeholder="Digite o nome da clínica" type="text" value="FisioFlow Sports Rehab"/>
+</div>
+<!-- CNPJ & Phone Row -->
+<div class="grid grid-cols-2 gap-3">
+<div class="space-y-1.5">
+<label class="text-xs font-medium text-muted-foreground">CNPJ</label>
+<input class="shadcn-input h-10 w-full rounded-md border border-border bg-background-light px-3 py-2 text-sm text-card-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:ring-offset-1" type="text" value="12.345.678/0001-90"/>
+</div>
+<div class="space-y-1.5">
+<label class="text-xs font-medium text-muted-foreground">Telefone</label>
+<input class="shadcn-input h-10 w-full rounded-md border border-border bg-background-light px-3 py-2 text-sm text-card-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:ring-offset-1" type="tel" value="(11) 99999-8888"/>
+</div>
+</div>
+<!-- Address -->
+<div class="space-y-1.5">
+<label class="text-xs font-medium text-muted-foreground">Endereço Completo</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-[18px] text-muted-foreground">location_on</span>
+<input class="shadcn-input h-10 w-full rounded-md border border-border bg-background-light pl-9 pr-3 py-2 text-sm text-card-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary focus:ring-offset-1" type="text" value="Av. Paulista, 1000 - Sala 42"/>
+</div>
+</div>
+<!-- Hours Accordion Trigger (Simulated) -->
+<button class="flex w-full items-center justify-between rounded-md border border-border bg-background-light px-3 py-2.5 hover:bg-muted">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary">schedule</span>
+<span class="text-sm font-medium text-card-foreground">Horário de Funcionamento</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs text-muted-foreground">08:00 - 19:00</span>
+<span class="material-symbols-outlined text-[18px] text-muted-foreground">chevron_right</span>
+</div>
+</button>
+</div>
+</section>
+<!-- Notifications Section -->
+<section class="flex flex-col gap-3">
+<h3 class="px-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">Notificações &amp; Automação</h3>
+<div class="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+<!-- Toggle Item 1 -->
+<div class="flex items-center justify-between border-b border-border p-4 hover:bg-muted/30">
+<div class="flex flex-col gap-0.5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-[#25D366]">chat</span>
+<span class="text-sm font-semibold text-card-foreground">Lembretes WhatsApp</span>
+</div>
+<span class="text-xs text-muted-foreground">Enviar resumo diário da agenda</span>
+</div>
+<!-- Toggle Switch Component -->
+<div class="relative inline-block w-11 select-none align-middle transition duration-200 ease-in">
+<input checked="" class="toggle-checkbox absolute block h-6 w-6 cursor-pointer appearance-none rounded-full border-4 border-white bg-white outline-none ring-0 transition-all duration-200 checked:right-0 checked:border-primary" id="toggle1" name="toggle1" type="checkbox"/>
+<label class="toggle-label block h-6 cursor-pointer overflow-hidden rounded-full bg-gray-300 transition-colors duration-200" for="toggle1"></label>
+</div>
+</div>
+<!-- Toggle Item 2 -->
+<div class="flex items-center justify-between p-4 hover:bg-muted/30">
+<div class="flex flex-col gap-0.5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-primary">notifications_active</span>
+<span class="text-sm font-semibold text-card-foreground">Confirmação de Pacientes</span>
+</div>
+<span class="text-xs text-muted-foreground">Auto-enviar 24h antes</span>
+</div>
+<!-- Toggle Switch Component -->
+<div class="relative inline-block w-11 select-none align-middle transition duration-200 ease-in">
+<input class="toggle-checkbox absolute block h-6 w-6 cursor-pointer appearance-none rounded-full border-4 border-white bg-white outline-none ring-0 transition-all duration-200 checked:right-0 checked:border-primary" id="toggle2" name="toggle2" type="checkbox"/>
+<label class="toggle-label block h-6 cursor-pointer overflow-hidden rounded-full bg-gray-300 transition-colors duration-200" for="toggle2"></label>
+</div>
+</div>
+</div>
+</section>
+<!-- Users & Permissions Section -->
+<section class="flex flex-col gap-3">
+<div class="flex items-end justify-between px-1">
+<h3 class="text-xs font-bold uppercase tracking-wider text-muted-foreground">Usuários e Permissões</h3>
+<button class="text-xs font-semibold text-primary hover:underline">+ Adicionar</button>
+</div>
+<div class="flex flex-col divide-y divide-border rounded-xl border border-border bg-card shadow-sm">
+<!-- User 1 -->
+<div class="flex items-center justify-between p-3 hover:bg-muted/30">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 overflow-hidden rounded-full bg-muted" data-alt="Female receptionist smiling" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDoqdUE7E4eFuNpX57ssextDHtHiRFNPIbe4vWDhfnQ4e3bEMWvOmy6rgEQWY_SM9xvhALe9L9XmFhVG6fcuN-r_eRt-L7u53jj9y4ee5u3OoTl_KaNHirHBt1oO4T9yHVOlZv0UiWJ_l9CShgENZxX70VWNG1wvVtzjaD3-s2bLGij8QBwcbRgnjn7xkuz2FvxH3UAxoEK_dO25zOb3ZKx1cH4M_NMLv_Dcq9wK5IQCakYsquEIgIhQxgC6bjr7sNDqa92qehqal5v'); background-size: cover;"></div>
+<div>
+<p class="text-sm font-semibold text-card-foreground">Ana Costa</p>
+<p class="text-xs text-muted-foreground">Recepcionista</p>
+</div>
+</div>
+<span class="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-green-700">Ativo</span>
+</div>
+<!-- User 2 -->
+<div class="flex items-center justify-between p-3 hover:bg-muted/30">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 overflow-hidden rounded-full bg-muted" data-alt="Male physiotherapist looking professional" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC8V0MZmoxjd2P6IWEeYjLypezVopmDm_l21ss6EMw1-x0MvQ-HEZK_6ZYBCuTLpun1C3P6h7OxKVIc09rurE3UaH3j5DuLpuBVsIy1MG23rXcJZV_0RZSdv5GU1wWse7lic_n2IV6U_nWU667rvMmijstctFdEaNMILfBYagZ6BYZFOC7Dh3mdiiyg_6pU8xlFZpLElCgBrTWuMG8sANSzoGhkD4AyA9VjDDu8zZl3Pa5xaTCgZyBN9Tx6kjGgBtB9loHIHIi7B6hG'); background-size: cover;"></div>
+<div>
+<p class="text-sm font-semibold text-card-foreground">Dr. Carlos Mendes</p>
+<p class="text-xs text-muted-foreground">Fisioterapeuta</p>
+</div>
+</div>
+<span class="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-green-700">Ativo</span>
+</div>
+<!-- User 3 -->
+<div class="flex items-center justify-between p-3 hover:bg-muted/30 opacity-60">
+<div class="flex items-center gap-3">
+<div class="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground font-bold">
+                                JS
+                            </div>
+<div>
+<p class="text-sm font-semibold text-card-foreground">Júlia Souza</p>
+<p class="text-xs text-muted-foreground">Estagiária</p>
+</div>
+</div>
+<span class="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-600">Pendente</span>
+</div>
+</div>
+</section>
+<!-- Footer / Danger Zone -->
+<div class="mt-8 flex flex-col items-center gap-4 pb-8">
+<button class="flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 py-3 text-sm font-bold text-red-600 hover:bg-red-100">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+                    Sair da Conta
+                </button>
+<p class="text-xs text-muted-foreground">FisioFlow v3.0 (Build 2405)</p>
+</div>
+</main>
+<!-- Bottom Tab Bar (Contextual Mockup) -->
+<nav class="fixed bottom-0 z-50 flex h-16 w-full max-w-md items-center justify-around border-t border-border bg-card px-2 pb-safe">
+<button class="flex flex-1 flex-col items-center gap-1 p-1 text-muted-foreground hover:text-primary">
+<span class="material-symbols-outlined text-[24px]">calendar_today</span>
+<span class="text-[10px] font-medium">Agenda</span>
+</button>
+<button class="flex flex-1 flex-col items-center gap-1 p-1 text-muted-foreground hover:text-primary">
+<span class="material-symbols-outlined text-[24px]">groups</span>
+<span class="text-[10px] font-medium">Pacientes</span>
+</button>
+<button class="flex flex-1 flex-col items-center gap-1 p-1 text-muted-foreground hover:text-primary">
+<div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white shadow-lg shadow-primary/30">
+<span class="material-symbols-outlined text-[24px]">add</span>
+</div>
+</button>
+<button class="flex flex-1 flex-col items-center gap-1 p-1 text-muted-foreground hover:text-primary">
+<span class="material-symbols-outlined text-[24px]">monitoring</span>
+<span class="text-[10px] font-medium">Financeiro</span>
+</button>
+<button class="flex flex-1 flex-col items-center gap-1 p-1 text-primary">
+<span class="material-symbols-outlined fill-current text-[24px]">settings</span>
+<span class="text-[10px] font-medium">Ajustes</span>
+</button>
+</nav>
+</div>
+</body></html>

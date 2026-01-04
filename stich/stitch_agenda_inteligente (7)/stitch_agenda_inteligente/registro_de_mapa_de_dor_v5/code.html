@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Registro de Mapa de Dor V5 - FisioFlow</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#0ea5e9", // Sky 500 - typical SaaS primary
+                        "background-light": "#ffffff",
+                        "background-dark": "#0f172a", // Slate 900
+                        "surface-light": "#f8fafc", // Slate 50
+                        "surface-dark": "#1e293b", // Slate 800
+                        "border-light": "#e2e8f0", // Slate 200
+                        "border-dark": "#334155", // Slate 700
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                    },
+                },
+            },
+        };
+    </script>
+<style>.silhouette-container {
+            position: relative;
+            width: 100%;
+            height: 480px;overflow: hidden;
+        }.pin {
+            cursor: grab;
+            transition: transform 0.1s ease;
+        }
+        .pin:active {
+            cursor: grabbing;
+            transform: scale(1.1);
+        }@keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            100% { transform: scale(2.0); opacity: 0; }
+        }
+        .pin-active::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            background-color: currentColor;
+            z-index: -1;
+            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }.no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-body antialiased selection:bg-primary selection:text-white">
+<div class="max-w-md mx-auto min-h-screen relative flex flex-col bg-surface-light dark:bg-black shadow-2xl overflow-hidden">
+<header class="bg-background-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark px-4 py-3 sticky top-0 z-30 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<button class="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors">
+<span class="material-icons-outlined">arrow_back</span>
+</button>
+<div>
+<h1 class="text-sm font-semibold text-slate-900 dark:text-white">Mapa de Dor</h1>
+<p class="text-xs text-slate-500 dark:text-slate-400">Paciente: Maria S.</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors">
+<span class="material-icons-outlined text-[20px]">history</span>
+</button>
+<button class="bg-primary text-white text-xs font-medium px-3 py-1.5 rounded-full shadow-sm hover:opacity-90 transition-opacity">
+                    Salvar
+                </button>
+</div>
+</header>
+<main class="flex-1 relative overflow-y-auto no-scrollbar pb-24">
+<div class="px-4 py-4">
+<div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg p-3 flex items-start gap-3">
+<span class="material-icons-outlined text-primary text-lg mt-0.5">info</span>
+<div class="text-xs text-slate-600 dark:text-slate-300">
+<span class="font-medium text-slate-900 dark:text-white">Instrução:</span> Arraste o pino para a área afetada na silhueta abaixo para registrar um novo ponto de dor.
+                    </div>
+</div>
+</div>
+<div class="relative w-full px-4 mb-6">
+<div class="flex justify-center mb-4">
+<div class="inline-flex bg-slate-100 dark:bg-surface-dark p-1 rounded-lg border border-border-light dark:border-border-dark">
+<button class="px-4 py-1.5 text-xs font-medium rounded-md bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm transition-all">
+                            Frente
+                        </button>
+<button class="px-4 py-1.5 text-xs font-medium rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all">
+                            Costas
+                        </button>
+<button class="px-4 py-1.5 text-xs font-medium rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all">
+                            Lado
+                        </button>
+</div>
+</div>
+<div class="silhouette-container bg-white dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark shadow-sm relative mx-auto max-w-[340px]">
+<div class="absolute inset-0 flex items-center justify-center opacity-10 dark:opacity-20 pointer-events-none">
+<div class="w-full h-full" style="background-image: radial-gradient(#94a3b8 1px, transparent 1px); background-size: 20px 20px;"></div>
+</div>
+<div class="relative w-full h-full flex justify-center items-center py-4">
+<img alt="Silhueta do corpo humano para mapeamento de dor" class="h-full object-contain opacity-80 dark:opacity-60 mix-blend-multiply dark:mix-blend-lighten filter grayscale contrast-125" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFOaT_BvHEYa0nCdOWzyWoQc-M-NE0Lvix1RPr1G3Ub9SZTQpONLA6srqynQBGThjLWWVa-GifV7EdxOBLka-5-4RALs7RurKlSKN4Jvtd3cI1R7wr63bmhKgzaoQYlmy2K5TJVlv-F7e7At9ZpZXItXCZkhaTkXZWqVr9e_kNqsOqBQAaTk1ozZcovN86FTiwQ0LYHj1HoVCZI6FyAsxjT1uiJYO0hnDRqQOY715RWZQxYQgJ3ZA4PJhOH871Fl7d65mGy61PTs8s"/>
+</div>
+<div class="absolute top-[22%] left-[62%] w-6 h-6 -ml-3 -mt-3 flex items-center justify-center z-10 group cursor-pointer">
+<div class="w-4 h-4 bg-orange-500 rounded-full shadow-lg border-2 border-white dark:border-surface-dark group-hover:scale-125 transition-transform"></div>
+<div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                            Ombro (7/10)
+                        </div>
+</div>
+<div class="absolute top-[65%] left-[40%] w-6 h-6 -ml-3 -mt-3 flex items-center justify-center z-10 group cursor-pointer">
+<div class="w-4 h-4 bg-red-500 rounded-full shadow-lg border-2 border-white dark:border-surface-dark group-hover:scale-125 transition-transform"></div>
+</div>
+<div class="absolute top-[45%] left-[55%] z-20 pointer-events-none">
+<svg class="absolute top-0 left-0 w-32 h-32 -translate-x-full -translate-y-full overflow-visible pointer-events-none opacity-0">
+<path d="M 100 100 L 20 20" stroke="#0ea5e9" stroke-dasharray="4" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+</div>
+<div class="px-4 mb-20">
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-white dark:bg-surface-dark p-3 rounded-lg border border-border-light dark:border-border-dark">
+<p class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Pontuação Total</p>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="text-2xl font-bold text-slate-900 dark:text-white">36</span>
+<span class="text-xs text-red-500 font-medium">↑ Alto</span>
+</div>
+</div>
+<div class="bg-white dark:bg-surface-dark p-3 rounded-lg border border-border-light dark:border-border-dark">
+<p class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Áreas Ativas</p>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="text-2xl font-bold text-slate-900 dark:text-white">4</span>
+<span class="text-xs text-slate-400">pontos</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<div class="absolute bottom-0 left-0 right-0 bg-white dark:bg-surface-dark border-t border-border-light dark:border-border-dark shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)] z-40 rounded-t-2xl">
+<div class="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mt-3 mb-1"></div>
+<div class="px-5 py-4">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-sm font-semibold text-slate-900 dark:text-white">Adicionar Ponto de Dor</h3>
+<span class="text-xs text-slate-500">Arraste para o corpo</span>
+</div>
+<div class="flex justify-between items-center gap-4">
+<div class="flex flex-col items-center gap-2">
+<div class="w-12 h-12 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-all pin relative text-primary">
+<span class="material-icons-outlined">add_location</span>
+</div>
+<span class="text-[10px] font-medium text-slate-600 dark:text-slate-400">Novo Ponto</span>
+</div>
+<div class="h-8 w-px bg-slate-200 dark:bg-slate-700"></div>
+<div class="flex gap-3 overflow-x-auto no-scrollbar py-1">
+<button class="flex flex-col items-center gap-1 min-w-[60px]">
+<div class="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800 flex items-center justify-center text-orange-600 dark:text-orange-400">
+<span class="material-icons-outlined text-lg">bolt</span>
+</div>
+<span class="text-[10px] text-slate-500">Aguda</span>
+</button>
+<button class="flex flex-col items-center gap-1 min-w-[60px]">
+<div class="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800 flex items-center justify-center text-purple-600 dark:text-purple-400">
+<span class="material-icons-outlined text-lg">waves</span>
+</div>
+<span class="text-[10px] text-slate-500">Crônica</span>
+</button>
+<button class="flex flex-col items-center gap-1 min-w-[60px]">
+<div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 flex items-center justify-center text-red-600 dark:text-red-400">
+<span class="material-icons-outlined text-lg">local_fire_department</span>
+</div>
+<span class="text-[10px] text-slate-500">Queimação</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="absolute inset-0 z-50 flex items-center justify-center px-4 bg-black/20 backdrop-blur-sm" style="display: flex;"> 
+<div class="bg-white dark:bg-surface-dark w-full max-w-sm rounded-xl shadow-2xl border border-border-light dark:border-border-dark transform transition-all p-5 animate-[scaleIn_0.2s_ease-out]">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="text-base font-bold text-slate-900 dark:text-white">Detalhes da Dor</h3>
+<p class="text-xs text-slate-500">Região lombar esquerda</p>
+</div>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+<span class="material-icons-outlined text-lg">close</span>
+</button>
+</div>
+<div class="mb-5">
+<div class="flex justify-between mb-2">
+<label class="text-xs font-semibold text-slate-700 dark:text-slate-300">Intensidade (VAS)</label>
+<span class="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">7 - Forte</span>
+</div>
+<input class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-primary" max="10" min="0" type="range" value="7"/>
+<div class="flex justify-between mt-1 text-[10px] text-slate-400">
+<span>Leve</span>
+<span>Moderada</span>
+<span>Intensa</span>
+</div>
+</div>
+<div class="mb-6">
+<label class="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-2">Tipo de Sensação</label>
+<div class="flex flex-wrap gap-2">
+<button class="px-3 py-1.5 rounded-md text-xs font-medium border border-primary bg-primary/10 text-primary">Latejante</button>
+<button class="px-3 py-1.5 rounded-md text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800">Queimação</button>
+<button class="px-3 py-1.5 rounded-md text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800">Formigamento</button>
+<button class="px-3 py-1.5 rounded-md text-xs font-medium border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800">Pontada</button>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<button class="w-full py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                        Cancelar
+                    </button>
+<button class="w-full py-2.5 rounded-lg bg-primary text-white text-sm font-medium hover:bg-sky-600 transition-colors shadow-lg shadow-sky-500/20">
+                        Confirmar
+                    </button>
+</div>
+</div>
+</div>
+</div>
+
+</body></html>

@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>FisioFlow - Clinical Management System</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800;900&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#007BFF", // Unified Primary
+                        "primary-hover": "#0056B3",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                        "text-main": "#111813",
+                        "text-muted": "#61896f",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1c2e22",
+                        "blue-resource": "#3b82f6",
+                        "purple-resource": "#9333ea",
+                        "orange-resource": "#fb923c",
+                        "gray-resource": "#6b7280",
+                        // Specific colors from screens 2 & 3
+                        "border-light": "#CDD5DF",
+                        "border-dark": "#495C73",
+                        "text-main-light": "#000000",
+                        "text-main-dark": "#E0E6EB",
+                        "text-secondary-light": "#5A677F",
+                        "text-secondary-dark": "#9EB3C9",
+                        "tag-blue-bg-light": "#E6F0FF",
+                        "tag-blue-text-light": "#0056B3",
+                        "tag-blue-border-light": "#94C4FF",
+                        "tag-blue-bg-dark": "#0B2D59",
+                        "tag-blue-text-dark": "#82BFFF",
+                        "tag-blue-border-dark": "#306BB3",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"],
+                        "sans": ["Inter", "sans-serif"],
+                        "condensed-sans": ["Roboto Condensed", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        .timeline-grid {
+            background-size: 100% 60px;
+            background-image: linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
+        }
+        .dark .timeline-grid {
+            background-image: linear-gradient(to bottom, #374151 1px, transparent 1px);
+        }
+    </style>
+    
+    <!-- React Dependencies -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/history@5/umd/history.development.js"></script>
+    <script src="https://unpkg.com/react-router@6.3.0/umd/react-router.development.js"></script>
+    <script src="https://unpkg.com/react-router-dom@6.3.0/umd/react-router-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-text-main dark:text-white transition-colors duration-200">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { createRoot } = ReactDOM;
+        const { MemoryRouter, Routes, Route, Link, useNavigate, useLocation } = ReactRouterDOM;
+
+        // --- Shared Components ---
+
+        const Sidebar = () => {
+            const location = useLocation();
+            
+            const isActive = (path) => location.pathname === path;
+
+            return (
+                <aside className="w-64 flex-shrink-0 flex flex-col bg-surface-light dark:bg-surface-dark border-r border-[#f0f4f2] dark:border-gray-800 z-20 h-screen fixed left-0 top-0 hidden xl:flex">
+                    <div className="flex h-full flex-col justify-between p-4">
+                        <div className="flex flex-col gap-6">
+                            <div className="flex gap-3 items-center px-2">
+                                <div className="bg-center bg-no-repeat bg-cover rounded-xl size-10 bg-primary/20 flex items-center justify-center text-primary">
+                                    <span className="material-symbols-outlined filled">spa</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <h1 className="text-text-main dark:text-white text-base font-bold leading-normal">FisioFlow</h1>
+                                    <p className="text-text-muted text-xs font-normal leading-normal">v3.0</p>
+                                </div>
+                            </div>
+                            <nav className="flex flex-col gap-1">
+                                <Link to="/" className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isActive('/') ? 'bg-primary/10 text-text-main dark:text-white border-l-4 border-primary' : 'text-text-main dark:text-gray-300 hover:bg-background-light dark:hover:bg-gray-800'}`}>
+                                    <span className={`material-symbols-outlined ${isActive('/') ? 'filled text-primary' : ''}`}>pie_chart</span>
+                                    <span className={`text-sm ${isActive('/') ? 'font-bold' : 'font-medium'}`}>Dashboard</span>
+                                </Link>
+                                <Link to="/overview" className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isActive('/overview') ? 'bg-primary/10 text-text-main dark:text-white border-l-4 border-primary' : 'text-text-main dark:text-gray-300 hover:bg-background-light dark:hover:bg-gray-800'}`}>
+                                    <span className={`material-symbols-outlined ${isActive('/overview') ? 'filled text-primary' : ''}`}>calendar_month</span>
+                                    <span className={`text-sm ${isActive('/overview') ? 'font-bold' : 'font-medium'}`}>Management</span>
+                                </Link>
+                                <Link to="/patient-journey" className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isActive('/patient-journey') ? 'bg-primary/10 text-text-main dark:text-white border-l-4 border-primary' : 'text-text-main dark:text-gray-300 hover:bg-background-light dark:hover:bg-gray-800'}`}>
+                                    <span className={`material-symbols-outlined ${isActive('/patient-journey') ? 'filled text-primary' : ''}`}>group</span>
+                                    <span className={`text-sm ${isActive('/patient-journey') ? 'font-bold' : 'font-medium'}`}>Patient Journey</span>
+                                </Link>
+                            </nav>
+                            <div className="h-px bg-gray-200 dark:bg-gray-800 w-full my-2"></div>
+                            <div className="flex flex-col gap-4 px-2">
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted">Quick Filters</h3>
+                                <div className="flex flex-col gap-3">
+                                    <label className="flex items-center gap-3 cursor-pointer group">
+                                        <div className="relative flex items-center">
+                                            <input defaultChecked className="peer h-4 w-4 appearance-none rounded border border-gray-300 bg-white checked:bg-primary checked:border-primary focus:ring-2 focus:ring-primary/20 transition-all dark:border-gray-600 dark:bg-gray-700" type="checkbox"/>
+                                            <span className="material-symbols-outlined absolute left-0 top-0 text-white opacity-0 peer-checked:opacity-100 pointer-events-none text-[16px]">check</span>
+                                        </div>
+                                        <span className="text-sm font-medium text-text-main dark:text-gray-300">Dr. Sarah Smith</span>
+                                        <span className="w-2 h-2 rounded-full bg-blue-resource ml-auto"></span>
+                                    </label>
+                                    <label className="flex items-center gap-3 cursor-pointer group">
+                                        <div className="relative flex items-center">
+                                            <input defaultChecked className="peer h-4 w-4 appearance-none rounded border border-gray-300 bg-white checked:bg-primary checked:border-primary focus:ring-2 focus:ring-primary/20 transition-all dark:border-gray-600 dark:bg-gray-700" type="checkbox"/>
+                                            <span className="material-symbols-outlined absolute left-0 top-0 text-white opacity-0 peer-checked:opacity-100 pointer-events-none text-[16px]">check</span>
+                                        </div>
+                                        <span className="text-sm font-medium text-text-main dark:text-gray-300">Dr. Mike Ross</span>
+                                        <span className="w-2 h-2 rounded-full bg-purple-resource ml-auto"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 px-2 py-3 mt-auto rounded-lg hover:bg-background-light dark:hover:bg-gray-800 cursor-pointer">
+                            <div className="size-9 rounded-full bg-cover bg-center border-2 border-white dark:border-gray-700 shadow-sm" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDrTU9dy76uJx_hflUAvS8IlGKEMDEYuqm2GtqmKMvFPq63tZrgdEHmccvbbqArpp6rRwXUbsA9tTNfdoinWDWPiylIs-azYDyjrHse-L8LKHPWgZ3QPwoEeh-T2Ua8hDd2QV6IrQiQyfWVircuY450FJE5c6lWvqyGfJDbVtDgWQh9GI-dun517lREu_2Cn4af0QFXKEXb7Y1pCp3lPnUC_S1Rzo1nIbY_Qg-sz37PmHIHOFP5pd5uFC-UJJy2wqQvD5lXF1XnQ0c")'}}></div>
+                            <div className="flex flex-col overflow-hidden">
+                                <p className="text-sm font-bold text-text-main dark:text-white truncate">Jane Doe</p>
+                                <p className="text-xs text-text-muted truncate">Admin</p>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            );
+        };
+
+        const CommonHeader = ({ title }) => {
+            return (
+                <header className="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark px-4 md:px-10 py-3 transition-colors xl:ml-64">
+                    <div className="flex items-center gap-8">
+                        <div className="xl:hidden flex items-center gap-4 text-text-main-light dark:text-text-main-dark">
+                             <div className="size-8 text-primary">
+                                <span className="material-symbols-outlined filled text-3xl">spa</span>
+                             </div>
+                             <h2 className="text-lg font-bold leading-tight tracking-[-0.015em]">FisioFlow</h2>
+                        </div>
+                         <h2 className="hidden xl:block text-lg font-bold leading-tight tracking-[-0.015em] text-text-main dark:text-white">{title}</h2>
+
+                        <label className="hidden md:flex flex-col min-w-40 !h-10 max-w-64">
+                            <div className="flex w-full flex-1 items-stretch rounded-lg h-full group">
+                                <div className="text-text-secondary-light dark:text-text-secondary-dark flex border-none bg-background-light dark:bg-background-dark items-center justify-center pl-4 rounded-l-lg border-r-0">
+                                    <span className="material-symbols-outlined text-[20px]">search</span>
+                                </div>
+                                <input className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-lg text-text-main-light dark:text-text-main-dark focus:outline-0 focus:ring-0 border-none bg-background-light dark:bg-background-dark focus:border-none h-full placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark px-4 pl-2 text-base font-normal leading-normal transition-colors" placeholder="Search..." />
+                            </div>
+                        </label>
+                    </div>
+                    <div className="flex flex-1 justify-end gap-8 items-center">
+                        <nav className="hidden lg:flex items-center gap-9">
+                            <Link to="/" className="text-text-main-light dark:text-text-main-dark text-sm font-medium leading-normal hover:text-primary transition-colors">Dashboard</Link>
+                            <Link to="/overview" className="text-text-main-light dark:text-text-main-dark text-sm font-medium leading-normal hover:text-primary transition-colors">Management</Link>
+                            <Link to="/patient-journey" className="text-text-main-light dark:text-text-main-dark text-sm font-medium leading-normal hover:text-primary transition-colors">Journey</Link>
+                        </nav>
+                        <div className="flex gap-2">
+                            <button className="flex items-center justify-center rounded-lg size-10 bg-background-light dark:bg-background-dark text-text-main-light dark:text-text-main-dark hover:bg-primary/20 hover:text-primary transition-colors relative">
+                                <span className="material-symbols-outlined">notifications</span>
+                                <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+                            </button>
+                        </div>
+                         <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-border-light dark:border-border-dark cursor-pointer" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAGDNvqXkNCOGjIvaabSHSd2NsIqzQT6pgG35ywJQmzm83ThLdLGzbkUERj1A_SHA-SS3nkIeuwkvyiyHftiRqT4JIWJ-w8KVZ-vkvLfmkl_mf-SXv7oqdxoCr5S_op5Za9J73jkne-qCejZuCId6KJMLzWpnXhLmhjuHthyaKut_efUApV1sl9_-7vQQai6yJNoNOQ_40K_b_d8qpnJJIajQUro82bOjsY2qqjC6OoWoi3qXoBl5-gHpxwbvDJZA6l7C3vlyiXU_c")'}}></div>
+                    </div>
+                </header>
+            )
+        }
+
+        // --- Screen 1: Dashboard (Multi-Resource) ---
+
+        const DashboardScreen = () => {
+             return (
+                <div className="flex h-screen w-full overflow-hidden font-display">
+                    <Sidebar />
+                    <main className="flex-1 flex flex-col h-full overflow-hidden bg-background-light dark:bg-background-dark xl:pl-64">
+                         <header className="h-16 flex items-center justify-between px-6 bg-surface-light dark:bg-surface-dark border-b border-[#f0f4f2] dark:border-gray-800 flex-shrink-0 z-10 xl:hidden">
+                            <div className="flex items-center gap-4">
+                                <h2 className="text-xl font-bold text-text-main dark:text-white">FisioFlow</h2>
+                            </div>
+                        </header>
+                        
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-[#f0f4f2] dark:border-gray-800 bg-surface-light dark:bg-surface-dark">
+                            <div className="flex items-center gap-4">
+                                <h2 className="text-xl font-bold text-text-main dark:text-white hidden xl:block">Multi-Resource Dashboard</h2>
+                                <button className="text-sm font-bold text-text-main dark:text-white border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Today</button>
+                                <div className="flex items-center gap-2">
+                                    <button className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"><span className="material-symbols-outlined text-text-main dark:text-white">chevron_left</span></button>
+                                    <button className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"><span className="material-symbols-outlined text-text-main dark:text-white">chevron_right</span></button>
+                                </div>
+                                <h3 className="text-lg font-bold text-text-main dark:text-white">Oct 24 - 30, 2023</h3>
+                            </div>
+                            <div className="flex bg-[#f0f4f2] dark:bg-gray-800 p-1 rounded-lg">
+                                <button className="px-3 py-1 text-xs font-medium rounded text-text-muted hover:text-text-main dark:hover:text-white transition-colors">Day</button>
+                                <button className="px-3 py-1 text-xs font-bold rounded bg-white dark:bg-gray-700 shadow-sm text-text-main dark:text-white transition-colors">Week</button>
+                                <button className="px-3 py-1 text-xs font-medium rounded text-text-muted hover:text-text-main dark:hover:text-white transition-colors">Month</button>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 overflow-hidden">
+                            <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-background-dark relative h-full">
+                                <div className="flex-1 overflow-x-auto overflow-y-auto relative bg-white dark:bg-[#15201b]">
+                                    <div className="grid grid-cols-[60px_repeat(4,minmax(200px,1fr))] sticky top-0 z-20 bg-white dark:bg-[#15201b] border-b border-gray-100 dark:border-gray-800">
+                                        <div className="border-r border-gray-100 dark:border-gray-800"></div>
+                                        <div className="flex items-center justify-center py-3 text-center border-r border-gray-100 dark:border-gray-800">
+                                            <span className="size-8 flex items-center justify-center rounded-full bg-blue-resource/10 text-blue-resource font-bold text-lg shadow-sm">
+                                                <span className="material-symbols-outlined filled text-sm">person</span>
+                                            </span>
+                                            <div className="ml-2">
+                                                <p className="text-sm font-bold text-text-main dark:text-white">Dr. S. Smith</p>
+                                                <p className="text-xs text-text-muted">Physiotherapist</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-center py-3 text-center border-r border-gray-100 dark:border-gray-800">
+                                            <span className="size-8 flex items-center justify-center rounded-full bg-purple-resource/10 text-purple-resource font-bold text-lg shadow-sm">
+                                                <span className="material-symbols-outlined filled text-sm">person</span>
+                                            </span>
+                                            <div className="ml-2">
+                                                <p className="text-sm font-bold text-text-main dark:text-white">Dr. M. Ross</p>
+                                                <p className="text-xs text-text-muted">Chiropractor</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-center py-3 text-center border-r border-gray-100 dark:border-gray-800">
+                                            <span className="size-8 flex items-center justify-center rounded-full bg-orange-resource/10 text-orange-resource font-bold text-lg shadow-sm">
+                                                <span className="material-symbols-outlined filled text-sm">meeting_room</span>
+                                            </span>
+                                            <div className="ml-2">
+                                                <p className="text-sm font-bold text-text-main dark:text-white">Room 101</p>
+                                                <p className="text-xs text-text-muted">Treatment Room</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-center py-3 text-center">
+                                            <span className="size-8 flex items-center justify-center rounded-full bg-gray-resource/10 text-gray-resource font-bold text-lg shadow-sm">
+                                                <span className="material-symbols-outlined filled text-sm">meeting_room</span>
+                                            </span>
+                                            <div className="ml-2">
+                                                <p className="text-sm font-bold text-text-main dark:text-white">Room 102</p>
+                                                <p className="text-xs text-text-muted">Consultation Room</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-[60px_repeat(4,minmax(200px,1fr))] min-h-[1000px] timeline-grid">
+                                        <div className="flex flex-col text-right pr-2 py-4 gap-[46px] text-xs font-medium text-text-muted border-r border-gray-100 dark:border-gray-800 bg-white dark:bg-[#15201b] sticky left-0 z-10">
+                                            <span>8 AM</span><span>9 AM</span><span>10 AM</span><span>11 AM</span><span>12 PM</span><span>1 PM</span><span>2 PM</span><span>3 PM</span><span>4 PM</span><span>5 PM</span><span>6 PM</span>
+                                        </div>
+                                        {/* Column 1 */}
+                                        <div className="relative group h-full border-r border-gray-100 dark:border-gray-800">
+                                            <Link to="/patient-journey" className="absolute top-[130px] left-1 right-1 h-[110px] bg-blue-100 dark:bg-blue-900/40 border-l-4 border-blue-resource rounded p-2 cursor-pointer hover:shadow-md transition-shadow block">
+                                                <p className="text-xs font-bold text-blue-800 dark:text-blue-100">John Doe</p>
+                                                <p className="text-[10px] text-blue-600 dark:text-blue-200 mt-0.5">10:00 - 11:30</p>
+                                                <p className="text-[10px] text-blue-600 dark:text-blue-200 mt-1">Initial Assessment</p>
+                                                <div className="mt-2 flex items-center gap-1">
+                                                    <span className="material-symbols-outlined text-[14px] text-blue-resource">person</span>
+                                                    <span className="text-[10px] text-blue-resource">Dr. Smith</span>
+                                                </div>
+                                            </Link>
+                                            <Link to="/overview" className="absolute top-[280px] left-1 right-1 h-[85px] bg-blue-100 dark:bg-blue-900/40 border-l-4 border-blue-resource rounded p-2 cursor-pointer hover:shadow-md transition-shadow block">
+                                                <p className="text-xs font-bold text-blue-800 dark:text-blue-100">Sarah Lee</p>
+                                                <p className="text-[10px] text-blue-600 dark:text-blue-200 mt-0.5">12:30 - 01:30</p>
+                                                <p className="text-[10px] text-blue-600 dark:text-blue-200 mt-1 truncate">Follow-up: Shoulder Injury</p>
+                                            </Link>
+                                        </div>
+                                        {/* Column 2 */}
+                                        <div className="relative group h-full border-r border-gray-100 dark:border-gray-800">
+                                            <div className="absolute top-[310px] left-1 right-1 h-[85px] bg-purple-100 dark:bg-purple-900/40 border-l-4 border-purple-resource rounded p-2 cursor-pointer hover:shadow-md transition-shadow">
+                                                <p className="text-xs font-bold text-purple-800 dark:text-purple-100">Mike Ross</p>
+                                                <p className="text-[10px] text-purple-600 dark:text-purple-200 mt-0.5">01:00 - 02:30</p>
+                                                <p className="text-[10px] text-purple-600 dark:text-purple-200 mt-1">Rehabilitation</p>
+                                            </div>
+                                            <div className="absolute top-[70px] left-1 right-1 h-[55px] bg-green-100 dark:bg-green-900/40 border-l-4 border-green-500 rounded p-2 cursor-pointer hover:shadow-md transition-shadow">
+                                                <div className="flex justify-between items-start">
+                                                    <p className="text-xs font-bold text-green-800 dark:text-green-100">Team Meeting</p>
+                                                    <span className="material-symbols-outlined text-[14px] text-green-600">check_circle</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {/* Column 3 */}
+                                        <div className="relative group h-full border-r border-gray-100 dark:border-gray-800">
+                                             <div className="absolute top-[130px] left-1 right-1 h-[55px] bg-gray-100 dark:bg-gray-700/40 border-l-4 border-gray-400 rounded p-2 cursor-pointer hover:shadow-md transition-shadow opacity-60">
+                                                <p className="text-xs font-bold text-gray-800 dark:text-gray-100 line-through">Maintenance</p>
+                                                <p className="text-[10px] text-gray-600 dark:text-gray-300 mt-0.5">10:00 - 11:00</p>
+                                            </div>
+                                             <div className="absolute top-[280px] left-1 right-1 h-[85px] bg-orange-100 dark:bg-orange-900/40 border-l-4 border-orange-resource rounded p-2 cursor-pointer hover:shadow-md transition-shadow">
+                                                <p className="text-xs font-bold text-orange-800 dark:text-orange-100">Group Therapy</p>
+                                                <p className="text-[10px] text-orange-600 dark:text-orange-200 mt-0.5">12:30 - 02:00</p>
+                                            </div>
+                                        </div>
+                                         {/* Column 4 */}
+                                        <div className="relative group h-full">
+                                            <div className="absolute top-[70px] left-1 right-1 h-[55px] bg-gray-100 dark:bg-gray-700/40 border-l-4 border-gray-resource rounded p-2 cursor-pointer hover:shadow-md transition-shadow">
+                                                <p className="text-xs font-bold text-gray-800 dark:text-gray-100">Initial Consult</p>
+                                                <p className="text-[10px] text-gray-600 dark:text-gray-300 mt-0.5">09:00 - 10:00</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button className="xl:hidden absolute bottom-6 right-6 size-14 bg-primary text-text-main rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform z-30 text-white">
+                                    <span className="material-symbols-outlined text-[28px]">add</span>
+                                </button>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            );
+        };
+
+        // --- Screen 2: Patient Journey ---
+
+        const PatientJourneyScreen = () => {
+            return (
+                <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden font-sans bg-background-light dark:bg-background-dark">
+                    <Sidebar />
+                    <CommonHeader title="Patient Journey" />
+                    <main className="flex flex-1 justify-center py-5 px-4 md:px-10 lg:px-20 xl:px-40 xl:ml-64">
+                        <div className="layout-content-container flex flex-col w-full max-w-[1200px] flex-1 gap-6">
+                            <div className="flex flex-wrap gap-2 px-4">
+                                <Link to="/overview" className="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium hover:text-primary">Patients</Link>
+                                <span className="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium">/</span>
+                                <Link to="/overview" className="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium hover:text-primary">João Silva</Link>
+                                <span className="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium">/</span>
+                                <span className="text-text-main-light dark:text-text-main-dark text-sm font-medium">Progress Journey</span>
+                            </div>
+
+                            <div className="flex flex-wrap justify-between items-end gap-4 px-4">
+                                <div className="flex min-w-72 flex-col gap-2">
+                                    <div className="flex items-center gap-3">
+                                        <h1 className="text-text-main-light dark:text-text-main-dark text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">João's Journey</h1>
+                                        <span className="px-2 py-1 rounded bg-tag-blue-bg-light dark:bg-tag-blue-bg-dark text-tag-blue-text-light dark:text-tag-blue-text-dark text-xs font-bold uppercase tracking-wider border border-tag-blue-border-light dark:border-tag-blue-border-dark">Active</span>
+                                    </div>
+                                    <p className="text-text-secondary-light dark:text-text-secondary-dark text-base font-normal">ACL Post-Surgical Rehab (Right Knee)</p>
+                                </div>
+                                <div className="flex gap-3">
+                                    <button className="flex items-center justify-center rounded-lg h-10 px-4 border border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark text-text-main-light dark:text-text-main-dark hover:bg-background-light dark:hover:bg-background-dark text-sm font-bold transition-colors">
+                                        <span className="material-symbols-outlined mr-2 text-[18px]">print</span>Report
+                                    </button>
+                                    <button className="flex items-center justify-center rounded-lg h-10 px-4 bg-primary hover:bg-primary-hover text-white text-sm font-bold shadow-lg shadow-primary/20 transition-all transform hover:scale-105">
+                                        <span className="material-symbols-outlined mr-2 text-[20px]">add</span>New Entry
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-4">
+                                <div className="flex flex-col gap-2 rounded-xl p-6 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark shadow-sm">
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark">calendar_month</span>
+                                        <p className="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium">Total Sessions</p>
+                                    </div>
+                                    <div className="flex items-baseline gap-2">
+                                        <p className="text-text-main-light dark:text-text-main-dark text-2xl font-bold">12</p>
+                                        <p className="text-primary text-sm font-bold">+2 this week</p>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col gap-2 rounded-xl p-6 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark shadow-sm">
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark">history</span>
+                                        <p className="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium">Last Visit</p>
+                                    </div>
+                                    <p className="text-text-main-light dark:text-text-main-dark text-2xl font-bold">2 days ago</p>
+                                </div>
+                                <div className="flex flex-col gap-2 rounded-xl p-6 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark shadow-sm">
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark">event_upcoming</span>
+                                        <p className="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium">Next Session</p>
+                                    </div>
+                                    <p className="text-text-main-light dark:text-text-main-dark text-2xl font-bold">Tomorrow, 14:00</p>
+                                </div>
+                                <div className="flex flex-col gap-2 rounded-xl p-6 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark shadow-sm relative overflow-hidden">
+                                    <div className="absolute right-0 top-0 p-4 opacity-10">
+                                        <span className="material-symbols-outlined text-6xl text-primary">vital_signs</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark">sentiment_dissatisfied</span>
+                                        <p className="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium">Pain Level</p>
+                                    </div>
+                                    <div className="flex items-baseline gap-2">
+                                        <p className="text-text-main-light dark:text-text-main-dark text-2xl font-bold">3/10</p>
+                                        <div className="flex items-center text-primary text-sm font-bold bg-primary/10 px-2 py-0.5 rounded-full">
+                                            <span className="material-symbols-outlined text-[14px] mr-1">trending_down</span>-20%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="px-4 border-b border-border-light dark:border-border-dark">
+                                <div className="flex gap-8 overflow-x-auto">
+                                    <a className="group flex items-center justify-center border-b-[3px] border-b-primary pb-[13px] pt-4 min-w-fit cursor-pointer">
+                                        <span className="material-symbols-outlined mr-2 text-[20px] text-primary group-hover:text-primary-hover">auto_stories</span> 
+                                        <p className="text-text-main-light dark:text-text-main-dark text-sm font-bold tracking-[0.015em]">Progress Journey</p> 
+                                    </a>
+                                     <Link to="/overview" className="group flex items-center justify-center border-b-[3px] border-b-transparent pb-[13px] pt-4 min-w-fit cursor-pointer hover:border-b-border-light dark:hover:border-b-border-dark transition-colors">
+                                        <span className="material-symbols-outlined mr-2 text-[20px] text-text-secondary-light dark:text-text-secondary-dark group-hover:text-text-main-light dark:group-hover:text-text-main-dark">monitoring</span>
+                                        <p className="text-text-secondary-light dark:text-text-secondary-dark group-hover:text-text-main-light dark:group-hover:text-text-main-dark text-sm font-bold tracking-[0.015em] transition-colors">Detailed Charts</p> 
+                                    </Link>
+                                </div>
+                            </div>
+
+                            <div className="px-4 pb-10 max-w-3xl mx-auto w-full"> 
+                                <div className="flex flex-col gap-10 relative"> 
+                                    <div className="absolute left-[29px] top-0 bottom-0 w-[2px] bg-border-light dark:bg-border-dark"></div> 
+                                    
+                                    {/* Chapter 1 */}
+                                    <div className="relative flex gap-6 items-start">
+                                        <div className="z-10 mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary ring-4 ring-white dark:ring-surface-dark">
+                                            <span className="material-symbols-outlined text-white text-base">start</span>
+                                        </div>
+                                        <div className="flex-1 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark p-6 shadow-lg">
+                                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark font-semibold mb-2">Rehabilitation Start</p>
+                                            <h3 className="text-xl font-bold text-text-main-light dark:text-text-main-dark mb-4 leading-snug">Chapter 1: The First Step to Recovery</h3>
+                                            <p className="text-base text-text-main-light dark:text-text-main-dark leading-relaxed mb-4">
+                                                João's journey began with courage. After ACL surgery, the main focus was alleviating initial pain and starting gentle knee mobilization.
+                                            </p>
+                                            <div className="flex justify-around items-center gap-4 py-4 mb-4 border-y border-border-light dark:border-border-dark">
+                                                <div className="text-center">
+                                                    <p className="text-2xl font-bold text-text-main-light dark:text-text-main-dark">8/10</p>
+                                                    <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">Pain Level</p>
+                                                </div>
+                                                <div className="text-center">
+                                                    <p className="text-2xl font-bold text-text-main-light dark:text-text-main-dark">50º</p>
+                                                    <p className="text-sm text-text-secondary-light dark:text-text-secondary-dark">Initial Flexion</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-3 pt-3 border-t border-border-light dark:border-border-dark mt-4">
+                                                 <div className="size-8 rounded-full bg-cover bg-center" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDmfyONRsuTpGmLLDxtqcgrFIME_OFvEXPZz8NBzIfuZfl_-NkYaBEUyeFHBxrGqAjx_eIX9F-7yfQ-xawKX2wH09FMiD1WaN6QjQOiuyuljs4jSon9OSzpdyQC22wVgyH0UrZyuK81egu74PRjRuq2-d0ThR2DTMl6toc25XISg56-VViqVOXRFN6_m58tr-7ezcGYDk68fl1PX-AQrI1R-_cOsv47kOWynQbjj-NFBDxEmhMCw1_25WoIc5WLvL7aTYvewlkS5DY")'}}></div>
+                                                <p className="text-sm font-bold text-text-main-light dark:text-text-main-dark">Dr. Ana Silva <span className="text-text-secondary-light dark:text-text-secondary-dark font-normal mx-1">•</span> PT</p>
+                                                <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark font-medium ml-auto">Oct 10, 09:00</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Chapter 2 */}
+                                    <div className="relative flex gap-6 items-start">
+                                        <div className="z-10 mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary ring-4 ring-white dark:ring-surface-dark">
+                                            <span className="material-symbols-outlined text-white text-base">trending_up</span>
+                                        </div>
+                                        <div className="flex-1 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark p-6 shadow-lg">
+                                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark font-semibold mb-2">Session #10 - Progress Eval</p>
+                                            <h3 className="text-xl font-bold text-text-main-light dark:text-text-main-dark mb-4 leading-snug">Chapter 2: Flexibility Returns</h3>
+                                            <div className="grid grid-cols-2 gap-4 mb-6">
+                                                 <div className="flex flex-col gap-2">
+                                                    <img alt="Knee before" className="w-full h-auto object-cover rounded-lg border border-border-light dark:border-border-dark shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcAyU1N_r-jzrtQ6zjYxlwDiS1qf5BHX0DyznR9ujxe5oEwdlkDEeXgbvnZaAA7N8qoS3r0khdRkDjqevCtL8Dl7-fU7Y5I_dwKwss7QcfJhsSeeIKK1Fv6SkU9Eac9lfSh34_-u_7uGxhfmNtAThPjYQ1d5RGT7fYOkMGC2aE2dV1ie2j6_zNHAcbXAoRUoqVHl4FMpOJuCo3s-zgUt4NETkpD3u1S7GfzEXo0ndepM9MU_Z5L1v2CAcU3Kg2euGxZ4TFzMibeXU"/>
+                                                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark text-center">Before (Oct 15)</p>
+                                                </div>
+                                                <div className="flex flex-col gap-2">
+                                                    <img alt="Knee after" className="w-full h-auto object-cover rounded-lg border border-border-light dark:border-border-dark shadow-sm" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCP4sleTea8aZpnikgxp2lJz63HDMW0Gi_uysjylsFhin6LTNapvoI7Xdkd9SwxfSDgg4akO7tCFJ9nu1fftXbKaq60q6ydtbH8SYrh3xg9ynwrx5osv7Ojz4R9oRuUGpBCPWSd2El_JD7sxzcC9uLa0TEyMTwmL6QFVq2cm0Y4ZVy_IUenPyOeNh_zEAVfYiC9KMTUECYZ_w3hKRpukkm6zjpPtfvc5zIN32K9GmWhJkT1lwIHQjvj3Ybu2owyH_g5tCnTDoRAgyI"/>
+                                                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark text-center">After (Oct 20)</p>
+                                                </div>
+                                            </div>
+                                            <div className="bg-background-light dark:bg-background-dark p-4 rounded-lg flex items-center justify-between">
+                                                <p className="text-text-main-light dark:text-text-main-dark font-bold text-lg">Flexion: 110º</p>
+                                                <div className="flex items-center text-primary text-sm font-bold bg-primary/10 px-3 py-1 rounded-full">
+                                                    <span className="material-symbols-outlined text-[16px] mr-1">arrow_upward</span> +10º
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Chapter 3 */}
+                                    <div className="relative flex gap-6 items-start">
+                                        <div className="z-10 mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary ring-4 ring-white dark:ring-surface-dark">
+                                            <span className="material-symbols-outlined text-white text-base">healing</span>
+                                        </div>
+                                        <div className="flex-1 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark p-6 shadow-lg">
+                                            <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark font-semibold mb-2">Session #11 - Electrotherapy</p>
+                                            <h3 className="text-xl font-bold text-text-main-light dark:text-text-main-dark mb-4 leading-snug">Chapter 3: Less Pain, More Hope</h3>
+                                            <p className="text-base text-text-main-light dark:text-text-main-dark leading-relaxed mb-4">
+                                                After a longer walk day, pain increased, but TENS application provided significant relief.
+                                            </p>
+                                            <div className="bg-background-light dark:bg-background-dark rounded-xl p-5 shadow-sm">
+                                                <h4 className="text-lg font-bold text-text-main-light dark:text-text-main-dark mb-4">Recent Pain History</h4>
+                                                <div className="flex justify-between items-end h-24 gap-1 px-2">
+                                                     {[8, 6, 5, 5, 4, 3].map((val, i) => (
+                                                        <div key={i} className="w-1/6 bg-tag-blue-bg-light dark:bg-tag-blue-bg-dark rounded-t-sm flex flex-col justify-end group" style={{height: `${val * 10}%`}}>
+                                                            <div className="w-full h-1 bg-primary rounded-t-sm"></div>
+                                                        </div>
+                                                     ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                     <button className="ml-10 py-2 text-sm text-text-secondary-light dark:text-text-secondary-dark font-medium hover:text-primary transition-colors self-start">
+                                        See earlier chapters...
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            );
+        }
+
+        // --- Screen 3: Managerial Overview ---
+
+        const OverviewScreen = () => {
+             return (
+                <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden font-display bg-background-light dark:bg-background-dark">
+                    <Sidebar />
+                    <CommonHeader title="Managerial Overview" />
+                    <main className="flex flex-1 justify-center py-5 px-4 md:px-10 lg:px-20 xl:px-40 xl:ml-64">
+                         <div className="layout-content-container flex flex-col w-full max-w-[1200px] flex-1 gap-6">
+                            <div className="flex flex-wrap gap-2 px-4">
+                                <Link to="/" className="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium hover:text-primary">Overview</Link>
+                                <span className="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium">/</span>
+                                <span className="text-text-main-light dark:text-text-main-dark text-sm font-medium">Patient João Silva</span>
+                            </div>
+
+                             <div className="flex flex-wrap justify-between items-end gap-4 px-4">
+                                <div className="flex min-w-72 flex-col gap-2">
+                                    <div className="flex items-center gap-3">
+                                        <h1 className="text-text-main-light dark:text-text-main-dark text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">João Silva</h1>
+                                        <span className="px-2 py-1 rounded bg-tag-blue-bg-light dark:bg-tag-blue-bg-dark text-tag-blue-text-light dark:text-tag-blue-text-dark text-xs font-bold uppercase tracking-wider border border-tag-blue-border-light dark:border-tag-blue-border-dark">Active</span>
+                                    </div>
+                                    <p className="text-text-secondary-light dark:text-text-secondary-dark text-base font-normal">ACL Post-Surgical Rehab (Right Knee)</p>
+                                </div>
+                                <div className="flex gap-3">
+                                    <button className="flex items-center justify-center rounded-lg h-10 px-4 border border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark text-text-main-light dark:text-text-main-dark hover:bg-background-light dark:hover:bg-background-dark text-sm font-bold transition-colors">
+                                        <span className="material-symbols-outlined mr-2 text-[18px]">print</span>Admin Report
+                                    </button>
+                                    <button className="flex items-center justify-center rounded-lg h-10 px-4 bg-primary hover:bg-primary-hover text-white text-sm font-bold shadow-lg shadow-primary/20 transition-all transform hover:scale-105">
+                                        <span className="material-symbols-outlined mr-2 text-[20px]">add</span>Log Activity
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-4">
+                                <div className="flex flex-col gap-2 rounded-xl p-4 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark shadow-sm">
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-primary">calendar_month</span>
+                                        <p className="text-text-secondary-light dark:text-text-secondary-dark text-xs font-semibold uppercase">Total Sessions</p>
+                                    </div>
+                                    <div className="flex items-baseline gap-1">
+                                        <p className="text-text-main-light dark:text-text-main-dark text-xl font-bold font-condensed-sans">12</p>
+                                        <p className="text-primary text-xs font-semibold">+2 this week</p>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col gap-2 rounded-xl p-4 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark shadow-sm">
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-primary">event_available</span>
+                                        <p className="text-text-secondary-light dark:text-text-secondary-dark text-xs font-semibold uppercase">Next Session</p>
+                                    </div>
+                                    <p className="text-text-main-light dark:text-text-main-dark text-xl font-bold font-condensed-sans">Tomorrow, 14:00</p>
+                                </div>
+                                <div className="flex flex-col gap-2 rounded-xl p-4 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark shadow-sm">
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-primary">checklist</span>
+                                        <p className="text-text-secondary-light dark:text-text-secondary-dark text-xs font-semibold uppercase">Plan Completion</p>
+                                    </div>
+                                    <p className="text-text-main-light dark:text-text-main-dark text-xl font-bold font-condensed-sans">85%</p>
+                                </div>
+                                <div className="flex flex-col gap-2 rounded-xl p-4 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark shadow-sm">
+                                    <div className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-primary">pending_actions</span>
+                                        <p className="text-text-secondary-light dark:text-text-secondary-dark text-xs font-semibold uppercase">Pending Tasks</p>
+                                    </div>
+                                    <p className="text-text-main-light dark:text-text-main-dark text-xl font-bold font-condensed-sans">2</p>
+                                </div>
+                            </div>
+
+                            <div className="px-4 border-b border-border-light dark:border-border-dark">
+                                <div className="flex gap-8 overflow-x-auto">
+                                    <a className="group flex items-center justify-center border-b-[3px] border-b-primary pb-[13px] pt-4 min-w-fit cursor-pointer">
+                                        <span className="material-symbols-outlined mr-2 text-[20px] text-primary group-hover:text-primary-hover">history</span>
+                                        <p className="text-text-main-light dark:text-text-main-dark text-sm font-bold tracking-[0.015em] font-condensed-sans">Activity Log</p>
+                                    </a>
+                                     <Link to="/patient-journey" className="group flex items-center justify-center border-b-[3px] border-b-transparent pb-[13px] pt-4 min-w-fit cursor-pointer hover:border-b-border-light dark:hover:border-b-border-dark transition-colors">
+                                        <span className="material-symbols-outlined mr-2 text-[20px] text-text-secondary-light dark:text-text-secondary-dark group-hover:text-text-main-light dark:group-hover:text-text-main-dark">monitoring</span>
+                                        <p className="text-text-secondary-light dark:text-text-secondary-dark group-hover:text-text-main-light dark:group-hover:text-text-main-dark text-sm font-bold tracking-[0.015em] font-condensed-sans transition-colors">Detailed Progress</p>
+                                    </Link>
+                                    <a className="group flex items-center justify-center border-b-[3px] border-b-transparent pb-[13px] pt-4 min-w-fit cursor-pointer hover:border-b-border-light dark:hover:border-b-border-dark transition-colors">
+                                        <span className="material-symbols-outlined mr-2 text-[20px] text-text-secondary-light dark:text-text-secondary-dark group-hover:text-text-main-light dark:group-hover:text-text-main-dark">folder_open</span>
+                                        <p className="text-text-secondary-light dark:text-text-secondary-dark group-hover:text-text-main-light dark:group-hover:text-text-main-dark text-sm font-bold tracking-[0.015em] font-condensed-sans transition-colors">Documents</p>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-4 pb-10">
+                                <div className="lg:col-span-1 order-1 flex flex-col gap-6">
+                                    <div className="bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-xl p-5 shadow-sm">
+                                        <h3 className="text-sm font-bold text-text-main-light dark:text-text-main-dark mb-3 uppercase tracking-wider flex items-center gap-2 font-condensed-sans">
+                                            <span className="material-symbols-outlined text-primary text-[18px]">edit_note</span>
+                                            Quick Log
+                                        </h3>
+                                        <div className="flex gap-4">
+                                            <div className="size-10 rounded-full bg-cover bg-center shrink-0 border border-border-light dark:border-border-dark" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDmfyONRsuTpGmLLDxtqcgrFIME_OFvEXPZz8NBzIfuZfl_-NkYaBEUyeFHBxrGqAjx_eIX9F-7yfQ-xawKX2wH09FMiD1WaN6QjQOiuyuljs4jSon9OSzpdyQC22wVgyH0UrZyuK81egu74PRjRuq2-d0ThR2DTMl6toc25XISg56-VViqVOXRFN6_m58tr-7ezcGYDk68fl1PX-AQrI1R-_cOsv47kOWynQbjj-NFBDxEmhMCw1_25WoIc5WLvL7aTYvewlkS5DY")'}}></div>
+                                            <div className="flex-1 flex flex-col gap-3">
+                                                <textarea className="w-full rounded-lg bg-background-light dark:bg-background-dark border-transparent focus:border-primary focus:ring-0 text-text-main-light dark:text-text-main-dark placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-sm min-h-[100px] font-condensed-sans" placeholder="Add quick note..."></textarea>
+                                                <button className="px-5 py-2 rounded-lg bg-primary text-white font-bold text-sm hover:bg-primary-hover transition-opacity font-condensed-sans self-end">Save Note</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                     <div className="bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark p-5 shadow-sm">
+                                         <div className="flex justify-between items-center mb-4">
+                                            <h3 className="text-sm font-bold text-text-main-light dark:text-text-main-dark font-condensed-sans">Recent Documents</h3>
+                                         </div>
+                                         <div className="space-y-3">
+                                             <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-background-light dark:hover:bg-background-dark transition-colors cursor-pointer group">
+                                                <div className="size-8 rounded bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
+                                                    <span className="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+                                                </div>
+                                                <div className="overflow-hidden">
+                                                    <p className="text-sm font-bold text-text-main-light dark:text-text-main-dark truncate font-condensed-sans">MRI_Report.pdf</p>
+                                                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark font-condensed-sans">Oct 15, 2023 • 2.4 MB</p>
+                                                </div>
+                                            </div>
+                                             <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-background-light dark:hover:bg-background-dark transition-colors cursor-pointer group">
+                                                <div className="size-8 rounded bg-tag-blue-bg-light dark:bg-tag-blue-bg-dark text-tag-blue-text-light dark:text-tag-blue-text-dark flex items-center justify-center shrink-0">
+                                                    <span className="material-symbols-outlined text-[18px]">image</span>
+                                                </div>
+                                                <div className="overflow-hidden">
+                                                    <p className="text-sm font-bold text-text-main-light dark:text-text-main-dark truncate font-condensed-sans">X-Ray_Knee.jpg</p>
+                                                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark font-condensed-sans">Oct 10, 2023 • 4.1 MB</p>
+                                                </div>
+                                            </div>
+                                         </div>
+                                     </div>
+                                </div>
+                                
+                                <div className="lg:col-span-2 order-2 flex flex-col gap-6">
+                                     <h3 className="px-4 text-sm font-bold text-text-main-light dark:text-text-main-dark uppercase tracking-wider font-condensed-sans">Recent Activity Log</h3>
+                                      <div className="flex flex-col gap-4 relative pl-4">
+                                          <div className="absolute left-[27px] top-0 bottom-0 w-[2px] bg-border-light dark:bg-border-dark"></div>
+                                          
+                                          {/* Activity 1 */}
+                                          <div className="relative flex gap-4">
+                                            <div className="z-10 mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary ring-4 ring-white dark:ring-surface-dark">
+                                                <span className="material-symbols-outlined text-white text-[14px]">event_note</span>
+                                            </div>
+                                            <div className="flex-1 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark p-4 shadow-sm">
+                                                <div className="flex flex-wrap justify-between items-start mb-2 gap-1">
+                                                    <p className="text-sm font-bold text-text-main-light dark:text-text-main-dark font-condensed-sans">Session #12: Kinesiotherapy</p>
+                                                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark font-condensed-sans">Today, 10:30</p>
+                                                </div>
+                                                <p className="text-xs text-text-main-light dark:text-text-main-dark leading-relaxed mb-3 font-condensed-sans">
+                                                    Mild pain (3/10), good tolerance to strengthening exercises.
+                                                </p>
+                                                <div className="flex items-center gap-2 pt-2 border-t border-border-light dark:border-border-dark">
+                                                     <div className="size-5 rounded-full bg-cover bg-center" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAdBHoAKjHuzH5EUeR5b8naDHe749o7ofYNaCH_iuuwP2RQ82AKF2xg-U-teQvKTiyQePxVmzbY8zIZ1d_ukSU0kdJz0evCLAYuiOUmONmKtlajDQcDQbVoZdufbZ7RizODgvZ6szjZa4f7cYW3Zp3wOTQm2Olx74o1VJUMitiJ5_4UORjnzO9aRadteLJSMmdsT009WkHwlETG4rLMFRsHcYjoqU8I3tEEftdCdPtZcEF-84u-AAQQkGdyXDB_9KfEwgI0MtTzcuM")'}}></div>
+                                                    <p className="text-xs font-semibold text-text-main-light dark:text-text-main-dark font-condensed-sans">Dr. Ana Silva</p>
+                                                </div>
+                                            </div>
+                                          </div>
+                                          
+                                          {/* Activity 2 */}
+                                           <div className="relative flex gap-4">
+                                            <div className="z-10 mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-border-light dark:bg-border-dark ring-4 ring-white dark:ring-surface-dark">
+                                                <span className="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark text-[14px]">medical_services</span>
+                                            </div>
+                                            <div className="flex-1 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark p-4 shadow-sm opacity-90">
+                                                <div className="flex flex-wrap justify-between items-start mb-2 gap-1">
+                                                    <p className="text-sm font-bold text-text-main-light dark:text-text-main-dark font-condensed-sans">Session #11: Electrotherapy</p>
+                                                    <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark font-condensed-sans">Oct 22, 15:00</p>
+                                                </div>
+                                                <p className="text-xs text-text-main-light dark:text-text-main-dark leading-relaxed mb-3 font-condensed-sans">
+                                                    TENS application, pain reduced from 5/10 to 3/10.
+                                                </p>
+                                            </div>
+                                          </div>
+                                      </div>
+                                </div>
+                            </div>
+                         </div>
+                    </main>
+                </div>
+             );
+        }
+
+        // --- App Component ---
+
+        const App = () => {
+            return (
+                <MemoryRouter>
+                    <Routes>
+                        <Route path="/" element={<DashboardScreen />} />
+                        <Route path="/patient-journey" element={<PatientJourneyScreen />} />
+                        <Route path="/overview" element={<OverviewScreen />} />
+                    </Routes>
+                </MemoryRouter>
+            );
+        };
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

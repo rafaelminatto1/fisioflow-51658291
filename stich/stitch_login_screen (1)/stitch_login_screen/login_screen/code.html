@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FisioFlow - Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0ea5e9",
+                        "background-light": "#f0f8ff",
+                        "background-dark": "#1a2c3a",
+                        "secondary-blue": "#a8c0ff",
+                        "tertiary-green": "#82e0aa",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .gradient-background {
+            background: linear-gradient(135deg, #e0f2fe 0%, #bbdefb 100%);
+        }
+        .dark .gradient-background {
+            background: linear-gradient(135deg, #1f3d53 0%, #1a2c3a 100%);
+        }
+    </style>
+</head>
+<body class="gradient-background font-display">
+<div class="flex items-center justify-center min-h-screen">
+<div class="w-full max-w-md p-8 space-y-8 bg-white dark:bg-background-dark/80 rounded-xl shadow-xl m-4 transform transition duration-500 hover:scale-105">
+<div class="text-center">
+<h1 class="text-4xl font-extrabold text-primary dark:text-white flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-4xl">medical_services</span> FisioFlow
+            </h1>
+<p class="mt-4 text-md text-gray-700 dark:text-gray-300">Welcome to your new journey with us!</p>
+<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Login to unlock your staff profile.</p>
+</div>
+<form action="#" class="mt-8 space-y-6" method="POST">
+<div class="rounded-md shadow-sm -space-y-px">
+<div>
+<label class="sr-only" for="username">Username</label>
+<input class="appearance-none rounded-t-xl relative block w-full px-4 py-3 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-background-light dark:bg-background-dark/20 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-base transition duration-300" id="username" name="username" placeholder="Username" required="" type="text"/>
+</div>
+<div>
+<label class="sr-only" for="password">Password</label>
+<input autocomplete="current-password" class="appearance-none rounded-b-xl relative block w-full px-4 py-3 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-background-light dark:bg-background-dark/20 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-base transition duration-300" id="password" name="password" placeholder="Password" required="" type="password"/>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div class="text-sm">
+<a class="font-medium text-primary hover:text-primary/80 transition duration-300" href="#">
+                        Forgot your password?
+                    </a>
+</div>
+</div>
+<div>
+<button class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-lg font-bold rounded-xl text-white bg-gradient-to-r from-primary to-secondary-blue hover:from-primary/90 hover:to-secondary-blue/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-300 transform hover:-translate-y-1" type="submit">
+                    Login
+                    <span class="material-symbols-outlined ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">login</span>
+</button>
+</div>
+</form>
+<div class="mt-8 text-center">
+<p class="text-sm text-gray-600 dark:text-gray-400">
+                Next up: <span class="font-semibold text-primary dark:text-tertiary-green">Set up your profile!</span>
+</p>
+<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mt-2">
+<div class="bg-gradient-to-r from-primary to-tertiary-green h-2.5 rounded-full w-1/4 animate-pulse"></div>
+</div>
+<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                You're 25% closer to getting started!
+            </p>
+</div>
+</div>
+</div>
+
+</body></html>

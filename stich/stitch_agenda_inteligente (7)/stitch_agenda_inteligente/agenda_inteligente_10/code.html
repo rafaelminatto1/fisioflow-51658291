@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Edição de Agendamento - FisioFlow</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0d7ff2",
+                        "primary-foreground": "#ffffff",
+                        "secondary": "#f1f5f9",
+                        "background-light": "#ffffff",
+                        "background-dark": "#020817",
+                        "border": "#e2e8f0",
+                        "input": "#e2e8f0",
+                        "muted": "#64748b",
+                        "muted-foreground": "#94a3b8",
+                        "success": "#10b981",
+                        "danger": "#ef4444",
+                        "neutral": "#94a3b8",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "sans": ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.375rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        'card': '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
+                        'elevation': '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>body {
+    min-height: 100dvh
+    }
+select {
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuC6R1pwdoFYjS9-XGoh-ZN5Cnal0ruhSpM-CnUjYgUhWIeqwCk6TP-3aGWnM_V8AsCufBVmtLcJ-mwSk88DJhCl5AdNwOWrH5X_igvl7V051o6SUBZvHIxBtkgmGZx7qCl6AgGCi5mn0PsSvoqxxhuRiyEkqskCV_8Exeicpk13lr4krZbogTedFxFDoaG3XEhjU2VEwn5TlusSgny0OYIE3KMlZMVpX9dBBTMTf_xq_x2YMDCfTbbm7fcIGMTB4BMNFqEl0tmuo5ka);
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+    -webkit-appearance: none;
+    appearance: none
+    }</style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-slate-50 text-slate-950 font-display antialiased flex flex-col h-full">
+<header class="flex-none bg-white border-b border-border px-4 py-4 flex items-center justify-between sticky top-0 z-20">
+<button class="text-slate-500 hover:text-slate-900 p-1 rounded-full transition-colors">
+<span class="material-symbols-outlined text-[24px]">close</span>
+</button>
+<h1 class="text-base font-semibold text-slate-900">Editar Agendamento</h1>
+<button class="text-primary font-semibold text-sm hover:text-blue-700 transition-colors">
+            Salvar
+        </button>
+</header>
+<main class="flex-1 overflow-y-auto pb-24">
+<div class="max-w-md mx-auto p-4 space-y-6">
+<section class="bg-white rounded-xl border border-border p-4 shadow-sm">
+<label class="block text-xs font-semibold text-muted uppercase tracking-wider mb-3">Status do Atendimento</label>
+<div class="grid grid-cols-2 gap-3">
+<label class="cursor-pointer relative">
+<input checked="" class="peer sr-only" name="status" type="radio"/>
+<div class="flex items-center justify-center gap-2 p-2 rounded-lg border border-success/30 bg-emerald-50 text-emerald-700 ring-2 ring-emerald-500 ring-offset-1 transition-all">
+<span class="material-symbols-outlined text-[18px] fill-1">check_circle</span>
+<span class="text-xs font-semibold">Confirmado</span>
+</div>
+</label>
+<label class="cursor-pointer relative">
+<input class="peer sr-only" name="status" type="radio"/>
+<div class="flex items-center justify-center gap-2 p-2 rounded-lg border border-border bg-white text-slate-600 hover:bg-slate-50 peer-checked:bg-blue-50 peer-checked:text-primary peer-checked:border-primary/30 peer-checked:ring-2 peer-checked:ring-primary peer-checked:ring-offset-1 transition-all">
+<span class="material-symbols-outlined text-[18px]">calendar_clock</span>
+<span class="text-xs font-medium">Agendado</span>
+</div>
+</label>
+<label class="cursor-pointer relative">
+<input class="peer sr-only" name="status" type="radio"/>
+<div class="flex items-center justify-center gap-2 p-2 rounded-lg border border-border bg-white text-slate-600 hover:bg-slate-50 peer-checked:bg-slate-100 peer-checked:text-slate-800 peer-checked:border-slate-300 peer-checked:ring-2 peer-checked:ring-slate-400 peer-checked:ring-offset-1 transition-all">
+<span class="material-symbols-outlined text-[18px]">done_all</span>
+<span class="text-xs font-medium">Realizado</span>
+</div>
+</label>
+<label class="cursor-pointer relative">
+<input class="peer sr-only" name="status" type="radio"/>
+<div class="flex items-center justify-center gap-2 p-2 rounded-lg border border-border bg-white text-slate-600 hover:bg-slate-50 peer-checked:bg-red-50 peer-checked:text-danger peer-checked:border-danger/30 peer-checked:ring-2 peer-checked:ring-danger peer-checked:ring-offset-1 transition-all">
+<span class="material-symbols-outlined text-[18px]">cancel</span>
+<span class="text-xs font-medium">Cancelado</span>
+</div>
+</label>
+</div>
+</section>
+<section class="space-y-4">
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-slate-700 flex items-center justify-between">
+                        Paciente
+                        <span class="text-primary text-xs font-medium cursor-pointer">Alterar</span>
+</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-slate-400 text-[20px]">search</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-2.5 bg-white border border-input rounded-lg text-slate-900 text-sm focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Buscar paciente..." type="text" value="Maria Souza"/>
+<div class="mt-2 flex items-center gap-3 p-2 bg-slate-100/50 rounded-lg border border-dashed border-slate-200">
+<div class="flex -space-x-1 overflow-hidden">
+<img alt="Maria Souza" class="inline-block h-8 w-8 rounded-full ring-2 ring-white" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjToYqps_HozHaL451bo_pcU-I6nsnpUPvLsy0BShgg8eWeJaKc39j97KEk3rsy14LkHHsfDhP7HACNTqaXAIan9FoyVnlCstCcYiB52Drhus-aQBvhgtx0_ux6YigKNkG-yQKXU8P3_tQru9lONkOb2K0tYe6734pxP4E0MAXp7Cfo9iFoDCWfcVlwIqdy6djtBc5TH-YUa_cuvJ7uTv0fPruw5Mqr1OdNr5hVZg-53OlSQZFX1CB9OFkUDKyYS68lx6W4y_LKCJi"/>
+</div>
+<div class="flex flex-col">
+<span class="text-xs font-semibold text-slate-700">Maria Souza</span>
+<span class="text-[10px] text-slate-500">Convênio: Unimed (Particular)</span>
+</div>
+<div class="ml-auto">
+<button class="p-1 text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">info</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-slate-700">Fisioterapeuta</label>
+<div class="relative">
+<select class="block w-full pl-3 pr-10 py-2.5 bg-white border border-input rounded-lg text-slate-900 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+<option>Dr. Pedro Martins</option>
+<option selected="">Dra. Ana Fonseca</option>
+<option>Dr. Lucas Silva</option>
+</select>
+</div>
+</div>
+</section>
+<section class="grid grid-cols-2 gap-4">
+<div class="col-span-2 space-y-1.5">
+<label class="text-sm font-medium text-slate-700">Data</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-slate-400 text-[18px]">calendar_today</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-2.5 bg-white border border-input rounded-lg text-slate-900 text-sm focus:ring-2 focus:ring-primary focus:border-primary" type="date" value="2023-09-13"/>
+</div>
+</div>
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-slate-700">Início</label>
+<input class="block w-full px-3 py-2.5 bg-white border border-input rounded-lg text-slate-900 text-sm focus:ring-2 focus:ring-primary focus:border-primary" type="time" value="09:30"/>
+</div>
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-slate-700">Duração</label>
+<select class="block w-full px-3 py-2.5 bg-white border border-input rounded-lg text-slate-900 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+<option value="30">30 min</option>
+<option value="45">45 min</option>
+<option selected="" value="60">1h 00min</option>
+<option value="90">1h 30min</option>
+</select>
+</div>
+</section>
+<section class="space-y-4">
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-slate-700">Tipo de Atendimento</label>
+<select class="block w-full px-3 py-2.5 bg-white border border-input rounded-lg text-slate-900 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+<option>Avaliação Inicial</option>
+<option selected="">Fisioterapia (Sessão)</option>
+<option>Liberação Miofascial</option>
+<option>Recovery</option>
+<option>Pilates</option>
+</select>
+</div>
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-slate-700 flex justify-between">
+                        Observações
+                        <span class="text-[10px] text-muted font-normal self-center">Opcional</span>
+</label>
+<textarea class="block w-full px-3 py-2.5 bg-white border border-input rounded-lg text-slate-900 text-sm focus:ring-2 focus:ring-primary focus:border-primary placeholder:text-slate-400" placeholder="Ex: Paciente relatou dor leve após última sessão..." rows="3">Sessão 4/10. Focar em fortalecimento de quadríceps e propriocepção.</textarea>
+</div>
+</section>
+<div class="pt-2 border-t border-border mt-4">
+<div class="flex items-center justify-between text-xs text-muted">
+<span>Criado em: 10/09/2023 às 14:20</span>
+<span>Por: Recepcionista</span>
+</div>
+</div>
+</div>
+</main>
+<footer class="flex-none bg-white border-t border-border p-4 safe-area-bottom">
+<div class="flex flex-col gap-3">
+<button class="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold py-3 rounded-lg shadow-sm active:bg-blue-700 transition-colors">
+<span class="material-symbols-outlined text-[20px]">save</span>
+                Salvar Alterações
+            </button>
+<button class="w-full flex items-center justify-center gap-2 bg-white border border-danger/30 text-danger font-semibold py-3 rounded-lg hover:bg-red-50 transition-colors">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+                Cancelar Agendamento
+            </button>
+</div>
+</footer>
+<style>
+        .safe-area-bottom {
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
+    </style>
+
+</body></html>

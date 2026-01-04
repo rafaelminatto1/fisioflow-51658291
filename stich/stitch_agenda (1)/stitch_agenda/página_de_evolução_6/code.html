@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FisioFlow - Evolução do Paciente</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        // Replaced vibrant green with a calm and authoritative blue as primary
+                        "primary": "#3B82F6", // A standard, professional blue
+                        "primary-hover": "#2563EB", // A slightly darker blue for hover states
+                        // Background: very light, cool gray
+                        "background-light": "#F8FAFC", // Light cool gray
+                        // Dark mode background: adjusted for blue palette
+                        "background-dark": "#1E293B", // Dark blue-gray
+                        // Surfaces: bright white (kept as requested)
+                        "surface-light": "#FFFFFF",
+                        // Dark mode surfaces: adjusted for blue palette
+                        "surface-dark": "#334155", // Slightly darker blue-gray for surfaces
+                        // Borders: complement the new blue primary
+                        "border-light": "#E2E8F0", // Lighter gray-blue border
+                        "border-dark": "#475569", // Darker gray-blue border
+                        // Text: adjusted to complement the new blue primary
+                        "text-main-light": "#1A202C", // Dark charcoal for readability
+                        "text-main-dark": "#F1F5F9", // Off-white for dark mode readability
+                        "text-secondary-light": "#64748B", // Medium gray-blue
+                        "text-secondary-dark": "#94A3B8", // Lighter gray-blue for dark mode
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-text-main-light dark:text-text-main-dark transition-colors duration-200">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+<header class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark px-10 py-3 transition-colors">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-4 text-text-main-light dark:text-text-main-dark">
+<div class="size-8 text-primary">
+<svg class="w-full h-full" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M8.57829 8.57829C5.52816 11.6284 3.451 15.5145 2.60947 19.7452C1.76794 23.9758 2.19984 28.361 3.85056 32.3462C5.50128 36.3314 8.29667 39.7376 11.8832 42.134C15.4698 44.5305 19.6865 45.8096 24 45.8096C28.3135 45.8096 32.5302 44.5305 36.1168 42.134C39.7033 39.7375 42.4987 36.3314 44.1494 32.3462C45.8002 28.361 46.2321 23.9758 45.3905 19.7452C44.549 15.5145 42.4718 11.6284 39.4217 8.57829L24 24L8.57829 8.57829Z" fill="currentColor"></path>
+</svg>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-[-0.015em]">FisioFlow</h2>
+</div>
+<label class="hidden md:flex flex-col min-w-40 !h-10 max-w-64">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full group">
+<div class="text-text-secondary-light dark:text-text-secondary-dark flex border-none bg-background-light dark:bg-background-dark items-center justify-center pl-4 rounded-l-lg border-r-0">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-lg text-text-main-light dark:text-text-main-dark focus:outline-0 focus:ring-0 border-none bg-background-light dark:bg-background-dark focus:border-none h-full placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark px-4 pl-2 text-base font-normal leading-normal transition-colors" placeholder="Buscar paciente..." value=""/>
+</div>
+</label>
+</div>
+<div class="flex flex-1 justify-end gap-8 items-center">
+<nav class="hidden lg:flex items-center gap-9">
+<a class="text-text-main-light dark:text-text-main-dark text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Dashboard</a>
+<a class="text-text-main-light dark:text-text-main-dark text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Agenda</a>
+<a class="text-text-main-light dark:text-text-main-dark text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Pacientes</a>
+<a class="text-text-main-light dark:text-text-main-dark text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Financeiro</a>
+</nav>
+<div class="flex gap-2">
+<button class="flex items-center justify-center rounded-lg size-10 bg-background-light dark:bg-background-dark text-text-main-light dark:text-text-main-dark hover:bg-primary/20 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="flex items-center justify-center rounded-lg size-10 bg-background-light dark:bg-background-dark text-text-main-light dark:text-text-main-dark hover:bg-primary/20 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">chat_bubble</span>
+</button>
+</div>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-border-light dark:border-border-dark cursor-pointer" data-alt="Portrait of the physiotherapist Dr. Silva" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAGDNvqXkNCOGjIvaabSHSd2NsIqzQT6pgG35ywJQmzm83ThLdLGzbkUERj1A_SHA-SS3nkIeuwkvyiyHftiRqT4JIWJ-w8KVZ-vkvLfmkl_mf-SXv7oqdxoCr5S_op5Za9J73jkne-qCejZuCId6KJMLzWpnXhLmhjuHthyaKut_efUApV1sl9_-7vQQai6yJNoNOQ_40K_b_d8qpnJJIajQUro82bOjsY2qqjC6OoWoi3qXoBl5-gHpxwbvDJZA6l7C3vlyiXU_c");'></div>
+</div>
+</header>
+<main class="flex flex-1 justify-center py-5 px-4 md:px-10 lg:px-20 xl:px-40">
+<div class="layout-content-container flex flex-col w-full max-w-[1200px] flex-1 gap-6">
+<div class="flex flex-wrap gap-2 px-4">
+<a class="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium hover:text-primary" href="#">Pacientes</a>
+<span class="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium">/</span>
+<a class="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium hover:text-primary" href="#">João Silva</a>
+<span class="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium">/</span>
+<span class="text-text-main-light dark:text-text-main-dark text-sm font-medium">Evolução Clínica</span>
+</div>
+<div class="flex flex-wrap justify-between items-end gap-4 px-4">
+<div class="flex min-w-72 flex-col gap-2">
+<div class="flex items-center gap-3">
+<h1 class="text-text-main-light dark:text-text-main-dark text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">João Silva</h1>
+<span class="px-2 py-1 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold uppercase tracking-wider border border-blue-200 dark:border-blue-800">Ativo</span>
+</div>
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-base font-normal">Reabilitação Pós-Cirúrgica LCA (Joelho Direito)</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center justify-center rounded-lg h-10 px-4 border border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark text-text-main-light dark:text-text-main-dark hover:bg-background-light dark:hover:bg-background-dark text-sm font-bold transition-colors">
+<span class="material-symbols-outlined mr-2 text-[18px]">print</span>
+                            Relatório
+                        </button>
+<button class="flex items-center justify-center rounded-lg h-10 px-4 bg-primary hover:bg-primary-hover text-white text-sm font-bold shadow-lg shadow-primary/20 transition-all transform hover:scale-105">
+<span class="material-symbols-outlined mr-2 text-[20px]">add</span>
+                            Nova Evolução
+                        </button>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-4">
+<div class="flex flex-col gap-2 rounded-xl p-6 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark shadow-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark">calendar_month</span>
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium">Total de Sessões</p>
+</div>
+<div class="flex items-baseline gap-2">
+<p class="text-text-main-light dark:text-text-main-dark text-2xl font-bold">12</p>
+<p class="text-primary text-sm font-bold">+2 essa semana</p>
+</div>
+</div>
+<div class="flex flex-col gap-2 rounded-xl p-6 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark shadow-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark">history</span>
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium">Última Visita</p>
+</div>
+<p class="text-text-main-light dark:text-text-main-dark text-2xl font-bold">2 dias atrás</p>
+</div>
+<div class="flex flex-col gap-2 rounded-xl p-6 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark shadow-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark">event_upcoming</span>
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium">Próxima Sessão</p>
+</div>
+<p class="text-text-main-light dark:text-text-main-dark text-2xl font-bold">Amanhã, 14:00</p>
+</div>
+<div class="flex flex-col gap-2 rounded-xl p-6 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark shadow-sm relative overflow-hidden">
+<div class="absolute right-0 top-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-6xl text-primary">vital_signs</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark">sentiment_dissatisfied</span>
+<p class="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium">Nível de Dor</p>
+</div>
+<div class="flex items-baseline gap-2">
+<p class="text-text-main-light dark:text-text-main-dark text-2xl font-bold">3/10</p>
+<div class="flex items-center text-primary text-sm font-bold bg-primary/10 px-2 py-0.5 rounded-full">
+<span class="material-symbols-outlined text-[14px] mr-1">trending_down</span>
+                                -20%
+                            </div>
+</div>
+</div>
+</div>
+<div class="px-4 border-b border-border-light dark:border-border-dark">
+<div class="flex gap-8 overflow-x-auto">
+<a class="group flex items-center justify-center border-b-[3px] border-b-primary pb-[13px] pt-4 min-w-fit cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-2 text-[20px] text-primary group-hover:text-primary-hover">view_timeline</span>
+<p class="text-text-main-light dark:text-text-main-dark text-sm font-bold tracking-[0.015em]">Timeline &amp; Evolução</p>
+</a>
+<a class="group flex items-center justify-center border-b-[3px] border-b-transparent pb-[13px] pt-4 min-w-fit cursor-pointer hover:border-b-border-light dark:hover:border-b-border-dark transition-colors" href="#">
+<span class="material-symbols-outlined mr-2 text-[20px] text-text-secondary-light dark:text-text-secondary-dark group-hover:text-text-main-light dark:group-hover:text-text-main-dark">monitoring</span>
+<p class="text-text-secondary-light dark:text-text-secondary-dark group-hover:text-text-main-light dark:group-hover:text-text-main-dark text-sm font-bold tracking-[0.015em] transition-colors">Gráficos</p>
+</a>
+<a class="group flex items-center justify-center border-b-[3px] border-b-transparent pb-[13px] pt-4 min-w-fit cursor-pointer hover:border-b-border-light dark:hover:border-b-border-dark transition-colors" href="#">
+<span class="material-symbols-outlined mr-2 text-[20px] text-text-secondary-light dark:text-text-secondary-dark group-hover:text-text-main-light dark:group-hover:text-text-main-dark">folder_open</span>
+<p class="text-text-secondary-light dark:text-text-secondary-dark group-hover:text-text-main-light dark:group-hover:text-text-main-dark text-sm font-bold tracking-[0.015em] transition-colors">Anexos</p>
+</a>
+<a class="group flex items-center justify-center border-b-[3px] border-b-transparent pb-[13px] pt-4 min-w-fit cursor-pointer hover:border-b-border-light dark:hover:border-b-border-dark transition-colors" href="#">
+<span class="material-symbols-outlined mr-2 text-[20px] text-text-secondary-light dark:text-text-secondary-dark group-hover:text-text-main-light dark:group-hover:text-text-main-dark">flag</span>
+<p class="text-text-secondary-light dark:text-text-secondary-dark group-hover:text-text-main-light dark:group-hover:text-text-main-dark text-sm font-bold tracking-[0.015em] transition-colors">Metas</p>
+</a>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 px-4 pb-10">
+<div class="lg:col-span-2 flex flex-col gap-6">
+<div class="bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-xl p-5 shadow-sm">
+<h3 class="text-sm font-bold text-text-main-light dark:text-text-main-dark mb-3 uppercase tracking-wider flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">edit_note</span>
+                                Registro Rápido (SOAP)
+                            </h3>
+<div class="flex gap-4">
+<div class="size-10 rounded-full bg-cover bg-center shrink-0 border border-border-light dark:border-border-dark" data-alt="User avatar of the current physiotherapist" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDmfyONRsuTpGmLLDxtqcgrFIME_OFvEXPZz8NBzIfuZfl_-NkYaBEUyeFHBxrGqAjx_eIX9F-7yfQ-xawKX2wH09FMiD1WaN6QjQOiuyuljs4jSon9OSzpdyQC22wVgyH0UrZyuK81egu74PRjRuq2-d0ThR2DTMl6toc25XISg56-VViqVOXRFN6_m58tr-7ezcGYDk68fl1PX-AQrI1R-_cOsv47kOWynQbjj-NFBDxEmhMCw1_25WoIc5WLvL7aTYvewlkS5DY");'></div>
+<div class="flex-1 flex flex-col gap-3">
+<textarea class="w-full rounded-lg bg-background-light dark:bg-background-dark border-transparent focus:border-primary focus:ring-0 text-text-main-light dark:text-text-main-dark placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-sm min-h-[100px]" placeholder="Descreva a evolução do paciente hoje..."></textarea>
+<div class="flex flex-wrap justify-between items-center gap-3">
+<div class="flex gap-2">
+<button class="p-2 rounded hover:bg-background-light dark:hover:bg-background-dark text-text-secondary-light dark:text-text-secondary-dark transition-colors" title="Attach Image">
+<span class="material-symbols-outlined text-[20px]">image</span>
+</button>
+<button class="p-2 rounded hover:bg-background-light dark:hover:bg-background-dark text-text-secondary-light dark:text-text-secondary-dark transition-colors" title="Add Pain Scale">
+<span class="material-symbols-outlined text-[20px]">sentiment_satisfied</span>
+</button>
+</div>
+<button class="px-5 py-2 rounded-lg bg-text-main-light dark:bg-text-main-dark text-background-light dark:text-background-dark font-bold text-sm hover:opacity-90 transition-opacity">
+                                            Salvar Registro
+                                        </button>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-6 relative pl-4">
+<div class="absolute left-[27px] top-4 bottom-0 w-[2px] bg-border-light dark:bg-border-dark"></div>
+<div class="relative flex gap-4">
+<div class="z-10 mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary ring-4 ring-white dark:ring-surface-dark">
+<div class="h-2 w-2 rounded-full bg-background-dark"></div>
+</div>
+<div class="flex-1 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark p-5 shadow-sm">
+<div class="flex flex-wrap justify-between items-start mb-3 gap-2">
+<div class="flex items-center gap-2">
+<p class="text-sm font-bold text-text-main-light dark:text-text-main-dark">Sessão #12 - Cinesioterapia</p>
+<span class="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 text-xs font-bold">Presença Confirmada</span>
+</div>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark font-medium">Hoje, 10:30</p>
+</div>
+<p class="text-sm text-text-main-light dark:text-text-main-dark leading-relaxed mb-4">
+                                        Paciente relatou dor leve (3/10) no início da sessão. Realizamos mobilização articular grau III no joelho direito e exercícios de fortalecimento de quadríceps em cadeia cinética fechada. Houve boa tolerância à carga.
+                                    </p>
+<div class="flex flex-wrap gap-2 mb-4">
+<span class="inline-flex items-center gap-1 rounded bg-background-light dark:bg-background-dark px-2 py-1 text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark border border-border-light dark:border-border-dark">
+<span class="material-symbols-outlined text-[14px]">fitness_center</span> Agachamento Iso (3x30s)
+                                        </span>
+<span class="inline-flex items-center gap-1 rounded bg-background-light dark:bg-background-dark px-2 py-1 text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark border border-border-light dark:border-border-dark">
+<span class="material-symbols-outlined text-[14px]">fitness_center</span> Extensão de Joelho (3x12)
+                                        </span>
+</div>
+<div class="flex items-center gap-3 pt-3 border-t border-border-light dark:border-border-dark">
+<div class="size-6 rounded-full bg-cover bg-center" data-alt="Small avatar of Dr. Silva" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAdBHoAKjHuzH5EUeR5b8naDHe749o7ofYNaCH_iuuwP2RQ82AKF2xg-U-teQvKTiyQePxVmzbY8zIZ1d_ukSU0kdJz0evCLAYuiOUmONmKtlajDQcDQbVoZdufbZ7RizODgvZ6szjZa4f7cYW3Zp3wOTQm2Olx74o1VJUMitiJ5_4UORjnzO9aRadteLJSMmdsT009WkHwlETG4rLMFRsHcYjoqU8I3tEEftdCdPtZcEF-84u-AAQQkGdyXDB_9KfEwgI0MtTzcuM");'></div>
+<p class="text-xs font-bold text-text-main-light dark:text-text-main-dark">Dr. Ana Silva <span class="text-text-secondary-light dark:text-text-secondary-dark font-normal mx-1">•</span> Fisioterapeuta</p>
+</div>
+</div>
+</div>
+<div class="relative flex gap-4">
+<div class="z-10 mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-border-light dark:bg-border-dark ring-4 ring-white dark:ring-surface-dark">
+<div class="h-2 w-2 rounded-full bg-text-secondary-light"></div>
+</div>
+<div class="flex-1 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark p-5 shadow-sm opacity-90">
+<div class="flex flex-wrap justify-between items-start mb-3 gap-2">
+<div class="flex items-center gap-2">
+<p class="text-sm font-bold text-text-main-light dark:text-text-main-dark">Sessão #11 - Eletroterapia</p>
+</div>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark font-medium">22 Out, 15:00</p>
+</div>
+<p class="text-sm text-text-main-light dark:text-text-main-dark leading-relaxed mb-4">
+                                        Aplicação de TENS para analgesia (Burst, 20min). Paciente chegou com dor 5/10 após caminhada longa no dia anterior. Saiu com dor 3/10. Orientado repouso relativo.
+                                    </p>
+<div class="flex items-center gap-3 pt-3 border-t border-border-light dark:border-border-dark">
+<div class="size-6 rounded-full bg-cover bg-center" data-alt="Small avatar of Dr. Silva" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAiqnprmaRV8AbkUW1kVdgoi-WKOz2WeryXn621Zb3Y39bidLrJQ-LiRRQrQ9AV5THNRbsXJHy48T6i6N5LjSuQz7zHHr_n9SFWIlC7Tj_-cJbaqTzckEAUJKgpuvWkEh7PrATx9y5aflwLbi1lJf_T73zfZMKIkjiw_MKuTw7LMqEg4wQ6DwcaNB8Hk4691UgGCtMuaB8c0lkr4Ghu9fHV9S-fHIreZ4js_Uy7VxAE_zBNyG8i6CP-1ThVGt-LVU92hZ7hnPSbVeA");'></div>
+<p class="text-xs font-bold text-text-main-light dark:text-text-main-dark">Dr. Ana Silva</p>
+</div>
+</div>
+</div>
+<div class="relative flex gap-4">
+<div class="z-10 mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-border-light dark:bg-border-dark ring-4 ring-white dark:ring-surface-dark">
+<div class="h-2 w-2 rounded-full bg-text-secondary-light"></div>
+</div>
+<div class="flex-1 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark p-5 shadow-sm opacity-80">
+<div class="flex flex-wrap justify-between items-start mb-3 gap-2">
+<div class="flex items-center gap-2">
+<p class="text-sm font-bold text-text-main-light dark:text-text-main-dark">Sessão #10 - Avaliação de Progresso</p>
+</div>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark font-medium">20 Out, 09:00</p>
+</div>
+<p class="text-sm text-text-main-light dark:text-text-main-dark leading-relaxed mb-3">
+                                        Reavaliação de amplitude de movimento (ADM). Flexão de joelho atingiu 110º (aumento de 10º desde última medição).
+                                    </p>
+<div class="flex gap-2 mb-4">
+<div class="size-16 rounded bg-cover bg-center cursor-pointer hover:opacity-80 border border-border-light dark:border-border-dark" data-alt="Thumbnail of knee flexibility photo" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCcAyU1N_r-jzrtQ6zjYxlwDiS1qf5BHX0DyznR9ujxe5oEwdlkDEeXgbvnZaAA7N8qoS3r0khdRkDjqevCtL8Dl7-fU7Y5I_dwKwss7QcfJhsSeeIKK1Fv6SkU9Eac9lfSh34_-u_7uGxhfmNtAThPjYQ1d5RGT7fYOkMGC2aE2dV1ie2j6_zNHAcbXAoRUoqVHl4FMpOJuCo3s-zgUt4NETkpD3u1S7GfzEXo0ndepM9MU_Z5L1v2CAcU3Kg2euGxZ4TFzMibeXU");'></div>
+<div class="size-16 rounded flex items-center justify-center bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+<span class="text-xs font-bold text-primary">+2</span>
+</div>
+</div>
+<div class="flex items-center gap-3 pt-3 border-t border-border-light dark:border-border-dark">
+<div class="size-6 rounded-full bg-cover bg-center" data-alt="Small avatar of Dr. Silva" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB2T7FRWW1R1ouwEmQBeTS-Fl9SjhiwZrtyb5XC57jTvBeIyjY-Q9UZRfgYO0zkohhdhgSyyoo9jnWDSddAt5snQR1PFDfeXnXAEr4DGWhvnggw4HaMRs0jDCxiA1Y5byS7Afvx0UJkbRhFG_p3kuk9JHVHkQXxg2of9DOa-djYRU6y_3p4InwmIv4XtX63EkaSp59FPSki3FmtiAp16ndFBo8CRZT5rlobfeObR98NQ5n6kB3aMajNLEr7kKezvYa0ycf6T_GuMmI");'></div>
+<p class="text-xs font-bold text-text-main-light dark:text-text-main-dark">Dr. Ana Silva</p>
+</div>
+</div>
+</div>
+<button class="ml-10 py-2 text-sm text-text-secondary-light dark:text-text-secondary-dark font-medium hover:text-primary transition-colors self-start">
+                                Ver registros anteriores...
+                            </button>
+</div>
+</div>
+<div class="flex flex-col gap-6">
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark p-5 shadow-sm">
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-sm font-bold text-text-main-light dark:text-text-main-dark">Histórico de Dor</h3>
+<button class="text-xs text-primary font-bold hover:underline">Ver Detalhes</button>
+</div>
+<div class="relative h-48 w-full flex items-end justify-between gap-1 px-2">
+<div class="absolute inset-0 flex flex-col justify-between pointer-events-none z-0">
+<div class="w-full h-px bg-border-light dark:bg-border-dark border-dashed border-b"></div>
+<div class="w-full h-px bg-border-light dark:bg-border-dark border-dashed border-b"></div>
+<div class="w-full h-px bg-border-light dark:bg-border-dark border-dashed border-b"></div>
+<div class="w-full h-px bg-border-light dark:bg-border-dark border-dashed border-b"></div>
+<div class="w-full h-px bg-border-light dark:bg-border-dark"></div>
+</div>
+<div class="relative z-10 w-1/6 bg-blue-200 dark:bg-blue-900 rounded-t-sm flex flex-col justify-end group cursor-pointer" style="height: 80%;">
+<div class="w-full h-1 bg-primary rounded-t-sm"></div>
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-text-main-light dark:bg-surface-light text-white dark:text-text-main-light text-[10px] px-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">8/10</div>
+</div>
+<div class="relative z-10 w-1/6 bg-blue-200 dark:bg-blue-900 rounded-t-sm flex flex-col justify-end group cursor-pointer" style="height: 70%;">
+<div class="w-full h-1 bg-primary rounded-t-sm"></div>
+</div>
+<div class="relative z-10 w-1/6 bg-blue-200 dark:bg-blue-900 rounded-t-sm flex flex-col justify-end group cursor-pointer" style="height: 50%;">
+<div class="w-full h-1 bg-primary rounded-t-sm"></div>
+</div>
+<div class="relative z-10 w-1/6 bg-blue-200 dark:bg-blue-900 rounded-t-sm flex flex-col justify-end group cursor-pointer" style="height: 60%;">
+<div class="w-full h-1 bg-primary rounded-t-sm"></div>
+</div>
+<div class="relative z-10 w-1/6 bg-blue-200 dark:bg-blue-900 rounded-t-sm flex flex-col justify-end group cursor-pointer" style="height: 40%;">
+<div class="w-full h-1 bg-primary rounded-t-sm"></div>
+</div>
+<div class="relative z-10 w-1/6 bg-blue-200 dark:bg-blue-900 rounded-t-sm flex flex-col justify-end group cursor-pointer" style="height: 30%;">
+<div class="w-full h-1 bg-primary rounded-t-sm"></div>
+<div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-text-main-light dark:bg-surface-light text-white dark:text-text-main-light text-[10px] px-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">3/10</div>
+</div>
+</div>
+<div class="flex justify-between text-[10px] text-text-secondary-light dark:text-text-secondary-dark mt-2 px-2">
+<span>10 Out</span>
+<span>Hoje</span>
+</div>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark p-5 shadow-sm">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-sm font-bold text-text-main-light dark:text-text-main-dark">Anexos Recentes</h3>
+<button class="rounded-full hover:bg-background-light dark:hover:bg-background-dark p-1">
+<span class="material-symbols-outlined text-[20px] text-text-secondary-light">add</span>
+</button>
+</div>
+<div class="space-y-3">
+<div class="flex items-center gap-3 p-2 rounded-lg hover:bg-background-light dark:hover:bg-background-dark transition-colors cursor-pointer group">
+<div class="size-10 rounded bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+</div>
+<div class="overflow-hidden">
+<p class="text-sm font-bold text-text-main-light dark:text-text-main-dark truncate">Laudo_Ressonancia.pdf</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark">15 Out 2023 • 2.4 MB</p>
+</div>
+<span class="material-symbols-outlined ml-auto text-text-secondary-light opacity-0 group-hover:opacity-100">download</span>
+</div>
+<div class="flex items-center gap-3 p-2 rounded-lg hover:bg-background-light dark:hover:bg-background-dark transition-colors cursor-pointer group">
+<div class="size-10 rounded bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">image</span>
+</div>
+<div class="overflow-hidden">
+<p class="text-sm font-bold text-text-main-light dark:text-text-main-dark truncate">Raio-X_Joelhos.jpg</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark">10 Out 2023 • 4.1 MB</p>
+</div>
+<span class="material-symbols-outlined ml-auto text-text-secondary-light opacity-0 group-hover:opacity-100">download</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark p-5 shadow-sm">
+<h3 class="text-sm font-bold text-text-main-light dark:text-text-main-dark mb-4">Metas de Curto Prazo</h3>
+<div class="space-y-4">
+<div class="flex items-start gap-3">
+<div class="mt-0.5 text-primary">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+</div>
+<div>
+<p class="text-sm font-medium text-text-main-light dark:text-text-main-dark line-through opacity-50">Reduzir dor para 5/10</p>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<div class="mt-0.5 text-text-secondary-light dark:text-text-secondary-dark">
+<span class="material-symbols-outlined text-[20px]">radio_button_unchecked</span>
+</div>
+<div>
+<p class="text-sm font-medium text-text-main-light dark:text-text-main-dark">Atingir 120º Flexão Joelho</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1">Atual: 110º</p>
+<div class="w-full bg-background-light dark:bg-background-dark rounded-full h-1.5 mt-2 overflow-hidden">
+<div class="bg-primary h-1.5 rounded-full" style="width: 90%"></div>
+</div>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<div class="mt-0.5 text-text-secondary-light dark:text-text-secondary-dark">
+<span class="material-symbols-outlined text-[20px]">radio_button_unchecked</span>
+</div>
+<div>
+<p class="text-sm font-medium text-text-main-light dark:text-text-main-dark">Marcha sem muletas</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>

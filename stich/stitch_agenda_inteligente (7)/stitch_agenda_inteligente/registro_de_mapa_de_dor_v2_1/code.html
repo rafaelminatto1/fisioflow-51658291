@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FisioFlow - Mapa de Dor V5</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        primary: "#3b82f6", // Bright Blue
+                        secondary: "#94a3b8",
+                        "background-dark": "#000000", 
+                        "card-dark": "#111111", 
+                        "border-dark": "#27272a",
+                        "surface-dark": "#1c1c1e",
+                        // Heatmap scale colors based on reference
+                        "scale-0": "#9ca3af",
+                        "scale-1": "#4ade80",
+                        "scale-2": "#84cc16",
+                        "scale-3": "#facc15",
+                        "scale-4": "#fbbf24",
+                        "scale-5": "#f59e0b",
+                        "scale-6": "#f97316",
+                        "scale-7": "#ea580c",
+                        "scale-8": "#ef4444",
+                        "scale-9": "#dc2626",
+                        "scale-10": "#7f1d1d",
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "3xl": "1.5rem",
+                    },
+                    boxShadow: {
+                        'glow': '0 0 20px -5px rgba(59, 130, 246, 0.5)',
+                        'glow-red': '0 0 20px -5px rgba(239, 68, 68, 0.5)',
+                    }
+                },
+            },
+        };
+    </script>
+<style>
+        body {
+            background-color: #000;color: #fff;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }input[type=range] {
+            -webkit-appearance: none; 
+            background: transparent; 
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #ffffff;
+            cursor: pointer;
+            margin-top: -8px; 
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: linear-gradient(to right, #4ade80, #facc15, #ef4444);
+            border-radius: 2px;
+        }.gauge-semi {
+            background: radial-gradient(circle at bottom, transparent 45%, #111111 46%), conic-gradient(from 270deg at 50% 100%, #4ade80 0deg, #facc15 60deg, #ef4444 120deg, #7f1d1d 180deg);
+            border-top-left-radius: 100px;
+            border-top-right-radius: 100px;
+        }
+        .gauge-needle {
+            transform-origin: bottom center;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-black text-slate-100 font-sans antialiased min-h-screen flex flex-col selection:bg-primary selection:text-white overflow-hidden">
+<header class="fixed top-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/10 px-4 py-3 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<button class="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors">
+<span class="material-icons-round text-slate-300">arrow_back</span>
+</button>
+<div>
+<h1 class="text-sm font-semibold tracking-tight text-white">Mapeamento da Dor</h1>
+<p class="text-[10px] text-slate-400">V5.0 Reference Style</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="hidden sm:flex flex-col items-end mr-2">
+<span class="text-xs font-medium text-slate-200">Maria Fulana</span>
+<span class="text-[10px] text-slate-500 font-mono">ID: 8492</span>
+</div>
+<button class="text-xs font-semibold bg-primary/20 text-blue-400 hover:bg-primary/30 px-3 py-1.5 rounded-full border border-blue-500/30 transition-all">
+                Salvar
+            </button>
+</div>
+</header>
+<main class="flex-1 pt-16 grid grid-rows-[1fr_auto] h-screen overflow-hidden">
+<div class="relative flex-1 bg-black w-full overflow-hidden flex flex-col">
+<div class="absolute top-4 left-4 z-20 flex flex-col gap-2">
+<div class="bg-white/5 backdrop-blur-md p-1 rounded-lg border border-white/10 flex flex-col gap-1">
+<button class="w-8 h-8 flex items-center justify-center rounded bg-white/10 text-white hover:bg-white/20 transition-all" title="Frente">
+<span class="text-[10px] font-bold">F</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded text-slate-400 hover:bg-white/10 hover:text-white transition-all" title="Costas">
+<span class="text-[10px] font-bold">C</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded text-slate-400 hover:bg-white/10 hover:text-white transition-all" title="Lateral E">
+<span class="text-[10px] font-bold">LE</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded text-slate-400 hover:bg-white/10 hover:text-white transition-all" title="Lateral D">
+<span class="text-[10px] font-bold">LD</span>
+</button>
+</div>
+</div>
+<div class="absolute top-4 right-4 z-20 flex flex-col gap-4 w-28 pointer-events-none">
+<div class="bg-card-dark/60 backdrop-blur-md rounded-xl border border-white/10 p-3 flex flex-col items-center shadow-lg">
+<span class="text-[10px] text-slate-400 uppercase tracking-widest mb-2 font-bold">Escore</span>
+<div class="relative w-20 h-10 overflow-hidden mb-1">
+<div class="gauge-semi w-20 h-20 rounded-full"></div>
+<div class="absolute bottom-0 left-1/2 w-0.5 h-10 bg-white origin-bottom gauge-needle rotate-[30deg] shadow-[0_0_10px_white]"></div>
+</div>
+<span class="text-2xl font-bold text-white font-mono mt-1">36</span>
+</div>
+<div class="bg-card-dark/60 backdrop-blur-md rounded-xl border border-white/10 p-3 flex flex-col shadow-lg">
+<span class="text-[10px] text-slate-400 uppercase tracking-widest mb-2 font-bold">Evolução</span>
+<div class="h-16 w-full flex items-end gap-1 relative border-l border-b border-white/20">
+<svg class="absolute inset-0 w-full h-full overflow-visible" preserveAspectRatio="none">
+<polyline fill="none" points="0,20 20,25 40,35 60,30 80,45" stroke="#facc15" stroke-width="2" vector-effect="non-scaling-stroke"></polyline>
+<circle cx="0" cy="20" fill="#ef4444" r="2"></circle>
+<circle cx="80" cy="45" fill="#facc15" r="2"></circle>
+</svg>
+</div>
+<div class="flex justify-between mt-1 text-[8px] text-slate-500 font-mono">
+<span>Aug</span>
+<span>Mar</span>
+</div>
+</div>
+</div>
+<div class="relative w-full h-full flex items-center justify-center cursor-crosshair">
+<div class="absolute inset-0 opacity-[0.1]" style="background-image: linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px); background-size: 40px 40px;"></div>
+<div class="relative h-[85%] w-auto aspect-[1/2.5]">
+<img alt="Human Body Outline" class="h-full w-full object-contain opacity-60 invert mix-blend-screen pointer-events-none select-none drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXpXJoNFWSf8IEbyzNEmHGL8Q-bUGcf-CZmz4nNepv7phK1wdxOybEbKSXb3nNVoxQ4sjIrp95_FvhFfkW03S4DBhrHNHox9vJZHhsdBSGLXk3U_Ej0tiLlNraiZwsAAgzQ51PNKK9zpQ_GvzgKEeBN_j4shsqBNfVYQUSxMtgvE020V29U1ufJzgoV4EUfDlAKSsNR_F0qlq-pJSDNMOpc_ZYoNWSjJq9arzY9OkgD_gWuPH4yyLJwnV9HIPHIuhYGb8o1Nf5OpK7"/>
+<div class="absolute top-[14%] left-[20%] w-24 h-16 bg-yellow-500/30 blur-xl rounded-full mix-blend-screen pointer-events-none"></div>
+<div class="absolute top-[15%] left-[25%] group cursor-pointer">
+<div class="relative">
+<div class="w-6 h-6 rounded-full bg-yellow-500 border-2 border-white shadow-[0_0_15px_rgba(234,179,8,0.8)] z-10 animate-pulse"></div>
+<div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-card-dark border border-yellow-500/50 px-2 py-1 rounded text-[10px] font-mono text-yellow-400 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                Pescoço • 4
+                            </div>
+</div>
+</div>
+<div class="absolute top-[68%] right-[25%] group cursor-pointer z-30">
+<div class="relative flex items-center justify-center w-12 h-12 -ml-3 -mt-3">
+<div class="absolute inset-0 bg-red-500/20 rounded-full animate-ping"></div>
+<div class="absolute inset-0 border border-red-500 rounded-full opacity-50"></div>
+<div class="w-5 h-5 rounded-full bg-red-600 border-2 border-white shadow-[0_0_20px_rgba(220,38,38,0.8)] z-10"></div>
+<div class="absolute top-1/2 left-1/2 w-[80px] h-[1px] bg-gradient-to-r from-red-500 to-transparent origin-left rotate-45 pointer-events-none"></div>
+</div>
+</div>
+<div class="absolute top-[18%] right-[15%] group cursor-pointer">
+<div class="w-4 h-4 rounded-full bg-green-500 border border-white/50 shadow-[0_0_10px_rgba(74,222,128,0.5)] opacity-80"></div>
+</div>
+</div>
+</div>
+<div class="absolute bottom-4 left-0 right-0 text-center pointer-events-none z-10">
+<p class="text-[10px] text-slate-500 font-mono">Tap body parts to add markers • Hold to drag</p>
+</div>
+</div>
+<aside class="bg-surface-dark border-t border-white/10 shadow-[0_-10px_40px_-10px_rgba(0,0,0,0.8)] z-40 pb-safe">
+<div class="flex justify-center pt-3 pb-1 w-full cursor-grab active:cursor-grabbing">
+<div class="w-10 h-1 rounded-full bg-white/20"></div>
+</div>
+<div class="px-5 pb-6 pt-2">
+<div class="flex items-start justify-between mb-6">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
+<h2 class="text-lg font-bold text-white tracking-tight">Joelho Direito</h2>
+</div>
+<p class="text-xs text-slate-400 pl-4 font-mono">Anterior • Articular</p>
+</div>
+<button class="text-xs font-medium text-red-400 hover:text-red-300 flex items-center gap-1 px-2 py-1.5 rounded-md hover:bg-red-900/20 transition-colors border border-transparent hover:border-red-900/50">
+<span class="material-icons-round text-sm">delete</span>
+</button>
+</div>
+<div class="mb-8">
+<div class="flex justify-between items-end mb-4">
+<label class="text-xs uppercase tracking-wider font-bold text-slate-400">Intensidade (EVA)</label>
+<div class="flex items-baseline gap-1">
+<span class="text-3xl font-bold text-red-500 font-mono">8</span>
+<span class="text-xs text-slate-500">/10</span>
+</div>
+</div>
+<div class="relative w-full h-8 flex items-center">
+<input class="w-full z-20 focus:outline-none" max="10" min="0" step="1" type="range" value="8"/>
+<div class="absolute top-1/2 -translate-y-1/2 w-full flex justify-between px-1 pointer-events-none z-10">
+<div class="w-0.5 h-2 bg-white/20"></div> 
+<div class="w-0.5 h-1 bg-white/10"></div>
+<div class="w-0.5 h-1 bg-white/10"></div>
+<div class="w-0.5 h-1 bg-white/10"></div>
+<div class="w-0.5 h-1 bg-white/10"></div>
+<div class="w-0.5 h-2 bg-white/20"></div> 
+<div class="w-0.5 h-1 bg-white/10"></div>
+<div class="w-0.5 h-1 bg-white/10"></div>
+<div class="w-0.5 h-1 bg-white/10"></div>
+<div class="w-0.5 h-1 bg-white/10"></div>
+<div class="w-0.5 h-2 bg-white/20"></div> 
+</div>
+</div>
+<div class="flex justify-between mt-2 text-[10px] text-slate-500 font-mono uppercase">
+<span>Sem dor</span>
+<span class="text-red-400 font-bold">Insuportável</span>
+</div>
+</div>
+<div>
+<label class="block text-xs uppercase tracking-wider font-bold text-slate-400 mb-3">Características</label>
+<div class="flex flex-wrap gap-2">
+<button class="px-3 py-1.5 rounded-full text-xs font-medium border border-red-500/50 bg-red-500/10 text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.2)]">
+                            Pontada
+                        </button>
+<button class="px-3 py-1.5 rounded-full text-xs font-medium border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:border-white/20 hover:text-slate-200 transition-colors">
+                            Queimação
+                        </button>
+<button class="px-3 py-1.5 rounded-full text-xs font-medium border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:border-white/20 hover:text-slate-200 transition-colors">
+                            Latejante
+                        </button>
+<button class="px-3 py-1.5 rounded-full text-xs font-medium border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:border-white/20 hover:text-slate-200 transition-colors">
+                            Irradiada
+                        </button>
+<button class="w-8 h-8 rounded-full border border-dashed border-white/20 flex items-center justify-center hover:bg-white/5 text-slate-500 hover:text-slate-300 transition-colors">
+<span class="material-icons-round text-sm">add</span>
+</button>
+</div>
+</div>
+<div class="mt-6 pt-4 border-t border-white/5">
+<button class="w-full bg-white text-black font-bold py-3.5 rounded-xl shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_25px_rgba(255,255,255,0.3)] active:scale-[0.99] transition-all flex items-center justify-center gap-2">
+<span>Confirmar Registro</span>
+<span class="material-icons-round text-base">check</span>
+</button>
+</div>
+</div>
+</aside>
+</main>
+
+</body></html>

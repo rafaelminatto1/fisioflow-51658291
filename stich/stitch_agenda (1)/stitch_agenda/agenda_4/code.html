@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Dynamic Resource Allocation Canvas</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#89CFF0","background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                        "text-main": "#111813",
+                        "text-muted": "#61896f",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1c2e22",
+                        "blue-resource": "#3b82f6",
+                        "purple-resource": "#9333ea",
+                        "orange-resource": "#fb923c",
+                        "gray-resource": "#6b7280",
+                    },
+                    fontFamily: {
+                        // Changed font to a bold sans-serif for quick scanning
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+    </style>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }.timeline-grid {
+            background-size: 100% 60px;background-image: 
+                linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);}
+        .dark .timeline-grid {
+            background-image: 
+                linear-gradient(to bottom, #374151 1px, transparent 1px);}.resource-lane {
+            min-height: 80vh;padding: 1rem;
+            background-color: theme('colors.surface-light');
+            border-radius: theme('borderRadius.lg');
+            position: relative;
+        }
+        .dark .resource-lane {
+            background-color: theme('colors.surface-dark');
+        }
+        .task-card {
+            cursor: grab;
+            margin-bottom: 0.75rem;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        }
+        .task-card:active {
+            cursor: grabbing;
+            transform: scale(1.02);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-text-main dark:text-white transition-colors duration-200">
+<div class="flex h-screen w-full overflow-hidden">
+<aside class="w-72 flex-shrink-0 flex flex-col bg-surface-light dark:bg-surface-dark border-r border-[#f0f4f2] dark:border-gray-800 z-20">
+<div class="flex h-full flex-col justify-between p-4">
+<div class="flex flex-col gap-6">
+<div class="flex gap-3 items-center px-2">
+<div class="bg-center bg-no-repeat bg-cover rounded-xl size-10 bg-primary/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined filled">spa</span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-text-main dark:text-white text-base font-bold leading-normal">FisioFlow</h1>
+<p class="text-text-muted text-xs font-normal leading-normal">v3.0</p>
+</div>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-main dark:text-gray-300 hover:bg-background-light dark:hover:bg-gray-800 transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm font-medium">Overview</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-text-main dark:text-white border-l-4 border-primary" href="#">
+<span class="material-symbols-outlined filled text-primary">flowsheet</span>
+<span class="text-sm font-bold">Allocation Canvas</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-main dark:text-gray-300 hover:bg-background-light dark:hover:bg-gray-800 transition-colors" href="#">
+<span class="material-symbols-outlined">person_add</span>
+<span class="text-sm font-medium">Client Directory</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-main dark:text-gray-300 hover:bg-background-light dark:hover:bg-gray-800 transition-colors" href="#">
+<span class="material-symbols-outlined">work</span>
+<span class="text-sm font-medium">Resources</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-main dark:text-gray-300 hover:bg-background-light dark:hover:bg-gray-800 transition-colors" href="#">
+<span class="material-symbols-outlined">insights</span>
+<span class="text-sm font-medium">Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-main dark:text-gray-300 hover:bg-background-light dark:hover:bg-gray-800 transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-medium">Admin Settings</span>
+</a>
+</nav>
+<div class="h-px bg-gray-200 dark:bg-gray-800 w-full my-2"></div>
+<div class="flex flex-col gap-4 px-2">
+<h3 class="text-xs font-bold uppercase tracking-wider text-text-muted">Pending Bookings</h3>
+<div class="flex flex-col gap-3">
+<div class="task-card bg-gray-100 dark:bg-gray-700 p-3 rounded-lg border-l-4 border-gray-400">
+<div class="flex items-center justify-between">
+<p class="text-sm font-bold text-gray-800 dark:text-gray-100">Laura Johnson</p>
+<span class="material-symbols-outlined text-xs text-gray-500">schedule</span>
+</div>
+<p class="text-xs text-gray-600 dark:text-gray-300 mt-1">Initial Consultation - 60 min</p>
+<p class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">Requested: Oct 25, 9 AM</p>
+<span class="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-2 block">Drag to Assign</span>
+</div>
+<div class="task-card bg-gray-100 dark:bg-gray-700 p-3 rounded-lg border-l-4 border-gray-400">
+<div class="flex items-center justify-between">
+<p class="text-sm font-bold text-gray-800 dark:text-gray-100">David Chen</p>
+<span class="material-symbols-outlined text-xs text-gray-500">add_task</span>
+</div>
+<p class="text-xs text-gray-600 dark:text-gray-300 mt-1">Follow-up Session - 45 min</p>
+<p class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">Requested: Any morning</p>
+<span class="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-2 block">Drag to Assign</span>
+</div>
+<div class="task-card bg-gray-100 dark:bg-gray-700 p-3 rounded-lg border-l-4 border-gray-400">
+<div class="flex items-center justify-between">
+<p class="text-sm font-bold text-gray-800 dark:text-gray-100">Emergency Case</p>
+<span class="material-symbols-outlined text-xs text-red-500">emergency</span>
+</div>
+<p class="text-xs text-gray-600 dark:text-gray-300 mt-1">Urgent appointment - 30 min</p>
+<p class="text-[10px] text-red-500 dark:text-red-400 mt-1 font-semibold">ASAP!</p>
+<span class="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-2 block">Drag to Assign</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3 px-2 py-3 mt-auto rounded-lg hover:bg-background-light dark:hover:bg-gray-800 cursor-pointer">
+<div class="size-9 rounded-full bg-cover bg-center border-2 border-white dark:border-gray-700 shadow-sm" data-alt="Portrait of a female user with blonde hair" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDrTU9dy76uJx_hflUAvS8IlGKEMDEYuqm2GtqmKMvFPq63tZrgdEHmccvbbqArpp6rRwXUbsA9tTNfdoinWDWPiylIs-azYDyjrHse-L8LKHPWgZ3QPwoEeh-T2Ua8hDd2QV6IrQiQyfWVircuY450FJE5c6lWvqyGfJDbVtDgWQh9GI-dun517lREu_2Cn4af0QFXKEXb7Y1pCp3lPnUC_S1Rzo1nIbY_Qg-sz37PmHIHOFP5pd5uFC-UJJy2wqQvD5lXF1XnQ0c");'></div>
+<div class="flex flex-col overflow-hidden">
+<p class="text-sm font-bold text-text-main dark:text-white truncate">Jane Doe</p>
+<p class="text-xs text-text-muted truncate">Admin</p>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col h-full overflow-hidden bg-background-light dark:bg-background-dark">
+<header class="h-16 flex items-center justify-between px-6 bg-surface-light dark:bg-surface-dark border-b border-[#f0f4f2] dark:border-gray-800 flex-shrink-0 z-10">
+<div class="flex items-center gap-4">
+<h2 class="text-xl font-bold text-text-main dark:text-white">Dynamic Resource Allocation Canvas</h2>
+<div class="h-6 w-px bg-gray-300 dark:bg-gray-700 mx-2"></div>
+<span class="text-sm text-text-muted">October 24, 2023</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-text-muted group-focus-within:text-primary transition-colors">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="block w-64 pl-10 pr-3 py-2 bg-[#f0f4f2] dark:bg-gray-800 border-none rounded-lg text-sm placeholder-text-muted text-text-main focus:ring-2 focus:ring-primary/50 transition-all" placeholder="Search tasks, resources..." type="text"/>
+</div>
+<button class="flex items-center justify-center size-10 rounded-lg bg-[#f0f4f2] dark:bg-gray-800 text-text-main hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+</button>
+<button class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 shadow-sm shadow-primary/30 transition-all">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                        Add Unassigned Task
+                    </button>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden">
+<div class="flex-1 flex flex-col min-w-0 bg-white dark:bg-background-dark relative">
+<div class="flex items-center justify-between px-6 py-4 border-b border-[#f0f4f2] dark:border-gray-800 bg-surface-light dark:bg-surface-dark">
+<div class="flex items-center gap-4">
+<button class="text-sm font-bold text-text-main dark:text-white border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Today</button>
+<div class="flex items-center gap-2">
+<button class="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-symbols-outlined text-text-main dark:text-white">chevron_left</span></button>
+<button class="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-symbols-outlined text-text-main dark:text-white">chevron_right</span></button>
+</div>
+<h3 class="text-lg font-bold text-text-main dark:text-white">Week of Oct 24</h3>
+</div>
+<div class="flex bg-[#f0f4f2] dark:bg-gray-800 p-1 rounded-lg">
+<button class="px-3 py-1 text-xs font-medium rounded text-text-muted hover:text-text-main dark:hover:text-white transition-colors">Day View</button>
+<button class="px-3 py-1 text-xs font-bold rounded bg-white dark:bg-gray-700 shadow-sm text-text-main dark:text-white transition-colors">Resource Lanes</button>
+<button class="px-3 py-1 text-xs font-medium rounded text-text-muted hover:text-text-main dark:hover:text-white transition-colors">Timeline</button>
+</div>
+</div>
+<div class="flex-1 overflow-x-auto overflow-y-auto relative bg-white dark:bg-[#15201b] p-4 flex gap-4">
+<div class="flex-1 flex flex-col gap-4">
+<div class="resource-lane flex-1 p-4 flex flex-col gap-3 border border-gray-200 dark:border-gray-700 shadow-sm">
+<div class="flex items-center gap-2 pb-3 border-b border-gray-100 dark:border-gray-800">
+<span class="size-8 flex items-center justify-center rounded-full bg-blue-resource/10 text-blue-resource font-bold text-lg shadow-sm">
+<span class="material-symbols-outlined filled text-sm">person</span>
+</span>
+<div>
+<p class="text-sm font-bold text-text-main dark:text-white">Dr. Sarah Smith</p>
+<p class="text-xs text-text-muted">Physiotherapist</p>
+</div>
+</div>
+<div class="task-card bg-blue-100 dark:bg-blue-900/40 border-l-4 border-blue-resource rounded p-3 cursor-pointer hover:shadow-md transition-shadow">
+<div class="flex justify-between items-center">
+<p class="text-sm font-bold text-blue-800 dark:text-blue-100">John Doe - Initial Assessment</p>
+<span class="material-symbols-outlined text-[14px] text-blue-resource">event_note</span>
+</div>
+<p class="text-xs text-blue-600 dark:text-blue-200 mt-1">10:00 - 11:30 (90 min)</p>
+<div class="mt-2 flex items-center gap-1 text-xs text-blue-resource font-medium">
+<span class="material-symbols-outlined text-[14px]">drag_indicator</span> Drag to Reschedule
+</div>
+</div>
+<div class="task-card bg-blue-100 dark:bg-blue-900/40 border-l-4 border-blue-resource rounded p-3 cursor-pointer hover:shadow-md transition-shadow">
+<div class="flex justify-between items-center">
+<p class="text-sm font-bold text-blue-800 dark:text-blue-100">Sarah Lee - Shoulder Injury Follow-up</p>
+<span class="material-symbols-outlined text-[14px] text-blue-resource">healing</span>
+</div>
+<p class="text-xs text-blue-600 dark:text-blue-200 mt-1">12:30 - 01:30 (60 min)</p>
+<div class="mt-2 flex items-center gap-1 text-xs text-blue-resource font-medium">
+<span class="material-symbols-outlined text-[14px]">drag_indicator</span> Reschedule Slot
+</div>
+</div>
+<div class="h-[60px] border-2 border-dashed border-primary bg-primary/10 rounded p-2 flex items-center justify-center transition-opacity hover:opacity-100 hover:scale-105">
+<span class="text-sm font-bold text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                                            Add Slot
+                </span>
+</div>
+</div>
+<div class="resource-lane flex-1 p-4 flex flex-col gap-3 border border-gray-200 dark:border-gray-700 shadow-sm">
+<div class="flex items-center gap-2 pb-3 border-b border-gray-100 dark:border-gray-800">
+<span class="size-8 flex items-center justify-center rounded-full bg-purple-resource/10 text-purple-resource font-bold text-lg shadow-sm">
+<span class="material-symbols-outlined filled text-sm">person</span>
+</span>
+<div>
+<p class="text-sm font-bold text-text-main dark:text-white">Dr. Mike Ross</p>
+<p class="text-xs text-text-muted">Chiropractor</p>
+</div>
+</div>
+<div class="task-card bg-green-100 dark:bg-green-900/40 border-l-4 border-green-500 rounded p-3 cursor-pointer hover:shadow-md transition-shadow">
+<div class="flex justify-between items-center">
+<p class="text-sm font-bold text-green-800 dark:text-green-100">Team Meeting</p>
+<span class="material-symbols-outlined text-[14px] text-green-600">check_circle</span>
+</div>
+<p class="text-xs text-green-600 dark:text-green-200 mt-1">09:00 - 10:00 (60 min)</p>
+<div class="mt-2 flex items-center gap-1 text-xs text-green-600 font-medium">
+<span class="material-symbols-outlined text-[14px]">drag_indicator</span> Move Meeting
+</div>
+</div>
+<div class="task-card bg-purple-100 dark:bg-purple-900/40 border-l-4 border-purple-resource rounded p-3 cursor-pointer hover:shadow-md transition-shadow">
+<div class="flex justify-between items-center">
+<p class="text-sm font-bold text-purple-800 dark:text-purple-100">Mike Ross - Rehabilitation Session</p>
+<span class="material-symbols-outlined text-[14px] text-purple-resource">directions_walk</span>
+</div>
+<p class="text-xs text-purple-600 dark:text-purple-200 mt-1">01:00 - 02:30 (90 min)</p>
+<div class="mt-2 flex items-center gap-1 text-xs text-purple-resource font-medium">
+<span class="material-symbols-outlined text-[14px]">drag_indicator</span> Drag to Re-assign
+</div>
+</div>
+<div class="h-[60px] border-2 border-dashed border-primary bg-primary/10 rounded p-2 flex items-center justify-center transition-opacity hover:opacity-100 hover:scale-105">
+<span class="text-sm font-bold text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                                            Add Slot
+                </span>
+</div>
+</div>
+<div class="resource-lane flex-1 p-4 flex flex-col gap-3 border border-gray-200 dark:border-gray-700 shadow-sm">
+<div class="flex items-center gap-2 pb-3 border-b border-gray-100 dark:border-gray-800">
+<span class="size-8 flex items-center justify-center rounded-full bg-orange-resource/10 text-orange-resource font-bold text-lg shadow-sm">
+<span class="material-symbols-outlined filled text-sm">meeting_room</span>
+</span>
+<div>
+<p class="text-sm font-bold text-text-main dark:text-white">Room 101</p>
+<p class="text-xs text-text-muted">Treatment Room</p>
+</div>
+</div>
+<div class="task-card bg-gray-100 dark:bg-gray-700/40 border-l-4 border-gray-400 rounded p-3 cursor-pointer hover:shadow-md transition-shadow opacity-60">
+<div class="flex justify-between items-center">
+<p class="text-sm font-bold text-gray-800 dark:text-gray-100 line-through">Maintenance</p>
+<span class="material-symbols-outlined text-[14px] text-gray-400">build</span>
+</div>
+<p class="text-xs text-gray-600 dark:text-gray-300 mt-1">10:00 - 11:00 (60 min)</p>
+<div class="mt-2 flex items-center gap-1 text-xs text-gray-400 font-medium">
+<span class="material-symbols-outlined text-[14px]">lock</span> Booked
+</div>
+</div>
+<div class="task-card bg-orange-100 dark:bg-orange-900/40 border-l-4 border-orange-resource rounded p-3 cursor-pointer hover:shadow-md transition-shadow">
+<div class="flex justify-between items-center">
+<p class="text-sm font-bold text-orange-800 dark:text-orange-100">Group Therapy Session</p>
+<span class="material-symbols-outlined text-[14px] text-orange-resource">groups</span>
+</div>
+<p class="text-xs text-orange-600 dark:text-orange-200 mt-1">12:30 - 02:00 (90 min)</p>
+<div class="mt-2 flex items-center gap-1 text-xs text-orange-resource font-medium">
+<span class="material-symbols-outlined text-[14px]">drag_indicator</span> Move Room
+</div>
+</div>
+<div class="h-[60px] border-2 border-dashed border-primary bg-primary/10 rounded p-2 flex items-center justify-center transition-opacity hover:opacity-100 hover:scale-105">
+<span class="text-sm font-bold text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                                            Add Slot
+                </span>
+</div>
+</div>
+<div class="resource-lane flex-1 p-4 flex flex-col gap-3 border border-gray-200 dark:border-gray-700 shadow-sm">
+<div class="flex items-center gap-2 pb-3 border-b border-gray-100 dark:border-gray-800">
+<span class="size-8 flex items-center justify-center rounded-full bg-gray-resource/10 text-gray-resource font-bold text-lg shadow-sm">
+<span class="material-symbols-outlined filled text-sm">meeting_room</span>
+</span>
+<div>
+<p class="text-sm font-bold text-text-main dark:text-white">Room 102</p>
+<p class="text-xs text-text-muted">Consultation Room</p>
+</div>
+</div>
+<div class="task-card bg-gray-100 dark:bg-gray-700/40 border-l-4 border-gray-resource rounded p-3 cursor-pointer hover:shadow-md transition-shadow">
+<div class="flex justify-between items-center">
+<p class="text-sm font-bold text-gray-800 dark:text-gray-100">Initial Consult - Dr. Ross</p>
+<span class="material-symbols-outlined text-[14px] text-gray-resource">forum</span>
+</div>
+<p class="text-xs text-gray-600 dark:text-gray-300 mt-1">09:00 - 10:00 (60 min)</p>
+<div class="mt-2 flex items-center gap-1 text-xs text-gray-resource font-medium">
+<span class="material-symbols-outlined text-[14px]">drag_indicator</span> Re-assign Room
+</div>
+</div>
+<div class="h-[60px] border-2 border-dashed border-primary bg-primary/10 rounded p-2 flex items-center justify-center transition-opacity hover:opacity-100 hover:scale-105">
+<span class="text-sm font-bold text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                                            Add Slot
+                </span>
+</div>
+</div>
+</div>
+</div>
+<button class="xl:hidden absolute bottom-6 right-6 size-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform z-30">
+<span class="material-symbols-outlined text-[28px]">add</span>
+</button>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FisioFlow - Exercise Details</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#0aa3f0",
+              "background-light": "#f5f7f8",
+              "background-dark": "#101c22",
+            },
+            fontFamily: {
+              display: ["Inter", "sans-serif"],
+            },
+            borderRadius: {
+              DEFAULT: "0.25rem",
+              lg: "0.5rem",
+              xl: "0.75rem",
+              full: "9999px",
+            },
+          },
+        },
+      };
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-800 dark:text-gray-200">
+<div class="flex flex-col min-h-screen">
+<header class="bg-white dark:bg-background-dark border-b border-gray-200 dark:border-gray-800 shadow-sm">
+<div class="container mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex items-center justify-between h-16">
+<div class="flex items-center gap-4">
+<div class="text-primary h-8 w-8">
+<svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_6_319)">
+<path d="M8.57829 8.57829C5.52816 11.6284 3.451 15.5145 2.60947 19.7452C1.76794 23.9758 2.19984 28.361 3.85056 32.3462C5.50128 36.3314 8.29667 39.7376 11.8832 42.134C15.4698 44.5305 19.6865 45.8096 24 45.8096C28.3135 45.8096 32.5302 44.5305 36.1168 42.134C39.7033 39.7375 42.4987 36.3314 44.1494 32.3462C45.8002 28.361 46.2321 23.9758 45.3905 19.7452C44.549 15.5145 42.4718 11.6284 39.4217 8.57829L24 24L8.57829 8.57829Z" fill="currentColor"></path>
+</g>
+<defs>
+<clipPath id="clip0_6_319"><rect fill="white" height="48" width="48"></rect></clipPath>
+</defs>
+</svg>
+</div>
+<h1 class="text-xl font-bold text-gray-900 dark:text-white">FisioFlow</h1>
+</div>
+<nav class="hidden md:flex items-center space-x-8">
+<a class="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary" href="#">Dashboard</a>
+<a class="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary" href="#">Patients</a>
+<a class="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary" href="#">Appointments</a>
+<a class="text-sm font-medium text-primary dark:text-primary" href="#">Exercises</a>
+<a class="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary" href="#">Finances</a>
+<a class="text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary" href="#">Reports</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-background-dark/50 hover:text-primary">
+<svg fill="currentColor" height="20px" viewBox="0 0 256 256" width="20px" xmlns="http://www.w3.org/2000/svg">
+<path d="M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216ZM48,184c7.7-13.24,16-43.92,16-80a64,64,0,1,1,128,0c0,36.05,8.28,66.73,16,80Z"></path>
+</svg>
+</button>
+<div class="w-10 h-10 rounded-full bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDO5hfWJ9WW51u5yQPMKwjaSkS4wA6VIO2VYoPQaLBOXgzkXZfU0Ej3bQe2HGgzKgZ_cqqgfN5srfxBw2_GJbBCmHvlMNAWj64J2H7A4SPeR8p8wXjBliV0dE7LmGe5jzsky7yre86csIO_YPyuXVoLbolkr7xjvvvFKqlD6qhhl1ZLOuaqCaqwCwc7u5EjxnVs-CVbEubmaSoB1xzRt8bjmqU6Joxz4RTGwyG-GJgYOpaXaPPyCqQjB80P2L8nXXoGtHl8Aix9WXfY");'></div>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-4xl mx-auto">
+<div class="mb-6 text-sm font-medium text-gray-500 dark:text-gray-400">
+<a class="hover:text-primary" href="#">Exercises</a>
+<span class="mx-2">/</span>
+<span class="text-gray-800 dark:text-gray-200">Shoulder Abduction</span>
+</div>
+<div class="bg-white dark:bg-background-dark rounded-xl shadow-lg overflow-hidden">
+<div class="grid grid-cols-1 lg:grid-cols-5">
+<div class="lg:col-span-3">
+<div class="relative aspect-video">
+<div class="absolute inset-0 bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDTfvPRkHXcqavyFpG2To7hOJTKi1cJd80WzK-oWRwolCVxHsr8r0y4CINhtAtqILVzsgZkjp9tD-bIp7igQThgYztWjbnUooC-XXvC90yJMfcjvfkyj6vR8QQpJAW_hXVwhvsTUvolAKcX4KSf4Yi3LX2ZeVNPFGtIaG8_xKbdopSKyphPdDNQ4NA65cJw4GCxBOsouo2_xduvOevkkfsYZLd8Q7BiT-FsAiaxjO-Qgyr3YIHQpC32ONJ515fPMDS3Mugl3NBPdzvw");'></div>
+<div class="absolute inset-0 bg-black/30 flex items-center justify-center">
+<button class="w-16 h-16 rounded-full bg-primary/80 text-white flex items-center justify-center hover:bg-primary transition-colors">
+<svg fill="currentColor" height="32px" viewBox="0 0 256 256" width="32px" xmlns="http://www.w3.org/2000/svg">
+<path d="M240,128a15.74,15.74,0,0,1-7.6,13.51L88.32,229.65a16,16,0,0,1-16.2.3A15.86,15.86,0,0,1,64,216.13V39.87a15.86,15.86,0,0,1,8.12-13.82,16,16,0,0,1,16.2.3L232.4,114.49A15.74,15.74,0,0,1,240,128Z"></path>
+</svg>
+</button>
+</div>
+</div>
+</div>
+<div class="lg:col-span-2 p-6 flex flex-col">
+<h2 class="text-2xl font-bold text-gray-900 dark:text-white">Shoulder Abduction</h2>
+<div class="mt-2 flex items-center">
+<div class="flex items-center text-primary">
+<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+</div>
+<span class="ml-1.5 text-sm font-medium text-gray-500 dark:text-gray-400">4.5 (120 reviews)</span>
+<span class="mx-2 text-gray-300 dark:text-gray-600">|</span>
+<span class="text-sm font-semibold text-green-600 dark:text-green-400">Beginner</span>
+</div>
+<p class="mt-4 text-sm text-gray-600 dark:text-gray-300 flex-grow">
+                  This exercise strengthens the deltoid muscles and improves shoulder mobility. It's commonly used in rehabilitation programs for shoulder injuries and to enhance
+                  overall upper body strength.
+                </p>
+<div class="mt-6 flex space-x-2">
+<button class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary transition-colors">
+<svg fill="currentColor" height="20px" viewBox="0 0 256 256" width="20px" xmlns="http://www.w3.org/2000/svg">
+<path d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32ZM128,206.8C109.74,196.16,32,147.69,32,94A46.06,46.06,0,0,1,78,48c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,147.61,146.24,196.15,128,206.8Z"></path>
+</svg>
+</button>
+<button class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary transition-colors">
+<svg fill="currentColor" height="20px" viewBox="0 0 256 256" width="20px" xmlns="http://www.w3.org/2000/svg">
+<path d="M229.66,109.66l-48,48a8,8,0,0,1-11.32-11.32L204.69,112H165a88,88,0,0,0-85.23,66,8,8,0,0,1-15.5-4A103.94,103.94,0,0,1,165,96h39.71L170.34,61.66a8,8,0,0,1,11.32-11.32l48,48A8,8,0,0,1,229.66,109.66ZM192,208H40V88a8,8,0,0,0-16,0V208a16,16,0,0,0,16,16H192a8,8,0,0,0,0-16Z"></path>
+</svg>
+</button>
+<button class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary transition-colors">
+<svg fill="currentColor" height="20px" viewBox="0 0 256 256" width="20px" xmlns="http://www.w3.org/2000/svg">
+<path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"></path>
+</svg>
+</button>
+<button class="ml-auto w-full sm:w-auto bg-primary text-white font-semibold py-2 px-4 rounded-lg flex items-center justify-center text-sm hover:bg-primary/90 transition-colors">
+<svg class="mr-2" fill="currentColor" height="20px" viewBox="0 0 256 256" width="20px" xmlns="http://www.w3.org/2000/svg">
+<path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"></path>
+</svg>
+                    Add to Prescription
+                  </button>
+</div>
+</div>
+</div>
+<div class="border-t border-gray-200 dark:border-gray-800">
+<div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+<div>
+<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Details</h3>
+<div class="space-y-4 text-sm">
+<div>
+<h4 class="font-semibold text-gray-700 dark:text-gray-300">Indications</h4>
+<p class="text-gray-600 dark:text-gray-400">Shoulder pain, rotator cuff injuries, post-surgical rehabilitation, and general shoulder weakness.</p>
+</div>
+<div>
+<h4 class="font-semibold text-gray-700 dark:text-gray-300">Contraindications</h4>
+<p class="text-gray-600 dark:text-gray-400">Acute shoulder injuries, dislocations, severe pain, or any condition where movement is restricted by a healthcare professional.</p>
+</div>
+<div>
+<h4 class="font-semibold text-gray-700 dark:text-gray-300">Equipment</h4>
+<p class="text-gray-600 dark:text-gray-400">Resistance band or light dumbbell.</p>
+</div>
+</div>
+</div>
+<div>
+<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Ratings Distribution</h3>
+<div class="space-y-2 text-sm">
+<div class="flex items-center gap-4">
+<span class="text-gray-500 dark:text-gray-400">5 star</span>
+<div class="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full"><div class="h-2 bg-primary rounded-full" style="width: 40%"></div></div>
+<span class="w-10 text-right text-gray-500 dark:text-gray-400">40%</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-gray-500 dark:text-gray-400">4 star</span>
+<div class="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full"><div class="h-2 bg-primary rounded-full" style="width: 30%"></div></div>
+<span class="w-10 text-right text-gray-500 dark:text-gray-400">30%</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-gray-500 dark:text-gray-400">3 star</span>
+<div class="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full"><div class="h-2 bg-primary rounded-full" style="width: 15%"></div></div>
+<span class="w-10 text-right text-gray-500 dark:text-gray-400">15%</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-gray-500 dark:text-gray-400">2 star</span>
+<div class="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full"><div class="h-2 bg-primary rounded-full" style="width: 10%"></div></div>
+<span class="w-10 text-right text-gray-500 dark:text-gray-400">10%</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="text-gray-500 dark:text-gray-400">1 star</span>
+<div class="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full"><div class="h-2 bg-primary rounded-full" style="width: 5%"></div></div>
+<span class="w-10 text-right text-gray-500 dark:text-gray-400">5%</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="border-t border-gray-200 dark:border-gray-800 p-6">
+<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Patient Reviews (2)</h3>
+<div class="space-y-6">
+<div class="flex gap-4">
+<img alt="Sophia Clark" class="h-10 w-10 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjwkJrQcyVrDcC1GdG5dVt5DEIsdmlRexyHPDGgMAK-xqLQ1jyUCsoi5XjCqptMlQbE4pvr7yoeN-S2UjnakPo8b7G-ARdvikxlMhiU47upsbNDRdX474GbEA7FHaRJ6zMf2P3Vy20h9kYFEcK1ZBzB3E7PGksFjugCNbAsQbvF6oGv1o6h_MagAIQkwYX4JVzgi4rUvnfNhpiDrU7m4yY6ARkpVMhWtmOpaDy4_D1qkEy9fcI3ucGIQycPJSAKx7gFfGJVPT1sKiY"/>
+<div>
+<div class="flex items-center gap-2">
+<p class="font-semibold text-gray-800 dark:text-white">Sophia Clark</p>
+<p class="text-xs text-gray-500 dark:text-gray-400">1 month ago</p>
+</div>
+<div class="flex items-center mt-1">
+<div class="flex text-primary">
+<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+</div>
+</div>
+<p class="mt-2 text-sm text-gray-600 dark:text-gray-300">This exercise has been incredibly helpful in my recovery. I've noticed significant improvement in my shoulder strength and mobility.</p>
+</div>
+</div>
+<div class="flex gap-4">
+<img alt="Ethan Bennett" class="h-10 w-10 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMw0vibAo87yMVrEREg0etCi4YgFgahX3P2dN-i5hjG_w_C7fJaJwVKLHTgoKoflYxq3VnA0-yZRJzMrdbjeX7KFQEXeaujjjDd_xcQfJtsuzS-fxvgGbkhxdebRCoCdT16wSaw-I-EpttG-YuuM9wBA6anJ7WljaIML4GAiE7kS7hfM-zOrF3803VTdYkEZv3duVy1NfMXBKvyY0jBVAuruZh0RLcmsF174H4Dz53rBgWy2C2i4W6I3f8M0LHzHU8Gd24tExv9b1g"/>
+<div>
+<div class="flex items-center gap-2">
+<p class="font-semibold text-gray-800 dark:text-white">Ethan Bennett</p>
+<p class="text-xs text-gray-500 dark:text-gray-400">2 months ago</p>
+</div>
+<div class="flex items-center mt-1">
+<div class="flex text-primary">
+<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+<svg class="w-4 h-4 text-gray-300 dark:text-gray-600" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+</div>
+</div>
+<p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Good exercise for beginners. The video demonstration is clear and easy to follow. I would recommend it for anyone starting shoulder rehab.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>

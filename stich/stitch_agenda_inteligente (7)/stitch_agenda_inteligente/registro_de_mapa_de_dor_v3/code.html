@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Registro de Mapa de Dor V3 - FisioFlow</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#0ea5e9", // Sky blue for medical/clean feel
+                        "background-light": "#ffffff",
+                        "background-dark": "#0f172a",
+                        "surface-light": "#f8fafc",
+                        "surface-dark": "#1e293b",
+                        "border-light": "#e2e8f0",
+                        "border-dark": "#334155",
+                        "text-primary-light": "#0f172a",
+                        "text-primary-dark": "#f1f5f9",
+                        "text-secondary-light": "#64748b",
+                        "text-secondary-dark": "#94a3b8",
+                        // Pain scale colors
+                        "pain-0": "#9ca3af",
+                        "pain-1-2": "#84cc16", // Lime
+                        "pain-3-4": "#facc15", // Yellow
+                        "pain-5-6": "#fb923c", // Orange
+                        "pain-7-8": "#ef4444", // Red
+                        "pain-9-10": "#7f1d1d", // Dark Red
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                        'xl': "0.75rem",
+                        '2xl': "1rem",
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+                    }
+                },
+            },
+        };
+    </script>
+<style>.no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }.body-map-container {
+            background-image: radial-gradient(circle at 1px 1px, #cbd5e1 1px, transparent 0);
+            background-size: 20px 20px;
+        }
+        .dark .body-map-container {
+            background-image: radial-gradient(circle at 1px 1px, #334155 1px, transparent 0);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-text-primary-light dark:text-text-primary-dark font-sans h-screen flex flex-col overflow-hidden selection:bg-primary selection:text-white">
+<header class="flex-none px-4 pt-12 pb-4 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md border-b border-border-light dark:border-border-dark z-20 sticky top-0">
+<div class="flex items-center justify-between mb-2">
+<button class="p-2 -ml-2 rounded-full hover:bg-surface-light dark:hover:bg-surface-dark text-text-secondary-light dark:text-text-secondary-dark transition-colors">
+<span class="material-icons-outlined">arrow_back</span>
+</button>
+<h1 class="text-lg font-semibold text-center flex-1 pr-8">Mapa de Dor</h1>
+<div class="flex gap-2">
+<button class="p-2 rounded-full hover:bg-surface-light dark:hover:bg-surface-dark text-text-secondary-light dark:text-text-secondary-dark transition-colors relative">
+<span class="material-icons-outlined">history</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-light dark:hover:bg-surface-dark text-primary transition-colors font-medium text-sm">
+                    Salvar
+                </button>
+</div>
+</div>
+<div class="flex items-center gap-3 px-1">
+<div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs border border-primary/20">
+                MF
+            </div>
+<div class="flex-1">
+<p class="text-sm font-medium leading-none">Maria Fulana das Dores</p>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-1 flex items-center gap-1">
+<span class="material-icons-outlined text-[10px]">calendar_today</span> 12/03/2023 15:27
+                </p>
+</div>
+<div class="px-2 py-1 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark">
+                V3.0
+            </div>
+</div>
+</header>
+<main class="flex-1 relative overflow-hidden flex flex-col">
+<div class="absolute top-4 right-4 z-10 flex flex-col gap-2">
+<button class="w-10 h-10 bg-white dark:bg-surface-dark rounded-full shadow-soft border border-border-light dark:border-border-dark flex items-center justify-center text-text-secondary-light dark:text-text-secondary-dark hover:text-primary transition-colors">
+<span class="material-icons-outlined">zoom_in</span>
+</button>
+<button class="w-10 h-10 bg-white dark:bg-surface-dark rounded-full shadow-soft border border-border-light dark:border-border-dark flex items-center justify-center text-text-secondary-light dark:text-text-secondary-dark hover:text-primary transition-colors">
+<span class="material-icons-outlined">zoom_out</span>
+</button>
+<button class="w-10 h-10 bg-white dark:bg-surface-dark rounded-full shadow-soft border border-border-light dark:border-border-dark flex items-center justify-center text-text-secondary-light dark:text-text-secondary-dark hover:text-primary transition-colors mt-2">
+<span class="material-icons-outlined">flip_camera_android</span>
+</button>
+</div>
+<div class="flex-1 relative body-map-container overflow-auto flex items-center justify-center p-8">
+<div class="relative w-full max-w-sm aspect-[3/4]">
+<svg class="w-full h-full drop-shadow-xl" fill="none" viewBox="0 0 200 400" xmlns="http://www.w3.org/2000/svg">
+<path class="fill-surface-light dark:fill-surface-dark stroke-border-light dark:stroke-border-dark stroke-2" d="M100 20 C115 20 125 30 125 45 C125 55 120 60 115 62 L135 70 C155 75 170 80 180 85 L190 140 C192 150 185 155 175 155 C165 155 160 145 158 135 L150 95 L130 140 L135 200 L140 280 C142 300 145 350 145 370 C145 385 135 390 125 390 C115 390 110 380 108 360 L105 280 L100 280 L95 280 L92 360 C90 380 85 390 75 390 C65 390 55 385 55 370 C55 350 58 300 60 280 L65 200 L70 140 L50 95 L42 135 C40 145 35 155 25 155 C15 155 8 150 10 140 L20 85 C30 80 45 75 65 70 L85 62 C80 60 75 55 75 45 C75 30 85 20 100 20Z"></path>
+<circle class="fill-pain-5-6/30 stroke-pain-5-6 stroke-2 animate-pulse" cx="145" cy="80" r="12"></circle>
+<circle class="fill-pain-5-6" cx="145" cy="80" r="4"></circle>
+<circle class="fill-pain-7-8/30 stroke-pain-7-8 stroke-2 animate-pulse" cx="65" cy="270" r="14"></circle>
+<circle class="fill-pain-7-8" cx="65" cy="270" r="5"></circle>
+<path class="fill-pain-1-2/40 stroke-pain-1-2 stroke-2" d="M85 180 Q100 190 115 180 L110 210 Q100 215 90 210 Z"></path>
+</svg>
+<div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-0 animate-[fadeIn_1s_ease-in_forwards]">
+<div class="bg-background-dark/80 text-white px-3 py-1 rounded-full text-xs backdrop-blur-sm">
+                        Toque para adicionar ponto
+                    </div>
+</div>
+</div>
+</div>
+<div class="flex-none px-4 py-3 bg-background-light dark:bg-background-dark border-t border-border-light dark:border-border-dark z-10">
+<div class="flex justify-between items-center mb-2">
+<span class="text-xs font-semibold text-text-secondary-light dark:text-text-secondary-dark uppercase tracking-wider">Escala EVA</span>
+<span class="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">Selecionado: 6 - Moderada</span>
+</div>
+<div class="flex w-full h-10 rounded-xl overflow-hidden shadow-sm ring-1 ring-border-light dark:ring-border-dark">
+<button class="flex-1 bg-[#9ca3af] hover:brightness-110 flex items-center justify-center text-[10px] font-bold text-white border-r border-white/20 transition-all active:scale-95">0</button>
+<button class="flex-1 bg-[#bef264] hover:brightness-110 flex items-center justify-center text-[10px] font-bold text-gray-800 border-r border-white/20 transition-all active:scale-95">1</button>
+<button class="flex-1 bg-[#84cc16] hover:brightness-110 flex items-center justify-center text-[10px] font-bold text-white border-r border-white/20 transition-all active:scale-95">2</button>
+<button class="flex-1 bg-[#fde047] hover:brightness-110 flex items-center justify-center text-[10px] font-bold text-gray-800 border-r border-white/20 transition-all active:scale-95">3</button>
+<button class="flex-1 bg-[#facc15] hover:brightness-110 flex items-center justify-center text-[10px] font-bold text-gray-800 border-r border-white/20 transition-all active:scale-95">4</button>
+<button class="flex-1 bg-[#fdba74] hover:brightness-110 flex items-center justify-center text-[10px] font-bold text-gray-800 border-r border-white/20 transition-all active:scale-95">5</button>
+<button class="flex-1 bg-[#fb923c] hover:brightness-110 flex items-center justify-center text-[10px] font-bold text-white border-r border-white/20 relative transition-all active:scale-95 ring-2 ring-background-light dark:ring-background-dark ring-offset-2 ring-offset-[#fb923c] z-10 scale-110">6</button>
+<button class="flex-1 bg-[#f87171] hover:brightness-110 flex items-center justify-center text-[10px] font-bold text-white border-r border-white/20 transition-all active:scale-95">7</button>
+<button class="flex-1 bg-[#ef4444] hover:brightness-110 flex items-center justify-center text-[10px] font-bold text-white border-r border-white/20 transition-all active:scale-95">8</button>
+<button class="flex-1 bg-[#b91c1c] hover:brightness-110 flex items-center justify-center text-[10px] font-bold text-white border-r border-white/20 transition-all active:scale-95">9</button>
+<button class="flex-1 bg-[#7f1d1d] hover:brightness-110 flex items-center justify-center text-[10px] font-bold text-white transition-all active:scale-95">10</button>
+</div>
+<div class="flex justify-between mt-1 text-[10px] text-text-secondary-light dark:text-text-secondary-dark px-1">
+<span>Sem Dor</span>
+<span>Moderada</span>
+<span>Insuportável</span>
+</div>
+</div>
+<div class="flex-none bg-surface-light dark:bg-surface-dark border-t border-border-light dark:border-border-dark rounded-t-2xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-20 transition-all duration-300 ease-in-out">
+<div class="w-full flex justify-center py-2 cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors rounded-t-2xl" onclick="toggleBottomSheet()">
+<div class="w-12 h-1.5 bg-border-light dark:border-border-dark rounded-full"></div>
+</div>
+<div class="px-4 pb-2 flex items-center justify-between">
+<h3 class="font-semibold text-text-primary-light dark:text-text-primary-dark flex items-center gap-2">
+                    Pontos Registrados
+                    <span class="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full font-bold">3</span>
+</h3>
+<button class="text-primary text-sm font-medium hover:text-primary/80">Editar</button>
+</div>
+<div class="px-4 pb-8 max-h-[30vh] overflow-y-auto no-scrollbar space-y-3">
+<div class="flex items-center gap-3 p-3 bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark rounded-xl shadow-sm hover:border-primary/50 transition-colors cursor-pointer group">
+<div class="w-10 h-10 rounded-lg bg-pain-7-8/10 flex items-center justify-center border border-pain-7-8/20 text-pain-7-8 font-bold text-lg">
+                        8
+                    </div>
+<div class="flex-1">
+<div class="flex justify-between">
+<h4 class="font-medium text-sm text-text-primary-light dark:text-text-primary-dark">Joelho Esquerdo</h4>
+<span class="text-[10px] text-text-secondary-light dark:text-text-secondary-dark">Anterior</span>
+</div>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-0.5 line-clamp-1">Dor aguda ao flexionar, irradia para canela.</p>
+</div>
+<button class="opacity-0 group-hover:opacity-100 p-1.5 text-text-secondary-light hover:text-red-500 hover:bg-red-50 rounded-md transition-all">
+<span class="material-icons-outlined text-sm">delete</span>
+</button>
+</div>
+<div class="flex items-center gap-3 p-3 bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark rounded-xl shadow-sm hover:border-primary/50 transition-colors cursor-pointer group ring-1 ring-primary/20">
+<div class="w-10 h-10 rounded-lg bg-pain-5-6/10 flex items-center justify-center border border-pain-5-6/20 text-pain-5-6 font-bold text-lg">
+                        6
+                    </div>
+<div class="flex-1">
+<div class="flex justify-between">
+<h4 class="font-medium text-sm text-text-primary-light dark:text-text-primary-dark">Ombro Direito</h4>
+<span class="text-[10px] text-text-secondary-light dark:text-text-secondary-dark">Lateral</span>
+</div>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-0.5 line-clamp-1">Latejante constante após exercício.</p>
+</div>
+<button class="opacity-0 group-hover:opacity-100 p-1.5 text-text-secondary-light hover:text-red-500 hover:bg-red-50 rounded-md transition-all">
+<span class="material-icons-outlined text-sm">delete</span>
+</button>
+</div>
+<div class="flex items-center gap-3 p-3 bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark rounded-xl shadow-sm hover:border-primary/50 transition-colors cursor-pointer group">
+<div class="w-10 h-10 rounded-lg bg-pain-1-2/10 flex items-center justify-center border border-pain-1-2/20 text-pain-1-2 font-bold text-lg">
+                        2
+                    </div>
+<div class="flex-1">
+<div class="flex justify-between">
+<h4 class="font-medium text-sm text-text-primary-light dark:text-text-primary-dark">Lombar</h4>
+<span class="text-[10px] text-text-secondary-light dark:text-text-secondary-dark">Posterior</span>
+</div>
+<p class="text-xs text-text-secondary-light dark:text-text-secondary-dark mt-0.5 line-clamp-1">Desconforto leve ao sentar por muito tempo.</p>
+</div>
+<button class="opacity-0 group-hover:opacity-100 p-1.5 text-text-secondary-light hover:text-red-500 hover:bg-red-50 rounded-md transition-all">
+<span class="material-icons-outlined text-sm">delete</span>
+</button>
+</div>
+<button class="w-full py-2 border border-dashed border-border-light dark:border-border-dark rounded-xl text-xs font-medium text-text-secondary-light dark:text-text-secondary-dark hover:bg-surface-light dark:hover:bg-surface-dark hover:text-primary transition-colors flex items-center justify-center gap-2">
+<span class="material-icons-outlined text-sm">add_comment</span>
+                    Adicionar observação geral
+                </button>
+</div>
+</div>
+</main>
+<nav class="flex-none bg-background-light dark:bg-background-dark border-t border-border-light dark:border-border-dark pb-6 pt-2 px-6">
+<div class="flex justify-between items-center">
+<button class="flex flex-col items-center gap-1 p-2 text-text-secondary-light dark:text-text-secondary-dark hover:text-primary transition-colors">
+<span class="material-icons-outlined">home</span>
+<span class="text-[10px] font-medium">Início</span>
+</button>
+<button class="flex flex-col items-center gap-1 p-2 text-primary transition-colors">
+<span class="material-icons-outlined">accessibility_new</span>
+<span class="text-[10px] font-medium">Avaliação</span>
+</button>
+<button class="flex flex-col items-center gap-1 p-2 text-text-secondary-light dark:text-text-secondary-dark hover:text-primary transition-colors">
+<span class="material-icons-outlined">folder_shared</span>
+<span class="text-[10px] font-medium">Pacientes</span>
+</button>
+<button class="flex flex-col items-center gap-1 p-2 text-text-secondary-light dark:text-text-secondary-dark hover:text-primary transition-colors">
+<span class="material-icons-outlined">settings</span>
+<span class="text-[10px] font-medium">Ajustes</span>
+</button>
+</div>
+</nav>
+<script>
+        // Simple JS for interaction simulation
+        function toggleBottomSheet() {
+            // In a real app this would handle height/expansion logic
+            console.log("Toggle bottom sheet");
+        }
+    </script>
+
+</body></html>

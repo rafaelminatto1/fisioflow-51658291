@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FisioFlow - Financial Control</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#0aa3f0",
+              "background-light": "#f5f7f8",
+              "background-dark": "#101c22",
+            },
+            fontFamily: {
+              display: ["Inter"],
+            },
+            borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+          },
+        },
+      };
+    </script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-800 dark:text-slate-200">
+<div class="flex min-h-screen">
+<aside class="flex w-64 flex-col bg-background-light dark:bg-background-dark p-4 shadow-lg">
+<div class="mb-8 flex items-center gap-2">
+<svg class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM16.5 15.5H15V17H9V15.5H7.5C6.67 15.5 6 14.83 6 14V10C6 9.17 6.67 8.5 7.5 8.5H9V7H15V8.5H16.5C17.33 8.5 18 9.17 18 10V14C18 14.83 17.33 15.5 16.5 15.5ZM10.5 14H13.5C14.05 14 14.5 13.55 14.5 13V11C14.5 10.45 14.05 10 13.5 10H10.5C9.95 10 9.5 10.45 9.5 11V13C9.5 13.55 9.95 14 10.5 14Z" fill="currentColor"></path>
+</svg>
+<span class="text-xl font-bold text-slate-900 dark:text-white">FisioFlow</span>
+</div>
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 rounded px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary dark:hover:text-primary" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 rounded px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary dark:hover:text-primary" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-medium">Patients</span>
+</a>
+<a class="flex items-center gap-3 rounded px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary dark:hover:text-primary" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="font-medium">Appointments</span>
+</a>
+<a class="flex items-center gap-3 rounded px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-primary/10 dark:hover:bg-primary/20 hover:text-primary dark:hover:text-primary" href="#">
+<span class="material-symbols-outlined">fitness_center</span>
+<span class="font-medium">Exercises</span>
+</a>
+<a class="flex items-center gap-3 rounded bg-primary/20 px-3 py-2 font-medium text-primary dark:bg-primary/30" href="#">
+<span class="material-symbols-outlined">paid</span>
+<span>Financial</span>
+</a>
+</nav>
+</aside>
+<main class="flex-1 p-8">
+<header class="mb-8 flex items-center justify-between">
+<h1 class="text-3xl font-bold text-slate-900 dark:text-white">Financial Control</h1>
+<div class="flex items-center gap-4">
+<button class="flex items-center justify-center gap-2 rounded-lg bg-primary/10 dark:bg-primary/20 px-4 py-2 font-bold text-primary hover:bg-primary/20 dark:hover:bg-primary/30">
+<span>Generate Report</span>
+</button>
+<button class="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 font-bold text-white hover:bg-primary/90">
+<span class="material-symbols-outlined">add_circle</span>
+<span>Record Payment</span>
+</button>
+</div>
+</header>
+<div class="mb-6 flex items-center justify-between gap-4">
+<div class="relative flex-1">
+<span class="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="w-full rounded-lg border-transparent bg-white dark:bg-background-dark py-2 pl-10 pr-4 text-slate-900 dark:text-white ring-1 ring-slate-200 dark:ring-slate-700 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Search by patient name" type="text"/>
+</div>
+<div class="flex gap-2">
+<button class="flex items-center gap-2 rounded-lg bg-white dark:bg-background-dark px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 ring-1 ring-slate-200 dark:ring-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+<span>Date</span>
+<span class="material-symbols-outlined text-sm">expand_more</span>
+</button>
+<button class="flex items-center gap-2 rounded-lg bg-white dark:bg-background-dark px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 ring-1 ring-slate-200 dark:ring-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+<span>Patient</span>
+<span class="material-symbols-outlined text-sm">expand_more</span>
+</button>
+<button class="flex items-center gap-2 rounded-lg bg-white dark:bg-background-dark px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 ring-1 ring-slate-200 dark:ring-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+<span>Payment Status</span>
+<span class="material-symbols-outlined text-sm">expand_more</span>
+</button>
+</div>
+</div>
+<div class="overflow-x-auto rounded-lg bg-white dark:bg-background-dark shadow-md">
+<table class="w-full text-left">
+<thead class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+<tr>
+<th class="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300">Procedure</th>
+<th class="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300">Patient</th>
+<th class="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300">Payment Method</th>
+<th class="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300">Value</th>
+<th class="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300">Status</th>
+<th class="px-6 py-3 text-sm font-semibold text-slate-600 dark:text-slate-300">Due Date</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-slate-200 dark:border-slate-800">
+<td class="px-6 py-4 text-slate-900 dark:text-white">Physiotherapy Session</td>
+<td class="px-6 py-4 text-slate-500 dark:text-slate-400">Sophia Clark</td>
+<td class="px-6 py-4 text-slate-500 dark:text-slate-400">PIX</td>
+<td class="px-6 py-4 text-slate-500 dark:text-slate-400">$80</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/50 px-3 py-1 text-sm font-medium text-green-800 dark:text-green-300">
+<span class="mr-1.5 h-2 w-2 rounded-full bg-green-500"></span>
+                    Paid
+                  </span>
+</td>
+<td class="px-6 py-4 text-slate-500 dark:text-slate-400">07/15/2024</td>
+</tr>
+<tr class="border-b border-slate-200 dark:border-slate-800">
+<td class="px-6 py-4 text-slate-900 dark:text-white">Rehabilitation Program</td>
+<td class="px-6 py-4 text-slate-500 dark:text-slate-400">Ethan Bennett</td>
+<td class="px-6 py-4 text-slate-500 dark:text-slate-400">Credit Card</td>
+<td class="px-6 py-4 text-slate-500 dark:text-slate-400">$150</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/50 px-3 py-1 text-sm font-medium text-green-800 dark:text-green-300">
+<span class="mr-1.5 h-2 w-2 rounded-full bg-green-500"></span>
+                    Paid
+                  </span>
+</td>
+<td class="px-6 py-4 text-slate-500 dark:text-slate-400">07/10/2024</td>
+</tr>
+<tr class="border-b border-slate-200 dark:border-slate-800">
+<td class="px-6 py-4 text-slate-900 dark:text-white">Manual Therapy</td>
+<td class="px-6 py-4 text-slate-500 dark:text-slate-400">Olivia Carter</td>
+<td class="px-6 py-4 text-slate-500 dark:text-slate-400">Cash</td>
+<td class="px-6 py-4 text-slate-500 dark:text-slate-400">$60</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/50 px-3 py-1 text-sm font-medium text-green-800 dark:text-green-300">
+<span class="mr-1.5 h-2 w-2 rounded-full bg-green-500"></span>
+                    Paid
+                  </span>
+</td>
+<td class="px-6 py-4 text-slate-500 dark:text-slate-400">07/05/2024</td>
+</tr>
+<tr class="border-b border-slate-200 dark:border-slate-800">
+<td class="px-6 py-4 text-slate-900 dark:text-white">Post-Surgery Rehab</td>
+<td class="px-6 py-4 text-slate-500 dark:text-slate-400">Liam Harper</td>
+<td class="px-6 py-4 text-slate-500 dark:text-slate-400">PIX</td>
+<td class="px-6 py-4 text-slate-500 dark:text-slate-400">$120</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-full bg-red-100 dark:bg-red-900/50 px-3 py-1 text-sm font-medium text-red-800 dark:text-red-300">
+<span class="mr-1.5 h-2 w-2 rounded-full bg-red-500"></span>
+                    Overdue
+                  </span>
+</td>
+<td class="px-6 py-4 text-slate-500 dark:text-slate-400">06/25/2024</td>
+</tr>
+<tr class="border-b border-slate-200 dark:border-slate-800">
+<td class="px-6 py-4 text-slate-900 dark:text-white">Sports Injury Treatment</td>
+<td class="px-6 py-4 text-slate-500 dark:text-slate-400">Ava Foster</td>
+<td class="px-6 py-4 text-slate-500 dark:text-slate-400">Credit Card</td>
+<td class="px-6 py-4 text-slate-500 dark:text-slate-400">$90</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/50 px-3 py-1 text-sm font-medium text-green-800 dark:text-green-300">
+<span class="mr-1.5 h-2 w-2 rounded-full bg-green-500"></span>
+                    Paid
+                  </span>
+</td>
+<td class="px-6 py-4 text-slate-500 dark:text-slate-400">07/01/2024</td>
+</tr>
+</tbody>
+</table>
+</div>
+</main>
+</div>
+
+</body></html>

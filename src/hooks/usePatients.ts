@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Patient } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/errors/logger';
+import { getUserOrganizationId } from '@/utils/userHelpers';
 
 export const useActivePatients = () => {
   const [data, setData] = useState<Patient[]>([]);
@@ -11,11 +12,26 @@ export const useActivePatients = () => {
   useEffect(() => {
     const loadPatients = async () => {
       try {
-        // First try to load from Supabase
-        const { data: supabasePatients, error: supabaseError } = await supabase
+        // Obter organization_id do usuário
+        let organizationId: string | null = null;
+        try {
+          organizationId = await getUserOrganizationId();
+        } catch (orgError) {
+          logger.warn('Não foi possível obter organization_id, usando RLS', orgError, 'usePatients');
+        }
+
+        // Construir query
+        let query = supabase
           .from('patients')
           .select('*')
-          .in('status', ['active', 'Em Tratamento', 'Inicial'])
+          .in('status', ['active', 'Em Tratamento', 'Inicial']);
+
+        // Filtrar por organização se disponível (melhora performance e segurança)
+        if (organizationId) {
+          query = query.eq('organization_id', organizationId);
+        }
+
+        const { data: supabasePatients, error: supabaseError } = await query
           .order('created_at', { ascending: false });
 
         if (!supabaseError && supabasePatients && supabasePatients.length > 0) {

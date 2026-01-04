@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FisioFlow - Reporting Center</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: '#0aa3f0',
+              'background-light': '#f5f7f8',
+              'background-dark': '#101c22'
+            },
+            fontFamily: {
+              display: ['Inter', 'sans-serif']
+            },
+            borderRadius: {
+              DEFAULT: '0.25rem',
+              lg: '0.5rem',
+              xl: '0.75rem',
+              full: '9999px'
+            }
+          }
+        }
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24;
+      }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-800 dark:text-slate-200">
+<div class="flex min-h-screen flex-col">
+<header class="sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm">
+<div class="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+<div class="flex items-center gap-4">
+<svg class="h-6 w-6 text-primary" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_6_319)">
+<path d="M8.57829 8.57829C5.52816 11.6284 3.451 15.5145 2.60947 19.7452C1.76794 23.9758 2.19984 28.361 3.85056 32.3462C5.50128 36.3314 8.29667 39.7376 11.8832 42.134C15.4698 44.5305 19.6865 45.8096 24 45.8096C28.3135 45.8096 32.5302 44.5305 36.1168 42.134C39.7033 39.7375 42.4987 36.3314 44.1494 32.3462C45.8002 28.361 46.2321 23.9758 45.3905 19.7452C44.549 15.5145 42.4718 11.6284 39.4217 8.57829L24 24L8.57829 8.57829Z" fill="currentColor"></path>
+</g>
+<defs>
+<clipPath id="clip0_6_319">
+<rect fill="white" height="48" width="48"></rect>
+</clipPath>
+</defs>
+</svg>
+<h1 class="text-lg font-bold text-slate-900 dark:text-white">FisioFlow</h1>
+</div>
+<nav class="hidden items-center gap-6 text-sm font-medium lg:flex">
+<a class="text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary" href="#">Dashboard</a>
+<a class="text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary" href="#">Patients</a>
+<a class="text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary" href="#">Appointments</a>
+<a class="text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary" href="#">Exercises</a>
+<a class="text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary" href="#">Finances</a>
+<a class="text-primary font-semibold" href="#">Reports</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="rounded-full p-2 hover:bg-slate-200/50 dark:hover:bg-slate-800/50">
+<span class="material-symbols-outlined text-slate-600 dark:text-slate-300">notifications</span>
+</button>
+<img alt="User avatar" class="h-10 w-10 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuANR9VBLzd4BbfSB7K26D1ES1WMxRXVqy6ZOSzkePofANX99iyKDq0zsqW_nzR1i6CebiSzBtJFG0npgvBrvTEirNnxwQgj-ASB8SuTPt-XZxFtBDvHmuEhK-xVFVYr_8jYf5a28W6o6D-ndZax0v9pXXcWz3JnIDMHCzvMQq3fWC2o7HmPm7CkKkthRDvhYocatOT5507Zg23BwZ5RxhBbFVEUZ_N0Bjn5n0hJvok2O7eIJjsDBF0uDMNvgJeFqPs7ueEwQC_h-Vzz"/>
+</div>
+</div>
+</header>
+<main class="flex-1">
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+<div class="mb-8">
+<h2 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Reporting Center</h2>
+<p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Generate and manage reports for clinical and management insights.</p>
+</div>
+<div class="border-b border-slate-200 dark:border-slate-800">
+<nav aria-label="Tabs" class="-mb-px flex space-x-8">
+<a aria-current="page" class="whitespace-nowrap border-b-2 border-primary px-1 py-4 text-sm font-medium text-primary" href="#"> Clinical Reports </a>
+<a class="whitespace-nowrap border-b-2 border-transparent px-1 py-4 text-sm font-medium text-slate-500 hover:border-slate-300 dark:text-slate-400 dark:hover:border-slate-700" href="#"> Management Reports </a>
+</nav>
+</div>
+<div class="mt-8">
+<div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+<div class="space-y-6">
+<h3 class="text-xl font-semibold text-slate-900 dark:text-white">Clinical Reports</h3>
+<div class="space-y-4">
+<div class="group flex cursor-pointer items-start gap-4 rounded-lg border border-slate-200 bg-white p-4 transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-primary/50">
+<div class="rounded-lg bg-primary/10 p-2 text-primary">
+<span class="material-symbols-outlined">analytics</span>
+</div>
+<div>
+<h4 class="font-semibold text-slate-800 dark:text-slate-100">Patient Evolution</h4>
+<p class="text-sm text-slate-500 dark:text-slate-400">Track patient progress over time.</p>
+</div>
+</div>
+<div class="group flex cursor-pointer items-start gap-4 rounded-lg border border-slate-200 bg-white p-4 transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-primary/50">
+<div class="rounded-lg bg-primary/10 p-2 text-primary">
+<span class="material-symbols-outlined">description</span>
+</div>
+<div>
+<h4 class="font-semibold text-slate-800 dark:text-slate-100">Discharge Summaries</h4>
+<p class="text-sm text-slate-500 dark:text-slate-400">Generate summaries of patient discharge.</p>
+</div>
+</div>
+<div class="group flex cursor-pointer items-start gap-4 rounded-lg border border-slate-200 bg-white p-4 transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-primary/50">
+<div class="rounded-lg bg-primary/10 p-2 text-primary">
+<span class="material-symbols-outlined">badge</span>
+</div>
+<div>
+<h4 class="font-semibold text-slate-800 dark:text-slate-100">Medical Certificates</h4>
+<p class="text-sm text-slate-500 dark:text-slate-400">Create medical certificates for patients.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="space-y-6">
+<h3 class="text-xl font-semibold text-slate-900 dark:text-white">Management Reports</h3>
+<div class="space-y-4">
+<div class="group flex cursor-pointer items-start gap-4 rounded-lg border border-slate-200 bg-white p-4 transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-primary/50">
+<div class="rounded-lg bg-primary/10 p-2 text-primary">
+<span class="material-symbols-outlined">monitoring</span>
+</div>
+<div>
+<h4 class="font-semibold text-slate-800 dark:text-slate-100">Physiotherapist Performance</h4>
+<p class="text-sm text-slate-500 dark:text-slate-400">Evaluate physiotherapist effectiveness.</p>
+</div>
+</div>
+<div class="group flex cursor-pointer items-start gap-4 rounded-lg border border-slate-200 bg-white p-4 transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-primary/50">
+<div class="rounded-lg bg-primary/10 p-2 text-primary">
+<span class="material-symbols-outlined">attach_money</span>
+</div>
+<div>
+<h4 class="font-semibold text-slate-800 dark:text-slate-100">Revenue Analysis</h4>
+<p class="text-sm text-slate-500 dark:text-slate-400">Analyze clinic revenue trends.</p>
+</div>
+</div>
+<div class="group flex cursor-pointer items-start gap-4 rounded-lg border border-slate-200 bg-white p-4 transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-primary/50">
+<div class="rounded-lg bg-primary/10 p-2 text-primary">
+<span class="material-symbols-outlined">pie_chart</span>
+</div>
+<div>
+<h4 class="font-semibold text-slate-800 dark:text-slate-100">Occupancy Rate</h4>
+<p class="text-sm text-slate-500 dark:text-slate-400">Monitor clinic occupancy rates.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="space-y-6 md:col-span-2 lg:col-span-1">
+<h3 class="text-xl font-semibold text-slate-900 dark:text-white">Filters &amp; Actions</h3>
+<div class="space-y-6 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+<div>
+<label class="block text-sm font-medium text-slate-700 dark:text-slate-300" for="date-range">Date Range</label>
+<div class="mt-1 flex items-center justify-between">
+<button class="rounded-full p-2 hover:bg-slate-100 dark:hover:bg-slate-800">
+<span class="material-symbols-outlined text-slate-500">chevron_left</span>
+</button>
+<span class="text-sm font-semibold text-slate-900 dark:text-white">October 2024</span>
+<button class="rounded-full p-2 hover:bg-slate-100 dark:hover:bg-slate-800">
+<span class="material-symbols-outlined text-slate-500">chevron_right</span>
+</button>
+</div>
+<div class="mt-2 grid grid-cols-7 text-center text-xs text-slate-500 dark:text-slate-400">
+<span class="py-2">S</span><span class="py-2">M</span><span class="py-2">T</span><span class="py-2">W</span><span class="py-2">T</span><span class="py-2">F</span><span class="py-2">S</span>
+</div>
+<div class="grid grid-cols-7 text-center text-sm">
+<span class="col-start-3 p-1">1</span><span class="p-1">2</span><span class="p-1">3</span><span class="p-1">4</span><span class="p-1">5</span>
+<span class="p-1">6</span><span class="p-1">7</span><span class="p-1">8</span><span class="p-1">9</span><span class="p-1">10</span><span class="p-1">11</span><span class="p-1">12</span>
+<span class="p-1">13</span><span class="p-1">14</span><span class="p-1">15</span><span class="p-1">16</span><span class="p-1">17</span><span class="p-1">18</span><span class="p-1">19</span>
+<span class="p-1">20</span><span class="p-1">21</span><span class="p-1">22</span><span class="p-1">23</span><span class="p-1">24</span><span class="p-1">25</span><span class="p-1">26</span>
+<span class="p-1">27</span><span class="p-1">28</span>
+<button class="p-1"><span class="rounded-full bg-primary/20 px-2 py-1 text-primary">29</span></button>
+<span class="p-1">30</span><span class="p-1 text-slate-400 dark:text-slate-600">31</span>
+</div>
+</div>
+<div class="space-y-4 border-t border-slate-200 pt-4 dark:border-slate-800">
+<button class="w-full rounded bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/90">Generate Report</button>
+<button class="w-full rounded border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700/50">Export Report</button>
+</div>
+<div class="space-y-2 border-t border-slate-200 pt-4 dark:border-slate-800">
+<h4 class="font-medium text-slate-800 dark:text-slate-200">Schedule Report</h4>
+<div>
+<label class="sr-only" for="frequency">Frequency</label>
+<select class="mt-1 block w-full rounded border-slate-300 bg-white text-slate-900 shadow-sm focus:border-primary focus:ring-primary sm:text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" id="frequency" name="frequency">
+<option>Daily</option>
+<option>Weekly</option>
+<option>Monthly</option>
+</select>
+</div>
+<button class="w-full rounded bg-primary/20 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/30">Schedule</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FisioFlow - Patient Profile</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#10a1ea",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101c22",
+                        "content-light": "#ffffff",
+                        "content-dark": "#1a2a33",
+                        "text-primary-light": "#05141c",
+                        "text-primary-dark": "#ffffff",
+                        "text-secondary-light": "#617c89",
+                        "text-secondary-dark": "#a0b8c4",
+                        "border-light": "#dbe2e6",
+                        "border-dark": "#30434e",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.75rem",
+                        "xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings:
+                'FILL' 0,
+                'wght' 400,
+                'GRAD' 0,
+                'opsz' 24
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-text-primary-light dark:text-text-primary-dark">
+<div class="flex min-h-screen">
+<aside class="w-64 bg-content-light dark:bg-content-dark flex flex-col p-4 border-r border-border-light dark:border-border-dark">
+<div class="flex items-center gap-3 mb-8">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAi-iTdL0E9OAqDoV1Zc0qyOHq0IAwZpLQkR0skXBtNN102o_-rpNhv82FZBDj_JAIf3ACjK3ZwVey6VlwxoXWYD-JjRFPsyEBdeQsxZz11biQWSWnfrh1xTSmGZs-P65Sj5-MNbEpm1yE2eLvg8y7mDnXafgvBPbEGCFZjlWDFbCnO4GydXkfcqvzNTVM-2V178b_vedqT-2OsP3kg3CuxCvK77iKh4N35rsjaQ8SGLKwnCmK5YaDnvaXH5ZnBvEDLslMGAYTigr1J");'></div>
+<h1 class="text-lg font-bold">FisioFlow</h1>
+</div>
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary-light dark:text-text-secondary-dark hover:bg-primary/10 hover:text-primary" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary font-medium" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span>Patients</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary-light dark:text-text-secondary-dark hover:bg-primary/10 hover:text-primary" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="font-medium">Appointments</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary-light dark:text-text-secondary-dark hover:bg-primary/10 hover:text-primary" href="#">
+<span class="material-symbols-outlined">fitness_center</span>
+<span class="font-medium">Exercises</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary-light dark:text-text-secondary-dark hover:bg-primary/10 hover:text-primary" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-medium">Finances</span>
+</a>
+</nav>
+</aside>
+<main class="flex-1 p-6 lg:p-8">
+<div class="max-w-7xl mx-auto">
+<div class="flex items-center gap-2 text-sm text-text-secondary-light dark:text-text-secondary-dark mb-6">
+<a class="hover:text-primary" href="#">Patients</a>
+<span>/</span>
+<span class="font-medium text-text-primary-light dark:text-text-primary-dark">Liam Harper</span>
+</div>
+<div class="flex flex-col md:flex-row items-start md:items-center gap-6 mb-8">
+<img alt="Patient Liam Harper" class="w-32 h-32 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAuYTikl2QTpJtV0k-d6cQb_6Pta6b9kC3OQnlNUTYQGfibA6Nnj0rlJ5YmG5XoEQrnBAgWdL1IaVOt_0fVz9BhN4mzUcteFkJK-wht6Yf7o1oU6Lx2rcMajF8iLTdH99lNkQOSYQck-5fQJhvp5YsTHrpIKQOmJiQ3vRfzV4-WcmquzsJgi0CHgFvHfAjBWyLZlq0BZet1rnen1LSjLzkzk9kPog60aXtmN8CGsTZryWPOuEXWoXn7PfSQF9-57xAuTYWXyNySLMyy"/>
+<div class="flex-1">
+<h2 class="text-3xl font-bold">Liam Harper</h2>
+<div class="flex flex-wrap gap-x-6 gap-y-2 mt-2 text-text-secondary-light dark:text-text-secondary-dark">
+<span>Patient ID: 12345</span>
+<span>Last visit: 2 weeks ago</span>
+</div>
+</div>
+<button class="flex items-center justify-center gap-2 h-10 px-4 rounded-lg bg-primary text-white text-sm font-bold">
+<span class="material-symbols-outlined text-base">edit</span>
+<span>Edit Profile</span>
+</button>
+</div>
+<div class="border-b border-border-light dark:border-border-dark mb-8">
+<nav class="flex gap-8 -mb-px">
+<a class="py-3 px-1 border-b-2 border-primary text-primary font-semibold" href="#">Overview</a>
+<a class="py-3 px-1 border-b-2 border-transparent text-text-secondary-light dark:text-text-secondary-dark hover:text-primary hover:border-primary font-medium" href="#">Appointments</a>
+<a class="py-3 px-1 border-b-2 border-transparent text-text-secondary-light dark:text-text-secondary-dark hover:text-primary hover:border-primary font-medium" href="#">Exercises</a>
+<a class="py-3 px-1 border-b-2 border-transparent text-text-secondary-light dark:text-text-secondary-dark hover:text-primary hover:border-primary font-medium" href="#">Billing</a>
+</nav>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<div class="lg:col-span-2 flex flex-col gap-8">
+<div class="bg-content-light dark:bg-content-dark p-6 rounded-lg border border-border-light dark:border-border-dark">
+<h3 class="text-xl font-bold mb-6">Patient Information</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+<div><p class="text-sm text-text-secondary-light dark:text-text-secondary-dark">Date of Birth</p><p>1985-08-15</p></div>
+<div><p class="text-sm text-text-secondary-light dark:text-text-secondary-dark">Gender</p><p>Male</p></div>
+<div><p class="text-sm text-text-secondary-light dark:text-text-secondary-dark">Phone</p><p>+1-555-123-4567</p></div>
+<div><p class="text-sm text-text-secondary-light dark:text-text-secondary-dark">Email</p><p>liam.harper@example.com</p></div>
+<div class="md:col-span-2"><p class="text-sm text-text-secondary-light dark:text-text-secondary-dark">Address</p><p>123 Elm Street, Anytown, USA</p></div>
+<div><p class="text-sm text-text-secondary-light dark:text-text-secondary-dark">Emergency Contact</p><p>Sophia Harper, +1-555-987-6543</p></div>
+<div><p class="text-sm text-text-secondary-light dark:text-text-secondary-dark">Insurance</p><p>United Health</p></div>
+<div class="md:col-span-2"><p class="text-sm text-text-secondary-light dark:text-text-secondary-dark">Notes</p><p>No known allergies</p></div>
+</div>
+</div>
+<div class="bg-content-light dark:bg-content-dark p-6 rounded-lg border border-border-light dark:border-border-dark">
+<h3 class="text-xl font-bold mb-4">Electronic Health Record</h3>
+<div class="border-b border-border-light dark:border-border-dark">
+<nav class="flex gap-6 -mb-px">
+<button class="py-3 px-1 border-b-2 border-primary text-primary font-semibold">Anamnesis</button>
+<button class="py-3 px-1 border-b-2 border-transparent text-text-secondary-light dark:text-text-secondary-dark hover:text-primary hover:border-primary font-medium">Physical Examination</button>
+<button class="py-3 px-1 border-b-2 border-transparent text-text-secondary-light dark:text-text-secondary-dark hover:text-primary hover:border-primary font-medium">Progress Timeline</button>
+</nav>
+</div>
+<div class="mt-6">
+<label class="block text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark mb-2" for="anamnesis-notes">Add New Note</label>
+<textarea class="w-full p-3 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark focus:ring-2 focus:ring-primary focus:border-primary" id="anamnesis-notes" name="anamnesis-notes" placeholder="Enter anamnesis details..." rows="5"></textarea>
+</div>
+</div>
+</div>
+<div class="lg:col-span-1 flex flex-col gap-8">
+<div class="bg-content-light dark:bg-content-dark p-6 rounded-lg border border-border-light dark:border-border-dark">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-xl font-bold">Photos &amp; Observations</h3>
+<button class="text-sm font-medium text-primary hover:underline">Upload</button>
+</div>
+<div class="grid grid-cols-2 gap-2 mb-4">
+<img alt="Patient photo 1" class="rounded-lg aspect-square object-cover w-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1Cv-CBS31AbpfKplv5YOXURS2FjS9Pc4cjH4lsBY8RCDLuQEvUHxdIzAiIHh6WJUBStVwIo0BQ8oZdFfU0okf0Ddo8DaYlzX-BVshDPQCVcgwjL-6ggB0PZxF2tlvmJgzcsUV3-BfPeOHMvdGWDzDFE_YCNvmKLCv44NW9Bv-Jqsogvlxwic7UCtu_pYj8HfdZRpYd40BLu6hLlC2mPL16Nb35kK0XzFsvVqdtB_RuAxvq3sdhVue2cQ-CO-UXWKEvOcUPpNaIkFS"/>
+<img alt="Patient photo 2" class="rounded-lg aspect-square object-cover w-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCka06eoCI3iy0QoWpYP3zGUDcpHubltYIcG0iwyGngJnGS2sk5BWVHQmprUG03QSOtQVC536YXSPAuCnnWV0dav2n3c9RtIBbFOuSwz2kccKm_pXyrexrXPlvI5AZGWQOEtWu-A5TRRK19rmUuHSgDYyIpmwPtdjxk64oYA4_m7W6kKuSVFSrJBtzfBl8bNgBie3IMt0PpvQwbLZ2OoL1vt3QTdM56uNgYNMOKQ7Sg7m1MFztMN2l38rdrXSYzhOQXhS2wNb4kRMtq"/>
+</div>
+<label class="block text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark mb-2" for="observations">Observations</label>
+<textarea class="w-full p-3 rounded-lg border border-border-light dark:border-border-dark bg-background-light dark:bg-background-dark focus:ring-2 focus:ring-primary focus:border-primary" id="observations" name="observations" placeholder="Add observations..." rows="4"></textarea>
+</div>
+<div class="flex justify-end">
+<button class="flex items-center justify-center gap-2 h-12 px-6 rounded-lg bg-primary text-white text-base font-bold w-full">
+<span>Save Changes</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>

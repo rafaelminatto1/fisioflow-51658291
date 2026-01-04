@@ -2,15 +2,27 @@ export const testUsers = {
   admin: {
     email: 'admin@activityfisio.com',
     password: 'Admin@123',
+    role: 'admin',
+    expectedOrganizationId: null, // Será preenchido durante os testes
   },
   fisio: {
     email: 'fisio@activityfisio.com',
     password: 'Fisio@123',
+    role: 'fisioterapeuta',
+    expectedOrganizationId: null,
   },
   estagiario: {
     email: 'estagiario@activityfisio.com',
     password: 'Estagiario@123',
+    role: 'estagiario',
+    expectedOrganizationId: null,
   },
+};
+
+// Dados de teste para organização
+export const testOrganization = {
+  name: 'Activity Fisio Test',
+  slug: 'activity-fisio-test',
 };
 
 export const testEvento = {

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Registro de Mapa de Dor</title>
+<!-- Tailwind CSS with Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'app-bg': '#0b0c15',
+            'card-bg': '#151725',
+            'nav-bg': '#0b0c15',
+            'accent-orange': '#FF7A45',
+            'accent-red': '#EF4444',
+            'text-secondary': '#9CA3AF',
+            'divider': '#1F2937',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Custom Styles for Specific Visuals not covered by Tailwind utilities -->
+<style data-purpose="custom-layout">
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #080A12;
+      color: white;
+      /* Hide scrollbar for cleaner mobile preview */
+      scrollbar-width: none; 
+      -ms-overflow-style: none;
+    }
+    body::-webkit-scrollbar { 
+      display: none; 
+    }
+    
+    /* Simulate the subtle glow effects */
+    .glow-text {
+      text-shadow: 0 0 10px rgba(255, 122, 69, 0.3);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="h-screen flex flex-col overflow-hidden relative text-sm">
+<!-- BEGIN: Header -->
+<!-- Top navigation bar with back button and title -->
+<header class="flex items-center p-4 bg-app-bg z-10 sticky top-0">
+<button class="text-white p-2 mr-2">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+<h1 class="text-lg font-semibold tracking-wide">Registro de Mapa de Dor Ref. V2</h1>
+</header>
+<!-- END: Header -->
+<!-- BEGIN: Main Content Scroll Area -->
+<main class="flex-1 overflow-y-auto pb-32">
+<!-- BEGIN: Dashboard Section -->
+<!-- Contains the Gauge and Bar chart visualizations -->
+<section class="px-4 py-2 flex flex-col gap-6 items-center">
+<!-- Gauge Chart Container -->
+<div class="flex flex-col items-center w-full" data-purpose="gauge-chart">
+<div class="relative w-48 h-24 flex justify-center items-end overflow-hidden mb-2">
+<!-- Gauge Gradient Arc -->
+<div class="absolute top-0 w-48 h-48 rounded-full box-border" style="background: conic-gradient(from 180deg at 50% 100%, #ff4d4f 0deg, #ffa940 180deg, transparent 180deg); mask: radial-gradient(farthest-side, transparent calc(100% - 12px), #fff calc(100% - 12px)); -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 12px), #fff calc(100% - 12px));">
+</div>
+<!-- Needle Indicator -->
+<div class="absolute bottom-0 w-full flex justify-center">
+<div class="w-1 h-24 bg-transparent origin-bottom relative" style="transform: rotate(-63deg);"> <!-- -90 + 27deg -->
+<div class="absolute top-1 -left-0.5 w-1.5 h-1.5 bg-gray-200 rounded-full shadow-[0_0_5px_rgba(255,255,255,0.8)]" style="background: conic-gradient(from 180deg at 50% 100%, #ff4d4f 0deg, #ffa940 180deg, transparent 180deg); mask: radial-gradient(farthest-side, transparent calc(100% - 12px), #fff calc(100% - 12px)); -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 12px), #fff calc(100% - 12px));"></div>
+</div>
+</div>
+<!-- Overlay Value -->
+<span class="absolute bottom-0 mb-[-4px] text-2xl font-bold text-white glow-text">6.5</span>
+</div>
+<p class="text-gray-400 text-xs mt-1 font-medium">Intensidade Geral (VAS)</p>
+</div>
+<!-- Bar Chart Container -->
+<div class="flex flex-col items-center w-full" data-purpose="bar-chart">
+<div class="w-full max-w-[280px] h-28 relative flex items-end gap-3 pl-6 pr-2">
+<!-- Y Axis -->
+<div class="absolute left-0 top-0 bottom-6 flex flex-col justify-between text-[10px] text-gray-600 font-medium">
+<span>10</span>
+<span>8</span>
+<span>6</span>
+<span>4</span>
+<span>2</span>
+<span>0</span>
+</div>
+<!-- Bars -->
+<div class="flex flex-col items-center flex-1 h-full justify-end group">
+<div class="w-5 bg-gradient-to-t from-orange-900 to-accent-orange rounded-t-sm shadow-[0_0_10px_rgba(255,122,69,0.2)]" style="height: 40%"></div>
+<span class="text-gray-500 mt-2 text-xs">Abo</span>
+</div>
+<div class="flex flex-col items-center flex-1 h-full justify-end group">
+<div class="w-5 bg-gradient-to-t from-orange-900 to-accent-orange rounded-t-sm shadow-[0_0_10px_rgba(255,122,69,0.2)]" style="height: 60%"></div>
+<span class="text-gray-500 mt-2 text-xs">Mais</span>
+</div>
+<div class="flex flex-col items-center flex-1 h-full justify-end group">
+<div class="w-5 bg-gradient-to-t from-orange-900 to-accent-orange rounded-t-sm shadow-[0_0_10px_rgba(255,122,69,0.2)]" style="height: 90%"></div>
+<span class="text-gray-500 mt-2 text-xs">Men</span>
+</div>
+<div class="flex flex-col items-center flex-1 h-full justify-end group">
+<div class="w-5 bg-gradient-to-t from-orange-900 to-accent-orange rounded-t-sm shadow-[0_0_10px_rgba(255,122,69,0.2)]" style="height: 80%"></div>
+<span class="text-gray-500 mt-2 text-xs">Sol</span>
+</div>
+</div>
+<p class="text-gray-400 text-xs mt-1 font-medium">Evolução Mensal</p>
+</div>
+</section>
+<!-- END: Dashboard Section -->
+<!-- BEGIN: Patient Info Strip -->
+<!-- Divider strip with patient details -->
+<section class="px-4 py-3 border-y border-gray-800 flex justify-between items-center text-xs bg-[#10121d] mt-10">
+<div>
+<span class="block text-gray-500 uppercase tracking-wider font-semibold mb-0.5">PACIENTE</span>
+<span class="text-white font-medium">Maria Fulana das Dores • <span class="text-gray-400">65 anos</span></span>
+</div>
+<div class="text-right">
+<span class="block text-gray-500 mb-0.5">Data</span>
+<span class="text-white font-medium">12/03/2023</span>
+</div>
+</section>
+<!-- END: Patient Info Strip -->
+<!-- BEGIN: Body Map Interactive Area -->
+<section class="relative flex flex-col items-center mt-4 min-h-[500px]">
+<!-- Toggle Switch (Front/Back) -->
+<div class="bg-[#1c1f2e] rounded-lg p-1 flex items-center w-48 mb-6">
+<button class="flex-1 py-1.5 text-center bg-[#2c3044] text-white rounded-md text-sm font-medium shadow-sm">Frente</button>
+<button class="flex-1 py-1.5 text-center text-gray-400 text-sm hover:text-white transition-colors">Costas</button>
+</div>
+<!-- Body Silhouette Image -->
+<div class="relative w-full flex justify-center flex-1">
+<!-- Using placeholder for body silhouette as requested -->
+<!-- The placeholder represents the body with glowing spots -->
+<img alt="Body Map Silhouette" class="w-[60%] h-auto object-contain opacity-90 mx-auto" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVhjACwfqW79S_ew9CXXEJ9KSw9QpKoQnRf7_bd3kpmo5CDfGSahQDmJ_WaCYAJt1WB09_4n1gtBUN8M5BXCNooZ2iMJvVrRQrgcAwg-TtT8H89M89BF7cmHlzWT9J4O3gS_c__KgN1BW9edrlZxJ5isprHRJE-M_zvnTghnQwe_2nREKNsEn7gYuCIKdKF4eQZ99Ls3dAFIMdJWvyXFDwXnF3lG2BH2QLLzBAt-RNHnRmDnA_tpmotWvm4o4TwY1pG0HYx9lwnpte"/>
+<!-- Interactive Prompt Pill -->
+<div class="absolute bottom-4 bg-[#1C1F2E]/90 backdrop-blur-sm px-4 py-2 rounded-full text-xs text-gray-300 border border-gray-800 shadow-lg">
+          Toque em uma região para adicionar
+        </div>
+</div>
+</section>
+<!-- END: Body Map Interactive Area -->
+</main>
+<!-- END: Main Content Scroll Area -->
+<!-- BEGIN: Bottom Sheet / Details Card -->
+<!-- This card appears to be overlaying the content or sitting at the bottom of the scroll view -->
+<div class="fixed bottom-[55px] left-0 right-0 z-20">
+<div class="bg-[#151722] rounded-t-3xl p-6 shadow-[0_-5px_20px_rgba(0,0,0,0.5)] border-t border-gray-800"><!-- Drag Handle Indicator -->
+<div class="w-10 h-1 bg-gray-600 rounded-full mx-auto mb-4"></div>
+<!-- Card Header Row -->
+<div class="flex justify-between items-start mb-4">
+<div>
+<h2 class="text-lg font-bold text-white leading-tight">Joelho Esquerdo</h2>
+<p class="text-gray-400 text-xs mt-0.5">Anterior • Ligamento</p>
+</div>
+<!-- Remove Button -->
+<button class="flex items-center gap-1.5 px-3 py-1.5 bg-transparent rounded-lg border border-red-500/50 hover:bg-red-500/10 transition-colors">
+<svg class="w-3.5 h-3.5 text-red-500" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+<path clip-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" fill-rule="evenodd"></path>
+</svg>
+<span class="text-xs font-medium text-red-500">Remover</span>
+</button>
+</div>
+<!-- Data Rows -->
+<div class="space-y-3">
+<!-- Intensity Row -->
+<div class="flex justify-between items-center border-b border-gray-800 pb-2">
+<span class="text-accent-red font-medium">Intensidade (VAS)</span>
+<span class="text-2xl font-bold text-accent-red">8</span>
+</div>
+<!-- Type Row -->
+<div class="flex justify-between items-center">
+<span class="text-gray-300">Tipo de Dor:</span>
+<span class="text-white font-medium">Pontada</span>
+</div>
+</div></div>
+</div>
+<!-- END: Bottom Sheet / Details Card -->
+<!-- BEGIN: Bottom Navigation Bar -->
+<nav class="fixed bottom-0 w-full bg-nav-bg border-t border-gray-800 flex justify-around items-center h-[60px] z-30 pb-2 safe-area-pb">
+<!-- Home Icon (Active State) -->
+<button class="flex flex-col items-center justify-center w-12 h-full text-white">
+<svg class="w-6 h-6" fill="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 001.061 1.06l8.69-8.69z"></path>
+<path d="M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75V21a.75.75 0 01-.75.75H5.625a1.875 1.875 0 01-1.875-1.875v-6.198a2.29 2.29 0 00.091-.086L12 5.43z"></path>
+</svg>
+</button>
+<!-- Document Icon -->
+<button class="flex flex-col items-center justify-center w-12 h-full text-gray-500 hover:text-white transition-colors">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+<!-- History/Clock Icon -->
+<button class="flex flex-col items-center justify-center w-12 h-full text-gray-500 hover:text-white transition-colors">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+<!-- Profile Icon -->
+<button class="flex flex-col items-center justify-center w-12 h-full text-gray-500 hover:text-white transition-colors">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</nav>
+<!-- END: Bottom Navigation Bar -->
+<!-- Add safe area padding for bottom devices (like iPhone X+) -->
+<style data-purpose="safe-area">
+    .safe-area-pb {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+  </style>
+</body></html>
