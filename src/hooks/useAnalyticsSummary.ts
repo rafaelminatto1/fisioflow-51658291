@@ -15,9 +15,9 @@ interface AnalyticsSummary {
 }
 
 // Função auxiliar para criar timeout em promises
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> {
   return Promise.race([
-    promise,
+    Promise.resolve(promise),
     new Promise<T>((_, reject) =>
       setTimeout(() => reject(new Error(`Timeout após ${timeoutMs}ms`)), timeoutMs)
     ),
@@ -67,7 +67,6 @@ export function useAnalyticsSummary() {
           currentPaymentsResult,
           lastPaymentsResult,
         ] = await Promise.allSettled([
-          // Agendamentos do mês atual
           retryWithBackoff(() =>
             withTimeout(
               supabase
@@ -75,10 +74,9 @@ export function useAnalyticsSummary() {
                 .select("*", { count: "exact", head: true })
                 .gte("appointment_date", format(currentMonthStart, "yyyy-MM-dd"))
                 .lte("appointment_date", format(currentMonthEnd, "yyyy-MM-dd")),
-              8000 // 8 segundos de timeout
-            ),
+              8000
+            )
           ),
-          // Agendamentos do mês passado
           retryWithBackoff(() =>
             withTimeout(
               supabase
@@ -87,9 +85,8 @@ export function useAnalyticsSummary() {
                 .gte("appointment_date", format(lastMonthStart, "yyyy-MM-dd"))
                 .lte("appointment_date", format(lastMonthEnd, "yyyy-MM-dd")),
               8000
-            ),
+            )
           ),
-          // Pacientes ativos (com agendamento nos últimos 30 dias)
           retryWithBackoff(() =>
             withTimeout(
               supabase
@@ -98,9 +95,8 @@ export function useAnalyticsSummary() {
                 .gte("appointment_date", format(subMonths(now, 1), "yyyy-MM-dd"))
                 .lte("appointment_date", format(now, "yyyy-MM-dd")),
               8000
-            ),
+            )
           ),
-          // Pacientes do mês anterior
           retryWithBackoff(() =>
             withTimeout(
               supabase
@@ -109,9 +105,8 @@ export function useAnalyticsSummary() {
                 .gte("appointment_date", format(subMonths(now, 2), "yyyy-MM-dd"))
                 .lte("appointment_date", format(lastMonthEnd, "yyyy-MM-dd")),
               8000
-            ),
+            )
           ),
-          // Receita do mês atual
           retryWithBackoff(() =>
             withTimeout(
               supabase
@@ -121,9 +116,8 @@ export function useAnalyticsSummary() {
                 .lte("appointment_date", format(currentMonthEnd, "yyyy-MM-dd"))
                 .eq("payment_status", "pago"),
               8000
-            ),
+            )
           ),
-          // Receita do mês passado
           retryWithBackoff(() =>
             withTimeout(
               supabase
@@ -133,7 +127,7 @@ export function useAnalyticsSummary() {
                 .lte("appointment_date", format(lastMonthEnd, "yyyy-MM-dd"))
                 .eq("payment_status", "pago"),
               8000
-            ),
+            )
           ),
         ]);
 
