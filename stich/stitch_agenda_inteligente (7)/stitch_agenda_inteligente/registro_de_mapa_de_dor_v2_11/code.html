@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FisioFlow - Mapa de Dor V3 Reference Style</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: "#2563eb", // Royal Blue
+                        secondary: "#64748b",
+                        "background-light": "#f8fafc", 
+                        "background-dark": "#09090b", 
+                        "card-light": "#ffffff",
+                        "card-dark": "#18181b", 
+                        "border-light": "#e2e8f0",
+                        "border-dark": "#27272a",
+                        "pain-low": "#22c55e",
+                        "pain-med": "#eab308",
+                        "pain-high": "#ef4444",
+                        "pain-extreme": "#a855f7",
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+                        'glow': '0 0 15px rgba(37, 99, 235, 0.3)',
+                    }
+                },
+            },
+        };
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }.gauge-container {
+            position: relative;
+            width: 200px;
+            height: 100px;
+            overflow: hidden;
+        }
+        .gauge-arc {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: conic-gradient(from 180deg at 50% 50%, 
+                #22c55e 180deg, 
+                #eab308 240deg, 
+                #ef4444 300deg, 
+                #a855f7 360deg, 
+                transparent 360deg);
+            position: absolute;
+            top: 0;
+            left: 0;
+            mask-image: radial-gradient(transparent 65%, black 66%);
+            -webkit-mask-image: radial-gradient(transparent 65%, black 66%);
+            transform: rotate(-90deg);
+        }
+        .needle {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 4px;
+            height: 90px;
+            background: #fff;
+            transform-origin: bottom center;
+            transform: rotate(-30deg);border-radius: 4px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+        .needle::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: -6px;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+        }.heatmap-zone {
+            position: absolute;
+            filter: blur(8px);
+            opacity: 0.6;
+            mix-blend-mode: screen; 
+            pointer-events: none;
+        }
+        body {
+            min-height: max(800px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light text-slate-900 font-sans antialiased min-h-screen flex flex-col">
+<header class="sticky top-0 z-50 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<button class="p-2 -ml-2 rounded-full hover:bg-slate-100 transition-colors">
+<span class="material-icons-round text-slate-600">arrow_back</span>
+</button>
+<h1 class="text-sm font-semibold tracking-tight text-slate-900">Mapa de Dor</h1>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex flex-col items-end">
+<span class="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Paciente</span>
+<span class="text-xs font-semibold text-slate-900">Maria Fulana</span>
+</div>
+<button class="px-3 py-1.5 bg-primary text-white text-xs font-medium rounded-full hover:bg-blue-700 transition-colors shadow-sm">
+                Salvar
+            </button>
+</div>
+</header>
+<main class="flex-1 relative flex flex-col bg-[#0f1115] text-white overflow-hidden">
+<div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px); background-size: 40px 40px;">
+</div>
+<div class="relative z-10 flex flex-col items-center justify-center pt-6 pb-2 shrink-0">
+<div class="gauge-container">
+<div class="gauge-arc"></div>
+<div class="needle" style="transform: rotate(15deg);"></div> 
+</div>
+<div class="absolute bottom-2 flex flex-col items-center">
+<span class="text-4xl font-bold tracking-tighter text-white drop-shadow-md">36</span>
+<span class="text-[10px] text-zinc-400 uppercase tracking-widest font-medium mt-1">Score Global</span>
+</div>
+</div>
+<div class="flex-1 relative w-full flex items-center justify-center -mt-4">
+<div class="absolute top-4 right-4 z-20 flex flex-col gap-2">
+<button class="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center transition-colors" title="Virar corpo">
+<span class="material-icons-round text-lg">3d_rotation</span>
+</button>
+<button class="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center transition-colors" title="Visualizar Camadas">
+<span class="material-icons-round text-lg">layers</span>
+</button>
+</div>
+<div class="relative h-[55vh] w-full max-w-sm flex justify-center items-center">
+<img alt="Human Body Outline" class="h-full w-auto opacity-40 invert mix-blend-lighten pointer-events-none select-none" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXpXJoNFWSf8IEbyzNEmHGL8Q-bUGcf-CZmz4nNepv7phK1wdxOybEbKSXb3nNVoxQ4sjIrp95_FvhFfkW03S4DBhrHNHox9vJZHhsdBSGLXk3U_Ej0tiLlNraiZwsAAgzQ51PNKK9zpQ_GvzgKEeBN_j4shsqBNfVYQUSxMtgvE020V29U1ufJzgoV4EUfDlAKSsNR_F0qlq-pJSDNMOpc_ZYoNWSjJq9arzY9OkgD_gWuPH4yyLJwnV9HIPHIuhYGb8o1Nf5OpK7"/>
+<div class="heatmap-zone w-16 h-8 bg-yellow-500 top-[18%] left-[30%] rounded-full rotate-[-15deg]"></div>
+<div class="heatmap-zone w-16 h-8 bg-green-500 top-[18%] right-[30%] rounded-full rotate-[15deg]"></div>
+<div class="heatmap-zone w-10 h-10 bg-red-600 top-[68%] left-[38%] rounded-full"></div>
+<div class="heatmap-zone w-10 h-10 bg-purple-500 top-[68%] right-[38%] rounded-full"></div>
+<button class="absolute top-[68%] left-[38%] w-10 h-10 -ml-5 -mt-5 rounded-full z-20 group focus:outline-none">
+<span class="absolute inset-0 bg-red-500/30 rounded-full animate-pulse"></span>
+<span class="absolute inset-0 border border-red-500/60 rounded-full"></span>
+<div class="absolute top-0 right-0 -mt-2 -mr-2 bg-zinc-900 border border-zinc-700 text-white text-[10px] font-bold px-1.5 py-0.5 rounded shadow-lg">8</div>
+</button>
+</div>
+</div>
+<div class="absolute bottom-4 left-4 right-4 z-20">
+<div class="bg-zinc-900/90 backdrop-blur-md border border-zinc-800 rounded-xl p-3 shadow-lg">
+<div class="flex justify-between items-end mb-2">
+<div>
+<h3 class="text-xs font-semibold text-zinc-300 uppercase tracking-wide">Evolução da Dor</h3>
+<p class="text-[10px] text-zinc-500">Últimos 6 meses</p>
+</div>
+<div class="flex items-center gap-2">
+<span class="block w-2 h-2 rounded-full bg-yellow-500"></span>
+<span class="text-[10px] text-zinc-400">Moderada</span>
+</div>
+</div>
+<div class="h-16 w-full relative">
+<div class="absolute inset-0 flex flex-col justify-between">
+<div class="border-t border-dashed border-zinc-800 w-full h-0"></div>
+<div class="border-t border-dashed border-zinc-800 w-full h-0"></div>
+<div class="border-t border-dashed border-zinc-800 w-full h-0"></div>
+</div>
+<svg class="absolute inset-0 w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 100">
+<path d="M0,30 L20,35 L40,45 L60,40 L80,60 L100,70" fill="none" stroke="url(#gradientLine)" stroke-linecap="round" stroke-width="3" vector-effect="non-scaling-stroke"></path>
+<defs>
+<linearGradient id="gradientLine" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" stop-color="#ef4444"></stop>
+<stop offset="50%" stop-color="#eab308"></stop>
+<stop offset="100%" stop-color="#22c55e"></stop>
+</linearGradient>
+</defs>
+<circle cx="0" cy="30" fill="#ef4444" r="3" stroke="#000" stroke-width="1" vector-effect="non-scaling-stroke"></circle>
+<circle cx="100" cy="70" fill="#22c55e" r="3" stroke="#000" stroke-width="1" vector-effect="non-scaling-stroke"></circle>
+</svg>
+</div>
+<div class="flex justify-between mt-1 text-[9px] text-zinc-600 font-mono">
+<span>AGO</span>
+<span>SET</span>
+<span>OUT</span>
+<span>NOV</span>
+<span>DEZ</span>
+<span>JAN</span>
+</div>
+</div>
+</div>
+</main>
+<div class="bg-white border-t border-slate-200 rounded-t-2xl shadow-[0_-5px_25px_rgba(0,0,0,0.1)] z-30">
+<div class="flex justify-center pt-3 pb-1 cursor-pointer">
+<div class="w-12 h-1.5 rounded-full bg-slate-200"></div>
+</div>
+<div class="px-5 pb-6 pt-1">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+<span class="text-lg font-bold text-red-600">8</span>
+</div>
+<div>
+<h2 class="text-base font-bold text-slate-900">Joelho Esquerdo</h2>
+<p class="text-xs text-slate-500">Região Anterior • Ligamento</p>
+</div>
+</div>
+<button class="text-primary text-sm font-semibold hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors">
+                    Editar
+                </button>
+</div>
+<div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+<span class="px-2.5 py-1 rounded-md text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">Pontada</span>
+<span class="px-2.5 py-1 rounded-md text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">Constante</span>
+<span class="px-2.5 py-1 rounded-md text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">Agrava ao movimento</span>
+</div>
+</div>
+</div>
+
+</body></html>

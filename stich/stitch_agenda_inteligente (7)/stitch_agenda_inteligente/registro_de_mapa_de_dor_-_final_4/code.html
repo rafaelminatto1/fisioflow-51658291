@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html class="dark" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Registro de Mapa de Dor - FisioFlow</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#3b82f6", // Blue 500
+                        "primary-dark": "#2563eb", // Blue 600
+                        "background-light": "#f8fafc", // Slate 50
+                        "background-dark": "#020617", // Slate 950
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#0f172a", // Slate 900
+                        "card-light": "#f1f5f9", // Slate 100
+                        "card-dark": "#1e293b", // Slate 800
+                        "border-light": "#e2e8f0", // Slate 200
+                        "border-dark": "#334155", // Slate 700
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                        body: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                    },
+                },
+            },
+        };
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }.pain-point {
+            background: radial-gradient(circle, rgba(239, 68, 68, 0.9) 0%, rgba(239, 68, 68, 0.6) 40%, rgba(239, 68, 68, 0) 70%);mix-blend-mode: screen;
+            filter: blur(6px);
+            animation: pulse-glow 3s infinite;
+        }
+        .pain-point-secondary {
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.8) 0%, rgba(59, 130, 246, 0.3) 50%, rgba(59, 130, 246, 0) 70%);
+            mix-blend-mode: screen;
+            filter: blur(4px);
+        }.pain-ghost {
+            border-style: dashed;
+            border-width: 1.5px;
+            background: transparent;
+            border-radius: 50%;
+            pointer-events: none;
+        }.ghost-yellow {border-color: rgba(250, 204, 21, 0.7);
+            box-shadow: 0 0 12px rgba(250, 204, 21, 0.15) inset;
+        }
+        .ghost-green {border-color: rgba(34, 197, 94, 0.7);
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.15) inset;
+        }
+        .ghost-red {border-color: rgba(239, 68, 68, 0.7);
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.15) inset;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.05); opacity: 0.7; }
+        }
+        .svg-glow {
+            filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.5));
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 h-screen flex flex-col overflow-hidden transition-colors duration-200">
+<header class="flex-none px-4 py-3 flex items-center justify-between border-b border-border-light dark:border-border-dark bg-surface-light dark:bg-background-dark z-20">
+<button class="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-primary">
+<span class="material-icons-round text-2xl">chevron_left</span>
+</button>
+<h1 class="text-sm font-semibold tracking-wide text-slate-900 dark:text-slate-100">Registro de Dor Ref. V3</h1>
+<div class="flex items-center gap-3">
+<button class="text-slate-500 dark:text-slate-400 hover:text-primary">
+<span class="material-icons-round text-xl">history</span>
+</button>
+<button class="text-primary font-medium text-sm hover:text-primary-dark">
+                Salvar
+            </button>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto no-scrollbar relative pb-24">
+<div class="px-4 py-3 bg-card-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark">
+<div class="flex justify-between items-start">
+<div>
+<div class="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase mb-1">Paciente</div>
+<div class="text-sm font-medium text-slate-800 dark:text-slate-200">Maria Fulana das Dores</div>
+<div class="text-xs text-slate-500 dark:text-slate-400">65 anos • Pós-op Joelho</div>
+</div>
+<div class="text-right">
+<div class="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase mb-1">Sessão Atual</div>
+<div class="text-sm font-medium text-primary dark:text-primary-dark">12 Mar 2023</div>
+</div>
+</div>
+</div>
+<div class="m-4 p-4 rounded-xl bg-surface-light dark:bg-card-dark border border-border-light dark:border-border-dark shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<h2 class="text-sm font-medium text-slate-700 dark:text-slate-200">Evolução do Escore (VAS)</h2>
+<div class="flex items-center gap-2">
+<div class="text-[10px] text-slate-400 uppercase font-bold text-right leading-tight">Média<br/>Corporal</div>
+<div class="w-10 h-10 relative flex items-center justify-center">
+<svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+<path class="text-slate-200 dark:text-slate-700" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="100, 100" stroke-width="3"></path>
+<path class="text-red-500 drop-shadow-[0_0_2px_rgba(239,68,68,0.5)]" d="M18 2.0845 a 15.9155 15.9155 0 0 1 11 4.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="3"></path>
+</svg>
+<span class="absolute text-xs font-bold text-slate-800 dark:text-white">6.5</span>
+</div>
+</div>
+</div>
+<div class="flex gap-4 items-center">
+<div class="flex-1 h-24 relative">
+<div class="absolute inset-0 flex flex-col justify-between text-[9px] text-slate-400 dark:text-slate-500 font-medium">
+<div class="flex items-center w-full gap-2"><span>10</span><div class="h-px bg-slate-100 dark:bg-slate-800 flex-1"></div></div>
+<div class="flex items-center w-full gap-2"><span>5</span><div class="h-px bg-slate-100 dark:bg-slate-800 flex-1"></div></div>
+<div class="flex items-center w-full gap-2"><span>0</span><div class="h-px bg-slate-100 dark:bg-slate-800 flex-1"></div></div>
+</div>
+<svg class="absolute inset-0 w-full h-full pl-5 pr-1 overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 100">
+<path d="M0,40 L33,60 L66,30 L100,20 V100 H0 Z" fill="url(#gradientBlue)" opacity="0.15"></path>
+<path class="svg-glow" d="M0,40 L33,60 L66,30 L100,20" fill="none" stroke="#3b82f6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+<defs>
+<linearGradient id="gradientBlue" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1"></stop>
+<stop offset="100%" style="stop-color:#3b82f6;stop-opacity:0"></stop>
+</linearGradient>
+</defs>
+<circle class="fill-surface-light dark:fill-card-dark stroke-primary stroke-2" cx="0" cy="40" r="2.5"></circle>
+<circle class="fill-surface-light dark:fill-card-dark stroke-primary stroke-2" cx="33" cy="60" r="2.5"></circle>
+<circle class="fill-surface-light dark:fill-card-dark stroke-primary stroke-2" cx="66" cy="30" r="2.5"></circle>
+<circle class="fill-surface-light dark:fill-card-dark stroke-primary stroke-2" cx="100" cy="20" r="3.5"></circle>
+</svg>
+<div class="absolute -bottom-5 left-5 right-0 flex justify-between text-[9px] text-slate-400 uppercase tracking-wide">
+<span>Fev 20</span>
+<span>Fev 27</span>
+<span>Mar 05</span>
+<span class="text-primary font-bold">Hoje</span>
+</div>
+</div>
+</div>
+</div>
+<div class="px-4 pb-32">
+<div class="relative rounded-2xl bg-slate-100 dark:bg-[#0f1420] border border-border-light dark:border-border-dark overflow-hidden min-h-[500px]">
+<div class="absolute top-0 left-0 right-0 p-4 z-20 flex flex-col gap-3 pointer-events-none">
+<div class="flex justify-between items-start w-full">
+<div class="pointer-events-auto relative z-30">
+<label class="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-wider mb-1 block ml-1">Comparar com</label>
+<button class="group flex items-center justify-between gap-3 pl-3 pr-2 py-2 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm active:scale-95 transition-all w-40">
+<div class="flex flex-col items-start text-left">
+<span class="text-[10px] text-slate-400 leading-none mb-0.5">Sessão Anterior</span>
+<span class="text-xs font-semibold text-slate-700 dark:text-slate-200 leading-none">05 Mar 23</span>
+</div>
+<div class="bg-slate-100 dark:bg-slate-700 rounded p-0.5 text-slate-500 dark:text-slate-400 group-hover:text-primary transition-colors">
+<span class="material-icons-round text-base block">calendar_today</span>
+</div>
+</button>
+</div>
+<div class="flex flex-col items-end gap-1.5 mt-5 pointer-events-auto">
+<div class="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-200/50 dark:bg-slate-800/50 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50">
+<div class="w-2.5 h-2.5 rounded-full border border-yellow-500 border-dashed"></div>
+<span class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">05 Mar</span>
+</div>
+<div class="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-200/50 dark:bg-slate-800/50 backdrop-blur-sm border border-slate-300/50 dark:border-slate-700/50">
+<div class="w-2.5 h-2.5 rounded-full bg-red-500/80 shadow-[0_0_5px_rgba(239,68,68,0.5)]"></div>
+<span class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">Hoje</span>
+</div>
+</div>
+</div>
+<div class="flex justify-center w-full pointer-events-auto -mt-2">
+<div class="bg-white/90 dark:bg-slate-800/90 backdrop-blur-md p-1 rounded-lg flex shadow-lg border border-slate-200 dark:border-slate-700 z-10">
+<button class="py-1 px-5 text-xs font-medium rounded-md bg-slate-900 text-white dark:bg-slate-600 shadow-sm transition-all">Frontal</button>
+<button class="py-1 px-5 text-xs font-medium rounded-md text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-all">Dorsal</button>
+</div>
+</div>
+</div>
+<div class="flex justify-center items-center h-full pt-28 pb-48 relative z-0">
+<div class="relative w-72 h-[420px]">
+<svg class="absolute left-6 top-0 h-full w-full text-slate-300 dark:text-slate-700/50 fill-current stroke-slate-400 dark:stroke-slate-600 stroke-1" viewBox="0 0 100 240">
+<path d="M50,15 C58,15 62,22 62,30 C62,35 58,40 55,42 L65,55 L85,90 L95,130 L85,135 L75,100 L65,110 L65,160 L70,200 L60,230 L55,230 L50,200 L45,230 L40,230 L30,200 L35,160 L35,110 L25,100 L15,135 L5,130 L15,90 L35,55 L45,42 C42,40 38,35 38,30 C38,22 42,15 50,15 Z"></path>
+</svg>
+<div class="absolute left-[54px] top-[192px] w-[50px] h-[60px] -ml-1 -mt-1 pain-ghost ghost-yellow z-10" title="Dor Anterior (VAS 5)"></div>
+<div class="absolute right-[25px] top-[55px] w-10 h-10 pain-ghost ghost-green z-10 opacity-70" title="Dor Anterior (VAS 3)"></div>
+<div class="absolute left-[52px] top-[190px] w-14 h-20 pain-point rounded-full opacity-90 z-20"></div>
+<div class="absolute left-[20px] top-[55px] w-10 h-10 pain-point-secondary rounded-full opacity-70 z-20"></div>
+</div>
+</div>
+<div class="absolute bottom-0 left-0 right-0 bg-white/90 dark:bg-card-dark/95 backdrop-blur-xl border-t border-border-light dark:border-border-dark p-5 rounded-t-3xl shadow-[0_-4px_30px_-5px_rgba(0,0,0,0.5)] z-30">
+<div class="flex justify-center mb-3">
+<div class="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+</div>
+<div class="flex justify-between items-start mb-4">
+<div>
+<div class="flex items-center gap-2 mb-0.5">
+<h3 class="text-base font-bold text-slate-900 dark:text-white">Joelho Esquerdo</h3>
+<span class="flex h-2 w-2 relative">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+</span>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Anterior • Ligamento Cruzado</p>
+</div>
+<div class="flex flex-col items-end">
+<div class="flex items-center gap-1.5 px-2.5 py-1 bg-red-100 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-md text-red-700 dark:text-red-400 text-sm font-bold shadow-sm">
+<span>VAS 8</span>
+<span class="material-icons-round text-[16px]">trending_up</span>
+</div>
+<span class="text-[10px] text-slate-400 mt-1">Anterior: VAS 5 (05/03)</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-4">
+<div class="relative group">
+<label class="block text-[10px] uppercase font-bold text-slate-400 mb-1.5 tracking-wider">Intensidade</label>
+<button class="w-full flex items-center justify-between bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/50 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-700 dark:text-slate-200 transition-colors">
+<span class="font-medium">Severa (8)</span>
+<span class="material-icons-round text-lg text-slate-400">tune</span>
+</button>
+</div>
+<div class="relative group">
+<label class="block text-[10px] uppercase font-bold text-slate-400 mb-1.5 tracking-wider">Sensação</label>
+<button class="w-full flex items-center justify-between bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/50 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-700 dark:text-slate-200 transition-colors">
+<span class="font-medium">Pontada</span>
+<span class="material-icons-round text-lg text-slate-400">category</span>
+</button>
+</div>
+</div>
+<div class="flex gap-3 pt-2">
+<button class="flex-1 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-medium text-sm hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 dark:hover:text-red-400 transition-colors">
+                            Remover
+                        </button>
+<button class="flex-[2] py-3 rounded-xl bg-primary text-white text-sm font-semibold shadow-lg shadow-blue-500/25 hover:bg-primary-dark active:scale-[0.98] transition-all flex justify-center items-center gap-2">
+<span class="material-icons-round text-lg">check</span>
+                            Confirmar
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<nav class="flex-none bg-surface-light dark:bg-surface-dark border-t border-border-light dark:border-border-dark pb-safe pt-2 px-6 flex justify-around items-center z-30 pb-4 shadow-[0_-5px_20px_-10px_rgba(0,0,0,0.1)]">
+<a class="flex flex-col items-center gap-1 group" href="#">
+<div class="p-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-primary group-hover:scale-110 transition-transform">
+<span class="material-icons-round text-2xl">accessibility_new</span>
+</div>
+<span class="text-[10px] font-bold text-primary">Mapa</span>
+</a>
+<a class="flex flex-col items-center gap-1 group" href="#">
+<div class="p-1.5 rounded-full text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300 group-hover:bg-slate-100 dark:group-hover:bg-slate-800 transition-all">
+<span class="material-icons-round text-2xl">show_chart</span>
+</div>
+<span class="text-[10px] font-medium text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300">Evolução</span>
+</a>
+<a class="flex flex-col items-center gap-1 group" href="#">
+<div class="p-1.5 rounded-full text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300 group-hover:bg-slate-100 dark:group-hover:bg-slate-800 transition-all">
+<span class="material-icons-round text-2xl">format_list_bulleted</span>
+</div>
+<span class="text-[10px] font-medium text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300">Histórico</span>
+</a>
+<a class="flex flex-col items-center gap-1 group" href="#">
+<div class="p-1.5 rounded-full text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300 group-hover:bg-slate-100 dark:group-hover:bg-slate-800 transition-all">
+<span class="material-icons-round text-2xl">settings</span>
+</div>
+<span class="text-[10px] font-medium text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300">Ajustes</span>
+</a>
+</nav>
+
+</body></html>

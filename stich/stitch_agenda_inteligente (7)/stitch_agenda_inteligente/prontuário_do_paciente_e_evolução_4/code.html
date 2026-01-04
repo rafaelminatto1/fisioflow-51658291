@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Prontuário do Paciente</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0d7ff2",
+                        "primary-foreground": "#ffffff",
+                        "background-light": "#f8fafc", /* slight cool gray for app bg */
+                        "background-dark": "#101922",
+                        "card": "#ffffff",
+                        "card-foreground": "#0f172a",
+                        "muted": "#f1f5f9",
+                        "muted-foreground": "#64748b",
+                        "border": "#e2e8f0",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.375rem", /* shadcn default radius */
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px",
+                        "md": "0.375rem",
+                        "sm": "0.25rem",
+                    },
+                    boxShadow: {
+                        "sm": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+                        "DEFAULT": "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* Custom styles to mimic shadcn/ui components */
+        .shadcn-input {
+            @apply flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+        }
+        .shadcn-checkbox {
+            @apply h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-white;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white antialiased overflow-x-hidden">
+<div class="relative flex min-h-screen flex-col pb-20 max-w-md mx-auto bg-white shadow-xl min-w-0">
+<!-- Sticky Header & Nav -->
+<header class="sticky top-0 z-50 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-border">
+<!-- Top App Bar -->
+<div class="flex items-center justify-between p-4 h-14">
+<button class="text-slate-900 flex items-center justify-center rounded-md w-10 h-10 hover:bg-slate-100 transition-colors">
+<span class="material-symbols-outlined" style="font-size: 24px;">arrow_back</span>
+</button>
+<h1 class="text-base font-semibold text-center flex-1">Prontuário</h1>
+<button class="text-slate-900 flex items-center justify-center rounded-md w-10 h-10 hover:bg-slate-100 transition-colors">
+<span class="material-symbols-outlined" style="font-size: 24px;">more_vert</span>
+</button>
+</div>
+</header>
+<!-- Scrollable Content starts here -->
+<main class="flex-1 flex flex-col">
+<!-- Patient Profile Header (Scrolls) -->
+<div class="bg-white p-4 pb-2 border-b border-border">
+<div class="flex gap-4 items-start">
+<div class="relative">
+<div class="h-16 w-16 rounded-full bg-slate-200 bg-cover bg-center border border-slate-100 shadow-sm" data-alt="Foto de perfil do paciente João Silva" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD8VkWQCDRw7HuyjMh4-Gfmso1YdresgsoxcjtqJBwIg6TY56OaGgYhu0yUgLhELD1etyi3ZdJkpKHLZLbYJsPe7_8WBfUqmon-PvTXdYXdoyonG88JelY4Bn6Uio7DAr_W0D0UxLF7hkHtQuIgV_f3J_VfsH1zjv9BiiTAeMmRtGbzfKBV3EZicajYCAoHZLtPFuMJDrb5IOm-eXV4KrVNFBIwAmKbpezFf3c6uF7G8DoCJsNf2uefYulIe1_PkqxT7TTAlA1c-OnT");'>
+</div>
+<div class="absolute -bottom-1 -right-1 bg-green-500 w-4 h-4 rounded-full border-2 border-white" title="Presente"></div>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<h2 class="text-lg font-bold text-slate-900 leading-tight truncate">João Silva</h2>
+<span class="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">#4829</span>
+</div>
+<p class="text-sm text-slate-500 mt-0.5">28 anos • Atleta Amador</p>
+<!-- Badges/Chips -->
+<div class="flex flex-wrap gap-2 mt-2">
+<span class="inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-800 ring-1 ring-inset ring-orange-600/20">
+                                Pós-Op LCA (E)
+                            </span>
+<span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800 ring-1 ring-inset ring-red-600/20">
+                                Alergia: Dipirona
+                            </span>
+</div>
+</div>
+</div>
+</div>
+<!-- Sticky Tabs -->
+<div class="sticky top-14 z-40 bg-white border-b border-border shadow-sm">
+<div class="flex overflow-x-auto hide-scrollbar px-2">
+<button class="flex-none px-4 py-3 text-sm font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700 whitespace-nowrap">Resumo</button>
+<button class="flex-none px-4 py-3 text-sm font-bold text-primary border-b-2 border-primary whitespace-nowrap">Evoluções</button>
+<button class="flex-none px-4 py-3 text-sm font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700 whitespace-nowrap">Dados Pessoais</button>
+<button class="flex-none px-4 py-3 text-sm font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700 whitespace-nowrap">Financeiro</button>
+<button class="flex-none px-4 py-3 text-sm font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700 whitespace-nowrap">Anexos</button>
+</div>
+</div>
+<!-- Evolution Content Area (Timeline + SOAP) -->
+<div class="flex-1 bg-background-light p-4">
+<div class="flex gap-4 h-full">
+<!-- Vertical Timeline Graphic -->
+<div class="flex flex-col items-center pt-2 w-8 shrink-0">
+<!-- Past Dot -->
+<div class="w-2.5 h-2.5 rounded-full bg-slate-300 mb-1"></div>
+<div class="w-0.5 h-6 bg-slate-200 mb-1"></div>
+<!-- Past Dot -->
+<div class="w-2.5 h-2.5 rounded-full bg-slate-300 mb-1"></div>
+<div class="w-0.5 h-10 bg-slate-200 mb-1"></div>
+<!-- Current Dot (Active) -->
+<div class="w-4 h-4 rounded-full border-4 border-white bg-primary shadow-sm mb-1 ring-2 ring-primary/20 z-10"></div>
+<!-- Future Line -->
+<div class="w-0.5 flex-1 bg-slate-200 border-l border-dashed border-slate-300"></div>
+</div>
+<!-- Content Cards -->
+<div class="flex-1 flex flex-col gap-6 min-w-0">
+<!-- Past Session Summary (Collapsed) -->
+<div class="opacity-60 hover:opacity-100 transition-opacity">
+<p class="text-xs font-semibold text-slate-400 mb-1 ml-1">12 OUT • Sessão #13</p>
+<div class="bg-white p-3 rounded-lg border border-border shadow-sm flex justify-between items-center cursor-pointer">
+<div>
+<p class="text-sm font-medium text-slate-700">Fisioterapia Convencional</p>
+<p class="text-xs text-slate-500">Dr. Lucas Martins</p>
+</div>
+<span class="material-symbols-outlined text-slate-400 text-lg">chevron_right</span>
+</div>
+</div>
+<!-- Current Session SOAP (Expanded) -->
+<div class="animate-in fade-in slide-in-from-bottom-4 duration-500">
+<div class="flex justify-between items-center mb-2 ml-1">
+<p class="text-sm font-bold text-primary">HOJE • Sessão #14</p>
+<span class="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-100">Em andamento</span>
+</div>
+<!-- SOAP Container -->
+<div class="flex flex-col gap-4">
+<!-- S: Subjetivo -->
+<div class="bg-white rounded-lg border border-border shadow-sm overflow-hidden">
+<div class="bg-slate-50 px-4 py-2 border-b border-border flex justify-between items-center">
+<h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+<span class="flex items-center justify-center w-5 h-5 rounded bg-blue-100 text-primary text-[10px]">S</span>
+                                            Subjetivo
+                                        </h3>
+<button class="text-xs text-primary font-medium hover:underline">Histórico</button>
+</div>
+<div class="p-4 space-y-4">
+<div>
+<label class="block text-xs font-medium text-slate-700 mb-1.5">Mapa de Dor</label>
+<div class="relative w-full h-48 bg-slate-100 rounded-md border border-slate-200 overflow-hidden group cursor-crosshair">
+<!-- Body Map Image Placeholder -->
+<div class="w-full h-full bg-contain bg-center bg-no-repeat opacity-60" data-alt="Diagrama do corpo humano para marcação de dor" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBd4nPNSSjKztkOVaFkp8osjkumRG-dM8qyCJ66AfHWKm1vWVBnpn8CMxxVr-6wca0xRaEWRIP2N_R0LXmlZszMqFbC1lDZmEvztWU-z-a1Z-p8DrQ9W_l_iJw2JpJNQdYGIUiPAE2xPTOUVpYJiwVAmItQwcdREGr4RJVonA5sWjutlzcXAa_Md7VZlKmE0cJBW8SzHAR0d69aWIOhx4eBdGoqXrXPbOhMXItcfceXkYeiwM-0CZTgShTNexKcF4KRKPyLuf7eYW4H");'></div>
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<span class="text-slate-400 text-xs font-medium opacity-50">Toque para adicionar ponto</span>
+</div>
+<!-- Interactive Dot Example -->
+<div class="absolute top-1/2 left-[45%] w-6 h-6 -ml-3 -mt-3 bg-red-500/20 rounded-full flex items-center justify-center animate-pulse">
+<div class="w-2.5 h-2.5 bg-red-500 rounded-full shadow-sm"></div>
+</div>
+<div class="absolute top-[55%] left-[48%] w-6 h-6 -ml-3 -mt-3 bg-orange-500/20 rounded-full flex items-center justify-center">
+<div class="w-2.5 h-2.5 bg-orange-500 rounded-full shadow-sm"></div>
+</div>
+</div>
+<div class="flex gap-2 mt-2">
+<div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-red-500"></div><span class="text-[10px] text-slate-500">Aguda</span></div>
+<div class="flex items-center gap-1"><div class="w-2 h-2 rounded-full bg-orange-500"></div><span class="text-[10px] text-slate-500">Moderada</span></div>
+</div>
+</div>
+<div>
+<label class="block text-xs font-medium text-slate-700 mb-1.5">Relato do Paciente</label>
+<textarea class="shadcn-input min-h-[80px] resize-none" placeholder="Paciente relata melhora na dor ao subir escadas..."></textarea>
+</div>
+</div>
+</div>
+<!-- O: Objetivo -->
+<div class="bg-white rounded-lg border border-border shadow-sm overflow-hidden">
+<div class="bg-slate-50 px-4 py-2 border-b border-border">
+<h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+<span class="flex items-center justify-center w-5 h-5 rounded bg-blue-100 text-primary text-[10px]">O</span>
+                                            Objetivo
+                                        </h3>
+</div>
+<div class="p-4 space-y-4">
+<div class="grid grid-cols-2 gap-3">
+<div>
+<label class="block text-xs font-medium text-slate-700 mb-1">Flexão (Graus)</label>
+<input class="shadcn-input text-center font-mono" type="number" value="110"/>
+</div>
+<div>
+<label class="block text-xs font-medium text-slate-700 mb-1">Extensão (Graus)</label>
+<input class="shadcn-input text-center font-mono" type="number" value="0"/>
+</div>
+</div>
+<div>
+<label class="block text-xs font-medium text-slate-700 mb-1">Edema (Perimetria)</label>
+<div class="flex items-center gap-2">
+<input class="shadcn-input" type="text" value="38 cm (Supra patelar)"/>
+<span class="text-xs text-green-600 font-bold bg-green-50 px-1.5 py-0.5 rounded">-2cm</span>
+</div>
+</div>
+</div>
+</div>
+<!-- A: Avaliação -->
+<div class="bg-white rounded-lg border border-border shadow-sm overflow-hidden">
+<div class="bg-slate-50 px-4 py-2 border-b border-border">
+<h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+<span class="flex items-center justify-center w-5 h-5 rounded bg-blue-100 text-primary text-[10px]">A</span>
+                                            Avaliação
+                                        </h3>
+</div>
+<div class="p-4">
+<textarea class="shadcn-input min-h-[60px] resize-none" placeholder="Evolução satisfatória, ganho de ADM e redução de edema.">Evolução satisfatória, ganho de ADM e redução de edema.</textarea>
+</div>
+</div>
+<!-- P: Plano -->
+<div class="bg-white rounded-lg border border-border shadow-sm overflow-hidden mb-4">
+<div class="bg-slate-50 px-4 py-2 border-b border-border flex justify-between items-center">
+<h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+<span class="flex items-center justify-center w-5 h-5 rounded bg-blue-100 text-primary text-[10px]">P</span>
+                                            Plano Terapêutico
+                                        </h3>
+</div>
+<div class="p-4 space-y-3">
+<button class="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-md border border-dashed border-primary/40 bg-primary/5 text-primary text-sm font-medium hover:bg-primary/10 transition-colors mb-3">
+<span class="material-symbols-outlined text-lg">history</span>
+                                            Replicar Conduta Anterior
+                                        </button>
+<div class="space-y-2">
+<label class="flex items-start gap-3 p-2 rounded hover:bg-slate-50 cursor-pointer">
+<input class="mt-0.5 w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary" type="checkbox"/>
+<span class="text-sm text-slate-700">Mobilização Patelar (Grau III)</span>
+</label>
+<label class="flex items-start gap-3 p-2 rounded hover:bg-slate-50 cursor-pointer">
+<input checked="" class="mt-0.5 w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary" type="checkbox"/>
+<span class="text-sm text-slate-700">Fortalecimento Quadríceps (Cadeira Extensora - 2kg)</span>
+</label>
+<label class="flex items-start gap-3 p-2 rounded hover:bg-slate-50 cursor-pointer">
+<input checked="" class="mt-0.5 w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary" type="checkbox"/>
+<span class="text-sm text-slate-700">Propriocepção em Cama Elástica</span>
+</label>
+<label class="flex items-start gap-3 p-2 rounded hover:bg-slate-50 cursor-pointer">
+<input class="mt-0.5 w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary" type="checkbox"/>
+<span class="text-sm text-slate-700">Crioterapia (20min)</span>
+</label>
+</div>
+<button class="flex items-center gap-1 text-xs text-slate-500 font-medium mt-2 hover:text-primary">
+<span class="material-symbols-outlined text-sm">add</span> Adicionar exercício
+                                        </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Fixed Bottom Actions -->
+<div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-border z-50 max-w-md mx-auto">
+<div class="flex gap-3">
+<button class="flex-1 bg-white border border-slate-300 text-slate-700 font-semibold py-3 px-4 rounded-lg shadow-sm hover:bg-slate-50 transition-colors">
+                    Salvar Rascunho
+                </button>
+<button class="flex-[2] bg-primary text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-blue-600 transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">check_circle</span>
+                    Finalizar Sessão
+                </button>
+</div>
+</div>
+</div>
+</body></html>

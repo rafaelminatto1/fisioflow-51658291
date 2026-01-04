@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+
+<html class="light" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lista de Pacientes - FisioFlow</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0d7ff2",
+                        "primary-foreground": "#ffffff",
+                        "background-light": "#ffffff",
+                        "background-dark": "#020817",
+                        "muted": "#f1f5f9",
+                        "muted-foreground": "#64748b",
+                        "border": "#e2e8f0",
+                        "card": "#ffffff",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "sans": ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.375rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px",
+                    },
+                    boxShadow: {
+                        'sm': '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            -webkit-tap-highlight-color: transparent;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-50 font-display antialiased overflow-hidden">
+<!-- App Container (Mobile Simulation) -->
+<div class="relative flex flex-col h-screen w-full mx-auto max-w-[480px] bg-background-light dark:bg-background-dark shadow-2xl overflow-hidden">
+<!-- Header Section -->
+<header class="sticky top-0 z-20 bg-background-light dark:bg-background-dark/95 backdrop-blur supports-[backdrop-filter]:bg-background-light/60 border-b border-border dark:border-slate-800">
+<!-- Top Bar -->
+<div class="flex items-center justify-between px-4 h-14">
+<h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Pacientes</h1>
+<button aria-label="Adicionar Paciente" class="flex items-center justify-center h-9 w-9 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm">
+<span class="material-symbols-outlined" style="font-size: 20px;">add</span>
+</button>
+</div>
+<!-- Search Bar -->
+<div class="px-4 pb-3">
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+<span class="material-symbols-outlined" style="font-size: 20px;">search</span>
+</span>
+<input class="flex h-10 w-full rounded-lg border border-border bg-transparent px-3 py-1 pl-10 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-800 dark:bg-slate-950/50" placeholder="Buscar por nome ou CPF..." type="text"/>
+</div>
+</div>
+<!-- Filter Chips -->
+<div class="px-4 pb-3 flex gap-2 overflow-x-auto no-scrollbar mask-gradient-right">
+<button class="inline-flex items-center rounded-full border border-transparent bg-slate-900 px-3 py-1 text-xs font-semibold text-white shadow hover:bg-slate-900/80 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-950 focus:ring-offset-2 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-slate-50/80">
+                    Todos
+                </button>
+<button class="inline-flex items-center rounded-full border border-border bg-transparent px-3 py-1 text-xs font-semibold text-slate-900 transition-colors hover:bg-muted focus:outline-none focus:ring-2 focus:ring-slate-950 focus:ring-offset-2 dark:border-slate-800 dark:text-slate-50 dark:hover:bg-slate-800">
+                    Ativos
+                </button>
+<button class="inline-flex items-center rounded-full border border-border bg-transparent px-3 py-1 text-xs font-semibold text-slate-900 transition-colors hover:bg-muted focus:outline-none focus:ring-2 focus:ring-slate-950 focus:ring-offset-2 dark:border-slate-800 dark:text-slate-50 dark:hover:bg-slate-800">
+                    Inativos
+                </button>
+</div>
+</header>
+<!-- Main Content: Patient List -->
+<main class="flex-1 overflow-y-auto scroll-smooth">
+<div class="px-4 py-2 space-y-1">
+<!-- Section Label -->
+<div class="px-1 pt-2 pb-1">
+<p class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Recentes</p>
+</div>
+<!-- Patient Item 1 -->
+<div class="group flex items-center gap-4 p-3 rounded-xl bg-card hover:bg-slate-50 active:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors cursor-pointer border border-transparent hover:border-border dark:hover:border-slate-700">
+<div class="relative shrink-0">
+<div class="h-12 w-12 rounded-full bg-cover bg-center border border-border dark:border-slate-700" data-alt="Portrait of a smiling man with short dark hair" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAdzAfOo-dg5NpWyEon6tgMN39Wc5jydhKDT2TiwaqL84ViemyIXa6wUBrVOIIP6hyMnhlbgxVqOnlVzBRbd7x9s9FzsJ0eoQgCVNd73lsuL6g1uxlcurmGM1n9OSd3EhBR3WBVzDZ74WuDwbCkMRbHYTh_j8ShNuqq1CFXtsCMkl4nh7OZJVcApIfJpT6nFqukSx-pGDavTkSjGHREM5nTMSc3IOvYDBVXE9_JuqqNCMNhVS7DCN5J2w35XTtEGCCn9MDGzrwmBK43');"></div>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<p class="text-sm font-semibold text-slate-900 dark:text-white truncate">João Pereira</p>
+<span class="inline-flex items-center rounded-full border border-transparent bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                                Ativo
+                            </span>
+</div>
+<p class="text-xs text-muted-foreground truncate mt-0.5">(11) 99999-9999</p>
+</div>
+<div class="shrink-0 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">chevron_right</span>
+</div>
+</div>
+<!-- Patient Item 2 -->
+<div class="group flex items-center gap-4 p-3 rounded-xl bg-card hover:bg-slate-50 active:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors cursor-pointer border border-transparent hover:border-border dark:hover:border-slate-700">
+<div class="relative shrink-0">
+<div class="h-12 w-12 rounded-full bg-cover bg-center border border-border dark:border-slate-700" data-alt="Portrait of a young woman with curly hair looking away" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBSAO7Ndvaob4Bq6pVj1SEi7uHGu75qfGu8G48g1s3EpmDyTrRgiCCGHyWjl1F6wzFcR-oaDpdIactSnuckqLjreNfbbYtWlw6ujxgoljimhO3oVMhtx2I_jQp3GI1zhI9hNBIDebopBEavx3O-Akgj0H-zXZLOxCSwX_julhY_c360VlWhxI3HaFoJYJwRGj7gZJopIvLbQwnInod2MY6c0JbtVymLEwel-rn-WC9wMK0Ukh1VvOh2jYCIv57MiYmmhF51EHX9QFpQ');"></div>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<p class="text-sm font-semibold text-slate-900 dark:text-white truncate">Maria Silva</p>
+<span class="inline-flex items-center rounded-full border border-transparent bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                                Inativo
+                            </span>
+</div>
+<p class="text-xs text-muted-foreground truncate mt-0.5">(11) 98888-8888</p>
+</div>
+<div class="shrink-0 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">chevron_right</span>
+</div>
+</div>
+<!-- Divider between sections could go here, but using spacing for cleanliness -->
+<div class="h-4"></div>
+<!-- Section Label -->
+<div class="px-1 pb-1">
+<p class="text-xs font-medium text-muted-foreground uppercase tracking-wider">Todos os Pacientes</p>
+</div>
+<!-- Patient Item 3 (No Image, Initials) -->
+<div class="group flex items-center gap-4 p-3 rounded-xl bg-card hover:bg-slate-50 active:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors cursor-pointer border border-transparent hover:border-border dark:hover:border-slate-700">
+<div class="relative shrink-0">
+<div class="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600 font-bold text-sm border border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-900/30">
+                            CL
+                        </div>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<p class="text-sm font-semibold text-slate-900 dark:text-white truncate">Carlos Lima</p>
+<span class="inline-flex items-center rounded-full border border-transparent bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                                Ativo
+                            </span>
+</div>
+<p class="text-xs text-muted-foreground truncate mt-0.5">(21) 97777-7777</p>
+</div>
+<div class="shrink-0 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">chevron_right</span>
+</div>
+</div>
+<!-- Patient Item 4 -->
+<div class="group flex items-center gap-4 p-3 rounded-xl bg-card hover:bg-slate-50 active:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors cursor-pointer border border-transparent hover:border-border dark:hover:border-slate-700">
+<div class="relative shrink-0">
+<div class="h-12 w-12 rounded-full bg-cover bg-center border border-border dark:border-slate-700" data-alt="Portrait of a young woman with long hair and bright makeup" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAZ_s1-L0A9WctD9eUDDaQsw4nR0EJyRK9jmA55gI1Dr3gEcIfflMUk-M2KNiPqa75cCcPBZLgdyWupMutHcKpdYbpAVX65tNlcwZuOsC35Q4Ik3Ett9mvYNpX-Zx-T8vby6_qv5w03ACfTFLy-azuBKYZWDbIOAla6IHbIMeiGDTsC_4pKj5EpNoW1KwCuK8-3L_Kj0hHWVELjRnX8mdVoweeqZxnu1bk4ezSKoKS55AHq9pWgp0bFvDNjy3YbqtZAr4WoVjfVC7uF');"></div>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<p class="text-sm font-semibold text-slate-900 dark:text-white truncate">Ana Costa</p>
+<span class="inline-flex items-center rounded-full border border-transparent bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                                Ativo
+                            </span>
+</div>
+<p class="text-xs text-muted-foreground truncate mt-0.5">(31) 96666-6666</p>
+</div>
+<div class="shrink-0 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">chevron_right</span>
+</div>
+</div>
+<!-- Patient Item 5 (Initials) -->
+<div class="group flex items-center gap-4 p-3 rounded-xl bg-card hover:bg-slate-50 active:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors cursor-pointer border border-transparent hover:border-border dark:hover:border-slate-700">
+<div class="relative shrink-0">
+<div class="flex h-12 w-12 items-center justify-center rounded-full bg-orange-50 text-orange-600 font-bold text-sm border border-orange-100 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-900/30">
+                            PS
+                        </div>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<p class="text-sm font-semibold text-slate-900 dark:text-white truncate">Pedro Santos</p>
+<span class="inline-flex items-center rounded-full border border-transparent bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                                Inativo
+                            </span>
+</div>
+<p class="text-xs text-muted-foreground truncate mt-0.5">(41) 95555-5555</p>
+</div>
+<div class="shrink-0 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">chevron_right</span>
+</div>
+</div>
+<!-- Patient Item 6 -->
+<div class="group flex items-center gap-4 p-3 rounded-xl bg-card hover:bg-slate-50 active:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors cursor-pointer border border-transparent hover:border-border dark:hover:border-slate-700">
+<div class="relative shrink-0">
+<div class="h-12 w-12 rounded-full bg-cover bg-center border border-border dark:border-slate-700" data-alt="Portrait of a serious man with a beard looking forward" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDXh5Vt7qcv24tka9udc1K_MJgytDWR0vajL1DdRoIl_HhFE_KgnhCoGYVuLoOAb-ibwup6U8gmLv_OZmDAGfWul7YF795esVWAtNoT5eo0Uu1fx2RMu1slg18sfZQ8VXmXBKs4L6ICxdfe2020b_1IY5d7vCVYlQlVaQXgR3-x8gnbmMoX-CxndVmQxcgiHBBWbUokRbCZB9PbNqFOBeH9ncuEY8usJGuqCS_HD-DwX68buLCwo9wPDlvBqPbBdtsS4JqMPfhCeYRW');"></div>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<p class="text-sm font-semibold text-slate-900 dark:text-white truncate">Roberto Almeida</p>
+<span class="inline-flex items-center rounded-full border border-transparent bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                                Ativo
+                            </span>
+</div>
+<p class="text-xs text-muted-foreground truncate mt-0.5">(51) 94444-4444</p>
+</div>
+<div class="shrink-0 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">chevron_right</span>
+</div>
+</div>
+<!-- Empty space for scrolling past FAB if needed -->
+<div class="h-24"></div>
+</div>
+</main>
+<!-- Bottom Navigation (Context) -->
+<nav class="sticky bottom-0 z-10 border-t border-border bg-background-light/95 dark:bg-background-dark/95 backdrop-blur supports-[backdrop-filter]:bg-background-light/60 dark:border-slate-800">
+<div class="flex h-16 items-center justify-around px-2">
+<a class="flex flex-col items-center justify-center gap-1 rounded-lg px-2 py-1 text-muted-foreground hover:bg-muted dark:hover:bg-slate-800/50 transition-colors" href="#">
+<span class="material-symbols-outlined" style="font-size: 24px;">home</span>
+<span class="text-[10px] font-medium">Início</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 rounded-lg px-2 py-1 text-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors" href="#">
+<span class="material-symbols-outlined filled" style="font-size: 24px;">group</span>
+<span class="text-[10px] font-medium">Pacientes</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 rounded-lg px-2 py-1 text-muted-foreground hover:bg-muted dark:hover:bg-slate-800/50 transition-colors" href="#">
+<span class="material-symbols-outlined" style="font-size: 24px;">calendar_month</span>
+<span class="text-[10px] font-medium">Agenda</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 rounded-lg px-2 py-1 text-muted-foreground hover:bg-muted dark:hover:bg-slate-800/50 transition-colors" href="#">
+<span class="material-symbols-outlined" style="font-size: 24px;">settings</span>
+<span class="text-[10px] font-medium">Ajustes</span>
+</a>
+</div>
+</nav>
+<!-- Mobile Floating Action Button (Alternative to Top Button) -->
+<!-- Just an example if needed, but the top button covers the requirement. -->
+</div>
+</body></html>

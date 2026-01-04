@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>FisioFlow - Clinical Management Prototype</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Inter:wght@300..900&family=Roboto+Condensed:wght@300;400;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/history@5/umd/history.development.js"></script>
+    <script src="https://unpkg.com/react-router@6.3.0/umd/react-router.development.js"></script>
+    <script src="https://unpkg.com/react-router-dom@6.3.0/umd/react-router-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#007BFF", // Unified Primary
+                        "primary-hover": "#0056B3",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                        "text-main": "#111813",
+                        "text-muted": "#61896f",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1c2e22",
+                        "blue-resource": "#3b82f6",
+                        "purple-resource": "#9333ea",
+                        "orange-resource": "#fb923c",
+                        "gray-resource": "#6b7280",
+                        // Screen 2 & 3 specifics mapped or kept
+                        "border-light": "#CDD5DF",
+                        "border-dark": "#495C73",
+                        "text-main-light": "#000000",
+                        "text-main-dark": "#E0E6EB",
+                        "text-secondary-light": "#5A677F",
+                        "text-secondary-dark": "#9EB3C9",
+                        "tag-blue-bg-light": "#E6F0FF",
+                        "tag-blue-text-light": "#0056B3",
+                        "tag-blue-border-light": "#94C4FF",
+                        "tag-blue-bg-dark": "#0B2D59",
+                        "tag-blue-text-dark": "#82BFFF",
+                        "tag-blue-border-dark": "#306BB3",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"],
+                        "sans": ["Inter", "sans-serif"],
+                        "condensed-sans": ["Roboto Condensed", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .material-symbols-outlined.filled { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        .timeline-grid { background-size: 100% 60px; background-image: linear-gradient(to bottom, #e2e8f0 1px, transparent 1px); }
+        .dark .timeline-grid { background-image: linear-gradient(to bottom, #374151 1px, transparent 1px); }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-text-main transition-colors duration-200">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { createRoot } = ReactDOM;
+        const { MemoryRouter, Routes, Route, Link, useNavigate, useLocation } = ReactRouterDOM;
+
+        // --- Common Components ---
+
+        const Sidebar = () => {
+            const navigate = useNavigate();
+            const location = useLocation();
+
+            const isActive = (path) => location.pathname === path;
+
+            return (
+                <aside className="w-64 flex-shrink-0 flex flex-col bg-surface-light dark:bg-surface-dark border-r border-[#f0f4f2] dark:border-gray-800 z-20 h-screen sticky top-0">
+                    <div className="flex h-full flex-col justify-between p-4">
+                        <div className="flex flex-col gap-6">
+                            <div className="flex gap-3 items-center px-2">
+                                <div className="bg-center bg-no-repeat bg-cover rounded-xl size-10 bg-primary/20 flex items-center justify-center text-primary">
+                                    <span className="material-symbols-outlined filled">spa</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <h1 className="text-text-main dark:text-white text-base font-bold leading-normal">FisioFlow</h1>
+                                    <p className="text-text-muted text-xs font-normal leading-normal">v3.0</p>
+                                </div>
+                            </div>
+                            <nav className="flex flex-col gap-1">
+                                <Link to="/" className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isActive('/') ? 'bg-primary/10 text-text-main dark:text-white border-l-4 border-primary' : 'text-text-main dark:text-gray-300 hover:bg-background-light dark:hover:bg-gray-800'}`}>
+                                    <span className={`material-symbols-outlined ${isActive('/') ? 'filled text-primary' : ''}`}>calendar_month</span>
+                                    <span className={`text-sm ${isActive('/') ? 'font-bold' : 'font-medium'}`}>Dashboard</span>
+                                </Link>
+                                <Link to="/overview" className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isActive('/overview') ? 'bg-primary/10 text-text-main dark:text-white border-l-4 border-primary' : 'text-text-main dark:text-gray-300 hover:bg-background-light dark:hover:bg-gray-800'}`}>
+                                    <span className={`material-symbols-outlined ${isActive('/overview') ? 'filled text-primary' : ''}`}>pie_chart</span>
+                                    <span className={`text-sm ${isActive('/overview') ? 'font-bold' : 'font-medium'}`}>Overview</span>
+                                </Link>
+                                <Link to="/patient" className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isActive('/patient') ? 'bg-primary/10 text-text-main dark:text-white border-l-4 border-primary' : 'text-text-main dark:text-gray-300 hover:bg-background-light dark:hover:bg-gray-800'}`}>
+                                    <span className={`material-symbols-outlined ${isActive('/patient') ? 'filled text-primary' : ''}`}>group</span>
+                                    <span className={`text-sm ${isActive('/patient') ? 'font-bold' : 'font-medium'}`}>Patient Journey</span>
+                                </Link>
+                                <a className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-main dark:text-gray-300 hover:bg-background-light dark:hover:bg-gray-800 transition-colors" href="#">
+                                    <span className="material-symbols-outlined">medical_services</span>
+                                    <span className="text-sm font-medium">Treatments</span>
+                                </a>
+                            </nav>
+                            
+                            {/* Quick Filters Mock */}
+                            <div className="h-px bg-gray-200 dark:bg-gray-800 w-full my-2"></div>
+                             <div className="flex flex-col gap-4 px-2">
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted">Quick Filters</h3>
+                                <div className="flex flex-col gap-3">
+                                    <label className="flex items-center gap-3 cursor-pointer group">
+                                        <div className="relative flex items-center">
+                                            <input defaultChecked className="peer h-4 w-4 appearance-none rounded border border-gray-300 bg-white checked:bg-primary checked:border-primary focus:ring-2 focus:ring-primary/20 transition-all dark:border-gray-600 dark:bg-gray-700" type="checkbox"/>
+                                            <span className="material-symbols-outlined absolute left-0 top-0 text-white opacity-0 peer-checked:opacity-100 pointer-events-none text-[16px]">check</span>
+                                        </div>
+                                        <span className="text-sm font-medium text-text-main dark:text-gray-300">Dr. Sarah Smith</span>
+                                        <span className="w-2 h-2 rounded-full bg-blue-resource ml-auto"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 px-2 py-3 mt-auto rounded-lg hover:bg-background-light dark:hover:bg-gray-800 cursor-pointer">
+                            <div className="size-9 rounded-full bg-cover bg-center border-2 border-white dark:border-gray-700 shadow-sm" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDrTU9dy76uJx_hflUAvS8IlGKEMDEYuqm2GtqmKMvFPq63tZrgdEHmccvbbqArpp6rRwXUbsA9tTNfdoinWDWPiylIs-azYDyjrHse-L8LKHPWgZ3QPwoEeh-T2Ua8hDd2QV6IrQiQyfWVircuY450FJE5c6lWvqyGfJDbVtDgWQh9GI-dun517lREu_2Cn4af0QFXKEXb7Y1pCp3lPnUC_S1Rzo1nIbY_Qg-sz37PmHIHOFP5pd5uFC-UJJy2wqQvD5lXF1XnQ0c")'}}></div>
+                            <div className="flex flex-col overflow-hidden">
+                                <p className="text-sm font-bold text-text-main dark:text-white truncate">Jane Doe</p>
+                                <p className="text-xs text-text-muted truncate">Admin</p>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            );
+        };
+
+        const TopHeader = ({ title }) => (
+            <header className="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark px-10 py-3 transition-colors">
+                <div className="flex items-center gap-8">
+                    <div className="flex items-center gap-4 text-text-main-light dark:text-text-main-dark">
+                         {/* Mobile menu trigger could go here */}
+                         <h2 className="text-lg font-bold leading-tight tracking-[-0.015em]">{title}</h2>
+                    </div>
+                    <label className="hidden md:flex flex-col min-w-40 !h-10 max-w-64">
+                        <div className="flex w-full flex-1 items-stretch rounded-lg h-full group">
+                            <div className="text-text-secondary-light dark:text-text-secondary-dark flex border-none bg-background-light dark:bg-background-dark items-center justify-center pl-4 rounded-l-lg border-r-0">
+                                <span className="material-symbols-outlined text-[20px]">search</span>
+                            </div>
+                            <input className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-lg text-text-main-light dark:text-text-main-dark focus:outline-0 focus:ring-0 border-none bg-background-light dark:bg-background-dark focus:border-none h-full placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark px-4 pl-2 text-base font-normal leading-normal transition-colors" placeholder="Buscar paciente..." defaultValue=""/>
+                        </div>
+                    </label>
+                </div>
+                <div className="flex flex-1 justify-end gap-8 items-center">
+                    <div className="flex gap-2">
+                        <button className="flex items-center justify-center rounded-lg size-10 bg-background-light dark:bg-background-dark text-text-main-light dark:text-text-main-dark hover:bg-primary/20 hover:text-primary transition-colors">
+                            <span className="material-symbols-outlined">notifications</span>
+                        </button>
+                        <button className="flex items-center justify-center rounded-lg size-10 bg-background-light dark:bg-background-dark text-text-main-light dark:text-text-main-dark hover:bg-primary/20 hover:text-primary transition-colors">
+                            <span className="material-symbols-outlined">chat_bubble</span>
+                        </button>
+                    </div>
+                    <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-border-light dark:border-border-dark cursor-pointer" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAGDNvqXkNCOGjIvaabSHSd2NsIqzQT6pgG35ywJQmzm83ThLdLGzbkUERj1A_SHA-SS3nkIeuwkvyiyHftiRqT4JIWJ-w8KVZ-vkvLfmkl_mf-SXv7oqdxoCr5S_op5Za9J73jkne-qCejZuCId6KJMLzWpnXhLmhjuHthyaKut_efUApV1sl9_-7vQQai6yJNoNOQ_40K_b_d8qpnJJIajQUro82bOjsY2qqjC6OoWoi3qXoBl5-gHpxwbvDJZA6l7C3vlyiXU_c")'}}></div>
+                </div>
+            </header>
+        );
+
+
+        // --- Screen 1: Dashboard ---
+        const DashboardScreen = () => {
+             const navigate = useNavigate();
+
+            return (
+                <div className="flex h-screen w-full overflow-hidden bg-background-light dark:bg-background-dark font-display">
+                    <Sidebar />
+                    <main className="flex-1 flex flex-col h-full overflow-hidden">
+                        <header className="h-16 flex items-center justify-between px-6 bg-surface-light dark:bg-surface-dark border-b border-[#f0f4f2] dark:border-gray-800 flex-shrink-0 z-10">
+                            <div className="flex items-center gap-4">
+                                <h2 className="text-xl font-bold text-text-main dark:text-white">Multi-Resource Dashboard</h2>
+                                <div className="h-6 w-px bg-gray-300 dark:bg-gray-700 mx-2"></div>
+                                <span className="text-sm text-text-muted">October 24, 2023</span>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-text-muted group-focus-within:text-primary transition-colors">
+                                        <span className="material-symbols-outlined">search</span>
+                                    </div>
+                                    <input className="block w-64 pl-10 pr-3 py-2 bg-[#f0f4f2] dark:bg-gray-800 border-none rounded-lg text-sm placeholder-text-muted text-text-main focus:ring-2 focus:ring-primary/50 transition-all" placeholder="Search appointments, resources..." type="text"/>
+                                </div>
+                                <button className="flex items-center justify-center size-10 rounded-lg bg-[#f0f4f2] dark:bg-gray-800 text-text-main hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors relative">
+                                    <span className="material-symbols-outlined">notifications</span>
+                                    <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+                                </button>
+                                <button className="bg-primary hover:bg-primary/90 text-text-main px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 shadow-sm shadow-primary/30 transition-all">
+                                    <span className="material-symbols-outlined text-[20px]">add</span>
+                                    New Booking
+                                </button>
+                            </div>
+                        </header>
+                        <div className="flex flex-1 overflow-hidden">
+                            <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-background-dark relative">
+                                <div className="flex items-center justify-between px-6 py-4 border-b border-[#f0f4f2] dark:border-gray-800 bg-surface-light dark:bg-surface-dark">
+                                    <div className="flex items-center gap-4">
+                                        <button className="text-sm font-bold text-text-main dark:text-white border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Today</button>
+                                        <div className="flex items-center gap-2">
+                                            <button className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"><span className="material-symbols-outlined text-text-main dark:text-white">chevron_left</span></button>
+                                            <button className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"><span className="material-symbols-outlined text-text-main dark:text-white">chevron_right</span></button>
+                                        </div>
+                                        <h3 className="text-lg font-bold text-text-main dark:text-white">Oct 24 - 30, 2023</h3>
+                                    </div>
+                                    <div className="flex bg-[#f0f4f2] dark:bg-gray-800 p-1 rounded-lg">
+                                        <button className="px-3 py-1 text-xs font-medium rounded text-text-muted hover:text-text-main dark:hover:text-white transition-colors">Day</button>
+                                        <button className="px-3 py-1 text-xs font-bold rounded bg-white dark:bg-gray-700 shadow-sm text-text-main dark:text-white transition-colors">Week</button>
+                                        <button className="px-3 py-1 text-xs font-medium rounded text-text-muted hover:text-text-main dark:hover:text-white transition-colors">Month</button>
+                                        <button className="px-3 py-1 text-xs font-medium rounded text-text-muted hover:text-text-main dark:hover:text-white transition-colors">List</button>
+                                    </div>
+                                </div>
+                                <div className="flex-1 overflow-x-auto overflow-y-auto relative bg-white dark:bg-[#15201b]">
+                                    <div className="grid grid-cols-[60px_repeat(4,minmax(200px,1fr))] sticky top-0 z-20 bg-white dark:bg-[#15201b] border-b border-gray-100 dark:border-gray-800">
+                                        <div className="border-r border-gray-100 dark:border-gray-800"></div>
+                                        <div className="flex items-center justify-center py-3 text-center border-r border-gray-100 dark:border-gray-800">
+                                            <span className="size-8 flex items-center justify-center rounded-full bg-blue-resource/10 text-blue-resource font-bold text-lg shadow-sm">
+                                                <span className="material-symbols-outlined filled text-sm">person</span>
+                                            </span>
+                                            <div className="ml-2">
+                                                <p className="text-sm font-bold text-text-main dark:text-white">Dr. S. Smith</p>
+                                                <p className="text-xs text-text-muted">Physiotherapist</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-center py-3 text-center border-r border-gray-100 dark:border-gray-800">
+                                            <span className="size-8 flex items-center justify-center rounded-full bg-purple-resource/10 text-purple-resource font-bold text-lg shadow-sm">
+                                                <span className="material-symbols-outlined filled text-sm">person</span>
+                                            </span>
+                                            <div className="ml-2">
+                                                <p className="text-sm font-bold text-text-main dark:text-white">Dr. M. Ross</p>
+                                                <p className="text-xs text-text-muted">Chiropractor</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-center py-3 text-center border-r border-gray-100 dark:border-gray-800">
+                                            <span className="size-8 flex items-center justify-center rounded-full bg-orange-resource/10 text-orange-resource font-bold text-lg shadow-sm">
+                                                <span className="material-symbols-outlined filled text-sm">meeting_room</span>
+                                            </span>
+                                            <div className="ml-2">
+                                                <p className="text-sm font-bold text-text-main dark:text-white">Room 101</p>
+                                                <p className="text-xs text-text-muted">Treatment Room</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-center py-3 text-center">
+                                            <span className="size-8 flex items-center justify-center rounded-full bg-gray-resource/10 text-gray-resource font-bold text-lg shadow-sm">
+                                                <span className="material-symbols-outlined filled text-sm">meeting_room</span>
+                                            </span>
+                                            <div className="ml-2">
+                                                <p className="text-sm font-bold text-text-main dark:text-white">Room 102</p>
+                                                <p className="text-xs text-text-muted">Consultation Room</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-[60px_repeat(4,minmax(200px,1fr))] min-h-[1000px] timeline-grid">
+                                        <div className="flex flex-col text-right pr-2 py-4 gap-[46px] text-xs font-medium text-text-muted border-r border-gray-100 dark:border-gray-800 bg-white dark:bg-[#15201b] sticky left-0 z-10">
+                                            {[8,9,10,11,12,1,2,3,4,5,6].map(t => <span key={t}>{t} {t >= 8 && t < 12 ? 'AM' : 'PM'}</span>)}
+                                        </div>
+                                        <div className="relative group h-full border-r border-gray-100 dark:border-gray-800">
+                                            <div onClick={() => navigate('/patient')} className="absolute top-[130px] left-1 right-1 h-[110px] bg-blue-100 dark:bg-blue-900/40 border-l-4 border-blue-resource rounded p-2 cursor-pointer hover:shadow-md transition-shadow">
+                                                <p className="text-xs font-bold text-blue-800 dark:text-blue-100">John Doe (Click Me)</p>
+                                                <p className="text-[10px] text-blue-600 dark:text-blue-200 mt-0.5">10:00 - 11:30</p>
+                                                <p className="text-[10px] text-blue-600 dark:text-blue-200 mt-1">Initial Assessment</p>
+                                                <div className="mt-2 flex items-center gap-1">
+                                                    <span className="material-symbols-outlined text-[14px] text-blue-resource">person</span>
+                                                    <span className="text-[10px] text-blue-resource">Dr. Smith</span>
+                                                </div>
+                                            </div>
+                                            <div className="absolute top-[280px] left-1 right-1 h-[85px] bg-blue-100 dark:bg-blue-900/40 border-l-4 border-blue-resource rounded p-2 cursor-pointer hover:shadow-md transition-shadow">
+                                                <p className="text-xs font-bold text-blue-800 dark:text-blue-100">Sarah Lee</p>
+                                                <p className="text-[10px] text-blue-600 dark:text-blue-200 mt-0.5">12:30 - 01:30</p>
+                                                <p className="text-[10px] text-blue-600 dark:text-blue-200 mt-1 truncate">Follow-up: Shoulder Injury</p>
+                                            </div>
+                                        </div>
+                                        {/* Mocking other columns empty or simple for brevity, keeping layout structure */}
+                                        <div className="relative group h-full border-r border-gray-100 dark:border-gray-800">
+                                            <div className="absolute top-[310px] left-1 right-1 h-[85px] bg-purple-100 dark:bg-purple-900/40 border-l-4 border-purple-resource rounded p-2 cursor-pointer hover:shadow-md transition-shadow">
+                                                <p className="text-xs font-bold text-purple-800 dark:text-purple-100">Mike Ross</p>
+                                                <p className="text-[10px] text-purple-600 dark:text-purple-200 mt-0.5">01:00 - 02:30</p>
+                                            </div>
+                                        </div>
+                                         <div className="relative group h-full border-r border-gray-100 dark:border-gray-800">
+                                            <div className="absolute top-[280px] left-1 right-1 h-[85px] bg-orange-100 dark:bg-orange-900/40 border-l-4 border-orange-resource rounded p-2 cursor-pointer hover:shadow-md transition-shadow">
+                                                <p className="text-xs font-bold text-orange-800 dark:text-orange-100">Group Therapy</p>
+                                                <p className="text-[10px] text-orange-600 dark:text-orange-200 mt-0.5">12:30 - 02:00</p>
+                                            </div>
+                                        </div>
+                                        <div className="relative group h-full"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            );
+        };
+
+        // --- Screen 2: Patient Journey ---
+        const PatientJourneyScreen = () => {
+             return (
+                <div className="flex h-screen w-full overflow-hidden bg-background-light dark:bg-background-dark font-sans text-text-main-light dark:text-text-main-dark">
+                    <Sidebar />
+                    <div className="flex-1 flex flex-col overflow-y-auto">
+                        <TopHeader title="FisioFlow - Patient Journey" />
+                        <main className="flex flex-1 justify-center py-5 px-4 md:px-10 lg:px-20 xl:px-40">
+                            <div className="layout-content-container flex flex-col w-full max-w-[1200px] flex-1 gap-6">
+                                <div className="flex flex-wrap gap-2 px-4">
+                                    <Link to="/overview" className="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium hover:text-primary">Pacientes</Link>
+                                    <span className="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium">/</span>
+                                    <a className="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium hover:text-primary" href="#">João Silva</a>
+                                    <span className="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium">/</span>
+                                    <span className="text-text-main-light dark:text-text-main-dark text-sm font-medium">Jornada de Progresso</span>
+                                </div>
+                                <div className="flex flex-wrap justify-between items-end gap-4 px-4">
+                                    <div className="flex min-w-72 flex-col gap-2">
+                                        <div className="flex items-center gap-3">
+                                            <h1 className="text-text-main-light dark:text-text-main-dark text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">Jornada de João</h1>
+                                            <span className="px-2 py-1 rounded bg-tag-blue-bg-light dark:bg-tag-blue-bg-dark text-tag-blue-text-light dark:text-tag-blue-text-dark text-xs font-bold uppercase tracking-wider border border-tag-blue-border-light dark:border-tag-blue-border-dark">Ativo</span>
+                                        </div>
+                                        <p className="text-text-secondary-light dark:text-text-secondary-dark text-base font-normal">Reabilitação Pós-Cirúrgica LCA (Joelho Direito)</p>
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <button className="flex items-center justify-center rounded-lg h-10 px-4 border border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark text-text-main-light dark:text-text-main-dark hover:bg-background-light dark:hover:bg-background-dark text-sm font-bold transition-colors">
+                                            <span className="material-symbols-outlined mr-2 text-[18px]">print</span>
+                                            Relatório
+                                        </button>
+                                        <button className="flex items-center justify-center rounded-lg h-10 px-4 bg-primary hover:bg-primary-hover text-white text-sm font-bold shadow-lg shadow-primary/20 transition-all transform hover:scale-105">
+                                            <span className="material-symbols-outlined mr-2 text-[20px]">add</span>
+                                            Nova Evolução
+                                        </button>
+                                    </div>
+                                </div>
+                                {/* Stats Cards */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-4">
+                                     <div className="flex flex-col gap-2 rounded-xl p-6 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark shadow-sm">
+                                        <div className="flex items-center gap-2">
+                                            <span className="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark">calendar_month</span>
+                                            <p className="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium">Total de Sessões</p>
+                                        </div>
+                                        <div className="flex items-baseline gap-2">
+                                            <p className="text-text-main-light dark:text-text-main-dark text-2xl font-bold">12</p>
+                                            <p className="text-primary text-sm font-bold">+2 essa semana</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col gap-2 rounded-xl p-6 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark shadow-sm">
+                                        <div className="flex items-center gap-2">
+                                            <span className="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark">history</span>
+                                            <p className="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium">Última Visita</p>
+                                        </div>
+                                        <p className="text-text-main-light dark:text-text-main-dark text-2xl font-bold">2 dias atrás</p>
+                                    </div>
+                                    <div className="flex flex-col gap-2 rounded-xl p-6 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark shadow-sm">
+                                        <div className="flex items-center gap-2">
+                                            <span className="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark">event_upcoming</span>
+                                            <p className="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium">Próxima Sessão</p>
+                                        </div>
+                                        <p className="text-text-main-light dark:text-text-main-dark text-2xl font-bold">Amanhã, 14:00</p>
+                                    </div>
+                                    <div className="flex flex-col gap-2 rounded-xl p-6 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark shadow-sm relative overflow-hidden">
+                                        <div className="absolute right-0 top-0 p-4 opacity-10">
+                                            <span className="material-symbols-outlined text-6xl text-primary">vital_signs</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark">sentiment_dissatisfied</span>
+                                            <p className="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium">Nível de Dor</p>
+                                        </div>
+                                        <div className="flex items-baseline gap-2">
+                                            <p className="text-text-main-light dark:text-text-main-dark text-2xl font-bold">3/10</p>
+                                            <div className="flex items-center text-primary text-sm font-bold bg-primary/10 px-2 py-0.5 rounded-full">
+                                                <span className="material-symbols-outlined text-[14px] mr-1">trending_down</span>
+                                                -20%
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {/* Tabs */}
+                                <div className="px-4 border-b border-border-light dark:border-border-dark">
+                                    <div className="flex gap-8 overflow-x-auto">
+                                        <a className="group flex items-center justify-center border-b-[3px] border-b-primary pb-[13px] pt-4 min-w-fit cursor-pointer" href="#">
+                                            <span className="material-symbols-outlined mr-2 text-[20px] text-primary group-hover:text-primary-hover">auto_stories</span> 
+                                            <p className="text-text-main-light dark:text-text-main-dark text-sm font-bold tracking-[0.015em]">Jornada de Progresso</p> 
+                                        </a>
+                                        <Link to="/overview" className="group flex items-center justify-center border-b-[3px] border-b-transparent pb-[13px] pt-4 min-w-fit cursor-pointer hover:border-b-border-light dark:hover:border-b-border-dark transition-colors">
+                                            <span className="material-symbols-outlined mr-2 text-[20px] text-text-secondary-light dark:text-text-secondary-dark group-hover:text-text-main-light dark:group-hover:text-text-main-dark">monitoring</span>
+                                            <p className="text-text-secondary-light dark:text-text-secondary-dark group-hover:text-text-main-light dark:group-hover:text-text-main-dark text-sm font-bold tracking-[0.015em] transition-colors">Gráficos de Detalhe</p> 
+                                        </Link>
+                                    </div>
+                                </div>
+                                {/* Timeline */}
+                                <div className="px-4 pb-10 max-w-3xl mx-auto w-full"> 
+                                    <div className="flex flex-col gap-10 relative"> 
+                                        <div className="absolute left-[29px] top-0 bottom-0 w-[2px] bg-border-light dark:bg-border-dark"></div> 
+                                        
+                                        {/* Chapter 1 */}
+                                        <div className="relative flex gap-6 items-start">
+                                            <div className="z-10 mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary ring-4 ring-white dark:ring-surface-dark">
+                                                <span className="material-symbols-outlined text-white text-base">start</span>
+                                            </div>
+                                            <div className="flex-1 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark p-6 shadow-lg">
+                                                <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark font-semibold mb-2">Início da Reabilitação</p>
+                                                <h3 className="text-xl font-bold text-text-main-light dark:text-text-main-dark mb-4 leading-snug">Capítulo 1: O Primeiro Passo para a Recuperação</h3>
+                                                <p className="text-base text-text-main-light dark:text-text-main-dark leading-relaxed mb-4">
+                                                    A jornada de João começou com coragem e determinação. Após a cirurgia de LCA, o foco principal era aliviar a dor inicial e iniciar a mobilização suave do joelho.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Chapter 2 */}
+                                        <div className="relative flex gap-6 items-start">
+                                            <div className="z-10 mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary ring-4 ring-white dark:ring-surface-dark">
+                                                <span className="material-symbols-outlined text-white text-base">trending_up</span>
+                                            </div>
+                                            <div className="flex-1 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark p-6 shadow-lg">
+                                                <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark font-semibold mb-2">Sessão #10 - Avaliação de Progresso</p>
+                                                <h3 className="text-xl font-bold text-text-main-light dark:text-text-main-dark mb-4 leading-snug">Capítulo 2: A Flexibilidade Retorna</h3>
+                                                <div className="bg-background-light dark:bg-background-dark p-4 rounded-lg flex items-center justify-between">
+                                                    <p className="text-text-main-light dark:text-text-main-dark font-bold text-lg">Flexão do Joelho: 110º</p>
+                                                    <div className="flex items-center text-primary text-sm font-bold bg-primary/10 px-3 py-1 rounded-full">
+                                                        <span className="material-symbols-outlined text-[16px] mr-1">arrow_upward</span> +10º
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </main>
+                    </div>
+                </div>
+            )
+        }
+
+        // --- Screen 3: Overview ---
+        const OverviewScreen = () => {
+             return (
+                <div className="flex h-screen w-full overflow-hidden bg-background-light dark:bg-background-dark font-display text-text-main-light dark:text-text-main-dark">
+                    <Sidebar />
+                    <div className="flex-1 flex flex-col overflow-y-auto">
+                        <TopHeader title="FisioFlow - Overview Gerencial" />
+                        <main className="flex flex-1 justify-center py-5 px-4 md:px-10 lg:px-20 xl:px-40">
+                             <div className="layout-content-container flex flex-col w-full max-w-[1200px] flex-1 gap-6">
+                                <div className="flex flex-wrap gap-2 px-4">
+                                    <a className="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium hover:text-primary" href="#">Visão Geral</a>
+                                    <span className="text-text-secondary-light dark:text-text-secondary-dark text-sm font-medium">/</span>
+                                    <span className="text-text-main-light dark:text-text-main-dark text-sm font-medium">Paciente João Silva</span>
+                                </div>
+                                <div className="flex flex-wrap justify-between items-end gap-4 px-4">
+                                    <div className="flex min-w-72 flex-col gap-2">
+                                        <div className="flex items-center gap-3">
+                                            <h1 className="text-text-main-light dark:text-text-main-dark text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">João Silva</h1>
+                                            <span className="px-2 py-1 rounded bg-tag-blue-bg-light dark:bg-tag-blue-bg-dark text-tag-blue-text-light dark:text-tag-blue-text-dark text-xs font-bold uppercase tracking-wider border border-tag-blue-border-light dark:border-tag-blue-border-dark">Ativo</span>
+                                        </div>
+                                        <p className="text-text-secondary-light dark:text-text-secondary-dark text-base font-normal">Reabilitação Pós-Cirúrgica LCA (Joelho Direito)</p>
+                                    </div>
+                                </div>
+                                
+                                <div className="px-4 border-b border-border-light dark:border-border-dark">
+                                    <div className="flex gap-8 overflow-x-auto">
+                                        <a className="group flex items-center justify-center border-b-[3px] border-b-primary pb-[13px] pt-4 min-w-fit cursor-pointer" href="#">
+                                            <span className="material-symbols-outlined mr-2 text-[20px] text-primary group-hover:text-primary-hover">history</span>
+                                            <p className="text-text-main-light dark:text-text-main-dark text-sm font-bold tracking-[0.015em] font-condensed-sans">Registro de Atividades</p>
+                                        </a>
+                                        <Link to="/patient" className="group flex items-center justify-center border-b-[3px] border-b-transparent pb-[13px] pt-4 min-w-fit cursor-pointer hover:border-b-border-light dark:hover:border-b-border-dark transition-colors">
+                                            <span className="material-symbols-outlined mr-2 text-[20px] text-text-secondary-light dark:text-text-secondary-dark group-hover:text-text-main-light dark:group-hover:text-text-main-dark">monitoring</span>
+                                            <p className="text-text-secondary-light dark:text-text-secondary-dark group-hover:text-text-main-light dark:group-hover:text-text-main-dark text-sm font-bold tracking-[0.015em] font-condensed-sans transition-colors">Progresso Detalhado</p>
+                                        </Link>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-4 pb-10">
+                                    <div className="lg:col-span-1 order-1 flex flex-col gap-6">
+                                        <div className="bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-xl p-5 shadow-sm">
+                                            <h3 className="text-sm font-bold text-text-main-light dark:text-text-main-dark mb-3 uppercase tracking-wider flex items-center gap-2 font-condensed-sans">
+                                                <span className="material-symbols-outlined text-primary text-[18px]">edit_note</span>
+                                                Registro Rápido
+                                            </h3>
+                                            <div className="flex gap-4">
+                                                <div className="size-10 rounded-full bg-cover bg-center shrink-0 border border-border-light dark:border-border-dark" style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDmfyONRsuTpGmLLDxtqcgrFIME_OFvEXPZz8NBzIfuZfl_-NkYaBEUyeFHBxrGqAjx_eIX9F-7yfQ-xawKX2wH09FMiD1WaN6QjQOiuyuljs4jSon9OSzpdyQC22wVgyH0UrZyuK81egu74PRjRuq2-d0ThR2DTMl6toc25XISg56-VViqVOXRFN6_m58tr-7ezcGYDk68fl1PX-AQrI1R-_cOsv47kOWynQbjj-NFBDxEmhMCw1_25WoIc5WLvL7aTYvewlkS5DY")'}}></div>
+                                                <div className="flex-1 flex flex-col gap-3">
+                                                    <textarea className="w-full rounded-lg bg-background-light dark:bg-background-dark border-transparent focus:border-primary focus:ring-0 text-text-main-light dark:text-text-main-dark placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark p-3 text-sm min-h-[100px] font-condensed-sans" placeholder="Adicionar nota rápida..."></textarea>
+                                                    <button className="px-5 py-2 rounded-lg bg-primary text-white font-bold text-sm hover:bg-primary-hover transition-opacity font-condensed-sans">
+                                                        Salvar Nota
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="lg:col-span-2 order-2 flex flex-col gap-6">
+                                        <h3 className="px-4 text-sm font-bold text-text-main-light dark:text-text-main-dark uppercase tracking-wider font-condensed-sans">Registro de Atividades Recentes</h3>
+                                        <div className="flex flex-col gap-4 relative pl-4">
+                                            <div className="absolute left-[27px] top-0 bottom-0 w-[2px] bg-border-light dark:bg-border-dark"></div>
+                                            <div className="relative flex gap-4">
+                                                <div className="z-10 mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary ring-4 ring-white dark:ring-surface-dark">
+                                                    <span className="material-symbols-outlined text-white text-[14px]">event_note</span>
+                                                </div>
+                                                <div className="flex-1 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark p-4 shadow-sm">
+                                                    <div className="flex flex-wrap justify-between items-start mb-2 gap-1">
+                                                        <p className="text-sm font-bold text-text-main-light dark:text-text-main-dark font-condensed-sans">Sessão #12: Cinesioterapia</p>
+                                                        <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark font-condensed-sans">Hoje, 10:30</p>
+                                                    </div>
+                                                    <p className="text-xs text-text-main-light dark:text-text-main-dark leading-relaxed mb-3 font-condensed-sans">
+                                                        Dor leve (3/10), boa tolerância a exercícios de fortalecimento.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            {/* Item 2 */}
+                                            <div className="relative flex gap-4">
+                                                <div className="z-10 mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-border-light dark:bg-border-dark ring-4 ring-white dark:ring-surface-dark">
+                                                    <span className="material-symbols-outlined text-text-secondary-light dark:text-text-secondary-dark text-[14px]">medical_services</span>
+                                                </div>
+                                                <div className="flex-1 rounded-xl bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark p-4 shadow-sm opacity-90">
+                                                    <div className="flex flex-wrap justify-between items-start mb-2 gap-1">
+                                                        <p className="text-sm font-bold text-text-main-light dark:text-text-main-dark font-condensed-sans">Sessão #11: Eletroterapia</p>
+                                                        <p className="text-xs text-text-secondary-light dark:text-text-secondary-dark font-condensed-sans">22 Out, 15:00</p>
+                                                    </div>
+                                                    <p className="text-xs text-text-main-light dark:text-text-main-dark leading-relaxed mb-3 font-condensed-sans">
+                                                        Aplicação de TENS, dor reduziu de 5/10 para 3/10.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </main>
+                    </div>
+                </div>
+             )
+        }
+
+
+        // --- App Wrapper ---
+        const App = () => {
+            return (
+                <MemoryRouter>
+                    <Routes>
+                        <Route path="/" element={<DashboardScreen />} />
+                        <Route path="/patient" element={<PatientJourneyScreen />} />
+                        <Route path="/overview" element={<OverviewScreen />} />
+                    </Routes>
+                </MemoryRouter>
+            );
+        };
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

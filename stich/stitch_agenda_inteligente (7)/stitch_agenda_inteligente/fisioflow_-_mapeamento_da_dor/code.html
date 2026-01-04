@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FisioFlow - Mapeamento da Dor</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            primary: "#2563eb",
+            secondary: "#64748b",
+            "background-light": "#f8fafc",
+            "background-dark": "#000000",
+            "card-light": "#ffffff",
+            "card-dark": "#121212",
+            "border-light": "#e2e8f0",
+            "border-dark": "#27272a",
+            "pain-0": "#9ca3af",
+            "pain-1-2": "#22c55e",
+            "pain-3-4": "#eab308",
+            "pain-5-6": "#f97316",
+            "pain-7-8": "#ef4444",
+            "pain-9-10": "#a855f7",
+            "pain-gauge-low": "#65a30d",
+            "pain-gauge-med": "#eab308",
+            "pain-gauge-high": "#ef4444",
+          },
+          borderRadius: {
+            DEFAULT: "0.5rem",
+            "xl": "0.75rem",
+            "2xl": "1rem",
+          },
+          boxShadow: {
+            'soft': '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+            'glow': '0 0 15px rgba(255, 255, 255, 0.1)',
+            'neon': '0 0 10px rgba(255, 255, 255, 0.1)',
+          }
+        },
+      },
+    };
+  </script>
+  <style>
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .gauge-arc {
+      background: conic-gradient(from 270deg, #22c55e 0deg 36deg, #eab308 36deg 90deg, #ef4444 90deg 144deg, #18181b 144deg 360deg);
+      border-radius: 50%;
+      transform: rotate(-90deg);
+    }
+    .gauge-mask {
+      background-color: #000000;
+    }
+    .gauge-arc-v2 {
+        background: conic-gradient(
+            from 270deg,
+            #84cc16 0deg,#eab308 90deg,#ef4444 180deg);
+        mask-image: radial-gradient(transparent 60%, black 61%);
+        -webkit-mask-image: radial-gradient(transparent 60%, black 61%);
+        border-radius: 50%;
+        transform: rotate(-90deg);
+    }
+    .graph-bg {
+        background: linear-gradient(to bottom, rgba(239, 68, 68, 0.1) 0%, rgba(234, 179, 8, 0.1) 50%, rgba(34, 197, 94, 0.1) 100%);
+    }
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+
+<body class="bg-background-dark text-slate-100 font-sans antialiased selection:bg-primary selection:text-white">
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/history@5/umd/history.development.js"></script>
+  <script src="https://unpkg.com/react-router@6.3.0/umd/react-router.development.js"></script>
+  <script src="https://unpkg.com/react-router-dom@6.3.0/umd/react-router-dom.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    const { createRoot } = ReactDOM;
+    const { MemoryRouter, Routes, Route, Link, useNavigate } = ReactRouterDOM;
+
+    // --- Components ---
+
+    const PainScaleSelector = ({ selected, onSelect }) => {
+      const painLevels = [
+        { level: 0, color: "bg-zinc-800", textColor: "text-zinc-400", borderColor: "border-zinc-700" },
+        { level: 1, color: "bg-pain-1-2", textColor: "text-black" },
+        { level: 2, color: "bg-pain-1-2", textColor: "text-black" },
+        { level: 3, color: "bg-pain-3-4", textColor: "text-black" },
+        { level: 4, color: "bg-pain-3-4", textColor: "text-black" },
+        { level: 5, color: "bg-pain-5-6", textColor: "text-black" },
+        { level: 6, color: "bg-pain-5-6", textColor: "text-black" },
+        { level: 7, color: "bg-pain-7-8", textColor: "text-white" },
+        { level: 8, color: "bg-pain-7-8", textColor: "text-white" },
+        { level: 9, color: "bg-pain-9-10", textColor: "text-white" },
+        { level: 10, color: "bg-pain-9-10", textColor: "text-white" },
+      ];
+
+      return (
+        <div className="flex gap-1 justify-center min-w-max px-2">
+          {painLevels.map(({ level, color, textColor, borderColor }) => (
+            <button
+              key={level}
+              onClick={() => onSelect(level)}
+              className={`w-8 h-8 rounded text-xs font-bold transition-transform ${color} ${textColor} ${borderColor ? `border ${borderColor}` : ''} hover:brightness-110 ${selected === level ? 'scale-110 ring-2 ring-white/50 z-10 shadow-lg' : ''}`}
+            >
+              {level}
+            </button>
+          ))}
+        </div>
+      );
+    };
+
+    const PainEvolutionChartV1 = () => (
+      <div className="px-4 mt-6 mb-8">
+        <h3 className="text-zinc-400 text-sm font-medium mb-3 text-center">Evolução do Escore de Dor</h3>
+        <div className="bg-zinc-900/50 rounded-lg p-3 border border-zinc-800">
+          <div className="h-32 w-full relative">
+            <div className="absolute inset-0 flex flex-col opacity-20">
+              <div className="h-1/3 bg-red-900 w-full"></div>
+              <div className="h-1/3 bg-yellow-900 w-full"></div>
+              <div className="h-1/3 bg-green-900 w-full"></div>
+            </div>
+            <div className="absolute inset-0 flex justify-between text-[8px] text-zinc-600 pt-1 pointer-events-none">
+              <span className="h-full border-r border-zinc-800/50 border-dashed w-full flex items-end justify-center pb-1">Aug</span>
+              <span className="h-full border-r border-zinc-800/50 border-dashed w-full flex items-end justify-center pb-1">Sep</span>
+              <span className="h-full border-r border-zinc-800/50 border-dashed w-full flex items-end justify-center pb-1">Oct</span>
+              <span className="h-full border-r border-zinc-800/50 border-dashed w-full flex items-end justify-center pb-1">Nov</span>
+              <span className="h-full border-r border-zinc-800/50 border-dashed w-full flex items-end justify-center pb-1">Dec</span>
+              <span className="h-full border-r border-zinc-800/50 border-dashed w-full flex items-end justify-center pb-1">Jan</span>
+              <span className="h-full border-r border-zinc-800/50 border-dashed w-full flex items-end justify-center pb-1">Feb</span>
+              <span className="h-full w-full flex items-end justify-center pb-1">Mar</span>
+            </div>
+            <div className="absolute -left-3 top-0 bottom-6 flex flex-col justify-between text-[8px] text-zinc-500">
+              <span>100</span>
+              <span>50</span>
+              <span>10</span>
+            </div>
+            <svg className="absolute inset-0 w-full h-full pb-6 pl-2" preserveAspectRatio="none" viewBox="0 0 100 100">
+              <path d="M 5 30 L 95 60" fill="none" stroke="#facc15" strokeWidth="1.5"></path>
+              <circle cx="5" cy="30" fill="#ef4444" r="2" stroke="#000" strokeWidth="0.5"></circle>
+              <circle cx="95" cy="60" fill="#facc15" r="2" stroke="#000" strokeWidth="0.5"></circle>
+            </svg>
+          </div>
+        </div>
+      </div>
+    );
+    
+    // --- Screens ---
+
+    const PainMapScreenV1 = () => {
+        const [selectedPainLevel, setSelectedPainLevel] = useState(7);
+        const navigate = useNavigate();
+
+        return (
+            <div className="flex flex-col min-h-screen bg-background-dark text-slate-100 font-sans antialiased">
+                <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-md border-b border-border-dark px-4 py-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <Link to="/v2" className="p-2 -ml-2 rounded-full hover:bg-zinc-800 transition-colors">
+                            <span className="material-symbols-outlined text-slate-400">arrow_back</span>
+                        </Link>
+                        <h1 className="text-sm font-semibold tracking-tight text-white">Mapeamento da Dor</h1>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button className="p-2 rounded-full hover:bg-zinc-800 transition-colors">
+                            <span className="material-symbols-outlined text-slate-400 text-xl">history</span>
+                        </button>
+                        <button className="text-xs font-medium text-white bg-primary hover:bg-blue-600 px-3 py-1.5 rounded-full transition-colors">
+                            Salvar
+                        </button>
+                    </div>
+                </header>
+
+                <section className="bg-black border-b border-zinc-800 px-4 py-3">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold mb-0.5">Avaliada</p>
+                            <div className="flex items-center gap-2">
+                                <span className="font-medium text-sm text-white">Maria Fulana das Dores</span>
+                                <span className="text-xs text-slate-500">• 65 anos</span>
+                            </div>
+                            <p className="text-[10px] text-slate-600 mt-0.5">Avaliador: Fernando Teixeira</p>
+                        </div>
+                        <div className="flex flex-col items-end">
+                            <span className="text-[10px] text-slate-500 mb-0.5">Comparado com</span>
+                            <span className="text-xs font-medium font-mono text-white flex items-center gap-1">
+                                12/08/2022 <span className="material-symbols-outlined text-[10px] text-slate-500">open_in_new</span>
+                            </span>
+                        </div>
+                    </div>
+                </section>
+
+                <main className="flex-1 relative flex flex-col overflow-y-auto no-scrollbar pb-24">
+                    <div className="relative w-full flex flex-col items-center justify-center pt-8 pb-4 bg-gradient-to-b from-black to-zinc-900/50">
+                        <div className="relative w-48 h-24 overflow-hidden mb-2">
+                            <div className="absolute top-0 left-0 w-48 h-48 rounded-full gauge-arc"></div>
+                            <div className="absolute top-4 left-4 w-40 h-40 rounded-full gauge-mask z-10"></div>
+                            <div className="absolute bottom-0 left-1/2 w-1 h-24 bg-transparent origin-bottom transition-transform duration-1000 z-20" style={{ transform: 'rotate(45deg)' }}>
+                                <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[16px] border-b-yellow-200 absolute top-2 -left-[6px]"></div>
+                            </div>
+                        </div>
+                        <div className="absolute top-[4.5rem] flex flex-col items-center z-30">
+                            <span className="text-4xl font-bold text-white tracking-tighter">36</span>
+                        </div>
+                        <h3 className="text-zinc-400 text-sm font-medium mt-1">Escore de Dor</h3>
+                    </div>
+
+                    <div className="flex-1 w-full max-w-lg mx-auto px-2 relative min-h-[400px]">
+                        <div className="flex justify-between items-start h-full relative">
+                            <div className="w-[48%] relative flex justify-center">
+                                <div className="relative h-[380px] w-full flex justify-center">
+                                    <img alt="Human Body Front" className="h-full w-auto object-contain opacity-40 invert mix-blend-lighten pointer-events-none select-none" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXpXJoNFWSf8IEbyzNEmHGL8Q-bUGcf-CZmz4nNepv7phK1wdxOybEbKSXb3nNVoxQ4sjIrp95_FvhFfkW03S4DBhrHNHox9vJZHhsdBSGLXk3U_Ej0tiLlNraiZwsAAgzQ51PNKK9zpQ_GvzgKEeBN_j4shsqBNfVYQUSxMtgvE020V29UufJzgoV4EUfDlAKSsNR_F0qlq-pJSDNMOpc_ZYoNWSjJq9arzY9OkgD_gWuPH4yyLJwnV9HIPHIuhYGb8o1Nf5OpK7" />
+                                    <div className="absolute top-[12%] left-[30%] w-[40%] h-[10%] bg-yellow-500/30 blur-md rounded-full mix-blend-screen"></div>
+                                    <div className="absolute top-[68%] left-[30%] w-[18%] h-[8%] bg-pain-7-8/60 blur-sm rounded-full mix-blend-screen animate-pulse"></div>
+                                    <div className="absolute top-[68%] right-[30%] w-[18%] h-[8%] bg-pain-7-8/60 blur-sm rounded-full mix-blend-screen animate-pulse"></div>
+                                    <span className="absolute bottom-0 text-[10px] text-zinc-600 uppercase tracking-widest font-bold">Frente</span>
+                                </div>
+                            </div>
+                            <div className="w-[48%] relative flex justify-center">
+                                <div className="relative h-[380px] w-full flex justify-center">
+                                    <img alt="Human Body Back" className="h-full w-auto object-contain opacity-40 invert mix-blend-lighten pointer-events-none select-none" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXpXJoNFWSf8IEbyzNEmHGL8Q-bUGcf-CZmz4nNepv7phK1wdxOybEbKSXb3nNVoxQ4sjIrp95_FvhFfkW03S4DBhrHNHox9vJZHhsdBSGLXk3U_Ej0tiLlNraiZwsAAgzQ51PNKK9zpQ_GvzgKEeBN_j4shsqBNfVYQUSxMtgvE020V29UufJzgoV4EUfDlAKSsNR_F0qlq-pJSDNMOpc_ZYoNWSjJq9arzY9OkgD_gWuPH4yyLJwnV9HIPHIuhYGb8o1Nf5OpK7" />
+                                    <div className="absolute top-[18%] left-[25%] w-[50%] h-[15%] bg-green-500/30 blur-md rounded-full mix-blend-screen"></div>
+                                    <div className="absolute top-[35%] left-[35%] w-[30%] h-[12%] bg-purple-500/40 blur-md rounded-full mix-blend-screen border border-purple-500/50"></div>
+                                    <span className="absolute bottom-0 text-[10px] text-zinc-600 uppercase tracking-widest font-bold">Costas</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button className="absolute bottom-4 right-4 bg-primary text-white p-3 rounded-full shadow-lg shadow-blue-900/50 z-20 flex items-center justify-center">
+                            <span className="material-symbols-outlined">add</span>
+                        </button>
+                    </div>
+                    
+                    <PainEvolutionChartV1 />
+
+                </main>
+
+                <footer className="bg-card-dark border-t border-zinc-800 pb-6 pt-2 z-50 fixed bottom-0 left-0 right-0">
+                    <div className="max-w-md mx-auto">
+                        <div className="flex justify-center mb-3">
+                            <div className="w-12 h-1 rounded-full bg-zinc-700"></div>
+                        </div>
+                        <div className="px-2 overflow-x-auto no-scrollbar">
+                            <PainScaleSelector selected={selectedPainLevel} onSelect={setSelectedPainLevel} />
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        );
+    };
+
+    const PainMapScreenV2 = () => {
+        const [view, setView] = useState('Ant.');
+        const [selectedPainLevel, setSelectedPainLevel] = useState(8);
+
+        const painLevels = [
+            { level: 0, color: "bg-zinc-800", textColor: "text-slate-400", borderColor: "border-zinc-700"},
+            { level: 1, color: "bg-[#22c55e]", textColor: "text-black"},
+            { level: 2, color: "bg-[#4ade80]", textColor: "text-black"},
+            { level: 3, color: "bg-[#facc15]", textColor: "text-black"},
+            { level: 4, color: "bg-[#eab308]", textColor: "text-black"},
+            { level: 5, color: "bg-[#fb923c]", textColor: "text-black"},
+            { level: 6, color: "bg-[#f97316]", textColor: "text-black"},
+            { level: 7, color: "bg-[#ef4444]", textColor: "text-white"},
+            { level: 8, color: "bg-[#dc2626]", textColor: "text-white"},
+            { level: 9, color: "bg-[#a855f7]", textColor: "text-white"},
+            { level: 10, color: "bg-[#7e22ce]", textColor: "text-white"},
+        ];
+
+        return (
+          <div className="flex flex-col min-h-screen bg-background-dark text-slate-100 font-sans antialiased overflow-hidden">
+            <header className="sticky top-0 z-50 bg-black border-b border-zinc-800 px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <Link to="/" className="p-2 -ml-2 rounded-full hover:bg-zinc-800 transition-colors">
+                        <span className="material-icons-round text-slate-400">arrow_back</span>
+                    </Link>
+                    <h1 className="text-sm font-semibold tracking-tight text-white">Mapeamento da Dor</h1>
+                </div>
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1 bg-zinc-900 px-2 py-1 rounded text-xs border border-zinc-800">
+                        <span className="material-icons-round text-green-500 text-sm">credit_card</span>
+                        <span className="text-zinc-400">Convênio</span>
+                    </div>
+                    <span className="material-icons-round text-slate-400 text-xl">email</span>
+                </div>
+            </header>
+
+            <section className="bg-black border-b border-zinc-800 px-4 py-2">
+                <div className="flex items-start justify-between text-[10px] leading-tight">
+                    <div className="space-y-0.5">
+                        <p className="text-slate-500">Avaliada: <span className="text-white font-medium">Maria Fulana das Dores</span></p>
+                        <p className="text-slate-500">Nascimento: <span className="text-slate-300">13/05/1957 - 65 anos</span></p>
+                        <p className="text-slate-500">Avaliador: <span className="text-slate-300">Fernando Teixeira</span></p>
+                    </div>
+                    <div className="text-right space-y-0.5">
+                        <div className="flex items-center justify-end gap-1">
+                            <span className="material-icons-round text-red-500 text-sm">science</span>
+                            <span className="font-bold text-white tracking-wider">Tera<span className="font-light text-slate-400">Science</span></span>
+                        </div>
+                        <p className="text-slate-500">12/03/2023</p>
+                    </div>
+                </div>
+            </section>
+
+            <main className="flex-1 relative flex flex-col bg-black">
+                <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
+                    <div className="flex bg-zinc-900 rounded-lg p-0.5 border border-zinc-800">
+                        <button onClick={() => setView('Ant.')} className={`px-3 py-1 text-[10px] font-medium rounded-md transition-colors ${view === 'Ant.' ? 'bg-zinc-700 text-white shadow-sm' : 'text-zinc-400 hover:text-white'}`}>Ant.</button>
+                        <button onClick={() => setView('Post.')} className={`px-3 py-1 text-[10px] font-medium rounded-md transition-colors ${view === 'Post.' ? 'bg-zinc-700 text-white shadow-sm' : 'text-zinc-400 hover:text-white'}`}>Post.</button>
+                    </div>
+                </div>
+
+                <div className="flex-1 flex flex-col relative">
+                    <div className="flex-1 relative flex items-center justify-center min-h-[50vh]">
+                        <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: "linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)", backgroundSize: "40px 40px" }}></div>
+                        <div className="relative h-[85%] w-full flex justify-center items-center">
+                            <img alt="Human Body Outline" className="h-full w-auto object-contain opacity-60 invert mix-blend-lighten pointer-events-none select-none filter brightness-75 contrast-125" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXpXJoNFWSf8IEbyzNEmHGL8Q-bUGcf-CZmz4nNepv7phK1wdxOybEbKSXb3nNVoxQ4sjIrp95_FvhFfkW03S4DBhrHNHox9vJZHhsdBSGLXk3U_Ej0tiLlNraiZwsAAgzQ51PNKK9zpQ_GvzgKEeBN_j4shsqBNfVYQUSxMtgvE020V29UufJzgoV4EUfDlAKSsNR_F0qlq-pJSDNMOpc_ZYoNWSjJq9arzY9OkgD_gWuPH4yyLJwnV9HIPHIuhYGb8o1Nf5OpK7" />
+                            <div className="absolute top-[16%] w-[28%] h-[5%] bg-yellow-500/40 blur-md rounded-full mix-blend-screen"></div>
+                            <div className="absolute top-[63%] left-[42%] w-[6%] h-[4%] bg-pink-500/60 blur-md rounded-full mix-blend-screen animate-pulse"></div>
+                            <div className="absolute top-[63%] right-[42%] w-[6%] h-[4%] bg-pink-500/60 blur-md rounded-full mix-blend-screen animate-pulse"></div>
+                            <button className="absolute top-[62%] left-[40%] w-10 h-10 -ml-2 -mt-2 rounded-full flex items-center justify-center group focus:outline-none z-30">
+                                <span className="absolute inset-0 border border-white/50 rounded-full animate-ping opacity-75"></span>
+                                <span className="relative w-3 h-3 bg-pink-500 rounded-full border border-white shadow-[0_0_10px_#ec4899]"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/90 to-transparent pt-12 pb-6 px-6 pointer-events-none">
+                        <div className="pointer-events-auto space-y-6">
+                            <div className="flex items-center justify-between">
+                                <div className="relative w-32 h-16 overflow-hidden">
+                                    <div className="absolute inset-0 w-32 h-32 rounded-full border-[6px] border-zinc-800 border-b-0 border-l-0 border-r-0 rotate-180"></div>
+                                    <div className="absolute top-0 left-0 w-32 h-32 rounded-full gauge-arc-v2"></div>
+                                    <div className="absolute bottom-0 left-1/2 w-1 h-16 origin-bottom -translate-x-1/2 rotate-[-20deg] transition-transform duration-500">
+                                        <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[16px] border-b-yellow-100 absolute top-2 left-1/2 -translate-x-1/2"></div>
+                                    </div>
+                                </div>
+                                <div className="text-center">
+                                    <span className="block text-5xl font-bold text-white tracking-tighter drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">36</span>
+                                    <span className="text-[10px] uppercase tracking-widest text-slate-400">Score Total</span>
+                                </div>
+                            </div>
+                            <div className="bg-zinc-900/50 backdrop-blur border border-zinc-800 rounded-lg p-3">
+                                <div className="flex justify-between items-center mb-2">
+                                    <h3 className="text-xs text-slate-300 font-medium">Evolução do Escore</h3>
+                                    <span className="text-[10px] text-green-400 flex items-center gap-0.5">
+                                        <span className="material-icons-round text-[10px]">arrow_downward</span> -12%
+                                    </span>
+                                </div>
+                                <div className="relative h-24 w-full border-l border-b border-zinc-700 graph-bg">
+                                    <div className="absolute inset-0 flex flex-col justify-between opacity-20 pointer-events-none">
+                                        <div className="w-full h-px bg-slate-500 border-t border-dashed"></div>
+                                        <div className="w-full h-px bg-slate-500 border-t border-dashed"></div>
+                                        <div className="w-full h-px bg-slate-500 border-t border-dashed"></div>
+                                    </div>
+                                    <svg className="absolute inset-0 w-full h-full overflow-visible" preserveAspectRatio="none">
+                                        <path d="M0,20 L80,40 L160,60 L240,70 L320,85" fill="none" stroke="#facc15" strokeWidth="2" vectorEffect="non-scaling-stroke"></path>
+                                        <circle cx="0%" cy="20%" fill="#ef4444" r="3"></circle>
+                                        <circle cx="100%" cy="85%" fill="#facc15" r="3" stroke="white" strokeWidth="1"></circle>
+                                    </svg>
+                                    <div className="absolute -bottom-4 left-0 right-0 flex justify-between text-[8px] text-slate-500 font-mono">
+                                        <span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span><span>Jan</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="overflow-x-auto no-scrollbar pb-2">
+                                <div className="flex gap-1 min-w-max">
+                                    {painLevels.map(({ level, color, textColor, borderColor }) => (
+                                        <button key={level} onClick={() => setSelectedPainLevel(level)} className={`w-8 h-8 rounded text-xs font-bold transition ${color} ${textColor} ${borderColor ? 'border '+borderColor : ''} hover:brightness-110 ${selectedPainLevel === level ? 'ring-2 ring-white' : ''}`}>
+                                            {level}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <div className="fixed bottom-24 right-4 z-50">
+                <button className="w-12 h-12 bg-white text-black rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform">
+                    <span className="material-icons-round">edit</span>
+                </button>
+            </div>
+        </div>
+        );
+    };
+
+    // --- App ---
+
+    const App = () => {
+        return (
+            <MemoryRouter>
+                <Routes>
+                    <Route path="/" element={<PainMapScreenV1 />} />
+                    <Route path="/v2" element={<PainMapScreenV2 />} />
+                </Routes>
+            </MemoryRouter>
+        );
+    };
+
+    const container = document.getElementById('root');
+    const root = createRoot(container);
+    root.render(<App />);
+
+  </script>
+</body>
+
+</html>

@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { DataProvider } from "@/contexts/DataContext";
-import { AuthProvider } from "@/components/auth/AuthProvider";
+import { AuthContextProvider } from "@/contexts/AuthContextProvider";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
@@ -273,7 +273,7 @@ const App = () => {
               </Suspense>
             </BrowserRouter>
             </DataProvider>
-          </AuthProvider>
+          </AuthContextProvider>
         </TooltipProvider>
       </QueryClientProvider>
       </ErrorBoundary>

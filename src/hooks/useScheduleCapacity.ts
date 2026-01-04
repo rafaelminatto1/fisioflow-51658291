@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from './useAuth';
+import { useAuth } from '@/contexts/AuthContextProvider';
 import { z } from 'zod';
 
 const capacitySchema = z.object({

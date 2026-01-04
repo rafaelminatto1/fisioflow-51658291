@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FisioFlow Agenda</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#13ec5b",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#102216",
+                        "text-main": "#111813",
+                        "text-muted": "#61896f",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1c2e22",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-text-main dark:text-white transition-colors duration-200">
+<div class="flex h-screen w-full overflow-hidden">
+<aside class="w-64 flex-shrink-0 flex flex-col bg-surface-light dark:bg-surface-dark border-r border-[#f0f4f2] dark:border-gray-800 z-20">
+<div class="flex h-full flex-col justify-between p-4">
+<div class="flex flex-col gap-6">
+<div class="flex gap-3 items-center px-2">
+<div class="bg-center bg-no-repeat bg-cover rounded-xl size-10 bg-primary/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined filled">spa</span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-text-main dark:text-white text-base font-bold leading-normal">FisioFlow</h1>
+<p class="text-text-muted text-xs font-normal leading-normal">v3.0</p>
+</div>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-main dark:text-gray-300 hover:bg-background-light dark:hover:bg-gray-800 transition-colors" href="#">
+<span class="material-symbols-outlined">pie_chart</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-text-main dark:text-white border-l-4 border-primary" href="#">
+<span class="material-symbols-outlined filled text-primary-dark">calendar_month</span>
+<span class="text-sm font-bold">Agenda</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-main dark:text-gray-300 hover:bg-background-light dark:hover:bg-gray-800 transition-colors" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="text-sm font-medium">Patients</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-main dark:text-gray-300 hover:bg-background-light dark:hover:bg-gray-800 transition-colors" href="#">
+<span class="material-symbols-outlined">medical_services</span>
+<span class="text-sm font-medium">Treatments</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-main dark:text-gray-300 hover:bg-background-light dark:hover:bg-gray-800 transition-colors" href="#">
+<span class="material-symbols-outlined">attach_money</span>
+<span class="text-sm font-medium">Finances</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-main dark:text-gray-300 hover:bg-background-light dark:hover:bg-gray-800 transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</nav>
+<div class="h-px bg-gray-200 dark:bg-gray-800 w-full my-2"></div>
+<div class="flex flex-col gap-4 px-2">
+<h3 class="text-xs font-bold uppercase tracking-wider text-text-muted">Quick Filters</h3>
+<div class="flex flex-col gap-3">
+<label class="flex items-center gap-3 cursor-pointer group">
+<div class="relative flex items-center">
+<input checked="" class="peer h-4 w-4 appearance-none rounded border border-gray-300 bg-white checked:bg-primary checked:border-primary focus:ring-2 focus:ring-primary/20 transition-all dark:border-gray-600 dark:bg-gray-700" type="checkbox"/>
+<span class="material-symbols-outlined absolute left-0 top-0 text-white opacity-0 peer-checked:opacity-100 pointer-events-none text-[16px]">check</span>
+</div>
+<span class="text-sm font-medium text-text-main dark:text-gray-300">Dr. Sarah Smith</span>
+<span class="w-2 h-2 rounded-full bg-blue-500 ml-auto"></span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<div class="relative flex items-center">
+<input checked="" class="peer h-4 w-4 appearance-none rounded border border-gray-300 bg-white checked:bg-primary checked:border-primary focus:ring-2 focus:ring-primary/20 transition-all dark:border-gray-600 dark:bg-gray-700" type="checkbox"/>
+<span class="material-symbols-outlined absolute left-0 top-0 text-white opacity-0 peer-checked:opacity-100 pointer-events-none text-[16px]">check</span>
+</div>
+<span class="text-sm font-medium text-text-main dark:text-gray-300">Dr. Mike Ross</span>
+<span class="w-2 h-2 rounded-full bg-purple-500 ml-auto"></span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<div class="relative flex items-center">
+<input class="peer h-4 w-4 appearance-none rounded border border-gray-300 bg-white checked:bg-primary checked:border-primary focus:ring-2 focus:ring-primary/20 transition-all dark:border-gray-600 dark:bg-gray-700" type="checkbox"/>
+<span class="material-symbols-outlined absolute left-0 top-0 text-white opacity-0 peer-checked:opacity-100 pointer-events-none text-[16px]">check</span>
+</div>
+<span class="text-sm font-medium text-text-main dark:text-gray-300">Room 101</span>
+<span class="w-2 h-2 rounded-full bg-orange-400 ml-auto"></span>
+</label>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-3 px-2 py-3 mt-auto rounded-lg hover:bg-background-light dark:hover:bg-gray-800 cursor-pointer">
+<div class="size-9 rounded-full bg-cover bg-center border-2 border-white dark:border-gray-700 shadow-sm" data-alt="Portrait of a female user with blonde hair" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDrTU9dy76uJx_hflUAvS8IlGKEMDEYuqm2GtqmKMvFPq63tZrgdEHmccvbbqArpp6rRwXUbsA9tTNfdoinWDWPiylIs-azYDyjrHse-L8LKHPWgZ3QPwoEeh-T2Ua8hDd2QV6IrQiQyfWVircuY450FJE5c6lWvqyGfJDbVtDgWQh9GI-dun517lREu_2Cn4af0QFXKEXb7Y1pCp3lPnUC_S1Rzo1nIbY_Qg-sz37PmHIHOFP5pd5uFC-UJJy2wqQvD5lXF1XnQ0c");'></div>
+<div class="flex flex-col overflow-hidden">
+<p class="text-sm font-bold text-text-main dark:text-white truncate">Jane Doe</p>
+<p class="text-xs text-text-muted truncate">Admin</p>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col h-full overflow-hidden bg-background-light dark:bg-background-dark">
+<header class="h-16 flex items-center justify-between px-6 bg-surface-light dark:bg-surface-dark border-b border-[#f0f4f2] dark:border-gray-800 flex-shrink-0 z-10">
+<div class="flex items-center gap-4">
+<h2 class="text-xl font-bold text-text-main dark:text-white">Daily Appointment Stream</h2>
+<div class="h-6 w-px bg-gray-300 dark:bg-gray-700 mx-2"></div>
+<span class="text-sm text-text-muted">October 24, 2023</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-text-muted group-focus-within:text-primary transition-colors">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="block w-64 pl-10 pr-3 py-2 bg-[#f0f4f2] dark:bg-gray-800 border-none rounded-lg text-sm placeholder-text-muted text-text-main focus:ring-2 focus:ring-primary/50 transition-all" placeholder="Search patients, appointments..." type="text"/>
+</div>
+<button class="flex items-center justify-center size-10 rounded-lg bg-[#f0f4f2] dark:bg-gray-800 text-text-main hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+</button>
+<button class="bg-primary hover:bg-primary/90 text-[#111813] px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 shadow-sm shadow-primary/30 transition-all">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                        New Appointment
+                    </button>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden">
+<div class="flex-1 flex flex-col min-w-0 bg-white dark:bg-background-dark relative">
+<div class="flex items-center justify-between px-6 py-4 border-b border-[#f0f4f2] dark:border-gray-800 bg-surface-light dark:bg-surface-dark">
+<div class="flex items-center gap-4">
+<button class="text-sm font-bold text-text-main dark:text-white border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Today</button>
+<div class="flex items-center gap-2">
+<button class="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-symbols-outlined text-text-main dark:text-white">chevron_left</span></button>
+<button class="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-symbols-outlined text-text-main dark:text-white">chevron_right</span></button>
+</div>
+<h3 class="text-lg font-bold text-text-main dark:text-white">October 24, 2023</h3>
+</div>
+<div class="flex bg-[#f0f4f2] dark:bg-gray-800 p-1 rounded-lg">
+<button class="px-3 py-1 text-xs font-bold rounded bg-white dark:bg-gray-700 shadow-sm text-text-main dark:text-white transition-colors">Day</button>
+<button class="px-3 py-1 text-xs font-medium rounded text-text-muted hover:text-text-main dark:hover:text-white transition-colors">Week</button>
+<button class="px-3 py-1 text-xs font-medium rounded text-text-muted hover:text-text-main dark:hover:text-white transition-colors">Month</button>
+<button class="px-3 py-1 text-xs font-medium rounded text-text-muted hover:text-text-main dark:hover:text-white transition-colors">List</button>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto relative bg-white dark:bg-[#15201b] p-6">
+<div class="grid grid-cols-[80px_1fr] gap-4">
+<div class="flex flex-col text-right pr-4 text-xs font-medium text-text-muted">
+<span class="mt-[-8px]">8 AM</span>
+<span class="mt-6">9 AM</span>
+<span class="mt-6">10 AM</span>
+<span class="mt-6">11 AM</span>
+<span class="mt-6">12 PM</span>
+<span class="mt-6">1 PM</span>
+<span class="mt-6">2 PM</span>
+<span class="mt-6">3 PM</span>
+<span class="mt-6">4 PM</span>
+<span class="mt-6">5 PM</span>
+<span class="mt-6">6 PM</span>
+<span class="mt-6">7 PM</span>
+</div>
+<div class="relative flex flex-col gap-4 pb-8">
+<div class="absolute top-[400px] left-0 w-full flex items-center z-10 pointer-events-none">
+<div class="w-full h-px bg-red-400"></div>
+<div class="absolute -left-1.5 w-3 h-3 rounded-full bg-red-400"></div>
+</div>
+<div class="relative group p-4 rounded-lg bg-green-100 dark:bg-green-900/40 border-l-4 border-green-500 shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start">
+<p class="text-xs font-bold text-green-800 dark:text-green-100">Team Meeting</p>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[14px] text-green-600">check_circle</span>
+<button class="text-text-muted hover:text-text-main dark:hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-sm">more_vert</span>
+</button>
+</div>
+</div>
+<p class="text-[10px] text-green-600 dark:text-green-200 mt-0.5">09:00 - 10:00</p>
+<div class="mt-2 flex items-center gap-2">
+<button class="bg-green-500/10 text-green-700 dark:text-green-300 text-xs px-2 py-1 rounded-md hover:bg-green-500/20 transition-colors">
+<span class="material-symbols-outlined text-[12px] align-middle mr-1">check_circle</span>
+                    Check-in
+                </button>
+<button class="bg-green-500/10 text-green-700 dark:text-green-300 text-xs px-2 py-1 rounded-md hover:bg-green-500/20 transition-colors">
+<span class="material-symbols-outlined text-[12px] align-middle mr-1">edit</span>
+                    Update
+                </button>
+</div>
+</div>
+<div class="relative group p-4 rounded-lg bg-blue-100 dark:bg-blue-900/40 border-l-4 border-blue-500 shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start">
+<p class="text-xs font-bold text-blue-800 dark:text-blue-100">John Doe - Initial Assessment</p>
+<div class="flex items-center gap-2">
+<button class="text-text-muted hover:text-text-main dark:hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-sm">more_vert</span>
+</button>
+</div>
+</div>
+<p class="text-[10px] text-blue-600 dark:text-blue-200 mt-0.5">10:00 - 11:30</p>
+<div class="mt-1 flex items-center gap-1 text-[10px] text-blue-500 dark:text-blue-300">
+<span class="material-symbols-outlined text-[14px]">person</span>
+<span>Dr. Smith</span>
+</div>
+<div class="mt-2 flex items-center gap-2">
+<button class="bg-blue-500/10 text-blue-700 dark:text-blue-300 text-xs px-2 py-1 rounded-md hover:bg-blue-500/20 transition-colors">
+<span class="material-symbols-outlined text-[12px] align-middle mr-1">check_circle</span>
+                    Check-in
+                </button>
+<button class="bg-blue-500/10 text-blue-700 dark:text-blue-300 text-xs px-2 py-1 rounded-md hover:bg-blue-500/20 transition-colors">
+<span class="material-symbols-outlined text-[12px] align-middle mr-1">edit</span>
+                    Update
+                </button>
+<button class="bg-blue-500/10 text-blue-700 dark:text-blue-300 text-xs px-2 py-1 rounded-md hover:bg-blue-500/20 transition-colors">
+<span class="material-symbols-outlined text-[12px] align-middle mr-1">attach_file</span>
+                    Docs
+                </button>
+</div>
+</div>
+<div class="relative group p-4 rounded-lg bg-purple-100 dark:bg-purple-900/40 border-l-4 border-purple-500 shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start">
+<p class="text-xs font-bold text-purple-800 dark:text-purple-100">Sarah Lee - Follow-up: Shoulder Injury</p>
+<div class="flex items-center gap-2">
+<button class="text-text-muted hover:text-text-main dark:hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-sm">more_vert</span>
+</button>
+</div>
+</div>
+<p class="text-[10px] text-purple-600 dark:text-purple-200 mt-0.5">11:30 - 12:30</p>
+<div class="mt-1 flex items-center gap-1 text-[10px] text-purple-500 dark:text-purple-300">
+<span class="material-symbols-outlined text-[14px]">person</span>
+<span>Dr. Smith</span>
+</div>
+<div class="mt-2 flex items-center gap-2">
+<button class="bg-purple-500/10 text-purple-700 dark:text-purple-300 text-xs px-2 py-1 rounded-md hover:bg-purple-500/20 transition-colors">
+<span class="material-symbols-outlined text-[12px] align-middle mr-1">check_circle</span>
+                    Check-in
+                </button>
+<button class="bg-purple-500/10 text-purple-700 dark:text-purple-300 text-xs px-2 py-1 rounded-md hover:bg-purple-500/20 transition-colors">
+<span class="material-symbols-outlined text-[12px] align-middle mr-1">edit</span>
+                    Update
+                </button>
+</div>
+</div>
+<div class="relative group p-4 rounded-lg bg-gray-100 dark:bg-gray-700/40 border-l-4 border-gray-400 opacity-60 shadow-sm">
+<p class="text-xs font-bold text-gray-800 dark:text-gray-100 line-through">Blocked Time</p>
+<p class="text-[10px] text-gray-600 dark:text-gray-300 mt-0.5">12:30 - 01:00</p>
+<p class="text-[10px] text-gray-600 dark:text-gray-300 mt-1">Lunch Break</p>
+</div>
+<div class="relative group p-4 rounded-lg bg-orange-100 dark:bg-orange-900/40 border-l-4 border-orange-500 shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start">
+<p class="text-xs font-bold text-orange-800 dark:text-orange-100">Mike Ross - Rehabilitation</p>
+<div class="flex items-center gap-2">
+<button class="text-text-muted hover:text-text-main dark:hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-sm">more_vert</span>
+</button>
+</div>
+</div>
+<p class="text-[10px] text-orange-600 dark:text-orange-200 mt-0.5">01:00 - 02:30</p>
+<div class="mt-1 flex items-center gap-1 text-[10px] text-orange-500 dark:text-orange-300">
+<span class="material-symbols-outlined text-[14px]">home_repair_service</span>
+<span>Dr. Ross</span>
+</div>
+<div class="mt-2 flex items-center gap-2">
+<button class="bg-orange-500/10 text-orange-700 dark:text-orange-300 text-xs px-2 py-1 rounded-md hover:bg-orange-500/20 transition-colors">
+<span class="material-symbols-outlined text-[12px] align-middle mr-1">check_circle</span>
+                    Check-in
+                </button>
+<button class="bg-orange-500/10 text-orange-700 dark:text-orange-300 text-xs px-2 py-1 rounded-md hover:bg-orange-500/20 transition-colors">
+<span class="material-symbols-outlined text-[12px] align-middle mr-1">edit</span>
+                    Update
+                </button>
+</div>
+</div>
+<div class="relative group w-full h-16 border-2 border-dashed border-primary bg-primary/10 rounded-lg p-2 flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity cursor-pointer">
+<span class="text-xs font-bold text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">add</span>
+                New Appointment Slot
+            </span>
+</div>
+</div>
+</div>
+</div>
+<button class="xl:hidden absolute bottom-6 right-6 size-14 bg-primary text-[#111813] rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-transform z-30">
+<span class="material-symbols-outlined text-[28px]">add</span>
+</button>
+</div>
+</div>
+</main>
+</div>
+</body></html>

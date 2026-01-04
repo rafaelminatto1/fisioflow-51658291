@@ -31,9 +31,25 @@ export const usePatientsQuery = () => {
   return useQuery({
     queryKey: ['patients'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Obter organization_id do usuário
+      let organizationId: string | null = null;
+      try {
+        const { getUserOrganizationId } = await import('@/utils/userHelpers');
+        organizationId = await getUserOrganizationId();
+      } catch (orgError) {
+        // Se não conseguir obter, RLS vai filtrar
+      }
+
+      let query = supabase
         .from('patients')
-        .select('*')
+        .select('*');
+
+      // Filtrar por organização se disponível
+      if (organizationId) {
+        query = query.eq('organization_id', organizationId);
+      }
+
+      const { data, error } = await query
         .order('name', { ascending: true });
 
       if (error) throw error;

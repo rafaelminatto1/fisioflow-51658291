@@ -6,7 +6,7 @@ import { checkAppointmentConflict } from '@/utils/appointmentValidation';
 import { logger } from '@/lib/errors/logger';
 import { useEffect } from 'react';
 import { AppointmentNotificationService } from '@/lib/services/AppointmentNotificationService';
-import { requireUserOrganizationId } from '@/utils/userHelpers';
+import { requireUserOrganizationId, getUserOrganizationId } from '@/utils/userHelpers';
 
 // Função auxiliar para criar timeout em promises
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
@@ -48,20 +48,36 @@ async function fetchAppointments(): Promise<AppointmentBase[]> {
   logger.info('Carregando agendamentos do Supabase', {}, 'useAppointments');
   
   try {
+    // Obter organization_id do usuário para filtrar
+    let organizationId: string | null = null;
+    try {
+      organizationId = await getUserOrganizationId();
+    } catch (orgError) {
+      logger.warn('Não foi possível obter organization_id, usando RLS', orgError, 'useAppointments');
+    }
+
+    // Construir query
+    let query = supabase
+      .from('appointments')
+      .select(`
+        *,
+        patients!inner(
+          id,
+          name,
+          phone,
+          email
+        )
+      `);
+
+    // Filtrar por organização se disponível (melhora performance e segurança)
+    if (organizationId) {
+      query = query.eq('organization_id', organizationId);
+    }
+
     // Usar retry com timeout
     const result = await retryWithBackoff(() =>
       withTimeout(
-        supabase
-          .from('appointments')
-          .select(`
-            *,
-            patients!inner(
-              id,
-              name,
-              phone,
-              email
-            )
-          `)
+        query
           .order('appointment_date', { ascending: true })
           .order('appointment_time', { ascending: true }),
         10000 // 10 segundos de timeout para agendamentos (pode ter muitos dados)

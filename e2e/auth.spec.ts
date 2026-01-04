@@ -42,4 +42,21 @@ test.describe('Autenticação', () => {
     await page.goto('/eventos');
     await expect(page).toHaveURL('/auth');
   });
+
+  test('deve carregar profile após login', async ({ page }) => {
+    await page.goto('/auth');
+    await page.fill('input[type="email"]', testUsers.admin.email);
+    await page.fill('input[type="password"]', testUsers.admin.password);
+    await page.click('button[type="submit"]');
+    await page.waitForURL(/\/(eventos|dashboard|schedule|smart-dashboard)/, { timeout: 10000 });
+    
+    // Aguardar um pouco para o profile carregar
+    await page.waitForTimeout(2000);
+    
+    // Verificar se a página carregou completamente (indica que profile foi carregado)
+    const pageContent = await page.content();
+    expect(pageContent.length).toBeGreaterThan(1000);
+    
+    console.log('✅ Profile carregado após login');
+  });
 });

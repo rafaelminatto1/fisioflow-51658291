@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<title>FisioFlow - Patient Portal</title>
+<link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect"/>
+<link as="style" href="https://fonts.googleapis.com/css2?display=swap&amp;family=Inter:wght@400;500;600;700" onload="this.rel='stylesheet'" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#0aa3f0",
+            "background-light": "#f5f7f8",
+            "background-dark": "#101c22",
+          },
+          fontFamily: {
+            "display": ["Inter"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+        },
+      },
+    }
+  </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-800 dark:text-gray-200">
+<div class="flex h-screen">
+<aside class="w-64 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm flex flex-col border-r border-gray-200 dark:border-gray-800">
+<div class="flex items-center gap-2 p-6">
+<span class="material-symbols-outlined text-primary text-3xl">
+          self_improvement
+        </span>
+<h1 class="text-xl font-bold text-gray-900 dark:text-white">FisioFlow</h1>
+</div>
+<nav class="flex-1 px-4 space-y-2">
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/20 dark:hover:text-primary" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary font-semibold" href="#">
+<span class="material-symbols-outlined">fitness_center</span>
+<span class="text-sm">Exercises</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/20 dark:hover:text-primary" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="text-sm font-medium">Appointments</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/20 dark:hover:text-primary" href="#">
+<span class="material-symbols-outlined">show_chart</span>
+<span class="text-sm font-medium">Progress</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/20 dark:hover:text-primary" href="#">
+<span class="material-symbols-outlined">chat</span>
+<span class="text-sm font-medium">Messages</span>
+</a>
+</nav>
+<div class="p-4 border-t border-gray-200 dark:border-gray-800">
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/20 dark:hover:text-primary" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 mt-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/20 dark:hover:text-primary" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="text-sm font-medium">Log out</span>
+</a>
+</div>
+</aside>
+<main class="flex-1 p-8 overflow-y-auto">
+<header class="flex justify-between items-center mb-8">
+<h2 class="text-3xl font-bold text-gray-900 dark:text-white">My Exercises</h2>
+<div class="flex items-center gap-4">
+<span class="text-sm text-gray-600 dark:text-gray-400">Welcome, Alex Johnson</span>
+<img alt="User avatar" class="w-10 h-10 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVgymTCavhe2hCDdKEE0ZRO8MxYZNAoSkR_BlMiDZy2EonJ7qvf2H8cl4aHfgpdDVomsosCf7VCmAztLG-uOnF5buxJLIsWbc7WG6c4Fy96jSLnpySiAsHYIsZvKCICs59y2dDF54tDTZ9eLSSdc2mSZpA8RcERDwZDDSMSwBW7arI7wB89iuGiKTMNBFikAA5uxlmHKFCHdR7LiFGOSNsTTh6p67X5pf8U_5b4RGcSmFi4TVoyQ8gqzsWY2zRnz5xuS1PhfygVDk6"/>
+</div>
+</header>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<div class="lg:col-span-2 space-y-8">
+<section>
+<h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Current Exercises</h3>
+<div class="space-y-4">
+<div class="bg-white dark:bg-background-dark/50 rounded-xl p-4 flex items-center justify-between shadow-sm hover:shadow-lg transition-shadow duration-300">
+<div class="flex items-center gap-4">
+<div class="bg-primary/10 dark:bg-primary/20 text-primary p-3 rounded-lg">
+<span class="material-symbols-outlined text-2xl">rotate_right</span>
+</div>
+<div>
+<p class="font-semibold text-gray-800 dark:text-gray-100">Shoulder Rotation</p>
+<p class="text-sm text-gray-500 dark:text-gray-400">3 sets of 10 reps</p>
+</div>
+</div>
+<button class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors">View</button>
+</div>
+<div class="bg-white dark:bg-background-dark/50 rounded-xl p-4 flex items-center justify-between shadow-sm hover:shadow-lg transition-shadow duration-300">
+<div class="flex items-center gap-4">
+<div class="bg-primary/10 dark:bg-primary/20 text-primary p-3 rounded-lg">
+<span class="material-symbols-outlined text-2xl">straighten</span>
+</div>
+<div>
+<p class="font-semibold text-gray-800 dark:text-gray-100">Knee Extension</p>
+<p class="text-sm text-gray-500 dark:text-gray-400">2 sets of 15 reps</p>
+</div>
+</div>
+<button class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors">View</button>
+</div>
+<div class="bg-white dark:bg-background-dark/50 rounded-xl p-4 flex items-center justify-between shadow-sm hover:shadow-lg transition-shadow duration-300">
+<div class="flex items-center gap-4">
+<div class="bg-primary/10 dark:bg-primary/20 text-primary p-3 rounded-lg">
+<span class="material-symbols-outlined text-2xl">exercise</span>
+</div>
+<div>
+<p class="font-semibold text-gray-800 dark:text-gray-100">Plank</p>
+<p class="text-sm text-gray-500 dark:text-gray-400">Hold for 30 seconds, 3 reps</p>
+</div>
+</div>
+<button class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors">View</button>
+</div>
+</div>
+</section>
+<section>
+<h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Session History</h3>
+<div class="space-y-4">
+<div class="bg-white dark:bg-background-dark/50 rounded-xl p-4 flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-4">
+<div class="bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 p-3 rounded-lg">
+<span class="material-symbols-outlined text-2xl">event_available</span>
+</div>
+<div>
+<p class="font-semibold text-gray-800 dark:text-gray-100">May 20, 2024</p>
+<p class="text-sm text-gray-500 dark:text-gray-400">Dr. Amelia Harper</p>
+</div>
+</div>
+<button class="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Details</button>
+</div>
+<div class="bg-white dark:bg-background-dark/50 rounded-xl p-4 flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-4">
+<div class="bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 p-3 rounded-lg">
+<span class="material-symbols-outlined text-2xl">event_available</span>
+</div>
+<div>
+<p class="font-semibold text-gray-800 dark:text-gray-100">May 13, 2024</p>
+<p class="text-sm text-gray-500 dark:text-gray-400">Dr. Amelia Harper</p>
+</div>
+</div>
+<button class="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Details</button>
+</div>
+</div>
+</section>
+</div>
+<div class="space-y-8">
+<section class="bg-white dark:bg-background-dark/50 p-6 rounded-xl shadow-sm">
+<h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Upcoming Appointment</h3>
+<div class="flex items-center gap-4">
+<div class="bg-primary/10 dark:bg-primary/20 text-primary p-3 rounded-lg">
+<span class="material-symbols-outlined text-3xl">event_upcoming</span>
+</div>
+<div>
+<p class="font-bold text-gray-800 dark:text-gray-100">June 15, 2024, 2:00 PM</p>
+<p class="text-sm text-gray-500 dark:text-gray-400">Dr. Amelia Harper</p>
+</div>
+</div>
+<button class="w-full mt-4 bg-primary text-white py-2 rounded-lg font-semibold hover:bg-primary/90 transition-colors">View Details</button>
+<button class="w-full mt-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Reschedule</button>
+</section>
+<section class="bg-white dark:bg-background-dark/50 p-6 rounded-xl shadow-sm">
+<h3 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Pain Evolution</h3>
+<div class="h-40 w-full bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+<p class="text-gray-500 dark:text-gray-400 text-sm">Pain Chart Placeholder</p>
+</div>
+</section>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>

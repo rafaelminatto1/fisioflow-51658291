@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FisioFlow - Mapa de Dor V4</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: "#2563eb", // Royal Blue
+                        secondary: "#64748b",
+                        "background-light": "#f8fafc", // Slate 50
+                        "background-dark": "#09090b", // Zinc 950
+                        "card-light": "#ffffff",
+                        "card-dark": "#18181b", // Zinc 900
+                        "border-light": "#e2e8f0",
+                        "border-dark": "#27272a",
+                        // Heatmap colors based on reference
+                        "eva-0": "#9ca3af",
+                        "eva-1": "#22c55e",
+                        "eva-2": "#4ade80",
+                        "eva-3": "#facc15",
+                        "eva-4": "#fbbf24",
+                        "eva-5": "#f59e0b",
+                        "eva-6": "#f97316",
+                        "eva-7": "#ea580c",
+                        "eva-8": "#ef4444",
+                        "eva-9": "#dc2626",
+                        "eva-10": "#a855f7",
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+                        'glow': '0 0 15px rgba(239, 68, 68, 0.3)',
+                    }
+                },
+            },
+        };
+    </script>
+<style>
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    .gauge-mask {
+        mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+        -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+    }input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 24px;
+        width: 24px;
+        border-radius: 50%;
+        background: #ffffff;
+        cursor: pointer;
+        margin-top: -10px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        border: 2px solid #e2e8f0;
+    }
+    input[type=range]::-moz-range-thumb {
+        height: 24px;
+        width: 24px;
+        border-radius: 50%;
+        background: #ffffff;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        border: 2px solid #e2e8f0;
+    }
+</style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+</style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light text-slate-900 font-sans antialiased min-h-screen flex flex-col selection:bg-primary selection:text-white overflow-hidden">
+<header class="sticky top-0 z-50 bg-white border-b border-border-light px-4 py-3 flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-3">
+<button class="p-2 -ml-2 rounded-full hover:bg-slate-100 transition-colors">
+<span class="material-icons-round text-slate-600">arrow_back</span>
+</button>
+<div>
+<h1 class="text-sm font-bold tracking-tight text-slate-900">Mapeamento da Dor</h1>
+<p class="text-[10px] text-slate-500 uppercase tracking-wide">FisioFlow v3.0</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<div class="flex flex-col items-end mr-2 hidden sm:flex">
+<span class="text-[10px] text-slate-400 font-medium">Global Score</span>
+<span class="text-sm font-bold text-slate-900">36/100</span>
+</div>
+<button class="text-xs font-semibold bg-slate-900 text-white px-3 py-1.5 rounded-lg hover:bg-slate-800 transition-colors shadow-sm">
+            Salvar
+        </button>
+</div>
+</header>
+<main class="flex-1 flex flex-col h-full overflow-hidden">
+<div class="bg-slate-900 text-white px-4 py-3 flex justify-between items-center shadow-md z-20">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
+<span class="material-icons-round text-slate-400">person</span>
+</div>
+<div>
+<div class="text-xs text-slate-400">Paciente</div>
+<div class="font-medium text-sm">Maria Fulana</div>
+</div>
+</div>
+<div class="h-8 w-px bg-slate-800 mx-2"></div>
+<div class="flex gap-4">
+<div class="text-right">
+<div class="text-[10px] text-slate-400 uppercase">Data</div>
+<div class="font-mono text-xs font-medium">12/03/23</div>
+</div>
+<div class="text-right">
+<div class="text-[10px] text-slate-400 uppercase">Histórico</div>
+<div class="font-mono text-xs font-medium text-green-400">▼ 12%</div>
+</div>
+</div>
+</div>
+<div class="flex-1 flex flex-col relative bg-zinc-950">
+<div class="absolute top-4 left-0 right-0 z-30 flex justify-center pointer-events-none">
+<div class="bg-zinc-900/90 backdrop-blur-md p-1 rounded-full border border-zinc-800 shadow-lg pointer-events-auto flex gap-1">
+<button class="px-4 py-1.5 text-xs font-medium rounded-full bg-zinc-700 text-white shadow-sm transition-all">
+                    Corpo
+                </button>
+<button class="px-4 py-1.5 text-xs font-medium rounded-full text-zinc-400 hover:text-white transition-all">
+                    Gráficos
+                </button>
+</div>
+</div>
+<div class="flex-1 relative flex items-center justify-center overflow-hidden">
+<div class="absolute inset-0 opacity-[0.1]" style="background-image: linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px); background-size: 40px 40px;"></div>
+<div class="absolute inset-0 bg-radial-gradient from-transparent to-zinc-950 opacity-80 pointer-events-none"></div>
+<div class="relative h-[65vh] w-full max-w-md mx-auto flex justify-center items-center z-10 scale-95 origin-center">
+<div class="relative h-full flex gap-4">
+<div class="relative h-full">
+<img alt="Human Body Front" class="h-full w-auto opacity-40 invert mix-blend-screen pointer-events-none select-none filter contrast-125 brightness-75" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXpXJoNFWSf8IEbyzNEmHGL8Q-bUGcf-CZmz4nNepv7phK1wdxOybEbKSXb3nNVoxQ4sjIrp95_FvhFfkW03S4DBhrHNHox9vJZHhsdBSGLXk3U_Ej0tiLlNraiZwsAAgzQ51PNKK9zpQ_GvzgKEeBN_j4shsqBNfVYQUSxMtgvE020V29U1ufJzgoV4EUfDlAKSsNR_F0qlq-pJSDNMOpc_ZYoNWSjJq9arzY9OkgD_gWuPH4yyLJwnV9HIPHIuhYGb8o1Nf5OpK7"/>
+<div class="absolute top-[62%] left-[58%] w-16 h-16 -ml-3 -mt-3 rounded-full flex items-center justify-center group cursor-pointer z-20">
+<span class="absolute inset-0 bg-eva-8/20 rounded-full animate-pulse shadow-glow"></span>
+<span class="absolute inset-2 bg-eva-8/40 rounded-full border border-eva-8/50"></span>
+<span class="text-xs font-bold text-white drop-shadow-md">8</span>
+</div>
+<div class="absolute top-[12%] left-[48%] -translate-x-1/2 w-12 h-8 rounded-full flex items-center justify-center cursor-pointer z-20">
+<svg class="w-full h-full absolute top-0 left-0 text-eva-3 fill-current opacity-60" viewBox="0 0 100 60">
+<path d="M10,10 Q50,60 90,10"></path>
+</svg>
+</div>
+<div class="absolute top-[16%] left-[70%] w-8 h-8 rounded-full bg-eva-5/30 border border-eva-5/60 flex items-center justify-center cursor-pointer hover:bg-eva-5/50 transition-colors">
+</div>
+</div>
+</div>
+</div>
+<div class="absolute bottom-6 left-4 right-4 z-30">
+<div class="bg-zinc-900/90 backdrop-blur-md border border-zinc-800 rounded-xl p-3 shadow-2xl">
+<div class="flex justify-between items-end mb-2">
+<span class="text-xs text-zinc-400 font-medium uppercase tracking-wider">Escala EVA</span>
+<span class="text-xs font-bold text-white">Selecionar região</span>
+</div>
+<div class="flex h-8 rounded-lg overflow-hidden border border-zinc-700/50">
+<div class="flex-1 bg-eva-0/20 hover:bg-eva-0 text-[10px] flex items-center justify-center text-zinc-500 hover:text-white transition-colors cursor-pointer border-r border-zinc-900/20">0</div>
+<div class="flex-1 bg-eva-1/20 hover:bg-eva-1 text-[10px] flex items-center justify-center text-zinc-500 hover:text-white transition-colors cursor-pointer border-r border-zinc-900/20">1</div>
+<div class="flex-1 bg-eva-2/20 hover:bg-eva-2 text-[10px] flex items-center justify-center text-zinc-500 hover:text-white transition-colors cursor-pointer border-r border-zinc-900/20">2</div>
+<div class="flex-1 bg-eva-3/20 hover:bg-eva-3 text-[10px] flex items-center justify-center text-zinc-500 hover:text-white transition-colors cursor-pointer border-r border-zinc-900/20">3</div>
+<div class="flex-1 bg-eva-4/20 hover:bg-eva-4 text-[10px] flex items-center justify-center text-zinc-500 hover:text-white transition-colors cursor-pointer border-r border-zinc-900/20">4</div>
+<div class="flex-1 bg-eva-5/20 hover:bg-eva-5 text-[10px] flex items-center justify-center text-zinc-500 hover:text-white transition-colors cursor-pointer border-r border-zinc-900/20">5</div>
+<div class="flex-1 bg-eva-6/20 hover:bg-eva-6 text-[10px] flex items-center justify-center text-zinc-500 hover:text-white transition-colors cursor-pointer border-r border-zinc-900/20">6</div>
+<div class="flex-1 bg-eva-7/20 hover:bg-eva-7 text-[10px] flex items-center justify-center text-zinc-500 hover:text-white transition-colors cursor-pointer border-r border-zinc-900/20">7</div>
+<div class="w-10 bg-eva-8 text-sm font-bold flex items-center justify-center text-white border-x-2 border-white shadow-lg z-10 scale-110 transform -translate-y-1">8</div>
+<div class="flex-1 bg-eva-9/20 hover:bg-eva-9 text-[10px] flex items-center justify-center text-zinc-500 hover:text-white transition-colors cursor-pointer border-r border-zinc-900/20">9</div>
+<div class="flex-1 bg-eva-10/20 hover:bg-eva-10 text-[10px] flex items-center justify-center text-zinc-500 hover:text-white transition-colors cursor-pointer">10</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<aside class="bg-white border-t border-border-light shadow-[0_-8px_30px_rgba(0,0,0,0.1)] z-40 rounded-t-2xl mt-[-20px] relative">
+<div class="w-full flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing">
+<div class="w-10 h-1 rounded-full bg-slate-200"></div>
+</div>
+<div class="px-5 pb-6 pt-2 max-h-[40vh] overflow-y-auto">
+<div class="flex items-start justify-between mb-6">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="h-2 w-2 rounded-full bg-eva-8"></span>
+<h2 class="text-xl font-bold text-slate-900">Joelho Esquerdo</h2>
+</div>
+<p class="text-xs text-slate-500 pl-4">Anterior • Ligamento Cruzado</p>
+</div>
+<button class="p-2 text-slate-400 hover:text-red-500 transition-colors rounded-full hover:bg-red-50">
+<span class="material-icons-round">delete_outline</span>
+</button>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-6">
+<div class="bg-slate-50 border border-slate-100 rounded-xl p-3 relative overflow-hidden">
+<p class="text-[10px] text-slate-500 font-semibold uppercase mb-2">Intensidade (VAS)</p>
+<div class="flex flex-col items-center justify-center relative h-20">
+<div class="w-24 h-12 overflow-hidden relative">
+<div class="w-24 h-24 rounded-full border-[6px] border-slate-200 absolute top-0 left-0 box-border"></div>
+<div class="w-24 h-24 rounded-full border-[6px] border-transparent border-t-eva-8 border-r-eva-8 absolute top-0 left-0 box-border rotate-[45deg]"></div>
+</div>
+<div class="absolute top-8 flex flex-col items-center">
+<span class="text-3xl font-bold text-slate-900 leading-none">8</span>
+<span class="text-[9px] text-slate-400 font-medium">Insuportável</span>
+</div>
+</div>
+</div>
+<div class="bg-slate-50 border border-slate-100 rounded-xl p-3">
+<p class="text-[10px] text-slate-500 font-semibold uppercase mb-2">Evolução</p>
+<div class="h-16 w-full flex items-end justify-between px-1 gap-1">
+<div class="w-full bg-green-100 rounded-t h-[30%] relative group">
+<div class="opacity-0 group-hover:opacity-100 absolute -top-4 left-1/2 -translate-x-1/2 text-[8px] bg-slate-800 text-white px-1 rounded">2</div>
+</div>
+<div class="w-full bg-yellow-100 rounded-t h-[50%] relative group">
+<div class="opacity-0 group-hover:opacity-100 absolute -top-4 left-1/2 -translate-x-1/2 text-[8px] bg-slate-800 text-white px-1 rounded">4</div>
+</div>
+<div class="w-full bg-orange-100 rounded-t h-[65%] relative group">
+<div class="opacity-0 group-hover:opacity-100 absolute -top-4 left-1/2 -translate-x-1/2 text-[8px] bg-slate-800 text-white px-1 rounded">6</div>
+</div>
+<div class="w-full bg-red-100 rounded-t h-[80%] border-t-2 border-eva-8 relative"></div>
+</div>
+<div class="flex justify-between text-[8px] text-slate-400 mt-1 font-mono">
+<span>Jan</span>
+<span>Fev</span>
+<span>Mar</span>
+<span>Abr</span>
+</div>
+</div>
+</div>
+<div class="space-y-4">
+<div>
+<label class="block text-xs font-semibold text-slate-700 mb-2 uppercase tracking-wide">Qualidade da Dor</label>
+<div class="flex flex-wrap gap-2">
+<label class="cursor-pointer">
+<input checked="" class="peer sr-only" type="checkbox"/>
+<div class="px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 bg-white text-slate-600 peer-checked:border-primary peer-checked:bg-blue-50 peer-checked:text-primary transition-all">
+                            Queimação
+                        </div>
+</label>
+<label class="cursor-pointer">
+<input class="peer sr-only" type="checkbox"/>
+<div class="px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 bg-white text-slate-600 peer-checked:border-primary peer-checked:bg-blue-50 peer-checked:text-primary transition-all">
+                            Pontada
+                        </div>
+</label>
+<label class="cursor-pointer">
+<input checked="" class="peer sr-only" type="checkbox"/>
+<div class="px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 bg-white text-slate-600 peer-checked:border-primary peer-checked:bg-blue-50 peer-checked:text-primary transition-all">
+                            Latejante
+                        </div>
+</label>
+<label class="cursor-pointer">
+<input class="peer sr-only" type="checkbox"/>
+<div class="px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-200 bg-white text-slate-600 peer-checked:border-primary peer-checked:bg-blue-50 peer-checked:text-primary transition-all">
+                            Irradiada
+                        </div>
+</label>
+</div>
+</div>
+<button class="w-full bg-slate-900 text-white font-medium py-3.5 rounded-xl shadow-lg shadow-slate-900/10 active:scale-[0.99] transition-transform flex items-center justify-center gap-2">
+<span class="material-icons-round text-lg">check_circle</span>
+                Confirmar Registro
+            </button>
+</div>
+</div>
+</aside>
+
+</body></html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mapa de Dor Corporal - FisioFlow</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0d7ff2",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#101922",
+                        "eva-green": "#22c55e",
+                        "eva-yellow": "#eab308",
+                        "eva-orange": "#f97316",
+                        "eva-red": "#ef4444",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.375rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display">
+<div class="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-[#1a2632] shadow-2xl overflow-hidden border-x border-slate-100 dark:border-slate-800">
+<header class="flex items-center bg-white dark:bg-[#1a2632] p-4 pb-2 justify-between sticky top-0 z-50 border-b border-slate-100 dark:border-slate-800">
+<div class="text-slate-900 dark:text-white flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-2xl">arrow_back</span>
+</div>
+<h2 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight flex-1 text-center pr-10">Mapa de Dor</h2>
+<div class="absolute right-4 flex items-center justify-end">
+<button class="text-primary hover:text-blue-600 text-base font-bold leading-normal tracking-tight shrink-0 transition-colors">Salvar</button>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto pb-20">
+<div class="flex px-4 py-4 bg-white dark:bg-[#1a2632]">
+<div class="flex h-10 flex-1 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 p-1 relative">
+<label class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-md px-2 z-10 transition-all duration-200 bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white text-sm font-semibold leading-normal">
+<span class="truncate">Frente</span>
+<input checked="" class="invisible w-0 absolute" name="view-toggle" type="radio" value="Frente"/>
+</label>
+<label class="flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-md px-2 z-10 transition-all duration-200 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-sm font-medium leading-normal">
+<span class="truncate">Costas</span>
+<input class="invisible w-0 absolute" name="view-toggle" type="radio" value="Costas"/>
+</label>
+</div>
+</div>
+<div class="relative w-full flex justify-center py-6 bg-slate-50 dark:bg-[#131d27]">
+<div class="absolute top-4 left-4 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm p-2 rounded-lg shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col gap-1.5 z-10">
+<span class="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-0.5">Escala EVA</span>
+<div class="flex items-center gap-2 text-[10px] font-medium text-slate-600 dark:text-slate-300">
+<div class="size-2 rounded-full bg-eva-green"></div> 0-2
+                    </div>
+<div class="flex items-center gap-2 text-[10px] font-medium text-slate-600 dark:text-slate-300">
+<div class="size-2 rounded-full bg-eva-yellow"></div> 3-4
+                    </div>
+<div class="flex items-center gap-2 text-[10px] font-medium text-slate-600 dark:text-slate-300">
+<div class="size-2 rounded-full bg-eva-orange"></div> 5-7
+                    </div>
+<div class="flex items-center gap-2 text-[10px] font-medium text-slate-600 dark:text-slate-300">
+<div class="size-2 rounded-full bg-eva-red"></div> 8+
+                    </div>
+</div>
+<div class="relative h-[420px] w-[220px]">
+<svg class="h-full w-full drop-shadow-xl" viewBox="0 0 200 400" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<filter height="140%" id="glow" width="140%" x="-20%" y="-20%">
+<feGaussianBlur result="blur" stdDeviation="3"></feGaussianBlur>
+<feComposite in="SourceGraphic" in2="blur" operator="over"></feComposite>
+</filter>
+<linearGradient id="boneGradient" x1="0%" x2="100%" y1="0%" y2="0%">
+<stop offset="0%" stop-color="#e2e8f0"></stop>
+<stop offset="50%" stop-color="#f8fafc"></stop>
+<stop offset="100%" stop-color="#e2e8f0"></stop>
+</linearGradient>
+</defs>
+<g class="dark:stroke-slate-600" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1">
+<path class="hover:fill-slate-200 transition-colors cursor-pointer" d="M100 25 C88 25 80 35 80 50 C80 62 88 72 100 72 C112 72 120 62 120 50 C120 35 112 25 100 25 Z" fill="url(#boneGradient)"></path>
+<path class="hover:fill-slate-200 transition-colors cursor-pointer" d="M92 70 L92 82 L108 82 L108 70 Z"></path>
+<path d="M92 82 L70 85 L92 88 Z" fill="none" stroke="#cbd5e1"></path>
+<path d="M108 82 L130 85 L108 88 Z" fill="none" stroke="#cbd5e1"></path>
+<path class="hover:fill-slate-200 transition-colors cursor-pointer" d="M70 85 L65 110 L80 140 L120 140 L135 110 L130 85 L100 90 L70 85 Z"></path>
+<path d="M100 90 L100 135" stroke="#cbd5e1" stroke-width="0.5"></path>
+<path class="hover:fill-slate-200 transition-colors cursor-pointer" d="M80 140 L82 180 L118 180 L120 140 Z"></path>
+<line stroke="#cbd5e1" stroke-width="0.5" x1="81" x2="119" y1="153" y2="153"></line>
+<line stroke="#cbd5e1" stroke-width="0.5" x1="82" x2="118" y1="166" y2="166"></line>
+<line stroke="#cbd5e1" stroke-width="0.5" x1="100" x2="100" y1="140" y2="180"></line>
+<path class="hover:fill-slate-200 transition-colors cursor-pointer" d="M82 180 L70 190 L75 210 L100 215 L125 210 L130 190 L118 180 Z"></path>
+<path class="hover:fill-slate-200 transition-colors cursor-pointer" d="M70 85 L50 95 L55 120 L70 110 Z"></path>
+<path class="hover:fill-slate-200 transition-colors cursor-pointer" d="M130 85 L150 95 L145 120 L130 110 Z"></path>
+<path class="hover:fill-slate-200 transition-colors cursor-pointer" d="M55 120 L52 150 L65 150 L70 110 Z"></path>
+<path class="hover:fill-slate-200 transition-colors cursor-pointer" d="M145 120 L148 150 L135 150 L130 110 Z"></path>
+<path class="hover:fill-slate-200 transition-colors cursor-pointer" d="M52 150 L45 190 L58 190 L65 150 Z"></path>
+<path class="hover:fill-slate-200 transition-colors cursor-pointer" d="M148 150 L155 190 L142 190 L135 150 Z"></path>
+<path class="hover:fill-slate-200 transition-colors cursor-pointer" d="M45 190 L42 210 L55 210 L58 190 Z"></path>
+<path class="hover:fill-slate-200 transition-colors cursor-pointer" d="M155 190 L158 210 L145 210 L142 190 Z"></path>
+<path class="hover:fill-slate-200 transition-colors cursor-pointer" d="M75 210 L70 280 L95 280 L98 215 L87 213 Z"></path>
+<path class="hover:fill-slate-200 transition-colors cursor-pointer" d="M125 210 L130 280 L105 280 L102 215 L113 213 Z"></path>
+<path d="M85 220 Q82 250 82 270" fill="none" stroke="#cbd5e1" stroke-width="0.5"></path>
+<path d="M115 220 Q118 250 118 270" fill="none" stroke="#cbd5e1" stroke-width="0.5"></path>
+<circle class="hover:fill-slate-200 transition-colors cursor-pointer" cx="82.5" cy="290" fill="white" r="10" stroke="#cbd5e1"></circle>
+<circle class="cursor-pointer animate-pulse" cx="117.5" cy="290" fill="#ef4444" fill-opacity="0.8" r="10" stroke="#ef4444" stroke-width="2"></circle>
+<path class="hover:fill-slate-200 transition-colors cursor-pointer" d="M72 300 L75 360 L90 360 L93 300 Z"></path>
+<path class="hover:fill-slate-200 transition-colors cursor-pointer" d="M128 300 L125 360 L110 360 L107 300 Z"></path>
+<line stroke="#cbd5e1" stroke-width="0.5" x1="82" x2="82" y1="305" y2="355"></line>
+<line stroke="#cbd5e1" stroke-width="0.5" x1="118" x2="118" y1="305" y2="355"></line>
+<path class="hover:fill-slate-200 transition-colors cursor-pointer" d="M75 360 L72 375 L93 375 L90 360 Z"></path>
+<path class="hover:fill-slate-200 transition-colors cursor-pointer" d="M125 360 L128 375 L107 375 L110 360 Z"></path>
+</g>
+<g>
+<circle cx="117.5" cy="290" fill="white" r="4"></circle>
+<circle cx="117.5" cy="290" fill="#ef4444" r="2"></circle>
+</g>
+</svg>
+</div>
+<p class="absolute bottom-4 text-center w-full text-xs text-slate-400 font-medium">Toque em uma região para editar</p>
+</div>
+<div class="border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-[#1a2632] px-5 py-5 pb-8 shadow-[0_-4px_20px_-8px_rgba(0,0,0,0.1)] z-20 relative rounded-t-2xl -mt-4">
+<div class="mx-auto w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mb-6"></div>
+<div class="flex justify-between items-start mb-6">
+<div>
+<span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Região Selecionada</span>
+<h2 class="text-2xl font-bold text-slate-900 dark:text-white mt-1">Joelho Direito</h2>
+</div>
+<div class="flex flex-col items-end">
+<div class="bg-eva-red/10 text-eva-red px-3 py-1 rounded-full text-sm font-bold border border-eva-red/20">
+                            Intenso
+                        </div>
+</div>
+</div>
+<div class="mb-8">
+<div class="flex justify-between items-end mb-3">
+<label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Intensidade (EVA)</label>
+<span class="text-3xl font-bold text-eva-red font-mono">8<span class="text-sm text-slate-400 font-normal ml-1">/10</span></span>
+</div>
+<div class="relative h-6 w-full flex items-center">
+<div class="absolute w-full h-2 rounded-full bg-gradient-to-r from-eva-green via-eva-yellow to-eva-red opacity-80"></div>
+<div class="absolute left-[80%] -ml-3.5 top-1/2 -mt-3.5 size-7 rounded-full border-4 border-white dark:border-[#1a2632] bg-eva-red shadow-md cursor-grab active:cursor-grabbing hover:scale-110 transition-transform"></div>
+</div>
+<div class="flex justify-between mt-2 px-1">
+<span class="text-[10px] text-slate-400 font-medium">0</span>
+<span class="text-[10px] text-slate-400 font-medium">5</span>
+<span class="text-[10px] text-slate-400 font-medium">10</span>
+</div>
+</div>
+<div class="mb-6">
+<label class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 block">Tipo de Dor</label>
+<div class="flex flex-wrap gap-2">
+<button class="px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-700 border border-transparent transition-colors">
+                            Latejante
+                        </button>
+<button class="px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-700 border border-transparent transition-colors">
+                            Queimação
+                        </button>
+<button class="px-4 py-2 rounded-lg bg-primary/10 text-primary border border-primary/20 text-sm font-semibold transition-colors">
+                            Aguda
+                        </button>
+<button class="px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-700 border border-transparent transition-colors">
+                            Crônica
+                        </button>
+</div>
+</div>
+<div class="pt-6 border-t border-slate-100 dark:border-slate-800">
+<h3 class="text-sm font-bold text-slate-900 dark:text-white mb-4">Pontos Registrados</h3>
+<div class="space-y-3">
+<div class="flex items-center p-3 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-[#131d27] group hover:border-primary/30 transition-colors cursor-pointer">
+<div class="size-8 rounded-full bg-eva-orange/20 text-eva-orange flex items-center justify-center font-bold text-sm mr-3 border border-eva-orange/20">6</div>
+<div class="flex-1">
+<div class="flex justify-between">
+<span class="text-sm font-bold text-slate-800 dark:text-slate-200">Lombar</span>
+<span class="text-xs text-slate-500">Há 2 dias</span>
+</div>
+<span class="text-xs text-slate-500 font-medium">Queimação</span>
+</div>
+<span class="material-symbols-outlined text-slate-400 text-lg ml-2">chevron_right</span>
+</div>
+<div class="flex items-center p-3 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-[#131d27] group hover:border-primary/30 transition-colors cursor-pointer">
+<div class="size-8 rounded-full bg-eva-green/20 text-eva-green flex items-center justify-center font-bold text-sm mr-3 border border-eva-green/20">2</div>
+<div class="flex-1">
+<div class="flex justify-between">
+<span class="text-sm font-bold text-slate-800 dark:text-slate-200">Ombro Esquerdo</span>
+<span class="text-xs text-slate-500">Hoje</span>
+</div>
+<span class="text-xs text-slate-500 font-medium">Desconforto leve</span>
+</div>
+<span class="material-symbols-outlined text-slate-400 text-lg ml-2">chevron_right</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>
