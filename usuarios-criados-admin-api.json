@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-01-04T04:35:16.394Z",
+  "organizationId": "ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02",
+  "users": [
+    {
+      "email": "admin@activityfisio.com",
+      "success": false
+    },
+    {
+      "email": "fisio@activityfisio.com",
+      "success": false
+    },
+    {
+      "email": "estagiario@activityfisio.com",
+      "success": false
+    }
+  ]
+}
