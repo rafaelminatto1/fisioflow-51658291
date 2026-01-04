@@ -12,19 +12,19 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 
 const Index = () => {
-  const { userProfile } = useAuth();
-  const { profile, getDisplayName, getInitials, loading: profileLoading } = useUserProfile();
+  const { profile } = useAuth();
+  const { getDisplayName, getInitials, loading: profileLoading } = useUserProfile();
   const [periodFilter, setPeriodFilter] = useState('hoje');
 
   const renderDashboard = () => {
-    if (!userProfile) return <AdminDashboard period={periodFilter} />;
+    if (!profile) return <AdminDashboard period={periodFilter} />;
     
-    switch (userProfile.role) {
+    switch (profile.role) {
       case 'admin':
         return <AdminDashboard period={periodFilter} />;
-      case 'therapist':
+      case 'fisioterapeuta':
         return <TherapistDashboard lastUpdate={new Date()} profile={{ id: '1', user_id: '1', role: 'admin' as const, full_name: 'Fisioterapeuta', avatar_url: '', onboarding_completed: true, is_active: true, created_at: '2024-01-01', updated_at: '2024-01-01' }} />;
-      case 'patient':
+      case 'paciente':
         return <PatientDashboard lastUpdate={new Date()} profile={{ id: '1', user_id: '1', role: 'admin' as const, full_name: 'Paciente', avatar_url: '', onboarding_completed: true, is_active: true, created_at: '2024-01-01', updated_at: '2024-01-01' }} />;
       default:
         return <AdminDashboard period={periodFilter} />;

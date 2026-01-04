@@ -33,7 +33,8 @@ import {
   Download,
   Share2,
   Eye,
-  EyeOff
+  EyeOff,
+  Target
 } from 'lucide-react';
 import { format, formatDistanceToNow, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -106,9 +107,9 @@ const PatientEvolution = () => {
   const { completeAppointment, isCompleting } = useAppointmentActions();
 
   // Função auxiliar para timeout
-  const withTimeout = useCallback(<T,>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
+  const withTimeout = useCallback(<T,>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> => {
     return Promise.race([
-      promise,
+      Promise.resolve(promise),
       new Promise<T>((_, reject) =>
         setTimeout(() => reject(new Error(`Timeout após ${timeoutMs}ms`)), timeoutMs)
       ),
@@ -144,7 +145,7 @@ const PatientEvolution = () => {
     queryFn: async () => {
       if (!appointmentId) throw new Error('ID do agendamento não fornecido');
       
-      return retryWithBackoff(() =>
+      const result = await retryWithBackoff(() =>
         withTimeout(
           supabase
             .from('appointments')
@@ -165,6 +166,7 @@ const PatientEvolution = () => {
           8000
         )
       );
+      return result.data;
     },
     enabled: !!appointmentId,
     retry: 3,
@@ -180,7 +182,7 @@ const PatientEvolution = () => {
     queryFn: async () => {
       if (!patientId) throw new Error('ID do paciente não fornecido');
       
-      return retryWithBackoff(() =>
+      const result = await retryWithBackoff(() =>
         withTimeout(
           supabase
             .from('patients')
@@ -190,6 +192,7 @@ const PatientEvolution = () => {
           8000
         )
       );
+      return result.data;
     },
     enabled: !!patientId,
     retry: 3,

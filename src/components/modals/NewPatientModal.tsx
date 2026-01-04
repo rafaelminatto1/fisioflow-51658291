@@ -41,8 +41,8 @@ const patientSchema = z.object({
   main_condition: z.string().min(1, 'Condição principal é obrigatória').max(500, 'Condição muito longa'),
   allergies: z.string().max(500, 'Alergias muito longas').optional(),
   medications: z.string().max(500, 'Medicamentos muito longos').optional(),
-  weight_kg: z.number().positive().max(500, 'Peso inválido').optional().or(z.literal('')),
-  height_cm: z.number().positive().max(300, 'Altura inválida').optional().or(z.literal('')),
+  weight_kg: z.union([z.number().positive().max(500, 'Peso inválido'), z.literal('')]).optional(),
+  height_cm: z.union([z.number().positive().max(300, 'Altura inválida'), z.literal('')]).optional(),
   blood_type: z.string().optional(),
   marital_status: z.string().optional(),
   profession: z.string().max(200, 'Profissão muito longa').optional(),
@@ -50,6 +50,8 @@ const patientSchema = z.object({
   insurance_plan: z.string().max(200, 'Plano muito longo').optional(),
   insurance_number: z.string().max(100, 'Número muito longo').optional(),
 });
+
+type PatientFormData = z.infer<typeof patientSchema>;
 
 interface NewPatientModalProps {
   open: boolean;
@@ -65,15 +67,15 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
   const queryClient = useQueryClient();
   const { currentOrganization } = useOrganizations();
 
-  const form = useForm({
+  const form = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
     defaultValues: {
       name: '',
       email: '',
       phone: '',
       cpf: '',
-      birth_date: undefined,
-      gender: 'masculino' as const,
+      birth_date: undefined as unknown as Date,
+      gender: 'masculino',
       address: '',
       emergency_contact: '',
       emergency_contact_relationship: '',
@@ -81,8 +83,8 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
       main_condition: '',
       allergies: '',
       medications: '',
-      weight_kg: '',
-      height_cm: '',
+      weight_kg: '' as const,
+      height_cm: '' as const,
       blood_type: '',
       marital_status: '',
       profession: '',
@@ -109,7 +111,7 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
     setValue('phone', formatted, { shouldValidate: false });
   };
   
-  const handleSave = async (data: z.infer<typeof patientSchema>) => {
+  const handleSave = async (data: PatientFormData) => {
     try {
       // Validar organização
       if (!currentOrganization?.id) {
