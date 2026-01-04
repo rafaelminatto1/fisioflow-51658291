@@ -1,18 +1,24 @@
 {
-  "timestamp": "2026-01-04T04:37:13.892Z",
+  "timestamp": "2026-01-04T04:38:31.651Z",
   "organizationId": "ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02",
   "users": [
     {
       "email": "admin@activityfisio.com",
-      "success": false
+      "userId": "c27d2c85-27fa-44fd-be7e-d8e8db9ec1e0",
+      "loginSuccess": true,
+      "success": true
     },
     {
       "email": "fisio@activityfisio.com",
-      "success": false
+      "userId": "1c444606-31ad-4076-82e6-fda84b5eba70",
+      "loginSuccess": true,
+      "success": true
     },
     {
       "email": "estagiario@activityfisio.com",
-      "success": false
+      "userId": "cfa96e06-4b4c-4e61-8665-2df16451b247",
+      "loginSuccess": true,
+      "success": true
     }
   ]
 }
