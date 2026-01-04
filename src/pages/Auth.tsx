@@ -29,6 +29,7 @@ export default function Auth() {
   const [error, setError] = useState('');
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [invitationData, setInvitationData] = useState<{ email: string; role: string } | null>(null);
+  const [activeTab, setActiveTab] = useState<'login' | 'register'>(searchParams.get('mode') === 'register' ? 'register' : 'login');
 
   useEffect(() => {
     // Check if user is already logged in
@@ -137,14 +138,16 @@ export default function Auth() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    
     setLoading(true);
     setError('');
     setValidationErrors({});
 
     try {
       // Validar campos com Zod
-      const fullNameResult = fullNameSchema.safeParse(fullName);
-      const emailResult = emailSchema.safeParse(email);
+      const fullNameResult = fullNameSchema.safeParse(fullName.trim());
+      const emailResult = emailSchema.safeParse(email.trim());
       const passwordResult = passwordSchema.safeParse(password);
       
       const errors: Record<string, string> = {};
@@ -165,63 +168,131 @@ export default function Auth() {
       if (Object.keys(errors).length > 0) {
         setValidationErrors(errors);
         setLoading(false);
+        toast({
+          title: 'Erro de validação',
+          description: 'Por favor, corrija os campos destacados',
+          variant: 'destructive',
+        });
         return;
       }
 
       const redirectUrl = `${window.location.origin}/`;
       
+      logger.info('Iniciando cadastro', { email: email.trim() }, 'Auth');
+      
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email,
+        email: email.trim(),
         password,
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            full_name: fullName,
+            full_name: fullName.trim(),
           }
         }
       });
 
       if (signUpError) {
-        if (signUpError.message.includes('User already registered')) {
-          setError('Este email já está cadastrado. Tente fazer login.');
-        } else {
-          setError(signUpError.message);
+        logger.error('Erro no cadastro do Supabase', signUpError, 'Auth');
+        let errorMessage = signUpError.message;
+        
+        if (signUpError.message.includes('User already registered') || 
+            signUpError.message.includes('already registered')) {
+          errorMessage = 'Este email já está cadastrado. Tente fazer login.';
+        } else if (signUpError.message.includes('Invalid email')) {
+          errorMessage = 'Email inválido. Verifique o formato do email.';
+        } else if (signUpError.message.includes('Password')) {
+          errorMessage = 'Senha inválida. Verifique os requisitos de senha.';
         }
+        
+        setError(errorMessage);
+        toast({
+          title: 'Erro no cadastro',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+        setLoading(false);
         return;
       }
 
+      if (!authData.user) {
+        setError('Erro ao criar conta. Tente novamente.');
+        toast({
+          title: 'Erro no cadastro',
+          description: 'Não foi possível criar a conta. Tente novamente.',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
+      logger.info('Conta criada com sucesso', { userId: authData.user.id }, 'Auth');
+
       // Se houver token de convite, validar e atribuir role
       if (inviteToken && authData.user) {
-        const { data: validationResult, error: validationError } = await supabase.rpc(
-          'validate_invitation',
-          {
-            _token: inviteToken,
-            _user_id: authData.user.id,
-          }
-        );
+        try {
+          const { data: validationResult, error: validationError } = await supabase.rpc(
+            'validate_invitation',
+            {
+              _token: inviteToken,
+              _user_id: authData.user.id,
+            }
+          );
 
-        if (validationError || !validationResult) {
-          logger.error('Erro ao validar convite', validationError, 'Auth');
-          toast({
-            title: 'Aviso',
-            description: 'Conta criada, mas houve erro ao processar o convite',
-            variant: 'destructive',
-          });
-        } else {
-          toast({
-            title: 'Conta criada com sucesso!',
-            description: `Role ${invitationData?.role} atribuída`,
-          });
+          if (validationError || !validationResult) {
+            logger.error('Erro ao validar convite', validationError, 'Auth');
+            toast({
+              title: 'Aviso',
+              description: 'Conta criada, mas houve erro ao processar o convite',
+              variant: 'destructive',
+            });
+          } else {
+            toast({
+              title: 'Conta criada com sucesso!',
+              description: `Role ${invitationData?.role} atribuída. Redirecionando...`,
+            });
+            // Limpar campos
+            setFullName('');
+            setEmail('');
+            setPassword('');
+            setConfirmPassword('');
+            // Redirecionar após 2 segundos
+            setTimeout(() => {
+              navigate('/');
+            }, 2000);
+            return;
+          }
+        } catch (inviteErr) {
+          logger.error('Erro ao processar convite', inviteErr, 'Auth');
         }
-      } else {
-        toast({
-          title: 'Conta criada com sucesso!',
-          description: 'Verifique seu email para confirmar a conta',
-        });
       }
+
+      // Sucesso no cadastro
+      toast({
+        title: 'Conta criada com sucesso!',
+        description: 'Verifique seu email para confirmar a conta. Você será redirecionado...',
+      });
+      
+      // Limpar campos
+      setFullName('');
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+      setValidationErrors({});
+      
+      // Redirecionar para login após 3 segundos
+      setTimeout(() => {
+        navigate('/auth/login');
+      }, 3000);
+      
     } catch (err: unknown) {
       logger.error('Erro no cadastro', err, 'Auth');
-      setError('Erro inesperado. Tente novamente.');
+      const errorMessage = err instanceof Error ? err.message : 'Erro inesperado. Tente novamente.';
+      setError(errorMessage);
+      toast({
+        title: 'Erro no cadastro',
+        description: errorMessage,
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -251,7 +322,7 @@ export default function Auth() {
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Faça login para desbloquear seu perfil.</p>
         </div>
 
-        <Tabs defaultValue="login" className="w-full">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'register')} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">Login</TabsTrigger>
             <TabsTrigger value="register">Cadastro</TabsTrigger>
@@ -342,6 +413,19 @@ export default function Auth() {
                     </svg>
                     Continuar com Google
                   </Button>
+
+                  <div className="text-center mt-4">
+                    <p className="text-sm text-muted-foreground">
+                      Não tem uma conta?{' '}
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('register')}
+                        className="text-primary hover:underline font-medium"
+                      >
+                        Cadastre-se aqui
+                      </button>
+                    </p>
+                  </div>
                 </form>
               </TabsContent>
               
@@ -452,11 +536,20 @@ export default function Auth() {
                   
                   <Button 
                     type="submit" 
-                    className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-lg font-bold rounded-xl text-white bg-gradient-to-r from-primary to-blue-400 hover:from-primary/90 hover:to-blue-400/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-300 transform hover:-translate-y-0.5" 
-                    disabled={loading}
+                    className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-lg font-bold rounded-xl text-white bg-gradient-to-r from-primary to-blue-400 hover:from-primary/90 hover:to-blue-400/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-300 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed" 
+                    disabled={loading || !fullName.trim() || !email.trim() || !password || !confirmPassword}
+                    onClick={(e) => {
+                      // Garantir que o evento seja tratado
+                      if (!loading && fullName.trim() && email.trim() && password && confirmPassword) {
+                        handleSignUp(e);
+                      }
+                    }}
                   >
                     {loading ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                        Criando conta...
+                      </>
                     ) : (
                       <>
                         Criar Conta
