@@ -8,50 +8,139 @@ import { useEffect } from 'react';
 import { AppointmentNotificationService } from '@/lib/services/AppointmentNotificationService';
 import { requireUserOrganizationId } from '@/utils/userHelpers';
 
-// Fetch all appointments
+// Função auxiliar para criar timeout em promises
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Timeout após ${timeoutMs}ms`)), timeoutMs)
+    ),
+  ]);
+}
+
+// Função auxiliar para retry com backoff exponencial
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  initialDelay: number = 1000
+): Promise<T> {
+  let lastError: Error | unknown;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (attempt < maxRetries - 1) {
+        const delay = initialDelay * Math.pow(2, attempt);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  
+  throw lastError;
+}
+
+// Fetch all appointments with improved error handling and validation
 async function fetchAppointments(): Promise<AppointmentBase[]> {
   const timer = logger.startTimer('fetchAppointments');
   
   logger.info('Carregando agendamentos do Supabase', {}, 'useAppointments');
   
-  const { data, error } = await supabase
-    .from('appointments')
-    .select(`
-      *,
-      patients!inner(
-        id,
-        name,
-        phone,
-        email
-      )
-    `)
-    .order('appointment_date', { ascending: true })
-    .order('appointment_time', { ascending: true });
+  try {
+    // Usar retry com timeout
+    const result = await retryWithBackoff(() =>
+      withTimeout(
+        supabase
+          .from('appointments')
+          .select(`
+            *,
+            patients!inner(
+              id,
+              name,
+              phone,
+              email
+            )
+          `)
+          .order('appointment_date', { ascending: true })
+          .order('appointment_time', { ascending: true }),
+        10000 // 10 segundos de timeout para agendamentos (pode ter muitos dados)
+      ),
+      3, // 3 tentativas
+      1000 // delay inicial de 1 segundo
+    );
 
-  if (error) {
-    logger.error('Erro ao buscar agendamentos', error, 'useAppointments');
-    throw error;
+    const { data, error } = result;
+
+    if (error) {
+      logger.error('Erro ao buscar agendamentos', error, 'useAppointments');
+      
+      // Tratar erros específicos
+      if (error.message) {
+        // Erro de schema/RLS
+        if (error.message.includes('user_id') && error.message.includes('does not exist')) {
+          logger.error('Erro de schema: coluna user_id não existe. Verifique as políticas RLS.', error, 'useAppointments');
+          timer();
+          return [];
+        }
+        
+        // Erro de permissão
+        if (error.message.includes('permission denied') || error.message.includes('new row violates row-level security')) {
+          logger.error('Erro de permissão: usuário não tem acesso aos agendamentos.', error, 'useAppointments');
+          timer();
+          return [];
+        }
+        
+        // Erro de conexão
+        if (error.message.includes('network') || error.message.includes('timeout') || error.message.includes('fetch')) {
+          logger.error('Erro de conexão ao buscar agendamentos.', error, 'useAppointments');
+          timer();
+          return [];
+        }
+      }
+      
+      // Retornar array vazio em vez de lançar erro
+      logger.warn('Retornando array vazio devido a erro', { error: error.message, code: error.code }, 'useAppointments');
+      timer();
+      return [];
+    }
+
+    // Validar e transformar dados
+    const transformedAppointments: AppointmentBase[] = (data || [])
+      .filter(apt => apt && apt.id) // Filtrar registros inválidos
+      .map(apt => {
+        try {
+          return {
+            id: apt.id,
+            patientId: apt.patient_id,
+            patientName: apt.patients?.name || 'Paciente não identificado',
+            phone: apt.patients?.phone || '',
+            date: apt.appointment_date ? new Date(apt.appointment_date) : new Date(),
+            time: apt.appointment_time || '',
+            duration: apt.duration || 60,
+            type: apt.type as AppointmentType || 'fisioterapia',
+            status: apt.status as AppointmentStatus || 'agendado',
+            notes: apt.notes || '',
+            createdAt: apt.created_at ? new Date(apt.created_at) : new Date(),
+            updatedAt: apt.updated_at ? new Date(apt.updated_at) : new Date()
+          };
+        } catch (transformError) {
+          logger.warn('Erro ao transformar agendamento', { appointmentId: apt.id, error: transformError }, 'useAppointments');
+          return null;
+        }
+      })
+      .filter((apt): apt is AppointmentBase => apt !== null); // Remover nulls
+    
+    logger.info(`Agendamentos carregados: ${transformedAppointments.length} registros`, { count: transformedAppointments.length }, 'useAppointments');
+    timer();
+    
+    return transformedAppointments;
+  } catch (error) {
+    logger.error('Erro crítico ao buscar agendamentos', error, 'useAppointments');
+    timer();
+    // Retornar array vazio em vez de lançar erro para não quebrar a UI
+    return [];
   }
-
-  const transformedAppointments: AppointmentBase[] = (data || []).map(apt => ({
-    id: apt.id,
-    patientId: apt.patient_id,
-    patientName: apt.patients?.name || 'Paciente não identificado',
-    phone: apt.patients?.phone || '',
-    date: new Date(apt.appointment_date),
-    time: apt.appointment_time,
-    duration: apt.duration || 60,
-    type: apt.type as AppointmentType,
-    status: apt.status as AppointmentStatus,
-    notes: apt.notes || '',
-    createdAt: new Date(apt.created_at),
-    updatedAt: new Date(apt.updated_at)
-  }));
-  
-  logger.info(`Agendamentos carregados: ${transformedAppointments.length} registros`, { count: transformedAppointments.length }, 'useAppointments');
-  timer();
-  
-  return transformedAppointments;
 }
 
 // Main hook to fetch appointments with Realtime support
@@ -108,7 +197,14 @@ export function useAppointments() {
   return useQuery({
     queryKey: ['appointments'],
     queryFn: fetchAppointments,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 2, // 2 minutos (dados dinâmicos)
+    gcTime: 1000 * 60 * 5, // 5 minutos
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Backoff exponencial
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    // Garantir que sempre retorne um array, mesmo em caso de erro
+    placeholderData: [],
   });
 }
 
@@ -138,14 +234,25 @@ export function useCreateAppointment() {
         throw new Error('Conflito de horário');
       }
 
+      // Validar dados antes de inserir
+      if (!data.patient_id) {
+        throw new Error('ID do paciente é obrigatório');
+      }
+      if (!data.appointment_date) {
+        throw new Error('Data do agendamento é obrigatória');
+      }
+      if (!data.appointment_time) {
+        throw new Error('Horário do agendamento é obrigatório');
+      }
+
       const { data: newAppointment, error} = await supabase
         .from('appointments')
         .insert({
           patient_id: data.patient_id,
           appointment_date: data.appointment_date,
           appointment_time: data.appointment_time,
-          duration: data.duration,
-          type: data.type,
+          duration: data.duration || 60,
+          type: data.type || 'fisioterapia',
           status: data.status || 'agendado',
           notes: data.notes || null,
           therapist_id: data.therapist_id || null,
@@ -165,6 +272,18 @@ export function useCreateAppointment() {
 
       if (error) {
         logger.error('Erro ao inserir agendamento no Supabase', error, 'useAppointments');
+        
+        // Melhorar mensagens de erro
+        if (error.message?.includes('violates row-level security')) {
+          throw new Error('Você não tem permissão para criar agendamentos nesta organização.');
+        }
+        if (error.message?.includes('foreign key')) {
+          throw new Error('Paciente ou terapeuta não encontrado.');
+        }
+        if (error.message?.includes('unique') || error.message?.includes('duplicate')) {
+          throw new Error('Já existe um agendamento com estes dados.');
+        }
+        
         throw error;
       }
 
@@ -268,6 +387,11 @@ export function useUpdateAppointment() {
       if (updates.therapist_id !== undefined) updateData.therapist_id = updates.therapist_id;
       if (updates.room !== undefined) updateData.room = updates.room;
 
+      // Validar que há dados para atualizar
+      if (Object.keys(updateData).length === 0) {
+        throw new Error('Nenhum dado para atualizar');
+      }
+
       const { data: updatedAppointment, error } = await supabase
         .from('appointments')
         .update(updateData)
@@ -286,7 +410,21 @@ export function useUpdateAppointment() {
 
       if (error) {
         logger.error('Erro ao atualizar agendamento no Supabase', error, 'useAppointments');
+        
+        // Melhorar mensagens de erro
+        if (error.message?.includes('violates row-level security')) {
+          throw new Error('Você não tem permissão para atualizar este agendamento.');
+        }
+        if (error.code === 'PGRST116') {
+          throw new Error('Agendamento não encontrado ou você não tem permissão para acessá-lo.');
+        }
+        
         throw error;
+      }
+
+      // Verificar se o agendamento foi encontrado
+      if (!updatedAppointment) {
+        throw new Error('Agendamento não encontrado após atualização');
       }
 
       const transformedAppointment: AppointmentBase = {
@@ -355,6 +493,13 @@ export function useDeleteAppointment() {
 
   return useMutation({
     mutationFn: async (appointmentId: string) => {
+      if (!appointmentId) {
+        throw new Error('ID do agendamento é obrigatório');
+      }
+
+      // Obter organization_id para garantir segurança
+      const organizationId = await requireUserOrganizationId();
+
       // Buscar dados do agendamento antes de deletar (para notificação)
       const currentAppointments = queryClient.getQueryData<AppointmentBase[]>(['appointments']) || [];
       const appointment = currentAppointments.find(apt => apt.id === appointmentId);
@@ -362,9 +507,21 @@ export function useDeleteAppointment() {
       const { error } = await supabase
         .from('appointments')
         .delete()
-        .eq('id', appointmentId);
+        .eq('id', appointmentId)
+        .eq('organization_id', organizationId); // Garantir que só deleta da própria organização
 
-      if (error) throw error;
+      if (error) {
+        logger.error('Erro ao deletar agendamento', error, 'useAppointments');
+        
+        if (error.message?.includes('violates row-level security')) {
+          throw new Error('Você não tem permissão para deletar este agendamento.');
+        }
+        if (error.code === 'PGRST116') {
+          throw new Error('Agendamento não encontrado ou já foi deletado.');
+        }
+        
+        throw error;
+      }
       
       // Notificar cancelamento se encontrou os dados
       if (appointment) {
@@ -404,14 +561,41 @@ export function useUpdateAppointmentStatus() {
 
   return useMutation({
     mutationFn: async ({ appointmentId, status }: { appointmentId: string; status: AppointmentStatus }) => {
+      if (!appointmentId) {
+        throw new Error('ID do agendamento é obrigatório');
+      }
+      if (!status) {
+        throw new Error('Status é obrigatório');
+      }
+
+      // Obter organization_id para garantir segurança
+      const organizationId = await requireUserOrganizationId();
+
       const { data, error } = await supabase
         .from('appointments')
-        .update({ status })
+        .update({ status, updated_at: new Date().toISOString() })
         .eq('id', appointmentId)
+        .eq('organization_id', organizationId) // Garantir segurança
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        logger.error('Erro ao atualizar status do agendamento', error, 'useAppointments');
+        
+        if (error.message?.includes('violates row-level security')) {
+          throw new Error('Você não tem permissão para atualizar este agendamento.');
+        }
+        if (error.code === 'PGRST116') {
+          throw new Error('Agendamento não encontrado.');
+        }
+        
+        throw error;
+      }
+
+      if (!data) {
+        throw new Error('Agendamento não encontrado após atualização');
+      }
+
       return data;
     },
     onSuccess: () => {
