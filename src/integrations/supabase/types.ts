@@ -11793,6 +11793,10 @@ export type Database = {
         Returns: string
       }
       create_demo_organization: { Args: never; Returns: string }
+      create_test_user: {
+        Args: { p_email: string; p_metadata?: Json; p_password: string }
+        Returns: string
+      }
       create_user_invitation: {
         Args: { _email: string; _role: Database["public"]["Enums"]["app_role"] }
         Returns: Json
