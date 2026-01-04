@@ -30,9 +30,28 @@ Os seguintes usuários foram criados na tabela `auth.users` e `profiles`:
 - Slug: "activity-fisio-test"
 - ID: `ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02`
 
-## Problema Conhecido
+## Problema Conhecido e Solução
 
 ⚠️ **Erro ao fazer login via API**: Os usuários foram criados, mas ao tentar fazer login via `signInWithPassword`, ocorre o erro "Database error querying schema" (HTTP 500).
+
+### ✅ Correções Aplicadas
+
+1. **Identities criadas**: Migration `fix_users_identities_final` aplicada com sucesso
+   - Entries em `auth.identities` foram criadas para todos os usuários
+   - Verificação confirmada via SQL
+
+2. **Problema persistente**: Mesmo com identities, o login ainda falha
+   - **Causa raiz**: Formato do hash da senha criado via SQL não é compatível
+   - **Solução**: Recriar usuários usando Supabase Admin API
+
+### 🔧 Solução Definitiva
+
+**Recriar usuários usando Admin API:**
+1. Obter service role key do dashboard Supabase
+2. Executar: `node create-test-users-admin.mjs`
+3. O script criará usuários com hash correto e testará login automaticamente
+
+**Instruções detalhadas:** Ver `INSTRUCOES_SERVICE_ROLE_KEY.md`
 
 ### Possíveis Causas
 
