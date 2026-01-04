@@ -33,6 +33,7 @@ import { cn } from '@/lib/utils';
 import { AppointmentBase, AppointmentFormData, AppointmentType, AppointmentStatus } from '@/types/appointment';
 import { useCreateAppointment, useUpdateAppointment, useAppointments } from '@/hooks/useAppointments';
 import { useActivePatients } from '@/hooks/usePatients';
+import { useQueryClient } from '@tanstack/react-query';
 import { PatientCombobox } from '@/components/ui/patient-combobox';
 import { QuickPatientModal } from '@/components/modals/QuickPatientModal';
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
@@ -150,7 +151,9 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isRecurringCalendarOpen, setIsRecurringCalendarOpen] = useState(false);
   const [conflictCheck, setConflictCheck] = useState<{ hasConflict: boolean; conflictingAppointment?: AppointmentBase; conflictCount?: number } | null>(null);
+  const queryClient = useQueryClient();
   const [quickPatientModalOpen, setQuickPatientModalOpen] = useState(false);
+  const [suggestedPatientName, setSuggestedPatientName] = useState('');
   const [currentMode, setCurrentMode] = useState<'create' | 'edit' | 'view'>(initialMode);
   const [activeTab, setActiveTab] = useState('info');
   const [selectedEquipments, setSelectedEquipments] = useState<SelectedEquipment[]>([]);
@@ -548,7 +551,10 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                     patients={activePatients || []}
                     value={watch('patient_id')}
                     onValueChange={(value) => setValue('patient_id', value)}
-                    onCreateNew={() => setQuickPatientModalOpen(true)}
+                    onCreateNew={(searchTerm) => {
+                      setSuggestedPatientName(searchTerm);
+                      setQuickPatientModalOpen(true);
+                    }}
                     disabled={currentMode === 'view' || patientsLoading}
                   />
                   {errors.patient_id && (
@@ -992,11 +998,19 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       {quickPatientModalOpen && (
         <QuickPatientModal
           open={quickPatientModalOpen}
-          onOpenChange={setQuickPatientModalOpen}
-          onPatientCreated={(patientId) => {
+          onOpenChange={(open) => {
+            setQuickPatientModalOpen(open);
+            if (!open) {
+              setSuggestedPatientName('');
+            }
+          }}
+          onPatientCreated={(patientId, patientName) => {
             setValue('patient_id', patientId);
             setQuickPatientModalOpen(false);
+            setSuggestedPatientName('');
+            queryClient.invalidateQueries({ queryKey: ['patients'] });
           }}
+          suggestedName={suggestedPatientName}
         />
       )}
 

@@ -10,6 +10,8 @@ import { AlertTriangle, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/errors/logger';
+import { useOrganizations } from '@/hooks/useOrganizations';
+import { useQueryClient } from '@tanstack/react-query';
 
 const quickPatientSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -30,6 +32,8 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
   suggestedName = ''
 }) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { currentOrganization } = useOrganizations();
 
   const form = useForm({
     resolver: zodResolver(quickPatientSchema),
@@ -41,6 +45,7 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
 
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset, setValue, watch } = form;
   const phoneValue = watch('phone');
+  const nameValue = watch('name');
 
   // Função para formatar telefone com máscara (XX) XXXXX-XXXX
   const formatPhone = (value: string) => {
@@ -80,6 +85,16 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
         return;
       }
 
+      // Verificar organização
+      if (!currentOrganization?.id) {
+        toast({
+          title: 'Organização não encontrada',
+          description: 'Não foi possível identificar sua organização. Tente fazer login novamente.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const { data: roles, error: rolesError } = await supabase
         .from('user_roles')
         .select('role')
@@ -101,15 +116,19 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
         return;
       }
 
-      logger.info('Criando paciente rápido', { name: data.name }, 'QuickPatientModal');
+      logger.info('Criando paciente rápido', { name: data.name, organizationId: currentOrganization.id }, 'QuickPatientModal');
+      
+      // Limpar telefone (remover formatação)
+      const cleanPhone = data.phone ? data.phone.replace(/\D/g, '') : null;
       
       const { data: newPatient, error } = await supabase
         .from('patients')
         .insert([{
-          name: data.name,
-          phone: data.phone || null,
+          name: data.name.trim(),
+          phone: cleanPhone || null,
           status: 'active',
           incomplete_registration: true,
+          organization_id: currentOrganization.id,
           // Campos mínimos para evitar erros
           birth_date: new Date().toISOString().split('T')[0],
         }])
@@ -118,10 +137,41 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
 
       if (error) {
         logger.error('Erro do Supabase ao criar paciente', error, 'QuickPatientModal');
-        throw error;
+        
+        // Melhorar mensagens de erro
+        let errorMessage = error.message || 'Não foi possível criar o paciente.';
+        
+        if (error.code === '23505') {
+          errorMessage = 'Já existe um paciente com este nome ou telefone cadastrado.';
+        } else if (error.code === '42501' || error.message?.includes('row-level security')) {
+          errorMessage = 'Sem permissão para criar pacientes. Verifique suas permissões.';
+        } else if (error.code === '23503') {
+          errorMessage = 'Erro de referência: organização não encontrada.';
+        } else if (error.message?.includes('organization_id')) {
+          errorMessage = 'Erro ao associar paciente à organização.';
+        }
+        
+        toast({
+          title: 'Erro ao criar paciente',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (!newPatient) {
+        toast({
+          title: 'Erro ao criar paciente',
+          description: 'Paciente não foi criado. Tente novamente.',
+          variant: 'destructive',
+        });
+        return;
       }
 
       logger.info('Paciente criado com sucesso', { patientId: newPatient.id }, 'QuickPatientModal');
+
+      // Invalidar cache de pacientes
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
 
       toast({
         title: 'Paciente criado!',
@@ -238,8 +288,20 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
             
             <Button
               type="submit"
-              disabled={isSubmitting}
-              className="bg-primary hover:bg-primary/90"
+              disabled={isSubmitting || !nameValue?.trim()}
+              className="bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={(e) => {
+                // Garantir que o evento seja tratado
+                if (!nameValue?.trim()) {
+                  e.preventDefault();
+                  toast({
+                    title: 'Nome obrigatório',
+                    description: 'Por favor, digite o nome do paciente.',
+                    variant: 'destructive',
+                  });
+                  return;
+                }
+              }}
             >
               {isSubmitting ? (
                 <>
