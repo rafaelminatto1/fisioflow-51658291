@@ -35,7 +35,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
         return null;
       }
 
-      return data as Profile;
+      return data as unknown as Profile;
     } catch (err) {
       logger.error('Erro ao buscar perfil', err, 'AuthContextProvider');
       return null;
@@ -175,7 +175,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
         password: data.password,
         options: {
           data: {
-            full_name: data.fullName,
+            full_name: data.full_name,
           }
         }
       });
@@ -255,12 +255,12 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
       const { error } = await supabase
         .from('profiles')
-        .update(updates)
+        .update(updates as any)
         .eq('user_id', user.id);
 
       if (error) {
         logger.error('Erro ao atualizar perfil', error, 'AuthContextProvider');
-        return { error: { message: error.message, status: error.status } };
+        return { error: { message: error.message, status: (error as any).status } };
       }
 
       // Atualizar estado local

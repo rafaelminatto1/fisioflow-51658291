@@ -8,10 +8,10 @@ import { useEffect } from 'react';
 import { AppointmentNotificationService } from '@/lib/services/AppointmentNotificationService';
 import { requireUserOrganizationId, getUserOrganizationId } from '@/utils/userHelpers';
 
-// Função auxiliar para criar timeout em promises
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+// Função auxiliar para criar timeout em promises (suporta PromiseLike do Supabase)
+function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> {
   return Promise.race([
-    promise,
+    Promise.resolve(promise),
     new Promise<T>((_, reject) =>
       setTimeout(() => reject(new Error(`Timeout após ${timeoutMs}ms`)), timeoutMs)
     ),
@@ -122,7 +122,7 @@ async function fetchAppointments(): Promise<AppointmentBase[]> {
     }
 
     // Validar e transformar dados
-    const transformedAppointments: AppointmentBase[] = (data || [])
+    const transformedAppointments = (data || [])
       .filter(apt => apt && apt.id) // Filtrar registros inválidos
       .map(apt => {
         try {
@@ -134,12 +134,12 @@ async function fetchAppointments(): Promise<AppointmentBase[]> {
             date: apt.appointment_date ? new Date(apt.appointment_date) : new Date(),
             time: apt.appointment_time || '',
             duration: apt.duration || 60,
-            type: apt.type as AppointmentType || 'fisioterapia',
-            status: apt.status as AppointmentStatus || 'agendado',
+            type: (apt.type || 'Fisioterapia') as AppointmentType,
+            status: (apt.status || 'agendado') as AppointmentStatus,
             notes: apt.notes || '',
             createdAt: apt.created_at ? new Date(apt.created_at) : new Date(),
             updatedAt: apt.updated_at ? new Date(apt.updated_at) : new Date()
-          };
+          } as AppointmentBase;
         } catch (transformError) {
           logger.warn('Erro ao transformar agendamento', { appointmentId: apt.id, error: transformError }, 'useAppointments');
           return null;
