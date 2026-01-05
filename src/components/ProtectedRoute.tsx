@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContextProvider';
 import { UserRole } from '@/types/auth';
@@ -16,13 +16,15 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ 
   children, 
   allowedRoles = [], 
-  requireProfile = true,
+  requireProfile = false, // Changed default to false to prevent blocking
   redirectTo = '/auth/login'
 }: ProtectedRouteProps) {
   const { user, profile, loading, initialized, sessionCheckFailed, role, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [retryCount, setRetryCount] = useState(0);
+  const profileTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [profileLoadTimeout, setProfileLoadTimeout] = useState(false);
 
   useEffect(() => {
     // Only redirect if auth is fully initialized
@@ -34,6 +36,25 @@ export function ProtectedRoute({
       });
     }
   }, [user, loading, initialized, sessionCheckFailed, navigate, redirectTo, location.pathname]);
+
+  // Timeout for profile loading - don't block forever
+  useEffect(() => {
+    if (requireProfile && user && !profile && !profileLoadTimeout) {
+      profileTimeoutRef.current = setTimeout(() => {
+        setProfileLoadTimeout(true);
+      }, 3000); // 3 second timeout
+    }
+    
+    if (profile && profileTimeoutRef.current) {
+      clearTimeout(profileTimeoutRef.current);
+    }
+    
+    return () => {
+      if (profileTimeoutRef.current) {
+        clearTimeout(profileTimeoutRef.current);
+      }
+    };
+  }, [user, profile, requireProfile, profileLoadTimeout]);
 
   // Show loading state while authentication is initializing
   if (!initialized || loading) {
@@ -78,8 +99,8 @@ export function ProtectedRoute({
     return null; // Will be redirected by useEffect
   }
 
-  // Check if profile is required but missing
-  if (requireProfile && !profile) {
+  // Check if profile is required but missing (only block if timeout hasn't passed)
+  if (requireProfile && !profile && !profileLoadTimeout) {
     const handleRetry = async () => {
       if (retryCount < 3) {
         setRetryCount(prev => prev + 1);
@@ -90,26 +111,12 @@ export function ProtectedRoute({
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center max-w-md">
-          <Alert>
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              {retryCount < 3 
-                ? 'Carregando perfil do usuário...'
-                : 'Não foi possível carregar seu perfil. Tente recarregar a página.'
-              }
-            </AlertDescription>
-          </Alert>
-          {retryCount < 3 ? (
-            <Button onClick={handleRetry} className="mt-4" variant="outline">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground">Carregando perfil...</p>
+          {retryCount > 0 && (
+            <Button onClick={handleRetry} className="mt-4" variant="outline" size="sm">
               <RefreshCw className="h-4 w-4 mr-2" />
               Tentar novamente
-            </Button>
-          ) : (
-            <Button 
-              onClick={() => window.location.reload()} 
-              className="mt-4"
-            >
-              Recarregar página
             </Button>
           )}
         </div>
@@ -117,8 +124,8 @@ export function ProtectedRoute({
     );
   }
 
-  // Check role-based access
-  if (allowedRoles.length > 0 && role && !allowedRoles.includes(role)) {
+  // Check role-based access (only if profile exists and roles are specified)
+  if (allowedRoles.length > 0 && profile && role && !allowedRoles.includes(role)) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center max-w-md">
