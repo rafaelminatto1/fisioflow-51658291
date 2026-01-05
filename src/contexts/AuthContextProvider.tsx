@@ -61,53 +61,54 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
     let initTimeout: NodeJS.Timeout | null = null;
 
     const initAuth = async () => {
+      // Timeout de segurança agressivo - 3 segundos máximo
+      initTimeout = setTimeout(() => {
+        if (mounted && !initialized) {
+          logger.warn('Timeout na inicialização - continuando sem sessão', null, 'AuthContextProvider');
+          setLoading(false);
+          setInitialized(true);
+        }
+      }, 3000);
+
       try {
         setLoading(true);
         setSessionCheckFailed(false);
 
-        // Timeout de segurança - inicializa mesmo se demorar
-        initTimeout = setTimeout(() => {
-          if (mounted && !initialized) {
-            logger.warn('Timeout na inicialização - continuando sem sessão', null, 'AuthContextProvider');
-            setLoading(false);
-            setInitialized(true);
-          }
-        }, 5000);
+        // Buscar sessão com timeout interno
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise<{ data: { session: null }, error: null }>((resolve) => 
+          setTimeout(() => resolve({ data: { session: null }, error: null }), 2500)
+        );
+        
+        const { data: { session: initialSession }, error: sessionError } = await Promise.race([
+          sessionPromise,
+          timeoutPromise
+        ]);
 
-        const { data: { session: initialSession }, error: sessionError } = await supabase.auth.getSession();
+        if (!mounted) return;
 
         if (sessionError) {
           logger.error('Erro ao obter sessão', sessionError, 'AuthContextProvider');
-          if (mounted) {
-            setSessionCheckFailed(true);
-            setLoading(false);
-            setInitialized(true);
-          }
+          setSessionCheckFailed(true);
+          setLoading(false);
+          setInitialized(true);
           return;
         }
 
         if (initialSession?.user) {
-          if (mounted) {
-            setUser(initialSession.user);
-            setSession(initialSession);
-            
-            // Carregar perfil com timeout próprio
-            try {
-              const profilePromise = fetchProfile(initialSession.user.id);
-              const timeoutPromise = new Promise<null>((resolve) => 
-                setTimeout(() => resolve(null), 3000)
-              );
-              const profileData = await Promise.race([profilePromise, timeoutPromise]);
-              if (mounted) {
-                setProfile(profileData);
-              }
-            } catch (profileErr) {
-              logger.error('Erro ao carregar perfil', profileErr, 'AuthContextProvider');
-            }
-          }
-        }
-
-        if (mounted) {
+          // Setar usuário imediatamente para liberar UI
+          setUser(initialSession.user);
+          setSession(initialSession);
+          setLoading(false);
+          setInitialized(true);
+          
+          // Carregar perfil em background (não bloqueia)
+          fetchProfile(initialSession.user.id)
+            .then(profileData => {
+              if (mounted) setProfile(profileData);
+            })
+            .catch(err => logger.error('Erro ao carregar perfil', err, 'AuthContextProvider'));
+        } else {
           setLoading(false);
           setInitialized(true);
         }

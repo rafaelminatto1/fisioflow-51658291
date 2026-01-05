@@ -2,9 +2,10 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContextProvider';
 import { UserRole } from '@/types/auth';
-import { Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { AppLoadingSkeleton } from '@/components/ui/AppLoadingSkeleton';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -16,7 +17,7 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ 
   children, 
   allowedRoles = [], 
-  requireProfile = false, // Changed default to false to prevent blocking
+  requireProfile = false,
   redirectTo = '/auth/login'
 }: ProtectedRouteProps) {
   const { user, profile, loading, initialized, sessionCheckFailed, role, refreshProfile } = useAuth();
@@ -29,7 +30,6 @@ export function ProtectedRoute({
   useEffect(() => {
     // Only redirect if auth is fully initialized
     if (initialized && !loading && !user && !sessionCheckFailed) {
-      // Save current location to redirect back after login
       navigate(redirectTo, { 
         state: { from: location.pathname },
         replace: true 
@@ -37,12 +37,12 @@ export function ProtectedRoute({
     }
   }, [user, loading, initialized, sessionCheckFailed, navigate, redirectTo, location.pathname]);
 
-  // Timeout for profile loading - don't block forever
+  // Timeout for profile loading - 2 seconds max
   useEffect(() => {
     if (requireProfile && user && !profile && !profileLoadTimeout) {
       profileTimeoutRef.current = setTimeout(() => {
         setProfileLoadTimeout(true);
-      }, 3000); // 3 second timeout
+      }, 2000);
     }
     
     if (profile && profileTimeoutRef.current) {
@@ -56,18 +56,9 @@ export function ProtectedRoute({
     };
   }, [user, profile, requireProfile, profileLoadTimeout]);
 
-  // Show loading state while authentication is initializing
+  // Show optimized loading skeleton
   if (!initialized || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-muted-foreground">
-            {!initialized ? 'Inicializando...' : 'Verificando autenticação...'}
-          </p>
-        </div>
-      </div>
-    );
+    return <AppLoadingSkeleton message={!initialized ? 'Iniciando' : 'Verificando'} />;
   }
 
   // Handle session check failure
