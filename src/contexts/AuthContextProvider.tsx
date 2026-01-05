@@ -58,11 +58,21 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   useEffect(() => {
     let mounted = true;
+    let initTimeout: NodeJS.Timeout | null = null;
 
     const initAuth = async () => {
       try {
         setLoading(true);
         setSessionCheckFailed(false);
+
+        // Timeout de segurança - inicializa mesmo se demorar
+        initTimeout = setTimeout(() => {
+          if (mounted && !initialized) {
+            logger.warn('Timeout na inicialização - continuando sem sessão', null, 'AuthContextProvider');
+            setLoading(false);
+            setInitialized(true);
+          }
+        }, 5000);
 
         const { data: { session: initialSession }, error: sessionError } = await supabase.auth.getSession();
 
@@ -81,10 +91,18 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
             setUser(initialSession.user);
             setSession(initialSession);
             
-            // Carregar perfil
-            const profileData = await fetchProfile(initialSession.user.id);
-            if (mounted) {
-              setProfile(profileData);
+            // Carregar perfil com timeout próprio
+            try {
+              const profilePromise = fetchProfile(initialSession.user.id);
+              const timeoutPromise = new Promise<null>((resolve) => 
+                setTimeout(() => resolve(null), 3000)
+              );
+              const profileData = await Promise.race([profilePromise, timeoutPromise]);
+              if (mounted) {
+                setProfile(profileData);
+              }
+            } catch (profileErr) {
+              logger.error('Erro ao carregar perfil', profileErr, 'AuthContextProvider');
             }
           }
         }
@@ -99,6 +117,10 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
           setSessionCheckFailed(true);
           setLoading(false);
           setInitialized(true);
+        }
+      } finally {
+        if (initTimeout) {
+          clearTimeout(initTimeout);
         }
       }
     };
@@ -115,10 +137,18 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
           setSession(newSession);
           setSessionCheckFailed(false);
           
-          // Carregar perfil
-          const profileData = await fetchProfile(newSession.user.id);
-          if (mounted) {
-            setProfile(profileData);
+          // Carregar perfil com timeout
+          try {
+            const profilePromise = fetchProfile(newSession.user.id);
+            const timeoutPromise = new Promise<null>((resolve) => 
+              setTimeout(() => resolve(null), 3000)
+            );
+            const profileData = await Promise.race([profilePromise, timeoutPromise]);
+            if (mounted) {
+              setProfile(profileData);
+            }
+          } catch (profileErr) {
+            logger.error('Erro ao carregar perfil', profileErr, 'AuthContextProvider');
           }
         } else {
           setUser(null);
@@ -135,9 +165,12 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     return () => {
       mounted = false;
+      if (initTimeout) {
+        clearTimeout(initTimeout);
+      }
       subscription.unsubscribe();
     };
-  }, [fetchProfile]);
+  }, [fetchProfile, initialized]);
 
   const signIn = async (email: string, password: string, remember?: boolean): Promise<{ error?: AuthError | null }> => {
     try {
