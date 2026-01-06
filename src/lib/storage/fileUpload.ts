@@ -35,6 +35,15 @@ const BUCKET_LIMITS = {
   },
 };
 
+// Short-lived signed URL expiration times per bucket (in seconds)
+// Following LGPD compliance and principle of least privilege
+const SIGNED_URL_EXPIRY: Record<StorageBucket, number> = {
+  avatars: 3600,       // 1 hour (public bucket, but fallback)
+  prontuarios: 3600,   // 1 hour - view during clinical session
+  comprovantes: 7200,  // 2 hours - download financial receipt
+  evolucao: 1800,      // 30 min - quick evolution photo check
+};
+
 export async function uploadFile(
   file: File,
   options: UploadOptions
@@ -98,9 +107,11 @@ export async function uploadFile(
       .getPublicUrl(filePath);
     publicUrl = urlData.publicUrl;
   } else {
+    // Use short-lived signed URLs for security (LGPD compliance)
+    const expiresIn = SIGNED_URL_EXPIRY[options.bucket] || 3600;
     const { data: urlData, error: urlError } = await supabase.storage
       .from(options.bucket)
-      .createSignedUrl(filePath, 31536000);
+      .createSignedUrl(filePath, expiresIn);
     
     if (urlError) throw urlError;
     publicUrl = urlData.signedUrl;
