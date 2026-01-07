@@ -48,8 +48,8 @@ export function StatCard({
 
   if (loading) {
     return (
-      <Card className="bg-gradient-card border-border">
-        <CardContent className="p-6">
+      <Card className="bg-gradient-card border-border min-h-[120px]">
+        <CardContent className="p-4 sm:p-5">
           <div className="animate-pulse">
             <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
             <div className="h-8 bg-muted rounded w-1/2 mb-2"></div>
@@ -63,29 +63,29 @@ export function StatCard({
   return (
     <Card 
       className={cn(
-        "border-border/50 transition-all duration-300 hover:shadow-medical cursor-pointer group overflow-hidden relative",
+        "border-border/50 transition-all duration-300 hover:shadow-medical cursor-pointer group overflow-hidden relative min-h-[120px]",
         gradient ? "bg-gradient-card" : "bg-card/80 backdrop-blur-sm",
         onClick && "hover:scale-[1.02] hover:-translate-y-1"
       )}
       onClick={onClick}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      <CardContent className="p-6 relative">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 rounded-xl bg-gradient-primary/10 group-hover:bg-gradient-primary/20 transition-colors">
-                {icon}
-              </div>
-              <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">{title}</p>
+      <CardContent className="p-4 sm:p-5 relative h-full">
+        <div className="flex flex-col h-full">
+          <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+            <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-gradient-primary/10 group-hover:bg-gradient-primary/20 transition-colors shrink-0">
+              {icon}
             </div>
-            <div className="flex items-baseline gap-2 mb-2">
-              <h3 className="text-3xl font-bold text-foreground bg-gradient-to-r from-foreground to-primary/80 bg-clip-text">{value}</h3>
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors line-clamp-2 leading-tight">{title}</p>
+          </div>
+          <div className="flex-1 flex flex-col justify-end">
+            <div className="flex items-baseline gap-2 mb-1">
+              <h3 className="text-2xl sm:text-3xl font-bold text-foreground">{value}</h3>
             </div>
             {change && (
-              <div className={cn("flex items-center gap-1 text-sm font-medium", getTrendColor())}>
+              <div className={cn("flex items-center gap-1 text-xs sm:text-sm font-medium truncate", getTrendColor())}>
                 {getTrendIcon()}
-                <span>{change}</span>
+                <span className="truncate">{change}</span>
               </div>
             )}
           </div>
