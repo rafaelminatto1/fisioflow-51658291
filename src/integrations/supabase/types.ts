@@ -1333,6 +1333,44 @@ export type Database = {
           },
         ]
       }
+      centros_custo: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          organization_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          organization_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          organization_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "centros_custo_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checklist_items: {
         Row: {
           created_at: string
@@ -2002,6 +2040,62 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "contrato_templates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      convenios: {
+        Row: {
+          ativo: boolean
+          cnpj: string | null
+          contato_responsavel: string | null
+          created_at: string
+          email: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          organization_id: string | null
+          prazo_pagamento_dias: number | null
+          telefone: string | null
+          updated_at: string
+          valor_repasse: number | null
+        }
+        Insert: {
+          ativo?: boolean
+          cnpj?: string | null
+          contato_responsavel?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          organization_id?: string | null
+          prazo_pagamento_dias?: number | null
+          telefone?: string | null
+          updated_at?: string
+          valor_repasse?: number | null
+        }
+        Update: {
+          ativo?: boolean
+          cnpj?: string | null
+          contato_responsavel?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          organization_id?: string | null
+          prazo_pagamento_dias?: number | null
+          telefone?: string | null
+          updated_at?: string
+          valor_repasse?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "convenios_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -3858,6 +3952,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "feriados_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      formas_pagamento: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          dias_recebimento: number | null
+          id: string
+          nome: string
+          organization_id: string | null
+          taxa_percentual: number | null
+          tipo: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          dias_recebimento?: number | null
+          id?: string
+          nome: string
+          organization_id?: string | null
+          taxa_percentual?: number | null
+          tipo?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          dias_recebimento?: number | null
+          id?: string
+          nome?: string
+          organization_id?: string | null
+          taxa_percentual?: number | null
+          tipo?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formas_pagamento_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
@@ -8531,6 +8669,53 @@ export type Database = {
         }
         Relationships: []
       }
+      salas: {
+        Row: {
+          ativo: boolean
+          capacidade: number | null
+          cor: string | null
+          created_at: string
+          descricao: string | null
+          equipamentos: string[] | null
+          id: string
+          nome: string
+          organization_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          capacidade?: number | null
+          cor?: string | null
+          created_at?: string
+          descricao?: string | null
+          equipamentos?: string[] | null
+          id?: string
+          nome: string
+          organization_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          capacidade?: number | null
+          cor?: string | null
+          created_at?: string
+          descricao?: string | null
+          equipamentos?: string[] | null
+          id?: string
+          nome?: string
+          organization_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salas_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       satisfaction_surveys: {
         Row: {
           appointment_id: string | null
@@ -9051,54 +9236,92 @@ export type Database = {
         Row: {
           ativo: boolean
           centro_custo: string | null
+          centro_custo_id: string | null
           cor: string | null
           created_at: string
           descricao: string | null
           duracao_padrao: number
+          experimental: boolean | null
           id: string
+          mostrar_valor: boolean | null
           nome: string
+          nome_exibicao: string | null
           organization_id: string | null
           permite_agendamento_online: boolean
+          profissional_padrao_id: string | null
+          qtd_sessoes_pacote: number | null
+          sala_padrao_id: string | null
           tipo_cobranca: string
           updated_at: string
           valor: number
+          valor_mensal: number | null
         }
         Insert: {
           ativo?: boolean
           centro_custo?: string | null
+          centro_custo_id?: string | null
           cor?: string | null
           created_at?: string
           descricao?: string | null
           duracao_padrao?: number
+          experimental?: boolean | null
           id?: string
+          mostrar_valor?: boolean | null
           nome: string
+          nome_exibicao?: string | null
           organization_id?: string | null
           permite_agendamento_online?: boolean
+          profissional_padrao_id?: string | null
+          qtd_sessoes_pacote?: number | null
+          sala_padrao_id?: string | null
           tipo_cobranca?: string
           updated_at?: string
           valor?: number
+          valor_mensal?: number | null
         }
         Update: {
           ativo?: boolean
           centro_custo?: string | null
+          centro_custo_id?: string | null
           cor?: string | null
           created_at?: string
           descricao?: string | null
           duracao_padrao?: number
+          experimental?: boolean | null
           id?: string
+          mostrar_valor?: boolean | null
           nome?: string
+          nome_exibicao?: string | null
           organization_id?: string | null
           permite_agendamento_online?: boolean
+          profissional_padrao_id?: string | null
+          qtd_sessoes_pacote?: number | null
+          sala_padrao_id?: string | null
           tipo_cobranca?: string
           updated_at?: string
           valor?: number
+          valor_mensal?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "servicos_centro_custo_id_fkey"
+            columns: ["centro_custo_id"]
+            isOneToOne: false
+            referencedRelation: "centros_custo"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "servicos_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "servicos_sala_padrao_id_fkey"
+            columns: ["sala_padrao_id"]
+            isOneToOne: false
+            referencedRelation: "salas"
             referencedColumns: ["id"]
           },
         ]
