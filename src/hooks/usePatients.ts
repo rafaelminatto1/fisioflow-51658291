@@ -89,7 +89,7 @@ export const useActivePatients = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [organizationId]);
 
   return { data, isLoading, error };
 };
