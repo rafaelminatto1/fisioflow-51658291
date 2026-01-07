@@ -177,13 +177,13 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
       </div>
 
       {/* Personal Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         <StatCard
           title="Consultas Hoje"
           value={stats.todayAppointments}
           change={stats.todayAppointments > 0 ? 'Agenda ativa' : 'Sem consultas'}
           changeType={stats.todayAppointments > 0 ? 'positive' : 'neutral'}
-          icon={<Calendar className="w-5 h-5 text-primary" />}
+          icon={<Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />}
           gradient
           loading={loading}
         />
@@ -192,7 +192,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
           value={stats.myPatients}
           change="Em acompanhamento"
           changeType="positive"
-          icon={<Users className="w-5 h-5 text-secondary" />}
+          icon={<Users className="w-4 h-4 sm:w-5 sm:h-5 text-secondary" />}
           loading={loading}
         />
         <StatCard
@@ -200,7 +200,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
           value={stats.completedSessions}
           change="Este mês"
           changeType="positive"
-          icon={<CheckCircle className="w-5 h-5 text-green-600" />}
+          icon={<CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />}
           loading={loading}
         />
         <StatCard
@@ -208,7 +208,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
           value={`${stats.avgSatisfaction}⭐`}
           change="Avaliação dos pacientes"
           changeType="positive"
-          icon={<Star className="w-5 h-5 text-yellow-500" />}
+          icon={<Star className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />}
           loading={loading}
         />
       </div>

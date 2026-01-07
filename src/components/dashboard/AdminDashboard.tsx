@@ -67,10 +67,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = 'hoje' 
   const loading = metricsLoading || appointmentsLoading;
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-6 sm:space-y-8 animate-fade-in">
       {/* Estatísticas de Eventos */}
       <div>
-        <h2 className="text-lg font-semibold mb-4">Estatísticas de Eventos</h2>
+        <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Estatísticas de Eventos</h2>
         <EventosStatsWidget />
       </div>
 
@@ -78,71 +78,71 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = 'hoje' 
       {loading ? (
         <LoadingSkeleton type="stats" rows={4} />
       ) : (
-        <div className="grid grid-cols-2 gap-3">
-          <Card className="flex flex-col gap-1 rounded-xl bg-white dark:bg-card p-4 border border-slate-200 dark:border-border shadow-sm">
-            <div className="flex items-center justify-between">
-              <p className="text-slate-500 dark:text-slate-400 text-xs font-medium truncate">Pacientes Ativos</p>
-              <Users className="h-[18px] w-[18px] text-primary" />
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
+          <Card className="flex flex-col gap-1 rounded-xl bg-card p-3 sm:p-4 border border-border shadow-sm min-h-[90px] sm:min-h-[100px]">
+            <div className="flex items-center justify-between gap-1">
+              <p className="text-muted-foreground text-[10px] sm:text-xs font-medium line-clamp-1">Pacientes Ativos</p>
+              <Users className="h-4 w-4 sm:h-[18px] sm:w-[18px] text-primary shrink-0" />
             </div>
-            <div className="flex items-baseline gap-2 mt-1">
-              <p className="text-2xl font-bold tracking-tight">{metrics?.totalPacientes || 0}</p>
-              <div className="flex items-center text-success text-xs font-bold bg-success/10 dark:bg-success/20 px-1.5 py-0.5 rounded-full">
-                <TrendingUp className="h-[10px] w-[10px] mr-0.5" />
+            <div className="flex items-baseline gap-1.5 sm:gap-2 mt-1 flex-wrap">
+              <p className="text-xl sm:text-2xl font-bold tracking-tight">{metrics?.totalPacientes || 0}</p>
+              <div className="flex items-center text-success text-[9px] sm:text-xs font-bold bg-success/10 dark:bg-success/20 px-1 sm:px-1.5 py-0.5 rounded-full">
+                <TrendingUp className="h-2.5 w-2.5 sm:h-[10px] sm:w-[10px] mr-0.5" />
                 {metrics?.pacientesNovos || 0}%
               </div>
             </div>
           </Card>
 
-          <Card className="flex flex-col gap-1 rounded-xl bg-white dark:bg-card p-4 border border-slate-200 dark:border-border shadow-sm">
-            <div className="flex items-center justify-between">
-              <p className="text-slate-500 dark:text-slate-400 text-xs font-medium truncate">Ocupação</p>
-              <Calendar className="h-[18px] w-[18px] text-primary" />
+          <Card className="flex flex-col gap-1 rounded-xl bg-card p-3 sm:p-4 border border-border shadow-sm min-h-[90px] sm:min-h-[100px]">
+            <div className="flex items-center justify-between gap-1">
+              <p className="text-muted-foreground text-[10px] sm:text-xs font-medium line-clamp-1">Ocupação</p>
+              <Calendar className="h-4 w-4 sm:h-[18px] sm:w-[18px] text-primary shrink-0" />
             </div>
-            <div className="flex items-baseline gap-2 mt-1">
-              <p className="text-2xl font-bold tracking-tight">
+            <div className="flex items-baseline gap-1.5 sm:gap-2 mt-1 flex-wrap">
+              <p className="text-xl sm:text-2xl font-bold tracking-tight">
                 {metrics?.agendamentosHoje ? Math.round((metrics.agendamentosHoje / (metrics.agendamentosHoje + metrics.agendamentosRestantes)) * 100) : 0}%
               </p>
-              <div className="flex items-center text-slate-500 dark:text-slate-400 text-xs font-medium bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-full">
-                <span>{(metrics?.agendamentosHoje || 0) + (metrics?.agendamentosRestantes || 0)} total</span>
+              <div className="flex items-center text-muted-foreground text-[9px] sm:text-xs font-medium bg-muted px-1 sm:px-1.5 py-0.5 rounded-full">
+                <span>{(metrics?.agendamentosHoje || 0) + (metrics?.agendamentosRestantes || 0)}</span>
               </div>
             </div>
           </Card>
 
-          <Card className="flex flex-col gap-1 rounded-xl bg-white dark:bg-card p-4 border border-slate-200 dark:border-border shadow-sm">
-            <div className="flex items-center justify-between">
-              <p className="text-slate-500 dark:text-slate-400 text-xs font-medium truncate">Receita Mensal</p>
-              <DollarSign className="h-[18px] w-[18px] text-primary" />
+          <Card className="flex flex-col gap-1 rounded-xl bg-card p-3 sm:p-4 border border-border shadow-sm min-h-[90px] sm:min-h-[100px]">
+            <div className="flex items-center justify-between gap-1">
+              <p className="text-muted-foreground text-[10px] sm:text-xs font-medium line-clamp-1">Receita Mensal</p>
+              <DollarSign className="h-4 w-4 sm:h-[18px] sm:w-[18px] text-primary shrink-0" />
             </div>
-            <div className="flex items-baseline gap-2 mt-1">
-              <p className="text-2xl font-bold tracking-tight">
+            <div className="flex items-baseline gap-1.5 sm:gap-2 mt-1 flex-wrap">
+              <p className="text-xl sm:text-2xl font-bold tracking-tight">
                 {(metrics?.receitaMensal || 0) >= 1000 
                   ? `${((metrics?.receitaMensal || 0) / 1000).toFixed(1)}k`
                   : (metrics?.receitaMensal || 0).toLocaleString('pt-BR')
                 }
               </p>
               {(metrics?.crescimentoMensal || 0) >= 0 ? (
-                <div className="flex items-center text-success text-xs font-bold bg-success/10 dark:bg-success/20 px-1.5 py-0.5 rounded-full">
-                  <TrendingUp className="h-[10px] w-[10px] mr-0.5" />
+                <div className="flex items-center text-success text-[9px] sm:text-xs font-bold bg-success/10 dark:bg-success/20 px-1 sm:px-1.5 py-0.5 rounded-full">
+                  <TrendingUp className="h-2.5 w-2.5 sm:h-[10px] sm:w-[10px] mr-0.5" />
                   +{metrics?.crescimentoMensal || 0}%
                 </div>
               ) : (
-                <div className="flex items-center text-destructive text-xs font-bold bg-destructive/10 dark:bg-destructive/20 px-1.5 py-0.5 rounded-full">
-                  <TrendingDown className="h-[10px] w-[10px] mr-0.5" />
+                <div className="flex items-center text-destructive text-[9px] sm:text-xs font-bold bg-destructive/10 dark:bg-destructive/20 px-1 sm:px-1.5 py-0.5 rounded-full">
+                  <TrendingDown className="h-2.5 w-2.5 sm:h-[10px] sm:w-[10px] mr-0.5" />
                   {metrics?.crescimentoMensal || 0}%
                 </div>
               )}
             </div>
           </Card>
 
-          <Card className="flex flex-col gap-1 rounded-xl bg-white dark:bg-card p-4 border border-slate-200 dark:border-border shadow-sm">
-            <div className="flex items-center justify-between">
-              <p className="text-slate-500 dark:text-slate-400 text-xs font-medium truncate">No-Shows</p>
-              <XCircle className="h-[18px] w-[18px] text-primary" />
+          <Card className="flex flex-col gap-1 rounded-xl bg-card p-3 sm:p-4 border border-border shadow-sm min-h-[90px] sm:min-h-[100px]">
+            <div className="flex items-center justify-between gap-1">
+              <p className="text-muted-foreground text-[10px] sm:text-xs font-medium line-clamp-1">No-Shows</p>
+              <XCircle className="h-4 w-4 sm:h-[18px] sm:w-[18px] text-primary shrink-0" />
             </div>
-            <div className="flex items-baseline gap-2 mt-1">
-              <p className="text-2xl font-bold tracking-tight">{metrics?.taxaNoShow || 0}%</p>
-              <div className="flex items-center text-slate-500 dark:text-slate-400 text-xs font-medium bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-full">
-                <span>0%</span>
+            <div className="flex items-baseline gap-1.5 sm:gap-2 mt-1 flex-wrap">
+              <p className="text-xl sm:text-2xl font-bold tracking-tight">{metrics?.taxaNoShow || 0}%</p>
+              <div className="flex items-center text-muted-foreground text-[9px] sm:text-xs font-medium bg-muted px-1 sm:px-1.5 py-0.5 rounded-full">
+                <span>meta: 0%</span>
               </div>
             </div>
           </Card>
