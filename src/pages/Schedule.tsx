@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { AppointmentFilters } from '@/components/schedule/AppointmentFilters';
 import { CalendarViewType } from '@/components/schedule/CalendarView';
-import { AppointmentModal } from '@/components/schedule/AppointmentModal';
+import { AppointmentModalRefactored as AppointmentModal } from '@/components/schedule/AppointmentModalRefactored';
 import { AppointmentQuickEditModal } from '@/components/schedule/AppointmentQuickEditModal';
 import { AppointmentListView } from '@/components/schedule/AppointmentListView';
 import { MiniCalendar } from '@/components/schedule/MiniCalendar';
@@ -62,7 +62,7 @@ const Schedule = () => {
     types: [] as string[],
     therapists: [] as string[],
   });
-  
+
   // Waitlist state
   const [waitlistQuickAdd, setWaitlistQuickAdd] = useState<{ date: Date; time: string } | null>(null);
   const [showWaitlistModal, setShowWaitlistModal] = useState(false);
@@ -72,10 +72,10 @@ const Schedule = () => {
   const createAppointmentMutation = useCreateAppointment();
   const { mutateAsync: rescheduleAppointment, isPending: isRescheduling } = useRescheduleAppointment();
   const { totalInWaitlist } = useWaitlistMatch();
-  
+
   // Datas com agendamentos para o mini calendário
   const appointmentDates = React.useMemo(() => {
-    return appointments.map(apt => 
+    return appointments.map(apt =>
       typeof apt.date === 'string' ? new Date(apt.date) : apt.date
     );
   }, [appointments]);
@@ -85,7 +85,7 @@ const Schedule = () => {
   };
 
   useEffect(() => {
-    logger.info('Página Schedule carregada', { 
+    logger.info('Página Schedule carregada', {
       appointmentsCount: appointments.length,
       loading
     }, 'Schedule');
@@ -94,13 +94,13 @@ const Schedule = () => {
   // Memoized statistics calculation
   const stats = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
-    const todayAppointments = appointments.filter(apt => 
+    const todayAppointments = appointments.filter(apt =>
       apt.date instanceof Date ? apt.date.toISOString().split('T')[0] === today : apt.date === today
     );
     const confirmedToday = todayAppointments.filter(apt => apt.status === 'confirmado').length;
     const totalToday = todayAppointments.length;
     const completedToday = todayAppointments.filter(apt => apt.status === 'concluido').length;
-    
+
     return {
       totalToday,
       confirmedToday,
@@ -123,22 +123,22 @@ const Schedule = () => {
         return false;
       }
       if (filters.dateFrom) {
-        const appointmentDate = appointment.date instanceof Date ? 
-          appointment.date.toISOString().split('T')[0] : 
+        const appointmentDate = appointment.date instanceof Date ?
+          appointment.date.toISOString().split('T')[0] :
           appointment.date;
         if (appointmentDate < filters.dateFrom) {
           return false;
         }
       }
       if (filters.dateTo) {
-        const appointmentDate = appointment.date instanceof Date ? 
-          appointment.date.toISOString().split('T')[0] : 
+        const appointmentDate = appointment.date instanceof Date ?
+          appointment.date.toISOString().split('T')[0] :
           appointment.date;
         if (appointmentDate > filters.dateTo) {
           return false;
         }
       }
-      
+
       // Advanced filters
       if (advancedFilters.status.length > 0 && !advancedFilters.status.includes(appointment.status)) {
         return false;
@@ -146,7 +146,7 @@ const Schedule = () => {
       if (advancedFilters.types.length > 0 && !advancedFilters.types.includes(appointment.type)) {
         return false;
       }
-      
+
       return true;
     });
   }, [appointments, filters, advancedFilters]);
@@ -215,9 +215,9 @@ const Schedule = () => {
         .from('appointments')
         .delete()
         .eq('id', appointment.id);
-      
+
       if (error) throw error;
-      
+
       toast({
         title: '✅ Agendamento excluído',
         description: `Agendamento de ${appointment.patientName} foi excluído.`,
@@ -256,7 +256,7 @@ const Schedule = () => {
       const today = new Date();
       const statuses = ['agendado', 'confirmado', 'aguardando_confirmacao', 'em_andamento', 'em_espera', 'atrasado', 'concluido', 'remarcado', 'cancelado', 'falta'] as const;
       const types = ['Fisioterapia', 'Consulta Inicial', 'Reavaliação', 'Pilates Clínico', 'RPG', 'Terapia Manual', 'Dry Needling'] as const;
-      
+
       // Buscar pacientes disponíveis
       const { data: patients, error: patientsError } = await supabase
         .from('patients')
@@ -264,10 +264,10 @@ const Schedule = () => {
         .limit(5);
 
       if (patientsError || !patients || patients.length === 0) {
-        toast({ 
-          title: '❌ Erro', 
-          description: 'Nenhum paciente encontrado. Cadastre pacientes primeiro.', 
-          variant: 'destructive' 
+        toast({
+          title: '❌ Erro',
+          description: 'Nenhum paciente encontrado. Cadastre pacientes primeiro.',
+          variant: 'destructive'
         });
         return;
       }
@@ -279,10 +279,10 @@ const Schedule = () => {
         const dayOffset = Math.floor(i / 2);
         const appointmentDate = new Date(today);
         appointmentDate.setDate(today.getDate() + dayOffset);
-        
+
         const hour = 9 + (i % 5);
         const time = `${hour.toString().padStart(2, '0')}:00`;
-        
+
         await createAppointmentMutation.mutateAsync({
           patient_id: patients[i % patients.length].id,
           appointment_date: appointmentDate.toISOString().split('T')[0],
@@ -293,17 +293,17 @@ const Schedule = () => {
           notes: `Agendamento de teste - ${statuses[i % statuses.length]}`
         });
       }
-      
-      toast({ 
-        title: '✅ Sucesso', 
-        description: '10 agendamentos de teste criados com diferentes status!' 
+
+      toast({
+        title: '✅ Sucesso',
+        description: '10 agendamentos de teste criados com diferentes status!'
       });
     } catch (error) {
       logger.error('Erro ao criar agendamentos de teste', error, 'Schedule');
-      toast({ 
-        title: '❌ Erro', 
-        description: 'Não foi possível criar os agendamentos de teste.', 
-        variant: 'destructive' 
+      toast({
+        title: '❌ Erro',
+        description: 'Não foi possível criar os agendamentos de teste.',
+        variant: 'destructive'
       });
     }
   };
@@ -343,7 +343,7 @@ const Schedule = () => {
                 <SettingsIcon className="h-4 w-4" />
               </Button>
             </Link>
-            <Button 
+            <Button
               onClick={handleCreateAppointment}
               size="sm"
               className="h-8 shadow-sm"
@@ -372,7 +372,7 @@ const Schedule = () => {
             <div className="text-lg font-bold text-warning">{stats.pendingToday}</div>
             <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Pendentes</div>
           </div>
-          <button 
+          <button
             onClick={() => setShowWaitlistModal(true)}
             className="bg-card border rounded-lg p-2.5 text-center hover:bg-muted/50 transition-colors cursor-pointer"
           >
@@ -399,13 +399,13 @@ const Schedule = () => {
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                {type === 'list' ? 'Lista' : 
-                 type === 'day' ? 'Dia' : 
-                 type === 'week' ? 'Semana' : 'Mês'}
+                {type === 'list' ? 'Lista' :
+                  type === 'day' ? 'Dia' :
+                    type === 'week' ? 'Semana' : 'Mês'}
               </button>
             ))}
           </div>
-          
+
           {/* Search */}
           <div className="flex-1">
             <AppointmentSearch
@@ -414,7 +414,7 @@ const Schedule = () => {
               onClear={() => setFilters({ ...filters, search: '' })}
             />
           </div>
-          
+
           <AdvancedFilters
             filters={advancedFilters}
             onChange={setAdvancedFilters}

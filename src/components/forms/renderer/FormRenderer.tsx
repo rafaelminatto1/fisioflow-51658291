@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { EvaluationForm, EvaluationFormField, ClinicalFieldType } from '@/types/clinical-forms';
+import { logger } from '@/lib/errors/logger';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -81,8 +82,12 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
         try {
             await onSubmit(formData);
         } catch (error) {
-            console.error(error);
-            // Toast is usually handled by the parent calling onSubmit
+            logger.error('Erro ao submeter formulário', error, 'FormRenderer');
+            toast({
+                title: "Erro ao salvar",
+                description: "Ocorreu um erro ao salvar a avaliação. Tente novamente.",
+                variant: "destructive"
+            });
         }
     };
 
