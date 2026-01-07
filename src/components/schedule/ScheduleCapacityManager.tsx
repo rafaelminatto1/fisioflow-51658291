@@ -5,8 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Trash2, Plus, Clock } from 'lucide-react';
+import { Trash2, Plus, Clock, AlertCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const DAYS_OF_WEEK = [
   { value: 'monday', label: 'Segunda-feira' },
@@ -19,7 +20,7 @@ const DAYS_OF_WEEK = [
 ];
 
 export function ScheduleCapacityManager() {
-  const { capacities, isLoading, createMultipleCapacities, updateCapacity, deleteCapacity, organizationId, isCreating, checkConflicts } = useScheduleCapacity();
+  const { capacities, isLoading, createMultipleCapacities, updateCapacity, deleteCapacity, organizationId, isCreating, checkConflicts, authError } = useScheduleCapacity();
   const { toast } = useToast();
   const [isAdding, setIsAdding] = useState(false);
   const [newCapacity, setNewCapacity] = useState({
@@ -40,7 +41,7 @@ export function ScheduleCapacityManager() {
       toast({ title: 'Erro', description: 'Selecione pelo menos um dia da semana', variant: 'destructive' });
       return;
     }
-    
+
     if (!newCapacity.start_time || !newCapacity.end_time) {
       toast({ title: 'Erro', description: 'Preencha horário de início e fim', variant: 'destructive' });
       return;
@@ -92,7 +93,7 @@ export function ScheduleCapacityManager() {
     }));
 
     createMultipleCapacities(formDataArray);
-    
+
     setIsAdding(false);
     setNewCapacity({ selectedDays: [], start_time: '07:00', end_time: '13:00', max_patients: 3 });
   };
@@ -121,6 +122,16 @@ export function ScheduleCapacityManager() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {authError && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Erro de Autenticação</AlertTitle>
+            <AlertDescription>
+              {authError}. Por favor, faça logout e login novamente para corrigir sua sessão.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Lista de capacidades existentes */}
         <div className="space-y-3">
           {DAYS_OF_WEEK.map((day) => {
@@ -129,7 +140,7 @@ export function ScheduleCapacityManager() {
               'thursday': 4, 'friday': 5, 'saturday': 6
             };
             const dayCapacities = capacities.filter((c) => c.day_of_week === dayMap[day.value]);
-            
+
             if (dayCapacities.length === 0) return null;
 
             return (
@@ -255,7 +266,12 @@ export function ScheduleCapacityManager() {
                   !newCapacity.end_time
                 }
               >
-                {isCreating ? 'Salvando...' : 'Adicionar'}
+                {isCreating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Salvando...
+                  </>
+                ) : 'Adicionar'}
               </Button>
               <Button
                 variant="outline"

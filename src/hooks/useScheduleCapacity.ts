@@ -29,19 +29,29 @@ export function useScheduleCapacity() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
+  // Validate user ID format (must be UUID)
+  const isValidUserId = user?.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
+
   // Get organization ID from profiles table (avoids RLS recursion issue)
-  const { data: profile } = useQuery({
+  const { data: profile, error: profileError } = useQuery({
     queryKey: ['profile-org', user?.id],
     queryFn: async () => {
-      if (!user?.id) return null;
-      const { data } = await supabase
+      if (!isValidUserId) {
+        console.warn('Invalid user ID detected in useScheduleCapacity:', user?.id);
+        return null;
+      }
+
+      const { data, error } = await supabase
         .from('profiles')
         .select('organization_id')
-        .eq('user_id', user.id)
+        .eq('user_id', user!.id)
         .single();
+
+      if (error) throw error;
       return data;
     },
-    enabled: !!user?.id,
+    enabled: !!isValidUserId,
+    retry: false, // Don't retry if ID is invalid
   });
 
   const organizationId = profile?.organization_id;
@@ -71,7 +81,7 @@ export function useScheduleCapacity() {
       if (!organizationId) {
         throw new Error('Organização não encontrada. Tente novamente.');
       }
-      
+
       const validated = capacitySchema.parse(formData);
 
       const { data, error } = await supabase
@@ -150,6 +160,10 @@ export function useScheduleCapacity() {
 
   const updateCapacity = useMutation({
     mutationFn: async ({ id, ...data }: Partial<CapacityFormData> & { id: string }) => {
+      if (!organizationId) {
+        throw new Error('Organização não encontrada. Tente novamente.');
+      }
+
       const { error } = await supabase
         .from('schedule_capacity_config')
         .update(data)
@@ -175,6 +189,10 @@ export function useScheduleCapacity() {
 
   const deleteCapacity = useMutation({
     mutationFn: async (id: string) => {
+      if (!organizationId) {
+        throw new Error('Organização não encontrada. Tente novamente.');
+      }
+
       const { error } = await supabase
         .from('schedule_capacity_config')
         .delete()
@@ -250,7 +268,7 @@ export function useScheduleCapacity() {
 
     for (const day of selectedDays) {
       const existingConfigs = capacities.filter(c => c.day_of_week === day);
-      
+
       for (const config of existingConfigs) {
         if (checkTimeOverlap(config.start_time, config.end_time, startTime, endTime)) {
           conflicts.push({
@@ -311,5 +329,6 @@ export function useScheduleCapacity() {
     isCreating: createCapacity.isPending || createMultipleCapacities.isPending,
     isUpdating: updateCapacity.isPending,
     isDeleting: deleteCapacity.isPending,
+    authError: !isValidUserId ? 'Sessão de usuário inválida' : (profileError ? 'Erro ao carregar perfil' : null),
   };
 }
