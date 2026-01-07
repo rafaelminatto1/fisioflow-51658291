@@ -232,68 +232,71 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
           </div>
 
           <div className="flex flex-col lg:flex-row gap-4">
-            <div className="lg:w-2/3">
+            <div className={is3DMode ? "w-full" : "lg:w-2/3"}>
               <PainMapCanvas
                 painPoints={painPoints}
                 onPainPointsChange={setPainPoints}
                 readOnly={readOnly}
                 variant={is3DMode ? '3d' : '2d'}
+                evolutionData={painEvolution}
               />
             </div>
 
-            <Card className="lg:w-1/3 p-4 flex flex-col justify-between gap-4">
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-sm font-medium">Nível Global de Dor</p>
-                  <PainGauge
-                    score={globalPainLevel * 10}
-                    intensity={globalPainLevel}
-                    size="md"
-                  />
+            {!is3DMode && (
+              <Card className="lg:w-1/3 p-4 flex flex-col justify-between gap-4">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm font-medium">Nível Global de Dor</p>
+                    <PainGauge
+                      score={globalPainLevel * 10}
+                      intensity={globalPainLevel}
+                      size="md"
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <EvaScaleBar
+                      value={selectedIntensity}
+                      onChange={(v) => setSelectedIntensity(v as PainIntensity)}
+                      disabled={readOnly}
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <Button
+                      onClick={() => setIsBottomSheetOpen(true)}
+                      className="w-full"
+                      variant="outline"
+                      disabled={painPoints.length === 0}
+                    >
+                      <List className="w-4 h-4 mr-2" />
+                      Ver Pontos ({painPoints.length})
+                    </Button>
+                  </div>
                 </div>
 
-                <div className="mb-4">
-                  <EvaScaleBar
-                    value={selectedIntensity}
-                    onChange={(v) => setSelectedIntensity(v as PainIntensity)}
-                    disabled={readOnly}
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <Button
-                    onClick={() => setIsBottomSheetOpen(true)}
-                    className="w-full"
-                    variant="outline"
-                    disabled={painPoints.length === 0}
-                  >
-                    <List className="w-4 h-4 mr-2" />
-                    Ver Pontos ({painPoints.length})
-                  </Button>
-                </div>
-              </div>
-
-              {/* Auto-save status indicator */}
-              {!readOnly && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mt-auto pt-4 border-t">
-                  {saveStatus === 'saving' && (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Salvando...</span>
-                    </>
-                  )}
-                  {saveStatus === 'saved' && (
-                    <>
-                      <CheckCircle2 className="w-4 h-4 text-green-600" />
-                      <span className="text-green-600">Salvo automaticamente</span>
-                    </>
-                  )}
-                  {saveStatus === 'idle' && painPoints.length > 0 && (
-                    <span className="text-xs">Auto-save ativo</span>
-                  )}
-                </div>
-              )}
-            </Card>
+                {/* Auto-save status indicator */}
+                {!readOnly && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mt-auto pt-4 border-t">
+                    {saveStatus === 'saving' && (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Salvando...</span>
+                      </>
+                    )}
+                    {saveStatus === 'saved' && (
+                      <>
+                        <CheckCircle2 className="w-4 h-4 text-green-600" />
+                        <span className="text-green-600">Salvo automaticamente</span>
+                      </>
+                    )}
+                    {saveStatus === 'idle' && painPoints.length > 0 && (
+                      <span className="text-xs">Auto-save ativo</span>
+                    )}
+                  </div>
+                )}
+              </Card>
+            )}
           </div>
         </TabsContent>
 

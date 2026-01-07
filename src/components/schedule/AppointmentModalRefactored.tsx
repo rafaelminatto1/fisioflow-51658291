@@ -15,13 +15,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { 
-  CalendarIcon, 
-  Clock, 
-  User, 
-  AlertTriangle, 
-  Check, 
-  X, 
+import {
+  CalendarIcon,
+  Clock,
+  User,
+  AlertTriangle,
+  Check,
+  X,
   CreditCard,
   FileText,
   Repeat,
@@ -102,6 +102,7 @@ const appointmentTypes: AppointmentType[] = [
 
 const appointmentStatuses = [
   'agendado',
+  'avaliacao',
   'confirmado',
   'aguardando_confirmacao',
   'em_andamento',
@@ -115,6 +116,7 @@ const appointmentStatuses = [
 
 const statusLabels: Record<string, string> = {
   'agendado': 'Agendado',
+  'avaliacao': 'Avaliação',
   'confirmado': 'Confirmado',
   'aguardando_confirmacao': 'Aguardando',
   'em_andamento': 'Em Andamento',
@@ -128,6 +130,7 @@ const statusLabels: Record<string, string> = {
 
 const statusColors: Record<string, string> = {
   'agendado': 'bg-blue-500',
+  'avaliacao': 'bg-violet-500',
   'confirmado': 'bg-emerald-500',
   'aguardando_confirmacao': 'bg-amber-500',
   'em_andamento': 'bg-cyan-500',
@@ -162,7 +165,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const [capacityDialogOpen, setCapacityDialogOpen] = useState(false);
   const [pendingFormData, setPendingFormData] = useState<AppointmentSchemaType | null>(null);
   const [forceOverCapacity, setForceOverCapacity] = useState(false);
-  
+
   const { mutate: createAppointmentMutation, isPending: isCreating } = useCreateAppointment();
   const { mutate: updateAppointmentMutation, isPending: isUpdating } = useUpdateAppointment();
   const { data: activePatients, isLoading: patientsLoading } = useActivePatients();
@@ -177,7 +180,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       appointment_time: (appointment as any)?.appointment_time || defaultTime || '',
       duration: appointment?.duration || 60,
       type: appointment?.type || 'Fisioterapia',
-      status: appointment?.status || 'agendado',
+      status: appointment?.status || 'avaliacao',
       notes: appointment?.notes || '',
       therapist_id: (appointment as any)?.therapist_id || undefined,
       room: (appointment as any)?.room || undefined,
@@ -217,7 +220,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         appointment_time: defaultTime || '',
         duration: 60,
         type: 'Fisioterapia',
-        status: 'agendado',
+        status: 'avaliacao',
         notes: '',
         payment_status: 'pending',
         payment_amount: 170,
@@ -251,7 +254,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   }, [watchedDate, watchedTime, watchedDuration, appointment?.id, appointments]);
 
   const { timeSlots: slotInfo, isDayClosed } = useAvailableTimeSlots(watchedDate || null);
-  
+
   const timeSlots = useMemo(() => {
     if (slotInfo.length === 0 && !isDayClosed) {
       const slots: string[] = [];
@@ -273,26 +276,26 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   // Check if over capacity before saving
   const checkCapacityBeforeSave = (data: AppointmentSchemaType): boolean => {
     if (forceOverCapacity) return true; // User chose to schedule anyway
-    
+
     const dayOfWeek = data.appointment_date.getDay();
     const maxCapacity = getCapacityForTime(dayOfWeek, data.appointment_time);
     const conflictCount = conflictCheck?.conflictCount || 0;
-    
+
     // If editing, don't count current appointment
     const adjustedCount = currentMode === 'edit' ? conflictCount : conflictCount;
-    
+
     if (adjustedCount >= maxCapacity) {
       setPendingFormData(data);
       setCapacityDialogOpen(true);
       return false;
     }
-    
+
     return true;
   };
 
   const executeCreateAppointment = (formData: AppointmentFormData, isOverCapacity: boolean = false) => {
     // Add over-capacity marker to notes if needed
-    const notesWithMarker = isOverCapacity 
+    const notesWithMarker = isOverCapacity
       ? `[EXCEDENTE] ${formData.notes || ''}`.trim()
       : formData.notes;
 
@@ -309,8 +312,8 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         onSuccess: () => {
           toast({
             title: 'Agendamento atualizado',
-            description: isOverCapacity 
-              ? 'Agendamento salvo como excedente.' 
+            description: isOverCapacity
+              ? 'Agendamento salvo como excedente.'
               : 'As alterações foram salvas com sucesso.',
             variant: isOverCapacity ? 'default' : 'default'
           });
@@ -330,8 +333,8 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         onSuccess: () => {
           toast({
             title: isOverCapacity ? 'Agendamento excedente criado' : 'Agendamento criado',
-            description: isOverCapacity 
-              ? 'Paciente agendado além da capacidade. Ficará destacado na agenda.' 
+            description: isOverCapacity
+              ? 'Paciente agendado além da capacidade. Ficará destacado na agenda.'
               : 'O agendamento foi criado com sucesso.',
           });
           setForceOverCapacity(false);
@@ -407,7 +410,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     if (pendingFormData) {
       setCapacityDialogOpen(false);
       setForceOverCapacity(true);
-      
+
       const dateStr = format(pendingFormData.appointment_date, 'yyyy-MM-dd');
       const formData: AppointmentFormData = {
         patient_id: pendingFormData.patient_id,
@@ -442,7 +445,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
 
   const handleDuplicate = (config: DuplicateConfig) => {
     if (!appointment) return;
-    
+
     // Create duplicated appointments
     const apt = appointment as any;
     config.dates.forEach((date) => {
@@ -538,7 +541,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
           {/* Scrollable Content */}
           <div className="flex-1 min-h-0 overflow-y-auto">
             <form id="appointment-form" onSubmit={handleSubmit(handleSave)} className="px-4 sm:px-6 py-3">
-              
+
               {/* Tab: Informações */}
               <TabsContent value="info" className="mt-0 space-y-2.5 sm:space-y-3">
                 {/* Patient Selection */}
@@ -627,14 +630,14 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                   const conflictCount = conflictCheck?.conflictCount || 0;
                   const availableSlots = maxCapacity - conflictCount;
                   const exceedsCapacity = conflictCount >= maxCapacity;
-                  
+
                   return (
                     <div className={cn(
                       "flex items-center justify-between p-2 sm:p-2.5 border rounded-lg text-xs sm:text-sm transition-all",
-                      exceedsCapacity 
-                        ? "border-red-500/30 bg-red-500/5" 
-                        : conflictCount > 0 
-                          ? "border-amber-500/30 bg-amber-500/5" 
+                      exceedsCapacity
+                        ? "border-red-500/30 bg-red-500/5"
+                        : conflictCount > 0
+                          ? "border-amber-500/30 bg-amber-500/5"
                           : "border-emerald-500/30 bg-emerald-500/5"
                     )}>
                       <div className="flex items-center gap-1.5 sm:gap-2">
@@ -647,10 +650,10 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                           "font-medium",
                           exceedsCapacity ? "text-red-700" : conflictCount > 0 ? "text-amber-700" : "text-emerald-700"
                         )}>
-                          {exceedsCapacity 
-                            ? "Horário lotado!" 
-                            : availableSlots === maxCapacity 
-                              ? "Horário livre" 
+                          {exceedsCapacity
+                            ? "Horário lotado!"
+                            : availableSlots === maxCapacity
+                              ? "Horário livre"
                               : `${availableSlots} vaga${availableSlots !== 1 ? 's' : ''} disponível`
                           }
                         </span>
@@ -741,8 +744,8 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                         variant={watchPaymentStatus === option.value ? 'default' : 'outline'}
                         className={cn(
                           "h-14 sm:h-16 flex-col gap-0.5 sm:gap-1 transition-all",
-                          watchPaymentStatus === option.value 
-                            ? "ring-2 ring-primary ring-offset-1 sm:ring-offset-2 shadow-md" 
+                          watchPaymentStatus === option.value
+                            ? "ring-2 ring-primary ring-offset-1 sm:ring-offset-2 shadow-md"
                             : option.color
                         )}
                         onClick={() => {
@@ -950,7 +953,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
               </Button>
             )}
           </div>
-          
+
           <div className="flex gap-2 justify-end">
             {currentMode === 'view' && appointment && (
               <Button
@@ -962,7 +965,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                 Editar
               </Button>
             )}
-            
+
             <Button
               type="button"
               variant="outline"
@@ -972,7 +975,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
             >
               {currentMode === 'view' ? 'Fechar' : 'Cancelar'}
             </Button>
-            
+
             {currentMode !== 'view' && (
               <Button
                 type="submit"

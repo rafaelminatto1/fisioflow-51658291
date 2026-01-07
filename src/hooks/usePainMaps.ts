@@ -39,7 +39,7 @@ export function usePainMapsBySession(sessionId: string | undefined) {
     queryKey: ['pain-maps', 'session', sessionId],
     queryFn: async () => {
       if (!sessionId) return [];
-      
+
       const { data, error } = await supabase
         .from('pain_maps')
         .select(`
@@ -62,7 +62,7 @@ export function usePainMapsByPatient(patientId: string | undefined) {
     queryKey: ['pain-maps', 'patient', patientId],
     queryFn: async () => {
       if (!patientId) return [];
-      
+
       const { data, error } = await supabase
         .from('pain_maps')
         .select(`
@@ -85,7 +85,7 @@ export function usePainMap(painMapId: string | undefined) {
     queryKey: ['pain-map', painMapId],
     queryFn: async () => {
       if (!painMapId) return null;
-      
+
       const { data, error } = await supabase
         .from('pain_maps')
         .select(`
@@ -271,8 +271,8 @@ function calculateEvolution(
     totalNewer += newer;
 
     const regionName = olderPoints.find(p => p.region_code === region)?.region ||
-                       newerPoints.find(p => p.region_code === region)?.region ||
-                       region;
+      newerPoints.find(p => p.region_code === region)?.region ||
+      region;
 
     if (newer < older) {
       regionsImproved.push(regionName);
@@ -281,7 +281,7 @@ function calculateEvolution(
     }
   });
 
-  const improvementPercentage = totalOlder > 0 
+  const improvementPercentage = totalOlder > 0
     ? Math.round(((totalOlder - totalNewer) / totalOlder) * 100)
     : 0;
 
@@ -358,10 +358,10 @@ export function usePainEvolution(patientId: string | undefined) {
         // pain_points pode ser JSONB array ou null
         const points = (map.pain_points as any[] || []);
         const totalIntensity = points.reduce((sum: number, p: any) => sum + (p.intensity || 0), 0);
-        const avgIntensity = points.length > 0 
-          ? totalIntensity / points.length 
+        const avgIntensity = points.length > 0
+          ? totalIntensity / points.length
           : (map.global_pain_level || 0);
-        
+
         return {
           id: map.id,
           date: map.created_at,
@@ -369,6 +369,13 @@ export function usePainEvolution(patientId: string | undefined) {
           pointCount: points.length,
           globalPainLevel: map.global_pain_level || avgIntensity,
           regionCount: points.length,
+          painPoints: points.map((p: any) => ({
+            region: p.region || p.regionCode,
+            intensity: p.intensity,
+            painType: p.painType || p.pain_type,
+            x: p.x || 0,
+            y: p.y || 0,
+          })),
         };
       });
     },
@@ -399,7 +406,7 @@ export function usePainStatistics(patientId: string | undefined) {
 
       // Calcular estatísticas
       const allPoints: any[] = data.flatMap(m => (m.pain_points as any[] || []));
-      
+
       // Regiões mais afetadas
       const regionCounts: Record<string, { count: number; totalIntensity: number }> = {};
       allPoints.forEach((p: any) => {
@@ -434,10 +441,10 @@ export function usePainStatistics(patientId: string | undefined) {
       // Tendência geral (comparando primeiro e último mapa)
       const firstMap = data[0];
       const lastMap = data[data.length - 1];
-      
+
       const firstPoints = (firstMap.pain_points as any[] || []);
       const lastPoints = (lastMap.pain_points as any[] || []);
-      
+
       const firstAvg = firstPoints.length > 0
         ? firstPoints.reduce((s: number, p: any) => s + (p.intensity || 0), 0) / firstPoints.length
         : (firstMap.global_pain_level || 0);
@@ -445,19 +452,19 @@ export function usePainStatistics(patientId: string | undefined) {
         ? lastPoints.reduce((s: number, p: any) => s + (p.intensity || 0), 0) / lastPoints.length
         : (lastMap.global_pain_level || 0);
 
-      const trend = firstAvg > lastAvg ? 'improving' 
-        : firstAvg < lastAvg ? 'worsening' 
-        : 'stable';
+      const trend = firstAvg > lastAvg ? 'improving'
+        : firstAvg < lastAvg ? 'worsening'
+          : 'stable';
 
       // Calcular média geral de dor
       const totalIntensity = allPoints.reduce((sum: number, p: any) => sum + (p.intensity || 0), 0);
-      const averagePainLevel = allPoints.length > 0 
-        ? totalIntensity / allPoints.length 
+      const averagePainLevel = allPoints.length > 0
+        ? totalIntensity / allPoints.length
         : (data.reduce((sum: number, m: any) => sum + (m.global_pain_level || 0), 0) / data.length);
 
       // Calcular redução percentual
-      const painReduction = firstAvg > 0 
-        ? Math.round(((firstAvg - lastAvg) / firstAvg) * 100) 
+      const painReduction = firstAvg > 0
+        ? Math.round(((firstAvg - lastAvg) / firstAvg) * 100)
         : 0;
 
       return {
@@ -480,7 +487,7 @@ export function usePainMaps(options: {
   patientId?: string;
 }) {
   const { sessionId, patientId } = options;
-  
+
   const bySession = usePainMapsBySession(sessionId);
   const byPatient = usePainMapsByPatient(patientId);
   const createMutation = useCreatePainMap();
@@ -506,7 +513,7 @@ export function usePainMaps(options: {
     // Dados
     sessionMaps: bySession.data || [],
     patientMaps: byPatient.data || [],
-    
+
     // Estados de loading
     isLoading: bySession.isLoading || byPatient.isLoading,
     isCreating: createMutation.isPending,
@@ -515,7 +522,7 @@ export function usePainMaps(options: {
     // Ações
     createPainMap,
     deletePainMap: deleteMutation.mutate,
-    
+
     // Refetch
     refetch: () => {
       bySession.refetch();

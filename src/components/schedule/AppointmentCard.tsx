@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, MapPin, MessageCircle, AlertCircle, Star, CheckCircle, XCircle } from 'lucide-react';
+import { Clock, MapPin, MessageCircle, AlertCircle, Star, CheckCircle, XCircle, FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { Appointment } from '@/types/appointment';
@@ -26,6 +26,13 @@ const getStatusConfig = (status: string) => {
       text: 'text-primary',
       label: 'Agendado',
       icon: Clock
+    },
+    avaliacao: {
+      bg: 'bg-violet-50 dark:bg-violet-950/20',
+      border: 'border-violet-500',
+      text: 'text-violet-700 dark:text-violet-400',
+      label: 'Avaliação',
+      icon: FileText
     },
     aguardando_confirmacao: {
       bg: 'bg-amber-50 dark:bg-amber-950/20',
@@ -84,7 +91,7 @@ const getStatusConfig = (status: string) => {
       icon: XCircle
     },
   };
-  
+
   return configs[status as keyof typeof configs] || configs.agendado;
 };
 
@@ -96,7 +103,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
 }) => {
   const statusConfig = getStatusConfig(appointment.status);
   const StatusIcon = statusConfig.icon;
-  
+
   if (variant === 'compact') {
     return (
       <div
@@ -131,7 +138,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
       </div>
     );
   }
-  
+
   // Expanded variant
   return (
     <div

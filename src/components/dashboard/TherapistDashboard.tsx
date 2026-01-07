@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { StatCard } from './StatCard';
 import { AppointmentWidget } from './AppointmentWidget';
 import { ChartWidget } from './ChartWidget';
@@ -8,18 +8,19 @@ import { Profile } from '@/types/auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Users, 
-  Calendar, 
-  Activity, 
+import {
+  Users,
+  Calendar,
+  Activity,
   Star,
   CheckCircle,
   Target,
   Brain,
   MessageSquare
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { useAppointments } from '@/hooks/useAppointments';
 
 interface TherapistDashboardProps {
   lastUpdate: Date;
@@ -28,34 +29,46 @@ interface TherapistDashboardProps {
 
 export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardProps) {
   const [loading, setLoading] = useState(true);
+  const { data: allAppointments = [], isLoading: appointmentsLoading } = useAppointments();
+
   const [stats, setStats] = useState({
     todayAppointments: 0,
     myPatients: 0,
     completedSessions: 0,
     avgSatisfaction: 0
   });
-  const [todayAppointments, setTodayAppointments] = useState([]);
   const [myPatients, setMyPatients] = useState([]);
   const [progressData, setProgressData] = useState([]);
   const [tasks, setTasks] = useState([]);
 
+  // Calculate today's appointments for this therapist derived from hook data
+  const todayAppointments = useMemo(() => {
+    if (!profile?.id) return [];
+    const today = new Date();
+
+    return allAppointments
+      .filter(apt => {
+        // Filter by date (today)
+        const isToday = isSameDay(apt.date, today);
+        // Filter by therapist
+        const isMyAppointment = apt.therapistId === profile.id;
+        return isToday && isMyAppointment;
+      })
+      .map(apt => ({
+        id: apt.id,
+        patient_name: apt.patientName,
+        appointment_time: apt.time,
+        appointment_date: format(apt.date, 'yyyy-MM-dd'),
+        status: apt.status,
+        type: apt.type,
+        room: '', // Not in base type yet, could be added if needed
+        patient_phone: apt.phone
+      }));
+  }, [allAppointments, profile.id]);
+
   const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
-
-      // Load today's appointments for this therapist
-      const today = format(new Date(), 'yyyy-MM-dd');
-      const { data: appointments, error: appointmentsError } = await supabase
-        .from('appointments')
-        .select(`
-          *,
-          patients!inner(name, phone)
-        `)
-        .eq('appointment_date', today)
-        .eq('therapist_id', profile.id)
-        .order('appointment_time');
-
-      if (appointmentsError) throw appointmentsError;
 
       // Load patients assigned to this therapist
       const { data: patients, error: patientsError } = await supabase
@@ -88,26 +101,15 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
       }
 
       setStats({
-        todayAppointments: appointments?.length || 0,
+        todayAppointments: todayAppointments.length,
         myPatients: patients?.length || 0,
         completedSessions: sessions?.length || 0,
         avgSatisfaction: 4.8 // Mock data
       });
 
-      setTodayAppointments(appointments?.map(apt => ({
-        id: apt.id,
-        patient_name: apt.patients?.name || 'Paciente',
-        appointment_time: apt.appointment_time,
-        appointment_date: apt.appointment_date,
-        status: apt.status,
-        type: apt.type,
-        room: apt.room,
-        patient_phone: apt.patients?.phone
-      })) || []);
-
       setMyPatients(patients || []);
       setProgressData(progressChartData);
-      
+
       // Mock tasks
       setTasks([
         { id: '1', title: 'Revisar plano de exercícios - João Silva', priority: 'high', due: 'Hoje' },
@@ -127,21 +129,18 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
     }
   }, [profile.id]);
 
+  // Update stats when appointments change
+  useEffect(() => {
+    setStats(prev => ({
+      ...prev,
+      todayAppointments: todayAppointments.length
+    }));
+  }, [todayAppointments.length]);
+
   useEffect(() => {
     loadDashboardData();
-
-    // Set up real-time subscriptions
-    const appointmentsSubscription = supabase
-      .channel('therapist-appointments')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'appointments' },
-        () => loadDashboardData()
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(appointmentsSubscription);
-    };
+    // Removed duplicate realtime subscription for appointments here
+    // keeping it for other entities if needed, but appointments are handled by hook
   }, [lastUpdate, loadDashboardData]);
 
   const getPriorityColor = (priority: string) => {
@@ -156,6 +155,8 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
     }
   };
+
+  const isLoading = loading || appointmentsLoading;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -185,7 +186,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
           changeType={stats.todayAppointments > 0 ? 'positive' : 'neutral'}
           icon={<Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />}
           gradient
-          loading={loading}
+          loading={isLoading}
         />
         <StatCard
           title="Meus Pacientes"
@@ -193,7 +194,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
           change="Em acompanhamento"
           changeType="positive"
           icon={<Users className="w-4 h-4 sm:w-5 sm:h-5 text-secondary" />}
-          loading={loading}
+          loading={isLoading}
         />
         <StatCard
           title="Sessões Realizadas"
@@ -201,7 +202,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
           change="Este mês"
           changeType="positive"
           icon={<CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />}
-          loading={loading}
+          loading={isLoading}
         />
         <StatCard
           title="Satisfação Média"
@@ -209,7 +210,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
           change="Avaliação dos pacientes"
           changeType="positive"
           icon={<Star className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />}
-          loading={loading}
+          loading={isLoading}
         />
       </div>
 
@@ -218,16 +219,16 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
         <AppointmentWidget
           title="Agenda de Hoje"
           appointments={todayAppointments}
-          loading={loading}
+          loading={isLoading}
           showActions={false}
         />
-        
+
         <div className="lg:col-span-2">
           <ChartWidget
             title="Evolução dos Pacientes em Tratamento"
             data={progressData}
             type="line"
-            loading={loading}
+            loading={isLoading}
             height={300}
           />
         </div>
@@ -244,7 +245,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {loading ? (
+            {isLoading ? (
               [...Array(3)].map((_, i) => (
                 <div key={i} className="animate-pulse">
                   <div className="flex items-center gap-3">
@@ -306,8 +307,8 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
                 <div className="flex-1">
                   <h4 className="text-sm font-medium text-foreground">{task.title}</h4>
                   <div className="flex items-center gap-2 mt-1">
-                    <Badge 
-                      variant="outline" 
+                    <Badge
+                      variant="outline"
                       className={`text-xs ${getPriorityColor(task.priority)}`}
                     >
                       {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Média' : 'Baixa'}
@@ -320,7 +321,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
                 </Button>
               </div>
             ))}
-            
+
             <div className="grid grid-cols-2 gap-3 mt-4">
               <Button variant="outline" size="sm" className="h-8">
                 <Brain className="w-3 h-3 mr-1" />

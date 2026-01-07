@@ -60,6 +60,11 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
     let mounted = true;
     let initTimeout: NodeJS.Timeout | null = null;
 
+    const isValidUUID = (id: string) => {
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      return uuidRegex.test(id);
+    };
+
     const initAuth = async () => {
       // Timeout de segurança agressivo - 3 segundos máximo
       initTimeout = setTimeout(() => {
@@ -76,10 +81,10 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
         // Buscar sessão com timeout interno
         const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise<{ data: { session: null }, error: null }>((resolve) => 
+        const timeoutPromise = new Promise<{ data: { session: null }, error: null }>((resolve) =>
           setTimeout(() => resolve({ data: { session: null }, error: null }), 2500)
         );
-        
+
         const { data: { session: initialSession }, error: sessionError } = await Promise.race([
           sessionPromise,
           timeoutPromise
@@ -96,12 +101,23 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }
 
         if (initialSession?.user) {
+          // Validação crítica de UUID
+          if (!isValidUUID(initialSession.user.id)) {
+            logger.error('ID de usuário inválido detectado (sessão corrompida)', { userId: initialSession.user.id }, 'AuthContextProvider');
+            await supabase.auth.signOut();
+            setUser(null);
+            setSession(null);
+            setLoading(false);
+            setInitialized(true);
+            return;
+          }
+
           // Setar usuário imediatamente para liberar UI
           setUser(initialSession.user);
           setSession(initialSession);
           setLoading(false);
           setInitialized(true);
-          
+
           // Carregar perfil em background (não bloqueia)
           fetchProfile(initialSession.user.id)
             .then(profileData => {
@@ -134,14 +150,21 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
         if (!mounted) return;
 
         if (newSession?.user) {
+          // Validação crítica de UUID
+          if (!isValidUUID(newSession.user.id)) {
+            logger.warn('Sessão com ID inválido bloqueada no listener', { userId: newSession.user.id }, 'AuthContextProvider');
+            await supabase.auth.signOut();
+            return;
+          }
+
           setUser(newSession.user);
           setSession(newSession);
           setSessionCheckFailed(false);
-          
+
           // Carregar perfil com timeout
           try {
             const profilePromise = fetchProfile(newSession.user.id);
-            const timeoutPromise = new Promise<null>((resolve) => 
+            const timeoutPromise = new Promise<null>((resolve) =>
               setTimeout(() => resolve(null), 3000)
             );
             const profileData = await Promise.race([profilePromise, timeoutPromise]);
@@ -156,7 +179,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
           setProfile(null);
           setSession(null);
         }
-        
+
         if (mounted) {
           setLoading(false);
           setInitialized(true);

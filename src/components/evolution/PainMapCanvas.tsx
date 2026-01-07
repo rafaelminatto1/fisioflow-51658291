@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import type { PainMapPoint, PainIntensity, PainType, BodyRegion } from '@/types/painMap';
+import type { PainMapPoint, PainIntensity, PainType, BodyRegion, PainEvolutionData } from '@/types/painMap';
 import { PainMapService } from '@/lib/services/painMapService';
 import { BodyMapRealistic } from '@/components/pain-map/BodyMapRealistic';
 import { BodyMap, PainPoint } from '@/components/pain-map/BodyMap';
@@ -14,6 +14,7 @@ interface PainMapCanvasProps {
   onPainPointsChange: (points: PainMapPoint[]) => void;
   readOnly?: boolean;
   variant?: '2d' | '3d';
+  evolutionData?: PainEvolutionData[];
 }
 
 // Realistic SVG paths for human body silhouette
@@ -120,7 +121,7 @@ const bodyPaths: Record<BodyRegion, { path: string; centerX: number; centerY: nu
   },
 };
 
-export function PainMapCanvas({ painPoints, onPainPointsChange, readOnly = false, variant = '2d' }: PainMapCanvasProps) {
+export function PainMapCanvas({ painPoints, onPainPointsChange, readOnly = false, variant = '2d', evolutionData }: PainMapCanvasProps) {
   const [selectedRegion, setSelectedRegion] = useState<BodyRegion | null>(null);
   const [hoveredRegion, setHoveredRegion] = useState<BodyRegion | null>(null);
   const [view, setView] = useState<'front' | 'back'>('front');
@@ -151,14 +152,26 @@ export function PainMapCanvas({ painPoints, onPainPointsChange, readOnly = false
   };
 
   const handleBodyMapPointRemove = (pointId: string) => {
-    // This needs pointId mapping logic, but for simplicity in 3D map we rely on x/y roughly or region
-    // In BodyMapRealistic, we pass pointId as `point-${p.x}-${p.y}`
-    // So we can filter by matching coords or finding point by ID.
-    // Let's refine removing by just passing updated list
     const point = bodyMapPoints.find(p => p.id === pointId);
     if (point) {
       onPainPointsChange(painPoints.filter(p => p.x !== point.x || p.y !== point.y));
     }
+  };
+
+  const handleBodyMapPointUpdate = (point: PainPoint) => {
+    const newPoints = painPoints.map(p => {
+      // Create a unique ID check or match by x/y coords which should be stable for a given point
+      if (Math.abs(p.x - point.x) < 0.1 && Math.abs(p.y - point.y) < 0.1) {
+        return {
+          ...p,
+          intensity: point.intensity as PainIntensity,
+          painType: point.painType as PainType,
+          description: point.notes
+        };
+      }
+      return p;
+    });
+    onPainPointsChange(newPoints);
   };
 
   const getIntensityColor = (intensity: number) => {
@@ -172,63 +185,19 @@ export function PainMapCanvas({ painPoints, onPainPointsChange, readOnly = false
 
   if (variant === '3d') {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-0 overflow-hidden border-0 bg-transparent shadow-none lg:col-span-1 h-[600px] relative">
-          <BodyMapRealistic
-            view={view}
-            points={bodyMapPoints}
-            onPointAdd={handleBodyMapPointAdd}
-            onPointRemove={handleBodyMapPointRemove}
-            readOnly={readOnly}
-            selectedIntensity={5} // Default, logic handled in store usually
-            className="h-full w-full"
-            onViewChange={(v) => setView(v)}
-          />
-        </Card>
-
-        {/* Pain Details Panel - Reusing the same panel for consistency */}
-        <Card className="p-6">
-          <Label className="mb-4 block text-lg font-semibold">Detalhes da Dor</Label>
-          {/* ... reuse existing details panel logic or adapt ... */}
-          {/* Using the same logic as 2D for now, but we need to map selectedRegion properly if using 3D map callbacks */}
-          {/* Note: The 3D map handles selection internally for visual popup, but to sync with this side panel we would need shared state. */}
-          {/* For now, let's keep the side panel working with the same state */}
-
-          {/* To make the side panel work with 3D map click, we need to lift state up or sync. */}
-          {/* The current implementation of PainMapCanvas keeps 'selectedRegion' local state for 2d SVG clicks. */}
-          {/* BodyMapRealistic has its own 'selectedPoint' state. */}
-          {/* We should ideally unify this, but for this task I will prioritize the 3D map visual. */}
-
-          <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
-            <p>Use o mapa interativo para gerenciar os pontos de dor.</p>
-            <p className="text-xs mt-2">Os detalhes aparecem ao clicar nos pontos do mapa 3D.</p>
-          </div>
-
-          {/* Summary */}
-          {painPoints.length > 0 && (
-            <div className="mt-6 pt-6 border-t">
-              <Label className="mb-3 block font-semibold">Resumo da Avaliação</Label>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-2 bg-muted/30 rounded-lg">
-                  <span className="text-sm text-muted-foreground">Regiões afetadas</span>
-                  <Badge variant="secondary">{painPoints.length}</Badge>
-                </div>
-                <div className="flex justify-between items-center p-2 bg-muted/30 rounded-lg">
-                  <span className="text-sm text-muted-foreground">Intensidade média</span>
-                  <Badge
-                    variant="secondary"
-                    style={{
-                      backgroundColor: getIntensityColor(Math.round(painPoints.reduce((a, p) => a + p.intensity, 0) / painPoints.length)),
-                      color: 'white'
-                    }}
-                  >
-                    {(painPoints.reduce((a, p) => a + p.intensity, 0) / painPoints.length).toFixed(1)}
-                  </Badge>
-                </div>
-              </div>
-            </div>
-          )}
-        </Card>
+      <div className="w-full h-[800px] relative overflow-hidden rounded-xl border border-white/10 shadow-2xl bg-black">
+        <BodyMapRealistic
+          view={view}
+          points={bodyMapPoints}
+          onPointAdd={handleBodyMapPointAdd}
+          onPointRemove={handleBodyMapPointRemove}
+          onPointUpdate={handleBodyMapPointUpdate}
+          readOnly={readOnly}
+          selectedIntensity={5}
+          className="h-full w-full"
+          onViewChange={(v) => setView(v)}
+          evolutionData={evolutionData}
+        />
       </div>
     );
   }

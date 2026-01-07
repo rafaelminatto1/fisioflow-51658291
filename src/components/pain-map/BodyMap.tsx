@@ -1,12 +1,13 @@
 import { useState, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
+import { PainType } from '@/types/painMap';
 
 export interface PainPoint {
   id: string;
   regionCode: string;
   region: string;
   intensity: number;
-  painType: 'sharp' | 'throbbing' | 'burning' | 'tingling' | 'numbness' | 'stiffness';
+  painType: PainType;
   notes?: string;
   x: number;
   y: number;
@@ -91,12 +92,14 @@ const getIntensityColor = (intensity: number): string => {
 
 // Ícones por tipo de dor
 const PAIN_TYPE_ICONS: Record<PainPoint['painType'], string> = {
-  sharp: '⚡',
-  throbbing: '💓',
-  burning: '🔥',
-  tingling: '✨',
-  numbness: '❄️',
-  stiffness: '🔒',
+  aguda: '⚡',
+  cronica: '⏳',
+  latejante: '💓',
+  queimacao: '🔥',
+  formigamento: '✨',
+  dormencia: '❄️',
+  peso: '🔒',
+  pontada: '📌',
 };
 
 export function BodyMap({
@@ -107,7 +110,7 @@ export function BodyMap({
   onPointUpdate,
   readOnly = false,
   selectedIntensity = 5,
-  selectedPainType = 'sharp',
+  selectedPainType = 'aguda',
   className,
 }: BodyMapProps) {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -284,7 +287,7 @@ export function BodyMap({
                   }}
                 />
               )}
-              
+
               {/* Glow Effect */}
               <circle
                 cx={point.x}
@@ -294,7 +297,7 @@ export function BodyMap({
                 opacity="0.2"
                 className="pointer-events-none"
               />
-              
+
               {/* Círculo do ponto */}
               <circle
                 cx={point.x}
@@ -317,7 +320,7 @@ export function BodyMap({
                   setSelectedPoint(isSelected ? null : point.id);
                 }}
               />
-              
+
               {/* Ícone do tipo de dor */}
               <text
                 x={point.x}
@@ -332,7 +335,7 @@ export function BodyMap({
               >
                 {PAIN_TYPE_ICONS[point.painType]}
               </text>
-              
+
               {/* Intensidade */}
               <text
                 x={point.x + (isSelected ? 5 : 4)}

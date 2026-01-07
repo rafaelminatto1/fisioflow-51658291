@@ -11,6 +11,7 @@ export interface AppointmentBase {
   type: AppointmentType;
   status: AppointmentStatus;
   notes?: string;
+  therapistId?: string;
   payment_status?: string;
   payment_amount?: number;
   session_package_id?: string;
@@ -20,10 +21,10 @@ export interface AppointmentBase {
   updatedAt: Date;
 }
 
-export type AppointmentType = 
-  | 'Consulta Inicial' 
-  | 'Fisioterapia' 
-  | 'Reavaliação' 
+export type AppointmentType =
+  | 'Consulta Inicial'
+  | 'Fisioterapia'
+  | 'Reavaliação'
   | 'Consulta de Retorno'
   | 'Avaliação Funcional'
   | 'Terapia Manual'
@@ -33,57 +34,62 @@ export type AppointmentType =
   | 'Liberação Miofascial';
 
 // Status conforme constraint do banco (em português)
-export type AppointmentStatus = 
+export type AppointmentStatus =
   | 'agendado'
   | 'confirmado'
   | 'em_andamento'
   | 'concluido'
   | 'cancelado'
-  | 'falta';
+  | 'falta'
+  | 'avaliacao'
+  | 'aguardando_confirmacao'
+  | 'em_espera'
+  | 'atrasado'
+  | 'remarcado';
 
 export interface EnhancedAppointment extends AppointmentBase {
   // Therapist assignment
   therapistId?: string;
   therapistName?: string;
-  
+
   // Room/Resource booking
   roomId?: string;
   roomName?: string;
   equipment?: string[];
-  
+
   // Recurring appointment support
   recurrenceId?: string;
   isRecurring?: boolean;
   recurrencePattern?: RecurrencePattern;
-  
+
   // Notification settings
   reminderSent?: boolean;
   confirmationSent?: boolean;
   lastReminderSent?: Date;
-  
+
   // Priority and special requirements
   priority: AppointmentPriority;
   specialRequirements?: string;
-  
+
   // Follow-up and continuity
   previousAppointmentId?: string;
   nextAppointmentId?: string;
   treatmentPhase?: string;
   sessionNumber?: number;
-  
+
   // Patient preference tracking
   preferredTime?: string;
   preferredDays?: DayOfWeek[];
-  
+
   // Cancellation/rescheduling
   cancellationReason?: string;
   rescheduledFromId?: string;
   rescheduledToId?: string;
   cancellationTimestamp?: Date;
-  
+
   // Color coding
   color?: string;
-  
+
   // Integration fields
   externalCalendarId?: string;
   syncedWithGoogle?: boolean;
@@ -194,11 +200,11 @@ export interface AppointmentConflict {
   overrideReason?: string;
 }
 
-export type ConflictType = 
-  | 'Double Booking' 
-  | 'Therapist Unavailable' 
-  | 'Room Unavailable' 
-  | 'Patient Conflict' 
+export type ConflictType =
+  | 'Double Booking'
+  | 'Therapist Unavailable'
+  | 'Room Unavailable'
+  | 'Patient Conflict'
   | 'Outside Working Hours'
   | 'Equipment Unavailable'
   | 'Insufficient Buffer Time';
@@ -255,7 +261,7 @@ export interface AppointmentNotification {
   createdAt: Date;
 }
 
-export type NotificationType = 
+export type NotificationType =
   | 'Confirmation'
   | 'Reminder'
   | 'Cancellation'

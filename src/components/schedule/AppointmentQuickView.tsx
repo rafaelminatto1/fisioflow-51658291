@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Play, Edit, Trash2, Clock, User, Phone, CreditCard, X, Bell, Users, UserPlus } from 'lucide-react';
+import { Play, Edit, Trash2, Clock, User, Phone, CreditCard, X, Bell, Users, UserPlus, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -37,20 +37,30 @@ interface AppointmentQuickViewProps {
 
 const statusLabels: Record<AppointmentStatus, string> = {
   agendado: 'Agendado',
+  avaliacao: 'Avaliação',
   confirmado: 'Confirmado',
+  aguardando_confirmacao: 'Aguardando',
   em_andamento: 'Em Andamento',
+  em_espera: 'Em Espera',
+  atrasado: 'Atrasado',
   concluido: 'Concluído',
+  remarcado: 'Remarcado',
   cancelado: 'Cancelado',
   falta: 'Falta',
 };
 
 const statusColors: Record<AppointmentStatus, string> = {
   agendado: 'bg-blue-500',
-  confirmado: 'bg-green-500',
+  avaliacao: 'bg-violet-500',
+  confirmado: 'bg-emerald-500',
+  aguardando_confirmacao: 'bg-amber-500',
   em_andamento: 'bg-yellow-500',
-  concluido: 'bg-gray-500',
+  em_espera: 'bg-indigo-500',
+  atrasado: 'bg-yellow-500',
+  concluido: 'bg-purple-500',
+  remarcado: 'bg-orange-500',
   cancelado: 'bg-red-500',
-  falta: 'bg-orange-500',
+  falta: 'bg-rose-500',
 };
 
 export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
@@ -67,27 +77,34 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   const [showWaitlistNotification, setShowWaitlistNotification] = useState(false);
   const [showWaitlistQuickAdd, setShowWaitlistQuickAdd] = useState(false);
 
-  const appointmentDate = typeof appointment.date === 'string' 
-    ? new Date(appointment.date) 
+  const appointmentDate = typeof appointment.date === 'string'
+    ? new Date(appointment.date)
     : appointment.date;
 
   const interestCount = getInterestCount(appointmentDate, appointment.time);
   const hasWaitlistInterest = interestCount > 0;
 
-  const canStartAttendance = appointment.status === 'confirmado' || appointment.status === 'agendado';
+  const canStartAttendance = appointment.status === 'confirmado' || appointment.status === 'agendado' || appointment.status === 'avaliacao';
 
   const handleStartAttendance = () => {
-    navigate(`/patient-evolution/${appointment.id}`);
-    toast.success('Iniciando atendimento', {
-      description: `Atendimento de ${appointment.patientName}`,
-    });
+    if (appointment.status === 'avaliacao') {
+      navigate(`/patient-evolution/${appointment.id}`);
+      toast.success('Iniciando avaliação', {
+        description: `Avaliação de ${appointment.patientName}`,
+      });
+    } else {
+      navigate(`/patient-evolution/${appointment.id}`);
+      toast.success('Iniciando atendimento', {
+        description: `Atendimento de ${appointment.patientName}`,
+      });
+    }
     onOpenChange?.(false);
   };
 
   const handleStatusChange = (newStatus: string) => {
     if (newStatus !== appointment.status) {
       updateStatus({ appointmentId: appointment.id, status: newStatus });
-      
+
       // If cancelling and there are interested patients, show notification
       if ((newStatus === 'cancelado' || newStatus === 'falta') && hasWaitlistInterest) {
         setTimeout(() => {
@@ -121,8 +138,8 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
         <PopoverTrigger asChild>
           {children}
         </PopoverTrigger>
-        <PopoverContent 
-          className="w-80 p-0 bg-card border border-border shadow-xl z-50" 
+        <PopoverContent
+          className="w-80 p-0 bg-card border border-border shadow-xl z-50"
           align="start"
           side="right"
           sideOffset={5}
@@ -135,9 +152,9 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
                 Horário: {appointment.time} - {endTime}
               </span>
             </div>
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="h-6 w-6"
               onClick={() => onOpenChange?.(false)}
             >
@@ -147,7 +164,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
 
           {/* Waitlist Interest Alert */}
           {hasWaitlistInterest && (
-            <div 
+            <div
               className="flex items-center gap-2 px-3 py-2 bg-amber-500/10 border-b border-amber-500/20 cursor-pointer hover:bg-amber-500/20 transition-colors"
               onClick={() => setShowWaitlistNotification(true)}
             >
@@ -221,19 +238,25 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
           <div className="p-3 space-y-2">
             <div className="flex items-center gap-2">
               {canStartAttendance && (
-                <Button 
+                <Button
                   onClick={handleStartAttendance}
                   className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
                   size="sm"
                 >
-                  <Play className="h-4 w-4 mr-1" />
-                  Iniciar atendimento
+                  <span className="flex items-center gap-1.5">
+                    {appointment.status === 'avaliacao' ? (
+                      <FileText className="h-4 w-4" />
+                    ) : (
+                      <Play className="h-4 w-4" />
+                    )}
+                    {appointment.status === 'avaliacao' ? 'Iniciar Avaliação' : 'Iniciar atendimento'}
+                  </span>
                 </Button>
               )}
-              
+
               {onEdit && (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="icon"
                   className="h-8 w-8"
                   onClick={handleEdit}
@@ -241,10 +264,10 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
                   <Edit className="h-4 w-4" />
                 </Button>
               )}
-              
+
               {onDelete && (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="icon"
                   className="h-8 w-8 text-destructive hover:text-destructive"
                   onClick={handleDelete}
