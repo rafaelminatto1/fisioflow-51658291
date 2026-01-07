@@ -23,9 +23,9 @@ const Index = () => {
       case 'admin':
         return <AdminDashboard period={periodFilter} />;
       case 'fisioterapeuta':
-        return <TherapistDashboard lastUpdate={new Date()} profile={{ id: '1', user_id: '1', role: 'admin' as const, full_name: 'Fisioterapeuta', avatar_url: '', onboarding_completed: true, is_active: true, created_at: '2024-01-01', updated_at: '2024-01-01' }} />;
+        return <TherapistDashboard lastUpdate={new Date()} profile={profile} />;
       case 'paciente':
-        return <PatientDashboard lastUpdate={new Date()} profile={{ id: '1', user_id: '1', role: 'admin' as const, full_name: 'Paciente', avatar_url: '', onboarding_completed: true, is_active: true, created_at: '2024-01-01', updated_at: '2024-01-01' }} />;
+        return <PatientDashboard lastUpdate={new Date()} profile={profile} />;
       default:
         return <AdminDashboard period={periodFilter} />;
     }
