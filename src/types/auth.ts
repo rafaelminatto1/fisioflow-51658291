@@ -28,6 +28,7 @@ export interface Profile {
   id: string;
   user_id: string;
   full_name: string;
+  organization_id?: string;
   role: UserRole;
   phone?: string;
   crefito?: string;

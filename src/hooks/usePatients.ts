@@ -2,23 +2,20 @@ import { useState, useEffect } from 'react';
 import { Patient } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/errors/logger';
-import { getUserOrganizationId } from '@/utils/userHelpers';
+import { useAuth } from '@/contexts/AuthContextProvider';
 
 export const useActivePatients = () => {
   const [data, setData] = useState<Patient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { profile } = useAuth();
+  const organizationId = profile?.organization_id;
 
   useEffect(() => {
     const loadPatients = async () => {
       try {
-        // Obter organization_id do usuário
-        let organizationId: string | null = null;
-        try {
-          organizationId = await getUserOrganizationId();
-        } catch (orgError) {
-          logger.warn('Não foi possível obter organization_id, usando RLS', orgError, 'usePatients');
-        }
+        // Obter organization_id do usuário via contexto
+        // organizationId já vem do hook useAuth
 
         // Construir query
         let query = supabase

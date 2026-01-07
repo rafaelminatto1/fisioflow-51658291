@@ -42,18 +42,24 @@ async function retryWithBackoff<T>(
 }
 
 // Fetch all appointments with improved error handling and validation
-async function fetchAppointments(): Promise<AppointmentBase[]> {
+import { useAuth } from '@/contexts/AuthContextProvider';
+
+// Fetch all appointments with improved error handling and validation
+async function fetchAppointments(organizationIdOverride?: string | null): Promise<AppointmentBase[]> {
   const timer = logger.startTimer('fetchAppointments');
 
   logger.info('Carregando agendamentos do Supabase', {}, 'useAppointments');
 
   try {
-    // Obter organization_id do usuário para filtrar
-    let organizationId: string | null = null;
-    try {
-      organizationId = await getUserOrganizationId();
-    } catch (orgError) {
-      logger.warn('Não foi possível obter organization_id, usando RLS', orgError, 'useAppointments');
+    // Obter organization_id do usuário para filtrar (usar override ou fallback para função utilitária)
+    let organizationId: string | null = organizationIdOverride || null;
+
+    if (!organizationId) {
+      try {
+        organizationId = await getUserOrganizationId();
+      } catch (orgError) {
+        logger.warn('Não foi possível obter organization_id, usando RLS', orgError, 'useAppointments');
+      }
     }
 
     // Construir query
@@ -164,6 +170,8 @@ async function fetchAppointments(): Promise<AppointmentBase[]> {
 export function useAppointments() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { profile } = useAuth();
+  const organizationId = profile?.organization_id;
 
   // Setup Realtime subscription
   useEffect(() => {
@@ -212,8 +220,8 @@ export function useAppointments() {
   }, [queryClient, toast]);
 
   return useQuery({
-    queryKey: ['appointments'],
-    queryFn: fetchAppointments,
+    queryKey: ['appointments', organizationId], // Include organizationId in query key
+    queryFn: () => fetchAppointments(organizationId),
     staleTime: 1000 * 60 * 2, // 2 minutos (dados dinâmicos)
     gcTime: 1000 * 60 * 5, // 5 minutos
     retry: 3,
@@ -222,6 +230,7 @@ export function useAppointments() {
     refetchOnReconnect: true,
     // Garantir que sempre retorne um array, mesmo em caso de erro
     placeholderData: [],
+    enabled: !!organizationId, // Only fetch when organizationId is available
   });
 }
 
@@ -229,13 +238,14 @@ export function useAppointments() {
 export function useCreateAppointment() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { profile } = useAuth();
 
   return useMutation({
     mutationFn: async (data: AppointmentFormData) => {
       logger.info('Criando novo agendamento', { patientId: data.patient_id, date: data.appointment_date }, 'useAppointments');
 
-      // Obter organization_id do usuário
-      const organizationId = await requireUserOrganizationId();
+      // Obter organization_id do usuário (usar contexto ou fallback)
+      const organizationId = profile?.organization_id || await requireUserOrganizationId();
 
       // Check for conflicts with current data
       const currentAppointments = queryClient.getQueryData<AppointmentBase[]>(['appointments']) || [];
@@ -365,13 +375,14 @@ export function useCreateAppointment() {
 export function useUpdateAppointment() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { profile } = useAuth();
 
   return useMutation({
     mutationFn: async ({ appointmentId, updates }: { appointmentId: string; updates: Partial<AppointmentFormData> }) => {
       logger.info('Atualizando agendamento', { appointmentId, updates }, 'useAppointments');
 
       // Obter organization_id do usuário para garantir segurança
-      const organizationId = await requireUserOrganizationId();
+      const organizationId = profile?.organization_id || await requireUserOrganizationId();
 
       // Check for conflicts if date/time is being changed
       if (updates.appointment_date || updates.appointment_time || updates.duration) {

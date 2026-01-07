@@ -65,23 +65,8 @@ const DAYS_OF_WEEK = [
 
 export function useScheduleSettings() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const queryClient = useQueryClient();
-
-  // Get organization ID from profiles (avoids RLS recursion)
-  const { data: profile } = useQuery({
-    queryKey: ['profile-org', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      const { data } = await supabase
-        .from('profiles')
-        .select('organization_id')
-        .eq('user_id', user.id)
-        .single();
-      return data;
-    },
-    enabled: !!user?.id,
-  });
 
   const organizationId = profile?.organization_id;
 
@@ -111,7 +96,7 @@ export function useScheduleSettings() {
         break_end: h.break_end || null,
         organization_id: organizationId,
       }));
-      
+
       const { error } = await supabase
         .from('schedule_business_hours')
         .upsert(validHours, { onConflict: 'organization_id,day_of_week' });
@@ -241,20 +226,20 @@ export function useScheduleSettings() {
     blockedTimes: blockedTimes || [],
     daysOfWeek: DAYS_OF_WEEK,
     organizationId,
-    
+
     // Loading states
     isLoadingHours,
     isLoadingRules,
     isLoadingNotifications,
     isLoadingBlocked,
-    
+
     // Mutations
     upsertBusinessHours: upsertBusinessHours.mutate,
     upsertCancellationRules: upsertCancellationRules.mutate,
     upsertNotificationSettings: upsertNotificationSettings.mutate,
     createBlockedTime: createBlockedTime.mutate,
     deleteBlockedTime: deleteBlockedTime.mutate,
-    
+
     // Pending states
     isSavingHours: upsertBusinessHours.isPending,
     isSavingRules: upsertCancellationRules.isPending,

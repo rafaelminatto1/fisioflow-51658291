@@ -27,18 +27,17 @@ export interface PatientDB {
   updated_at?: string | null;
 }
 
+import { useAuth } from '@/contexts/AuthContextProvider';
+
 export const usePatientsQuery = () => {
+  const { profile } = useAuth();
+  const organizationId = profile?.organization_id;
+
   return useQuery({
-    queryKey: ['patients'],
+    queryKey: ['patients', organizationId],
     queryFn: async () => {
-      // Obter organization_id do usuário
-      let organizationId: string | null = null;
-      try {
-        const { getUserOrganizationId } = await import('@/utils/userHelpers');
-        organizationId = await getUserOrganizationId();
-      } catch (orgError) {
-        // Se não conseguir obter, RLS vai filtrar
-      }
+      // Se não tiver organização, tentar buscar mas RLS pode filtrar
+
 
       let query = supabase
         .from('patients')
@@ -63,7 +62,7 @@ export const usePatientQuery = (patientId?: string) => {
     queryKey: ['patient', patientId],
     queryFn: async () => {
       if (!patientId) return null;
-      
+
       const { data, error } = await supabase
         .from('patients')
         .select('*')
