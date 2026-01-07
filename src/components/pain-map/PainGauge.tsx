@@ -27,21 +27,21 @@ const getScoreLabel = (score: number): string => {
   return 'Extrema';
 };
 
-export function PainGauge({ 
-  score, 
-  intensity, 
+export function PainGauge({
+  score,
+  intensity,
   className,
   size = 'md',
-  showLabel = true 
+  showLabel = true
 }: PainGaugeProps) {
   // Normalizar score para 0-100
   const normalizedScore = Math.min(100, Math.max(0, score));
-  
+
   // Calcular rotação do gauge (0 a 180 graus, onde 0 = 0% e 180 = 100%)
   const rotation = (normalizedScore / 100) * 180;
-  
+
   const color = getIntensityColor(normalizedScore);
-  
+
   const sizeClasses = {
     sm: 'w-24 h-12',
     md: 'w-32 h-16',
@@ -59,7 +59,7 @@ export function PainGauge({
       {/* Gauge Container */}
       <div className={cn('relative', sizeClasses[size])}>
         {/* Background Arc */}
-        <svg 
+        <svg
           className="absolute inset-0 w-full h-full"
           viewBox="0 0 200 100"
           preserveAspectRatio="none"
@@ -73,7 +73,7 @@ export function PainGauge({
             strokeLinecap="round"
             className="opacity-20"
           />
-          
+
           {/* Gradient definition */}
           <defs>
             <linearGradient id="gauge-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -84,7 +84,7 @@ export function PainGauge({
               <stop offset="100%" stopColor="#7f1d1d" />
             </linearGradient>
           </defs>
-          
+
           {/* Progress Arc */}
           {normalizedScore > 0 && (
             <path
@@ -96,18 +96,18 @@ export function PainGauge({
               strokeDasharray={`${(normalizedScore / 100) * 282.74} 282.74`}
               className="transition-all duration-500 ease-out"
               style={{
-                strokeDashoffset: 141.37, // Half circle offset
+                // strokeDashoffset removed to fix alignment
               }}
             />
           )}
         </svg>
-        
+
         {/* Needle Indicator */}
-        <div 
+        <div
           className="absolute bottom-0 left-1/2 w-1 h-full origin-bottom -translate-x-1/2 transition-transform duration-500 ease-out"
           style={{ transform: `translateX(-50%) rotate(${rotation - 90}deg)` }}
         >
-          <div 
+          <div
             className="absolute top-2 left-1/2 w-0 h-0 -translate-x-1/2"
             style={{
               borderLeft: '6px solid transparent',
@@ -117,7 +117,7 @@ export function PainGauge({
           />
         </div>
       </div>
-      
+
       {/* Score Display */}
       <div className="flex flex-col items-center mt-2">
         <div className={cn('font-bold text-foreground', textSizes[size])}>

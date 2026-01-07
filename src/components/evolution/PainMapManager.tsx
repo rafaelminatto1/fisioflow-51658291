@@ -14,8 +14,10 @@ import { usePainMaps, usePainEvolution, usePainStatistics, useCreatePainMap, use
 import { useAuth } from '@/contexts/AuthContextProvider';
 import type { PainMapPoint, PainIntensity } from '@/types/painMap';
 import type { PainPoint } from '@/components/pain-map/BodyMap';
-import { TrendingDown, TrendingUp, Minus, CheckCircle2, Loader2, List } from 'lucide-react';
+import { TrendingDown, TrendingUp, Minus, CheckCircle2, Loader2, List, ToggleLeft, ToggleRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface PainMapManagerProps {
   patientId: string;
@@ -27,23 +29,24 @@ interface PainMapManagerProps {
 export function PainMapManager({ patientId, sessionId, appointmentId, readOnly = false }: PainMapManagerProps) {
   const [painPoints, setPainPoints] = useState<PainMapPoint[]>([]);
   const [chartType, setChartType] = useState<'line' | 'area' | 'bar'>('line');
+  const [is3DMode, setIs3DMode] = useState(false);
   const [notes, setNotes] = useState('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const { user } = useAuth();
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
   const lastSavedRef = useRef<string>('');
-  
+
   const { patientMaps: painMaps = [], isLoading } = usePainMaps({ patientId });
   const { data: painEvolution = [] } = usePainEvolution(patientId);
   const { data: stats } = usePainStatistics(patientId);
   const createPainMap = useCreatePainMap();
   const updatePainMap = useUpdatePainMap();
-  
+
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [selectedPointForDetail, setSelectedPointForDetail] = useState<PainPoint | null>(null);
   const [selectedIntensity, setSelectedIntensity] = useState<PainIntensity>(5);
 
-  const globalPainLevel = painPoints.length > 0 
+  const globalPainLevel = painPoints.length > 0
     ? Math.round(painPoints.reduce((sum, p) => sum + p.intensity, 0) / painPoints.length) as PainIntensity
     : 0;
 
@@ -76,7 +79,7 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
       });
       lastSavedRef.current = currentData;
       setSaveStatus('saved');
-      
+
       // Reset to idle after 2 seconds
       setTimeout(() => setSaveStatus('idle'), 2000);
     } catch (error) {
@@ -108,7 +111,7 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
 
   const getTrendIcon = () => {
     if (!stats) return <Minus className="w-4 h-4" />;
-    
+
     switch (stats.improvementTrend) {
       case 'improving':
         return <TrendingDown className="w-4 h-4 text-green-600" />;
@@ -121,7 +124,7 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
 
   const getTrendLabel = () => {
     if (!stats) return 'Sem dados';
-    
+
     switch (stats.improvementTrend) {
       case 'improving':
         return 'Melhorando';
@@ -155,7 +158,7 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
       x: point.x,
       y: point.y,
     };
-    
+
     setPainPoints(prev => {
       const index = prev.findIndex(p => p.x === point.x && p.y === point.y);
       if (index >= 0) {
@@ -165,7 +168,7 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
       }
       return prev;
     });
-    
+
     if (selectedPointForDetail?.id === point.id) {
       setSelectedPointForDetail(point);
     }
@@ -217,26 +220,38 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
         </TabsList>
 
         <TabsContent value="current" className="space-y-4 mt-6">
+          <div className="flex justify-end mb-2">
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="3d-mode" className="text-sm font-medium">Modo 3D Realista</Label>
+              <Switch
+                id="3d-mode"
+                checked={is3DMode}
+                onCheckedChange={setIs3DMode}
+              />
+            </div>
+          </div>
+
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="lg:w-2/3">
-              <PainMapCanvas 
+              <PainMapCanvas
                 painPoints={painPoints}
                 onPainPointsChange={setPainPoints}
                 readOnly={readOnly}
+                variant={is3DMode ? '3d' : '2d'}
               />
             </div>
-            
+
             <Card className="lg:w-1/3 p-4 flex flex-col justify-between gap-4">
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-sm font-medium">Nível Global de Dor</p>
-                  <PainGauge 
-                    score={globalPainLevel * 10} 
+                  <PainGauge
+                    score={globalPainLevel * 10}
                     intensity={globalPainLevel}
                     size="md"
                   />
                 </div>
-                
+
                 <div className="mb-4">
                   <EvaScaleBar
                     value={selectedIntensity}
@@ -244,10 +259,10 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
                     disabled={readOnly}
                   />
                 </div>
-                
+
                 <div className="mb-4">
-                  <Button 
-                    onClick={() => setIsBottomSheetOpen(true)} 
+                  <Button
+                    onClick={() => setIsBottomSheetOpen(true)}
                     className="w-full"
                     variant="outline"
                     disabled={painPoints.length === 0}
@@ -257,7 +272,7 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
                   </Button>
                 </div>
               </div>
-              
+
               {/* Auto-save status indicator */}
               {!readOnly && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mt-auto pt-4 border-t">
@@ -295,14 +310,14 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
               </SelectContent>
             </Select>
           </div>
-          <PainEvolutionChart 
-            evolutionData={painEvolution as any} 
+          <PainEvolutionChart
+            evolutionData={painEvolution as any}
             showStats={true}
           />
         </TabsContent>
 
         <TabsContent value="history" className="mt-6">
-          <PainMapHistory 
+          <PainMapHistory
             painMaps={painMaps as any}
             isLoading={isLoading}
           />
