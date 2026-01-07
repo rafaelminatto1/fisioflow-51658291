@@ -36,9 +36,9 @@ const Index = () => {
 
   return (
     <MainLayout showBreadcrumbs={false}>
-      <div className="space-y-4 animate-fade-in pb-20 md:pb-0">
+      <div className="space-y-4 sm:space-y-6 animate-fade-in pb-20 md:pb-0">
         {/* Header com saudação - estilo Stich */}
-        <div className="flex items-center justify-between px-4 md:px-0 py-3">
+        <div className="flex items-center justify-between py-2 sm:py-3">
           <div className="flex items-center gap-3">
             <div className="relative">
               <Avatar className="h-10 w-10 ring-2 ring-slate-100 dark:ring-slate-800">
@@ -49,9 +49,9 @@ const Index = () => {
               </Avatar>
               <span className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full ring-2 ring-white dark:ring-background-dark"></span>
             </div>
-            <div>
-              <h1 className="text-sm font-medium text-slate-500 dark:text-slate-400">Bem-vindo de volta,</h1>
-              <h2 className="text-base font-bold text-slate-900 dark:text-white leading-tight">
+            <div className="min-w-0">
+              <h1 className="text-xs sm:text-sm font-medium text-muted-foreground">Bem-vindo de volta,</h1>
+              <h2 className="text-sm sm:text-base font-bold text-foreground leading-tight truncate max-w-[200px] sm:max-w-none">
                 {profileLoading ? 'Carregando...' : displayName}
               </h2>
             </div>
@@ -59,7 +59,7 @@ const Index = () => {
         </div>
 
         {/* Filtros tipo chip - estilo Stich */}
-        <div className="px-4 md:px-0 py-2 overflow-x-auto">
+        <div className="py-1 sm:py-2 overflow-x-auto -mx-1 px-1">
           <div className="flex gap-2">
             {['hoje', 'semana', 'mes', 'personalizado'].map((period) => (
               <Button
@@ -68,14 +68,14 @@ const Index = () => {
                 size="sm"
                 onClick={() => setPeriodFilter(period)}
                 className={periodFilter === period 
-                  ? "h-8 rounded-full bg-slate-900 dark:bg-slate-50 text-white dark:text-slate-900 px-4 text-xs font-semibold shadow-sm" 
-                  : "h-8 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 px-4 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-700"
+                  ? "h-7 sm:h-8 rounded-full bg-primary text-primary-foreground px-3 sm:px-4 text-[10px] sm:text-xs font-semibold shadow-sm whitespace-nowrap" 
+                  : "h-7 sm:h-8 rounded-full bg-card border border-border text-muted-foreground px-3 sm:px-4 text-[10px] sm:text-xs font-medium hover:bg-accent whitespace-nowrap"
                 }
               >
                 {period === 'hoje' && 'Hoje'}
-                {period === 'semana' && 'Esta Semana'}
-                {period === 'mes' && 'Este Mês'}
-                {period === 'personalizado' && 'Personalizado'}
+                {period === 'semana' && <><span className="hidden sm:inline">Esta </span>Semana</>}
+                {period === 'mes' && <><span className="hidden sm:inline">Este </span>Mês</>}
+                {period === 'personalizado' && 'Custom'}
               </Button>
             ))}
           </div>
