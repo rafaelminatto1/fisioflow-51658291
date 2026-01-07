@@ -29,6 +29,16 @@ import {
   Bell,
   Zap
 } from 'lucide-react';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerClose
+} from '@/components/ui/drawer';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { AppointmentBase, AppointmentFormData, AppointmentType, AppointmentStatus } from '@/types/appointment';
 import { useCreateAppointment, useUpdateAppointment, useAppointments } from '@/hooks/useAppointments';
@@ -483,539 +493,576 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     });
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl w-[95vw] max-h-[80vh] sm:max-h-[85vh] flex flex-col p-0 overflow-hidden">
-        {/* Header - Fixed */}
-        <DialogHeader className="px-4 sm:px-6 pt-3 sm:pt-4 pb-2 sm:pb-3 border-b bg-gradient-to-r from-primary/5 to-transparent shrink-0">
-          <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0 flex-1">
-              <DialogTitle className="flex items-center gap-2 text-base sm:text-lg font-semibold">
-                <CalendarIcon className="h-4 w-4 text-primary shrink-0" />
-                <span className="truncate">
-                  {currentMode === 'create' ? 'Novo Agendamento' : currentMode === 'edit' ? 'Editar Agendamento' : 'Detalhes'}
-                </span>
-              </DialogTitle>
-              <DialogDescription className="text-xs mt-0.5">
-                {watchedDate && watchedTime ? (
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="h-3 w-3 shrink-0" />
-                    <span className="truncate">
-                      {format(watchedDate, "EEEE, d 'de' MMMM", { locale: ptBR })} às {watchedTime}
-                    </span>
-                  </span>
-                ) : 'Preencha os dados do agendamento'}
-              </DialogDescription>
+  const isMobile = useIsMobile();
+
+  const ModalWrapper = ({ children }: { children: React.ReactNode }) => {
+    if (isMobile) {
+      return (
+        <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
+          <DrawerContent className="h-[95vh] flex flex-col p-0">
+            {children}
+          </DrawerContent>
+        </Drawer>
+      );
+    }
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-2xl w-[95vw] max-h-[80vh] sm:max-h-[85vh] flex flex-col p-0 overflow-hidden">
+          {children}
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
+  const Header = () => {
+    const Title = isMobile ? DrawerTitle : DialogTitle;
+    const Description = isMobile ? DrawerDescription : DialogDescription;
+    const HeaderWrapper = isMobile ? DrawerHeader : DialogHeader;
+
+    return (
+      <div className="px-4 sm:px-6 pt-3 sm:pt-4 pb-2 sm:pb-3 border-b bg-gradient-to-r from-primary/5 to-transparent shrink-0">
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 text-base sm:text-lg font-semibold">
+              <CalendarIcon className="h-4 w-4 text-primary shrink-0" />
+              <Title className="truncate text-base sm:text-lg font-semibold">
+                {currentMode === 'create' ? 'Novo Agendamento' : currentMode === 'edit' ? 'Editar Agendamento' : 'Detalhes'}
+              </Title>
             </div>
-            {watch('status') && (
-              <Badge className={cn("text-white text-xs shrink-0", statusColors[watch('status')])}>
-                {statusLabels[watch('status')]}
-              </Badge>
-            )}
+            <div className="text-xs mt-0.5 text-muted-foreground">
+              {watchedDate && watchedTime ? (
+                <span className="flex items-center gap-1.5">
+                  <Clock className="h-3 w-3 shrink-0" />
+                  <Description className="truncate text-xs">
+                    {format(watchedDate, "EEEE, d 'de' MMMM", { locale: ptBR })} às {watchedTime}
+                  </Description>
+                </span>
+              ) : 'Preencha os dados do agendamento'}
+            </div>
           </div>
-        </DialogHeader>
+          {watch('status') && (
+            <Badge className={cn("text-white text-xs shrink-0", statusColors[watch('status')])}>
+              {statusLabels[watch('status')]}
+            </Badge>
+          )}
+          {isMobile && (
+            <DrawerClose asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8 ml-2">
+                <X className="h-4 w-4" />
+              </Button>
+            </DrawerClose>
+          )}
+        </div>
+      </div>
+    );
+  };
 
-        {/* Scrollable Content with Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
-          {/* Tabs Navigation - Fixed */}
-          <div className="px-4 sm:px-6 py-1.5 border-b shrink-0">
-            <TabsList className="grid w-full grid-cols-3 h-8">
-              <TabsTrigger value="info" className="flex items-center gap-1 sm:gap-2 text-xs">
-                <User className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden xs:inline">Informações</span>
-                <span className="xs:hidden">Info</span>
-              </TabsTrigger>
-              <TabsTrigger value="payment" className="flex items-center gap-1 sm:gap-2 text-xs">
-                <CreditCard className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden xs:inline">Pagamento</span>
-                <span className="xs:hidden">Pag.</span>
-              </TabsTrigger>
-              <TabsTrigger value="options" className="flex items-center gap-1 sm:gap-2 text-xs">
-                <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden xs:inline">Opções</span>
-                <span className="xs:hidden">Opç.</span>
-              </TabsTrigger>
-            </TabsList>
-          </div>
+  return (
+    <ModalWrapper>
+      <Header />
 
-          {/* Scrollable Content */}
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            <form id="appointment-form" onSubmit={handleSubmit(handleSave)} className="px-4 sm:px-6 py-3">
+      {/* Scrollable Content with Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
+        {/* Tabs Navigation - Fixed */}
+        <div className="px-4 sm:px-6 py-1.5 border-b shrink-0">
+          <TabsList className="grid w-full grid-cols-3 h-8">
+            <TabsTrigger value="info" className="flex items-center gap-1 sm:gap-2 text-xs">
+              <User className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Informações</span>
+              <span className="xs:hidden">Info</span>
+            </TabsTrigger>
+            <TabsTrigger value="payment" className="flex items-center gap-1 sm:gap-2 text-xs">
+              <CreditCard className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Pagamento</span>
+              <span className="xs:hidden">Pag.</span>
+            </TabsTrigger>
+            <TabsTrigger value="options" className="flex items-center gap-1 sm:gap-2 text-xs">
+              <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Opções</span>
+              <span className="xs:hidden">Opç.</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-              {/* Tab: Informações */}
-              <TabsContent value="info" className="mt-0 space-y-2.5 sm:space-y-3">
-                {/* Patient Selection */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
-                    <User className="h-3.5 w-3.5 text-primary" />
-                    Paciente *
-                  </Label>
-                  <PatientCombobox
-                    patients={activePatients || []}
-                    value={watch('patient_id')}
-                    onValueChange={(value) => setValue('patient_id', value)}
-                    onCreateNew={(searchTerm) => {
-                      setSuggestedPatientName(searchTerm);
-                      setQuickPatientModalOpen(true);
-                    }}
-                    disabled={currentMode === 'view' || patientsLoading}
-                  />
-                  {errors.patient_id && (
-                    <p className="text-xs text-destructive">{errors.patient_id.message}</p>
-                  )}
-                </div>
-
-                {/* Date and Time - Responsive Row */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-                  <div className="space-y-1.5 sm:space-y-2">
-                    <Label className="text-xs sm:text-sm font-medium">Data *</Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal h-9 sm:h-10 text-xs sm:text-sm",
-                        !watchedDate && "text-muted-foreground"
-                      )}
-                      disabled={currentMode === 'view'}
-                      onClick={() => setIsCalendarOpen(true)}
-                    >
-                      <CalendarIcon className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                      {watchedDate ? format(watchedDate, 'dd/MM', { locale: ptBR }) : "Data"}
-                    </Button>
-                  </div>
-
-                  <div className="space-y-1.5 sm:space-y-2">
-                    <Label className="text-xs sm:text-sm font-medium">Horário *</Label>
-                    <Select
-                      value={watchedTime}
-                      onValueChange={(value) => setValue('appointment_time', value)}
-                      disabled={currentMode === 'view'}
-                    >
-                      <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
-                        <SelectValue placeholder="Hora" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-60">
-                        {timeSlots.map((slot) => (
-                          <SelectItem key={slot} value={slot}>{slot}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-1.5 sm:space-y-2 col-span-2 sm:col-span-1">
-                    <Label className="text-xs sm:text-sm font-medium">Duração</Label>
-                    <Select
-                      value={watchedDuration?.toString()}
-                      onValueChange={(value) => setValue('duration', parseInt(value))}
-                      disabled={currentMode === 'view'}
-                    >
-                      <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="30">30 min</SelectItem>
-                        <SelectItem value="45">45 min</SelectItem>
-                        <SelectItem value="60">1 hora</SelectItem>
-                        <SelectItem value="90">1h30</SelectItem>
-                        <SelectItem value="120">2 horas</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Capacity Indicator */}
-                {watchedDate && watchedTime && (() => {
-                  const dayOfWeek = watchedDate.getDay();
-                  const maxCapacity = getCapacityForTime(dayOfWeek, watchedTime);
-                  const conflictCount = conflictCheck?.conflictCount || 0;
-                  const availableSlots = maxCapacity - conflictCount;
-                  const exceedsCapacity = conflictCount >= maxCapacity;
-
-                  return (
-                    <div className={cn(
-                      "flex items-center justify-between p-2 sm:p-2.5 border rounded-lg text-xs sm:text-sm transition-all",
-                      exceedsCapacity
-                        ? "border-red-500/30 bg-red-500/5"
-                        : conflictCount > 0
-                          ? "border-amber-500/30 bg-amber-500/5"
-                          : "border-emerald-500/30 bg-emerald-500/5"
-                    )}>
-                      <div className="flex items-center gap-1.5 sm:gap-2">
-                        {exceedsCapacity ? (
-                          <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-600" />
-                        ) : (
-                          <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
-                        )}
-                        <span className={cn(
-                          "font-medium",
-                          exceedsCapacity ? "text-red-700" : conflictCount > 0 ? "text-amber-700" : "text-emerald-700"
-                        )}>
-                          {exceedsCapacity
-                            ? "Horário lotado!"
-                            : availableSlots === maxCapacity
-                              ? "Horário livre"
-                              : `${availableSlots} vaga${availableSlots !== 1 ? 's' : ''} disponível`
-                          }
-                        </span>
-                      </div>
-                      <Badge variant="outline" className={cn(
-                        "text-[10px] sm:text-xs h-5 sm:h-6",
-                        exceedsCapacity ? "border-red-500/50" : "border-muted"
-                      )}>
-                        {conflictCount}/{maxCapacity}
-                      </Badge>
-                    </div>
-                  );
-                })()}
-
-                {/* Type and Status */}
-                <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                  <div className="space-y-1.5 sm:space-y-2">
-                    <Label className="text-xs sm:text-sm font-medium">Tipo *</Label>
-                    <Select
-                      value={watch('type')}
-                      onValueChange={(value) => setValue('type', value as AppointmentType)}
-                      disabled={currentMode === 'view'}
-                    >
-                      <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
-                        <SelectValue placeholder="Tipo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {appointmentTypes.map((type) => (
-                          <SelectItem key={type} value={type}>{type}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-1.5 sm:space-y-2">
-                    <Label className="text-xs sm:text-sm font-medium">Status *</Label>
-                    <Select
-                      value={watch('status')}
-                      onValueChange={(value) => setValue('status', value as AppointmentStatus)}
-                      disabled={currentMode === 'view'}
-                    >
-                      <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {appointmentStatuses.map((status) => (
-                          <SelectItem key={status} value={status}>
-                            <div className="flex items-center gap-2">
-                              <div className={cn("w-2 h-2 rounded-full", statusColors[status])} />
-                              {statusLabels[status]}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Notes */}
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium">Observações</Label>
-                  <Textarea
-                    {...register('notes')}
-                    placeholder="Informações importantes sobre o atendimento..."
-                    rows={2}
-                    disabled={currentMode === 'view'}
-                    className="resize-none text-sm min-h-[60px]"
-                  />
-                </div>
-              </TabsContent>
-
-              {/* Tab: Pagamento */}
-              <TabsContent value="payment" className="mt-0 space-y-2.5 sm:space-y-3">
-                <div className="space-y-2">
-                  <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
-                    <CreditCard className="h-3.5 w-3.5 text-primary" />
-                    Tipo de Pagamento
-                  </Label>
-                  <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
-                    {[
-                      { value: 'pending', label: 'Pendente', icon: '⏳', color: 'border-amber-500/30 bg-amber-500/5' },
-                      { value: 'paid_single', label: 'Avulso', icon: '💵', color: 'border-emerald-500/30 bg-emerald-500/5' },
-                      { value: 'paid_package', label: 'Pacote', icon: '📦', color: 'border-blue-500/30 bg-blue-500/5' },
-                    ].map((option) => (
-                      <Button
-                        key={option.value}
-                        type="button"
-                        variant={watchPaymentStatus === option.value ? 'default' : 'outline'}
-                        className={cn(
-                          "h-14 sm:h-16 flex-col gap-0.5 sm:gap-1 transition-all",
-                          watchPaymentStatus === option.value
-                            ? "ring-2 ring-primary ring-offset-1 sm:ring-offset-2 shadow-md"
-                            : option.color
-                        )}
-                        onClick={() => {
-                          setValue('payment_status', option.value as any);
-                          if (option.value === 'paid_single') setValue('payment_amount', 180);
-                          if (option.value === 'paid_package') setValue('payment_amount', 170);
-                        }}
-                        disabled={currentMode === 'view'}
-                      >
-                        <span className="text-base sm:text-lg">{option.icon}</span>
-                        <span className="text-[10px] sm:text-xs font-medium">{option.label}</span>
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Payment Amount */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs sm:text-sm font-medium">Valor da Sessão (R$)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="170.00"
-                    {...register('payment_amount', { valueAsNumber: true })}
-                    disabled={currentMode === 'view' || watchPaymentStatus === 'pending'}
-                    className="h-9 sm:h-10 text-sm"
-                  />
-                  <p className="text-[10px] sm:text-xs text-muted-foreground bg-muted/30 px-2 py-1 rounded">
-                    💡 Pacote: R$ 170/sessão • Avulso: R$ 180/sessão
-                  </p>
-                </div>
-
-                {/* Payment Method */}
-                {(watchPaymentStatus === 'paid_single' || watchPaymentStatus === 'paid_package') && (
-                  <div className="space-y-2 bg-gradient-to-r from-emerald-500/5 to-transparent p-3 sm:p-4 rounded-lg border border-emerald-500/20">
-                    <Label className="text-xs sm:text-sm font-medium">Forma de Pagamento</Label>
-                    <div className="grid grid-cols-4 gap-1 sm:gap-2">
-                      {[
-                        { value: 'pix', label: 'PIX', icon: '📲' },
-                        { value: 'dinheiro', label: 'Dinheiro', icon: '💵' },
-                        { value: 'debito', label: 'Débito', icon: '💳' },
-                        { value: 'credito', label: 'Crédito', icon: '💳' },
-                      ].map((method) => (
-                        <Button
-                          key={method.value}
-                          type="button"
-                          variant={watchPaymentMethod === method.value ? 'default' : 'outline'}
-                          size="sm"
-                          className={cn(
-                            "h-10 sm:h-12 flex-col gap-0 sm:gap-0.5 transition-all",
-                            watchPaymentMethod === method.value && "ring-1 ring-primary shadow-sm"
-                          )}
-                          onClick={() => setValue('payment_method', method.value as any)}
-                          disabled={currentMode === 'view'}
-                        >
-                          <span className="text-xs sm:text-sm">{method.icon}</span>
-                          <span className="text-[8px] sm:text-[10px]">{method.label}</span>
-                        </Button>
-                      ))}
-                    </div>
-
-                    {/* Installments for Credit */}
-                    {watchPaymentMethod === 'credito' && (
-                      <div className="space-y-1.5 pt-2 border-t border-emerald-500/20">
-                        <Label className="text-xs sm:text-sm">Parcelas (até 6x sem juros)</Label>
-                        <Select
-                          value={watch('installments')?.toString()}
-                          onValueChange={(value) => setValue('installments', parseInt(value))}
-                          disabled={currentMode === 'view'}
-                        >
-                          <SelectTrigger className="h-9 sm:h-10 text-sm">
-                            <SelectValue placeholder="Parcelas" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {[1, 2, 3, 4, 5, 6].map((num) => (
-                              <SelectItem key={num} value={num.toString()}>
-                                {num}x de R$ {(watch('payment_amount') / num).toFixed(2)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-                  </div>
+        {/* Scrollable Content */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <form id="appointment-form" onSubmit={handleSubmit(handleSave)} className="px-4 sm:px-6 py-3">
+            {/* Tab: Informações */}
+            <TabsContent value="info" className="mt-0 space-y-2.5 sm:space-y-3">
+              {/* Patient Selection */}
+              <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
+                  <User className="h-3.5 w-3.5 text-primary" />
+                  Paciente *
+                </Label>
+                <PatientCombobox
+                  patients={activePatients || []}
+                  value={watch('patient_id')}
+                  onValueChange={(value) => setValue('patient_id', value)}
+                  onCreateNew={(searchTerm) => {
+                    setSuggestedPatientName(searchTerm);
+                    setQuickPatientModalOpen(true);
+                  }}
+                  disabled={currentMode === 'view' || patientsLoading}
+                />
+                {errors.patient_id && (
+                  <p className="text-xs text-destructive">{errors.patient_id.message}</p>
                 )}
-              </TabsContent>
+              </div>
 
-              {/* Tab: Opções */}
-              <TabsContent value="options" className="mt-0 space-y-3 sm:space-y-4">
-                {/* Equipment Selection */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
-                    <Zap className="h-3.5 w-3.5 text-primary" />
-                    Equipamentos
-                  </Label>
-                  <EquipmentSelector
-                    selectedEquipments={selectedEquipments}
-                    onSelectionChange={setSelectedEquipments}
+              {/* Date and Time - Responsive Row */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label className="text-xs sm:text-sm font-medium">Data *</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal h-9 sm:h-10 text-xs sm:text-sm",
+                      !watchedDate && "text-muted-foreground"
+                    )}
                     disabled={currentMode === 'view'}
-                  />
+                    onClick={() => setIsCalendarOpen(true)}
+                  >
+                    <CalendarIcon className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    {watchedDate ? format(watchedDate, 'dd/MM', { locale: ptBR }) : "Data"}
+                  </Button>
                 </div>
 
-                {/* Recurring */}
-                <div className="space-y-2 bg-gradient-to-r from-blue-500/5 to-transparent p-3 sm:p-4 rounded-lg border border-blue-500/20">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <Checkbox
-                      id="is_recurring"
-                      checked={watch('is_recurring')}
-                      onCheckedChange={(checked) => setValue('is_recurring', checked as boolean)}
-                      disabled={currentMode === 'view'}
-                      className="h-4 w-4"
-                    />
-                    <div className="flex items-center gap-1.5">
-                      <Repeat className="h-3.5 w-3.5 text-blue-600" />
-                      <Label htmlFor="is_recurring" className="text-xs sm:text-sm font-medium cursor-pointer">
-                        Agendamento Recorrente
-                      </Label>
-                    </div>
-                  </div>
-
-                  {watch('is_recurring') && (
-                    <div className="space-y-1.5 pl-6 sm:pl-7">
-                      <Label className="text-[10px] sm:text-xs text-muted-foreground">Repetir semanalmente até</Label>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className={cn("w-full justify-start h-9 sm:h-10 text-xs sm:text-sm", !watch('recurring_until') && "text-muted-foreground")}
-                        disabled={currentMode === 'view'}
-                        onClick={() => setIsRecurringCalendarOpen(true)}
-                      >
-                        <CalendarIcon className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                        {watch('recurring_until') ? format(watch('recurring_until')!, 'dd/MM/yyyy', { locale: ptBR }) : "Selecione a data final"}
-                      </Button>
-                      {errors.recurring_until && <p className="text-xs text-destructive">{errors.recurring_until.message}</p>}
-                    </div>
-                  )}
-                </div>
-
-                {/* Reminders */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
-                    <Bell className="h-3.5 w-3.5 text-primary" />
-                    Lembretes
-                  </Label>
-                  <AppointmentReminder
-                    reminders={reminders}
-                    onRemindersChange={setReminders}
-                    disabled={currentMode === 'view'}
-                  />
-                </div>
-
-                {/* Room Selection */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs sm:text-sm font-medium">Sala</Label>
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label className="text-xs sm:text-sm font-medium">Horário *</Label>
                   <Select
-                    value={watch('room') || ''}
-                    onValueChange={(value) => setValue('room', value)}
+                    value={watchedTime}
+                    onValueChange={(value) => setValue('appointment_time', value)}
                     disabled={currentMode === 'view'}
                   >
-                    <SelectTrigger className="h-9 sm:h-10 text-sm">
-                      <SelectValue placeholder="Selecione a sala" />
+                    <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
+                      <SelectValue placeholder="Hora" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sala-1">🚪 Sala 01</SelectItem>
-                      <SelectItem value="sala-2">🚪 Sala 02</SelectItem>
-                      <SelectItem value="sala-3">🚪 Sala 03</SelectItem>
-                      <SelectItem value="pilates">🧘 Sala Pilates</SelectItem>
+                    <SelectContent className="max-h-60">
+                      {timeSlots.map((slot) => (
+                        <SelectItem key={slot} value={slot}>{slot}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Duplicate Button - Only in edit mode */}
-                {currentMode === 'edit' && appointment && (
-                  <div className="pt-2 border-t">
+                <div className="space-y-1.5 sm:space-y-2 col-span-2 sm:col-span-1">
+                  <Label className="text-xs sm:text-sm font-medium">Duração</Label>
+                  <Select
+                    value={watchedDuration?.toString()}
+                    onValueChange={(value) => setValue('duration', parseInt(value))}
+                    disabled={currentMode === 'view'}
+                  >
+                    <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="30">30 min</SelectItem>
+                      <SelectItem value="45">45 min</SelectItem>
+                      <SelectItem value="60">1 hora</SelectItem>
+                      <SelectItem value="90">1h30</SelectItem>
+                      <SelectItem value="120">2 horas</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Capacity Indicator */}
+              {watchedDate && watchedTime && (() => {
+                const dayOfWeek = watchedDate.getDay();
+                const maxCapacity = getCapacityForTime(dayOfWeek, watchedTime);
+                const conflictCount = conflictCheck?.conflictCount || 0;
+                const availableSlots = maxCapacity - conflictCount;
+                const exceedsCapacity = conflictCount >= maxCapacity;
+
+                return (
+                  <div className={cn(
+                    "flex items-center justify-between p-2 sm:p-2.5 border rounded-lg text-xs sm:text-sm transition-all",
+                    exceedsCapacity
+                      ? "border-red-500/30 bg-red-500/5"
+                      : conflictCount > 0
+                        ? "border-amber-500/30 bg-amber-500/5"
+                        : "border-emerald-500/30 bg-emerald-500/5"
+                  )}>
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      {exceedsCapacity ? (
+                        <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-600" />
+                      ) : (
+                        <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
+                      )}
+                      <span className={cn(
+                        "font-medium",
+                        exceedsCapacity ? "text-red-700" : conflictCount > 0 ? "text-amber-700" : "text-emerald-700"
+                      )}>
+                        {exceedsCapacity
+                          ? "Horário lotado!"
+                          : availableSlots === maxCapacity
+                            ? "Horário livre"
+                            : `${availableSlots} vaga${availableSlots !== 1 ? 's' : ''} disponível`
+                        }
+                      </span>
+                    </div>
+                    <Badge variant="outline" className={cn(
+                      "text-[10px] sm:text-xs h-5 sm:h-6",
+                      exceedsCapacity ? "border-red-500/50" : "border-muted"
+                    )}>
+                      {conflictCount}/{maxCapacity}
+                    </Badge>
+                  </div>
+                );
+              })()}
+
+              {/* Type and Status */}
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label className="text-xs sm:text-sm font-medium">Tipo *</Label>
+                  <Select
+                    value={watch('type')}
+                    onValueChange={(value) => setValue('type', value as AppointmentType)}
+                    disabled={currentMode === 'view'}
+                  >
+                    <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
+                      <SelectValue placeholder="Tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {appointmentTypes.map((type) => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label className="text-xs sm:text-sm font-medium">Status *</Label>
+                  <Select
+                    value={watch('status')}
+                    onValueChange={(value) => setValue('status', value as AppointmentStatus)}
+                    disabled={currentMode === 'view'}
+                  >
+                    <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {appointmentStatuses.map((status) => (
+                        <SelectItem key={status} value={status}>
+                          <div className="flex items-center gap-2">
+                            <div className={cn("w-2 h-2 rounded-full", statusColors[status])} />
+                            {statusLabels[status]}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div className="space-y-1">
+                <Label className="text-xs font-medium">Observações</Label>
+                <Textarea
+                  {...register('notes')}
+                  placeholder="Informações importantes sobre o atendimento..."
+                  rows={2}
+                  disabled={currentMode === 'view'}
+                  className="resize-none text-sm min-h-[60px]"
+                />
+              </div>
+            </TabsContent>
+
+            {/* Tab: Pagamento */}
+            <TabsContent value="payment" className="mt-0 space-y-2.5 sm:space-y-3">
+              <div className="space-y-2">
+                <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
+                  <CreditCard className="h-3.5 w-3.5 text-primary" />
+                  Tipo de Pagamento
+                </Label>
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+                  {[
+                    { value: 'pending', label: 'Pendente', icon: '⏳', color: 'border-amber-500/30 bg-amber-500/5' },
+                    { value: 'paid_single', label: 'Avulso', icon: '💵', color: 'border-emerald-500/30 bg-emerald-500/5' },
+                    { value: 'paid_package', label: 'Pacote', icon: '📦', color: 'border-blue-500/30 bg-blue-500/5' },
+                  ].map((option) => (
+                    <Button
+                      key={option.value}
+                      type="button"
+                      variant={watchPaymentStatus === option.value ? 'default' : 'outline'}
+                      className={cn(
+                        "h-14 sm:h-16 flex-col gap-0.5 sm:gap-1 transition-all",
+                        watchPaymentStatus === option.value
+                          ? "ring-2 ring-primary ring-offset-1 sm:ring-offset-2 shadow-md"
+                          : option.color
+                      )}
+                      onClick={() => {
+                        setValue('payment_status', option.value as any);
+                        if (option.value === 'paid_single') setValue('payment_amount', 180);
+                        if (option.value === 'paid_package') setValue('payment_amount', 170);
+                      }}
+                      disabled={currentMode === 'view'}
+                    >
+                      <span className="text-base sm:text-lg">{option.icon}</span>
+                      <span className="text-[10px] sm:text-xs font-medium">{option.label}</span>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Payment Amount */}
+              <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-medium">Valor da Sessão (R$)</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="170.00"
+                  {...register('payment_amount', { valueAsNumber: true })}
+                  disabled={currentMode === 'view' || watchPaymentStatus === 'pending'}
+                  className="h-9 sm:h-10 text-sm"
+                />
+                <p className="text-[10px] sm:text-xs text-muted-foreground bg-muted/30 px-2 py-1 rounded">
+                  💡 Pacote: R$ 170/sessão • Avulso: R$ 180/sessão
+                </p>
+              </div>
+
+              {/* Payment Method */}
+              {(watchPaymentStatus === 'paid_single' || watchPaymentStatus === 'paid_package') && (
+                <div className="space-y-2 bg-gradient-to-r from-emerald-500/5 to-transparent p-3 sm:p-4 rounded-lg border border-emerald-500/20">
+                  <Label className="text-xs sm:text-sm font-medium">Forma de Pagamento</Label>
+                  <div className="grid grid-cols-4 gap-1 sm:gap-2">
+                    {[
+                      { value: 'pix', label: 'PIX', icon: '📲' },
+                      { value: 'dinheiro', label: 'Dinheiro', icon: '💵' },
+                      { value: 'debito', label: 'Débito', icon: '💳' },
+                      { value: 'credito', label: 'Crédito', icon: '💳' },
+                    ].map((method) => (
+                      <Button
+                        key={method.value}
+                        type="button"
+                        variant={watchPaymentMethod === method.value ? 'default' : 'outline'}
+                        size="sm"
+                        className={cn(
+                          "h-10 sm:h-12 flex-col gap-0 sm:gap-0.5 transition-all",
+                          watchPaymentMethod === method.value && "ring-1 ring-primary shadow-sm"
+                        )}
+                        onClick={() => setValue('payment_method', method.value as any)}
+                        disabled={currentMode === 'view'}
+                      >
+                        <span className="text-xs sm:text-sm">{method.icon}</span>
+                        <span className="text-[8px] sm:text-[10px]">{method.label}</span>
+                      </Button>
+                    ))}
+                  </div>
+
+                  {/* Installments for Credit */}
+                  {watchPaymentMethod === 'credito' && (
+                    <div className="space-y-1.5 pt-2 border-t border-emerald-500/20">
+                      <Label className="text-xs sm:text-sm">Parcelas (até 6x sem juros)</Label>
+                      <Select
+                        value={watch('installments')?.toString()}
+                        onValueChange={(value) => setValue('installments', parseInt(value))}
+                        disabled={currentMode === 'view'}
+                      >
+                        <SelectTrigger className="h-9 sm:h-10 text-sm">
+                          <SelectValue placeholder="Parcelas" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {[1, 2, 3, 4, 5, 6].map((num) => (
+                            <SelectItem key={num} value={num.toString()}>
+                              {num}x de R$ {(watch('payment_amount') / num).toFixed(2)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+              )}
+            </TabsContent>
+
+            {/* Tab: Opções */}
+            <TabsContent value="options" className="mt-0 space-y-3 sm:space-y-4">
+              {/* Equipment Selection */}
+              <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
+                  <Zap className="h-3.5 w-3.5 text-primary" />
+                  Equipamentos
+                </Label>
+                <EquipmentSelector
+                  selectedEquipments={selectedEquipments}
+                  onSelectionChange={setSelectedEquipments}
+                  disabled={currentMode === 'view'}
+                />
+              </div>
+
+              {/* Recurring */}
+              <div className="space-y-2 bg-gradient-to-r from-blue-500/5 to-transparent p-3 sm:p-4 rounded-lg border border-blue-500/20">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <Checkbox
+                    id="is_recurring"
+                    checked={watch('is_recurring')}
+                    onCheckedChange={(checked) => setValue('is_recurring', checked as boolean)}
+                    disabled={currentMode === 'view'}
+                    className="h-4 w-4"
+                  />
+                  <div className="flex items-center gap-1.5">
+                    <Repeat className="h-3.5 w-3.5 text-blue-600" />
+                    <Label htmlFor="is_recurring" className="text-xs sm:text-sm font-medium cursor-pointer">
+                      Agendamento Recorrente
+                    </Label>
+                  </div>
+                </div>
+
+                {watch('is_recurring') && (
+                  <div className="space-y-1.5 pl-6 sm:pl-7">
+                    <Label className="text-[10px] sm:text-xs text-muted-foreground">Repetir semanalmente até</Label>
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full h-9 sm:h-10 text-xs sm:text-sm"
-                      onClick={() => setDuplicateDialogOpen(true)}
+                      className={cn("w-full justify-start h-9 sm:h-10 text-xs sm:text-sm", !watch('recurring_until') && "text-muted-foreground")}
+                      disabled={currentMode === 'view'}
+                      onClick={() => setIsRecurringCalendarOpen(true)}
                     >
-                      <Copy className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
-                      Duplicar Agendamento
+                      <CalendarIcon className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      {watch('recurring_until') ? format(watch('recurring_until')!, 'dd/MM/yyyy', { locale: ptBR }) : "Selecione a data final"}
                     </Button>
+                    {errors.recurring_until && <p className="text-xs text-destructive">{errors.recurring_until.message}</p>}
                   </div>
                 )}
-              </TabsContent>
-            </form>
-          </div>
-        </Tabs>
+              </div>
 
-        {/* Fixed Footer */}
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2 px-4 sm:px-6 py-2.5 sm:py-3 border-t bg-background shrink-0">
-          <div className="flex justify-center sm:justify-start">
-            {currentMode === 'edit' && appointment && (
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={handleDelete}
-                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                size="sm"
-              >
-                <X className="w-4 h-4 mr-1" />
-                Excluir
-              </Button>
-            )}
-          </div>
+              {/* Reminders */}
+              <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
+                  <Bell className="h-3.5 w-3.5 text-primary" />
+                  Lembretes
+                </Label>
+                <AppointmentReminder
+                  reminders={reminders}
+                  onRemindersChange={setReminders}
+                  disabled={currentMode === 'view'}
+                />
+              </div>
 
-          <div className="flex gap-2 justify-end">
-            {currentMode === 'view' && appointment && (
-              <Button
-                type="button"
-                variant="default"
-                onClick={() => setCurrentMode('edit')}
-                size="sm"
-              >
-                Editar
-              </Button>
-            )}
+              {/* Room Selection */}
+              <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-medium">Sala</Label>
+                <Select
+                  value={watch('room') || ''}
+                  onValueChange={(value) => setValue('room', value)}
+                  disabled={currentMode === 'view'}
+                >
+                  <SelectTrigger className="h-9 sm:h-10 text-sm">
+                    <SelectValue placeholder="Selecione a sala" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sala-1">🚪 Sala 01</SelectItem>
+                    <SelectItem value="sala-2">🚪 Sala 02</SelectItem>
+                    <SelectItem value="sala-3">🚪 Sala 03</SelectItem>
+                    <SelectItem value="pilates">🧘 Sala Pilates</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
+              {/* Duplicate Button - Only in edit mode */}
+              {currentMode === 'edit' && appointment && (
+                <div className="pt-2 border-t">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full h-9 sm:h-10 text-xs sm:text-sm"
+                    onClick={() => setDuplicateDialogOpen(true)}
+                  >
+                    <Copy className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+                    Duplicar Agendamento
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+          </form>
+        </div>
+      </Tabs>
+
+      {/* Fixed Footer */}
+      <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2 px-4 sm:px-6 py-2.5 sm:py-3 border-t bg-background shrink-0">
+        <div className="flex justify-center sm:justify-start">
+          {currentMode === 'edit' && appointment && (
             <Button
               type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isCreating || isUpdating}
+              variant="ghost"
+              onClick={handleDelete}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
               size="sm"
             >
-              {currentMode === 'view' ? 'Fechar' : 'Cancelar'}
+              <X className="w-4 h-4 mr-1" />
+              Excluir
             </Button>
-
-            {currentMode !== 'view' && (
-              <Button
-                type="submit"
-                form="appointment-form"
-                disabled={isCreating || isUpdating}
-                className="min-w-[80px] sm:min-w-[100px]"
-                size="sm"
-              >
-                {(isCreating || isUpdating) ? (
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <Check className="w-4 h-4 mr-1" />
-                    {currentMode === 'edit' ? 'Salvar' : 'Criar'}
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
+          )}
         </div>
-      </DialogContent>
 
-      {quickPatientModalOpen && (
-        <QuickPatientModal
-          open={quickPatientModalOpen}
-          onOpenChange={(open) => {
-            setQuickPatientModalOpen(open);
-            if (!open) {
+        <div className="flex gap-2 justify-end">
+          {currentMode === 'view' && appointment && (
+            <Button
+              type="button"
+              variant="default"
+              onClick={() => setCurrentMode('edit')}
+              size="sm"
+            >
+              Editar
+            </Button>
+          )}
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={isCreating || isUpdating}
+            size="sm"
+          >
+            {currentMode === 'view' ? 'Fechar' : 'Cancelar'}
+          </Button>
+
+          {currentMode !== 'view' && (
+            <Button
+              type="submit"
+              form="appointment-form"
+              disabled={isCreating || isUpdating}
+              className="min-w-[80px] sm:min-w-[100px]"
+              size="sm"
+            >
+              {(isCreating || isUpdating) ? (
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <Check className="w-4 h-4 mr-1" />
+                  {currentMode === 'edit' ? 'Salvar' : 'Criar'}
+                </>
+              )}
+            </Button>
+          )}
+        </div>
+      </div>
+
+
+      {
+        quickPatientModalOpen && (
+          <QuickPatientModal
+            open={quickPatientModalOpen}
+            onOpenChange={(open) => {
+              setQuickPatientModalOpen(open);
+              if (!open) {
+                setSuggestedPatientName('');
+              }
+            }}
+            onPatientCreated={(patientId, patientName) => {
+              setValue('patient_id', patientId);
+              setQuickPatientModalOpen(false);
               setSuggestedPatientName('');
-            }
-          }}
-          onPatientCreated={(patientId, patientName) => {
-            setValue('patient_id', patientId);
-            setQuickPatientModalOpen(false);
-            setSuggestedPatientName('');
-            queryClient.invalidateQueries({ queryKey: ['patients'] });
-          }}
-          suggestedName={suggestedPatientName}
-        />
-      )}
+              queryClient.invalidateQueries({ queryKey: ['patients'] });
+            }}
+            suggestedName={suggestedPatientName}
+          />
+        )
+      }
 
       {/* Calendar Dialog for Main Date */}
       <Dialog open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
@@ -1079,17 +1126,19 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       />
 
       {/* Waitlist Quick Add from Capacity Dialog */}
-      {waitlistQuickAddOpen && pendingFormData && (
-        <WaitlistQuickAdd
-          open={waitlistQuickAddOpen}
-          onOpenChange={(open) => {
-            setWaitlistQuickAddOpen(open);
-            if (!open) setPendingFormData(null);
-          }}
-          date={pendingFormData.appointment_date}
-          time={pendingFormData.appointment_time}
-        />
-      )}
-    </Dialog>
+      {
+        waitlistQuickAddOpen && pendingFormData && (
+          <WaitlistQuickAdd
+            open={waitlistQuickAddOpen}
+            onOpenChange={(open) => {
+              setWaitlistQuickAddOpen(open);
+              if (!open) setPendingFormData(null);
+            }}
+            date={pendingFormData.appointment_date}
+            time={pendingFormData.appointment_time}
+          />
+        )
+      }
+    </ModalWrapper >
   );
 };

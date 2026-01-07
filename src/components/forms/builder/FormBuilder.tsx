@@ -25,6 +25,7 @@ import { ClinicalFieldType, EvaluationForm, EvaluationFormField } from '@/types/
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/errors/logger';
 
 interface FormBuilderProps {
     formId?: string; // If provided, we are editing specific fields for this form
@@ -169,7 +170,7 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ formId, initialData, o
             if (onSave) onSave();
 
         } catch (error: any) {
-            console.error('Error saving form:', error);
+            logger.error('Erro ao salvar ficha de avaliação', error, 'FormBuilder');
             toast({
                 title: "Erro ao salvar",
                 description: error.message || "Ocorreu um erro ao salvar a ficha.",

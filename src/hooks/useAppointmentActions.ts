@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/lib/errors/logger';
 
 export const useAppointmentActions = () => {
   const queryClient = useQueryClient();
@@ -13,7 +14,7 @@ export const useAppointmentActions = () => {
         .eq('id', appointmentId)
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -22,6 +23,7 @@ export const useAppointmentActions = () => {
       toast.success('Agendamento confirmado com sucesso');
     },
     onError: (error: Error) => {
+      logger.error('Erro ao confirmar agendamento', error, 'useAppointmentActions');
       toast.error('Erro ao confirmar agendamento: ' + error.message);
     },
   });
@@ -34,7 +36,7 @@ export const useAppointmentActions = () => {
         .eq('id', appointmentId)
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -43,23 +45,24 @@ export const useAppointmentActions = () => {
       toast.success('Agendamento cancelado');
     },
     onError: (error: Error) => {
+      logger.error('Erro ao cancelar agendamento', error, 'useAppointmentActions');
       toast.error('Erro ao cancelar agendamento: ' + error.message);
     },
   });
 
   const rescheduleAppointment = useMutation({
-    mutationFn: async ({ 
-      appointmentId, 
-      newDate, 
-      newTime 
-    }: { 
-      appointmentId: string; 
-      newDate: string; 
+    mutationFn: async ({
+      appointmentId,
+      newDate,
+      newTime
+    }: {
+      appointmentId: string;
+      newDate: string;
       newTime: string;
     }) => {
       const { data, error } = await supabase
         .from('appointments')
-        .update({ 
+        .update({
           appointment_date: newDate,
           appointment_time: newTime,
           status: 'reagendado'
@@ -67,7 +70,7 @@ export const useAppointmentActions = () => {
         .eq('id', appointmentId)
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -76,6 +79,7 @@ export const useAppointmentActions = () => {
       toast.success('Agendamento reagendado com sucesso');
     },
     onError: (error: Error) => {
+      logger.error('Erro ao reagendar agendamento', error, 'useAppointmentActions');
       toast.error('Erro ao reagendar: ' + error.message);
     },
   });
@@ -88,7 +92,7 @@ export const useAppointmentActions = () => {
         .eq('id', appointmentId)
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -97,6 +101,7 @@ export const useAppointmentActions = () => {
       toast.success('Consulta marcada como concluída');
     },
     onError: (error: Error) => {
+      logger.error('Erro ao concluir consulta', error, 'useAppointmentActions');
       toast.error('Erro ao concluir consulta: ' + error.message);
     },
   });
@@ -109,7 +114,7 @@ export const useAppointmentActions = () => {
         .eq('id', appointmentId)
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -118,6 +123,7 @@ export const useAppointmentActions = () => {
       toast.success('Status atualizado com sucesso');
     },
     onError: (error: Error) => {
+      logger.error('Erro ao atualizar status', error, 'useAppointmentActions');
       toast.error('Erro ao atualizar status: ' + error.message);
     },
   });

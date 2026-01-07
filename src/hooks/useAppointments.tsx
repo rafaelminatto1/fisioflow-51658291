@@ -256,10 +256,9 @@ export function useCreateAppointment() {
         appointments: currentAppointments
       });
 
-      if (conflict.hasConflict) {
-        logger.warn('Conflito de horário detectado', { appointmentData: data }, 'useAppointments');
-        throw new Error('Conflito de horário');
-      }
+      logger.warn('Conflito de horário detectado, mas permitindo criação (controle de capacidade no frontend)', { appointmentData: data }, 'useAppointments');
+      // Não lançar erro aqui para permitir sobreposição controlada pela capacidade
+      // throw new Error('Conflito de horário');
 
       // Validar dados antes de inserir
       if (!data.patient_id) {
@@ -398,9 +397,8 @@ export function useUpdateAppointment() {
             appointments: currentAppointments
           });
 
-          if (conflict.hasConflict) {
-            throw new Error('Conflito de horário');
-          }
+          logger.warn('Conflito de horário detectado na atualização, permitindo (controle no frontend)', { appointmentId }, 'useAppointments');
+          // throw new Error('Conflito de horário');
         }
       }
 
