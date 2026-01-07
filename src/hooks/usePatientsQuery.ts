@@ -54,6 +54,7 @@ export const usePatientsQuery = () => {
       if (error) throw error;
       return data as PatientDB[];
     },
+    enabled: !!organizationId,
   });
 };
 
