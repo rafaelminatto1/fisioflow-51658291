@@ -31,7 +31,7 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
   const [chartType, setChartType] = useState<'line' | 'area' | 'bar'>('line');
   const [is3DMode, setIs3DMode] = useState(false);
   const [notes, setNotes] = useState('');
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const { user } = useAuth();
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
   const lastSavedRef = useRef<string>('');
@@ -84,7 +84,7 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
       setTimeout(() => setSaveStatus('idle'), 2000);
     } catch (error) {
       console.error('Erro ao salvar mapa de dor:', error);
-      setSaveStatus('idle');
+      setSaveStatus('error');
     }
   }, [user, painPoints, sessionId, createPainMap, readOnly]);
 
@@ -238,7 +238,7 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
                 onPainPointsChange={setPainPoints}
                 readOnly={readOnly}
                 variant={is3DMode ? '3d' : '2d'}
-                evolutionData={painEvolution}
+                evolutionData={painEvolution as any}
               />
             </div>
 
@@ -288,6 +288,12 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
                       <>
                         <CheckCircle2 className="w-4 h-4 text-green-600" />
                         <span className="text-green-600">Salvo automaticamente</span>
+                      </>
+                    )}
+                    {saveStatus === 'error' && (
+                      <>
+                        <TrendingUp className="w-4 h-4 text-red-600 rotate-45" />
+                        <span className="text-red-600 font-medium">Erro ao salvar (Tente novamente)</span>
                       </>
                     )}
                     {saveStatus === 'idle' && painPoints.length > 0 && (

@@ -1,16 +1,18 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  Calendar, 
-  MapPin, 
+import { useNavigate } from 'react-router-dom';
+import {
+  User,
+  Mail,
+  Phone,
+  Calendar,
+  MapPin,
   FileText,
   Heart,
   AlertCircle,
@@ -19,23 +21,24 @@ import {
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-export const ViewPatientModal: React.FC<{ 
-  open: boolean; 
-  onOpenChange: (o: boolean) => void; 
-  patientId?: string 
+export const ViewPatientModal: React.FC<{
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  patientId?: string
 }> = ({ open, onOpenChange, patientId }) => {
-  
+  const navigate = useNavigate();
+
   const { data: patient, isLoading } = useQuery({
     queryKey: ['patient', patientId],
     queryFn: async () => {
       if (!patientId) return null;
-      
+
       const { data, error } = await supabase
         .from('patients')
         .select('*')
         .eq('id', patientId)
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -98,122 +101,135 @@ export const ViewPatientModal: React.FC<{
                     </p>
                   )}
                 </div>
+              </div>
+              <div className="flex flex-col gap-2">
                 <Badge className={getStatusColor(patient.status)}>
                   {patient.status}
                 </Badge>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    onOpenChange(false);
+                    navigate(`/patients/${patientId}/evaluations/new`);
+                  }}
+                  className="gap-2 text-xs h-7"
+                >
+                  <FileText size={12} /> Avaliar
+                </Button>
               </div>
+            </div>
 
-              <Separator />
+            <Separator />
 
-              {/* Contact Information */}
-              <div className="space-y-3">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <Phone className="h-4 w-4" />
-                  Informações de Contato
-                </h4>
-                <div className="grid gap-3">
-                  {patient.email && (
-                    <div className="flex items-center gap-2 text-sm p-3 bg-accent/30 rounded-lg">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span>{patient.email}</span>
-                    </div>
-                  )}
-                  {patient.phone && (
-                    <div className="flex items-center gap-2 text-sm p-3 bg-accent/30 rounded-lg">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      <span>{patient.phone}</span>
-                    </div>
-                  )}
-                  {patient.emergency_contact && (
-                    <div className="flex items-center gap-2 text-sm p-3 bg-accent/30 rounded-lg">
-                      <AlertCircle className="h-4 w-4 text-destructive" />
-                      <div>
-                        <p className="font-medium">Contato de Emergência</p>
-                        <p className="text-muted-foreground">{patient.emergency_contact}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Address Information */}
-              {(patient.address || patient.city || patient.state) && (
-                <>
-                  <div className="space-y-3">
-                    <h4 className="font-semibold flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      Endereço
-                    </h4>
-                    <div className="text-sm p-3 bg-accent/30 rounded-lg space-y-1">
-                      {patient.address && <p>{patient.address}</p>}
-                      {(patient.city || patient.state) && (
-                        <p className="text-muted-foreground">
-                          {[patient.city, patient.state].filter(Boolean).join(' - ')}
-                        </p>
-                      )}
-                      {patient.zip_code && (
-                        <p className="text-muted-foreground">CEP: {patient.zip_code}</p>
-                      )}
-                    </div>
+            {/* Contact Information */}
+            <div className="space-y-3">
+              <h4 className="font-semibold flex items-center gap-2">
+                <Phone className="h-4 w-4" />
+                Informações de Contato
+              </h4>
+              <div className="grid gap-3">
+                {patient.email && (
+                  <div className="flex items-center gap-2 text-sm p-3 bg-accent/30 rounded-lg">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span>{patient.email}</span>
                   </div>
-                  <Separator />
-                </>
-              )}
-
-              {/* Health Insurance */}
-              {patient.health_insurance && (
-                <>
-                  <div className="space-y-3">
-                    <h4 className="font-semibold flex items-center gap-2">
-                      <Heart className="h-4 w-4" />
-                      Plano de Saúde
-                    </h4>
-                    <div className="text-sm p-3 bg-accent/30 rounded-lg space-y-1">
-                      <p>{patient.health_insurance}</p>
-                      {patient.insurance_number && (
-                        <p className="text-muted-foreground">Número: {patient.insurance_number}</p>
-                      )}
-                    </div>
+                )}
+                {patient.phone && (
+                  <div className="flex items-center gap-2 text-sm p-3 bg-accent/30 rounded-lg">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span>{patient.phone}</span>
                   </div>
-                  <Separator />
-                </>
-              )}
-
-              {/* Observations */}
-              {patient.observations && (
-                <>
-                  <div className="space-y-3">
-                    <h4 className="font-semibold flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      Observações
-                    </h4>
-                    <div className="text-sm p-3 bg-accent/30 rounded-lg">
-                      <p className="whitespace-pre-wrap">{patient.observations}</p>
+                )}
+                {patient.emergency_contact && (
+                  <div className="flex items-center gap-2 text-sm p-3 bg-accent/30 rounded-lg">
+                    <AlertCircle className="h-4 w-4 text-destructive" />
+                    <div>
+                      <p className="font-medium">Contato de Emergência</p>
+                      <p className="text-muted-foreground">{patient.emergency_contact}</p>
                     </div>
-                  </div>
-                  <Separator />
-                </>
-              )}
-
-              {/* Registration Info */}
-              <div className="space-y-2 text-xs text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-3 w-3" />
-                  <span>
-                    Cadastrado em: {format(new Date(patient.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                  </span>
-                </div>
-                {patient.updated_at && patient.updated_at !== patient.created_at && (
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-3 w-3" />
-                    <span>
-                      Última atualização: {format(new Date(patient.updated_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                    </span>
                   </div>
                 )}
               </div>
+            </div>
+
+            <Separator />
+
+            {/* Address Information */}
+            {(patient.address || patient.city || patient.state) && (
+              <>
+                <div className="space-y-3">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    Endereço
+                  </h4>
+                  <div className="text-sm p-3 bg-accent/30 rounded-lg space-y-1">
+                    {patient.address && <p>{patient.address}</p>}
+                    {(patient.city || patient.state) && (
+                      <p className="text-muted-foreground">
+                        {[patient.city, patient.state].filter(Boolean).join(' - ')}
+                      </p>
+                    )}
+                    {patient.zip_code && (
+                      <p className="text-muted-foreground">CEP: {patient.zip_code}</p>
+                    )}
+                  </div>
+                </div>
+                <Separator />
+              </>
+            )}
+
+            {/* Health Insurance */}
+            {patient.health_insurance && (
+              <>
+                <div className="space-y-3">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <Heart className="h-4 w-4" />
+                    Plano de Saúde
+                  </h4>
+                  <div className="text-sm p-3 bg-accent/30 rounded-lg space-y-1">
+                    <p>{patient.health_insurance}</p>
+                    {patient.insurance_number && (
+                      <p className="text-muted-foreground">Número: {patient.insurance_number}</p>
+                    )}
+                  </div>
+                </div>
+                <Separator />
+              </>
+            )}
+
+            {/* Observations */}
+            {patient.observations && (
+              <>
+                <div className="space-y-3">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Observações
+                  </h4>
+                  <div className="text-sm p-3 bg-accent/30 rounded-lg">
+                    <p className="whitespace-pre-wrap">{patient.observations}</p>
+                  </div>
+                </div>
+                <Separator />
+              </>
+            )}
+
+            {/* Registration Info */}
+            <div className="space-y-2 text-xs text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-3 w-3" />
+                <span>
+                  Cadastrado em: {format(new Date(patient.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                </span>
+              </div>
+              {patient.updated_at && patient.updated_at !== patient.created_at && (
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-3 w-3" />
+                  <span>
+                    Última atualização: {format(new Date(patient.updated_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                  </span>
+                </div>
+              )}
             </div>
           </ScrollArea>
         )}

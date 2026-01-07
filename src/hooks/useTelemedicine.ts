@@ -19,17 +19,17 @@ export interface TelemedicineRoom {
   created_at: string;
 }
 
+import { useAuth } from '@/contexts/AuthContextProvider';
+
 export function useTelemedicineRooms() {
+  const { profile } = useAuth();
+  const organizationId = profile?.organization_id;
+
   return useQuery({
-    queryKey: ['telemedicine-rooms'],
+    queryKey: ['telemedicine-rooms', organizationId],
     queryFn: async () => {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('organization_id')
-        .single();
-      
-      if (!profile?.organization_id) return [];
-      
+      if (!organizationId) return [];
+
       const { data, error } = await supabase
         .from('telemedicine_rooms')
         .select(`
@@ -37,30 +37,27 @@ export function useTelemedicineRooms() {
           patients:patient_id (name, email, phone),
           profiles:therapist_id (full_name)
         `)
-        .eq('organization_id', profile.organization_id)
+        .eq('organization_id', organizationId)
         .order('created_at', { ascending: false });
-      
+
       if (error) throw error;
       return data;
-    }
+    },
+    enabled: !!organizationId
   });
 }
 
 export function useCreateTelemedicineRoom() {
   const queryClient = useQueryClient();
-  
+  const { profile } = useAuth();
+
   return useMutation({
     mutationFn: async (data: { patient_id: string; scheduled_at?: string; appointment_id?: string }) => {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id, organization_id')
-        .single();
-      
       if (!profile?.organization_id) throw new Error('Organização não encontrada');
-      
+
       // Generate unique room code
       const roomCode = crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase();
-      
+
       const { data: result, error } = await supabase
         .from('telemedicine_rooms')
         .insert({
@@ -72,7 +69,7 @@ export function useCreateTelemedicineRoom() {
         })
         .select()
         .single();
-      
+
       if (error) throw error;
       return result;
     },
@@ -88,14 +85,14 @@ export function useCreateTelemedicineRoom() {
 
 export function useUpdateTelemedicineRoom() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async ({ id, ...data }: Partial<TelemedicineRoom> & { id: string }) => {
       const { error } = await supabase
         .from('telemedicine_rooms')
         .update(data)
         .eq('id', id);
-      
+
       if (error) throw error;
     },
     onSuccess: () => {

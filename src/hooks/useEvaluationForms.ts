@@ -1,32 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-export interface EvaluationFormField {
-  id: string;
-  form_id: string;
-  grupo: string | null;
-  ordem: number;
-  label: string;
-  tipo_campo: 'texto_curto' | 'texto_longo' | 'lista' | 'opcao_unica' | 'selecao';
-  opcoes: string[] | null;
-  obrigatorio: boolean;
-  placeholder: string | null;
-  created_at: string;
-}
-
-export interface EvaluationForm {
-  id: string;
-  nome: string;
-  descricao: string | null;
-  tipo: string;
-  ativo: boolean;
-  organization_id: string | null;
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
-  fields?: EvaluationFormField[];
-}
+import { EvaluationForm, EvaluationFormWithFields, EvaluationFormField } from '@/types/clinical-forms';
 
 export type EvaluationFormFormData = {
   nome: string;
@@ -80,7 +55,9 @@ export function useEvaluationFormWithFields(formId: string | undefined) {
 
       if (fieldsError) throw fieldsError;
 
-      return { ...form, fields } as EvaluationForm;
+      // Cast fields to ensure they match our frontend type (e.g. tipo_campo string -> enum)
+      // We assume the DB values match the enum values
+      return { ...form, fields } as unknown as EvaluationFormWithFields;
     },
     enabled: !!formId,
   });
@@ -163,9 +140,17 @@ export function useAddFormField() {
 
   return useMutation({
     mutationFn: async ({ formId, field }: { formId: string; field: EvaluationFormFieldFormData }) => {
+      // We need to cast the field type to string for Supabase insertion if types mismatch strictness
+      // But typically it's fine.
       const { data, error } = await supabase
         .from('evaluation_form_fields')
-        .insert({ ...field, form_id: formId })
+        .insert({
+          ...field,
+          form_id: formId,
+          // Ensure options is treated correctly (array vs jsonb)
+          // Supabase typescript helper might expect Json, our type has string[]
+          opcoes: field.opcoes ? JSON.stringify(field.opcoes) : null
+        } as any) // Type casting to bypass potential strictness issues with generated types for now
         .select()
         .single();
 
@@ -187,9 +172,14 @@ export function useUpdateFormField() {
 
   return useMutation({
     mutationFn: async ({ id, formId, ...field }: Partial<EvaluationFormField> & { id: string; formId: string }) => {
+      const updateData: any = { ...field };
+      if (updateData.opcoes) {
+        updateData.opcoes = JSON.stringify(updateData.opcoes);
+      }
+
       const { data, error } = await supabase
         .from('evaluation_form_fields')
-        .update(field)
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();

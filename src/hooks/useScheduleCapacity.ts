@@ -26,33 +26,11 @@ export interface ScheduleCapacity {
 
 export function useScheduleCapacity() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const queryClient = useQueryClient();
 
   // Validate user ID format (must be UUID)
   const isValidUserId = user?.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
-
-  // Get organization ID from profiles table (avoids RLS recursion issue)
-  const { data: profile, error: profileError } = useQuery({
-    queryKey: ['profile-org', user?.id],
-    queryFn: async () => {
-      if (!isValidUserId) {
-        console.warn('Invalid user ID detected in useScheduleCapacity:', user?.id);
-        return null;
-      }
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('organization_id')
-        .eq('user_id', user!.id)
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!isValidUserId,
-    retry: false, // Don't retry if ID is invalid
-  });
 
   const organizationId = profile?.organization_id;
 
@@ -329,6 +307,6 @@ export function useScheduleCapacity() {
     isCreating: createCapacity.isPending || createMultipleCapacities.isPending,
     isUpdating: updateCapacity.isPending,
     isDeleting: deleteCapacity.isPending,
-    authError: !isValidUserId ? 'Sessão de usuário inválida' : (profileError ? 'Erro ao carregar perfil' : null),
+    authError: !isValidUserId ? 'Sessão de usuário inválida' : null,
   };
 }

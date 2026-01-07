@@ -333,6 +333,24 @@ export function useUpdatePainMap() {
   });
 }
 
+// Interfaces for Supabase responses to avoid 'any'
+interface PainMapResponse {
+  id: string;
+  created_at: string;
+  pain_points: unknown; // Supabase returns JSONB as unknown or any, we'll validate it
+  global_pain_level?: number;
+}
+
+interface RawPainPoint {
+  region: string;
+  regionCode?: string;
+  intensity: number;
+  painType?: string;
+  pain_type?: string;
+  x?: number;
+  y?: number;
+}
+
 // Hook para evolução da dor
 export function usePainEvolution(patientId: string | undefined) {
   return useQuery({
@@ -354,25 +372,28 @@ export function usePainEvolution(patientId: string | undefined) {
       if (error) throw error;
 
       // Calcular média de intensidade por mapa
-      return (data || []).map((map: any) => {
-        // pain_points pode ser JSONB array ou null
-        const points = (map.pain_points as any[] || []);
-        const totalIntensity = points.reduce((sum: number, p: any) => sum + (p.intensity || 0), 0);
-        const avgIntensity = points.length > 0
-          ? totalIntensity / points.length
+      return (data || []).map((map: PainMapResponse) => {
+        // Validation/Transformation of JSONB data
+        const rawPoints = Array.isArray(map.pain_points)
+          ? (map.pain_points as unknown as RawPainPoint[])
+          : [];
+
+        const totalIntensity = rawPoints.reduce((sum, p) => sum + (p.intensity || 0), 0);
+        const avgIntensity = rawPoints.length > 0
+          ? totalIntensity / rawPoints.length
           : (map.global_pain_level || 0);
 
         return {
           id: map.id,
           date: map.created_at,
           averageIntensity: Math.round(avgIntensity * 10) / 10,
-          pointCount: points.length,
+          pointCount: rawPoints.length,
           globalPainLevel: map.global_pain_level || avgIntensity,
-          regionCount: points.length,
-          painPoints: points.map((p: any) => ({
-            region: p.region || p.regionCode,
+          regionCount: rawPoints.length,
+          painPoints: rawPoints.map(p => ({
+            region: p.region || p.regionCode || 'Desconhecido',
             intensity: p.intensity,
-            painType: p.painType || p.pain_type,
+            painType: p.painType || p.pain_type || 'unspecified',
             x: p.x || 0,
             y: p.y || 0,
           })),
@@ -405,11 +426,13 @@ export function usePainStatistics(patientId: string | undefined) {
       if (!data || data.length === 0) return null;
 
       // Calcular estatísticas
-      const allPoints: any[] = data.flatMap(m => (m.pain_points as any[] || []));
+      const allPoints: RawPainPoint[] = data.flatMap(m =>
+        Array.isArray(m.pain_points) ? (m.pain_points as unknown as RawPainPoint[]) : []
+      );
 
       // Regiões mais afetadas
       const regionCounts: Record<string, { count: number; totalIntensity: number }> = {};
-      allPoints.forEach((p: any) => {
+      allPoints.forEach((p) => {
         const region = p.region || p.regionCode || 'unknown';
         if (!regionCounts[region]) {
           regionCounts[region] = { count: 0, totalIntensity: 0 };
@@ -429,7 +452,7 @@ export function usePainStatistics(patientId: string | undefined) {
 
       // Tipos de dor mais comuns
       const typeCounts: Record<string, number> = {};
-      allPoints.forEach((p: any) => {
+      allPoints.forEach((p) => {
         const painType = p.pain_type || p.painType || 'unknown';
         typeCounts[painType] = (typeCounts[painType] || 0) + 1;
       });
@@ -442,14 +465,14 @@ export function usePainStatistics(patientId: string | undefined) {
       const firstMap = data[0];
       const lastMap = data[data.length - 1];
 
-      const firstPoints = (firstMap.pain_points as any[] || []);
-      const lastPoints = (lastMap.pain_points as any[] || []);
+      const firstPoints = Array.isArray(firstMap.pain_points) ? (firstMap.pain_points as unknown as RawPainPoint[]) : [];
+      const lastPoints = Array.isArray(lastMap.pain_points) ? (lastMap.pain_points as unknown as RawPainPoint[]) : [];
 
       const firstAvg = firstPoints.length > 0
-        ? firstPoints.reduce((s: number, p: any) => s + (p.intensity || 0), 0) / firstPoints.length
+        ? firstPoints.reduce((s, p) => s + (p.intensity || 0), 0) / firstPoints.length
         : (firstMap.global_pain_level || 0);
       const lastAvg = lastPoints.length > 0
-        ? lastPoints.reduce((s: number, p: any) => s + (p.intensity || 0), 0) / lastPoints.length
+        ? lastPoints.reduce((s, p) => s + (p.intensity || 0), 0) / lastPoints.length
         : (lastMap.global_pain_level || 0);
 
       const trend = firstAvg > lastAvg ? 'improving'
@@ -457,10 +480,10 @@ export function usePainStatistics(patientId: string | undefined) {
           : 'stable';
 
       // Calcular média geral de dor
-      const totalIntensity = allPoints.reduce((sum: number, p: any) => sum + (p.intensity || 0), 0);
+      const totalIntensity = allPoints.reduce((sum, p) => sum + (p.intensity || 0), 0);
       const averagePainLevel = allPoints.length > 0
         ? totalIntensity / allPoints.length
-        : (data.reduce((sum: number, m: any) => sum + (m.global_pain_level || 0), 0) / data.length);
+        : (data.reduce((sum, m) => sum + (m.global_pain_level || 0), 0) / data.length);
 
       // Calcular redução percentual
       const painReduction = firstAvg > 0
