@@ -1,5 +1,5 @@
 -- Create assessment_templates table
-CREATE TABLE assessment_templates (
+CREATE TABLE IF NOT EXISTS assessment_templates (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   title TEXT NOT NULL,
   description TEXT,
@@ -12,7 +12,7 @@ CREATE TABLE assessment_templates (
 );
 
 -- Create assessment_sections table
-CREATE TABLE assessment_sections (
+CREATE TABLE IF NOT EXISTS assessment_sections (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   template_id UUID REFERENCES assessment_templates(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE assessment_sections (
 );
 
 -- Create assessment_questions table
-CREATE TABLE assessment_questions (
+CREATE TABLE IF NOT EXISTS assessment_questions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   section_id UUID REFERENCES assessment_sections(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE assessment_questions (
 );
 
 -- Create patient_assessments table
-CREATE TABLE patient_assessments (
+CREATE TABLE IF NOT EXISTS patient_assessments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   patient_id UUID REFERENCES patients(id) NOT NULL,
   appointment_id UUID REFERENCES appointments(id),
@@ -47,7 +47,7 @@ CREATE TABLE patient_assessments (
 );
 
 -- Create assessment_responses table
-CREATE TABLE assessment_responses (
+CREATE TABLE IF NOT EXISTS assessment_responses (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   assessment_id UUID REFERENCES patient_assessments(id) ON DELETE CASCADE,
   question_id UUID REFERENCES assessment_questions(id),
@@ -63,6 +63,39 @@ ALTER TABLE assessment_sections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE assessment_questions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE patient_assessments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE assessment_responses ENABLE ROW LEVEL SECURITY;
+
+-- Helper to safely drop policies
+DO $$ 
+BEGIN
+    -- Assessment Templates
+    DROP POLICY IF EXISTS "Users can view their own templates" ON assessment_templates;
+    DROP POLICY IF EXISTS "Users can insert their own templates" ON assessment_templates;
+    DROP POLICY IF EXISTS "Users can update their own templates" ON assessment_templates;
+    DROP POLICY IF EXISTS "Users can delete their own templates" ON assessment_templates;
+
+    -- Assessment Sections
+    DROP POLICY IF EXISTS "Users can view sections of their templates" ON assessment_sections;
+    DROP POLICY IF EXISTS "Users can insert sections to their templates" ON assessment_sections;
+    DROP POLICY IF EXISTS "Users can update sections of their templates" ON assessment_sections;
+    DROP POLICY IF EXISTS "Users can delete sections of their templates" ON assessment_sections;
+
+    -- Assessment Questions
+    DROP POLICY IF EXISTS "Users can view questions of their templates" ON assessment_questions;
+    DROP POLICY IF EXISTS "Users can insert questions to their templates" ON assessment_questions;
+    DROP POLICY IF EXISTS "Users can update questions of their templates" ON assessment_questions;
+    DROP POLICY IF EXISTS "Users can delete questions of their templates" ON assessment_questions;
+
+    -- Patient Assessments
+    DROP POLICY IF EXISTS "Users can view their assessments" ON patient_assessments;
+    DROP POLICY IF EXISTS "Users can insert their assessments" ON patient_assessments;
+    DROP POLICY IF EXISTS "Users can update their assessments" ON patient_assessments;
+    DROP POLICY IF EXISTS "Users can delete their assessments" ON patient_assessments;
+
+    -- Assessment Responses
+    DROP POLICY IF EXISTS "Users can view their assessment responses" ON assessment_responses;
+    DROP POLICY IF EXISTS "Users can insert their assessment responses" ON assessment_responses;
+    DROP POLICY IF EXISTS "Users can update their assessment responses" ON assessment_responses;
+END $$;
 
 -- Create policies (Basic: users can see/edit their own data)
 -- Assuming 'auth.uid()' matches 'user_id' or 'created_by'
