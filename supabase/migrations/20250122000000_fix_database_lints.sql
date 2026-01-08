@@ -5,7 +5,8 @@ CREATE SCHEMA IF NOT EXISTS extensions;
 GRANT USAGE ON SCHEMA extensions TO postgres, anon, authenticated, service_role;
 
 -- Move pg_net extension to extensions schema
-ALTER EXTENSION pg_net SET SCHEMA extensions;
+-- ALTER EXTENSION pg_net SET SCHEMA extensions; -- FAILED: extension "pg_net" does not support SET SCHEMA
+
 
 -- Update search path for standard roles to include extensions
 ALTER ROLE postgres SET search_path = public, extensions;
