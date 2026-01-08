@@ -31,8 +31,9 @@ import {
   type AppointmentType,
   type AppointmentStatus
 } from '@/types/appointment';
-import { appointmentSchema } from '@/lib/validations/agenda';
+import { appointmentFormSchema } from '@/lib/validations/agenda';
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
+import { cn } from '@/lib/utils';
 
 import { QuickPatientModal } from '../modals/QuickPatientModal';
 import { DuplicateAppointmentDialog, type DuplicateConfig } from './DuplicateAppointmentDialog';
@@ -60,6 +61,8 @@ interface AppointmentModalProps {
   mode?: 'create' | 'edit' | 'view';
 }
 
+import { useNavigate } from 'react-router-dom';
+
 export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   isOpen,
   onClose,
@@ -69,6 +72,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   defaultPatientId,
   mode: initialMode = 'create'
 }) => {
+  const navigate = useNavigate();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isRecurringCalendarOpen, setIsRecurringCalendarOpen] = useState(false);
   const [conflictCheck, setConflictCheck] = useState<{ hasConflict: boolean; conflictingAppointment?: AppointmentBase; conflictCount?: number } | null>(null);
@@ -92,7 +96,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const { getCapacityForTime } = useScheduleCapacity();
 
   const methods = useForm<AppointmentFormData>({
-    resolver: zodResolver(appointmentSchema),
+    resolver: zodResolver(appointmentFormSchema),
     defaultValues: {
       patient_id: appointment?.patientId || defaultPatientId || '',
       appointment_date: appointment?.date ? format(new Date(appointment.date), 'yyyy-MM-dd') : (defaultDate ? format(defaultDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')),
@@ -222,20 +226,45 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       return;
     }
 
-    const appointmentData: AppointmentFormData = data;
+    const appointmentData = data;
+    const endTime = new Date(new Date(`${appointmentData.appointment_date}T${appointmentData.appointment_time}`).getTime() + appointmentData.duration * 60000);
+    const endTimeString = format(endTime, 'HH:mm');
+
+    const formattedData = {
+      patient_id: appointmentData.patient_id,
+      therapist_id: appointmentData.therapist_id || '',
+      date: appointmentData.appointment_date,
+      start_time: appointmentData.appointment_time,
+      end_time: endTimeString,
+      duration: appointmentData.duration,
+      status: appointmentData.status as any, // Cast to avoid type mismatch with database enum if needed
+      payment_status: appointmentData.payment_status as any,
+      notes: appointmentData.notes || '',
+      room: appointmentData.room || '',
+      session_type: (appointmentData.type === 'Fisioterapia' ? 'individual' : 'group') as any, // Simple mapping, should be refined based on type
+    };
 
     if (appointment?.id) {
       updateAppointmentMutation({
         appointmentId: appointment.id,
-        updates: appointmentData
+        updates: formattedData
       }, {
         onSuccess: () => {
+          if (appointmentData.status === 'avaliacao') {
+            navigate(`/patients/${appointmentData.patient_id}/evaluations/new?appointmentId=${appointment.id}`);
+          }
           onClose();
         }
       });
     } else {
-      createAppointmentMutation(appointmentData, {
-        onSuccess: () => {
+      createAppointmentMutation(formattedData as any, { // Cast to avoid strict type check on mutation payload vs inferred
+        onSuccess: (newAppointment) => {
+          if (appointmentData.status === 'avaliacao') {
+            const createdId = (newAppointment as any)?.id;
+            if (createdId) {
+              navigate(`/patients/${appointmentData.patient_id}/evaluations/new?appointmentId=${createdId}`);
+            }
+          }
           onClose();
         }
       });
@@ -427,7 +456,10 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                 type="submit"
                 form="appointment-form"
                 disabled={isCreating || isUpdating}
-                className="min-w-[80px] sm:min-w-[100px]"
+                className={cn(
+                  "min-w-[80px] sm:min-w-[100px]",
+                  watch('status') === 'avaliacao' && "bg-violet-600 hover:bg-violet-700 text-white"
+                )}
                 size="sm"
               >
                 {(isCreating || isUpdating) ? (
@@ -435,7 +467,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                 ) : (
                   <>
                     <Check className="w-4 h-4 mr-1" />
-                    {currentMode === 'edit' ? 'Salvar' : 'Criar'}
+                    {watch('status') === 'avaliacao' ? 'Iniciar Avaliação' : (currentMode === 'edit' ? 'Salvar' : 'Criar')}
                   </>
                 )}
               </Button>

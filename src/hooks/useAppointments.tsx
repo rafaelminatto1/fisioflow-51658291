@@ -170,7 +170,7 @@ async function fetchAppointments(organizationIdOverride?: string | null): Promis
 export function useAppointments() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const organizationId = profile?.organization_id;
 
   // Setup Realtime subscription
@@ -230,7 +230,8 @@ export function useAppointments() {
     refetchOnReconnect: true,
     // Garantir que sempre retorne um array, mesmo em caso de erro
     placeholderData: [],
-    enabled: !!organizationId, // Only fetch when organizationId is available
+    enabled: !!organizationId || !!user, // Enable if we have org ID OR if user is logged in (we can fetch org ID)
+
   });
 }
 
@@ -404,8 +405,30 @@ export function useUpdateAppointment() {
 
       const updateData: any = {};
       if (updates.patient_id) updateData.patient_id = updates.patient_id;
-      if (updates.appointment_date) updateData.appointment_date = updates.appointment_date;
-      if (updates.appointment_time) updateData.appointment_time = updates.appointment_time;
+
+      // Sanitize date format to YYYY-MM-DD
+      if (updates.appointment_date) {
+        try {
+          // Ensure we have a valid date object
+          const dateObj = new Date(updates.appointment_date);
+          if (isNaN(dateObj.getTime())) {
+            throw new Error('Data inválida');
+          }
+          // Format as YYYY-MM-DD for Postgres date column
+          updateData.appointment_date = dateObj.toISOString().split('T')[0];
+        } catch (e) {
+          logger.error('Erro ao formatar data', { date: updates.appointment_date }, 'useAppointments');
+          throw new Error('Data inválida fornecida para atualização');
+        }
+      }
+
+      // Sanitize time format to HH:MM
+      if (updates.appointment_time) {
+        // Simple regex check or just pass it if it looks like HH:MM
+        // Postgres time column usually accepts HH:MM or HH:MM:SS
+        updateData.appointment_time = updates.appointment_time;
+      }
+
       if (updates.duration) updateData.duration = updates.duration;
       if (updates.type) updateData.type = updates.type;
       if (updates.status) updateData.status = updates.status;
@@ -417,6 +440,8 @@ export function useUpdateAppointment() {
       if (Object.keys(updateData).length === 0) {
         throw new Error('Nenhum dado para atualizar');
       }
+
+      logger.debug('Enviando atualização para Supabase', { appointmentId, updateData, organizationId }, 'useAppointments');
 
       const { data: updatedAppointment, error } = await supabase
         .from('appointments')
@@ -443,6 +468,10 @@ export function useUpdateAppointment() {
         }
         if (error.code === 'PGRST116') {
           throw new Error('Agendamento não encontrado ou você não tem permissão para acessá-lo.');
+        }
+        // Tratamento para erro 400 data inválida
+        if (error.code === '22007' || error.code === '22008' || error.message?.includes('invalid input syntax')) {
+          throw new Error('Dados inválidos ao atualizar agendamento. Verifique data e hora.');
         }
 
         throw error;
@@ -501,6 +530,8 @@ export function useUpdateAppointment() {
         errorMessage = 'Organização não encontrada. Você precisa estar vinculado a uma organização.';
       } else if (error.message.includes('não autenticado')) {
         errorMessage = 'Sessão expirada. Por favor, faça login novamente.';
+      } else if (error.message.includes('Dados inválidos')) {
+        errorMessage = error.message;
       }
 
       toast({

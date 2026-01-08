@@ -5,13 +5,13 @@ import { Button } from '@/components/ui/button';
 import { useNavPreload } from '@/hooks/useIntelligentPreload';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Calendar, 
-  Activity, 
-  DollarSign, 
-  BarChart3, 
+import {
+  LayoutDashboard,
+  Users,
+  Calendar,
+  Activity,
+  DollarSign,
+  BarChart3,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -38,7 +38,10 @@ import {
   Trophy,
   Video,
   UserPlus,
-  LinkIcon
+  LinkIcon,
+  ScanFace,
+  Footprints,
+  Image as ImageIcon
 } from 'lucide-react';
 import {
   Collapsible,
@@ -69,6 +72,14 @@ const menuItems = [
   { icon: Lock, label: 'Segurança & LGPD', href: '/security-settings' },
   { icon: Shield, label: 'Monitoramento', href: '/security-monitoring' },
 ];
+
+const avaliacoesSubmenu = [
+  { icon: ScanFace, label: 'Avaliação Postural', href: '/dashboard/imagens?mode=clinical_posture' },
+  { icon: ImageIcon, label: 'Avaliação de Imagem', href: '/dashboard/imagens' },
+  { icon: Footprints, label: 'Avaliação de Marcha', href: '/dashboard/imagens?mode=dynamic_demo' },
+];
+
+
 
 const cadastrosSubmenu = [
   { icon: FileText, label: 'Serviços', href: '/cadastros/servicos' },
@@ -107,6 +118,7 @@ const configuracoesSubmenu = [
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [cadastrosOpen, setCadastrosOpen] = useState(false);
+  const [avaliacoesOpen, setAvaliacoesOpen] = useState(false);
   const [financeiroOpen, setFinanceiroOpen] = useState(false);
   const [relatoriosOpen, setRelatoriosOpen] = useState(false);
   const [crmOpen, setCrmOpen] = useState(false);
@@ -115,8 +127,9 @@ export function Sidebar() {
   const navigate = useNavigate();
   const { toast } = useToast();
   useNavPreload();
-  
+
   const isCadastrosActive = location.pathname.startsWith('/cadastros');
+  const isAvaliacoesActive = location.pathname.startsWith('/dashboard/imagens');
   const isFinanceiroActive = location.pathname.startsWith('/financeiro') || location.pathname === '/financial';
   const isRelatoriosActive = location.pathname.startsWith('/relatorios') || location.pathname === '/reports';
   const isCrmActive = location.pathname.startsWith('/crm');
@@ -179,7 +192,7 @@ export function Sidebar() {
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.href;
-          
+
           return (
             <Link
               key={item.href}
@@ -203,7 +216,7 @@ export function Sidebar() {
             </Link>
           );
         })}
-        
+
         {/* Cadastros Submenu */}
         {!collapsed && (
           <Collapsible open={cadastrosOpen || isCadastrosActive} onOpenChange={setCadastrosOpen}>
@@ -259,6 +272,66 @@ export function Sidebar() {
           >
             <ClipboardList className="h-5 w-5" />
             {isCadastrosActive && (
+              <div className="absolute left-0 w-1 h-8 bg-primary rounded-r-lg" />
+            )}
+          </Link>
+        )}
+
+        {/* Avaliações Submenu */}
+        {!collapsed && (
+          <Collapsible open={avaliacoesOpen || isAvaliacoesActive} onOpenChange={setAvaliacoesOpen}>
+            <CollapsibleTrigger asChild>
+              <button
+                className={cn(
+                  "flex items-center justify-between w-full px-4 py-2.5 rounded-lg transition-all group",
+                  isAvaliacoesActive
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <ScanFace className="h-5 w-5" />
+                  <span className="text-sm">Avaliações</span>
+                </div>
+                <ChevronDown className={cn(
+                  "h-4 w-4 transition-transform",
+                  (avaliacoesOpen || isAvaliacoesActive) && "rotate-180"
+                )} />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-8 space-y-1 mt-1">
+              {avaliacoesSubmenu.map((item) => {
+                const isSubActive = location.pathname + location.search === item.href || (item.href === '/dashboard/imagens' && location.pathname === '/dashboard/imagens' && !location.search);
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className={cn(
+                      "block px-4 py-2 rounded-lg text-sm transition-all",
+                      isSubActive
+                        ? "bg-primary text-primary-foreground font-medium"
+                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+        {collapsed && (
+          <Link
+            to="/dashboard/imagens"
+            className={cn(
+              "flex items-center justify-center px-2 py-2.5 rounded-lg transition-all group relative",
+              isAvaliacoesActive
+                ? "bg-primary text-primary-foreground font-medium shadow-sm"
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+            )}
+          >
+            <ScanFace className="h-5 w-5" />
+            {isAvaliacoesActive && (
               <div className="absolute left-0 w-1 h-8 bg-primary rounded-r-lg" />
             )}
           </Link>

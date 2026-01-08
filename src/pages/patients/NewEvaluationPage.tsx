@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useEvaluationFormWithFields } from '@/hooks/useEvaluationForms';
 import { FormRenderer } from '@/components/forms/renderer/FormRenderer';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -13,6 +13,8 @@ import { EvaluationFormField, ClinicalFieldType, EvaluationForm } from '@/types/
 export default function NewEvaluationPage() {
     const { patientId, formId } = useParams();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const appointmentId = searchParams.get('appointmentId');
     const { toast } = useToast();
 
     // Fetch Form
@@ -62,7 +64,8 @@ export default function NewEvaluationPage() {
                     patient_id: patientId,
                     form_id: formId,
                     respostas: data,
-                    preenchido_por: user?.id
+                    preenchido_por: user?.id,
+                    appointment_id: appointmentId ? appointmentId : null
                 });
 
             if (error) throw error;
@@ -112,7 +115,7 @@ export default function NewEvaluationPage() {
                         {availableForms?.map(form => (
                             <div
                                 key={form.id}
-                                onClick={() => navigate(`/patients/${patientId}/evaluations/new/${form.id}`)}
+                                onClick={() => navigate(`/patients/${patientId}/evaluations/new/${form.id}${appointmentId ? `?appointmentId=${appointmentId}` : ''}`)}
                                 className="bg-card hover:bg-muted/50 border rounded-xl p-6 cursor-pointer transition-all hover:shadow-md hover:border-primary/50 group"
                             >
                                 <h3 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors">{form.nome}</h3>
