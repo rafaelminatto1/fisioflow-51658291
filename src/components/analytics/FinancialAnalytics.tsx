@@ -38,19 +38,24 @@ export function FinancialAnalytics() {
     queryKey: ["financial-payment-methods"],
     queryFn: async () => {
       const { data } = await supabase
-        .from("appointments")
-        .select("payment_amount")
-        .eq("payment_status", "pago")
-        .gte("appointment_date", format(subMonths(new Date(), 1), "yyyy-MM-dd"));
+        .from("payments")
+        .select("amount, payment_method")
+        .gte("created_at", format(subMonths(new Date(), 1), "yyyy-MM-dd"));
 
-      // Simplificado: assumindo todos via PIX/Dinheiro por enquanto
-      const total = data?.reduce((sum, p) => sum + (p.payment_amount || 0), 0) || 0;
+      const paymentMap = new Map<string, number>();
+      let total = 0;
 
-      return [
-        { metodo: "Dinheiro", valor: Number((total * 0.4).toFixed(2)) },
-        { metodo: "PIX", valor: Number((total * 0.35).toFixed(2)) },
-        { metodo: "Cartão", valor: Number((total * 0.25).toFixed(2)) },
-      ];
+      data?.forEach((payment) => {
+        const method = payment.payment_method || "Outros";
+        const amount = Number(payment.amount) || 0;
+        paymentMap.set(method, (paymentMap.get(method) || 0) + amount);
+        total += amount;
+      });
+
+      return Array.from(paymentMap.entries()).map(([metodo, valor]) => ({
+        metodo,
+        valor: Number(valor.toFixed(2)),
+      })).sort((a, b) => b.valor - a.valor);
     },
   });
 

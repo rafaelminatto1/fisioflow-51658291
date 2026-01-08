@@ -21,6 +21,11 @@ interface AdvancedFiltersProps {
   filters: FilterOptions;
   onChange: (filters: FilterOptions) => void;
   onClear: () => void;
+  dateRange?: {
+    from: string;
+    to: string;
+  };
+  onDateRangeChange?: (range: { from: string; to: string }) => void;
 }
 
 const STATUS_OPTIONS = [
@@ -45,8 +50,10 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
   filters,
   onChange,
   onClear,
+  dateRange,
+  onDateRangeChange,
 }) => {
-  const activeFiltersCount = 
+  const activeFiltersCount =
     filters.status.length + filters.types.length + filters.therapists.length;
 
   const toggleFilter = (category: keyof FilterOptions, value: string) => {
@@ -54,7 +61,7 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
     const updated = current.includes(value)
       ? current.filter((v) => v !== value)
       : [...current, value];
-    
+
     onChange({ ...filters, [category]: updated });
   };
 
@@ -81,7 +88,7 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
           )}
         </Button>
       </SheetTrigger>
-      
+
       <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader className="mb-6">
           <SheetTitle className="flex items-center justify-between">
@@ -101,6 +108,33 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
         </SheetHeader>
 
         <div className="space-y-6">
+          {/* Date Range Filters */}
+          {dateRange && onDateRangeChange && (
+            <div className="space-y-3">
+              <h3 className="font-semibold text-sm text-foreground">Período</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">De</label>
+                  <input
+                    type="date"
+                    value={dateRange.from}
+                    onChange={(e) => onDateRangeChange({ ...dateRange, from: e.target.value })}
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Até</label>
+                  <input
+                    type="date"
+                    value={dateRange.to}
+                    onChange={(e) => onDateRangeChange({ ...dateRange, to: e.target.value })}
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Status Filters */}
           <div className="space-y-3">
             <h3 className="font-semibold text-sm text-foreground">Status</h3>

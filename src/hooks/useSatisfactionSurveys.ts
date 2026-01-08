@@ -98,7 +98,7 @@ export function useSatisfactionSurveys(filters?: SurveyFilters) {
       const { data, error } = await query;
 
       if (error) throw error;
-      
+
       // Map data to expected format
       return (data || []).map((item: any) => ({
         ...item,
@@ -114,30 +114,33 @@ export function useSurveyStats() {
     queryFn: async () => {
       const { data: surveys, error } = await supabase
         .from('satisfaction_surveys')
-        .select('nps_score, responded_at, q_care_quality, q_professionalism, q_communication')
-        .not('nps_score', 'is', null)
-        .not('responded_at', 'is', null);
+        .select('nps_score, responded_at, q_care_quality, q_professionalism, q_communication');
 
       if (error) throw error;
 
       const total = surveys?.length || 0;
-      const promotores = surveys?.filter(s => s.nps_score && s.nps_score >= 9).length || 0;
-      const neutros = surveys?.filter(s => s.nps_score && s.nps_score >= 7 && s.nps_score <= 8).length || 0;
-      const detratores = surveys?.filter(s => s.nps_score && s.nps_score <= 6).length || 0;
+      const respondedSurveys = surveys?.filter(s => s.responded_at) || [];
+      const respondedCount = respondedSurveys.length;
 
-      const nps = total > 0 ? Math.round(((promotores - detratores) / total) * 100) : 0;
+      const promotores = respondedSurveys.filter(s => s.nps_score && s.nps_score >= 9).length;
+      const neutros = respondedSurveys.filter(s => s.nps_score && s.nps_score >= 7 && s.nps_score <= 8).length;
+      const detratores = respondedSurveys.filter(s => s.nps_score && s.nps_score <= 6).length;
 
-      const avgCareQuality = surveys?.length > 0
-        ? surveys.reduce((sum, s) => sum + (s.q_care_quality || 0), 0) / surveys.length
+      const nps = respondedCount > 0 ? Math.round(((promotores - detratores) / respondedCount) * 100) : 0;
+
+      const avgCareQuality = respondedCount > 0
+        ? respondedSurveys.reduce((sum, s) => sum + (s.q_care_quality || 0), 0) / respondedCount
         : 0;
 
-      const avgProfessionalism = surveys?.length > 0
-        ? surveys.reduce((sum, s) => sum + (s.q_professionalism || 0), 0) / surveys.length
+      const avgProfessionalism = respondedCount > 0
+        ? respondedSurveys.reduce((sum, s) => sum + (s.q_professionalism || 0), 0) / respondedCount
         : 0;
 
-      const avgCommunication = surveys?.length > 0
-        ? surveys.reduce((sum, s) => sum + (s.q_communication || 0), 0) / surveys.length
+      const avgCommunication = respondedCount > 0
+        ? respondedSurveys.reduce((sum, s) => sum + (s.q_communication || 0), 0) / respondedCount
         : 0;
+
+      const responseRate = total > 0 ? Math.round((respondedCount / total) * 100) : 0;
 
       return {
         total,
@@ -148,7 +151,7 @@ export function useSurveyStats() {
         avgCareQuality: Math.round(avgCareQuality * 10) / 10,
         avgProfessionalism: Math.round(avgProfessionalism * 10) / 10,
         avgCommunication: Math.round(avgCommunication * 10) / 10,
-        responseRate: 0, // TODO: calcular taxa de resposta
+        responseRate,
       };
     },
   });

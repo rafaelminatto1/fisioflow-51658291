@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { AppointmentFilters } from '@/components/schedule/AppointmentFilters';
+
 import { CalendarViewType } from '@/components/schedule/CalendarView';
 import { AppointmentModalRefactored as AppointmentModal } from '@/components/schedule/AppointmentModalRefactored';
 import { AppointmentQuickEditModal } from '@/components/schedule/AppointmentQuickEditModal';
@@ -418,7 +418,12 @@ const Schedule = () => {
           <AdvancedFilters
             filters={advancedFilters}
             onChange={setAdvancedFilters}
-            onClear={() => setAdvancedFilters({ status: [], types: [], therapists: [] })}
+            onClear={() => {
+              setAdvancedFilters({ status: [], types: [], therapists: [] });
+              setFilters(prev => ({ ...prev, dateFrom: '', dateTo: '' }));
+            }}
+            dateRange={{ from: filters.dateFrom, to: filters.dateTo }}
+            onDateRangeChange={(range) => setFilters(prev => ({ ...prev, dateFrom: range.from, dateTo: range.to }))}
           />
         </div>
 

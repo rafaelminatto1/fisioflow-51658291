@@ -24,7 +24,10 @@ export const APPOINTMENT_STATUSES = [
     'concluido',
     'remarcado',
     'cancelado',
-    'falta'
+    'falta',
+    'faltou',
+    'reagendado',
+    'atendido'
 ] as const;
 
 export const STATUS_LABELS: Record<string, string> = {
@@ -38,7 +41,10 @@ export const STATUS_LABELS: Record<string, string> = {
     'concluido': 'Concluído',
     'remarcado': 'Remarcado',
     'cancelado': 'Cancelado',
-    'falta': 'Falta'
+    'falta': 'Falta',
+    'faltou': 'Faltou',
+    'reagendado': 'Reagendado',
+    'atendido': 'Atendido'
 };
 
 export const STATUS_COLORS: Record<string, string> = {
@@ -52,7 +58,10 @@ export const STATUS_COLORS: Record<string, string> = {
     'concluido': 'bg-purple-500',
     'remarcado': 'bg-orange-500',
     'cancelado': 'bg-red-500',
-    'falta': 'bg-rose-500'
+    'falta': 'bg-rose-500',
+    'faltou': 'bg-rose-500',
+    'reagendado': 'bg-orange-500',
+    'atendido': 'bg-purple-500'
 };
 
 export const PAYMENT_METHODS = [
