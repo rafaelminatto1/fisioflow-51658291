@@ -52,6 +52,7 @@ export { usePatientDocuments } from './usePatientDocuments';
 export { useConductLibrary } from './useConductLibrary';
 export { useOrganizations } from './useOrganizations';
 export { useOrganizationMembers } from './useOrganizationMembers';
+export { useConnectionStatus, type ConnectionStatus, type ConnectionState } from './useConnectionStatus';
 
 // Add toasts array for useToast
 export const useToastHook = () => ({

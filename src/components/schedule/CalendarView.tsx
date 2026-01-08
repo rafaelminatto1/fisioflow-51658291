@@ -173,7 +173,9 @@ export const CalendarView = memo(({
 
   // Helper to check if time is blocked for any date
   const checkTimeBlocked = useCallback((date: Date, time: string): { blocked: boolean; reason?: string } => {
-    if (!blockedTimes) return { blocked: false };
+    if (!blockedTimes) {
+      return { blocked: false };
+    }
 
     const dayOfWeek = date.getDay();
     const [timeH, timeM] = time.split(':').map(Number);

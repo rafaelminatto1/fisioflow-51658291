@@ -1,0 +1,125 @@
+{
+  "testPlan": {
+    "id": "FISIOFLOW-TEST-PLAN-001",
+    "title": "Teste de Aceitação do Sistema FisioFlow",
+    "description": "Plano de testes para validar as funcionalidades principais do sistema de gestão para clínicas de fisioterapia FisioFlow"
+  },
+  "project_name": "FisioFlow",
+  "version": "1.0.0",
+  "description": "Sistema completo de gestão para clínicas de fisioterapia e eventos",
+  "requirements": [
+    {
+      "id": "PRD-001",
+      "title": "Autenticação e Segurança",
+      "priority": "high",
+      "description": "O sistema deve permitir autenticação segura de usuários com controle de acesso",
+      "acceptance_criteria": [
+        "Usuários devem conseguir fazer login com email e senha",
+        "Sistema deve validar credenciais antes de permitir acesso",
+        "Sessões devem ser gerenciadas com tokens seguros",
+        "Sistema deve permitir logout e encerramento de sessão"
+      ]
+    },
+    {
+      "id": "PRD-002",
+      "title": "Dashboard Principal",
+      "priority": "high",
+      "description": "O sistema deve exibir um dashboard com visão geral das atividades",
+      "acceptance_criteria": [
+        "Dashboard deve mostrar estatísticas em tempo real",
+        "Usuários devem ver métricas de pacientes e consultas",
+        "Dashboard deve ter navegação intuitiva",
+        "Gráficos e visualizações devem ser responsivos"
+      ]
+    },
+    {
+      "id": "PRD-003",
+      "title": "Gestão de Pacientes",
+      "priority": "high",
+      "description": "O sistema deve permitir gerenciamento completo de pacientes",
+      "acceptance_criteria": [
+        "Usuários devem poder cadastrar novos pacientes",
+        "Sistema deve permitir busca e filtragem de pacientes",
+        "Histórico médico deve ser acessível",
+        "Documentos podem ser anexados ao perfil do paciente"
+      ]
+    },
+    {
+      "id": "PRD-004",
+      "title": "Agendamento de Consultas",
+      "priority": "high",
+      "description": "O sistema deve permitir agendamento e gestão de consultas",
+      "acceptance_criteria": [
+        "Usuários devem poder visualizar calendário de consultas",
+        "Novos agendamentos podem ser criados",
+        "Conflitos de horário devem ser detectados",
+        "Notificações devem ser enviadas para pacientes"
+      ]
+    },
+    {
+      "id": "PRD-005",
+      "title": "Prontuários Eletrônicos",
+      "priority": "medium",
+      "description": "O sistema deve manter prontuários médicos digitais",
+      "acceptance_criteria": [
+        "Notas SOAP podem ser criadas e editadas",
+        "Assinaturas digitais devem ser suportadas",
+        "Histórico de evoluções deve ser preservado",
+        "Planos de tratamento podem ser anexados"
+      ]
+    },
+    {
+      "id": "PRD-006",
+      "title": "Gestão de Exercícios",
+      "priority": "medium",
+      "description": "O sistema deve fornecer biblioteca de exercícios fisioterapêuticos",
+      "acceptance_criteria": [
+        "Biblioteca de exercícios deve ser pesquisável",
+        "Exercícios podem ser prescritos para pacientes",
+        "Progresso dos pacientes pode ser acompanhado",
+        "Protocolos baseados em evidências devem estar disponíveis"
+      ]
+    }
+  ],
+  "user_stories": [
+    {
+      "id": "US-001",
+      "title": "Login no Sistema",
+      "priority": "high",
+      "as_a": "fisioterapeuta",
+      "i_want_to": "fazer login no sistema",
+      "so_that": "eu possa acessar minhas funcionalidades",
+      "acceptance_criteria": [
+        "Posso inserir meu email e senha",
+        "Recebo feedback sobre sucesso ou falha",
+        "Sou redirecionado para o dashboard após login bem-sucedido"
+      ]
+    },
+    {
+      "id": "US-002",
+      "title": "Visualizar Agenda",
+      "priority": "high",
+      "as_a": "fisioterapeuta",
+      "i_want_to": "ver minha agenda de consultas",
+      "so_that": "eu possa me organizar para o dia",
+      "acceptance_criteria": [
+        "Vejo consultas agendadas do dia",
+        "Posso navegar entre dias/semanas/meses",
+        "Vejo informações do paciente em cada consulta"
+      ]
+    },
+    {
+      "id": "US-003",
+      "title": "Cadastrar Paciente",
+      "priority": "high",
+      "as_a": "fisioterapeuta",
+      "i_want_to": "cadastrar um novo paciente",
+      "so_that": "eu possa começar a tratá-lo",
+      "acceptance_criteria": [
+        "Posso preencher dados demográficos",
+        "Posso adicionar histórico médico",
+        "Paciente é salvo e aparece na lista"
+      ]
+    }
+  ]
+}

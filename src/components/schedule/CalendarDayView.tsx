@@ -178,72 +178,99 @@ const CalendarDayView = memo(({
                         </div>
                     )}
 
-                    {/* Appointments overlay */}
-                    {dayAppointments.map(apt => {
-                        const [hours, minutes] = (apt.time || '09:00').split(':').map(Number);
-                        const slotIndex = timeSlots.findIndex(slot => {
-                            const [slotHour, slotMin] = slot.split(':').map(Number);
-                            return slotHour === hours && slotMin === minutes;
+                    {/* Appointments overlay - with stacking support */}
+                    {(() => {
+                        // Agrupar appointments por horário para calcular offset horizontal
+                        const appointmentsByTime: Record<string, Appointment[]> = {};
+                        dayAppointments.forEach(apt => {
+                            const time = apt.time || '09:00';
+                            if (!appointmentsByTime[time]) {
+                                appointmentsByTime[time] = [];
+                            }
+                            appointmentsByTime[time].push(apt);
                         });
 
-                        if (slotIndex === -1) return null;
+                        return dayAppointments.map(apt => {
+                            const [hours, minutes] = (apt.time || '09:00').split(':').map(Number);
+                            const slotIndex = timeSlots.findIndex(slot => {
+                                const [slotHour, slotMin] = slot.split(':').map(Number);
+                                return slotHour === hours && slotMin === minutes;
+                            });
 
-                        // Calcular altura baseada na duração (cada slot = 64px, cada slot = 30min)
-                        const duration = apt.duration || 60;
-                        const heightInPixels = (duration / 30) * 64;
-                        const top = slotIndex * 64;
-                        const isDraggable = !!onAppointmentReschedule;
+                            if (slotIndex === -1) return null;
 
-                        return (
-                            <AppointmentQuickView
-                                key={apt.id}
-                                appointment={apt}
-                                open={openPopoverId === apt.id}
-                                onOpenChange={(open) => setOpenPopoverId(open ? apt.id : null)}
-                                onEdit={onEditAppointment ? () => onEditAppointment(apt) : undefined}
-                                onDelete={onDeleteAppointment ? () => onDeleteAppointment(apt) : undefined}
-                            >
-                                <div
-                                    draggable={isDraggable}
-                                    onDragStart={(e) => handleDragStart(e, apt)}
-                                    onDragEnd={handleDragEnd}
-                                    className={cn(
-                                        "absolute left-1 right-1 p-2 rounded-xl text-white cursor-pointer shadow-xl border-l-4 backdrop-blur-sm animate-fade-in overflow-hidden",
-                                        getStatusColor(apt.status, isOverCapacity(apt)),
-                                        "hover:shadow-2xl hover:scale-[1.02] hover:z-20 transition-all duration-300",
-                                        isDraggable && "cursor-grab active:cursor-grabbing",
-                                        dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50 scale-95",
-                                        isOverCapacity(apt) && "animate-pulse"
-                                    )}
-                                    style={{
-                                        top: `${top}px`,
-                                        height: `${heightInPixels}px`
-                                    }}
+                            // Calcular offset horizontal para appointments empilhados
+                            const sameTimeAppointments = appointmentsByTime[apt.time || '09:00'] || [];
+                            const stackIndex = sameTimeAppointments.findIndex(a => a.id === apt.id);
+                            const stackCount = sameTimeAppointments.length;
+
+                            // Calcular largura e offset baseado em quantos appointments estão empilhados
+                            const widthPercent = stackCount > 1 ? (100 / stackCount) - 2 : 100;
+                            const leftOffset = stackCount > 1 ? (stackIndex * (100 / stackCount)) + 1 : 0;
+
+                            // Calcular altura baseada na duração (cada slot = 64px, cada slot = 30min)
+                            const duration = apt.duration || 60;
+                            const heightInPixels = (duration / 30) * 64;
+                            const top = slotIndex * 64;
+                            const isDraggable = !!onAppointmentReschedule;
+
+                            return (
+                                <AppointmentQuickView
+                                    key={apt.id}
+                                    appointment={apt}
+                                    open={openPopoverId === apt.id}
+                                    onOpenChange={(open) => setOpenPopoverId(open ? apt.id : null)}
+                                    onEdit={onEditAppointment ? () => onEditAppointment(apt) : undefined}
+                                    onDelete={onDeleteAppointment ? () => onDeleteAppointment(apt) : undefined}
                                 >
-                                    <div className="flex items-start justify-between gap-1">
-                                        <div className="font-bold text-sm line-clamp-3 leading-tight flex-1 flex items-center gap-1">
-                                            {isOverCapacity(apt) && (
-                                                <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 text-white" />
+                                    <div
+                                        draggable={isDraggable}
+                                        onDragStart={(e) => handleDragStart(e, apt)}
+                                        onDragEnd={handleDragEnd}
+                                        className={cn(
+                                            "absolute p-2 rounded-xl text-white cursor-pointer shadow-xl border-l-4 backdrop-blur-sm animate-fade-in overflow-hidden",
+                                            getStatusColor(apt.status, isOverCapacity(apt)),
+                                            "hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 group/card",
+                                            isDraggable && "cursor-grab active:cursor-grabbing",
+                                            dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50 scale-95",
+                                            isOverCapacity(apt) && "animate-pulse"
+                                        )}
+                                        style={{
+                                            top: `${top}px`,
+                                            height: `${heightInPixels}px`,
+                                            // Posicionamento dinâmico para appointments empilhados
+                                            left: stackCount > 1 ? `${leftOffset}%` : '4px',
+                                            right: stackCount > 1 ? 'auto' : '4px',
+                                            width: stackCount > 1 ? `${widthPercent}%` : 'calc(100% - 8px)',
+                                            zIndex: stackCount > 1 ? 10 + stackIndex : 1,
+                                        }}
+                                        title={`${apt.patientName} - ${apt.type}${stackCount > 1 ? ` [${stackIndex + 1}/${stackCount}]` : ''}`}
+                                    >
+                                        <div className="flex items-start justify-between gap-1">
+                                            <div className="font-bold text-sm line-clamp-3 leading-tight flex-1 flex items-center gap-1">
+                                                {isOverCapacity(apt) && (
+                                                    <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 text-white" />
+                                                )}
+                                                {apt.patientName}
+                                            </div>
+                                            {isDraggable && (
+                                                <GripVertical className="h-4 w-4 opacity-50 flex-shrink-0 group-hover/card:opacity-100 transition-opacity" />
                                             )}
-                                            {apt.patientName}
                                         </div>
-                                        {isDraggable && (
-                                            <GripVertical className="h-4 w-4 opacity-50 flex-shrink-0" />
-                                        )}
+                                        <div className="text-xs opacity-90 flex items-center gap-1 mt-1">
+                                            <Clock className="h-3 w-3 flex-shrink-0" />
+                                            <span>{apt.time}</span>
+                                            {isOverCapacity(apt) && (
+                                                <Badge variant="secondary" className="text-[8px] px-1 py-0 h-4 bg-white/20 text-white ml-1">
+                                                    EXCEDENTE
+                                                </Badge>
+                                            )}
+                                        </div>
                                     </div>
-                                    <div className="text-xs opacity-90 flex items-center gap-1 mt-1">
-                                        <Clock className="h-3 w-3 flex-shrink-0" />
-                                        <span>{apt.time}</span>
-                                        {isOverCapacity(apt) && (
-                                            <Badge variant="secondary" className="text-[8px] px-1 py-0 h-4 bg-white/20 text-white ml-1">
-                                                EXCEDENTE
-                                            </Badge>
-                                        )}
-                                    </div>
-                                </div>
-                            </AppointmentQuickView>
-                        );
-                    })}
+                                </AppointmentQuickView>
+                            );
+                        });
+                    })()}
                 </div>
             </div>
         </div>

@@ -201,7 +201,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     return {
       patient_id: apt.patientId,
       appointment_date: format(new Date(apt.date), 'yyyy-MM-dd'),
-      appointment_time: apt.time,
+      appointment_time: apt.time || '',
       duration: apt.duration,
       type: apt.type,
       status: apt.status,
@@ -214,10 +214,6 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   };
 
   const handleSave = async (data: AppointmentFormData) => {
-    // #region agent log
-    console.log('[DEBUG] handleSave called', { status: data.status, patient_id: data.patient_id, appointmentId: appointment?.id });
-    fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/components/schedule/AppointmentModalRefactored.tsx:216', message: 'handleSave called', data: { status: data.status, patient_id: data.patient_id, appointmentId: appointment?.id, hasAppointment: !!appointment }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'A' }) }).catch(() => { });
-    // #endregion
     try {
       const maxCapacity = watchedDate && watchedTime ? getCapacityForTime(watchedDate.getDay(), watchedTime) : 1;
       const currentCount = (conflictCheck?.conflictCount || 0);
@@ -225,7 +221,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       if (currentCount >= maxCapacity) {
         setPendingFormData({
           ...data,
-          appointment_date: format(new Date(), 'yyyy-MM-dd') // Fallback date if needed, or adjust as per logic
+          appointment_date: format(new Date(), 'yyyy-MM-dd')
         });
         setCapacityDialogOpen(true);
         return;
@@ -242,11 +238,11 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         start_time: appointmentData.appointment_time,
         end_time: endTimeString,
         duration: appointmentData.duration,
-        status: appointmentData.status as any, // Cast to avoid type mismatch with database enum if needed
+        status: appointmentData.status as any,
         payment_status: appointmentData.payment_status as any,
         notes: appointmentData.notes || '',
         room: appointmentData.room || '',
-        session_type: (appointmentData.type === 'Fisioterapia' ? 'individual' : 'group') as any, // Simple mapping, should be refined based on type
+        session_type: (appointmentData.type === 'Fisioterapia' ? 'individual' : 'group') as any,
       };
 
       if (appointment?.id) {
@@ -255,56 +251,32 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
           updates: formattedData
         }, {
           onSuccess: () => {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/components/schedule/AppointmentModalRefactored.tsx:252', message: 'updateAppointmentMutation onSuccess', data: { status: appointmentData.status, isAvaliacao: appointmentData.status === 'avaliacao', patient_id: appointmentData.patient_id, appointmentId: appointment.id }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'B' }) }).catch(() => { });
-            // #endregion
             if (appointmentData.status === 'avaliacao') {
               const navPath = `/medical-record?patientId=${appointmentData.patient_id}&action=new&appointmentId=${appointment.id}`;
-              // #region agent log
-              fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/components/schedule/AppointmentModalRefactored.tsx:258', message: 'Navigating to medical record', data: { navPath }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'C' }) }).catch(() => { });
-              // #endregion
               navigate(navPath);
             }
             onClose();
           }
         });
       } else {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/components/schedule/AppointmentModalRefactored.tsx:270', message: 'Calling createAppointmentMutation', data: { status: appointmentData.status, patient_id: appointmentData.patient_id }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'D' }) }).catch(() => { });
-        // #endregion
-        createAppointmentMutation(formattedData as any, { // Cast to avoid strict type check on mutation payload vs inferred
+        createAppointmentMutation(formattedData as any, {
           onSuccess: (newAppointment) => {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/components/schedule/AppointmentModalRefactored.tsx:273', message: 'createAppointmentMutation onSuccess', data: { status: appointmentData.status, isAvaliacao: appointmentData.status === 'avaliacao', newAppointment }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'B' }) }).catch(() => { });
-            // #endregion
             if (appointmentData.status === 'avaliacao') {
               const createdId = (newAppointment as any)?.id;
-              // #region agent log
-              fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/components/schedule/AppointmentModalRefactored.tsx:280', message: 'Avaliacao status - createdId', data: { createdId, patient_id: appointmentData.patient_id }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'D' }) }).catch(() => { });
-              // #endregion
               if (createdId) {
                 const navPath = `/medical-record?patientId=${appointmentData.patient_id}&action=new&appointmentId=${createdId}`;
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/components/schedule/AppointmentModalRefactored.tsx:285', message: 'Navigating to medical record (new)', data: { navPath }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'C' }) }).catch(() => { });
-                // #endregion
                 navigate(navPath);
               }
             }
             onClose();
           },
           onError: (error) => {
-            // #region agent log
-            console.error('[DEBUG] createAppointmentMutation onError', error);
-            fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/components/schedule/AppointmentModalRefactored.tsx:298', message: 'createAppointmentMutation onError', data: { error: error?.message, errorName: error?.name, stack: error?.stack }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'E' }) }).catch(() => { });
-            // #endregion
+            console.error('Erro ao criar agendamento:', error);
           }
         });
       }
     } catch (error: any) {
-      // #region agent log
-      console.error('[DEBUG] handleSave error', error);
-      fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/components/schedule/AppointmentModalRefactored.tsx:306', message: 'handleSave catch error', data: { error: error?.message, errorName: error?.name, stack: error?.stack }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'F' }) }).catch(() => { });
-      // #endregion
+      console.error('Erro ao salvar:', error);
       throw error;
     }
   };
@@ -390,16 +362,9 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
 
             <div className="flex-1 min-h-0 overflow-y-auto">
               <form id="appointment-form" onSubmit={handleSubmit((data) => {
-                // #region agent log
-                console.log('[DEBUG] Form onSubmit triggered');
-                fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/components/schedule/AppointmentModalRefactored.tsx:354', message: 'Form onSubmit triggered', data: { status: watch('status'), patient_id: watch('patient_id') }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'A' }) }).catch(() => { });
-                // #endregion
                 handleSave(data);
               }, (errors) => {
-                // #region agent log
-                console.error('[DEBUG] Form validation errors', errors);
-                fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/components/schedule/AppointmentModalRefactored.tsx:359', message: 'Form validation errors', data: { errors }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'G' }) }).catch(() => { });
-                // #endregion
+                console.error('Erros de validação:', errors);
               })} className="px-4 sm:px-6 py-3">
                 <TabsContent value="info" className="mt-0 space-y-2.5 sm:space-y-3">
                   <PatientSelectionSection

@@ -43,12 +43,27 @@ async function retryWithBackoff<T>(
 
 // Fetch all appointments with improved error handling and validation
 import { useAuth } from '@/contexts/AuthContext';
+import { appointmentsCacheService } from '@/lib/offline/AppointmentsCacheService';
+
+// Flag para indicar se dados vieram do cache
+export interface AppointmentsQueryResult {
+  data: AppointmentBase[];
+  isFromCache: boolean;
+  cacheTimestamp: string | null;
+}
 
 // Fetch all appointments with improved error handling and validation
-async function fetchAppointments(organizationIdOverride?: string | null): Promise<AppointmentBase[]> {
+async function fetchAppointments(organizationIdOverride?: string | null): Promise<AppointmentsQueryResult> {
   const timer = logger.startTimer('fetchAppointments');
 
   logger.info('Carregando agendamentos do Supabase', {}, 'useAppointments');
+
+  // Checar se está offline primeiro
+  if (!navigator.onLine) {
+    logger.warn('Dispositivo offline, usando cache', {}, 'useAppointments');
+    timer();
+    return getFromCacheWithMetadata();
+  }
 
   try {
     // Obter organization_id do usuário para filtrar (usar override ou fallback para função utilitária)
@@ -97,34 +112,34 @@ async function fetchAppointments(organizationIdOverride?: string | null): Promis
     if (error) {
       logger.error('Erro ao buscar agendamentos', error, 'useAppointments');
 
+      // Verificar se é erro de conexão - usar cache como fallback
+      if (isNetworkError(error)) {
+        logger.warn('Erro de rede, tentando usar cache', { error: error.message }, 'useAppointments');
+        timer();
+        return getFromCacheWithMetadata();
+      }
+
       // Tratar erros específicos
       if (error.message) {
         // Erro de schema/RLS
         if (error.message.includes('user_id') && error.message.includes('does not exist')) {
           logger.error('Erro de schema: coluna user_id não existe. Verifique as políticas RLS.', error, 'useAppointments');
           timer();
-          return [];
+          return { data: [], isFromCache: false, cacheTimestamp: null };
         }
 
         // Erro de permissão
         if (error.message.includes('permission denied') || error.message.includes('new row violates row-level security')) {
           logger.error('Erro de permissão: usuário não tem acesso aos agendamentos.', error, 'useAppointments');
           timer();
-          return [];
-        }
-
-        // Erro de conexão
-        if (error.message.includes('network') || error.message.includes('timeout') || error.message.includes('fetch')) {
-          logger.error('Erro de conexão ao buscar agendamentos.', error, 'useAppointments');
-          timer();
-          return [];
+          return { data: [], isFromCache: false, cacheTimestamp: null };
         }
       }
 
       // Retornar array vazio em vez de lançar erro
       logger.warn('Retornando array vazio devido a erro', { error: error.message, code: error.code }, 'useAppointments');
       timer();
-      return [];
+      return { data: [], isFromCache: false, cacheTimestamp: null };
     }
 
     // Validar e transformar dados
@@ -146,6 +161,7 @@ async function fetchAppointments(organizationIdOverride?: string | null): Promis
             createdAt: apt.created_at ? new Date(apt.created_at) : new Date(),
             updatedAt: apt.updated_at ? new Date(apt.updated_at) : new Date(),
             therapistId: apt.therapist_id,
+            room: apt.room,
           } as AppointmentBase;
         } catch (transformError) {
           logger.warn('Erro ao transformar agendamento', { appointmentId: apt.id, error: transformError }, 'useAppointments');
@@ -155,15 +171,67 @@ async function fetchAppointments(organizationIdOverride?: string | null): Promis
       .filter((apt): apt is AppointmentBase => apt !== null); // Remover nulls
 
     logger.info(`Agendamentos carregados: ${transformedAppointments.length} registros`, { count: transformedAppointments.length }, 'useAppointments');
+
+    // Salvar no cache para uso offline
+    appointmentsCacheService.saveToCache(transformedAppointments, organizationId || undefined);
+
     timer();
 
-    return transformedAppointments;
-  } catch (error) {
+    return { data: transformedAppointments, isFromCache: false, cacheTimestamp: null };
+  } catch (error: any) {
     logger.error('Erro crítico ao buscar agendamentos', error, 'useAppointments');
+
+    // Se for erro de rede, tentar cache
+    if (isNetworkError(error)) {
+      timer();
+      return getFromCacheWithMetadata();
+    }
+
     timer();
     // Retornar array vazio em vez de lançar erro para não quebrar a UI
-    return [];
+    return { data: [], isFromCache: false, cacheTimestamp: null };
   }
+}
+
+// Função auxiliar para detectar erros de rede
+function isNetworkError(error: any): boolean {
+  if (!error) return false;
+  const message = error.message?.toLowerCase() || '';
+  return (
+    message.includes('network') ||
+    message.includes('timeout') ||
+    message.includes('fetch') ||
+    message.includes('failed to fetch') ||
+    message.includes('net::err') ||
+    error.name === 'TypeError' ||
+    !navigator.onLine
+  );
+}
+
+// Função auxiliar para obter dados do cache com metadata
+async function getFromCacheWithMetadata(organizationId?: string): Promise<AppointmentsQueryResult> {
+  try {
+    const cacheResult = await appointmentsCacheService.getFromCache(organizationId);
+
+    if (cacheResult.data.length > 0) {
+      const ageMinutes = appointmentsCacheService.getCacheAgeMinutes();
+      logger.info('Usando dados do cache', {
+        count: cacheResult.data.length,
+        isStale: cacheResult.isStale,
+        isExpired: cacheResult.isExpired,
+        ageMinutes
+      }, 'useAppointments');
+
+      return {
+        data: cacheResult.data,
+        isFromCache: true,
+        cacheTimestamp: cacheResult.metadata?.lastUpdated || null,
+      };
+    }
+  } catch (cacheError) {
+    logger.error('Erro ao acessar cache', cacheError, 'useAppointments');
+  }
+  return { data: [], isFromCache: false, cacheTimestamp: null };
 }
 
 // Main hook to fetch appointments with Realtime support
@@ -219,7 +287,7 @@ export function useAppointments() {
     };
   }, [queryClient, toast]);
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['appointments', organizationId], // Include organizationId in query key
     queryFn: () => fetchAppointments(organizationId),
     staleTime: 1000 * 60 * 2, // 2 minutos (dados dinâmicos)
@@ -228,11 +296,20 @@ export function useAppointments() {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Backoff exponencial
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
-    // Garantir que sempre retorne um array, mesmo em caso de erro
-    placeholderData: [],
+    // Garantir que sempre retorne um resultado válido
+    placeholderData: { data: [], isFromCache: false, cacheTimestamp: null },
     enabled: !!organizationId || !!user, // Enable if we have org ID OR if user is logged in (we can fetch org ID)
-
   });
+
+  // Extrair dados do resultado
+  const result = query.data as AppointmentsQueryResult | undefined;
+
+  return {
+    ...query,
+    data: result?.data || [],
+    isFromCache: result?.isFromCache || false,
+    cacheTimestamp: result?.cacheTimestamp || null,
+  };
 }
 
 // Create appointment mutation
