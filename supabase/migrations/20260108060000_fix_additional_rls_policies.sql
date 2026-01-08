@@ -86,6 +86,3 @@ BEGIN
       )';
   END IF;
 END $$;
-
-COMMENT ON MIGRATION IS 'Fix RLS policies to use profiles.user_id instead of profiles.id for auth.uid() comparisons';
-
