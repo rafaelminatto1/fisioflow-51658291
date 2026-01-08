@@ -71,10 +71,12 @@ const PreCadastroAdmin = () => {
   const createToken = useMutation({
     mutationFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) throw new Error('Usuário não autenticado');
+
       const { data: profile } = await supabase
         .from('profiles')
         .select('organization_id')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .single();
 
       const { data, error } = await supabase
@@ -106,10 +108,10 @@ const PreCadastroAdmin = () => {
   });
 
   const resetForm = () => {
-    setNewToken({ 
-      nome: '', 
-      descricao: '', 
-      validade_dias: 30, 
+    setNewToken({
+      nome: '',
+      descricao: '',
+      validade_dias: 30,
       max_usos: '',
       campos_obrigatorios: ['nome', 'email', 'telefone'],
       campos_opcionais: []
@@ -119,7 +121,7 @@ const PreCadastroAdmin = () => {
   const toggleFieldRequired = (fieldId: string) => {
     const isRequired = newToken.campos_obrigatorios.includes(fieldId);
     const isOptional = newToken.campos_opcionais.includes(fieldId);
-    
+
     if (isRequired) {
       // Move to optional
       setNewToken({
@@ -168,7 +170,7 @@ const PreCadastroAdmin = () => {
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { error } = await supabase
         .from('precadastros')
-        .update({ 
+        .update({
           status,
           updated_at: new Date().toISOString()
         })
@@ -214,7 +216,7 @@ const PreCadastroAdmin = () => {
             <h1 className="text-2xl font-bold">Pré-cadastro de Pacientes</h1>
             <p className="text-muted-foreground">Gerencie links de pré-cadastro e novos pacientes</p>
           </div>
-          
+
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -229,7 +231,7 @@ const PreCadastroAdmin = () => {
                   Configure os campos que o paciente deverá preencher
                 </DialogDescription>
               </DialogHeader>
-              
+
               <div className="space-y-6 py-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -240,7 +242,7 @@ const PreCadastroAdmin = () => {
                       placeholder="Ex: Link Instagram, Campanha Google"
                     />
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-2">
                       <Label>Validade (dias)</Label>
@@ -250,7 +252,7 @@ const PreCadastroAdmin = () => {
                         onChange={(e) => setNewToken({ ...newToken, validade_dias: parseInt(e.target.value) || 30 })}
                       />
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label>Máx. usos</Label>
                       <Input
@@ -262,7 +264,7 @@ const PreCadastroAdmin = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label>Descrição (visível para o paciente)</Label>
                   <Textarea
@@ -279,11 +281,11 @@ const PreCadastroAdmin = () => {
                     <Label className="text-base font-medium">Campos do Formulário</Label>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Clique para alternar: <Badge variant="default" className="mx-1">Obrigatório</Badge> 
-                    → <Badge variant="secondary" className="mx-1">Opcional</Badge> 
+                    Clique para alternar: <Badge variant="default" className="mx-1">Obrigatório</Badge>
+                    → <Badge variant="secondary" className="mx-1">Opcional</Badge>
                     → <Badge variant="outline" className="mx-1">Oculto</Badge>
                   </p>
-                  
+
                   <div className="grid grid-cols-2 gap-2">
                     {AVAILABLE_FIELDS.map((field) => {
                       const status = getFieldStatus(field.id);
@@ -295,16 +297,16 @@ const PreCadastroAdmin = () => {
                           className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors text-left"
                         >
                           <span className="text-sm">{field.label}</span>
-                          <Badge 
+                          <Badge
                             variant={
-                              status === 'required' ? 'default' : 
-                              status === 'optional' ? 'secondary' : 
-                              'outline'
+                              status === 'required' ? 'default' :
+                                status === 'optional' ? 'secondary' :
+                                  'outline'
                             }
                           >
-                            {status === 'required' ? 'Obrigatório' : 
-                             status === 'optional' ? 'Opcional' : 
-                             'Oculto'}
+                            {status === 'required' ? 'Obrigatório' :
+                              status === 'optional' ? 'Opcional' :
+                                'Oculto'}
                           </Badge>
                         </button>
                       );
@@ -312,7 +314,7 @@ const PreCadastroAdmin = () => {
                   </div>
                 </div>
               </div>
-              
+
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsCreateOpen(false)}>Cancelar</Button>
                 <Button onClick={() => createToken.mutate()} disabled={createToken.isPending}>
@@ -338,7 +340,7 @@ const PreCadastroAdmin = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-3">
@@ -352,7 +354,7 @@ const PreCadastroAdmin = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-3">
@@ -366,7 +368,7 @@ const PreCadastroAdmin = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="pt-4">
               <div className="flex items-center gap-3">
@@ -387,7 +389,7 @@ const PreCadastroAdmin = () => {
             <TabsTrigger value="precadastros">Pré-cadastros</TabsTrigger>
             <TabsTrigger value="links">Links</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="precadastros" className="mt-4">
             <Card>
               <CardHeader>
@@ -464,7 +466,7 @@ const PreCadastroAdmin = () => {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="links" className="mt-4">
             <Card>
               <CardHeader>
@@ -515,7 +517,7 @@ const PreCadastroAdmin = () => {
                             </div>
                           )}
                         </div>
-                        
+
                         <div className="flex items-center gap-2">
                           <Switch
                             checked={t.ativo}

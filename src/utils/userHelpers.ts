@@ -20,8 +20,10 @@ export async function getUserOrganizationId(): Promise<string | null> {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   if (!uuidRegex.test(user.id)) {
     console.error('CRITICAL: Malformed User ID detected (pre-check):', user.id);
+    localStorage.clear();
+    sessionStorage.clear();
     await supabase.auth.signOut();
-    window.location.reload();
+    window.location.href = '/login';
     throw new Error('Sessão inválida: ID de usuário malformado');
   }
 
@@ -35,8 +37,11 @@ export async function getUserOrganizationId(): Promise<string | null> {
     // Se o erro for de sintaxe de UUID (código 22P02), é um sinal claro de ID inválido
     if (error.code === '22P02') {
       console.error('CRITICAL: Invalid UUID syntax detected in RLS query', user.id);
+      // Limpar todo o armazenamento local para garantir
+      localStorage.clear();
+      sessionStorage.clear();
       await supabase.auth.signOut();
-      window.location.reload();
+      window.location.href = '/login'; // Redirecionar para login em vez de reload
       throw new Error('Sessão inválida detected via DB error');
     }
     throw new Error(`Erro ao buscar organização do usuário: ${error.message}`);

@@ -60,8 +60,8 @@ export const useDashboardMetrics = () => {
         .from('appointments')
         .select('patient_id')
         .gte('appointment_date', thirtyDaysAgo)
-        .not('status', 'eq', 'cancelado');
-      
+        .neq('status', 'cancelado');
+
       const uniqueActivePatients = new Set(activePatientsData?.map(a => a.patient_id) || []);
       const pacientesAtivos = uniqueActivePatients.size;
 
@@ -98,8 +98,8 @@ export const useDashboardMetrics = () => {
         .lte('appointment_date', today)
         .eq('status', 'falta');
 
-      const taxaNoShow = totalAppointments30d && totalAppointments30d > 0 
-        ? ((noShowCount || 0) / totalAppointments30d) * 100 
+      const taxaNoShow = totalAppointments30d && totalAppointments30d > 0
+        ? ((noShowCount || 0) / totalAppointments30d) * 100
         : 0;
 
       // Fisioterapeutas ativos (buscar de user_roles e depois profiles)
@@ -109,7 +109,7 @@ export const useDashboardMetrics = () => {
         .in('role', ['admin', 'fisioterapeuta']);
 
       const uniqueTherapistUserIds = [...new Set((userRolesData || []).map(ur => ur.user_id))];
-      
+
       let fisioterapeutasAtivos = 0;
       if (uniqueTherapistUserIds.length > 0) {
         const { count: profilesCount } = await supabase
@@ -141,8 +141,8 @@ export const useDashboardMetrics = () => {
       const receitaMesAnterior = receitaAnteriorData?.reduce((sum, r) => sum + Number(r.valor), 0) || 0;
 
       // Crescimento mensal
-      const crescimentoMensal = receitaMesAnterior > 0 
-        ? ((receitaMensal - receitaMesAnterior) / receitaMesAnterior) * 100 
+      const crescimentoMensal = receitaMesAnterior > 0
+        ? ((receitaMensal - receitaMesAnterior) / receitaMesAnterior) * 100
         : 0;
 
       // Média de sessões por paciente (últimos 30 dias)
@@ -152,8 +152,8 @@ export const useDashboardMetrics = () => {
         .gte('appointment_date', thirtyDaysAgo)
         .eq('status', 'concluido');
 
-      const mediaSessoesPorPaciente = pacientesAtivos > 0 
-        ? (totalSessions30d || 0) / pacientesAtivos 
+      const mediaSessoesPorPaciente = pacientesAtivos > 0
+        ? (totalSessions30d || 0) / pacientesAtivos
         : 0;
 
       // Pacientes em risco (sem consulta há mais de 30 dias)
@@ -181,7 +181,7 @@ export const useDashboardMetrics = () => {
       receitaPorFisio?.forEach((apt) => {
         const profile = apt.profiles as any;
         if (!profile?.id) return;
-        
+
         const existing = fisioStats.get(profile.id) || {
           id: profile.id,
           nome: profile.full_name || 'Sem nome',
@@ -189,7 +189,7 @@ export const useDashboardMetrics = () => {
           receita: 0,
           taxaOcupacao: 0,
         };
-        
+
         existing.atendimentos += 1;
         existing.receita += Number(apt.payment_amount || 0);
         fisioStats.set(profile.id, existing);
@@ -208,12 +208,12 @@ export const useDashboardMetrics = () => {
 
       const weekDays = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
       const tendenciaSemanal: WeeklyTrend[] = [];
-      
+
       for (let i = 0; i < 7; i++) {
         const day = subDays(new Date(weekEnd), 6 - i);
         const dayStr = format(day, 'yyyy-MM-dd');
         const dayAppointments = weeklyData?.filter(a => a.appointment_date === dayStr) || [];
-        
+
         tendenciaSemanal.push({
           dia: weekDays[i],
           agendamentos: dayAppointments.length,
