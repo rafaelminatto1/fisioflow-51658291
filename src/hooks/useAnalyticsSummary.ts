@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { startOfMonth, endOfMonth, subMonths, format } from "date-fns";
+import { format, startOfMonth, subMonths } from 'date-fns';
+import { formatDateToLocalISO } from '@/utils/dateUtils';
 import { queryConfigs } from "@/lib/queryConfig";
 import { logger } from "@/lib/errors/logger";
 
@@ -19,7 +20,7 @@ function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> 
   return Promise.race([
     Promise.resolve(promise),
     new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`Timeout após ${timeoutMs}ms`)), timeoutMs)
+      setTimeout(() => reject(new Error(`Timeout após ${timeoutMs} ms`)), timeoutMs)
     ),
   ]);
 }
@@ -31,7 +32,7 @@ async function retryWithBackoff<T>(
   initialDelay: number = 1000
 ): Promise<T> {
   let lastError: Error | unknown;
-  
+
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       return await fn();
@@ -43,7 +44,7 @@ async function retryWithBackoff<T>(
       }
     }
   }
-  
+
   throw lastError;
 }
 
@@ -72,8 +73,8 @@ export function useAnalyticsSummary() {
               supabase
                 .from("appointments")
                 .select("*", { count: "exact", head: true })
-                .gte("appointment_date", format(currentMonthStart, "yyyy-MM-dd"))
-                .lte("appointment_date", format(currentMonthEnd, "yyyy-MM-dd")),
+                .gte("appointment_date", formatDateToLocalISO(currentMonthStart))
+                .lte("appointment_date", formatDateToLocalISO(currentMonthEnd)),
               8000
             )
           ),
@@ -82,8 +83,8 @@ export function useAnalyticsSummary() {
               supabase
                 .from("appointments")
                 .select("*", { count: "exact", head: true })
-                .gte("appointment_date", format(lastMonthStart, "yyyy-MM-dd"))
-                .lte("appointment_date", format(lastMonthEnd, "yyyy-MM-dd")),
+                .gte("appointment_date", formatDateToLocalISO(lastMonthStart))
+                .lte("appointment_date", formatDateToLocalISO(lastMonthEnd)),
               8000
             )
           ),
@@ -92,8 +93,8 @@ export function useAnalyticsSummary() {
               supabase
                 .from("appointments")
                 .select("patient_id")
-                .gte("appointment_date", format(subMonths(now, 1), "yyyy-MM-dd"))
-                .lte("appointment_date", format(now, "yyyy-MM-dd")),
+                .gte("appointment_date", formatDateToLocalISO(subMonths(now, 1)))
+                .lte("appointment_date", formatDateToLocalISO(now)),
               8000
             )
           ),
@@ -102,8 +103,8 @@ export function useAnalyticsSummary() {
               supabase
                 .from("appointments")
                 .select("patient_id")
-                .gte("appointment_date", format(subMonths(now, 2), "yyyy-MM-dd"))
-                .lte("appointment_date", format(lastMonthEnd, "yyyy-MM-dd")),
+                .gte("appointment_date", formatDateToLocalISO(subMonths(now, 2)))
+                .lte("appointment_date", formatDateToLocalISO(lastMonthEnd)),
               8000
             )
           ),
@@ -112,8 +113,8 @@ export function useAnalyticsSummary() {
               supabase
                 .from("appointments")
                 .select("payment_amount")
-                .gte("appointment_date", format(currentMonthStart, "yyyy-MM-dd"))
-                .lte("appointment_date", format(currentMonthEnd, "yyyy-MM-dd"))
+                .gte("appointment_date", formatDateToLocalISO(currentMonthStart))
+                .lte("appointment_date", formatDateToLocalISO(currentMonthEnd))
                 .eq("payment_status", "pago"),
               8000
             )
@@ -123,8 +124,8 @@ export function useAnalyticsSummary() {
               supabase
                 .from("appointments")
                 .select("payment_amount")
-                .gte("appointment_date", format(lastMonthStart, "yyyy-MM-dd"))
-                .lte("appointment_date", format(lastMonthEnd, "yyyy-MM-dd"))
+                .gte("appointment_date", formatDateToLocalISO(lastMonthStart))
+                .lte("appointment_date", formatDateToLocalISO(lastMonthEnd))
                 .eq("payment_status", "pago"),
               8000
             )
@@ -132,10 +133,10 @@ export function useAnalyticsSummary() {
         ]);
 
         // Extrair dados com fallback para valores padrão
-        const currentAppointments = currentAppointmentsResult.status === "fulfilled" 
-          ? currentAppointmentsResult.value.count || 0 
+        const currentAppointments = currentAppointmentsResult.status === "fulfilled"
+          ? currentAppointmentsResult.value.count || 0
           : 0;
-        
+
         const lastAppointments = lastAppointmentsResult.status === "fulfilled"
           ? lastAppointmentsResult.value.count || 0
           : 0;
@@ -158,11 +159,11 @@ export function useAnalyticsSummary() {
 
         // Taxa de ocupação (simplificado: 160 slots por mês)
         const totalSlots = 160;
-        const occupancyRate = currentAppointments 
-          ? Math.round((currentAppointments / totalSlots) * 100) 
+        const occupancyRate = currentAppointments
+          ? Math.round((currentAppointments / totalSlots) * 100)
           : 0;
 
-        const appointmentGrowth = lastAppointments 
+        const appointmentGrowth = lastAppointments
           ? Math.round(((currentAppointments - lastAppointments) / lastAppointments) * 100)
           : 0;
 
