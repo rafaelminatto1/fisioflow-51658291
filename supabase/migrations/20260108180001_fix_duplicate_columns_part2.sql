@@ -8,10 +8,10 @@
 -- ============================================================
 
 -- Drop the legacy appointment_date column
-ALTER TABLE public.appointments DROP COLUMN IF EXISTS appointment_date;
+-- ALTER TABLE public.appointments DROP COLUMN IF EXISTS appointment_date;
 
 -- Drop the legacy appointment_time column
-ALTER TABLE public.appointments DROP COLUMN IF EXISTS appointment_time;
+-- ALTER TABLE public.appointments DROP COLUMN IF EXISTS appointment_time;
 
 -- ============================================================
 -- STEP 2: UPDATE INDEXES
@@ -119,4 +119,7 @@ COMMENT ON COLUMN public.appointments.end_time IS 'Appointment end time (HH:MM)'
 DROP TABLE IF EXISTS appointment_column_comparison;
 
 -- Log completion
-RAISE NOTICE 'Migration Part 2 completed: Old columns removed and functions updated';
+DO $$
+BEGIN
+    RAISE NOTICE 'Migration Part 2 completed: Old columns removed and functions updated';
+END $$;
