@@ -17,10 +17,7 @@ export default function NewEvaluationPage() {
     const appointmentId = searchParams.get('appointmentId');
     const { toast } = useToast();
 
-    // #region agent log
-    console.log('[DEBUG] NewEvaluationPage loaded', { patientId, formId, appointmentId });
-    fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/pages/patients/NewEvaluationPage.tsx:15',message:'NewEvaluationPage loaded',data:{patientId,formId,appointmentId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
-    // #endregion
+
 
     // Fetch Form
     const { data: form, isLoading: isLoadingForm } = useEvaluationFormWithFields(formId);
