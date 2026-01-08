@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Clock, User, MapPin, Phone, Calendar } from 'lucide-react';
+import { Clock, User, Calendar } from 'lucide-react';
 import type { Appointment } from '@/types/agenda';
 
 interface AppointmentModalProps {
@@ -121,7 +121,7 @@ export function AppointmentModal({
               Confirmar
             </Button>
           )}
-          
+
           {onEdit && (
             <Button
               variant="outline"
@@ -131,7 +131,7 @@ export function AppointmentModal({
               Editar
             </Button>
           )}
-          
+
           {onCancel && appointment.status !== 'cancelled' && (
             <Button
               variant="destructive"

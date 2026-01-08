@@ -25,7 +25,7 @@ describe('Dynamic Compare Validation', () => {
 
     it('should fail if required fields are missing', () => {
         const invalid = { ...VALID_PAYLOAD };
-        // @ts-ignore
+        // @ts-expect-error Testing missing required field
         delete invalid.schema_version;
 
         expect(() => parseDynamicCompare(invalid)).toThrow(/AJV Validation Failed/);

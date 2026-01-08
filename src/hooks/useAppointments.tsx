@@ -7,6 +7,7 @@ import { logger } from '@/lib/errors/logger';
 import { useEffect } from 'react';
 import { AppointmentNotificationService } from '@/lib/services/AppointmentNotificationService';
 import { requireUserOrganizationId, getUserOrganizationId } from '@/utils/userHelpers';
+import { dateSchema, timeSchema } from '@/lib/validations/agenda';
 
 // Função auxiliar para criar timeout em promises (suporta PromiseLike do Supabase)
 function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> {
@@ -84,7 +85,7 @@ async function fetchAppointments(organizationIdOverride?: string | null): Promis
         *,
         patients!inner(
           id,
-          name,
+          full_name,
           phone,
           email
         )
@@ -347,23 +348,37 @@ export function useCreateAppointment() {
       if (!data.patient_id) {
         throw new Error('ID do paciente é obrigatório');
       }
-      if (!data.appointment_date && !data.date) {
-        throw new Error('Data do agendamento é obrigatória');
-      }
-      if (!data.appointment_time && !data.start_time) {
-        throw new Error('Horário do agendamento é obrigatório');
+
+      // Normalização e Validação com Zod
+      const rawDate = data.appointment_date || data.date;
+      const rawTime = data.appointment_time || data.start_time;
+
+      if (!rawDate) throw new Error('Data do agendamento é obrigatória');
+      if (!rawTime) throw new Error('Horário do agendamento é obrigatório');
+
+      const dateValidation = dateSchema.safeParse(rawDate);
+      if (!dateValidation.success) {
+        throw new Error(`Formato de data inválido: ${rawDate || 'vazio'}. Use YYYY-MM-DD.`);
       }
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/hooks/useAppointments.tsx:358', message: 'Inserindo no Supabase', data: { patient_id: data.patient_id, appointment_date: data.appointment_date, start_time: data.appointment_time }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'H' }) }).catch(() => { });
-      // #endregion
+      const timeValidation = timeSchema.safeParse(rawTime);
+      if (!timeValidation.success) {
+        // Tentar recuperar formato HH:MM simples se falhar (embora o schema já deva cobrir)
+        const simpleTimeRegex = /^([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/;
+        if (!simpleTimeRegex.test(rawTime)) {
+          throw new Error(`Formato de horário inválido: ${rawTime || 'vazio'}. Use HH:MM.`);
+        }
+      }
 
       const { data: newAppointment, error } = await supabase
         .from('appointments')
         .insert({
           patient_id: data.patient_id,
-          appointment_date: data.appointment_date || data.date,
-          appointment_time: data.appointment_time || data.start_time,
+          // Dual Write Strategy: Gravar em ambas as colunas para garantir compatibilidade
+          appointment_date: rawDate,
+          date: rawDate,
+          appointment_time: rawTime,
+          start_time: rawTime,
           duration: data.duration || 60,
           type: data.type || 'fisioterapia',
           status: data.status || 'agendado',
@@ -376,16 +391,14 @@ export function useCreateAppointment() {
           *,
           patients!inner(
             id,
-            name,
+            full_name,
             phone,
             email
           )
         `)
         .single();
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/hooks/useAppointments.tsx:385', message: 'Resultado do insert', data: { error: !!error, newAppointment: !!newAppointment }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'H' }) }).catch(() => { });
-      // #endregion
+
 
       if (error) {
         logger.error('Erro ao inserir agendamento no Supabase', error, 'useAppointments');
@@ -499,28 +512,31 @@ export function useUpdateAppointment() {
 
       const updateData: any = {};
 
-      // Strict validation for date
+      // Strict validation for date with Zod
       if (updateDate) {
-        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (!dateRegex.test(updateDate)) {
+        const dateValidation = dateSchema.safeParse(updateDate);
+        if (!dateValidation.success) {
           throw new Error(`Formato de data inválido: ${updateDate}. Use YYYY-MM-DD.`);
         }
+        // Dual Write Strategy
         updateData.appointment_date = updateDate;
-
-        // Log for debugging
-        console.log('[DEBUG useUpdateAppointment] Normalized date:', updateDate);
+        updateData.date = updateDate;
       }
 
-      // Strict validation for time
+      // Strict validation for time with Zod
       if (updateTime) {
-        // Accept HH:MM or HH:MM:SS
-        const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/;
-        if (!timeRegex.test(updateTime)) {
-          // Try to rescue simple HH:MM cases if they don't match strict for some reason, 
-          // but usually this regex covers it.
-          throw new Error(`Formato de horário inválido: ${updateTime}. Use HH:MM.`);
+        const timeValidation = timeSchema.safeParse(updateTime);
+        if (!timeValidation.success) {
+          // Fallback regex logic from original code preserved/adapted if schema is too strict, 
+          // but keeping consistent with Zod as primary.
+          const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/;
+          if (!timeRegex.test(updateTime)) {
+            throw new Error(`Formato de horário inválido: ${updateTime}. Use HH:MM.`);
+          }
         }
+        // Dual Write Strategy
         updateData.appointment_time = updateTime;
+        updateData.start_time = updateTime;
       }
 
       if (updates.patient_id) updateData.patient_id = updates.patient_id;
@@ -547,7 +563,7 @@ export function useUpdateAppointment() {
           *,
           patients!inner(
             id,
-            name,
+            full_name,
             phone,
             email
           )

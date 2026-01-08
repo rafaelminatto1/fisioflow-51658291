@@ -1,5 +1,6 @@
 import type { Config } from "tailwindcss";
 import tailwindcssAnimate from "tailwindcss-animate";
+import plugin from "tailwindcss/plugin";
 
 export default {
 	darkMode: ["class"],
@@ -25,45 +26,45 @@ export default {
 				ring: 'hsl(var(--ring))',
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
-			primary: {
-				DEFAULT: 'hsl(var(--primary))',
-				foreground: 'hsl(var(--primary-foreground))',
-				glow: 'hsl(var(--primary-glow))',
-				dark: 'hsl(var(--primary-dark))'
-			},
-			secondary: {
-				DEFAULT: 'hsl(var(--secondary))',
-				foreground: 'hsl(var(--secondary-foreground))',
-				light: 'hsl(var(--secondary-light))'
-			},
-			success: {
-				DEFAULT: 'hsl(var(--success))',
-				foreground: 'hsl(var(--success-foreground))'
-			},
-			warning: {
-				DEFAULT: 'hsl(var(--warning))',
-				foreground: 'hsl(var(--warning-foreground))'
-			},
-			destructive: {
-				DEFAULT: 'hsl(var(--destructive))',
-				foreground: 'hsl(var(--destructive-foreground))'
-			},
-			muted: {
-				DEFAULT: 'hsl(var(--muted))',
-				foreground: 'hsl(var(--muted-foreground))'
-			},
-			accent: {
-				DEFAULT: 'hsl(var(--accent))',
-				foreground: 'hsl(var(--accent-foreground))'
-			},
-			popover: {
-				DEFAULT: 'hsl(var(--popover))',
-				foreground: 'hsl(var(--popover-foreground))'
-			},
-			card: {
-				DEFAULT: 'hsl(var(--card))',
-				foreground: 'hsl(var(--card-foreground))'
-			},
+				primary: {
+					DEFAULT: 'hsl(var(--primary))',
+					foreground: 'hsl(var(--primary-foreground))',
+					glow: 'hsl(var(--primary-glow))',
+					dark: 'hsl(var(--primary-dark))'
+				},
+				secondary: {
+					DEFAULT: 'hsl(var(--secondary))',
+					foreground: 'hsl(var(--secondary-foreground))',
+					light: 'hsl(var(--secondary-light))'
+				},
+				success: {
+					DEFAULT: 'hsl(var(--success))',
+					foreground: 'hsl(var(--success-foreground))'
+				},
+				warning: {
+					DEFAULT: 'hsl(var(--warning))',
+					foreground: 'hsl(var(--warning-foreground))'
+				},
+				destructive: {
+					DEFAULT: 'hsl(var(--destructive))',
+					foreground: 'hsl(var(--destructive-foreground))'
+				},
+				muted: {
+					DEFAULT: 'hsl(var(--muted))',
+					foreground: 'hsl(var(--muted-foreground))'
+				},
+				accent: {
+					DEFAULT: 'hsl(var(--accent))',
+					foreground: 'hsl(var(--accent-foreground))'
+				},
+				popover: {
+					DEFAULT: 'hsl(var(--popover))',
+					foreground: 'hsl(var(--popover-foreground))'
+				},
+				card: {
+					DEFAULT: 'hsl(var(--card))',
+					foreground: 'hsl(var(--card-foreground))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -225,7 +226,7 @@ export default {
 	},
 	plugins: [
 		tailwindcssAnimate,
-		require('tailwindcss/plugin')(({ addUtilities }) => {
+		plugin(({ addUtilities }) => {
 			addUtilities({
 				'.hover-scale': {
 					'transition': 'transform 0.2s ease-out',

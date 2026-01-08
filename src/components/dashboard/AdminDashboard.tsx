@@ -38,7 +38,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
           appointment_date,
           status,
           type,
-          patients!inner(name)
+          patients!inner(full_name)
         `)
         .gte('appointment_date', today)
         .order('appointment_date')
@@ -47,7 +47,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
 
       return data?.map(apt => ({
         id: apt.id,
-        paciente: (apt.patients as unknown as { name: string })?.name || 'Paciente',
+        paciente: (apt.patients as unknown as { full_name?: string; name?: string })?.full_name || (apt.patients as unknown as { name?: string })?.name || 'Paciente',
         horario: apt.appointment_time,
         status: apt.status
       })) || [];
