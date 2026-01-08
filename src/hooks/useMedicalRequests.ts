@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContextProvider';
@@ -28,7 +28,7 @@ export const useMedicalRequests = (patientId?: string | null) => {
     const { profile } = useAuth();
     const organizationId = profile?.organization_id;
 
-    const fetchRequests = async () => {
+    const fetchRequests = useCallback(async () => {
         if (!patientId || !organizationId) {
             setIsLoading(false);
             return;
@@ -47,18 +47,14 @@ export const useMedicalRequests = (patientId?: string | null) => {
 
             if (error) throw error;
             setRequests(data as MedicalRequest[]);
-        } catch (error: any) {
-            console.error('Error fetching medical requests:', error);
-            // Suppress error if table doesn't exist yet to avoid crashing while migrating, but here we expect it to exist
-            // toast.error('Erro ao carregar pedidos médicos');
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [patientId, organizationId]);
 
     useEffect(() => {
         fetchRequests();
-    }, [patientId, organizationId]);
+    }, [fetchRequests]);
 
     const addRequest = async (
         data: { doctorName: string; date: Date; notes: string },

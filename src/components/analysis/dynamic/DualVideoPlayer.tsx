@@ -2,8 +2,8 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Card } from '@/components/ui/card';
-import { Play, Pause, FastForward, SkipBack, SkipForward, RefreshCw } from 'lucide-react';
-import { POSE_LANDMARKS, UnifiedLandmark } from '@/utils/geometry';
+import { Play, Pause, SkipBack, SkipForward, RefreshCw } from 'lucide-react';
+import { UnifiedLandmark } from '@/utils/geometry';
 
 interface VideoSource {
     url: string;
@@ -62,7 +62,7 @@ const DualVideoPlayer: React.FC<DualVideoPlayerProps> = ({ videoA, videoB, syncO
     }, [speed]);
 
     // 4. Time Update Loop (RAF for Sync and Canvas Draw)
-    const tick = () => {
+    const tick = React.useCallback(() => {
         if (!vidARef.current || !vidBRef.current) {
             requestRef.current = requestAnimationFrame(tick);
             return;
@@ -97,12 +97,12 @@ const DualVideoPlayer: React.FC<DualVideoPlayerProps> = ({ videoA, videoB, syncO
         drawLandmarks(canvasBRef.current, vidBRef.current, videoB.landmarks, vidBRef.current.currentTime);
 
         requestRef.current = requestAnimationFrame(tick);
-    };
+    }, [videoA, videoB]);
 
     useEffect(() => {
         requestRef.current = requestAnimationFrame(tick);
         return () => cancelAnimationFrame(requestRef.current!);
-    }, [videoA, videoB, localOffset]); // Dependencies for draw logic if needed
+    }, [tick]); // Dependencies for draw logic if needed
 
     // Draw Helper
     const drawLandmarks = (

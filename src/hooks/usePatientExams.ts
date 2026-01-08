@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContextProvider';
@@ -29,7 +29,7 @@ export const usePatientExams = (patientId?: string | null) => {
     const { profile } = useAuth();
     const organizationId = profile?.organization_id;
 
-    const fetchExams = async () => {
+    const fetchExams = useCallback(async () => {
         if (!patientId || !organizationId) {
             setIsLoading(false);
             return;
@@ -48,17 +48,14 @@ export const usePatientExams = (patientId?: string | null) => {
 
             if (error) throw error;
             setExams(data as PatientExam[]);
-        } catch (error: any) {
-            console.error('Error fetching exams:', error);
-            // toast.error('Erro ao carregar exames');
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [patientId, organizationId]);
 
     useEffect(() => {
         fetchExams();
-    }, [patientId, organizationId]);
+    }, [fetchExams]);
 
     const addExam = async (
         data: { title: string; date: Date; type: string; description: string },

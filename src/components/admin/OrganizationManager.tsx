@@ -7,7 +7,7 @@ import { useOrganizations } from '@/hooks/useOrganizations';
 import { useOrganizationMembers } from '@/hooks/useOrganizationMembers';
 import { Building2, Users, Settings, Plus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Badge } from '@/components/ui/badge';
 
 export const OrganizationManager = () => {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -57,24 +57,24 @@ export function CustomizableDashboard() {
       case 'appointments-today':
         return {
           value: isLoading ? '...' : safeSummary.totalAppointments,
-          description: isLoading 
-            ? 'Carregando...' 
+          description: isLoading
+            ? 'Carregando...'
             : `${safeSummary.appointmentGrowth}% vs. mês anterior`,
         };
       case 'revenue-month':
         return {
-          value: isLoading 
-            ? '...' 
+          value: isLoading
+            ? '...'
             : `R$ ${safeSummary.monthlyRevenue.toFixed(2).replace('.', ',')}`,
-          description: isLoading 
-            ? 'Carregando...' 
+          description: isLoading
+            ? 'Carregando...'
             : `${safeSummary.revenueGrowth}% vs. mês anterior`,
         };
       case 'patients-active':
         return {
           value: isLoading ? '...' : safeSummary.activePatients,
-          description: isLoading 
-            ? 'Carregando...' 
+          description: isLoading
+            ? 'Carregando...'
             : `${safeSummary.patientGrowth}% vs. mês anterior`,
         };
       case 'ocupancy-rate':
@@ -127,7 +127,7 @@ export function CustomizableDashboard() {
                     <div className="flex items-center gap-4">
                       <Select
                         value={widget.size}
-                        onValueChange={(value: any) => updateWidgetSize(widget.id, value)}
+                        onValueChange={(value: "small" | "medium" | "large") => updateWidgetSize(widget.id, value)}
                         disabled={!widget.visible}
                       >
                         <SelectTrigger className="w-28">

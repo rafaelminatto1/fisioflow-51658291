@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Camera, StopCircle, RefreshCw, AlertTriangle, CheckCircle2, Video } from 'lucide-react';
-import { useLivePoseAnalysis, BiofeedbackMetrics } from '@/hooks/useLivePoseAnalysis';
+
+import { Camera, StopCircle, AlertTriangle, CheckCircle2, Video } from 'lucide-react';
+import { useLivePoseAnalysis } from '@/hooks/useLivePoseAnalysis';
 import { toast } from '@/components/ui/use-toast';
 
-const MetricTrafficLight = ({ label, value, thresholdYellow, thresholdRed, unit = "°", inverse = false }: {
+const MetricTrafficLight = ({ label, value, thresholdYellow, thresholdRed, unit = "°", inverse: _inverse = false }: {
     label: string,
     value: number,
     thresholdYellow: number,
@@ -16,7 +16,7 @@ const MetricTrafficLight = ({ label, value, thresholdYellow, thresholdRed, unit 
     inverse?: boolean
 }) => {
     let color = "bg-green-500";
-    let status = "Bom";
+    // unused: let status = "Bom";
 
     // Standard: Lower is better (e.g., Lean). Inverse: Higher is better? 
     // Usually biomech deviation: Lower is better.
@@ -27,10 +27,10 @@ const MetricTrafficLight = ({ label, value, thresholdYellow, thresholdRed, unit 
 
     if (absVal > thresholdRed) {
         color = "bg-red-500 animate-pulse";
-        status = "Atenção!";
+        // status = "Atenção!";
     } else if (absVal > thresholdYellow) {
         color = "bg-yellow-400";
-        status = "Cuidado";
+        // status = "Cuidado";
     }
 
     return (
@@ -49,7 +49,7 @@ interface LiveBiofeedbackSessionProps {
 }
 
 const LiveBiofeedbackSession: React.FC<LiveBiofeedbackSessionProps> = ({ onClose }) => {
-    const { videoRef, canvasRef, startCamera, stopCamera, isAnalyzing, metrics, error } = useLivePoseAnalysis();
+    const { videoRef, canvasRef, startCamera, stopCamera, metrics, error } = useLivePoseAnalysis();
     const [isRecording, setIsRecording] = useState(false);
     const [recordingTime, setRecordingTime] = useState(0);
 
@@ -57,6 +57,7 @@ const LiveBiofeedbackSession: React.FC<LiveBiofeedbackSessionProps> = ({ onClose
     useEffect(() => {
         startCamera();
         return () => stopCamera();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleRecordToggle = () => {

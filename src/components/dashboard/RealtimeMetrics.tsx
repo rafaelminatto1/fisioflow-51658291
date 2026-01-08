@@ -64,6 +64,7 @@ export function RealtimeMetrics() {
           8000
         ),
         withTimeout(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (supabase as any)
             .from('payments')
             .select('amount')
@@ -78,8 +79,9 @@ export function RealtimeMetrics() {
       let appointmentsCount = 0;
       let confirmed = 0;
       let cancelled = 0;
-      
+
       if (appointmentsResult.status === 'fulfilled') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const appointments = appointmentsResult.value.data as any[];
         appointmentsCount = appointmentsResult.value.count || 0;
         confirmed = appointments?.filter((apt) => apt.status === 'confirmed' || apt.status === 'confirmado').length || 0;
@@ -87,10 +89,12 @@ export function RealtimeMetrics() {
       }
 
       const patientsInSession = sessionsResult.status === 'fulfilled'
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ? new Set((sessionsResult.value as any).data?.map((s: any) => s.patient_id) || []).size
         : 0;
 
       const todayRevenue = paymentsResult.status === 'fulfilled' && (paymentsResult.value as any).data
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ? ((paymentsResult.value as any).data || []).reduce((sum: number, p: any) => sum + (p.amount || 0), 0)
         : 0;
 
@@ -169,12 +173,12 @@ export function RealtimeMetrics() {
     };
   }, [loadMetrics]);
 
-  const formattedRevenue = useMemo(() => 
+  const formattedRevenue = useMemo(() =>
     metrics.todayRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
     [metrics.todayRevenue]
   );
 
-  const occupancyRateFormatted = useMemo(() => 
+  const occupancyRateFormatted = useMemo(() =>
     metrics.occupancyRate.toFixed(1),
     [metrics.occupancyRate]
   );

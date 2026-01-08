@@ -6,7 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
-import { AlertTriangle, Download, Wand2, Copy, Check } from 'lucide-react';
+import { AlertTriangle, Download, Copy } from 'lucide-react';
 
 import VideoComposer from './VideoComposer';
 import { checkMarketingConsent, createMarketingExportRecord, generateSocialCaption } from '@/services/marketing/marketingService';
@@ -159,7 +159,7 @@ const MarketingExportModal: React.FC<MarketingExportModalProps> = ({
 
                         <div className="space-y-4">
                             <h3 className="font-semibold text-sm">Legenda Inteligente</h3>
-                            <Tabs value={captionType} onValueChange={(v: any) => setCaptionType(v)}>
+                            <Tabs value={captionType} onValueChange={(v) => setCaptionType(v as 'technical' | 'motivational' | 'educational')}>
                                 <TabsList className="w-full">
                                     <TabsTrigger value="technical" className="flex-1">Técnico</TabsTrigger>
                                     <TabsTrigger value="motivational" className="flex-1">Motivacional</TabsTrigger>

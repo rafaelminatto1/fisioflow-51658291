@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+
 import {
   Select,
   SelectContent,
@@ -91,12 +91,12 @@ const CONDITIONS_PATOLOGIA = [
   'Outro',
 ];
 
-export function NewProtocolModal({ 
-  open, 
-  onOpenChange, 
-  onSubmit, 
-  protocol, 
-  isLoading 
+export function NewProtocolModal({
+  open,
+  onOpenChange,
+  onSubmit,
+  protocol,
+  isLoading
 }: ProtocolModalProps) {
   const [customCondition, setCustomCondition] = useState('');
 
@@ -130,7 +130,7 @@ export function NewProtocolModal({
     if (protocol) {
       const milestones = Array.isArray(protocol.milestones) ? protocol.milestones : [];
       const restrictions = Array.isArray(protocol.restrictions) ? protocol.restrictions : [];
-      
+
       form.reset({
         name: protocol.name || '',
         condition_name: protocol.condition_name || '',
@@ -146,8 +146,12 @@ export function NewProtocolModal({
           description: r.description,
         })),
       });
-      
-      if (!conditions.includes(protocol.condition_name)) {
+
+      const localConditions = (protocol.protocol_type || 'pos_operatorio') === 'pos_operatorio'
+        ? CONDITIONS_POS_OP
+        : CONDITIONS_PATOLOGIA;
+
+      if (!localConditions.includes(protocol.condition_name)) {
         setCustomCondition(protocol.condition_name);
       }
     } else {
@@ -165,7 +169,7 @@ export function NewProtocolModal({
 
   const handleSubmit = (data: ProtocolFormData) => {
     const finalCondition = data.condition_name === 'Outro' ? customCondition : data.condition_name;
-    
+
     onSubmit({
       name: data.name,
       condition_name: finalCondition,
@@ -184,7 +188,7 @@ export function NewProtocolModal({
         <DialogHeader className="p-6 pb-0">
           <DialogTitle>{protocol ? 'Editar Protocolo' : 'Novo Protocolo'}</DialogTitle>
         </DialogHeader>
-        
+
         <ScrollArea className="flex-1 px-6">
           <Form {...form}>
             <form id="protocol-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 pb-4">
@@ -254,8 +258,8 @@ export function NewProtocolModal({
                 <FormItem>
                   <FormLabel>Nome da Condição</FormLabel>
                   <FormControl>
-                    <Input 
-                      value={customCondition} 
+                    <Input
+                      value={customCondition}
                       onChange={(e) => setCustomCondition(e.target.value)}
                       placeholder="Digite o nome da condição"
                     />
@@ -387,10 +391,10 @@ export function NewProtocolModal({
                             <FormItem className="w-20">
                               <FormLabel className="text-xs">Até</FormLabel>
                               <FormControl>
-                                <Input 
-                                  type="number" 
-                                  {...field} 
-                                  value={field.value || ''} 
+                                <Input
+                                  type="number"
+                                  {...field}
+                                  value={field.value || ''}
                                   onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
                                   placeholder="-"
                                 />

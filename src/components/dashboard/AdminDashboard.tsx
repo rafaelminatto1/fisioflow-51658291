@@ -3,9 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Calendar, Users, DollarSign, Clock, UserCheck, AlertCircle, 
-  TrendingUp, TrendingDown, UserX, Activity, Receipt, Target,
+import {
+  Calendar, Users, DollarSign, Clock, UserCheck, AlertCircle,
+  TrendingUp, TrendingDown, UserX, Activity, Target,
   CalendarDays, XCircle
 } from 'lucide-react';
 import { EventosStatsWidget } from '@/components/eventos/EventosStatsWidget';
@@ -21,7 +21,7 @@ interface AdminDashboardProps {
   period?: string;
 }
 
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = 'hoje' }) => {
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period = 'hoje' }) => {
   const navigate = useNavigate();
   const { data: metrics, isLoading: metricsLoading } = useDashboardMetrics();
 
@@ -47,7 +47,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = 'hoje' 
 
       return data?.map(apt => ({
         id: apt.id,
-        paciente: (apt.patients as any)?.name || 'Paciente',
+        paciente: (apt.patients as unknown as { name: string })?.name || 'Paciente',
         horario: apt.appointment_time,
         status: apt.status
       })) || [];
@@ -115,7 +115,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = 'hoje' 
             </div>
             <div className="flex items-baseline gap-1.5 sm:gap-2 mt-1 flex-wrap">
               <p className="text-xl sm:text-2xl font-bold tracking-tight">
-                {(metrics?.receitaMensal || 0) >= 1000 
+                {(metrics?.receitaMensal || 0) >= 1000
                   ? `${((metrics?.receitaMensal || 0) / 1000).toFixed(1)}k`
                   : (metrics?.receitaMensal || 0).toLocaleString('pt-BR')
                 }
@@ -228,18 +228,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = 'hoje' 
             ) : (
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={metrics?.tendenciaSemanal || []}>
-                  <XAxis 
-                    dataKey="dia" 
+                  <XAxis
+                    dataKey="dia"
                     axisLine={false}
                     tickLine={false}
                     tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
                   />
-                  <YAxis 
+                  <YAxis
                     axisLine={false}
                     tickLine={false}
                     tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
                   />
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{
                       backgroundColor: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
@@ -297,8 +297,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = 'hoje' 
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Progress 
-                        value={(fisio.atendimentos / Math.max(...(metrics?.receitaPorFisioterapeuta.map(f => f.atendimentos) || [1]))) * 100} 
+                      <Progress
+                        value={(fisio.atendimentos / Math.max(...(metrics?.receitaPorFisioterapeuta.map(f => f.atendimentos) || [1]))) * 100}
                         className="h-2 flex-1"
                       />
                       <span className="text-xs text-muted-foreground whitespace-nowrap">
@@ -383,8 +383,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = 'hoje' 
             ) : (
               <div className="space-y-3 sm:space-y-4">
                 {agendamentosProximos.map((agendamento) => (
-                  <div 
-                    key={agendamento.id} 
+                  <div
+                    key={agendamento.id}
                     className="flex items-center justify-between p-3 sm:p-4 border border-border/50 rounded-xl hover:bg-accent/50 transition-colors"
                   >
                     <div className="flex items-center space-x-3 sm:space-x-4">
@@ -405,8 +405,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = 'hoje' 
               </div>
             )}
             <div className="mt-4 sm:mt-6">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full hover:bg-accent/80 border-border/50"
                 onClick={() => navigate('/agenda')}
               >
@@ -422,7 +422,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = 'hoje' 
             <CardTitle className="text-foreground">Ações Rápidas</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 sm:space-y-3">
-            <Button 
+            <Button
               className="w-full justify-start bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-sm text-sm sm:text-base"
               onClick={() => navigate('/pacientes')}
             >
@@ -466,8 +466,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = 'hoje' 
                   <p className="text-sm font-medium">{metrics?.pacientesEmRisco} pacientes sem consulta há mais de 30 dias</p>
                   <p className="text-xs text-muted-foreground">Considere entrar em contato para reativação</p>
                 </div>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   variant="outline"
                   onClick={() => navigate('/pacientes')}
                   className="w-full sm:w-auto"
@@ -483,8 +483,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = 'hoje' 
                   <p className="text-sm font-medium">Taxa de no-show acima do ideal ({metrics?.taxaNoShow}%)</p>
                   <p className="text-xs text-muted-foreground">Reforce os lembretes de confirmação</p>
                 </div>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   variant="outline"
                   onClick={() => navigate('/comunicacao')}
                   className="w-full sm:w-auto"

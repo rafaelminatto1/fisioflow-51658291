@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Upload, Video, Brain, FileText, Share2 } from 'lucide-react';
+import { Loader2, Upload, Video, Brain, Share2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 import DualVideoPlayer from './DualVideoPlayer';
@@ -121,11 +121,11 @@ const DynamicComparisonPage = () => {
 
             const report = await generateClinicalReport({
                 comparison: comparisonResult
-            } as any);
+            } as unknown as { image: string; clinicalContext?: string });
 
             setAiReport(report);
             toast({ title: 'Laudo Gerado', description: 'Análise clínica concluída com sucesso.' });
-        } catch (e) {
+        } catch {
             toast({ title: 'Erro', description: 'Falha ao conectar com serviço de IA.', variant: 'destructive' });
         } finally {
             setGeneratingReport(false);

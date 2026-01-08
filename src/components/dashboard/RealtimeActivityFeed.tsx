@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Calendar, User, DollarSign, Clock, Bell } from 'lucide-react';
+import { Calendar, User, Bell } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ActivityEvent {
@@ -13,7 +13,7 @@ interface ActivityEvent {
   title: string;
   description: string;
   timestamp: Date;
-  icon: any;
+  icon: React.ElementType;
   variant: 'default' | 'success' | 'warning' | 'destructive';
 }
 
@@ -29,7 +29,7 @@ export function RealtimeActivityFeed() {
   const loadRecentActivities = async () => {
     try {
       setIsLoading(true);
-      
+
       // Função auxiliar para timeout
       const withTimeout = <T,>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> => {
         return Promise.race([
@@ -55,12 +55,12 @@ export function RealtimeActivityFeed() {
               .limit(5),
             8000
           );
-          
+
           if (result.data) {
             appointments = result.data;
             break;
           }
-        } catch (error) {
+        } catch {
           retries++;
           if (retries < maxRetries) {
             await new Promise(resolve => setTimeout(resolve, 1000 * retries));

@@ -85,7 +85,7 @@ export const useLivePoseAnalysis = () => {
         }
     };
 
-    const predictWebcam = async () => {
+    const predictWebcam = useCallback(async () => {
         if (!landmarkerRef.current || !videoRef.current || !canvasRef.current) return;
 
         const video = videoRef.current;
@@ -111,7 +111,7 @@ export const useLivePoseAnalysis = () => {
                 drawingUtils.drawConnectors(landmarks, PoseLandmarker.POSE_CONNECTIONS);
 
                 // Calculate Live Metrics
-                const unified = landmarks.map((l, i) => ({ x: l.x, y: l.y, z: l.z, visibility: l.visibility })) as UnifiedLandmark[];
+                const unified = landmarks.map((l) => ({ x: l.x, y: l.y, z: l.z, visibility: l.visibility })) as UnifiedLandmark[];
 
                 const hipL = unified[POSE_LANDMARKS.LEFT_HIP];
                 const hipR = unified[POSE_LANDMARKS.RIGHT_HIP];
@@ -163,7 +163,7 @@ export const useLivePoseAnalysis = () => {
         if (isAnalyzing) {
             requestRef.current = requestAnimationFrame(predictWebcam);
         }
-    };
+    }, [isAnalyzing]);
 
     // Restart loop if isAnalyzing changes state (handled by layout effect usually, but here recursive reqAnimFrame)
     useEffect(() => {
@@ -175,7 +175,7 @@ export const useLivePoseAnalysis = () => {
         return () => {
             if (requestRef.current) cancelAnimationFrame(requestRef.current);
         }
-    }, [isAnalyzing]);
+    }, [isAnalyzing, predictWebcam]);
 
     return {
         videoRef,
