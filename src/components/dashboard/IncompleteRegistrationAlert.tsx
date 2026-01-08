@@ -17,14 +17,23 @@ export const IncompleteRegistrationAlert: React.FC = () => {
 
   React.useEffect(() => {
     const fetchIncompletePatients = async () => {
-      const { data, error } = await supabase
-        .from('patients')
-        .select('id, name')
-        .eq('incomplete_registration', true)
-        .limit(5);
+      try {
+        const { data, error } = await supabase
+          .from('patients')
+          .select('id, name')
+          .eq('incomplete_registration', true)
+          .limit(5);
 
-      if (!error && data) {
-        setIncompletePatients(data);
+        if (error) {
+          console.error('Error fetching incomplete patients:', error);
+          return;
+        }
+
+        if (data) {
+          setIncompletePatients(data);
+        }
+      } catch (err) {
+        console.error('Unexpected error in IncompleteRegistrationAlert:', err);
       }
     };
 
@@ -82,7 +91,7 @@ export const IncompleteRegistrationAlert: React.FC = () => {
                 {visiblePatients.length} {visiblePatients.length === 1 ? 'paciente precisa' : 'pacientes precisam'} de cadastro completo
               </p>
             </div>
-            
+
             <div className="space-y-2 mt-2 sm:mt-3">
               {visiblePatients.map((patient) => (
                 <div
