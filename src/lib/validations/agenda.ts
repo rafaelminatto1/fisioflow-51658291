@@ -181,3 +181,30 @@ export type CreateAppointmentInput = z.infer<typeof createAppointmentSchema>;
 export type UpdateAppointmentInput = z.infer<typeof updateAppointmentSchema>;
 export type CreatePaymentInput = z.infer<typeof createPaymentSchema>;
 export type AgendaFiltersInput = z.infer<typeof agendaFiltersSchema>;
+
+export const appointmentFormSchema = z.object({
+  patient_id: z.string().min(1, "Selecione um paciente"),
+  appointment_date: dateSchema,
+  appointment_time: timeSchema,
+  duration: z.number().min(1, "Duração deve ser pelo menos 1 minuto"),
+  type: z.string().min(1, "Selecione o tipo de agendamento"),
+  status: sessionStatusSchema,
+  notes: z.string().optional().nullable(),
+  therapist_id: z.string().optional().nullable(),
+  room: z.string().optional().nullable(),
+  payment_status: z.string().optional().nullable(),
+  payment_amount: z.number().optional().nullable(),
+  payment_method: z.string().optional().nullable(),
+  installments: z.number().optional().nullable(),
+  session_package_id: z.string().optional().nullable(),
+  is_recurring: z.boolean().optional().nullable(),
+  recurring_until: z.string().optional().nullable(),
+}).refine((data) => {
+  if (data.is_recurring && data.recurring_until) {
+    return new Date(data.recurring_until) > new Date(data.appointment_date);
+  }
+  return true;
+}, {
+  message: "Data final da recorrência deve ser posterior à data do agendamento",
+  path: ["recurring_until"]
+});

@@ -1,4 +1,5 @@
-import React, { useState, useCallback, lazy, Suspense } from 'react';
+import React, { useState, useCallback, lazy, Suspense, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useDropzone } from 'react-dropzone';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -59,8 +60,27 @@ const MOCK_GAIT_DATA: GaitMetrics = {
 type ViewerMode = 'upload' | 'dicom' | 'pose' | 'image' | 'clinical_posture' | 'dynamic_demo' | 'dynamic_compare';
 
 const ImageAnalysisDashboard = () => {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const initialMode = (searchParams.get('mode') as ViewerMode) || 'upload';
+
     const [file, setFile] = useState<File | null>(null);
-    const [mode, setMode] = useState<ViewerMode>('upload');
+    const [mode, setMode] = useState<ViewerMode>(initialMode);
+
+    useEffect(() => {
+        const urlMode = searchParams.get('mode') as ViewerMode;
+        if (urlMode && urlMode !== mode) {
+            setMode(urlMode);
+        }
+    }, [searchParams]);
+
+    const handleModeChange = (newMode: ViewerMode) => {
+        setMode(newMode);
+        if (newMode === 'upload') {
+            setSearchParams({});
+        } else {
+            setSearchParams({ mode: newMode });
+        }
+    };
 
     const onDrop = useCallback((acceptedFiles: File[]) => {
         const selected = acceptedFiles[0];
@@ -85,7 +105,7 @@ const ImageAnalysisDashboard = () => {
 
     const reset = () => {
         setFile(null);
-        setMode('upload');
+        handleModeChange('upload');
     };
 
     return (
@@ -136,13 +156,13 @@ const ImageAnalysisDashboard = () => {
                             </div>
 
                             <div className="mt-8 border-t pt-6 w-full max-w-md space-y-2">
-                                <Button variant="secondary" className="w-full" onClick={() => setMode('clinical_posture')}>
+                                <Button variant="secondary" className="w-full" onClick={() => handleModeChange('clinical_posture')}>
                                     Nova Análise Postural (Foto)
                                 </Button>
-                                <Button variant="outline" className="w-full" onClick={() => setMode('dynamic_demo')}>
+                                <Button variant="outline" className="w-full" onClick={() => handleModeChange('dynamic_demo')}>
                                     Demo: Marcha Clínica (JSON)
                                 </Button>
-                                <Button variant="secondary" className="w-full border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100" onClick={() => setMode('dynamic_compare')}>
+                                <Button variant="secondary" className="w-full border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100" onClick={() => handleModeChange('dynamic_compare')}>
                                     Comparativo de Vídeo (Antes x Depois)
                                 </Button>
                             </div>
