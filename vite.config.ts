@@ -51,8 +51,15 @@ export default defineConfig(({ mode }) => {
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff2}'],
-          // Exclude cornerstone WASM files from PWA caching to avoid build issues
-          globIgnores: ['**/node_modules/**/*', '**/*.wasm'],
+          // Exclude cornerstone and WASM files from PWA caching to avoid build issues
+          globIgnores: [
+            '**/node_modules/**/*',
+            '**/*.wasm',
+            '**/cornerstone*',
+            '**/dicom*'
+          ],
+          // Don't precache large chunks
+          maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
@@ -97,9 +104,13 @@ export default defineConfig(({ mode }) => {
           cleanupOutdatedCaches: true,
           skipWaiting: true,
           clientsClaim: true,
+          // Disable navigation preload to avoid issues with cornerstone
+          navigationPreload: false,
         },
         // Disable injectManifest mode to avoid IIFE conflict with cornerstone
         injectManifest: undefined,
+        // Don't include cornerstone in any PWA processing
+        strategies: 'generateSW',
         devOptions: {
           enabled: false,
         }
@@ -157,7 +168,15 @@ export default defineConfig(({ mode }) => {
     },
 
     optimizeDeps: {
-      exclude: ['@cornerstonejs/dicom-image-loader'],
+      exclude: [
+        '@cornerstonejs/dicom-image-loader',
+        '@cornerstonejs/core',
+        '@cornerstonejs/tools',
+        '@cornerstonejs/codec-charls',
+        '@cornerstonejs/codec-libjpeg-turbo-8bit',
+        '@cornerstonejs/codec-openjpeg',
+        '@cornerstonejs/codec-openjph',
+      ],
       include: [
         'react',
         'react-dom',
