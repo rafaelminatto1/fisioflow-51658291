@@ -8,8 +8,8 @@ import { DataProvider } from "@/contexts/DataContext";
 import { AuthContextProvider } from "@/contexts/AuthContextProvider";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
-import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
-import { PWAUpdatePrompt } from "@/components/pwa/PWAUpdatePrompt";
+// import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
+// import { PWAUpdatePrompt } from "@/components/pwa/PWAUpdatePrompt";
 import { logger } from '@/lib/errors/logger';
 import { notificationManager } from '@/lib/services/NotificationManager';
 import { initMonitoring } from '@/lib/monitoring';
@@ -186,8 +186,8 @@ const App = () => {
             <DataProvider>
               <Toaster />
               <Sonner />
-              <PWAInstallPrompt />
-              <PWAUpdatePrompt />
+              {/* <PWAInstallPrompt /> */}
+              {/* <PWAUpdatePrompt /> */}
               <BrowserRouter>
                 <Suspense fallback={<PageLoadingFallback />}>
                   <Routes>

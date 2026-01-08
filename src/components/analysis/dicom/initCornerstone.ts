@@ -1,6 +1,6 @@
 import { init as coreInit } from '@cornerstonejs/core';
 import { init as toolsInit } from '@cornerstonejs/tools';
-import * as cornerstoneDICOMImageLoader from '@cornerstonejs/dicom-image-loader';
+// import * as cornerstoneDICOMImageLoader from '@cornerstonejs/dicom-image-loader';
 
 let initialized = false;
 

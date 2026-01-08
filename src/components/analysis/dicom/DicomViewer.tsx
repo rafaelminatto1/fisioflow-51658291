@@ -7,17 +7,18 @@ import {
 } from '@cornerstonejs/core';
 import {
     ToolGroupManager,
-    StackScrollTool,
+    // StackScrollTool,
+    // StackScrollMouseWheelTool,
     PanTool,
     ZoomTool,
     LengthTool,
-    AngleTool,
-    CobbAngleTool,
+    // AngleTool,
+    // CobbAngleTool,
     ProbeTool,
     addTool,
     Enums as ToolEnums,
 } from '@cornerstonejs/tools';
-import * as cornerstoneDICOMImageLoader from '@cornerstonejs/dicom-image-loader';
+// import * as cornerstoneDICOMImageLoader from '@cornerstonejs/dicom-image-loader';
 import * as cornerstone from '@cornerstonejs/core'; // Import cornerstone for external injection
 import initCornerstone from './initCornerstone';
 import { Card } from '@/components/ui/card';
@@ -52,12 +53,13 @@ const DicomViewer: React.FC<DicomViewerProps> = ({ file, studyInstanceUid, serie
                 // Check if tool exists to avoid error? 
                 // Cornerstone addTool might throw if already added.
                 // We'll rely on try/catch
-                addTool(StackScrollTool);
+                // addTool(StackScrollTool);
+                // addTool(StackScrollMouseWheelTool);
                 addTool(PanTool);
                 addTool(ZoomTool);
                 addTool(LengthTool);
-                addTool(AngleTool);
-                addTool(CobbAngleTool);
+                // addTool(AngleTool);
+                // addTool(CobbAngleTool);
                 addTool(ProbeTool);
             } catch (e) {
                 // Tools might be already added
@@ -79,7 +81,7 @@ const DicomViewer: React.FC<DicomViewerProps> = ({ file, studyInstanceUid, serie
             // Usually: cornerstoneDICOMImageLoader.external.cornerstone = cornerstone;
             // If TS complains, we can cast to any or check the import structure.
             // It is likely `cornerstoneDICOMImageLoader.external` exists at runtime.
-            (cornerstoneDICOMImageLoader as any).external.cornerstone = cornerstone;
+            // (cornerstoneDICOMImageLoader as any).external.cornerstone = cornerstone;
 
             // Configure WADO-RS
             // The wado-rs loader usually needs a request modifier to add headers (Authorization)
@@ -134,15 +136,17 @@ const DicomViewer: React.FC<DicomViewerProps> = ({ file, studyInstanceUid, serie
             toolGroup = ToolGroupManager.createToolGroup(TOOL_GROUP_ID);
 
             if (toolGroup) {
-                toolGroup.addTool(StackScrollTool.toolName);
+                // toolGroup.addTool(StackScrollTool.toolName);
+                // toolGroup.addTool(StackScrollMouseWheelTool.toolName);
                 toolGroup.addTool(PanTool.toolName);
                 toolGroup.addTool(ZoomTool.toolName);
                 toolGroup.addTool(LengthTool.toolName);
-                toolGroup.addTool(AngleTool.toolName);
-                toolGroup.addTool(CobbAngleTool.toolName);
+                // toolGroup.addTool(AngleTool.toolName);
+                // toolGroup.addTool(CobbAngleTool.toolName);
                 toolGroup.addTool(ProbeTool.toolName);
 
-                toolGroup.setToolActive(StackScrollTool.toolName);
+                // toolGroup.setToolActive(StackScrollTool.toolName);
+                // toolGroup.setToolActive(StackScrollMouseWheelTool.toolName);
                 toolGroup.setToolActive(LengthTool.toolName, {
                     bindings: [{ mouseButton: ToolEnums.MouseBindings.Primary }],
                 });
@@ -162,8 +166,9 @@ const DicomViewer: React.FC<DicomViewerProps> = ({ file, studyInstanceUid, serie
 
             if (file) {
                 // Local File Mode
-                const imageId = await cornerstoneDICOMImageLoader.wadouri.fileManager.add(file);
-                imageIds = [imageId];
+                // const imageId = await cornerstoneDICOMImageLoader.wadouri.fileManager.add(file);
+                // imageIds = [imageId];
+                console.warn("DICOM Loader disabled for build verification");
             } else if (studyInstanceUid && seriesInstanceUid && wadoUrl) {
                 // WADO-RS Mode
                 // We need to fetch the instance list first via QIDO-RS (Proxy)
@@ -234,12 +239,12 @@ const DicomViewer: React.FC<DicomViewerProps> = ({ file, studyInstanceUid, serie
         const loadFile = async () => {
             try {
                 // WADO-URI Manager
-                const imageId = await cornerstoneDICOMImageLoader.wadouri.fileManager.add(file);
+                // const imageId = await cornerstoneDICOMImageLoader.wadouri.fileManager.add(file);
 
                 const viewport = engineRef.current?.getViewport(VIEWPORT_ID) as StackViewport;
                 if (viewport) {
-                    await viewport.setStack([imageId]);
-                    viewport.render();
+                    // await viewport.setStack([imageId]);
+                    // viewport.render();
                 }
             } catch (err) {
                 console.error("Error loading DICOM:", err);
@@ -258,7 +263,7 @@ const DicomViewer: React.FC<DicomViewerProps> = ({ file, studyInstanceUid, serie
         // toolGroup.setToolPassive(activeTool); // Or just set new one active?
         // Best to disable previously active Primary tool to avoid conflict if both use Left Click
 
-        const primaryTools = [LengthTool.toolName, AngleTool.toolName, CobbAngleTool.toolName, ProbeTool.toolName, 'Eraser'];
+        const primaryTools = [LengthTool.toolName, /*AngleTool.toolName, CobbAngleTool.toolName,*/ ProbeTool.toolName, 'Eraser'];
 
         primaryTools.forEach(t => {
             toolGroup.setToolPassive(t);
@@ -280,7 +285,7 @@ const DicomViewer: React.FC<DicomViewerProps> = ({ file, studyInstanceUid, serie
                 >
                     <Ruler className="w-4 h-4 mr-2" /> Medir (Régua)
                 </Button>
-                <Button
+                {/* <Button
                     variant={activeTool === AngleTool.toolName ? "default" : "ghost"}
                     size="sm"
                     onClick={() => activateTool(AngleTool.toolName)}
@@ -293,7 +298,7 @@ const DicomViewer: React.FC<DicomViewerProps> = ({ file, studyInstanceUid, serie
                     onClick={() => activateTool(CobbAngleTool.toolName)}
                 >
                     <Activity className="w-4 h-4 mr-2" /> Cobb (Escoliose)
-                </Button>
+                </Button> */}
                 <Button
                     variant={activeTool === ProbeTool.toolName ? "default" : "ghost"}
                     size="sm"
