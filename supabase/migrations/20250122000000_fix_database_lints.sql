@@ -68,7 +68,7 @@ ALTER FUNCTION public.audit_trigger_function() SET search_path = public, extensi
 
 -- Fix Materialized View in API warnings
 -- Revoke access from API roles to prevent exposure
-REVOKE SELECT ON MATERIALIZED VIEW public.monthly_metrics FROM anon, authenticated;
-REVOKE SELECT ON MATERIALIZED VIEW public.financial_metrics FROM anon, authenticated;
-REVOKE SELECT ON MATERIALIZED VIEW public.clinical_metrics FROM anon, authenticated;
-REVOKE SELECT ON MATERIALIZED VIEW public.patient_analytics FROM anon, authenticated;
+REVOKE SELECT ON TABLE public.monthly_metrics FROM anon, authenticated;
+REVOKE SELECT ON TABLE public.financial_metrics FROM anon, authenticated;
+REVOKE SELECT ON TABLE public.clinical_metrics FROM anon, authenticated;
+REVOKE SELECT ON TABLE public.patient_analytics FROM anon, authenticated;
