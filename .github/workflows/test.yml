@@ -7,7 +7,27 @@ on:
     branches: [main, develop]
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 1
+
   unit-tests:
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,6 +46,7 @@ jobs:
           flags: unittests
 
   e2e-tests:
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -38,7 +59,10 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run build
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
       - uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
@@ -59,6 +83,7 @@ jobs:
           retention-days: 30
 
   accessibility:
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -71,7 +96,10 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run build
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
       - uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
@@ -86,6 +114,7 @@ jobs:
       - run: pnpm run test:e2e --project=chromium accessibility.spec.ts
 
   performance:
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -98,7 +127,10 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run build
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
       - uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
