@@ -58,9 +58,17 @@ export const useOrganizations = () => {
         .from('organizations')
         .select('*')
         .eq('id', profile.organization_id)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching current organization:', error);
+        throw error;
+      }
+
+      if (!data) {
+        console.warn('Organization not found (404/406) for ID:', profile.organization_id);
+      }
+
       return data as Organization;
     },
   });
