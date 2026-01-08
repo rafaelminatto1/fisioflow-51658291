@@ -36,9 +36,12 @@ export default defineConfig({
     },
   ],
 
-  webServer: {
+  // webServer configuration is disabled in CI to avoid issues
+  // In CI, we expect the tests to run without a running dev server
+  webServer: process.env.CI ? undefined : {
     command: 'npm run dev',
     url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
+    timeout: 120000,
   },
 });
