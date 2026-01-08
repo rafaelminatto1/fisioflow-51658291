@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Media Upload - Physiotherapy App</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar hide for cleaner UI if needed */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display antialiased text-white bg-background-light dark:bg-background-dark">
+<div class="relative flex min-h-screen w-full flex-col overflow-hidden group/design-root">
+<!-- Subtle Background Illustration -->
+<!-- Using a dark overlay on top of an image to keep it subtle as requested -->
+<div class="absolute inset-0 z-0 opacity-20 pointer-events-none">
+<div class="w-full h-full bg-center bg-no-repeat bg-cover mix-blend-overlay" data-alt="Abstract medical blue waves and lines background illustration" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA_AQj2xl8URx7VHJgIO4_5Rqwj84L8CU6Lk8POMpDfvJMK0iCSzR1vmoTRtcrYtRPnX_I8aBDWglustFORFT92avVA3ILhrv1GC_ojj2WHHxvejqs0IC9FkAe9DcLLdI2kE7K9Lb8TKUrrj1-irf8iKVfh32PHLr2t_62u00sgWdovwLWDB33-JkfDaJD4LOPyRUlzRstMfY0WGjwGpJ3-Y93WIAgs_WJDmbVAkZJLB7rw4R-cv34lbMRixpj_oUVHByKD-CuNbgM');">
+</div>
+<div class="absolute inset-0 bg-gradient-to-b from-background-dark via-background-dark/90 to-background-dark"></div>
+</div>
+<!-- TopAppBar -->
+<div class="relative z-10 flex items-center p-4 justify-between">
+<button class="text-white flex size-12 shrink-0 items-center justify-center rounded-full hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined" style="font-size: 24px;">arrow_back_ios_new</span>
+</button>
+<h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-12">Add Media</h2>
+</div>
+<!-- Main Content Area -->
+<div class="relative z-10 flex flex-col items-center justify-center flex-grow w-full max-w-md mx-auto px-6 pb-6 gap-8">
+<!-- Intro Text -->
+<div class="text-center space-y-3">
+<div class="inline-flex items-center justify-center size-16 rounded-full bg-primary/10 mb-2">
+<span class="material-symbols-outlined text-primary" style="font-size: 32px;">add_a_photo</span>
+</div>
+<h1 class="text-2xl font-bold text-white tracking-tight">New Analysis</h1>
+<p class="text-gray-400 text-base font-normal leading-normal max-w-xs mx-auto">
+                    Choose how you would like to import your scan or injury photo for analysis.
+                </p>
+</div>
+<!-- Action Buttons Container -->
+<div class="w-full flex flex-col gap-4">
+<!-- Upload from Gallery Button -->
+<button class="group flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl h-14 px-5 bg-primary hover:bg-primary/90 transition-all text-white gap-3 shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform" style="font-size: 24px;">photo_library</span>
+<span class="text-base font-bold leading-normal tracking-[0.015em] truncate">Upload from Gallery</span>
+</button>
+<!-- Capture with Camera Button -->
+<button class="group flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl h-14 px-5 bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-white gap-3">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform text-primary" style="font-size: 24px;">photo_camera</span>
+<span class="text-base font-bold leading-normal tracking-[0.015em] truncate">Capture with Camera</span>
+</button>
+</div>
+<!-- Helper/Supported Formats -->
+<div class="text-center">
+<p class="text-xs text-gray-500 font-medium">We support MRI scans, X-rays, and standard photos.</p>
+</div>
+<!-- Live Camera Preview (Conditional / Placeholder) -->
+<!-- This represents the 'small area for live camera preview' mentioned in requirements -->
+<div class="w-full mt-4">
+<div class="relative w-full aspect-[4/3] bg-black rounded-2xl border border-white/10 overflow-hidden shadow-2xl flex flex-col items-center justify-center group">
+<!-- Placeholder Content (Simulating 'Ready to Capture' state) -->
+<div class="absolute inset-0 flex flex-col items-center justify-center text-gray-500 bg-[#0f151a]">
+<span class="material-symbols-outlined opacity-50 mb-2" style="font-size: 48px;">videocam_off</span>
+<p class="text-sm font-medium opacity-50">Camera Preview</p>
+</div>
+<!-- Mock Live View Elements (Hidden by default or low opacity to show UI possibility) -->
+<div class="absolute bottom-4 flex items-center justify-center w-full z-20">
+<div class="size-16 rounded-full border-4 border-white flex items-center justify-center cursor-pointer opacity-50 group-hover:opacity-100 transition-opacity">
+<div class="size-12 rounded-full bg-white"></div>
+</div>
+</div>
+<!-- Grid Overlay -->
+<div class="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none opacity-20">
+<div class="border-r border-white/30"></div>
+<div class="border-r border-white/30"></div>
+<div></div>
+<div class="border-r border-t border-white/30"></div>
+<div class="border-r border-t border-white/30"></div>
+<div class="border-t border-white/30"></div>
+<div class="border-r border-t border-white/30"></div>
+<div class="border-r border-t border-white/30"></div>
+<div class="border-t border-white/30"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Spacer -->
+<div class="h-8"></div>
+</div>
+</body></html>

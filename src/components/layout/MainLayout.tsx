@@ -19,10 +19,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { 
-  ChevronDown, 
-  User, 
-  Settings, 
+import {
+  ChevronDown,
+  User,
+  Settings,
   LogOut,
   Stethoscope
 } from 'lucide-react';
@@ -37,7 +37,7 @@ interface MainLayoutProps {
   customBreadcrumbLabels?: Record<string, string>;
 }
 
-export const MainLayout: React.FC<MainLayoutProps> = ({ 
+export const MainLayout: React.FC<MainLayoutProps> = ({
   children,
   showBreadcrumbs = true,
   customBreadcrumbLabels,
@@ -52,7 +52,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         title: 'Sessão encerrada',
         description: 'Você foi desconectado com sucesso.',
       });
-      navigate('/login');
+      navigate('/auth');
     } catch (error) {
       toast({
         title: 'Erro ao sair',
@@ -69,15 +69,15 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
     <div className="min-h-screen flex w-full bg-gradient-to-br from-background via-accent/5 to-background">
       {/* Onboarding Tour */}
       <OnboardingTour />
-      
+
       {/* Header Mobile */}
       <MobileHeader />
-      
+
       {/* Sidebar - Hidden on mobile */}
       <div className="hidden md:block">
         <Sidebar />
       </div>
-      
+
       <div className="flex-1 flex flex-col">
         {/* Header Desktop */}
         <header className="hidden md:flex h-14 bg-white/95 dark:bg-background-dark/95 border-b border-border items-center justify-between px-4 shadow-sm backdrop-blur-md">
@@ -91,15 +91,15 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
               </h2>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-4">
             <GlobalSearch />
-            
+
             {/* Indicador de usuários online */}
             <OnlineUsersIndicator />
-            
+
             <NotificationBell />
-            
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2 h-9 hover:bg-accent/80 transition-colors">
@@ -126,19 +126,19 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                 <DropdownMenuLabel className="text-foreground">Minha Conta</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild className="hover:bg-accent/80 cursor-pointer">
-                  <Link to="/perfil">
+                  <Link to="/profile">
                     <User className="w-4 h-4 mr-2 text-primary" />
                     Perfil
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild className="hover:bg-accent/80 cursor-pointer">
-                  <Link to="/configuracoes">
+                  <Link to="/settings">
                     <Settings className="w-4 h-4 mr-2 text-primary" />
                     Configurações
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={handleLogout}
                   className="hover:bg-destructive/10 text-destructive cursor-pointer"
                 >
@@ -158,7 +158,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
           </div>
         </main>
       </div>
-      
+
       {/* Bottom Navigation - Mobile only */}
       <BottomNavigation />
     </div>

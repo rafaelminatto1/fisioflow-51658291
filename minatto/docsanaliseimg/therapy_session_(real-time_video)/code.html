@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Therapy Session - Real-time Video</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar hiding for clean UI */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-white overflow-hidden h-screen w-full">
+<!-- Main Container: Simulates the phone screen area -->
+<div class="relative h-full w-full flex flex-col group/design-root">
+<!-- Background Video Feed Simulation -->
+<!-- In a real app, this would be the camera view element -->
+<div class="absolute inset-0 z-0 bg-gray-900">
+<div class="absolute inset-0 bg-cover bg-center opacity-90" data-alt="Woman doing yoga stretches in a bright studio" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAr21jEOqc_3ApjnhVJwQMyJkwlttCWVWefbRKEjfH9RdyMtNF-pVOhSdeg1kNOlGPf-45hMjct0xlTmbKDaEflJ7uld1mz-NlUEMo_etpFxTHPhgILYcoUnfghmyTf3S5QFB5SF8qSxvczxzjUBpTZe1fKxU4iX6GKVWQGxYKcYHJ-izhkQdNsGgzCFhdS9-PqqDW6_X1MIm3pXke2VnP_3z-2nR41iAJv8U6JR0WdOi1XHxgkzUdqoDKNR4m2XYY_UAxUtnntZMM');">
+</div>
+<!-- Dark Gradient Overlay for text readability -->
+<div class="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80"></div>
+<!-- AR Overlay Simulation -->
+<!-- This represents the skeletal tracking lines drawn by the app -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+<!-- Leg lines -->
+<line class="opacity-80 drop-shadow-lg" stroke="#137fec" stroke-linecap="round" stroke-width="3" x1="65%" x2="55%" y1="55%" y2="70%"></line>
+<line class="opacity-80 drop-shadow-lg" stroke="#137fec" stroke-linecap="round" stroke-width="3" x1="55%" x2="75%" y1="70%" y2="85%"></line>
+<!-- Joint points -->
+<circle class="drop-shadow-md" cx="65%" cy="55%" fill="#ffffff" r="6"></circle>
+<circle class="animate-pulse drop-shadow-md" cx="55%" cy="70%" fill="#137fec" r="8" stroke="white" stroke-width="2"></circle>
+<circle class="drop-shadow-md" cx="75%" cy="85%" fill="#ffffff" r="6"></circle>
+<!-- Angle Arc -->
+<path d="M 60% 65% Q 55% 70% 62% 75%" fill="none" stroke="white" stroke-dasharray="4 2" stroke-width="1.5"></path>
+</svg>
+</div>
+<!-- Foreground UI Layer (Z-10) -->
+<div class="relative z-10 flex flex-col h-full justify-between safe-area-padding">
+<!-- Top App Bar -->
+<header class="flex items-center justify-between p-4 pt-12 pb-6 w-full">
+<!-- Back Button -->
+<button class="flex items-center justify-center size-10 rounded-full bg-black/20 backdrop-blur-sm border border-white/10 hover:bg-black/40 transition-colors">
+<span class="material-symbols-outlined text-white">arrow_back</span>
+</button>
+<!-- Timer / Session Status -->
+<div class="flex items-center gap-2 px-4 py-1.5 rounded-full bg-black/30 backdrop-blur-md border border-white/5">
+<div class="size-2 rounded-full bg-red-500 animate-pulse"></div>
+<span class="text-base font-bold tracking-wide tabular-nums">00:15</span>
+</div>
+<!-- Settings -->
+<button class="flex items-center justify-center size-10 rounded-full bg-black/20 backdrop-blur-sm border border-white/10 hover:bg-black/40 transition-colors">
+<span class="material-symbols-outlined text-white">settings</span>
+</button>
+</header>
+<!-- Center Content Area (Feedback Toast) -->
+<div class="flex-1 flex flex-col items-center justify-center p-6">
+<!-- Transient Feedback Banner -->
+<div class="mt-auto mb-12 transform transition-all duration-300">
+<div class="flex flex-col items-center gap-1 px-6 py-3 rounded-xl bg-black/50 backdrop-blur-md border border-white/10 shadow-lg">
+<div class="flex items-center gap-2 text-primary-300">
+<span class="material-symbols-outlined text-yellow-400 text-xl">warning</span>
+<h2 class="text-lg font-bold leading-tight tracking-tight text-white">Straighten your back</h2>
+</div>
+<p class="text-xs font-medium text-white/70 uppercase tracking-wider">Form Correction</p>
+</div>
+</div>
+</div>
+<!-- Bottom Control Panel -->
+<div class="flex flex-col w-full pb-8 px-4 gap-6">
+<!-- Metrics / Stats Cards (Horizontal Scroll on small screens) -->
+<div class="flex gap-3 overflow-x-auto no-scrollbar snap-x snap-mandatory">
+<!-- Card 1: Knee Flexion -->
+<div class="flex min-w-[140px] flex-1 flex-col gap-1 rounded-2xl p-4 bg-background-dark/80 backdrop-blur-md border border-white/5 snap-center shadow-lg">
+<div class="flex items-center justify-between">
+<p class="text-gray-400 text-xs font-semibold uppercase tracking-wider">Knee Flexion</p>
+<span class="material-symbols-outlined text-primary text-sm">show_chart</span>
+</div>
+<div class="flex items-baseline gap-1">
+<p class="text-white text-2xl font-bold leading-tight">45°</p>
+<span class="text-gray-400 text-xs font-medium">/ 90°</span>
+</div>
+<!-- Mini visual indicator bar -->
+<div class="w-full bg-gray-700 h-1 rounded-full mt-2 overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 50%"></div>
+</div>
+</div>
+<!-- Card 2: Rep Count -->
+<div class="flex min-w-[140px] flex-1 flex-col gap-1 rounded-2xl p-4 bg-background-dark/80 backdrop-blur-md border border-white/5 snap-center shadow-lg">
+<div class="flex items-center justify-between">
+<p class="text-gray-400 text-xs font-semibold uppercase tracking-wider">Reps</p>
+<span class="material-symbols-outlined text-green-400 text-sm">check_circle</span>
+</div>
+<div class="flex items-baseline gap-1">
+<p class="text-white text-2xl font-bold leading-tight">3</p>
+<span class="text-gray-400 text-xs font-medium">/ 10</span>
+</div>
+<div class="w-full bg-gray-700 h-1 rounded-full mt-2 overflow-hidden">
+<div class="bg-green-500 h-full rounded-full" style="width: 30%"></div>
+</div>
+</div>
+<!-- Card 3: Accuracy -->
+<div class="flex min-w-[140px] flex-1 flex-col gap-1 rounded-2xl p-4 bg-background-dark/80 backdrop-blur-md border border-white/5 snap-center shadow-lg">
+<div class="flex items-center justify-between">
+<p class="text-gray-400 text-xs font-semibold uppercase tracking-wider">Accuracy</p>
+<span class="material-symbols-outlined text-blue-400 text-sm">verified</span>
+</div>
+<p class="text-white text-2xl font-bold leading-tight">92%</p>
+<div class="w-full bg-gray-700 h-1 rounded-full mt-2 overflow-hidden">
+<div class="bg-blue-500 h-full rounded-full" style="width: 92%"></div>
+</div>
+</div>
+</div>
+<!-- Camera Controls Row -->
+<div class="flex items-center justify-between px-4 pt-2">
+<!-- Gallery / Library -->
+<button class="flex shrink-0 items-center justify-center rounded-full size-12 bg-black/40 text-white hover:bg-black/60 backdrop-blur-sm border border-white/10 transition-all">
+<span class="material-symbols-outlined">photo_library</span>
+</button>
+<!-- Shutter / Record Button -->
+<!-- Active State: Red Square inside white ring -->
+<button class="group relative flex items-center justify-center size-20 rounded-full border-4 border-white bg-transparent transition-transform active:scale-95">
+<div class="size-16 rounded-full bg-red-500 group-hover:bg-red-600 transition-colors shadow-[0_0_15px_rgba(239,68,68,0.5)] flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-4xl">stop</span>
+</div>
+</button>
+<!-- Flip Camera -->
+<button class="flex shrink-0 items-center justify-center rounded-full size-12 bg-black/40 text-white hover:bg-black/60 backdrop-blur-sm border border-white/10 transition-all">
+<span class="material-symbols-outlined">flip_camera_ios</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</body></html>

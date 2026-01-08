@@ -19,7 +19,8 @@ import {
     Trash2,
     GripVertical,
     Save,
-    Loader2
+    Loader2,
+    Hash
 } from 'lucide-react';
 import { ClinicalFieldType, EvaluationForm, EvaluationFormField } from '@/types/clinical-forms';
 import { Switch } from '@/components/ui/switch';
@@ -69,9 +70,15 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ formId, initialData, o
         }
 
         if (fields.length === 0) {
+            // Safety check: if we are editing an existing form that HAD fields, and now has 0, warn.
+            // Simplified logic: just error if generic empty for now, unless user explicitly deleted all? 
+            // Let's stick to: "Formulário deve ter pelo menos um campo".
             toast({ title: "Erro", description: "Adicione pelo menos um campo à ficha.", variant: "destructive" });
             return;
         }
+
+        // Safety check: if initialData had fields but current fields is empty (handled above) or very different?
+        // Let's just proceed for now.
 
         setIsSaving(true);
         try {
@@ -184,6 +191,7 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ formId, initialData, o
     const icons: Record<ClinicalFieldType, React.ReactNode> = {
         texto_curto: <Type size={16} />,
         texto_longo: <AlignLeft size={16} />,
+        numero: <Hash size={16} />,
         opcao_unica: <CheckCircle size={16} />,
         selecao: <CheckSquare size={16} />,
         lista: <List size={16} />,
@@ -404,6 +412,13 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ formId, initialData, o
                                 <div>
                                     <div className="font-medium">Informação</div>
                                     <div className="text-xs text-muted-foreground font-normal">Título de Seção, Aviso</div>
+                                </div>
+                            </Button>
+                            <Button variant="outline" className="justify-start gap-3 h-auto py-4 hover:border-primary hover:bg-primary/5 transition-all text-left group" onClick={() => addField('numero')}>
+                                <div className="bg-primary/10 p-2 rounded group-hover:bg-primary/20"><Hash size={18} className="text-primary" /></div>
+                                <div>
+                                    <div className="font-medium">Número</div>
+                                    <div className="text-xs text-muted-foreground font-normal">Medidas, Quantidade</div>
                                 </div>
                             </Button>
                         </CardContent>

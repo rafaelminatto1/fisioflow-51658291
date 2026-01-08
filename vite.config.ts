@@ -7,11 +7,15 @@ import { VitePWA } from 'vite-plugin-pwa';
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production';
-  
+
   return {
     server: {
       host: "::",
       port: 8080,
+      headers: {
+        "Cross-Origin-Embedder-Policy": "require-corp",
+        "Cross-Origin-Opener-Policy": "same-origin",
+      },
     },
     plugins: [
       react(),
@@ -102,12 +106,15 @@ export default defineConfig(({ mode }) => {
         "@": path.resolve(__dirname, "./src"),
       },
     },
-    
+
     build: {
       outDir: 'dist',
       emptyOutDir: true,
       target: 'esnext',
       minify: true,
+      commonjsOptions: {
+        transformMixedEsModules: true,
+      },
       rollupOptions: {
         output: {
           manualChunks: {
@@ -118,13 +125,16 @@ export default defineConfig(({ mode }) => {
             'chart-vendor': ['recharts'],
             'date-vendor': ['date-fns'],
             'supabase': ['@supabase/supabase-js'],
+            'cornerstone': ['@cornerstonejs/core', '@cornerstonejs/tools', '@cornerstonejs/dicom-image-loader'],
+            'mediapipe': ['@mediapipe/pose', '@mediapipe/drawing_utils'],
           },
         },
       },
       chunkSizeWarningLimit: 1000,
     },
-    
+
     optimizeDeps: {
+      exclude: ['@cornerstonejs/dicom-image-loader'],
       include: [
         'react',
         'react-dom',
@@ -136,7 +146,7 @@ export default defineConfig(({ mode }) => {
         'recharts'
       ],
     },
-    
+
     esbuild: {
       drop: isProduction ? ['console', 'debugger'] : [],
     },

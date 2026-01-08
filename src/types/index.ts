@@ -121,16 +121,22 @@ export interface Appointment {
 export interface Exercise {
   id: string;
   name: string;
-  category: 'fortalecimento' | 'alongamento' | 'mobilidade' | 'cardio' | 'equilibrio' | 'respiratorio';
-  difficulty: 'iniciante' | 'intermediario' | 'avancado';
-  duration: string;
-  description: string;
-  instructions: string;
-  targetMuscles: string[];
+  category?: string;
+  difficulty?: string;
+  video_url?: string;
+  image_url?: string;
+  description?: string;
+  instructions?: string;
+  sets?: number;
+  repetitions?: number;
+  duration?: number;
+  targetMuscles?: string[];
   equipment?: string[];
-  contraindications?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  indicated_pathologies?: string[];
+  contraindicated_pathologies?: string[];
+  body_parts?: string[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ExercisePlan {

@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  orthanc:
+    image: jodogne/orthanc-plugins
+    container_name: fisioflow-orthanc
+    restart: unless-stopped
+    ports:
+      - "8042:8042" # HTTP port (expose to host for dev/proxy)
+      - "4242:4242" # DICOM port
+    environment:
+      ORTHANC_NAME: "FISIOFLOW_ORTHANC"
+      # Enable plugins explicitly
+      ORTHANC__PLUGINS__ENABLED: "true"
+      # Default credentials (CHANGE IN PRODUCTION)
+      # For dev/internal usage behind proxy, we can keep default or disable auth if purely internal
+      # Using default orthanc:orthanc for now
+      ORTHANC__AUTHENTICATION_ENABLED: "false" 
+      # Enable DICOMweb
+      ORTHANC__DICOM_WEB__ENABLE: "true"
+      ORTHANC__DICOM_WEB__ROOT: "/dicom-web/"
+    volumes:
+      - orthanc-storage:/var/lib/orthanc/db
+    networks:
+      - dicom-net
+
+volumes:
+  orthanc-storage:
+
+networks:
+  dicom-net:

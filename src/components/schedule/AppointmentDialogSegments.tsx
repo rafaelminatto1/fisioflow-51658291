@@ -1,0 +1,508 @@
+import React from 'react';
+import { useFormContext, type FieldErrors } from 'react-hook-form';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PatientCombobox } from '@/components/ui/patient-combobox';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Textarea } from '@/components/ui/textarea';
+import {
+    CalendarIcon,
+    User,
+    AlertTriangle,
+    Check,
+    CreditCard,
+    Zap,
+    Repeat,
+    Bell,
+    Copy
+} from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import { type AppointmentType, type AppointmentStatus, type AppointmentFormData } from '@/types/appointment';
+import { type Patient } from '@/types';
+import {
+    APPOINTMENT_TYPES,
+    APPOINTMENT_STATUSES,
+    STATUS_LABELS,
+    STATUS_COLORS
+} from '@/constants/appointments';
+import { Checkbox } from '@/components/ui/checkbox';
+import { EquipmentSelector, type SelectedEquipment } from './EquipmentSelector';
+import { AppointmentReminder, type AppointmentReminderData } from './AppointmentReminder';
+
+export const PatientSelectionSection = ({
+    patients,
+    isLoading,
+    disabled,
+    onCreateNew
+}: {
+    patients: Patient[],
+    isLoading: boolean,
+    disabled: boolean,
+    onCreateNew: (name: string) => void
+}) => {
+    const { watch, setValue, formState: { errors } } = useFormContext<AppointmentFormData>();
+
+    return (
+        <div className="space-y-1.5">
+            <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
+                <User className="h-3.5 w-3.5 text-primary" />
+                Paciente *
+            </Label>
+            <PatientCombobox
+                patients={patients}
+                value={watch('patient_id')}
+                onValueChange={(value) => setValue('patient_id', value)}
+                onCreateNew={onCreateNew}
+                disabled={disabled || isLoading}
+            />
+            {errors.patient_id && (
+                <p className="text-xs text-destructive">{(errors.patient_id as any).message}</p>
+            )}
+        </div>
+    );
+};
+
+export const DateTimeSection = ({
+    disabled,
+    timeSlots,
+    isCalendarOpen,
+    setIsCalendarOpen,
+    getCapacityForTime,
+    conflictCount
+}: {
+    disabled: boolean,
+    timeSlots: string[],
+    isCalendarOpen: boolean,
+    setIsCalendarOpen: (open: boolean) => void,
+    getCapacityForTime: (day: number, time: string) => number,
+    conflictCount: number
+}) => {
+    const { watch, setValue } = useFormContext<AppointmentFormData>();
+    const watchedDateStr = watch('appointment_date');
+    const watchedTime = watch('appointment_time');
+    const watchedDuration = watch('duration');
+
+    const watchedDate = watchedDateStr ? (typeof watchedDateStr === 'string' ? parseISO(watchedDateStr) : watchedDateStr as Date) : null;
+
+    const maxCapacity = watchedDate && watchedTime ? getCapacityForTime(watchedDate.getDay(), watchedTime) : 0;
+    const availableSlots = maxCapacity - conflictCount;
+    const exceedsCapacity = conflictCount >= maxCapacity;
+
+    return (
+        <div className="space-y-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                <div className="space-y-1.5 sm:space-y-2">
+                    <Label className="text-xs sm:text-sm font-medium">Data *</Label>
+                    <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                        <PopoverTrigger asChild>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className={cn(
+                                    "w-full justify-start text-left font-normal h-9 sm:h-10 text-xs sm:text-sm",
+                                    !watchedDate && "text-muted-foreground"
+                                )}
+                                disabled={disabled}
+                            >
+                                <CalendarIcon className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                {watchedDate ? format(watchedDate, 'dd/MM', { locale: ptBR }) : "Data"}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                                mode="single"
+                                selected={watchedDate || undefined}
+                                onSelect={(date) => {
+                                    if (date) {
+                                        setValue('appointment_date', format(date, 'yyyy-MM-dd'));
+                                    }
+                                    setIsCalendarOpen(false);
+                                }}
+                                initialFocus
+                            />
+                        </PopoverContent>
+                    </Popover>
+                </div>
+
+                <div className="space-y-1.5 sm:space-y-2">
+                    <Label className="text-xs sm:text-sm font-medium">Horário *</Label>
+                    <Select
+                        value={watchedTime}
+                        onValueChange={(value) => setValue('appointment_time', value)}
+                        disabled={disabled}
+                    >
+                        <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
+                            <SelectValue placeholder="Hora" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60">
+                            {timeSlots.map((slot) => (
+                                <SelectItem key={slot} value={slot}>{slot}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="space-y-1.5 sm:space-y-2 col-span-2 sm:col-span-1">
+                    <Label className="text-xs sm:text-sm font-medium">Duração</Label>
+                    <Select
+                        value={watchedDuration?.toString()}
+                        onValueChange={(value) => setValue('duration', parseInt(value))}
+                        disabled={disabled}
+                    >
+                        <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="30">30 min</SelectItem>
+                            <SelectItem value="45">45 min</SelectItem>
+                            <SelectItem value="60">1 hora</SelectItem>
+                            <SelectItem value="90">1h30</SelectItem>
+                            <SelectItem value="120">2 horas</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+
+            {watchedDate && watchedTime && (
+                <div className={cn(
+                    "flex items-center justify-between p-2 sm:p-2.5 border rounded-lg text-xs sm:text-sm transition-all",
+                    exceedsCapacity
+                        ? "border-red-500/30 bg-red-500/5"
+                        : conflictCount > 0
+                            ? "border-amber-500/30 bg-amber-500/5"
+                            : "border-emerald-500/30 bg-emerald-500/5"
+                )}>
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                        {exceedsCapacity ? (
+                            <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-600" />
+                        ) : (
+                            <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
+                        )}
+                        <span className={cn(
+                            "font-medium",
+                            exceedsCapacity ? "text-red-700" : conflictCount > 0 ? "text-amber-700" : "text-emerald-700"
+                        )}>
+                            {exceedsCapacity
+                                ? "Horário lotado!"
+                                : availableSlots === maxCapacity
+                                    ? "Horário livre"
+                                    : `${availableSlots} vaga${availableSlots !== 1 ? 's' : ''} disponível`
+                            }
+                        </span>
+                    </div>
+                    <Badge variant="outline" className={cn(
+                        "text-[10px] sm:text-xs h-5 sm:h-6",
+                        exceedsCapacity ? "border-red-500/50" : "border-muted"
+                    )}>
+                        {conflictCount}/{maxCapacity}
+                    </Badge>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export const TypeAndStatusSection = ({ disabled }: { disabled: boolean }) => {
+    const { watch, setValue } = useFormContext<AppointmentFormData>();
+
+    return (
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <div className="space-y-1.5 sm:space-y-2">
+                <Label className="text-xs sm:text-sm font-medium">Tipo *</Label>
+                <Select
+                    value={watch('type')}
+                    onValueChange={(value) => setValue('type', value as AppointmentType)}
+                    disabled={disabled}
+                >
+                    <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
+                        <SelectValue placeholder="Tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {APPOINTMENT_TYPES.map((type) => (
+                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+
+            <div className="space-y-1.5 sm:space-y-2">
+                <Label className="text-xs sm:text-sm font-medium">Status *</Label>
+                <Select
+                    value={watch('status')}
+                    onValueChange={(value) => setValue('status', value as AppointmentStatus)}
+                    disabled={disabled}
+                >
+                    <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {APPOINTMENT_STATUSES.map((status) => (
+                            <SelectItem key={status} value={status}>
+                                <div className="flex items-center gap-2">
+                                    <div className={cn("w-2 h-2 rounded-full", STATUS_COLORS[status])} />
+                                    {STATUS_LABELS[status]}
+                                </div>
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+        </div>
+    );
+};
+
+export const PaymentTab = ({
+    disabled,
+    watchPaymentStatus,
+    watchPaymentMethod,
+    watchpaymentAmount
+}: {
+    disabled: boolean,
+    watchPaymentStatus: string,
+    watchPaymentMethod: string,
+    watchpaymentAmount: number
+}) => {
+    const { register, setValue, watch } = useFormContext<AppointmentFormData>();
+
+    const paymentOptions = [
+        { value: 'pending', label: 'Pendente', icon: '⏳', color: 'border-amber-500/30 bg-amber-500/5' },
+        { value: 'paid_single', label: 'Avulso', icon: '💵', color: 'border-emerald-500/30 bg-emerald-500/5' },
+        { value: 'paid_package', label: 'Pacote', icon: '📦', color: 'border-blue-500/30 bg-blue-500/5' },
+    ];
+
+    const paymentMethods = [
+        { value: 'pix', label: 'PIX', icon: '📲' },
+        { value: 'dinheiro', label: 'Dinheiro', icon: '💵' },
+        { value: 'debito', label: 'Débito', icon: '💳' },
+        { value: 'credito', label: 'Crédito', icon: '💳' },
+    ];
+
+    return (
+        <div className="mt-0 space-y-2.5 sm:space-y-3">
+            <div className="space-y-2">
+                <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
+                    <CreditCard className="h-3.5 w-3.5 text-primary" />
+                    Tipo de Pagamento
+                </Label>
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+                    {paymentOptions.map((option) => (
+                        <Button
+                            key={option.value}
+                            type="button"
+                            variant={watchPaymentStatus === option.value ? 'default' : 'outline'}
+                            className={cn(
+                                "h-14 sm:h-16 flex-col gap-0.5 sm:gap-1 transition-all",
+                                watchPaymentStatus === option.value
+                                    ? "ring-2 ring-primary ring-offset-1 sm:ring-offset-2 shadow-md"
+                                    : option.color
+                            )}
+                            disabled={disabled}
+                            onClick={() => {
+                                setValue('payment_status', option.value);
+                                if (option.value === 'paid_single') setValue('payment_amount', 180);
+                                if (option.value === 'paid_package') setValue('payment_amount', 170);
+                            }}
+                        >
+                            <span className="text-lg">{option.icon}</span>
+                            <span className="text-[10px] sm:text-xs font-semibold">{option.label}</span>
+                        </Button>
+                    ))}
+                </div>
+            </div>
+
+            <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-medium">Valor da Sessão (R$)</Label>
+                <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span>
+                    <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        {...register('payment_amount', { valueAsNumber: true })}
+                        className="flex h-9 sm:h-10 w-full rounded-md border border-input bg-background px-9 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        disabled={disabled || watchPaymentStatus === 'pending'}
+                    />
+                </div>
+                <p className="text-[10px] sm:text-xs text-muted-foreground bg-muted/30 px-2 py-1 rounded">
+                    💡 Pacote: R$ 170/sessão • Avulso: R$ 180/sessão
+                </p>
+            </div>
+
+            {(watchPaymentStatus === 'paid_single' || watchPaymentStatus === 'paid_package') && (
+                <div className="space-y-2 bg-gradient-to-r from-emerald-500/5 to-transparent p-3 sm:p-4 rounded-lg border border-emerald-500/20">
+                    <Label className="text-xs sm:text-sm font-medium">Forma de Pagamento</Label>
+                    <div className="grid grid-cols-4 gap-1 sm:gap-2">
+                        {paymentMethods.map((method) => (
+                            <Button
+                                key={method.value}
+                                type="button"
+                                variant={watchPaymentMethod === method.value ? 'default' : 'outline'}
+                                size="sm"
+                                className={cn(
+                                    "h-10 sm:h-12 flex-col gap-0 sm:gap-0.5 transition-all text-[8px] sm:text-[10px]",
+                                    watchPaymentMethod === method.value && "ring-1 ring-primary shadow-sm"
+                                )}
+                                onClick={() => setValue('payment_method', method.value)}
+                                disabled={disabled}
+                            >
+                                <span className="text-sm sm:text-base">{method.icon}</span>
+                                {method.label}
+                            </Button>
+                        ))}
+                    </div>
+
+                    {watchPaymentMethod === 'credito' && (
+                        <div className="space-y-1.5 pt-2 border-t border-emerald-500/20">
+                            <Label className="text-xs sm:text-sm">Parcelas (até 6x sem juros)</Label>
+                            <Select
+                                value={watch('installments')?.toString()}
+                                onValueChange={(value) => setValue('installments', parseInt(value))}
+                                disabled={disabled}
+                            >
+                                <SelectTrigger className="h-9 sm:h-10 text-sm">
+                                    <SelectValue placeholder="Parcelas" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {[1, 2, 3, 4, 5, 6].map((num) => (
+                                        <SelectItem key={num} value={num.toString()}>
+                                            {num}x de R$ {(watchpaymentAmount / num).toFixed(2)}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+};
+
+export const OptionsTab = ({
+    disabled,
+    currentMode,
+    selectedEquipments,
+    setSelectedEquipments,
+    isRecurringCalendarOpen,
+    setIsRecurringCalendarOpen,
+    reminders,
+    setReminders,
+    onDuplicate
+}: {
+    disabled: boolean,
+    currentMode: string,
+    selectedEquipments: SelectedEquipment[],
+    setSelectedEquipments: (equipments: SelectedEquipment[]) => void,
+    isRecurringCalendarOpen: boolean,
+    setIsRecurringCalendarOpen: (open: boolean) => void,
+    reminders: AppointmentReminderData[],
+    setReminders: (reminders: AppointmentReminderData[]) => void,
+    onDuplicate?: () => void
+}) => {
+    const { watch, setValue, formState: { errors } } = useFormContext<AppointmentFormData>();
+    const isRecurring = watch('is_recurring');
+    const recurringUntilStr = watch('recurring_until');
+
+    const recurringUntil = recurringUntilStr ? (typeof recurringUntilStr === 'string' ? parseISO(recurringUntilStr) : recurringUntilStr as Date) : null;
+
+    return (
+        <div className="mt-0 space-y-3 sm:space-y-4">
+            <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
+                    <Zap className="h-3.5 w-3.5 text-primary" />
+                    Equipamentos
+                </Label>
+                <EquipmentSelector
+                    selectedEquipments={selectedEquipments}
+                    onSelectionChange={setSelectedEquipments}
+                    disabled={disabled}
+                />
+            </div>
+
+            <div className="space-y-2 bg-gradient-to-r from-blue-500/5 to-transparent p-3 sm:p-4 rounded-lg border border-blue-500/20">
+                <div className="flex items-center gap-2 sm:gap-3">
+                    <Checkbox
+                        id="is_recurring"
+                        checked={!!isRecurring}
+                        onCheckedChange={(checked) => setValue('is_recurring', checked as boolean)}
+                        disabled={disabled}
+                        className="h-4 w-4"
+                    />
+                    <div className="flex items-center gap-1.5">
+                        <Repeat className="h-3.5 w-3.5 text-blue-600" />
+                        <Label htmlFor="is_recurring" className="text-xs sm:text-sm font-medium cursor-pointer">
+                            Agendamento Recorrente
+                        </Label>
+                    </div>
+                </div>
+
+                {isRecurring && (
+                    <div className="space-y-1.5 pl-6 sm:pl-7">
+                        <Label className="text-[10px] sm:text-xs text-muted-foreground">Repetir semanalmente até</Label>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className={cn("w-full justify-start h-9 sm:h-10 text-xs sm:text-sm", !recurringUntil && "text-muted-foreground")}
+                            disabled={disabled}
+                            onClick={() => setIsRecurringCalendarOpen(true)}
+                        >
+                            <CalendarIcon className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            {recurringUntil ? format(recurringUntil, 'dd/MM/yyyy', { locale: ptBR }) : "Selecione a data final"}
+                        </Button>
+                        {errors.recurring_until && <p className="text-xs text-destructive">{(errors.recurring_until as any).message}</p>}
+                    </div>
+                )}
+            </div>
+
+            <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
+                    <Bell className="h-3.5 w-3.5 text-primary" />
+                    Lembretes
+                </Label>
+                <AppointmentReminder
+                    reminders={reminders}
+                    onRemindersChange={setReminders}
+                    disabled={disabled}
+                />
+            </div>
+
+            <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-medium">Sala</Label>
+                <Select
+                    value={watch('room') || ''}
+                    onValueChange={(value) => setValue('room', value)}
+                    disabled={disabled}
+                >
+                    <SelectTrigger className="h-9 sm:h-10 text-sm">
+                        <SelectValue placeholder="Selecione a sala" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="sala-1">🚪 Sala 01</SelectItem>
+                        <SelectItem value="sala-2">🚪 Sala 02</SelectItem>
+                        <SelectItem value="sala-3">🚪 Sala 03</SelectItem>
+                        <SelectItem value="pilates">🧘 Sala Pilates</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+
+            {currentMode === 'edit' && onDuplicate && (
+                <div className="pt-2 border-t">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full h-9 sm:h-10 text-xs sm:text-sm"
+                        onClick={onDuplicate}
+                    >
+                        <Copy className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+                        Duplicar Agendamento
+                    </Button>
+                </div>
+            )}
+        </div>
+    );
+};

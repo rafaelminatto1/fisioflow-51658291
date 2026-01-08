@@ -1,50 +1,22 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { exerciseService, type ExerciseFilters } from '@/services/exercises';
+import type { Exercise } from '@/types';
 import { toast } from 'sonner';
 
-export interface Exercise {
-  id: string;
-  name: string;
-  description?: string;
-  category?: string;
-  difficulty?: string;
-  video_url?: string;
-  image_url?: string;
-  instructions?: string;
-  sets?: number;
-  repetitions?: number;
-  duration?: number;
-  created_at?: string;
-  updated_at?: string;
-}
+// Re-export specific hook type to match import in other files if necessary
+export type { Exercise };
 
-export const useExercises = () => {
+export const useExercises = (filters?: ExerciseFilters) => {
   const queryClient = useQueryClient();
 
   const { data: exercises = [], isLoading, error } = useQuery({
-    queryKey: ['exercises'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('exercises')
-        .select('*')
-        .order('name');
-      
-      if (error) throw error;
-      return data as Exercise[];
-    },
+    queryKey: ['exercises', filters],
+    queryFn: () => exerciseService.getExercises(filters),
   });
 
   const createMutation = useMutation({
-    mutationFn: async (exercise: Omit<Exercise, 'id' | 'created_at' | 'updated_at'>) => {
-      const { data, error } = await supabase
-        .from('exercises')
-        .insert([exercise])
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
+    mutationFn: exerciseService.createExercise,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exercises'] });
       toast.success('Exercício criado com sucesso');
@@ -55,17 +27,8 @@ export const useExercises = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, ...exercise }: Partial<Exercise> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('exercises')
-        .update(exercise)
-        .eq('id', id)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
+    mutationFn: ({ id, ...data }: Partial<Exercise> & { id: string }) =>
+      exerciseService.updateExercise(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exercises'] });
       toast.success('Exercício atualizado com sucesso');
@@ -76,14 +39,7 @@ export const useExercises = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('exercises')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
+    mutationFn: exerciseService.deleteExercise,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exercises'] });
       toast.success('Exercício excluído com sucesso');

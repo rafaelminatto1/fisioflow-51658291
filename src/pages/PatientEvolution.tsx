@@ -58,6 +58,7 @@ import { MeasurementCharts } from '@/components/evolution/MeasurementCharts';
 import { PainMapManager } from '@/components/evolution/PainMapManager';
 import { ReportGeneratorDialog } from '@/components/reports/ReportGeneratorDialog';
 import { TreatmentAssistant } from '@/components/ai/TreatmentAssistant';
+import { SessionExercisesPanel, type SessionExercise } from '@/components/evolution/SessionExercisesPanel';
 import { PatientGamification } from '@/components/gamification/PatientGamification';
 import { WhatsAppIntegration } from '@/components/whatsapp/WhatsAppIntegration';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -69,19 +70,19 @@ import { ApplyTemplateModal } from '@/components/exercises/ApplyTemplateModal';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 
 // Lazy loading para componentes pesados
-const LazyMeasurementCharts = lazy(() => 
+const LazyMeasurementCharts = lazy(() =>
   Promise.resolve({ default: MeasurementCharts })
 );
-const LazyPainMapManager = lazy(() => 
+const LazyPainMapManager = lazy(() =>
   Promise.resolve({ default: PainMapManager })
 );
-const LazyTreatmentAssistant = lazy(() => 
+const LazyTreatmentAssistant = lazy(() =>
   Promise.resolve({ default: TreatmentAssistant })
 );
-const LazyPatientGamification = lazy(() => 
+const LazyPatientGamification = lazy(() =>
   Promise.resolve({ default: PatientGamification })
 );
-const LazyWhatsAppIntegration = lazy(() => 
+const LazyWhatsAppIntegration = lazy(() =>
   Promise.resolve({ default: WhatsAppIntegration })
 );
 
@@ -97,12 +98,15 @@ const PatientEvolution = () => {
   const [showInsights, setShowInsights] = useState(true);
   const [showComparison, setShowComparison] = useState(false);
   const [wordCount, setWordCount] = useState({ subjective: 0, objective: 0, assessment: 0, plan: 0 });
-  
+
   // Estados do formulário SOAP
   const [subjective, setSubjective] = useState('');
   const [objective, setObjective] = useState('');
   const [assessment, setAssessment] = useState('');
   const [plan, setPlan] = useState('');
+
+  // Exercises state
+  const [sessionExercises, setSessionExercises] = useState<SessionExercise[]>([]);
 
   const { completeAppointment, isCompleting } = useAppointmentActions();
 
@@ -123,7 +127,7 @@ const PatientEvolution = () => {
     initialDelay: number = 1000
   ): Promise<T> => {
     let lastError: Error | unknown;
-    
+
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         return await fn();
@@ -135,7 +139,7 @@ const PatientEvolution = () => {
         }
       }
     }
-    
+
     throw lastError;
   }, []);
 
@@ -144,7 +148,7 @@ const PatientEvolution = () => {
     queryKey: ['appointment', appointmentId],
     queryFn: async () => {
       if (!appointmentId) throw new Error('ID do agendamento não fornecido');
-      
+
       const result = await retryWithBackoff(() =>
         withTimeout(
           supabase
@@ -181,7 +185,7 @@ const PatientEvolution = () => {
     queryKey: ['patient', patientId],
     queryFn: async () => {
       if (!patientId) throw new Error('ID do paciente não fornecido');
-      
+
       const result = await retryWithBackoff(() =>
         withTimeout(
           supabase
@@ -216,7 +220,7 @@ const PatientEvolution = () => {
   const { data: previousEvolutions = [] } = useSoapRecords(patientId || '', 10);
 
   // Calcular tempo de tratamento
-  const treatmentDuration = patient?.created_at 
+  const treatmentDuration = patient?.created_at
     ? formatDistanceToNow(new Date(patient.created_at), { locale: ptBR, addSuffix: true })
     : 'N/A';
 
@@ -227,17 +231,17 @@ const PatientEvolution = () => {
     const totalGoals = goals.length;
     const activePathologiesCount = pathologies.filter(p => p.status === 'em_tratamento').length;
     const totalMeasurements = measurements.length;
-    
+
     // Calcular progresso médio das metas
     const avgGoalProgress = goals.length > 0
       ? goals
-          .filter(g => g.status === 'em_andamento')
-          .reduce((sum, g) => {
-            const progress = g.target_date 
-              ? Math.max(0, Math.min(100, 100 - (differenceInDays(new Date(g.target_date), new Date()) / 30) * 100))
-              : 50;
-            return sum + progress;
-          }, 0) / Math.max(1, goals.filter(g => g.status === 'em_andamento').length)
+        .filter(g => g.status === 'em_andamento')
+        .reduce((sum, g) => {
+          const progress = g.target_date
+            ? Math.max(0, Math.min(100, 100 - (differenceInDays(new Date(g.target_date), new Date()) / 30) * 100))
+            : 50;
+          return sum + progress;
+        }, 0) / Math.max(1, goals.filter(g => g.status === 'em_andamento').length)
       : 0;
 
     return {
@@ -319,7 +323,7 @@ const PatientEvolution = () => {
     onSave: async (data) => {
       if (!patientId || !appointmentId) return;
       if (!data.subjective && !data.objective && !data.assessment && !data.plan) return;
-      
+
       await createSoapRecord.mutateAsync({
         patient_id: patientId,
         appointment_id: appointmentId,
@@ -366,9 +370,9 @@ const PatientEvolution = () => {
       });
       return;
     }
-    
+
     if (!patientId) return;
-    
+
     const record = await createSoapRecord.mutateAsync({
       patient_id: patientId,
       appointment_id: appointmentId,
@@ -377,8 +381,57 @@ const PatientEvolution = () => {
       assessment,
       plan
     });
-    
+
     setCurrentSoapRecordId(record.id);
+
+    // Save to treatment_sessions (Exercises Performed)
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      // Check for existing session linked to this appointment to upsert
+      let existingSessionId = null;
+      if (appointmentId) {
+        const { data: existingSession } = await supabase
+          .from('treatment_sessions')
+          .select('id')
+          .eq('appointment_id', appointmentId)
+          .maybeSingle(); // Use maybeSingle to avoid errors if not found
+        if (existingSession) existingSessionId = existingSession.id;
+      }
+
+      const sessionData = {
+        patient_id: patientId,
+        therapist_id: user.id,
+        appointment_id: appointmentId || null,
+        session_date: new Date().toISOString(),
+        session_type: 'treatment',
+        pain_level_before: 0,
+        pain_level_after: 0,
+        functional_score_before: 0,
+        functional_score_after: 0,
+        exercises_performed: sessionExercises,
+        observations: assessment,
+        status: 'completed',
+        created_by: user.id
+      };
+
+      let sessionError;
+      if (existingSessionId) {
+        const { error } = await supabase
+          .from('treatment_sessions')
+          .update(sessionData)
+          .eq('id', existingSessionId);
+        sessionError = error;
+      } else {
+        const { error } = await supabase
+          .from('treatment_sessions')
+          .insert(sessionData);
+        sessionError = error;
+      }
+
+      if (sessionError) {
+        console.warn('Error saving treatment_sessions:', sessionError);
+      }
+    }
   };
 
   const handleCompleteSession = async () => {
@@ -495,7 +548,7 @@ const PatientEvolution = () => {
                   </div>
                 </div>
               </div>
-              
+
               {/* Actions Section */}
               <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-2 lg:pt-0 border-t lg:border-t-0 border-border/30">
                 <SessionTimer startTime={sessionStartTime} />
@@ -673,8 +726,8 @@ const PatientEvolution = () => {
                   {wizardSteps.filter(s => s.completed).length} / {wizardSteps.filter(s => !s.optional).length}
                 </span>
               </div>
-              <Progress 
-                value={(wizardSteps.filter(s => s.completed).length / wizardSteps.filter(s => !s.optional).length) * 100} 
+              <Progress
+                value={(wizardSteps.filter(s => s.completed).length / wizardSteps.filter(s => !s.optional).length) * 100}
                 className="h-2 mt-2"
               />
             </div>
@@ -704,316 +757,327 @@ const PatientEvolution = () => {
               <BarChart3 className="h-4 w-4" />
               <span className="hidden sm:inline">Medições</span>
             </TabsTrigger>
+            <TabsTrigger value="exercises" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Sparkles className="h-4 w-4" />
+              <span className="hidden sm:inline">Exercícios</span>
+            </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="exercises" className="mt-6">
+            <SessionExercisesPanel
+              exercises={sessionExercises}
+              onChange={setSessionExercises}
+            />
+          </TabsContent>
 
           <TabsContent value="soap" className="mt-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Coluna Principal - Evolução SOAP */}
-          <div className="lg:col-span-2 space-y-6">
-            <Card className="shadow-lg">
-              <CardHeader className="bg-gradient-to-r from-primary/5 to-background">
-                <CardTitle>Registro SOAP</CardTitle>
-                <CardDescription>
-                  Preencha os campos abaixo para registrar a evolução do paciente
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6 pt-6">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="subjective" className="text-base font-semibold flex items-center gap-2">
-                      <span className="w-8 h-8 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center text-sm font-bold">S</span>
-                      Subjetivo
-                    </Label>
-                    <Badge variant="outline" className="text-xs">
-                      {wordCount.subjective} palavras
-                    </Badge>
-                  </div>
-                  <Textarea
-                    id="subjective"
-                    value={subjective}
-                    onChange={(e) => setSubjective(e.target.value)}
-                    placeholder="Queixa principal do paciente, relato de dor, desconforto..."
-                    rows={4}
-                    className="resize-none transition-all focus:ring-2 focus:ring-primary/20"
-                  />
-                  {wordCount.subjective < 10 && subjective.length > 0 && (
-                    <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                      <Lightbulb className="h-3 w-3" />
-                      Considere adicionar mais detalhes (mínimo recomendado: 10 palavras)
-                    </p>
-                  )}
-                </div>
-
-                <Separator />
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="objective" className="text-base font-semibold flex items-center gap-2">
-                      <span className="w-8 h-8 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 flex items-center justify-center text-sm font-bold">O</span>
-                      Objetivo
-                    </Label>
-                    <Badge variant="outline" className="text-xs">
-                      {wordCount.objective} palavras
-                    </Badge>
-                  </div>
-                  <Textarea
-                    id="objective"
-                    value={objective}
-                    onChange={(e) => setObjective(e.target.value)}
-                    placeholder="Observações clínicas, testes realizados, medições..."
-                    rows={4}
-                    className="resize-none transition-all focus:ring-2 focus:ring-primary/20"
-                  />
-                  {wordCount.objective < 10 && objective.length > 0 && (
-                    <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                      <Lightbulb className="h-3 w-3" />
-                      Considere adicionar mais detalhes (mínimo recomendado: 10 palavras)
-                    </p>
-                  )}
-                </div>
-
-                <Separator />
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="assessment" className="text-base font-semibold flex items-center gap-2">
-                      <span className="w-8 h-8 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center text-sm font-bold">A</span>
-                      Avaliação
-                    </Label>
-                    <Badge variant="outline" className="text-xs">
-                      {wordCount.assessment} palavras
-                    </Badge>
-                  </div>
-                  <Textarea
-                    id="assessment"
-                    value={assessment}
-                    onChange={(e) => setAssessment(e.target.value)}
-                    placeholder="Diagnóstico fisioterapêutico, análise da evolução..."
-                    rows={4}
-                    className="resize-none transition-all focus:ring-2 focus:ring-primary/20"
-                  />
-                  {wordCount.assessment < 10 && assessment.length > 0 && (
-                    <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                      <Lightbulb className="h-3 w-3" />
-                      Considere adicionar mais detalhes (mínimo recomendado: 10 palavras)
-                    </p>
-                  )}
-                </div>
-
-                <Separator />
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="plan" className="text-base font-semibold flex items-center gap-2">
-                      <span className="w-8 h-8 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center text-sm font-bold">P</span>
-                      Plano
-                    </Label>
-                    <Badge variant="outline" className="text-xs">
-                      {wordCount.plan} palavras
-                    </Badge>
-                  </div>
-                  <Textarea
-                    id="plan"
-                    value={plan}
-                    onChange={(e) => setPlan(e.target.value)}
-                    placeholder="Conduta, exercícios prescritos, orientações..."
-                    rows={4}
-                    className="resize-none transition-all focus:ring-2 focus:ring-primary/20"
-                  />
-                  {wordCount.plan < 10 && plan.length > 0 && (
-                    <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                      <Lightbulb className="h-3 w-3" />
-                      Considere adicionar mais detalhes (mínimo recomendado: 10 palavras)
-                    </p>
-                  )}
-                </div>
-
-                {/* Progress Indicator */}
-                <div className="pt-4 border-t">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Progresso do preenchimento</span>
-                      <span className="font-semibold">
-                        {Math.round(
-                          ((wordCount.subjective >= 10 ? 1 : 0) +
-                           (wordCount.objective >= 10 ? 1 : 0) +
-                           (wordCount.assessment >= 10 ? 1 : 0) +
-                           (wordCount.plan >= 10 ? 1 : 0)) / 4 * 100
-                        )}%
-                      </span>
+              {/* Coluna Principal - Evolução SOAP */}
+              <div className="lg:col-span-2 space-y-6">
+                <Card className="shadow-lg">
+                  <CardHeader className="bg-gradient-to-r from-primary/5 to-background">
+                    <CardTitle>Registro SOAP</CardTitle>
+                    <CardDescription>
+                      Preencha os campos abaixo para registrar a evolução do paciente
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6 pt-6">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="subjective" className="text-base font-semibold flex items-center gap-2">
+                          <span className="w-8 h-8 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center text-sm font-bold">S</span>
+                          Subjetivo
+                        </Label>
+                        <Badge variant="outline" className="text-xs">
+                          {wordCount.subjective} palavras
+                        </Badge>
+                      </div>
+                      <Textarea
+                        id="subjective"
+                        value={subjective}
+                        onChange={(e) => setSubjective(e.target.value)}
+                        placeholder="Queixa principal do paciente, relato de dor, desconforto..."
+                        rows={4}
+                        className="resize-none transition-all focus:ring-2 focus:ring-primary/20"
+                      />
+                      {wordCount.subjective < 10 && subjective.length > 0 && (
+                        <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                          <Lightbulb className="h-3 w-3" />
+                          Considere adicionar mais detalhes (mínimo recomendado: 10 palavras)
+                        </p>
+                      )}
                     </div>
-                    <Progress 
-                      value={
-                        ((wordCount.subjective >= 10 ? 1 : 0) +
-                         (wordCount.objective >= 10 ? 1 : 0) +
-                         (wordCount.assessment >= 10 ? 1 : 0) +
-                         (wordCount.plan >= 10 ? 1 : 0)) / 4 * 100
-                      } 
-                      className="h-2"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
-            {/* Alertas de Medições Obrigatórias */}
-            {requiredMeasurements.length > 0 && (
-              <Card className="border-destructive/30 shadow-lg">
-                <CardHeader className="bg-destructive/5">
-                  <CardTitle className="flex items-center gap-2 text-destructive">
-                    <AlertTriangle className="h-5 w-5" />
-                    Medições Obrigatórias
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 pt-6">
-                  {requiredMeasurements.map((req) => (
-                    <Alert
-                      key={req.id}
-                      variant={req.alert_level === 'high' ? 'destructive' : 'default'}
-                    >
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertTitle>{req.measurement_name}</AlertTitle>
-                      <AlertDescription>
-                        {req.instructions}
-                        {req.measurement_unit && ` (${req.measurement_unit})`}
-                      </AlertDescription>
-                    </Alert>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
+                    <Separator />
 
-            {/* Formulário de Medições */}
-            {patientId && (
-              <MeasurementForm
-                patientId={patientId}
-                soapRecordId={currentSoapRecordId}
-                requiredMeasurements={requiredMeasurements}
-              />
-            )}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="objective" className="text-base font-semibold flex items-center gap-2">
+                          <span className="w-8 h-8 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 flex items-center justify-center text-sm font-bold">O</span>
+                          Objetivo
+                        </Label>
+                        <Badge variant="outline" className="text-xs">
+                          {wordCount.objective} palavras
+                        </Badge>
+                      </div>
+                      <Textarea
+                        id="objective"
+                        value={objective}
+                        onChange={(e) => setObjective(e.target.value)}
+                        placeholder="Observações clínicas, testes realizados, medições..."
+                        rows={4}
+                        className="resize-none transition-all focus:ring-2 focus:ring-primary/20"
+                      />
+                      {wordCount.objective < 10 && objective.length > 0 && (
+                        <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                          <Lightbulb className="h-3 w-3" />
+                          Considere adicionar mais detalhes (mínimo recomendado: 10 palavras)
+                        </p>
+                      )}
+                    </div>
 
-            {/* Gráficos de Medições - Lazy Loaded */}
-            {Object.keys(measurementsByType).length > 0 && (
-              <Suspense fallback={<LoadingSkeleton type="card" />}>
-                <LazyMeasurementCharts measurementsByType={measurementsByType} />
-              </Suspense>
-            )}
+                    <Separator />
 
-            {/* Mapa de Dor - Lazy Loaded */}
-            {patientId && (
-              <Card className="shadow-lg">
-                <CardHeader className="bg-gradient-to-r from-red-50/50 to-orange-100/50 dark:from-red-950/20 dark:to-orange-900/20">
-                  <CardTitle className="text-lg">Mapa de Dor</CardTitle>
-                  <CardDescription>Registre e acompanhe a evolução da dor do paciente</CardDescription>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <Suspense fallback={<LoadingSkeleton type="card" />}>
-                    <LazyPainMapManager 
-                      patientId={patientId}
-                      sessionId={currentSoapRecordId}
-                      appointmentId={appointmentId}
-                    />
-                  </Suspense>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="assessment" className="text-base font-semibold flex items-center gap-2">
+                          <span className="w-8 h-8 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center text-sm font-bold">A</span>
+                          Avaliação
+                        </Label>
+                        <Badge variant="outline" className="text-xs">
+                          {wordCount.assessment} palavras
+                        </Badge>
+                      </div>
+                      <Textarea
+                        id="assessment"
+                        value={assessment}
+                        onChange={(e) => setAssessment(e.target.value)}
+                        placeholder="Diagnóstico fisioterapêutico, análise da evolução..."
+                        rows={4}
+                        className="resize-none transition-all focus:ring-2 focus:ring-primary/20"
+                      />
+                      {wordCount.assessment < 10 && assessment.length > 0 && (
+                        <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                          <Lightbulb className="h-3 w-3" />
+                          Considere adicionar mais detalhes (mínimo recomendado: 10 palavras)
+                        </p>
+                      )}
+                    </div>
 
-          {/* Coluna Lateral - Informações Complementares */}
-          <div className="space-y-6">
-            {/* Cirurgias */}
-            <SurgeryTimeline surgeries={surgeries} />
+                    <Separator />
 
-            {/* Objetivos */}
-            <GoalsTracker goals={goals} />
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="plan" className="text-base font-semibold flex items-center gap-2">
+                          <span className="w-8 h-8 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center text-sm font-bold">P</span>
+                          Plano
+                        </Label>
+                        <Badge variant="outline" className="text-xs">
+                          {wordCount.plan} palavras
+                        </Badge>
+                      </div>
+                      <Textarea
+                        id="plan"
+                        value={plan}
+                        onChange={(e) => setPlan(e.target.value)}
+                        placeholder="Conduta, exercícios prescritos, orientações..."
+                        rows={4}
+                        className="resize-none transition-all focus:ring-2 focus:ring-primary/20"
+                      />
+                      {wordCount.plan < 10 && plan.length > 0 && (
+                        <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                          <Lightbulb className="h-3 w-3" />
+                          Considere adicionar mais detalhes (mínimo recomendado: 10 palavras)
+                        </p>
+                      )}
+                    </div>
 
-            {/* Patologias */}
-            <PathologyStatus pathologies={pathologies} />
+                    {/* Progress Indicator */}
+                    <div className="pt-4 border-t">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Progresso do preenchimento</span>
+                          <span className="font-semibold">
+                            {Math.round(
+                              ((wordCount.subjective >= 10 ? 1 : 0) +
+                                (wordCount.objective >= 10 ? 1 : 0) +
+                                (wordCount.assessment >= 10 ? 1 : 0) +
+                                (wordCount.plan >= 10 ? 1 : 0)) / 4 * 100
+                            )}%
+                          </span>
+                        </div>
+                        <Progress
+                          value={
+                            ((wordCount.subjective >= 10 ? 1 : 0) +
+                              (wordCount.objective >= 10 ? 1 : 0) +
+                              (wordCount.assessment >= 10 ? 1 : 0) +
+                              (wordCount.plan >= 10 ? 1 : 0)) / 4 * 100
+                          }
+                          className="h-2"
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-            {/* Evoluções Anteriores - Melhorado */}
-            {previousEvolutions.length > 0 && (
-              <Card className="shadow-lg hover:shadow-xl transition-shadow">
-                <CardHeader className="bg-gradient-to-r from-indigo-50/50 via-indigo-100/50 to-indigo-50/50 dark:from-indigo-950/20 dark:via-indigo-900/20 dark:to-indigo-950/20">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Clock className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                      Evoluções Anteriores
-                    </CardTitle>
-                    <Badge variant="secondary" className="text-xs">
-                      {previousEvolutions.length} registros
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <ScrollArea className="h-[320px] pr-4">
-                    <div className="space-y-3">
-                      {previousEvolutions.map((evolution, index) => (
-                        <div 
-                          key={evolution.id} 
-                          className="group border rounded-xl p-4 space-y-3 hover:bg-muted/50 hover:shadow-md transition-all cursor-pointer bg-card"
-                          onClick={() => setShowComparison(!showComparison)}
+                {/* Alertas de Medições Obrigatórias */}
+                {requiredMeasurements.length > 0 && (
+                  <Card className="border-destructive/30 shadow-lg">
+                    <CardHeader className="bg-destructive/5">
+                      <CardTitle className="flex items-center gap-2 text-destructive">
+                        <AlertTriangle className="h-5 w-5" />
+                        Medições Obrigatórias
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 pt-6">
+                      {requiredMeasurements.map((req) => (
+                        <Alert
+                          key={req.id}
+                          variant={req.alert_level === 'high' ? 'destructive' : 'default'}
                         >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs font-bold">
-                                {previousEvolutions.length - index}
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertTitle>{req.measurement_name}</AlertTitle>
+                          <AlertDescription>
+                            {req.instructions}
+                            {req.measurement_unit && ` (${req.measurement_unit})`}
+                          </AlertDescription>
+                        </Alert>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Formulário de Medições */}
+                {patientId && (
+                  <MeasurementForm
+                    patientId={patientId}
+                    soapRecordId={currentSoapRecordId}
+                    requiredMeasurements={requiredMeasurements}
+                  />
+                )}
+
+                {/* Gráficos de Medições - Lazy Loaded */}
+                {Object.keys(measurementsByType).length > 0 && (
+                  <Suspense fallback={<LoadingSkeleton type="card" />}>
+                    <LazyMeasurementCharts measurementsByType={measurementsByType} />
+                  </Suspense>
+                )}
+
+                {/* Mapa de Dor - Lazy Loaded */}
+                {patientId && (
+                  <Card className="shadow-lg">
+                    <CardHeader className="bg-gradient-to-r from-red-50/50 to-orange-100/50 dark:from-red-950/20 dark:to-orange-900/20">
+                      <CardTitle className="text-lg">Mapa de Dor</CardTitle>
+                      <CardDescription>Registre e acompanhe a evolução da dor do paciente</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                      <Suspense fallback={<LoadingSkeleton type="card" />}>
+                        <LazyPainMapManager
+                          patientId={patientId}
+                          sessionId={currentSoapRecordId}
+                          appointmentId={appointmentId}
+                        />
+                      </Suspense>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+
+              {/* Coluna Lateral - Informações Complementares */}
+              <div className="space-y-6">
+                {/* Cirurgias */}
+                <SurgeryTimeline surgeries={surgeries} />
+
+                {/* Objetivos */}
+                <GoalsTracker goals={goals} />
+
+                {/* Patologias */}
+                <PathologyStatus pathologies={pathologies} />
+
+                {/* Evoluções Anteriores - Melhorado */}
+                {previousEvolutions.length > 0 && (
+                  <Card className="shadow-lg hover:shadow-xl transition-shadow">
+                    <CardHeader className="bg-gradient-to-r from-indigo-50/50 via-indigo-100/50 to-indigo-50/50 dark:from-indigo-950/20 dark:via-indigo-900/20 dark:to-indigo-950/20">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Clock className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                          Evoluções Anteriores
+                        </CardTitle>
+                        <Badge variant="secondary" className="text-xs">
+                          {previousEvolutions.length} registros
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                      <ScrollArea className="h-[320px] pr-4">
+                        <div className="space-y-3">
+                          {previousEvolutions.map((evolution, index) => (
+                            <div
+                              key={evolution.id}
+                              className="group border rounded-xl p-4 space-y-3 hover:bg-muted/50 hover:shadow-md transition-all cursor-pointer bg-card"
+                              onClick={() => setShowComparison(!showComparison)}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-8 h-8 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs font-bold">
+                                    {previousEvolutions.length - index}
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-semibold">
+                                      {format(new Date(evolution.record_date), 'dd/MM/yyyy', { locale: ptBR })}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {formatDistanceToNow(new Date(evolution.record_date), { locale: ptBR, addSuffix: true })}
+                                    </p>
+                                  </div>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleCopyPreviousEvolution(evolution);
+                                  }}
+                                  className="hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <Copy className="h-4 w-4" />
+                                </Button>
                               </div>
-                              <div>
-                                <p className="text-sm font-semibold">
-                                  {format(new Date(evolution.record_date), 'dd/MM/yyyy', { locale: ptBR })}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {formatDistanceToNow(new Date(evolution.record_date), { locale: ptBR, addSuffix: true })}
-                                </p>
+
+                              <div className="grid grid-cols-2 gap-2 text-xs">
+                                {evolution.subjective && (
+                                  <div className="p-2 rounded-lg bg-blue-500/5 border border-blue-500/10">
+                                    <p className="font-semibold text-blue-600 dark:text-blue-400 mb-1">S:</p>
+                                    <p className="text-muted-foreground line-clamp-2">{evolution.subjective}</p>
+                                  </div>
+                                )}
+                                {evolution.objective && (
+                                  <div className="p-2 rounded-lg bg-green-500/5 border border-green-500/10">
+                                    <p className="font-semibold text-green-600 dark:text-green-400 mb-1">O:</p>
+                                    <p className="text-muted-foreground line-clamp-2">{evolution.objective}</p>
+                                  </div>
+                                )}
+                                {evolution.assessment && (
+                                  <div className="p-2 rounded-lg bg-purple-500/5 border border-purple-500/10">
+                                    <p className="font-semibold text-purple-600 dark:text-purple-400 mb-1">A:</p>
+                                    <p className="text-muted-foreground line-clamp-2">{evolution.assessment}</p>
+                                  </div>
+                                )}
+                                {evolution.plan && (
+                                  <div className="p-2 rounded-lg bg-orange-500/5 border border-orange-500/10">
+                                    <p className="font-semibold text-orange-600 dark:text-orange-400 mb-1">P:</p>
+                                    <p className="text-muted-foreground line-clamp-2">{evolution.plan}</p>
+                                  </div>
+                                )}
                               </div>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleCopyPreviousEvolution(evolution);
-                              }}
-                              className="hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-2 text-xs">
-                            {evolution.subjective && (
-                              <div className="p-2 rounded-lg bg-blue-500/5 border border-blue-500/10">
-                                <p className="font-semibold text-blue-600 dark:text-blue-400 mb-1">S:</p>
-                                <p className="text-muted-foreground line-clamp-2">{evolution.subjective}</p>
-                              </div>
-                            )}
-                            {evolution.objective && (
-                              <div className="p-2 rounded-lg bg-green-500/5 border border-green-500/10">
-                                <p className="font-semibold text-green-600 dark:text-green-400 mb-1">O:</p>
-                                <p className="text-muted-foreground line-clamp-2">{evolution.objective}</p>
-                              </div>
-                            )}
-                            {evolution.assessment && (
-                              <div className="p-2 rounded-lg bg-purple-500/5 border border-purple-500/10">
-                                <p className="font-semibold text-purple-600 dark:text-purple-400 mb-1">A:</p>
-                                <p className="text-muted-foreground line-clamp-2">{evolution.assessment}</p>
-                              </div>
-                            )}
-                            {evolution.plan && (
-                              <div className="p-2 rounded-lg bg-orange-500/5 border border-orange-500/10">
-                                <p className="font-semibold text-orange-600 dark:text-orange-400 mb-1">P:</p>
-                                <p className="text-muted-foreground line-clamp-2">{evolution.plan}</p>
-                              </div>
-                            )}
-                          </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                      </ScrollArea>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             </div>
           </TabsContent>
 

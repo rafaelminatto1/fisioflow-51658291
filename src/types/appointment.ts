@@ -14,6 +14,9 @@ export interface AppointmentBase {
   therapistId?: string;
   payment_status?: string;
   payment_amount?: number;
+  payment_method?: string;
+  installments?: number;
+  room?: string;
   session_package_id?: string;
   is_recurring?: boolean;
   recurring_until?: Date;
@@ -330,6 +333,8 @@ export type AppointmentFormData = {
   room?: string | null;
   payment_status?: string | null;
   payment_amount?: number | null;
+  payment_method?: string | null;
+  installments?: number | null;
   session_package_id?: string | null;
   is_recurring?: boolean | null;
   recurring_until?: string | null;

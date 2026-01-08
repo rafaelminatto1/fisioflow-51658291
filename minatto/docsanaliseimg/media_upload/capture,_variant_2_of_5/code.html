@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Media Upload/Capture</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-[#111418] dark:text-white font-display overflow-x-hidden">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root">
+<!-- Header -->
+<div class="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between sticky top-0 z-10">
+<div class="text-[#111418] dark:text-white flex size-12 shrink-0 items-center justify-center cursor-pointer">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</div>
+<h2 class="text-[#111418] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-12">
+                Upload Media
+            </h2>
+</div>
+<!-- Main Content -->
+<div class="flex flex-col flex-1 px-4 gap-6 pb-8">
+<!-- Upload Zone (Hero Component) -->
+<div class="flex flex-col mt-2">
+<div class="flex flex-col items-center gap-6 rounded-xl border-2 border-dashed border-[#3b4754] bg-[#1a2632] px-6 py-12 transition-colors hover:border-primary/50 group cursor-pointer">
+<div class="flex size-16 items-center justify-center rounded-full bg-[#28323e] group-hover:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined text-4xl text-[#9dabb9] group-hover:text-primary">cloud_upload</span>
+</div>
+<div class="flex max-w-[480px] flex-col items-center gap-2">
+<p class="text-[#111418] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] text-center">
+                            Upload Scans or Videos
+                        </p>
+<p class="text-[#637588] dark:text-[#9dabb9] text-sm font-normal leading-normal text-center">
+                            Supports DICOM, JPG, MP4.<br/>Max 500MB.
+                        </p>
+</div>
+<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-6 bg-[#283039] hover:bg-[#343e49] text-white text-sm font-bold leading-normal tracking-[0.015em] transition-colors">
+<span class="truncate">Browse Files</span>
+</button>
+</div>
+</div>
+<!-- OR Divider -->
+<div class="flex items-center justify-center gap-4 opacity-50">
+<div class="h-px bg-[#3b4754] flex-1"></div>
+<span class="text-xs font-medium text-[#9dabb9] uppercase tracking-wider">or</span>
+<div class="h-px bg-[#3b4754] flex-1"></div>
+</div>
+<!-- Camera Button -->
+<div>
+<button class="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-5 bg-primary hover:bg-primary/90 text-white gap-3 text-base font-bold leading-normal tracking-[0.015em] shadow-lg shadow-primary/20 transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined text-[24px]">photo_camera</span>
+<span class="truncate">Capture New Video/Photo</span>
+</button>
+</div>
+<!-- Recent Media Section -->
+<div class="flex flex-col gap-2 pt-2">
+<div class="flex items-center justify-between pb-2">
+<h3 class="text-[#111418] dark:text-white text-[20px] font-bold leading-tight tracking-[-0.015em]">
+                        Recent Uploads
+                    </h3>
+<button class="text-primary text-sm font-bold hover:underline">See all</button>
+</div>
+<!-- List Item 1 -->
+<div class="flex items-center gap-4 bg-white dark:bg-[#1a2632] rounded-xl p-3 shadow-sm border border-transparent dark:border-[#2b3846] hover:border-primary/30 transition-colors cursor-pointer">
+<div class="shrink-0 relative">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-16 bg-[#28323e]" data-alt="Black and white X-ray of a human chest ribcage" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBLSUKryIywPmU3BV3TDQI_n7vl6K5io-w1-6kkyyKah8qggcfdDIcnwYyEBveqY1JoEnRT4n5R_s638k--rHCgTT-WeB3y1Yn4PlA325q2dCajCm4hZX2cm-9GebBF_L6wsX3VzH44YNHygh5ljog_ETy6888Gmhd_5JUXGjTWUSJ4WI-bU2WBhKatTdxk1D387JLsIoFwY9OexNgcstnJPW5yqtWP95h0dZHZNiZmPX7IbVNwmBwDKDQs0OXOF7Zr5TmWhL_6dUQ");'>
+</div>
+<div class="absolute -bottom-1 -right-1 bg-[#111418] rounded text-[10px] font-bold px-1.5 py-0.5 text-white border border-[#3b4754]">JPG</div>
+</div>
+<div class="flex flex-col justify-center flex-1 min-w-0">
+<p class="text-[#111418] dark:text-white text-base font-medium leading-normal truncate">Patient_042_Xray.jpg</p>
+<p class="text-[#637588] dark:text-[#9dabb9] text-sm font-normal leading-normal truncate">2 mins ago • Chest Scan</p>
+</div>
+<div class="shrink-0">
+<span class="material-symbols-outlined text-[#9dabb9] text-[24px]">chevron_right</span>
+</div>
+</div>
+<!-- List Item 2 -->
+<div class="flex items-center gap-4 bg-white dark:bg-[#1a2632] rounded-xl p-3 shadow-sm border border-transparent dark:border-[#2b3846] hover:border-primary/30 transition-colors cursor-pointer">
+<div class="shrink-0 relative">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-16 bg-[#28323e]" data-alt="Blurred motion capture of a person running on a treadmill" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD2P7bWqXPKe9L0HqWdm5fSrGUzVeC_jJ-1CyVNnqKaFLKlSji0Z9HbJLmy9cWY7k0qRd1NcxDtYxjSBgza_UbEx5yjvWXDUYWCOzkP9lA9nKMAWU5Hsz3itL-ELCjhejlKe_LpZ7FJOtnfBRNDhD48FqHqFOO6NH5lWwcdG5HzhevHjNAq12YuXXFLxUWvQlZ9AdLq6sqMtFYIbqXjsvjBeRY_hbH6zJx7gIkX8VMV46urhb080qpJDxf-0HmuOlhlxCsQjgHRKBs");'>
+</div>
+<div class="absolute -bottom-1 -right-1 bg-primary rounded text-[10px] font-bold px-1.5 py-0.5 text-white">MP4</div>
+</div>
+<div class="flex flex-col justify-center flex-1 min-w-0">
+<p class="text-[#111418] dark:text-white text-base font-medium leading-normal truncate">Gait_Analysis_Run.mp4</p>
+<p class="text-[#637588] dark:text-[#9dabb9] text-sm font-normal leading-normal truncate">Yesterday • Treadmill</p>
+</div>
+<div class="shrink-0">
+<span class="material-symbols-outlined text-[#9dabb9] text-[24px]">chevron_right</span>
+</div>
+</div>
+<!-- List Item 3 -->
+<div class="flex items-center gap-4 bg-white dark:bg-[#1a2632] rounded-xl p-3 shadow-sm border border-transparent dark:border-[#2b3846] hover:border-primary/30 transition-colors cursor-pointer">
+<div class="shrink-0 relative">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-16 bg-[#28323e]" data-alt="MRI scan of a human brain side view" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCVu90wByoBxF-7P3Ju8aUs-Tdz4IHDxa1ow8lgX2RMil8BI2w_fNCrVcksLIkNW8aFbcNiJiYUY-xpU3-rY85rbjuz_oPn4ryYumEwtHd8_Umsi5xs1nIyqbZUeZ7duMeyuLnbEGC2KJk-3qBOmT4aKslQGAL_fR0pX9zWZMRfE0_ikk4S13U1E2HhoahsvfPPw23PS0ZP_nBfFcuozf7c7B4FoJIxNUV92D0wKf7SNh9o0yDEddtzQzdkB0D4bX7xa88vh3mSMPI");'>
+</div>
+<div class="absolute -bottom-1 -right-1 bg-[#111418] rounded text-[10px] font-bold px-1.5 py-0.5 text-white border border-[#3b4754]">DCM</div>
+</div>
+<div class="flex flex-col justify-center flex-1 min-w-0">
+<p class="text-[#111418] dark:text-white text-base font-medium leading-normal truncate">Lumbar_Spine_MRI.dcm</p>
+<p class="text-[#637588] dark:text-[#9dabb9] text-sm font-normal leading-normal truncate">Oct 24 • Spine</p>
+</div>
+<div class="shrink-0">
+<span class="material-symbols-outlined text-[#9dabb9] text-[24px]">chevron_right</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Tab Bar Spacer -->
+<div class="h-[80px]"></div>
+</div>
+</body></html>

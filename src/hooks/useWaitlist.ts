@@ -78,8 +78,7 @@ export function useWaitlist(filters?: {
         .from('waitlist')
         .select(`
           *,
-          patient:patients(id, name, phone, email),
-          preferred_therapist:profiles(id, name)
+          patient:patients(id, name, phone, email)
         `)
         .order('created_at', { ascending: true });
 
@@ -99,8 +98,8 @@ export function useWaitlist(filters?: {
 
       // Ordenar por prioridade (urgent > high > normal) e depois por data
       const sorted = (data || []).sort((a: any, b: any) => {
-        const priorityDiff = PRIORITY_CONFIG[a.priority as keyof typeof PRIORITY_CONFIG].order - 
-                            PRIORITY_CONFIG[b.priority as keyof typeof PRIORITY_CONFIG].order;
+        const priorityDiff = PRIORITY_CONFIG[a.priority as keyof typeof PRIORITY_CONFIG].order -
+          PRIORITY_CONFIG[b.priority as keyof typeof PRIORITY_CONFIG].order;
         if (priorityDiff !== 0) return priorityDiff;
         return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
       });
@@ -108,8 +107,11 @@ export function useWaitlist(filters?: {
       // Map to expected format
       return sorted.map((item: any) => ({
         ...item,
-        preferred_periods: item.preferred_periods || [],
+        // Map DB column `preferred_time_slots` to frontend `preferred_periods`
+        preferred_periods: item.preferred_time_slots || item.preferred_periods || [],
         refusal_count: item.refusal_count ?? 0,
+        // Map first therapist ID if array exists
+        preferred_therapist_id: item.preferred_therapist_ids?.[0],
       })) as WaitlistEntry[];
     },
   });
@@ -378,11 +380,11 @@ export function useUpdatePriority() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ 
-      waitlistId, 
-      priority 
-    }: { 
-      waitlistId: string; 
+    mutationFn: async ({
+      waitlistId,
+      priority
+    }: {
+      waitlistId: string;
       priority: 'normal' | 'high' | 'urgent';
     }) => {
       const { data, error } = await supabase
@@ -440,7 +442,7 @@ export function formatPreferences(entry: WaitlistEntry): string {
   const days = entry.preferred_days
     .map(d => DAY_NAMES[d] || d)
     .join(', ');
-  
+
   const periods = entry.preferred_periods
     .map(p => PERIOD_NAMES[p] || p)
     .join(', ');
@@ -455,14 +457,14 @@ export function isSlotCompatible(
 ): boolean {
   const dayOfWeek = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][slotDate.getDay()];
   const hour = slotDate.getHours();
-  
+
   let period: string;
   if (hour < 12) period = 'morning';
   else if (hour < 18) period = 'afternoon';
   else period = 'evening';
 
-  return entry.preferred_days.includes(dayOfWeek) && 
-         entry.preferred_periods.includes(period);
+  return entry.preferred_days.includes(dayOfWeek) &&
+    entry.preferred_periods.includes(period);
 }
 
 // Encontrar candidatos para uma vaga cancelada

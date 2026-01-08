@@ -1,0 +1,254 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://physioscience.com/schemas/dynamic_compare_metrics.schema.json",
+    "title": "DynamicCompareMetrics",
+    "description": "Schema for dynamic comparison metrics between two trials (A vs B).",
+    "type": "object",
+    "properties": {
+        "schema_version": {
+            "type": "string",
+            "const": "dynamic_compare@1.0.0"
+        },
+        "compare_type": {
+            "type": "string",
+            "const": "DYNAMIC_COMPARE"
+        },
+        "created_at": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "test_type": {
+            "$ref": "#/definitions/TestType"
+        },
+        "trial_A": {
+            "$ref": "#/definitions/TrialRef"
+        },
+        "trial_B": {
+            "$ref": "#/definitions/TrialRef"
+        },
+        "synchronization": {
+            "$ref": "#/definitions/Synchronization"
+        },
+        "metric_deltas": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/MetricDelta"
+            }
+        },
+        "summary": {
+            "$ref": "#/definitions/Summary"
+        },
+        "quality": {
+            "$ref": "#/definitions/Quality"
+        }
+    },
+    "required": [
+        "schema_version",
+        "compare_type",
+        "created_at",
+        "test_type",
+        "trial_A",
+        "trial_B",
+        "synchronization",
+        "metric_deltas",
+        "summary",
+        "quality"
+    ],
+    "definitions": {
+        "TestType": {
+            "type": "string",
+            "enum": [
+                "GAIT",
+                "SQUAT_OVERHEAD",
+                "ROMBERG",
+                "CUSTOM",
+                "AUTO"
+            ]
+        },
+        "TrialRef": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "captured_at": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "source_asset_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "protocol": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            },
+            "required": [
+                "label",
+                "captured_at"
+            ]
+        },
+        "Synchronization": {
+            "type": "object",
+            "properties": {
+                "mode": {
+                    "type": "string",
+                    "enum": [
+                        "AUTO",
+                        "MANUAL"
+                    ]
+                },
+                "anchor": {
+                    "type": "object",
+                    "properties": {
+                        "anchor_type": {
+                            "type": "string"
+                        },
+                        "trial_A": {
+                            "$ref": "#/definitions/FrameTimeRef"
+                        },
+                        "trial_B": {
+                            "$ref": "#/definitions/FrameTimeRef"
+                        }
+                    },
+                    "required": [
+                        "anchor_type"
+                    ]
+                }
+            },
+            "required": [
+                "mode"
+            ]
+        },
+        "FrameTimeRef": {
+            "type": "object",
+            "properties": {
+                "frame_index": {
+                    "type": "integer"
+                },
+                "t_ms": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "frame_index",
+                "t_ms"
+            ]
+        },
+        "MetricDelta": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string",
+                    "description": "Unique key (e.g. gait.cadence)"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "value_A": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "value_B": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "delta": {
+                    "type": [
+                        "number",
+                        "null"
+                    ],
+                    "description": "B - A"
+                },
+                "directionality": {
+                    "type": "string",
+                    "enum": [
+                        "HIGHER_IS_BETTER",
+                        "LOWER_IS_BETTER",
+                        "NEUTRAL"
+                    ]
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "IMPROVED",
+                        "WORSE",
+                        "UNCHANGED",
+                        "NA"
+                    ]
+                },
+                "confidence_0_100": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                }
+            },
+            "required": [
+                "key",
+                "label",
+                "directionality",
+                "status"
+            ]
+        },
+        "Summary": {
+            "type": "object",
+            "properties": {
+                "improvements": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "still_to_improve": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "key_findings": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "metrics_table_markdown": {
+                    "type": "string"
+                }
+            },
+            "required": []
+        },
+        "Quality": {
+            "type": "object",
+            "properties": {
+                "analysis_confidence_A_0_100": {
+                    "type": "number"
+                },
+                "analysis_confidence_B_0_100": {
+                    "type": "number"
+                },
+                "analysis_confidence_overall_0_100": {
+                    "type": "number"
+                },
+                "warnings": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": [
+                "analysis_confidence_overall_0_100"
+            ]
+        }
+    }
+}

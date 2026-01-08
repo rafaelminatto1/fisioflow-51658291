@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Media Upload/Capture - Physiotherapy App</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-dark": "#1c2630",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom styles for animations and specific overrides if needed */
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Hide scrollbar for cleaner horizontal scrolling */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display antialiased selection:bg-primary selection:text-white overflow-hidden">
+<div class="relative flex h-screen w-full flex-col overflow-hidden max-w-md mx-auto shadow-2xl bg-background-light dark:bg-background-dark">
+<!-- Header -->
+<div class="flex items-center px-4 py-3 justify-between z-10 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-sm sticky top-0">
+<div class="flex items-center gap-3">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-surface-dark dark:border-gray-700" data-alt="User profile avatar showing a smiling person" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD0sO97ubjL3OjSpXYTYZR0nDTQm6Nc82o3dk8Kyg57x_crtfIoh4dEBpRnwhrfHCm-7xHwWKrVyqzKDQ3-wwE2C6SOp1nK5sUU_ToM-yXKP1g7iZJqfVdsWmSLr6j-VCXgv-BBlqeUZb63U2FBIctY4QewrzB9aSGpZ6ayRcElRH8KvfGGNb52YEh0SRomldoEzJrHkgGcY9Irw3cgjFpPATUqIYSZ4bRbQ3AsJz1LRQejdNLI2oSDLNbYIH9mnC2Zv1fIIVS1k9I");'></div>
+<h2 class="text-slate-900 dark:text-white text-lg font-bold leading-tight">New Analysis</h2>
+</div>
+<button class="flex items-center justify-center rounded-full size-10 hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-slate-900 dark:text-white">settings</span>
+</button>
+</div>
+<!-- Main Content (Scrollable) -->
+<div class="flex-1 overflow-y-auto no-scrollbar pb-32">
+<!-- Hero / Empty State -->
+<div class="flex flex-col items-center justify-center px-6 py-12 min-h-[50vh]">
+<!-- Illustration -->
+<div class="relative mb-8 group cursor-pointer">
+<div class="absolute inset-0 bg-primary/20 rounded-full blur-3xl opacity-50 dark:opacity-30"></div>
+<div class="relative bg-surface-dark/5 dark:bg-surface-dark border border-black/5 dark:border-white/10 rounded-2xl p-8 flex items-center justify-center">
+<div class="bg-center bg-contain bg-no-repeat w-48 h-48 opacity-80" data-alt="Stylized wireframe illustration of a human body ready for scanning" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDbgaR4Lcw9qK_FrkjvpmKJIFXMSkPu2dD4m2Nog3hmKZuLEtMwA6PokmaO8rQFrySJ8AGI2LKhr3kIhr9KD0tCei9f6Hwwj2m7qG-TRpC8xEIaS4a9WHhVabaquDLB9--qCEBdBsK3WjyZHPaAfk-sWKUg2vvaWo7MDW3jCG1YArjTTGYlBk5nOLxlJHAeeQSCFWmZ0uDtWnW99_qxsIzGTpaRrAhkk-TjNbnmyCJqnPdnl68Fae0aLNFQIxWynQKjBPE-cabHmJw");'>
+<!-- Fallback icon if image doesn't load nicely in context -->
+<div class="w-full h-full flex items-center justify-center" style="display:none;">
+<span class="material-symbols-outlined text-primary text-6xl">accessibility_new</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex max-w-[320px] flex-col items-center gap-3 text-center z-0">
+<h3 class="text-slate-900 dark:text-white text-2xl font-bold tracking-tight">Ready for Analysis</h3>
+<p class="text-slate-500 dark:text-gray-400 text-sm leading-relaxed">
+                        Capture movement or upload existing scans to begin your AI-powered assessment.
+                    </p>
+</div>
+</div>
+<!-- Recent Activity Section -->
+<div class="px-5 mt-auto">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-slate-900 dark:text-white text-base font-bold">Recent Activity</h3>
+<button class="text-primary text-xs font-bold hover:underline">View All</button>
+</div>
+<div class="flex gap-3 overflow-x-auto no-scrollbar pb-4 snap-x">
+<!-- Item 1 -->
+<div class="flex-shrink-0 w-32 snap-start">
+<div class="relative aspect-[4/5] rounded-xl overflow-hidden bg-surface-dark mb-2 group">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="Thumbnail of a recent knee scan analysis" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD-Nzrq6VntHQDR-sg1xqvs5AceqDZ6x5HOSMhLRx9T5iWNaGkdZjYp71KZOO40QnpWn0lfndEs-IR3tYZTdwlVPHbEO4oVbw2gcBwJWERku6etvsRaGVbcL5XZp7BoILWl1WJTzKm4ysk8ORXOKAc1nWfra3BXhUgkh4w-eXhsh_AQySpVuGy5qIxr74tv5yXf9QdhLqtOxoRFZUzP07bZmNY6s07Fh0pykqePDK1u7Ey8YWa7_wjUeNG98EB2536CL8k45eLCsp8");'>
+</div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+<div class="absolute bottom-2 left-2 right-2">
+<span class="block text-white text-xs font-semibold">Knee Flexion</span>
+<span class="block text-gray-300 text-[10px]">2h ago</span>
+</div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex-shrink-0 w-32 snap-start">
+<div class="relative aspect-[4/5] rounded-xl overflow-hidden bg-surface-dark mb-2 group">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="Thumbnail of a recent spine posture analysis" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCQaLdtzrajVpuhW5lpA2UFfqofLOj050jyGoWar2T9E32DZCbDtiDzbs0leR0JuEfAmUWXZ_U332gtP2bWFP1IeHaZ4acg__YTTf72LzptyrxYcRHL-kD0Gu_MHB-Wi-VlfQCGHZr7M9kHAtcGyMqUnEiS8hpqqLNRXJ46uJtZx1WEVoI9FqNctCk8g5BsjhtOu4O-jJRiooeGzYWBwIpyUMA0INxIYMq_kXG1s_xx8NfuSME6Tnu75st3IRTnUN-L4WWqe9CubMM");'>
+</div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+<div class="absolute bottom-2 left-2 right-2">
+<span class="block text-white text-xs font-semibold">Spine Posture</span>
+<span class="block text-gray-300 text-[10px]">Yesterday</span>
+</div>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="flex-shrink-0 w-32 snap-start">
+<div class="relative aspect-[4/5] rounded-xl overflow-hidden bg-surface-dark mb-2 group">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" data-alt="Thumbnail of a shoulder range of motion video" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA4JAl_HG0AWDkvKsH_XGyHR_whk9KUIpvQKgJwa_Q3Jc6CVQ81VztPtIDaoZG0cMa0IfrWdMIqXXIBYMM7JLKS0pyurOisHyfk_AfI_kkKgRGs9ERdmArzuxah3N-LN8VrxHS15LKdnZipJahXfaCVkbJenLIOcXJTE6b42OP9uzRmO4eEGwM2DQI8FRya18FUa5PYMa8QO8xH8NSaFoyqe7ZakE1JHfSnsqTWhMSjkQ_UiwVB5E4FekxKEanctKqNOMnPYmMvpBI");'>
+</div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+<div class="absolute bottom-2 left-2 right-2">
+<span class="block text-white text-xs font-semibold">Shoulder ROM</span>
+<span class="block text-gray-300 text-[10px]">Oct 24</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Floating Action Button Area (Expanded State Simulation) -->
+<div class="absolute inset-0 z-40 pointer-events-none">
+<!-- Backdrop for simulated active state -->
+<div class="absolute inset-0 bg-background-dark/80 backdrop-blur-[2px] pointer-events-auto transition-opacity duration-300 ease-in-out"></div>
+<!-- FAB Menu Items -->
+<div class="absolute bottom-6 right-6 flex flex-col items-end gap-4 pointer-events-auto">
+<!-- Option 1: Library -->
+<div class="flex items-center gap-3 translate-y-0 opacity-100 transition-all duration-300 delay-100">
+<span class="bg-white text-slate-900 text-sm font-bold px-3 py-1.5 rounded-lg shadow-lg">Choose from Library</span>
+<button class="flex items-center justify-center size-12 rounded-full bg-surface-dark text-white border border-gray-700 shadow-xl hover:bg-gray-700 active:scale-95 transition-all">
+<span class="material-symbols-outlined">photo_library</span>
+</button>
+</div>
+<!-- Option 2: Video -->
+<div class="flex items-center gap-3 translate-y-0 opacity-100 transition-all duration-300 delay-75">
+<span class="bg-white text-slate-900 text-sm font-bold px-3 py-1.5 rounded-lg shadow-lg">Record Video</span>
+<button class="flex items-center justify-center size-12 rounded-full bg-surface-dark text-white border border-gray-700 shadow-xl hover:bg-gray-700 active:scale-95 transition-all">
+<span class="material-symbols-outlined">videocam</span>
+</button>
+</div>
+<!-- Option 3: Photo -->
+<div class="flex items-center gap-3 translate-y-0 opacity-100 transition-all duration-300 delay-0">
+<span class="bg-white text-slate-900 text-sm font-bold px-3 py-1.5 rounded-lg shadow-lg">Take Photo</span>
+<button class="flex items-center justify-center size-12 rounded-full bg-surface-dark text-white border border-gray-700 shadow-xl hover:bg-gray-700 active:scale-95 transition-all">
+<span class="material-symbols-outlined">photo_camera</span>
+</button>
+</div>
+<!-- Main Trigger Button (Active State) -->
+<button class="flex items-center justify-center size-16 rounded-full bg-primary text-white shadow-2xl hover:bg-blue-600 active:scale-95 transition-all mt-2 rotate-45">
+<span class="material-symbols-outlined text-[32px]">add</span>
+</button>
+</div>
+</div>
+</div>
+</body></html>
