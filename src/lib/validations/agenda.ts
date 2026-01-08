@@ -1,7 +1,22 @@
 import { z } from "zod";
 
 // Enum schemas
-export const sessionStatusSchema = z.enum(['scheduled', 'completed', 'missed', 'cancelled', 'rescheduled']);
+export const sessionStatusSchema = z.enum([
+  'agendado',
+  'confirmado',
+  'em_andamento',
+  'concluido',
+  'cancelado',
+  'falta',
+  'faltou',
+  'avaliacao',
+  'aguardando_confirmacao',
+  'em_espera',
+  'atrasado',
+  'remarcado',
+  'reagendado',
+  'atendido'
+]);
 export const paymentStatusSchema = z.enum(['pending', 'paid', 'partial']);
 export const sessionTypeSchema = z.enum(['individual', 'group']);
 export const paymentTypeSchema = z.enum(['session', 'package']);

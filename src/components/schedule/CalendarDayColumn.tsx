@@ -167,9 +167,9 @@ export const DayColumn = memo(({
                                 onDragStart={(e) => handleDragStart(e, apt)}
                                 onDragEnd={handleDragEnd}
                                 className={cn(
-                                    "absolute left-0.5 right-0.5 sm:left-1 sm:right-1 p-1.5 sm:p-2.5 rounded-xl text-white cursor-pointer shadow-xl border-l-[3px] sm:border-l-4 backdrop-blur-sm animate-fade-in overflow-hidden",
+                                    "absolute left-0.5 right-0.5 sm:left-1 sm:right-1 p-2 rounded-lg text-white cursor-pointer shadow-md border-l-[4px] backdrop-blur-sm animate-fade-in overflow-hidden flex flex-col justify-between",
                                     getStatusColor(apt.status, isOverCapacity(apt)),
-                                    "hover:shadow-2xl hover:scale-[1.02] hover:z-20 transition-all duration-200 group/card",
+                                    "hover:shadow-lg hover:scale-[1.02] hover:z-20 transition-all duration-200 group/card ring-1 ring-white/10",
                                     isDraggable && "cursor-grab active:cursor-grabbing",
                                     dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50 scale-95",
                                     isOverCapacity(apt) && "animate-pulse"
@@ -181,6 +181,7 @@ export const DayColumn = memo(({
                                     ['--height-desktop' as any]: `${heightDesktop}px`
                                 } as React.CSSProperties}
                                 onClick={(e) => e.stopPropagation()}
+                                title={`${apt.patientName} - ${apt.type} (${apt.status})`}
                             >
                                 <style dangerouslySetInnerHTML={{
                                     __html: `
@@ -191,21 +192,47 @@ export const DayColumn = memo(({
                     }
                   }
                 `}} />
-                                <div className="flex items-start justify-between gap-0.5">
-                                    <div className="font-extrabold drop-shadow-md leading-tight text-[11px] sm:text-xs line-clamp-3 flex-1 flex items-center gap-0.5">
-                                        {isOverCapacity(apt) && (
-                                            <AlertTriangle className="h-3 w-3 flex-shrink-0 text-white" />
-                                        )}
+                                <div className="flex flex-col gap-0.5 min-w-0">
+                                    {/* Therapist Name - Like the "Dr. Ana" in mockup */}
+                                    <div className={cn(
+                                        "text-[10px] font-bold uppercase tracking-wide opacity-90 truncate",
+                                        apt.therapistId?.includes('Ana') ? "text-yellow-200" :
+                                            apt.therapistId?.includes('Paulo') ? "text-cyan-200" :
+                                                apt.therapistId?.includes('Carla') ? "text-purple-200" : "text-white/90"
+                                    )}>
+                                        {apt.therapistId || 'Sem Terapeuta'}
+                                    </div>
+
+                                    {/* Patient Name */}
+                                    <div className="font-bold text-[11px] sm:text-xs leading-tight line-clamp-2 text-white shadow-sm">
+                                        {isOverCapacity(apt) && <AlertTriangle className="h-3 w-3 inline mr-1 text-amber-300" />}
                                         {apt.patientName}
                                     </div>
-                                    {isDraggable && (
-                                        <GripVertical className="h-3 w-3 opacity-50 flex-shrink-0 hidden sm:block" />
+
+                                    {/* Service Type */}
+                                    <div className="text-[9px] sm:text-[10px] opacity-80 truncate hidden sm:block">
+                                        {apt.type}
+                                    </div>
+                                </div>
+
+                                {/* Bottom Info: Time & Room */}
+                                <div className="flex items-center justify-between text-[9px] sm:text-[10px] bg-black/10 -mx-2 -mb-2 px-2 py-1 mt-1 font-medium">
+                                    <div className="flex items-center gap-1">
+                                        <Clock className="h-2.5 w-2.5 opacity-70" />
+                                        {apt.time}
+                                    </div>
+                                    {apt.room && (
+                                        <div className="flex items-center gap-1 opacity-80">
+                                            <span>{apt.room}</span>
+                                        </div>
                                     )}
                                 </div>
-                                <div className="opacity-95 text-[9px] sm:text-xs mt-0.5 flex items-center gap-1 font-semibold">
-                                    <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3 flex-shrink-0" />
-                                    <span>{apt.time}</span>
-                                </div>
+
+                                {isDraggable && (
+                                    <div className="absolute top-1 right-1 opacity-0 group-hover/card:opacity-50 transition-opacity">
+                                        <GripVertical className="h-3 w-3 hidden sm:block" />
+                                    </div>
+                                )}
                             </div>
                         </AppointmentQuickView>
                     );

@@ -18,12 +18,19 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const { toast } = useToast();
 
   const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/contexts/AuthContextProvider.tsx:20',message:'fetchProfile - Entry',data:{userId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+    // #endregion
     try {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
         .single();
+
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/contexts/AuthContextProvider.tsx:31',message:'fetchProfile - Query result',data:{hasError:!!error,errorMessage:error?.message,errorStatus:error?.code,hasData:!!data},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
 
       if (error) {
         logger.error('Erro ao buscar perfil', error, 'AuthContextProvider');
@@ -32,12 +39,18 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
       return data as unknown as Profile;
     } catch (err) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/contexts/AuthContextProvider.tsx:42',message:'fetchProfile - Exception',data:{error:err instanceof Error ? err.message : String(err)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+      // #endregion
       logger.error('Erro ao buscar perfil', err, 'AuthContextProvider');
       return null;
     }
   }, []);
 
   const refreshProfile = useCallback(async () => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/contexts/AuthContextProvider.tsx:50',message:'refreshProfile - Entry',data:{hasUser:!!user,userId:user?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
     if (!user) {
       setProfile(null);
       return;
@@ -45,8 +58,14 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     try {
       const profileData = await fetchProfile(user.id);
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/contexts/AuthContextProvider.tsx:62',message:'refreshProfile - Profile loaded',data:{hasProfile:!!profileData,role:profileData?.role},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
       setProfile(profileData);
     } catch (err) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/contexts/AuthContextProvider.tsx:68',message:'refreshProfile - Error',data:{error:err instanceof Error ? err.message : String(err)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
       logger.error('Erro ao atualizar perfil', err, 'AuthContextProvider');
     }
   }, [user, fetchProfile]);
@@ -144,9 +163,17 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
       async (event, newSession) => {
         if (!mounted) return;
 
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/contexts/AuthContextProvider.tsx:147',message:'onAuthStateChange - Event triggered',data:{event,hasSession:!!newSession,userId:newSession?.user?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+        // #endregion
+
         if (newSession?.user) {
           // Validação crítica de UUID
-          if (!isValidUUID(newSession.user.id)) {
+          const isUUIDValid = isValidUUID(newSession.user.id);
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/contexts/AuthContextProvider.tsx:156',message:'onAuthStateChange - UUID validation',data:{userId:newSession.user.id,isValid:isUUIDValid},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+          // #endregion
+          if (!isUUIDValid) {
             logger.warn('Sessão com ID inválido bloqueada no listener', { userId: newSession.user.id }, 'AuthContextProvider');
             await supabase.auth.signOut();
             return;
@@ -163,11 +190,17 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
               setTimeout(() => resolve(null), 3000)
             );
             const profileData = await Promise.race([profilePromise, timeoutPromise]);
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/contexts/AuthContextProvider.tsx:175',message:'onAuthStateChange - Profile loaded',data:{hasProfile:!!profileData,profileData:profileData ? {role:profileData.role} : null},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+            // #endregion
             if (mounted) {
               setProfile(profileData);
             }
           } catch (profileErr) {
             logger.error('Erro ao carregar perfil', profileErr, 'AuthContextProvider');
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/contexts/AuthContextProvider.tsx:184',message:'onAuthStateChange - Profile load error',data:{error:profileErr instanceof Error ? profileErr.message : String(profileErr)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+            // #endregion
           }
         } else {
           setUser(null);
@@ -193,11 +226,18 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const signIn = async (email: string, password: string, _remember?: boolean): Promise<{ error?: AuthError | null }> => {
     try {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/contexts/AuthContextProvider.tsx:195',message:'signIn - Entry with credentials',data:{email,passwordLength:password.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       setLoading(true);
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/contexts/AuthContextProvider.tsx:204',message:'signIn - Supabase response',data:{error:error?.message,errorStatus:error?.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
 
       if (error) {
         logger.error('Erro no login', error, 'AuthContextProvider');
@@ -211,10 +251,16 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
 
       // Profile será carregado pelo onAuthStateChange
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/contexts/AuthContextProvider.tsx:218',message:'signIn - Success',data:{success:true},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       return { error: null };
     } catch (err: unknown) {
       const error = err as Error;
       logger.error('Erro no login', error, 'AuthContextProvider');
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/contexts/AuthContextProvider.tsx:226',message:'signIn - Exception',data:{error:error.message,errorStack:error.stack},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       setLoading(false);
       return { error: { message: error.message || 'Erro ao fazer login' } };
     }

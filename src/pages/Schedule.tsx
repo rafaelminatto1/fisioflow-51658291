@@ -3,22 +3,29 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import * as SheetComponents from '@/components/ui/sheet';
+
+const Sheet = SheetComponents.Sheet;
+const SheetContent = SheetComponents.SheetContent;
+const SheetTrigger = SheetComponents.SheetTrigger;
+
+// #region agent log
+console.log('[DEBUG] Sheet component imported:', Sheet);
+// #endregion
 
 import { CalendarViewType } from '@/components/schedule/CalendarView';
 import { AppointmentModalRefactored as AppointmentModal } from '@/components/schedule/AppointmentModalRefactored';
 import { AppointmentQuickEditModal } from '@/components/schedule/AppointmentQuickEditModal';
 import { AppointmentListView } from '@/components/schedule/AppointmentListView';
-import { MiniCalendar } from '@/components/schedule/MiniCalendar';
 import { AppointmentSearch } from '@/components/schedule/AppointmentSearch';
-import { AdvancedFilters } from '@/components/schedule/AdvancedFilters';
+import { ScheduleSidebar, FilterState } from '@/components/schedule/ScheduleSidebar'; // Updated import
 import { QuickStats } from '@/components/schedule/QuickStats';
 import { WaitlistQuickAdd } from '@/components/schedule/WaitlistQuickAdd';
-import { WaitlistNotification } from '@/components/schedule/WaitlistNotification';
 import { WaitlistQuickViewModal } from '@/components/schedule/WaitlistQuickViewModal';
 import { useAppointments, useCreateAppointment, useRescheduleAppointment } from '@/hooks/useAppointments';
 import { useWaitlistMatch } from '@/hooks/useWaitlistMatch';
 import { logger } from '@/lib/errors/logger';
-import { AlertTriangle, Calendar, Clock, Users, TrendingUp, Plus, Settings as SettingsIcon, Bell } from 'lucide-react';
+import { AlertTriangle, Calendar, Clock, Users, TrendingUp, Plus, Settings as SettingsIcon, Bell, Filter } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { cn } from '@/lib/utils';
@@ -26,21 +33,11 @@ import { EmptyState, LoadingSkeleton } from '@/components/ui';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
-import { ScheduleStatsCard } from '@/components/schedule/ScheduleStatsCard';
-import { format } from 'date-fns';
+import { format, isAfter, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 // Lazy load CalendarView for better initial load performance
 const CalendarView = lazy(() => import('@/components/schedule/CalendarView').then(mod => ({ default: mod.CalendarView })));
-
-// Define FilterType interface
-interface FilterType {
-  search: string;
-  status: string;
-  dateFrom: string;
-  dateTo: string;
-  service: string;
-}
 
 const Schedule = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
@@ -50,18 +47,15 @@ const Schedule = () => {
   const [modalDefaultTime, setModalDefaultTime] = useState<string | undefined>();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewType, setViewType] = useState<CalendarViewType | 'list'>('week');
-  const [filters, setFilters] = useState<FilterType>({
-    search: '',
-    status: '',
-    dateFrom: '',
-    dateTo: '',
-    service: ''
+
+  // Consolidated Filter State
+  const [filters, setFilters] = useState<FilterState>({
+    therapists: [],
+    rooms: [],
+    services: []
   });
-  const [advancedFilters, setAdvancedFilters] = useState({
-    status: [] as string[],
-    types: [] as string[],
-    therapists: [] as string[],
-  });
+  const [dateRange, setDateRange] = useState({ from: '', to: '' });
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Waitlist state
   const [waitlistQuickAdd, setWaitlistQuickAdd] = useState<{ date: Date; time: string } | null>(null);
@@ -72,13 +66,6 @@ const Schedule = () => {
   const createAppointmentMutation = useCreateAppointment();
   const { mutateAsync: rescheduleAppointment, isPending: isRescheduling } = useRescheduleAppointment();
   const { totalInWaitlist } = useWaitlistMatch();
-
-  // Datas com agendamentos para o mini calendário
-  const appointmentDates = React.useMemo(() => {
-    return appointments.map(apt =>
-      typeof apt.date === 'string' ? new Date(apt.date) : apt.date
-    );
-  }, [appointments]);
 
   const handleRefresh = async () => {
     await refetch();
@@ -112,52 +99,73 @@ const Schedule = () => {
   // Filter appointments based on current filters
   const filteredAppointments = useMemo(() => {
     return appointments.filter(appointment => {
-      // Basic filters
-      if (filters.search && !appointment.patientName.toLowerCase().includes(filters.search.toLowerCase())) {
+      // Search
+      if (searchTerm && !appointment.patientName.toLowerCase().includes(searchTerm.toLowerCase())) {
         return false;
-      }
-      if (filters.status && appointment.status !== filters.status) {
-        return false;
-      }
-      if (filters.service && appointment.type !== filters.service) {
-        return false;
-      }
-      if (filters.dateFrom) {
-        const appointmentDate = appointment.date instanceof Date ?
-          appointment.date.toISOString().split('T')[0] :
-          appointment.date;
-        if (appointmentDate < filters.dateFrom) {
-          return false;
-        }
-      }
-      if (filters.dateTo) {
-        const appointmentDate = appointment.date instanceof Date ?
-          appointment.date.toISOString().split('T')[0] :
-          appointment.date;
-        if (appointmentDate > filters.dateTo) {
-          return false;
-        }
       }
 
-      // Advanced filters
-      if (advancedFilters.status.length > 0 && !advancedFilters.status.includes(appointment.status)) {
+      // Date Range
+      if (dateRange.from) {
+        const appointmentDate = appointment.date instanceof Date ?
+          appointment.date.toISOString().split('T')[0] :
+          appointment.date;
+        if (appointmentDate < dateRange.from) return false;
+      }
+      if (dateRange.to) {
+        const appointmentDate = appointment.date instanceof Date ?
+          appointment.date.toISOString().split('T')[0] :
+          appointment.date;
+        if (appointmentDate > dateRange.to) return false;
+      }
+
+      // Sidebar Filters
+      if (filters.therapists.length > 0 && appointment.therapistId && !filters.therapists.includes(appointment.therapistId)) {
         return false;
       }
-      if (advancedFilters.types.length > 0 && !advancedFilters.types.includes(appointment.type)) {
+      if (filters.rooms.length > 0 && appointment.room && !filters.rooms.includes(appointment.room)) {
+        return false;
+      }
+      if (filters.services.length > 0 && appointment.type && !filters.services.includes(appointment.type)) {
         return false;
       }
 
       return true;
     });
-  }, [appointments, filters, advancedFilters]);
+  }, [appointments, searchTerm, dateRange, filters]);
 
-  const services = useMemo(() => {
-    return Array.from(new Set(appointments.map(apt => apt.type))) as string[];
+  // Upcoming appointments for sidebar
+  const upcomingAppointments = useMemo(() => {
+    const now = new Date();
+    return appointments
+      .filter(apt => {
+        const aptDate = typeof apt.date === 'string' ? parseISO(apt.date) : apt.date;
+        return isAfter(aptDate, now);
+      })
+      .sort((a, b) => {
+        const dateA = typeof a.date === 'string' ? parseISO(a.date).getTime() : a.date.getTime();
+        const dateB = typeof b.date === 'string' ? parseISO(b.date).getTime() : b.date.getTime();
+        return dateA - dateB;
+      })
+      .slice(0, 5); // Take top 5
   }, [appointments]);
 
-  // Memoize callbacks to prevent unnecessary re-renders
+  // Available options for filters (dynamically derived)
+  const filterOptions = useMemo(() => {
+    const therapists = Array.from(new Set(appointments.map(a => a.therapistId).filter(Boolean))) as string[];
+    const rooms = Array.from(new Set(appointments.map(a => a.room).filter(Boolean))) as string[];
+    const services = Array.from(new Set(appointments.map(a => a.type).filter(Boolean))) as string[];
+
+    // Fallbacks if empty (mock data for better UX if no data yet)
+    return {
+      therapists: therapists.length ? therapists : ['Dr. Ana', 'Dr. Paulo', 'Dra. Carla'],
+      rooms: rooms.length ? rooms : ['Sala 1', 'Sala 2', 'Sala 3'],
+      services: services.length ? services : ['Fisioterapia', 'Osteopatia', 'Pilates']
+    };
+  }, [appointments]);
+
+
+  // Handlers
   const handleAppointmentClick = useCallback((appointment: Appointment) => {
-    // Open quick edit modal instead of the full modal
     setQuickEditAppointment(appointment);
   }, []);
 
@@ -217,45 +225,20 @@ const Schedule = () => {
         .eq('id', appointment.id);
 
       if (error) throw error;
-
-      toast({
-        title: '✅ Agendamento excluído',
-        description: `Agendamento de ${appointment.patientName} foi excluído.`,
-      });
+      toast({ title: '✅ Agendamento excluído', description: `Agendamento de ${appointment.patientName} foi excluído.` });
       refetch();
     } catch (error) {
-      toast({
-        title: '❌ Erro ao excluir',
-        description: 'Não foi possível excluir o agendamento.',
-        variant: 'destructive'
-      });
+      toast({ title: '❌ Erro ao excluir', description: 'Não foi possível excluir o agendamento.', variant: 'destructive' });
     }
   }, [refetch]);
 
-  const handleFiltersChange = useCallback((newFilters: FilterType) => {
-    setFilters(newFilters);
-  }, []);
-
-  const handleClearFilters = useCallback(() => {
-    setFilters({
-      search: '',
-      status: '',
-      dateFrom: '',
-      dateTo: '',
-      service: ''
-    });
-    setAdvancedFilters({
-      status: [],
-      types: [],
-      therapists: []
-    });
-  }, []);
-
-  const createTestAppointments = async () => {
+  const createTestAppointments = useCallback(async () => {
     try {
       const today = new Date();
       const statuses = ['agendado', 'confirmado', 'aguardando_confirmacao', 'em_andamento', 'em_espera', 'atrasado', 'concluido', 'remarcado', 'cancelado', 'falta'] as const;
       const types = ['Fisioterapia', 'Consulta Inicial', 'Reavaliação', 'Pilates Clínico', 'RPG', 'Terapia Manual', 'Dry Needling'] as const;
+      const therapists = ['Dr. Ana', 'Dr. Paulo', 'Dra. Carla'];
+      const rooms = ['Sala 1', 'Sala 2', 'Sala 3', 'Sala 4'];
 
       // Buscar pacientes disponíveis
       const { data: patients, error: patientsError } = await supabase
@@ -290,14 +273,17 @@ const Schedule = () => {
           duration: 60,
           type: types[i % types.length] as any,
           status: statuses[i % statuses.length] as any,
-          notes: `Agendamento de teste - ${statuses[i % statuses.length]}`
-        });
+          notes: `Agendamento de teste - ${statuses[i % statuses.length]}`,
+          therapist_id: therapists[i % therapists.length], // Mocking ID as name for now for UI demo
+          room: rooms[i % rooms.length]
+        } as any); // Casting as any to bypass partial type mismatches if strict types aren't fully aligned yet
       }
 
       toast({
         title: '✅ Sucesso',
         description: '10 agendamentos de teste criados com diferentes status!'
       });
+      refetch(); // Refresh appointments after creating test data
     } catch (error) {
       logger.error('Erro ao criar agendamentos de teste', error, 'Schedule');
       toast({
@@ -306,7 +292,7 @@ const Schedule = () => {
         variant: 'destructive'
       });
     }
-  };
+  }, [createAppointmentMutation, refetch]);
 
   if (error) {
     logger.error('Erro na página Schedule', { error }, 'Schedule');
@@ -323,9 +309,9 @@ const Schedule = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-4 animate-fade-in">
+      <div className="h-[calc(100vh-80px)] overflow-hidden flex flex-col gap-4 animate-fade-in relative">
         {/* Header compacto */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gradient-primary rounded-lg shadow-sm">
               <Calendar className="h-5 w-5 text-primary-foreground" />
@@ -333,156 +319,116 @@ const Schedule = () => {
             <div>
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Agenda</h1>
               <p className="text-xs text-muted-foreground hidden sm:block">
-                {format(currentDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
+                {format(currentDate, "MMMM 'de' yyyy", { locale: ptBR })}
               </p>
             </div>
           </div>
+
           <div className="flex items-center gap-2 flex-wrap">
+            <AppointmentSearch value={searchTerm} onChange={setSearchTerm} onClear={() => setSearchTerm('')} />
+
+            {/* Mobile Sidebar Trigger */}
+            <div className="lg:hidden">
+              <Sheet>
+                {/* #region agent log */}
+                {console.log('[DEBUG] Rendering Sheet component')}
+                {/* #endregion */}
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-9 gap-2">
+                    <Filter className="h-4 w-4" />
+                    <span className="hidden xs:inline">Filtros</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[300px] sm:w-[350px] p-0 border-l border-border/50">
+                  <div className="h-full py-4 overflow-y-auto">
+                    <ScheduleSidebar
+                      upcomingAppointments={upcomingAppointments}
+                      filters={filters}
+                      onFilterChange={setFilters}
+                      availableTherapists={filterOptions.therapists}
+                      availableRooms={filterOptions.rooms}
+                      availableServices={filterOptions.services}
+                    />
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+
             <Link to="/schedule/settings">
-              <Button variant="ghost" size="sm" className="h-8">
+              <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
                 <SettingsIcon className="h-4 w-4" />
               </Button>
             </Link>
-            <Button
-              onClick={handleCreateAppointment}
-              size="sm"
-              className="h-8 shadow-sm"
-            >
+
+            <Button onClick={() => setShowWaitlistModal(true)} variant="outline" size="sm" className="h-9 gap-2">
+              {totalInWaitlist > 0 && <span className="bg-primary text-primary-foreground text-[10px] px-1.5 rounded-full">{totalInWaitlist}</span>}
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">Lista de Espera</span>
+            </Button>
+
+            <Button onClick={handleCreateAppointment} size="sm" className="h-9 shadow-sm bg-primary hover:bg-primary/90 text-white">
               <Plus className="h-4 w-4 mr-1" />
-              Novo
+              Novo Agendamento
             </Button>
           </div>
         </div>
 
-        {/* Stats compactos em linha */}
-        <div className="grid grid-cols-5 gap-2">
-          <div className="bg-card border rounded-lg p-2.5 text-center">
-            <div className="text-lg font-bold text-foreground">{stats.totalToday}</div>
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Hoje</div>
-          </div>
-          <div className="bg-card border rounded-lg p-2.5 text-center">
-            <div className="text-lg font-bold text-success">{stats.confirmedToday}</div>
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Confirmados</div>
-          </div>
-          <div className="bg-card border rounded-lg p-2.5 text-center">
-            <div className="text-lg font-bold text-secondary">{stats.completedToday}</div>
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Concluídos</div>
-          </div>
-          <div className="bg-card border rounded-lg p-2.5 text-center">
-            <div className="text-lg font-bold text-warning">{stats.pendingToday}</div>
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Pendentes</div>
-          </div>
-          <button
-            onClick={() => setShowWaitlistModal(true)}
-            className="bg-card border rounded-lg p-2.5 text-center hover:bg-muted/50 transition-colors cursor-pointer"
-          >
-            <div className="text-lg font-bold text-primary flex items-center justify-center gap-1">
-              {totalInWaitlist}
-              {totalInWaitlist > 0 && <Users className="h-4 w-4" />}
+        {/* Main Content Grid */}
+        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-4 gap-4">
+          {/* Left Col - Calendar (3 spans) */}
+          <div className="lg:col-span-3 flex flex-col gap-4 min-h-0">
+            <div className="flex-1 border rounded-xl overflow-hidden bg-background shadow-sm relative flex flex-col">
+              {/* View Filters bar inside calendar card */}
+
+              {viewType === 'list' ? (
+                <AppointmentListView
+                  appointments={filteredAppointments}
+                  selectedDate={currentDate}
+                  onAppointmentClick={handleAppointmentClick}
+                  onRefresh={handleRefresh}
+                />
+              ) : (
+                <Suspense fallback={
+                  <div className="flex items-center justify-center h-full"><div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" /></div>
+                }>
+                  <CalendarView
+                    appointments={filteredAppointments}
+                    currentDate={currentDate}
+                    onDateChange={setCurrentDate}
+                    viewType={viewType as CalendarViewType}
+                    onViewTypeChange={(type) => setViewType(type)}
+                    onAppointmentClick={handleAppointmentClick}
+                    onTimeSlotClick={handleTimeSlotClick}
+                    onAppointmentReschedule={handleAppointmentReschedule}
+                    isRescheduling={isRescheduling}
+                    onEditAppointment={handleEditAppointment}
+                    onDeleteAppointment={handleDeleteAppointment}
+                  />
+                </Suspense>
+              )}
             </div>
-            <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Lista Espera</div>
-          </button>
-        </div>
-
-        {/* View Selector + Search integrado */}
-        <div className="flex flex-col sm:flex-row gap-2">
-          {/* View tabs */}
-          <div className="flex bg-muted/50 p-1 rounded-lg">
-            {(['list', 'day', 'week', 'month'] as const).map(type => (
-              <button
-                key={type}
-                onClick={() => setViewType(type)}
-                className={cn(
-                  "px-3 py-1.5 rounded-md text-xs font-medium transition-all",
-                  viewType === type
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {type === 'list' ? 'Lista' :
-                  type === 'day' ? 'Dia' :
-                    type === 'week' ? 'Semana' : 'Mês'}
-              </button>
-            ))}
           </div>
 
-          {/* Search */}
-          <div className="flex-1">
-            <AppointmentSearch
-              value={filters.search}
-              onChange={(value) => setFilters({ ...filters, search: value })}
-              onClear={() => setFilters({ ...filters, search: '' })}
+          {/* Right Col - Sidebar (1 span) */}
+          <div className="hidden lg:block lg:col-span-1 min-h-0">
+            <ScheduleSidebar
+              upcomingAppointments={upcomingAppointments}
+              filters={filters}
+              onFilterChange={setFilters}
+              availableTherapists={filterOptions.therapists}
+              availableRooms={filterOptions.rooms}
+              availableServices={filterOptions.services}
             />
           </div>
-
-          <AdvancedFilters
-            filters={advancedFilters}
-            onChange={setAdvancedFilters}
-            onClear={() => {
-              setAdvancedFilters({ status: [], types: [], therapists: [] });
-              setFilters(prev => ({ ...prev, dateFrom: '', dateTo: '' }));
-            }}
-            dateRange={{ from: filters.dateFrom, to: filters.dateTo }}
-            onDateRangeChange={(range) => setFilters(prev => ({ ...prev, dateFrom: range.from, dateTo: range.to }))}
-          />
         </div>
 
-        {/* Results Summary compacto */}
-        {(filters.search || filters.status || filters.service || advancedFilters.status.length > 0) && (
-          <div className="flex items-center justify-between px-3 py-2 bg-muted/30 rounded-lg text-xs">
-            <span className="text-muted-foreground">
-              <Badge variant="secondary" className="mr-2">{filteredAppointments.length}</Badge>
-              resultado{filteredAppointments.length !== 1 ? 's' : ''}
-            </span>
-            <Button variant="ghost" size="sm" onClick={handleClearFilters} className="h-6 text-xs">
-              Limpar
-            </Button>
-          </div>
-        )}
-
-        {/* Calendar/List View */}
-        <div className="rounded-xl border bg-card shadow-sm overflow-hidden" style={{ height: 'calc(100vh - 280px)', minHeight: '500px' }}>
-          {viewType === 'list' ? (
-            <AppointmentListView
-              appointments={filteredAppointments}
-              selectedDate={currentDate}
-              onAppointmentClick={handleAppointmentClick}
-              onRefresh={handleRefresh}
-            />
-          ) : (
-            <Suspense fallback={
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center space-y-2">
-                  <div className="h-8 w-8 mx-auto border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                  <p className="text-xs text-muted-foreground">Carregando...</p>
-                </div>
-              </div>
-            }>
-              <CalendarView
-                appointments={filteredAppointments}
-                currentDate={currentDate}
-                onDateChange={setCurrentDate}
-                viewType={viewType as CalendarViewType}
-                onViewTypeChange={(type) => setViewType(type)}
-                onAppointmentClick={handleAppointmentClick}
-                onTimeSlotClick={handleTimeSlotClick}
-                onAppointmentReschedule={handleAppointmentReschedule}
-                isRescheduling={isRescheduling}
-                onEditAppointment={handleEditAppointment}
-                onDeleteAppointment={handleDeleteAppointment}
-              />
-            </Suspense>
-          )}
-        </div>
-
-        {/* Quick Edit Modal - opens when clicking on appointment cards */}
+        {/* Modals */}
         <AppointmentQuickEditModal
           appointment={quickEditAppointment}
           open={!!quickEditAppointment}
           onOpenChange={(open) => !open && setQuickEditAppointment(null)}
         />
 
-        {/* Appointment Modal for creating new appointments */}
         <AppointmentModal
           isOpen={isModalOpen}
           onClose={() => {
@@ -496,7 +442,6 @@ const Schedule = () => {
           mode={selectedAppointment ? 'view' : 'create'}
         />
 
-        {/* Waitlist Quick Add Modal */}
         {waitlistQuickAdd && (
           <WaitlistQuickAdd
             open={!!waitlistQuickAdd}
@@ -506,7 +451,6 @@ const Schedule = () => {
           />
         )}
 
-        {/* Waitlist Quick View Modal */}
         <WaitlistQuickViewModal
           open={showWaitlistModal}
           onOpenChange={setShowWaitlistModal}
