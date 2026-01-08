@@ -63,7 +63,7 @@ ALTER FUNCTION public.generate_demo_uuid(text) SET search_path = public, extensi
 ALTER FUNCTION public.generate_demo_uuid_v2(text) SET search_path = public, extensions;
 ALTER FUNCTION public.update_updated_at_column() SET search_path = public, extensions;
 ALTER FUNCTION public.cleanup_old_notification_logs() SET search_path = public, extensions;
-ALTER FUNCTION public.create_audit_log(uuid, varchar, varchar, jsonb, jsonb) SET search_path = public, extensions;
+ALTER FUNCTION public.create_audit_log(uuid, uuid, text, text, uuid, jsonb, jsonb, inet, text) SET search_path = public, extensions;
 ALTER FUNCTION public.audit_trigger_function() SET search_path = public, extensions;
 
 -- Fix Materialized View in API warnings
