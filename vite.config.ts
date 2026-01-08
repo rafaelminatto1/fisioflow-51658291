@@ -98,6 +98,7 @@ export default defineConfig(({ mode }) => {
           clientsClaim: true,
           // Disable navigation preload to avoid issues with cornerstone
           navigationPreload: false,
+          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB
         },
         // Disable injectManifest mode to avoid IIFE conflict with cornerstone
         injectManifest: undefined,
@@ -106,8 +107,7 @@ export default defineConfig(({ mode }) => {
         devOptions: {
           enabled: false,
         },
-        // Configure workbox to cache larger files
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB
+
       })
     ].filter(Boolean),
     resolve: {
@@ -141,7 +141,7 @@ export default defineConfig(({ mode }) => {
             'xlsx': ['xlsx'],
           },
         },
-          },
+      },
       chunkSizeWarningLimit: 5000,
     },
     optimizeDeps: {
