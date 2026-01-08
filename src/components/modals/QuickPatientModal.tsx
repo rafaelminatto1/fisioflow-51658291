@@ -25,8 +25,8 @@ interface QuickPatientModalProps {
   suggestedName?: string;
 }
 
-export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({ 
-  open, 
+export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
+  open,
   onOpenChange,
   onPatientCreated,
   suggestedName = ''
@@ -50,10 +50,10 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
   // Função para formatar telefone com máscara (XX) XXXXX-XXXX
   const formatPhone = (value: string) => {
     if (!value) return '';
-    
+
     // Remove tudo que não é dígito
     const numbers = value.replace(/\D/g, '');
-    
+
     // Aplica a máscara
     if (numbers.length <= 2) {
       return `(${numbers}`;
@@ -70,7 +70,7 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
     const formatted = formatPhone(e.target.value);
     setValue('phone', formatted);
   };
-  
+
   const handleSave = async (data: z.infer<typeof quickPatientSchema>) => {
     try {
       // Verifica sessão e papéis antes de tentar inserir (evita erro 401/RLS)
@@ -117,10 +117,10 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
       }
 
       logger.info('Criando paciente rápido', { name: data.name, organizationId: currentOrganization.id }, 'QuickPatientModal');
-      
+
       // Limpar telefone (remover formatação)
       const cleanPhone = data.phone ? data.phone.replace(/\D/g, '') : null;
-      
+
       const { data: newPatient, error } = await supabase
         .from('patients')
         .insert([{
@@ -130,17 +130,17 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
           incomplete_registration: true,
           organization_id: currentOrganization.id,
           // Campos mínimos para evitar erros
-          birth_date: new Date().toISOString().split('T')[0],
+          birth_date: null,
         }])
         .select()
         .single();
 
       if (error) {
         logger.error('Erro do Supabase ao criar paciente', error, 'QuickPatientModal');
-        
+
         // Melhorar mensagens de erro
         let errorMessage = error.message || 'Não foi possível criar o paciente.';
-        
+
         if (error.code === '23505') {
           errorMessage = 'Já existe um paciente com este nome ou telefone cadastrado.';
         } else if (error.code === '42501' || error.message?.includes('row-level security')) {
@@ -150,7 +150,7 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
         } else if (error.message?.includes('organization_id')) {
           errorMessage = 'Erro ao associar paciente à organização.';
         }
-        
+
         toast({
           title: 'Erro ao criar paciente',
           description: errorMessage,
@@ -285,7 +285,7 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
             >
               Cancelar
             </Button>
-            
+
             <Button
               type="submit"
               disabled={isSubmitting || !nameValue?.trim()}

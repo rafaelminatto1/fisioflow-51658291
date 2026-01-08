@@ -1,23 +1,34 @@
 -- Fix organizations RLS policy that incorrectly uses profiles.id instead of profiles.user_id
--- This is causing 406 errors when querying organizations
+-- This is causing 406 errors when querying organizations and creating circular dependencies
 
--- Drop the incorrect policy
+-- 1. Break recursion by allowing users to view their own organization membership directly
+DROP POLICY IF EXISTS "view_own_membership" ON public.organization_members;
+CREATE POLICY "view_own_membership"
+ON public.organization_members
+FOR SELECT
+TO authenticated
+USING (user_id = auth.uid());
+
+-- 2. Drop the incorrect policy on organizations
 DROP POLICY IF EXISTS "organizations_member_select" ON public.organizations;
 
--- Recreate with correct user_id reference
+-- 3. Recreate with correct dependency using organization_members instead of profiles
+-- This avoids the profiles -> organizations -> profiles recursion loop
 CREATE POLICY "organizations_member_select"
 ON public.organizations
 FOR SELECT
 TO authenticated
 USING (
   id IN (
-    SELECT profiles.organization_id
-    FROM profiles
-    WHERE profiles.user_id = auth.uid()
+    SELECT organization_id
+    FROM organization_members
+    WHERE user_id = auth.uid()
+      AND active = true
   )
 );
 
--- Sync organization_members from profiles (for RLS policy "Membros podem ver sua organização")
+-- 4. Sync organization_members from profiles (migration data fix)
+-- Ensures all users with a profile organization are properly added to members table
 INSERT INTO organization_members (user_id, organization_id, role, active)
 SELECT 
   p.user_id,
