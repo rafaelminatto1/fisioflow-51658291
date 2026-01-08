@@ -20,7 +20,7 @@ export const IncompleteRegistrationAlert: React.FC = () => {
       try {
         const { data, error } = await supabase
           .from('patients')
-          .select('id, name')
+          .select('id, name:full_name')
           .eq('incomplete_registration', true)
           .limit(5);
 

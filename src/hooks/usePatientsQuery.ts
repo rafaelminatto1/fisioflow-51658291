@@ -41,7 +41,7 @@ export const usePatientsQuery = () => {
 
       let query = supabase
         .from('patients')
-        .select('*');
+        .select('*, name:full_name');
 
       // Filtrar por organização se disponível
       if (organizationId) {
@@ -49,7 +49,7 @@ export const usePatientsQuery = () => {
       }
 
       const { data, error } = await query
-        .order('name', { ascending: true });
+        .order('full_name', { ascending: true });
 
       if (error) throw error;
       return data as PatientDB[];
