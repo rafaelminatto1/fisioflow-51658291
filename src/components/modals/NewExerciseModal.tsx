@@ -21,6 +21,10 @@ const exerciseSchema = z.object({
   sets: z.number().int().positive().optional(),
   repetitions: z.number().int().positive().optional(),
   duration: z.number().int().positive().optional(),
+  indicated_pathologies: z.array(z.string()).optional(),
+  contraindicated_pathologies: z.array(z.string()).optional(),
+  body_parts: z.array(z.string()).optional(),
+  equipment: z.array(z.string()).optional(),
 });
 
 type ExerciseFormData = z.infer<typeof exerciseSchema>;
@@ -47,6 +51,10 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
       sets: undefined,
       repetitions: undefined,
       duration: undefined,
+      indicated_pathologies: [],
+      contraindicated_pathologies: [],
+      body_parts: [],
+      equipment: [],
     },
   });
 
@@ -63,6 +71,10 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
         sets: exercise.sets || undefined,
         repetitions: exercise.repetitions || undefined,
         duration: exercise.duration || undefined,
+        indicated_pathologies: exercise.indicated_pathologies || [],
+        contraindicated_pathologies: exercise.contraindicated_pathologies || [],
+        body_parts: exercise.body_parts || [],
+        equipment: exercise.equipment || [],
       });
     } else {
       form.reset({
@@ -76,6 +88,10 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
         sets: undefined,
         repetitions: undefined,
         duration: undefined,
+        indicated_pathologies: [],
+        contraindicated_pathologies: [],
+        body_parts: [],
+        equipment: [],
       });
     }
   }, [exercise, form]);
@@ -260,6 +276,90 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
                 </FormItem>
               )}
             />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="indicated_pathologies"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Patologias Indicadas (separar por vírgula)</FormLabel>
+                    <FormControl>
+                      {/* Handle string[] <-> string conversion here or in schema */}
+                      {/* Since Zod schema handles simple strings, we might need to update schema too. 
+                           For quick implementation, let's treat it as string in form and split on submit, 
+                           but matching Zod type is better. 
+                           Let's stick to simple Textarea and I will update schema next.
+                       */}
+                      <Textarea
+                        placeholder="Ex: Joelho Valgo, Artrose"
+                        {...field}
+                        value={Array.isArray(field.value) ? field.value.join(', ') : field.value || ''}
+                        onChange={e => field.onChange(e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="contraindicated_pathologies"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contraindicações (separar por vírgula)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Ex: Fratura Recente"
+                        {...field}
+                        value={Array.isArray(field.value) ? field.value.join(', ') : field.value || ''}
+                        onChange={e => field.onChange(e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="body_parts"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Partes do Corpo (separar por vírgula)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Ex: Ombro, Cotovelo"
+                        {...field}
+                        value={Array.isArray(field.value) ? field.value.join(', ') : field.value || ''}
+                        onChange={e => field.onChange(e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="equipment"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Equipamentos (separar por vírgula)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Ex: Halter, Elástico"
+                        {...field}
+                        value={Array.isArray(field.value) ? field.value.join(', ') : field.value || ''}
+                        onChange={e => field.onChange(e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="flex justify-end gap-2 pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

@@ -102,6 +102,14 @@ const Notifications = lazy(() => import("./pages/Notifications"));
 const TherapistOccupancy = lazy(() => import("./pages/TherapistOccupancy"));
 const CalendarSettings = lazy(() => import("./pages/configuracoes/CalendarSettings"));
 const PublicPrescriptionPage = lazy(() => import("./pages/prescricoes/PublicPrescriptionPage"));
+const ImageAnalysisDashboard = lazy(() => import("./components/analysis/dashboard/ImageAnalysisDashboard"));
+const DynamicCompareDetailsPage = lazy(() => import("./pages/dashboard/dinamica/DynamicCompareDetailsPage"));
+
+// Goals Admin
+const GoalProfileListPage = lazy(() => import("./pages/admin/goals/GoalProfileListPage"));
+const GoalProfileEditorPage = lazy(() => import("./pages/admin/goals/GoalProfileEditorPage"));
+
+
 
 
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
@@ -198,6 +206,10 @@ const App = () => {
                     <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
                     <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
                     <Route path="/agenda" element={<Navigate to="/schedule" replace />} />
+                    <Route path="/goals" element={<Navigate to="/cadastros/objetivos" replace />} />
+                    <Route path="/login" element={<Navigate to="/auth" replace />} />
+                    <Route path="/perfil" element={<Navigate to="/profile" replace />} />
+                    <Route path="/configuracoes" element={<Navigate to="/settings" replace />} />
                     <Route path="/schedule/settings" element={<ProtectedRoute><ScheduleSettings /></ProtectedRoute>} />
                     <Route path="/exercises" element={<ProtectedRoute><Exercises /></ProtectedRoute>} />
                     <Route path="/protocols" element={<ProtectedRoute><ProtocolsPage /></ProtectedRoute>} />
@@ -282,6 +294,16 @@ const App = () => {
                     <Route path="/computer-vision" element={<ProtectedRoute><ComputerVisionExercise patientId="current-patient" /></ProtectedRoute>} />
                     <Route path="/intelligent-reports" element={<ProtectedRoute><IntelligentReports patientId="demo-patient" patientName="Paciente Demo" /></ProtectedRoute>} />
                     <Route path="/augmented-reality" element={<ProtectedRoute><AugmentedRealityExercise patientId="current-patient" /></ProtectedRoute>} />
+
+                    {/* Image Analysis Module (NeuroPose) */}
+                    <Route path="/dashboard/imagens" element={<ProtectedRoute><ImageAnalysisDashboard /></ProtectedRoute>} />
+                    <Route path="/pacientes/:id/imagens" element={<ProtectedRoute><ImageAnalysisDashboard /></ProtectedRoute>} />
+                    <Route path="/dashboard/dinamica/:id" element={<ProtectedRoute><DynamicCompareDetailsPage /></ProtectedRoute>} />
+
+                    {/* Goals Admin */}
+                    <Route path="/admin/goals" element={<ProtectedRoute allowedRoles={['admin', 'fisioterapeuta']}><GoalProfileListPage /></ProtectedRoute>} />
+                    <Route path="/admin/goals/:id" element={<ProtectedRoute allowedRoles={['admin', 'fisioterapeuta']}><GoalProfileEditorPage /></ProtectedRoute>} />
+
 
                     {/* Catch-all route */}
                     <Route path="*" element={<NotFound />} />

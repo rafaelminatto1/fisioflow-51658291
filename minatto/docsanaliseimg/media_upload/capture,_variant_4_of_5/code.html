@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Media Upload - Physiotherapy App</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Manrope -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Theme Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem", 
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom styles for radio selection visualization */
+        .option-radio:checked + .option-card {
+            border-color: #137fec;
+            background-color: rgba(19, 127, 236, 0.05);
+        }
+        .option-radio:checked + .option-card .radio-circle {
+            border-color: #137fec;
+            background-color: #137fec;
+        }
+        .option-radio:checked + .option-card .radio-circle::after {
+            content: '';
+            display: block;
+            width: 8px;
+            height: 8px;
+            background-color: white;
+            border-radius: 50%;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-white antialiased selection:bg-primary/30">
+<div class="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden">
+<!-- Top App Bar -->
+<div class="sticky top-0 z-10 flex items-center justify-between bg-background-light dark:bg-background-dark p-4 pb-2">
+<div class="flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer text-slate-900 dark:text-white transition-colors">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</div>
+<h2 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">New Analysis</h2>
+<div class="flex size-10 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer text-slate-900 dark:text-white transition-colors">
+<span class="material-symbols-outlined text-[24px]">info</span>
+</div>
+</div>
+<!-- Scrollable Content -->
+<div class="flex-1 flex flex-col px-4 pb-24 pt-2">
+<!-- Headline & Subtitle -->
+<div class="mb-6">
+<h1 class="text-slate-900 dark:text-white tracking-tight text-[28px] font-bold leading-tight text-left pb-2">
+                    Add Media for Analysis
+                </h1>
+<p class="text-slate-500 dark:text-slate-400 text-base font-normal leading-normal">
+                    Choose the best format for your condition. Each type provides different insights for your recovery plan.
+                </p>
+</div>
+<!-- Options Grid/List -->
+<div class="flex flex-col gap-4">
+<!-- Option 1: Images -->
+<label class="relative cursor-pointer group">
+<input checked="" class="option-radio peer sr-only" name="media_type" type="radio"/>
+<div class="option-card flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1a2632] shadow-sm transition-all duration-200 hover:border-primary/50 dark:hover:border-primary/50">
+<!-- Icon/Illustration -->
+<div class="shrink-0 size-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[28px]">image</span>
+</div>
+<!-- Content -->
+<div class="flex-1 flex flex-col">
+<div class="flex justify-between items-center mb-1">
+<h3 class="text-base font-bold text-slate-900 dark:text-white">Upload Images</h3>
+<!-- Custom Radio Circle -->
+<div class="radio-circle size-5 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center transition-colors"></div>
+</div>
+<p class="text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
+                                Best for static analysis. Use for X-rays, MRI reports, or documenting specific swelling areas.
+                            </p>
+</div>
+</div>
+</label>
+<!-- Option 2: Video -->
+<label class="relative cursor-pointer group">
+<input class="option-radio peer sr-only" name="media_type" type="radio"/>
+<div class="option-card flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1a2632] shadow-sm transition-all duration-200 hover:border-primary/50 dark:hover:border-primary/50">
+<!-- Icon/Illustration -->
+<div class="shrink-0 size-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[28px]">videocam</span>
+</div>
+<!-- Content -->
+<div class="flex-1 flex flex-col">
+<div class="flex justify-between items-center mb-1">
+<h3 class="text-base font-bold text-slate-900 dark:text-white">Upload Video</h3>
+<!-- Custom Radio Circle -->
+<div class="radio-circle size-5 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center transition-colors"></div>
+</div>
+<p class="text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
+                                Best for mobility checks. Upload pre-recorded movements showing range of motion or gait.
+                            </p>
+</div>
+</div>
+</label>
+<!-- Option 3: Live Capture -->
+<label class="relative cursor-pointer group">
+<input class="option-radio peer sr-only" name="media_type" type="radio"/>
+<div class="option-card flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1a2632] shadow-sm transition-all duration-200 hover:border-primary/50 dark:hover:border-primary/50">
+<!-- Icon/Illustration -->
+<div class="shrink-0 size-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[28px]">center_focus_strong</span>
+</div>
+<!-- Content -->
+<div class="flex-1 flex flex-col">
+<div class="flex justify-between items-center mb-1">
+<h3 class="text-base font-bold text-slate-900 dark:text-white">Capture Live</h3>
+<!-- Custom Radio Circle -->
+<div class="radio-circle size-5 rounded-full border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center transition-colors"></div>
+</div>
+<p class="text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
+                                Real-time assessment. Launch the camera to perform guided exercises instantly.
+                            </p>
+</div>
+</div>
+</label>
+</div>
+<!-- Additional Help Tip -->
+<div class="mt-6 p-4 rounded-lg bg-slate-100 dark:bg-slate-800/50 flex gap-3 items-start border border-slate-200 dark:border-slate-700/50">
+<span class="material-symbols-outlined text-slate-500 dark:text-slate-400 text-[20px] mt-0.5">lightbulb</span>
+<p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+<strong>Tip:</strong> Ensure good lighting for all media types. Clear visuals help our AI provide more accurate diagnostics.
+                </p>
+</div>
+</div>
+<!-- Sticky Footer CTA -->
+<div class="fixed bottom-0 left-0 w-full p-4 bg-background-light dark:bg-background-dark/95 backdrop-blur-sm border-t border-slate-200 dark:border-slate-800">
+<button class="w-full flex cursor-pointer items-center justify-center rounded-lg h-12 bg-primary hover:bg-blue-600 text-white gap-2 text-base font-bold leading-normal tracking-[0.015em] transition-colors shadow-lg shadow-primary/20">
+<span>Proceed</span>
+<span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</body></html>

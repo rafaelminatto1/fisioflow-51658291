@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Analysis Results</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;family=Noto+Sans:wght@300..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "Noto Sans", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display antialiased">
+<div class="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden">
+<!-- Top App Bar -->
+<div class="sticky top-0 z-50 flex items-center bg-background-light/95 dark:bg-background-dark/95 backdrop-blur-sm p-4 pb-2 justify-between border-b border-gray-200 dark:border-gray-800">
+<div class="text-gray-900 dark:text-white flex size-12 shrink-0 items-center cursor-pointer hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined" style="font-size: 24px;">arrow_back_ios_new</span>
+</div>
+<h2 class="text-gray-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Analysis Results</h2>
+<div class="flex w-12 items-center justify-end">
+<button class="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 bg-transparent text-gray-900 dark:text-white gap-2 text-base font-bold leading-normal tracking-[0.015em] min-w-0 p-0 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" style="font-size: 24px;">ios_share</span>
+</button>
+</div>
+</div>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col gap-2 pb-24">
+<!-- Media Player / Viewer -->
+<div class="px-4 pt-2">
+<div class="relative w-full rounded-xl overflow-hidden shadow-lg group">
+<!-- Background Image with Overlay -->
+<div class="relative flex items-center justify-center bg-gray-200 dark:bg-gray-800 bg-cover bg-center aspect-[4/3] w-full" data-alt="Person performing squat exercise with skeletal analysis overlay lines" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAoVJFBEwp281wbEiZQz8SlW28_VyaVCZ3EAy9ubimlXbAAls89yMVHvVU5IRRMaK5DtcCDccmwrFQltdLnuNtNXmsMMQik3qHBIzFNKX4NTV5Ws_syqyIpjjn2hXNMagMXay5KeqfXaML7apRr-ExO-_EBoDYKiZWcG2cw9Ghj530iHTzeDE-0-eFeqKVh4Eu-XXTj3zl3rrDOWMFDUwQ6QE8ihEX5oRo9aZGWSMDfJVVZOlfnGfSIezlNcQImoJHUBv9Cd4dPV8U");'>
+<!-- SVG Overlay Mockup for Skeletal Tracking -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none opacity-80" viewbox="0 0 400 300">
+<!-- Example lines representing skeletal structure -->
+<path d="M 200 80 L 200 150 L 170 240" fill="none" stroke="#137fec" stroke-linecap="round" stroke-width="3"></path>
+<path d="M 200 150 L 230 240" fill="none" stroke="#137fec" stroke-linecap="round" stroke-width="3"></path>
+<path d="M 170 80 L 230 80" fill="none" stroke="#137fec" stroke-linecap="round" stroke-width="3"></path>
+<!-- Joints -->
+<circle cx="200" cy="80" fill="white" r="4"></circle>
+<circle cx="200" cy="150" fill="white" r="4"></circle>
+<circle cx="170" cy="240" fill="white" r="4"></circle>
+<circle cx="230" cy="240" fill="white" r="4"></circle>
+</svg>
+<!-- Play Button -->
+<button class="flex shrink-0 items-center justify-center rounded-full size-16 bg-black/40 text-white backdrop-blur-sm hover:bg-primary/90 hover:scale-105 transition-all">
+<span class="material-symbols-outlined" style="font-size: 32px;">play_arrow</span>
+</button>
+<!-- Angle Overlay Badge -->
+<div class="absolute top-4 right-4 bg-black/60 backdrop-blur-md rounded-lg px-3 py-1.5 flex items-center gap-2 border border-white/10">
+<span class="material-symbols-outlined text-primary text-sm">straighten</span>
+<span class="text-white text-xs font-bold font-display">Knee: 112°</span>
+</div>
+<!-- Video Controls Overlay -->
+<div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent pt-12 pb-4 px-4">
+<div class="flex items-center justify-between mb-2">
+<p class="text-white text-xs font-medium leading-normal tracking-[0.015em]">0:05 / 0:15</p>
+<button class="text-white hover:text-primary transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">fullscreen</span>
+</button>
+</div>
+<div class="flex h-1.5 w-full items-center bg-white/20 rounded-full cursor-pointer group/slider">
+<div class="h-full w-[35%] rounded-full bg-primary relative">
+<div class="absolute right-0 top-1/2 -translate-y-1/2 size-3 rounded-full bg-white shadow-sm scale-0 group-hover/slider:scale-100 transition-transform"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Timeline / Frame Scrubber -->
+<div class="px-4 py-2">
+<div class="@container">
+<div class="relative flex w-full flex-col items-start justify-between gap-2 @[480px]:flex-row @[480px]:items-center">
+<div class="flex w-full shrink-[3] items-center justify-between">
+<p class="text-gray-900 dark:text-white text-base font-bold leading-normal">Frame Analysis</p>
+<div class="flex items-center gap-2">
+<button class="text-gray-500 hover:text-primary dark:text-gray-400 transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">skip_previous</span>
+</button>
+<span class="text-primary text-sm font-bold font-mono bg-primary/10 px-2 py-0.5 rounded">Frame 45</span>
+<button class="text-gray-500 hover:text-primary dark:text-gray-400 transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">skip_next</span>
+</button>
+</div>
+</div>
+<!-- Film strip visual representation -->
+<div class="flex h-10 w-full items-center gap-1 overflow-hidden mt-2 rounded-lg opacity-60">
+<div class="h-full w-8 bg-gray-300 dark:bg-gray-700 rounded-sm shrink-0"></div>
+<div class="h-full w-8 bg-gray-300 dark:bg-gray-700 rounded-sm shrink-0"></div>
+<div class="h-full w-8 bg-gray-300 dark:bg-gray-700 rounded-sm shrink-0 border-2 border-primary"></div> <!-- Active Frame -->
+<div class="h-full w-8 bg-gray-300 dark:bg-gray-700 rounded-sm shrink-0"></div>
+<div class="h-full w-8 bg-gray-300 dark:bg-gray-700 rounded-sm shrink-0"></div>
+<div class="h-full w-8 bg-gray-300 dark:bg-gray-700 rounded-sm shrink-0"></div>
+<div class="h-full w-8 bg-gray-300 dark:bg-gray-700 rounded-sm shrink-0"></div>
+<div class="h-full w-8 bg-gray-300 dark:bg-gray-700 rounded-sm shrink-0"></div>
+<div class="h-full w-8 bg-gray-300 dark:bg-gray-700 rounded-sm shrink-0"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="h-px w-full bg-gray-200 dark:bg-gray-800 my-1"></div>
+<!-- Key Metrics Header -->
+<div class="px-4 flex items-center justify-between pt-2">
+<h3 class="text-gray-900 dark:text-white text-xl font-bold leading-tight">Key Metrics</h3>
+<button class="text-primary text-sm font-medium hover:underline">View All</button>
+</div>
+<!-- Stats Cards (Horizontal Scroll) -->
+<div class="flex overflow-x-auto gap-4 px-4 pb-4 pt-2 snap-x hide-scrollbar">
+<!-- Card 1 -->
+<div class="flex min-w-[160px] flex-col gap-3 rounded-xl p-4 bg-white dark:bg-[#1E2228] border border-gray-100 dark:border-gray-800 shadow-sm snap-start">
+<div class="flex items-center justify-between">
+<p class="text-gray-500 dark:text-gray-400 text-sm font-medium leading-normal">Cervical Tilt</p>
+<span class="material-symbols-outlined text-red-500 text-lg">warning</span>
+</div>
+<div>
+<p class="text-gray-900 dark:text-white tracking-tight text-3xl font-bold leading-tight tabular-nums">12°</p>
+<p class="text-red-500 text-xs font-bold uppercase tracking-wider mt-1">+ High Risk</p>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="flex min-w-[160px] flex-col gap-3 rounded-xl p-4 bg-white dark:bg-[#1E2228] border border-gray-100 dark:border-gray-800 shadow-sm snap-start">
+<div class="flex items-center justify-between">
+<p class="text-gray-500 dark:text-gray-400 text-sm font-medium leading-normal">Shoulder Level</p>
+<span class="material-symbols-outlined text-green-500 text-lg">check_circle</span>
+</div>
+<div>
+<p class="text-gray-900 dark:text-white tracking-tight text-3xl font-bold leading-tight tabular-nums">0°</p>
+<p class="text-green-500 text-xs font-bold uppercase tracking-wider mt-1">Optimal</p>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="flex min-w-[160px] flex-col gap-3 rounded-xl p-4 bg-white dark:bg-[#1E2228] border border-gray-100 dark:border-gray-800 shadow-sm snap-start">
+<div class="flex items-center justify-between">
+<p class="text-gray-500 dark:text-gray-400 text-sm font-medium leading-normal">Pelvic Tilt</p>
+<span class="material-symbols-outlined text-yellow-500 text-lg">remove</span>
+</div>
+<div>
+<p class="text-gray-900 dark:text-white tracking-tight text-3xl font-bold leading-tight tabular-nums">4°</p>
+<p class="text-yellow-500 text-xs font-bold uppercase tracking-wider mt-1">Normal Range</p>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="flex min-w-[160px] flex-col gap-3 rounded-xl p-4 bg-white dark:bg-[#1E2228] border border-gray-100 dark:border-gray-800 shadow-sm snap-start">
+<div class="flex items-center justify-between">
+<p class="text-gray-500 dark:text-gray-400 text-sm font-medium leading-normal">Knee Flexion</p>
+<span class="material-symbols-outlined text-primary text-lg">info</span>
+</div>
+<div>
+<p class="text-gray-900 dark:text-white tracking-tight text-3xl font-bold leading-tight tabular-nums">112°</p>
+<p class="text-primary text-xs font-bold uppercase tracking-wider mt-1">Deep</p>
+</div>
+</div>
+</div>
+<!-- Findings Accordion / Summary List -->
+<div class="px-4 flex flex-col gap-4">
+<!-- Analysis Summary -->
+<div class="bg-white dark:bg-[#1E2228] rounded-xl p-5 border border-gray-100 dark:border-gray-800">
+<div class="flex items-center gap-3 mb-3">
+<div class="bg-primary/10 p-2 rounded-lg text-primary">
+<span class="material-symbols-outlined">analytics</span>
+</div>
+<h4 class="text-gray-900 dark:text-white font-bold text-lg">Assessment Summary</h4>
+</div>
+<p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+                    Patient demonstrates slight forward head posture during the initial phase. Right shoulder elevation observed during the abduction phase, suggesting potential trapezius tightness.
+                </p>
+</div>
+<!-- Recommendations -->
+<div class="bg-white dark:bg-[#1E2228] rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800">
+<div class="p-5 flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+<div class="flex items-center gap-3">
+<div class="bg-green-500/10 p-2 rounded-lg text-green-600 dark:text-green-500">
+<span class="material-symbols-outlined">fitness_center</span>
+</div>
+<h4 class="text-gray-900 dark:text-white font-bold text-lg">Recommendations</h4>
+</div>
+<span class="material-symbols-outlined text-gray-400">expand_more</span>
+</div>
+<div class="px-5 pb-5 pt-0">
+<ul class="flex flex-col gap-3">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-sm mt-0.5">check_circle</span>
+<div>
+<p class="text-gray-900 dark:text-white text-sm font-bold">Chin Tucks</p>
+<p class="text-gray-500 dark:text-gray-400 text-xs">3 sets of 10 reps daily to correct cervical posture.</p>
+</div>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-sm mt-0.5">check_circle</span>
+<div>
+<p class="text-gray-900 dark:text-white text-sm font-bold">Scapular Retractions</p>
+<p class="text-gray-500 dark:text-gray-400 text-xs">Focus on lower trapezius activation.</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<!-- Risk Factors (Collapsed) -->
+<div class="bg-white dark:bg-[#1E2228] rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 opacity-80">
+<div class="p-5 flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+<div class="flex items-center gap-3">
+<div class="bg-red-500/10 p-2 rounded-lg text-red-500">
+<span class="material-symbols-outlined">warning</span>
+</div>
+<h4 class="text-gray-900 dark:text-white font-bold text-lg">Risk Factors</h4>
+</div>
+<span class="material-symbols-outlined text-gray-400">chevron_right</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Sticky Footer / FAB Area -->
+<div class="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background-light dark:from-background-dark via-background-light dark:via-background-dark to-transparent z-40 pb-8">
+<button class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white font-bold text-base h-14 rounded-full shadow-lg shadow-primary/25 transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined">save</span>
+            Save to Patient Record
+        </button>
+</div>
+</div>
+</body></html>

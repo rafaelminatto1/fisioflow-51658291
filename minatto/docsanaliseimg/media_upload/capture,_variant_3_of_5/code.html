@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Media Upload - Physiotherapy App</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-dark": "#1c252e",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<!-- Fonts & Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        /* Custom scrollbar hide for cleaner UI */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white antialiased h-screen overflow-hidden flex flex-col">
+<!-- Header -->
+<header class="flex-none bg-background-light dark:bg-background-dark px-4 pt-12 pb-4 flex items-center justify-between z-20">
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-2xl">arrow_back</span>
+</button>
+<h1 class="text-lg font-bold leading-tight tracking-[-0.015em]">Add Media</h1>
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+<span class="material-symbols-outlined text-2xl">help_outline</span>
+</button>
+</header>
+<!-- Tab Navigation -->
+<div class="flex-none px-4 pb-4 bg-background-light dark:bg-background-dark z-20">
+<div class="flex p-1 bg-gray-200 dark:bg-[#1c252e] rounded-lg">
+<!-- Active Tab: Upload -->
+<button class="flex-1 flex items-center justify-center py-2 px-4 bg-white dark:bg-primary rounded-[6px] shadow-sm transition-all duration-200">
+<span class="material-symbols-outlined text-sm mr-2 text-primary dark:text-white">photo_library</span>
+<span class="text-sm font-bold text-slate-900 dark:text-white">Upload</span>
+</button>
+<!-- Inactive Tab: Camera -->
+<button class="flex-1 flex items-center justify-center py-2 px-4 rounded-[6px] text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200">
+<span class="material-symbols-outlined text-sm mr-2">photo_camera</span>
+<span class="text-sm font-medium">Camera</span>
+</button>
+</div>
+</div>
+<!-- Main Content Area (Scrollable) -->
+<main class="flex-1 overflow-y-auto no-scrollbar pb-24 px-4">
+<!-- Section: Recent Scans -->
+<div class="mb-6">
+<div class="flex justify-between items-center mb-3">
+<h3 class="text-lg font-bold tracking-tight">Recent Scans</h3>
+<button class="text-primary text-sm font-semibold">See All</button>
+</div>
+<div class="grid grid-cols-3 gap-2">
+<!-- Item 1: Selected -->
+<div class="relative aspect-square group cursor-pointer">
+<div class="absolute inset-0 rounded-lg overflow-hidden border-[3px] border-primary z-10 transition-all">
+<img alt="Medical X-ray of a human joint" class="w-full h-full object-cover opacity-80 transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_drXhyaso4O2CxTX8uUye--TLwSDeg09-NHmnn0gN0yNVqtsoWcXROtUumWYL2HflOu23di3FgFRLK8V7TPbPU8b0oCmpgJGEM5QjkC4iHJH8IHGFJvaFOY96HLYUaNRdCiiIKzwZgwfhKtyAoJuViIdietI0HOYXSjn7gGdRcbGHyCPu4ksRdYYy7bNvjiVinWmn9srACmvjjwV4H9b5cVRvz_f_pUnqJ5Nrk7i_Wk_wgoXj03r3KPgUp0kRvxD3EI0bnWtc4CU"/>
+</div>
+<div class="absolute top-2 right-2 z-20 bg-primary text-white rounded-full p-[2px] shadow-sm">
+<span class="material-symbols-outlined text-[16px] block font-bold">check</span>
+</div>
+</div>
+<!-- Item 2: Selected -->
+<div class="relative aspect-square group cursor-pointer">
+<div class="absolute inset-0 rounded-lg overflow-hidden border-[3px] border-primary z-10 transition-all">
+<img alt="Close up of medical MRI scan" class="w-full h-full object-cover opacity-80 transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCCzMfOFJnX8cIYDb-zXalDfpG9qGmr3-bUC4e09yLuNTJkCe6P6Ze6sRcYtB1MtAg_-fAbKiZWMODKLPJSkdZrWFj0Zqdw4_Zef-OO61tnGeQz6jAW9ImFr-BHt99nprhzaMcdJTSpSFkmjo_-WdblJzmSoPfK1FklbY5p6Sot7IUXcuxCAypextHgTZr9ksUryxsTI-nZZejfwlCmJfegtpHvrlg8YE8iozB9cnsqbOap6ix3AJWRYK_F7TR0NVerrzFV6CnN2Wg"/>
+</div>
+<div class="absolute top-2 right-2 z-20 bg-primary text-white rounded-full p-[2px] shadow-sm">
+<span class="material-symbols-outlined text-[16px] block font-bold">check</span>
+</div>
+</div>
+<!-- Item 3: Unselected -->
+<div class="relative aspect-square group cursor-pointer">
+<div class="absolute inset-0 rounded-lg overflow-hidden border border-transparent hover:border-white/20 transition-all">
+<img alt="Person stretching leg on yoga mat" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB92Hl841cdbT3wrDnMeOdS36lL56tD0yGPKp1HeYUaFk4MiAxAgMmVdXrFSWarJqjnaljt94gbaqtI0KBCerwE6GaJbEc3uY_RtANmZd07cl7l5R8CiZEmQCNHOyAKO54bO5VLznkYA_JkXN4-tYlRnxF-euC2kH3WBopgwPgA59vFlu4rrmB-ATaiRLeWgv43GoLdAD0XhPHLUUoIB4AtBxh_g39du4o1wJ1sznvCP6rD6t8KZjBrYSOV32sxCypwWRlQJippNZ4"/>
+</div>
+<div class="absolute top-2 right-2 z-20">
+<div class="w-5 h-5 rounded-full border-[1.5px] border-white/70 bg-black/20 backdrop-blur-sm"></div>
+</div>
+</div>
+<!-- Item 4: Unselected -->
+<div class="relative aspect-square group cursor-pointer">
+<div class="absolute inset-0 rounded-lg overflow-hidden border border-transparent hover:border-white/20 transition-all">
+<img alt="Physiotherapist assisting patient with arm exercise" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsSkS2nuP6dM7A_y6lgjE6K8bUiY6z9EDcMVGy9488ZWd3xrz3Zu4xBxoeThIuCuW5JuVs_bepJxm79EWIhoyBDHw_XnavIjDD5HuQs1cYNw9KFGgyU3S3No5Xx__4Lx_JLRAahL2fGyZClt8OShE8P9xQw6voxZQ2mDk-02x8GbaCgr9DffkYU5Wkv1cW28k1giTbM9m1vsDgkoMKe8hJdfB5sYpGzsLHvK27yg_5xw4e_GFnZmJQLFU54G4lPNcUtU-D9imlZio"/>
+</div>
+<div class="absolute top-2 right-2 z-20">
+<div class="w-5 h-5 rounded-full border-[1.5px] border-white/70 bg-black/20 backdrop-blur-sm"></div>
+</div>
+</div>
+<!-- Item 5: Unselected -->
+<div class="relative aspect-square group cursor-pointer">
+<div class="absolute inset-0 rounded-lg overflow-hidden border border-transparent hover:border-white/20 transition-all">
+<img alt="Human spine anatomy model visualization" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPkrAMzfYOgYG8nvLUwpFWEej8N9hMSxtK7O2IeyK7GXdyNOFW3DflcYpvwDe1TQ252cgUmxD2oVpXe9rBsMLN8fWBnpk_n22xXqYcSj4MlQPCW8cc5_MOrJKCn2Id_Ba3wnV-K0jX6i767HqBmAiuUBenoplF4vMESNlU4wobabyhV19ESXWrFK4EAy-DfcuB9VVeiteb0j9n2vgNyOSXF7FZL8qGPN9tNZvh_AGNORkx1sl_6E6R4m4djlfxGWd6zCM6leaHg0Y"/>
+</div>
+<div class="absolute top-2 right-2 z-20">
+<div class="w-5 h-5 rounded-full border-[1.5px] border-white/70 bg-black/20 backdrop-blur-sm"></div>
+</div>
+</div>
+<!-- Item 6: Unselected -->
+<div class="relative aspect-square group cursor-pointer">
+<div class="absolute inset-0 rounded-lg overflow-hidden border border-transparent hover:border-white/20 transition-all">
+<img alt="Runner tying shoelaces before training" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRfogQkUFQiEQEcAZAlwZACZw1KLS7caPsPMIcycDRz5TLxcG6GjOcuE65EUorfvDB1XMsGYY2IJw9WTw5z-cMrvapcOXyUYerCVVB5SXiEB2lCJa9jStfU1dMGkSbh2IwGsv3Bil7x41xlnq9m7nYXKyM7N2m1bo03lp6l5ctZuseeKPp__VSuLeffnegrlqToZ5Epdg6fWAVhdv46DQXNRgawe5tM0RWESbUYdpWWWNr6I4C7Vx-zwHF7RIzbkmbacBOcCs9gnI"/>
+</div>
+<div class="absolute top-2 right-2 z-20">
+<div class="w-5 h-5 rounded-full border-[1.5px] border-white/70 bg-black/20 backdrop-blur-sm"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Section: Last Week -->
+<div>
+<div class="flex justify-between items-center mb-3">
+<h3 class="text-base font-bold text-gray-500 dark:text-gray-400">Last Week</h3>
+</div>
+<div class="grid grid-cols-3 gap-2">
+<!-- Item 7 -->
+<div class="relative aspect-square group cursor-pointer">
+<div class="absolute inset-0 rounded-lg overflow-hidden border border-transparent hover:border-white/20 transition-all">
+<img alt="Medical report on a tablet screen" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_nJ8JEXUQS1cKHBgJ_PdMZSeaSFFa4wJ4YS5-LJfHEH5CHi0HY_fEjPaMrKfwrZqBUvkhqyjCKsHYGvQbncsuZGfYTl6E9McO7xlJpacr2tRcJi9hD0NL3wxQKS3aEM2jfa_5zMm8ApDE6LZkqWbnPPFnZiXl3CnWWiDfYo2x13Q5OXMgoFmnC8HMkqFy7xSb_-YBOh4FhKAzYemtc3UQkphb4iBXB-Jd7tqFY0FgsL8bxHfeykbAULKAoadE5mhs_ZSK9ssLCVY"/>
+</div>
+<div class="absolute top-2 right-2 z-20">
+<div class="w-5 h-5 rounded-full border-[1.5px] border-white/70 bg-black/20 backdrop-blur-sm"></div>
+</div>
+</div>
+<!-- Item 8 -->
+<div class="relative aspect-square group cursor-pointer">
+<div class="absolute inset-0 rounded-lg overflow-hidden border border-transparent hover:border-white/20 transition-all">
+<img alt="Doctor holding an X-ray film" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3BQxIsrumpn8wLowyNOoreghrKNyQUMQtEOeufdhiyZuBo3zfl9Im_oQArfX56EDwb80LqgHu-gQTz3bs2w2hrOqFQMPRrGt7AyvlQgqHpCBOPMGZYStgjEFDe4cHO8-cekQAflQfEFbil4IAaweCPwL0ruGs1xgDtJmXKALZB49JGMy-wpULLqTfihe-mVuljFiOgzbqawuscNEy-wnQMgzObr1pqv4gTWW33EIEInh6QqXnLYibvK1H10HVXDMzs3GpxdYAzbI"/>
+</div>
+<div class="absolute top-2 right-2 z-20">
+<div class="w-5 h-5 rounded-full border-[1.5px] border-white/70 bg-black/20 backdrop-blur-sm"></div>
+</div>
+</div>
+<!-- Item 9 -->
+<div class="relative aspect-square group cursor-pointer">
+<div class="absolute inset-0 rounded-lg overflow-hidden border border-transparent hover:border-white/20 transition-all">
+<img alt="Ultrasound scan of muscle tissue" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCc_-B8iHeLNumFX1XARC9MZXRKjwrLfcl_fDFVvdUUzqVVXJUvRAhYspHT2aoVoCAHb01Kv0KeQ_bWRQCTBHpUbeAUrVwI5iTofghT3E2xnv78UAicKcZMX4beKJbNgPi5ja46fB97oSCxATexneIrR9kAmpdKtjx_rtCJVVNmusJyfPGgi0LwPR9bME1V_ftRyUhU2gLKLeKZD1aCg2DTQnTof0O5tdeCkM8R6dxvYZtQ_KHXwKY7n4fxBO-Pk6VFfGEeyVENvYI"/>
+</div>
+<div class="absolute top-2 right-2 z-20">
+<div class="w-5 h-5 rounded-full border-[1.5px] border-white/70 bg-black/20 backdrop-blur-sm"></div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Sticky Footer -->
+<footer class="flex-none fixed bottom-0 left-0 w-full p-4 bg-background-light dark:bg-background-dark/95 border-t border-gray-200 dark:border-white/10 backdrop-blur-md z-30">
+<button class="w-full h-12 flex items-center justify-center bg-primary hover:bg-blue-600 text-white rounded-lg shadow-lg shadow-blue-900/20 active:scale-[0.98] transition-all">
+<span class="text-base font-bold tracking-[0.015em]">Proceed to Analysis (2)</span>
+<span class="material-symbols-outlined ml-2 text-[20px]">arrow_forward</span>
+</button>
+<div class="h-1 mt-2 mx-auto w-1/3 bg-gray-300 dark:bg-gray-700 rounded-full"></div> <!-- Home Indicator Simulation -->
+</footer>
+</body></html>

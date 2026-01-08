@@ -9,7 +9,8 @@ export type ClinicalFieldType =
     | 'escala' // Added support for scale
     | 'data' // Added support for date
     | 'hora' // Added support for time
-    | 'info'; // Added support for info text
+    | 'info' // Added support for info text
+    | 'numero'; // Added support for numeric input
 
 export interface EvaluationForm {
     id: string;

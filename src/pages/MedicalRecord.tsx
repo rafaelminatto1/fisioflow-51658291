@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,10 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { 
-  FileText, 
-  Plus, 
-  Search, 
+import {
+  FileText,
+  Plus,
+  Search,
   Filter,
   User,
   Calendar,
@@ -26,8 +26,18 @@ import {
   Edit,
   Eye,
   Download,
-  X
+  X,
+  Watch,
+  Share2,
+  FileStack,
+  Microscope
 } from 'lucide-react';
+import { MedicalRequestsTab } from '@/components/patient/MedicalRequestsTab';
+import { PatientExamsTab } from '@/components/patient/PatientExamsTab';
+import { WearablesData } from '@/components/patient/WearablesData';
+import { NewPrescriptionModal } from '@/components/prescriptions/NewPrescriptionModal';
+import { usePrescriptions } from '@/hooks/usePrescriptions';
+import { generatePrescriptionPDF } from '@/utils/pdfGenerator';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -38,6 +48,10 @@ const MedicalRecord = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [viewingRecord, setViewingRecord] = useState<typeof medicalRecords[0] | null>(null);
   const [editingRecord, setEditingRecord] = useState<typeof medicalRecords[0] | null>(null);
+  const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
+
+  // Load prescriptions for selected patient
+  const { prescriptions, deletePrescription } = usePrescriptions(selectedPatient || undefined);
 
   // Load patients from Supabase
   const { data: patients = [], isLoading: patientsLoading } = useQuery({
@@ -47,7 +61,7 @@ const MedicalRecord = () => {
         .from('patients')
         .select('id, name, observations')
         .order('name');
-      
+
       if (error) throw error;
       return data.map(p => ({
         id: p.id,
@@ -61,8 +75,10 @@ const MedicalRecord = () => {
     { value: 'anamnesis', label: 'Anamnese', icon: ClipboardList },
     { value: 'evolution', label: 'Evolução', icon: Activity },
     { value: 'assessment', label: 'Avaliação', icon: Stethoscope },
-    { value: 'exam', label: 'Exame', icon: Heart },
+    { value: 'exam', label: 'Exame', icon: Microscope },
     { value: 'prescription', label: 'Prescrição', icon: FileText },
+    { value: 'medical-requests', label: 'Pedidos Médicos', icon: FileStack },
+    { value: 'wearables', label: 'Wearables', icon: Watch },
   ];
 
   const medicalRecords = [
@@ -183,7 +199,7 @@ const MedicalRecord = () => {
               <Filter className="w-4 h-4 mr-2" />
               Filtros
             </Button>
-            <Button 
+            <Button
               className="bg-gradient-primary hover:bg-gradient-primary/90 shadow-medical"
               onClick={() => setIsEditing(true)}
             >
@@ -210,16 +226,15 @@ const MedicalRecord = () => {
                   className="pl-10"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 {patients.map((patient) => (
                   <div
                     key={patient.id}
-                    className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                      selectedPatient === patient.id 
-                        ? 'bg-primary/10 border-primary/20' 
-                        : 'hover:bg-muted/50'
-                    }`}
+                    className={`p-3 rounded-lg border cursor-pointer transition-colors ${selectedPatient === patient.id
+                      ? 'bg-primary/10 border-primary/20'
+                      : 'hover:bg-muted/50'
+                      }`}
                     onClick={() => setSelectedPatient(patient.id)}
                   >
                     <p className="font-medium">{patient.name}</p>
@@ -285,7 +300,7 @@ const MedicalRecord = () => {
                               <Textarea
                                 placeholder="Descreva a queixa principal do paciente..."
                                 value={recordForm.chiefComplaint}
-                                onChange={(e) => setRecordForm({...recordForm, chiefComplaint: e.target.value})}
+                                onChange={(e) => setRecordForm({ ...recordForm, chiefComplaint: e.target.value })}
                                 rows={3}
                               />
                             </div>
@@ -295,7 +310,7 @@ const MedicalRecord = () => {
                               <Textarea
                                 placeholder="História detalhada da condição atual..."
                                 value={recordForm.currentHistory}
-                                onChange={(e) => setRecordForm({...recordForm, currentHistory: e.target.value})}
+                                onChange={(e) => setRecordForm({ ...recordForm, currentHistory: e.target.value })}
                                 rows={4}
                               />
                             </div>
@@ -307,8 +322,8 @@ const MedicalRecord = () => {
                                   placeholder="120/80 mmHg"
                                   value={recordForm.vitalSigns.bloodPressure}
                                   onChange={(e) => setRecordForm({
-                                    ...recordForm, 
-                                    vitalSigns: {...recordForm.vitalSigns, bloodPressure: e.target.value}
+                                    ...recordForm,
+                                    vitalSigns: { ...recordForm.vitalSigns, bloodPressure: e.target.value }
                                   })}
                                 />
                               </div>
@@ -319,8 +334,8 @@ const MedicalRecord = () => {
                                   placeholder="72 bpm"
                                   value={recordForm.vitalSigns.heartRate}
                                   onChange={(e) => setRecordForm({
-                                    ...recordForm, 
-                                    vitalSigns: {...recordForm.vitalSigns, heartRate: e.target.value}
+                                    ...recordForm,
+                                    vitalSigns: { ...recordForm.vitalSigns, heartRate: e.target.value }
                                   })}
                                 />
                               </div>
@@ -331,8 +346,8 @@ const MedicalRecord = () => {
                                   placeholder="36.5°C"
                                   value={recordForm.vitalSigns.temperature}
                                   onChange={(e) => setRecordForm({
-                                    ...recordForm, 
-                                    vitalSigns: {...recordForm.vitalSigns, temperature: e.target.value}
+                                    ...recordForm,
+                                    vitalSigns: { ...recordForm.vitalSigns, temperature: e.target.value }
                                   })}
                                 />
                               </div>
@@ -343,8 +358,8 @@ const MedicalRecord = () => {
                                   placeholder="16 ipm"
                                   value={recordForm.vitalSigns.respiratoryRate}
                                   onChange={(e) => setRecordForm({
-                                    ...recordForm, 
-                                    vitalSigns: {...recordForm.vitalSigns, respiratoryRate: e.target.value}
+                                    ...recordForm,
+                                    vitalSigns: { ...recordForm.vitalSigns, respiratoryRate: e.target.value }
                                   })}
                                 />
                               </div>
@@ -359,7 +374,7 @@ const MedicalRecord = () => {
                               <Textarea
                                 placeholder="Descreva a evolução do paciente..."
                                 value={recordForm.content}
-                                onChange={(e) => setRecordForm({...recordForm, content: e.target.value})}
+                                onChange={(e) => setRecordForm({ ...recordForm, content: e.target.value })}
                                 rows={6}
                               />
                             </div>
@@ -381,7 +396,7 @@ const MedicalRecord = () => {
                               <Textarea
                                 placeholder="Achados do exame físico..."
                                 value={recordForm.physicalExam}
-                                onChange={(e) => setRecordForm({...recordForm, physicalExam: e.target.value})}
+                                onChange={(e) => setRecordForm({ ...recordForm, physicalExam: e.target.value })}
                                 rows={5}
                               />
                             </div>
@@ -391,7 +406,7 @@ const MedicalRecord = () => {
                               <Input
                                 placeholder="Diagnóstico principal"
                                 value={recordForm.diagnosis}
-                                onChange={(e) => setRecordForm({...recordForm, diagnosis: e.target.value})}
+                                onChange={(e) => setRecordForm({ ...recordForm, diagnosis: e.target.value })}
                               />
                             </div>
 
@@ -400,7 +415,7 @@ const MedicalRecord = () => {
                               <Textarea
                                 placeholder="Plano de tratamento proposto..."
                                 value={recordForm.treatmentPlan}
-                                onChange={(e) => setRecordForm({...recordForm, treatmentPlan: e.target.value})}
+                                onChange={(e) => setRecordForm({ ...recordForm, treatmentPlan: e.target.value })}
                                 rows={4}
                               />
                             </div>
@@ -408,23 +423,107 @@ const MedicalRecord = () => {
                         </TabsContent>
 
                         <TabsContent value="exam" className="space-y-6">
-                          <div className="text-center py-12">
-                            <Stethoscope className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                            <h3 className="text-lg font-semibold mb-2">Exames em desenvolvimento</h3>
-                            <p className="text-muted-foreground">
-                              O módulo de exames será implementado na próxima atualização
-                            </p>
-                          </div>
+                          <PatientExamsTab patientId={selectedPatient} />
                         </TabsContent>
 
                         <TabsContent value="prescription" className="space-y-6">
-                          <div className="text-center py-12">
-                            <FileText className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                            <h3 className="text-lg font-semibold mb-2">Prescrições em desenvolvimento</h3>
-                            <p className="text-muted-foreground">
-                              O módulo de prescrições será implementado na próxima atualização
-                            </p>
+                          <div className="flex justify-between items-center">
+                            <h3 className="text-lg font-semibold">Prescrições do Paciente</h3>
+                            <Button onClick={() => setIsPrescriptionModalOpen(true)}>
+                              <Plus className="w-4 h-4 mr-2" />
+                              Nova Prescrição
+                            </Button>
                           </div>
+
+                          {prescriptions.length === 0 ? (
+                            <div className="text-center py-12 bg-muted/30 rounded-lg">
+                              <FileText className="w-16 h-16 mx-auto text-muted-foreground mb-4 opacity-50" />
+                              <h3 className="text-lg font-semibold mb-2">Nenhuma prescrição encontrada</h3>
+                              <p className="text-muted-foreground">
+                                Crie a primeira prescrição de exercícios para este paciente.
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="grid gap-4">
+                              {prescriptions.map((prescription) => (
+                                <Card key={prescription.id} className="hover:shadow-md transition-shadow">
+                                  <CardHeader className="flex flex-row items-start justify-between pb-2">
+                                    <div>
+                                      <CardTitle className="text-base font-semibold">
+                                        {prescription.title}
+                                      </CardTitle>
+                                      <CardDescription>
+                                        Criado em {format(new Date(prescription.created_at), 'dd/MM/yyyy')} •
+                                        Válido até {prescription.valid_until && format(new Date(prescription.valid_until), 'dd/MM/yyyy')}
+                                      </CardDescription>
+                                    </div>
+                                    <Badge variant={prescription.status === 'ativo' ? 'default' : 'secondary'}>
+                                      {prescription.status}
+                                    </Badge>
+                                  </CardHeader>
+                                  <CardContent>
+                                    <div className="space-y-2">
+                                      <div className="flex gap-2 text-sm text-muted-foreground">
+                                        <Badge variant="outline">{prescription.exercises?.length || 0} exercícios</Badge>
+                                        <Badge variant="outline">{prescription.view_count} visualizações</Badge>
+                                      </div>
+                                      <div className="flex gap-2 mt-4">
+                                        <Button variant="outline" size="sm" onClick={() => window.open(`/prescription/${prescription.qr_code}`, '_blank')}>
+                                          <Eye className="w-4 h-4 mr-2" />
+                                          Visualizar
+                                        </Button>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => generatePrescriptionPDF(prescription)}
+                                        >
+                                          <Download className="w-4 h-4 mr-2" />
+                                          PDF
+                                        </Button>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => {
+                                            const url = `${window.location.origin}/prescription/${prescription.qr_code}`;
+                                            if (navigator.share) {
+                                              navigator.share({
+                                                title: prescription.title,
+                                                text: 'Acesse sua prescrição de exercícios:',
+                                                url: url
+                                              }).catch(console.error);
+                                            } else {
+                                              navigator.clipboard.writeText(url);
+                                              toast.success('Link copiado!');
+                                            }
+                                          }}
+                                        >
+                                          <Share2 className="w-4 h-4 mr-2" />
+                                          Compartilhar
+                                        </Button>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="text-destructive hover:text-destructive"
+                                          onClick={() => deletePrescription(prescription.id)}
+                                        >
+                                          <X className="w-4 h-4 mr-2" />
+                                          Excluir
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              ))}
+                            </div>
+                          )}
+                        </TabsContent>
+
+                        <TabsContent value="wearables" className="space-y-6">
+                          <WearablesData patientId={selectedPatient} />
+                        </TabsContent>
+
+                        <TabsContent value="medical-requests" className="space-y-6">
+                          <MedicalRequestsTab patientId={selectedPatient} />
                         </TabsContent>
                       </Tabs>
 
@@ -556,6 +655,14 @@ const MedicalRecord = () => {
           </div>
         </DialogContent>
       </Dialog>
+      {selectedPatient && (
+        <NewPrescriptionModal
+          open={isPrescriptionModalOpen}
+          onOpenChange={setIsPrescriptionModalOpen}
+          patientId={selectedPatient}
+          patientName={patients.find(p => p.id === selectedPatient)?.name || ''}
+        />
+      )}
     </MainLayout>
   );
 };

@@ -20,6 +20,7 @@ import { GoalsTracker } from './GoalsTracker';
 import { ConductReplication } from './ConductReplication';
 import { MedicalReportSuggestions } from './MedicalReportSuggestions';
 import { MandatoryTestAlertService, type AlertCheckResult } from '@/lib/services/mandatoryTestAlertService';
+import { SessionExercisesPanel, type SessionExercise } from './SessionExercisesPanel';
 
 interface SessionEvolutionContainerProps {
   appointmentId?: string;
@@ -38,21 +39,21 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   const navigate = useNavigate();
   const { toast } = useToast();
   const { currentOrganization } = useOrganizations();
-  
+
   const appointmentId = propAppointmentId || params.appointmentId;
   const [patientId, setPatientId] = useState(propPatientId || '');
-  
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [patient, setPatient] = useState<any>(null);
   const [appointment, setAppointment] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('evolution');
-  
+
   // Patient data
   const [surgeries, setSurgeries] = useState<any[]>([]);
   const [pathologies, setPathologies] = useState<any[]>([]);
   const [goals, setGoals] = useState<any[]>([]);
-  
+
   // SOAP Form State
   const [soapData, setSoapData] = useState({
     subjective: '',
@@ -60,12 +61,15 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
     assessment: '',
     plan: ''
   });
-  
+
+  // Exercises State
+  const [sessionExercises, setSessionExercises] = useState<SessionExercise[]>([]);
+
   // Mandatory Tests State
   const [mandatoryTestsResult, setMandatoryTestsResult] = useState<AlertCheckResult | null>(null);
   const [testsCompleted, setTestsCompleted] = useState<string[]>([]);
   const [showMandatoryAlert, setShowMandatoryAlert] = useState(false);
-  
+
   // Session number for test frequency
   const [sessionNumber, setSessionNumber] = useState(1);
 
@@ -77,7 +81,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
     setIsLoading(true);
     try {
       let currentPatientId = propPatientId || '';
-      
+
       // Load appointment data
       if (appointmentId) {
         const { data: appointmentData, error: appointmentError } = await supabase
@@ -90,18 +94,21 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
           .single();
 
         if (appointmentError) throw appointmentError;
-        
+
         setAppointment(appointmentData);
         setPatient(appointmentData.patients);
         currentPatientId = appointmentData.patient_id;
         setPatientId(currentPatientId);
-        
+
         // Load existing SOAP if any
         if (appointmentData.notes) {
           try {
             const notes = JSON.parse(appointmentData.notes);
             if (notes.soap) {
               setSoapData(notes.soap);
+            }
+            if (notes.exercises) {
+              setSessionExercises(notes.exercises);
             }
           } catch {
             // Notes is plain text
@@ -128,7 +135,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
           .select('*', { count: 'exact', head: true })
           .eq('patient_id', currentPatientId)
           .eq('status', 'Realizado');
-        
+
         setSessionNumber((count || 0) + 1);
 
         // Load surgeries
@@ -137,7 +144,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
           .select('*')
           .eq('patient_id', currentPatientId)
           .order('surgery_date', { ascending: false });
-        
+
         setSurgeries(surgeryData || []);
 
         // Load pathologies
@@ -145,7 +152,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
           .from('patient_pathologies')
           .select('*')
           .eq('patient_id', currentPatientId);
-        
+
         setPathologies(pathologyData || []);
 
         // Load goals
@@ -153,7 +160,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
           .from('patient_goals')
           .select('*')
           .eq('patient_id', currentPatientId);
-        
+
         setGoals(goalsData || []);
 
         // Check mandatory tests
@@ -219,7 +226,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
 
   const handleRegisterException = async (testName: string, reason: string) => {
     if (!patientId || !appointmentId) return;
-    
+
     await MandatoryTestAlertService.registerException(patientId, appointmentId, testName, reason);
     handleTestCompleted(testName);
   };
@@ -282,9 +289,60 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
         .select()
         .single();
 
+      if (soapData && soapRecord) {
+        // Also update the note created in treatment_session if needed or just rely on appointment linkage
+      }
+
       if (soapError) {
         logger.error('Erro ao salvar registro SOAP', soapError, 'SessionEvolutionContainer');
         throw soapError;
+      }
+
+      // Save to treatment_sessions (Exercises Performed)
+      // First, check if a session already exists for this appointment to avoid duplicates
+      let existingSessionId = null;
+      if (appointmentId) {
+        const { data: existingSession } = await supabase
+          .from('treatment_sessions')
+          .select('id')
+          .eq('appointment_id', appointmentId)
+          .single();
+        if (existingSession) existingSessionId = existingSession.id;
+      }
+
+      const sessionData = {
+        patient_id: patientId,
+        therapist_id: user.id,
+        appointment_id: appointmentId || null,
+        session_date: new Date().toISOString(),
+        session_type: 'treatment',
+        // pain_level_before/after could be gathered from a form, keeping default 0 for now
+        pain_level_before: 0,
+        pain_level_after: 0,
+        functional_score_before: 0,
+        functional_score_after: 0,
+        exercises_performed: sessionExercises,
+        observations: soapData.assessment,
+        status: 'completed',
+        created_by: user.id
+      };
+
+      let sessionError;
+      if (existingSessionId) {
+        const { error } = await supabase
+          .from('treatment_sessions')
+          .update(sessionData)
+          .eq('id', existingSessionId);
+        sessionError = error;
+      } else {
+        const { error } = await supabase
+          .from('treatment_sessions')
+          .insert(sessionData);
+        sessionError = error;
+      }
+
+      if (sessionError) {
+        console.warn('Error saving treatment_sessions:', sessionError);
       }
 
       // Update appointment status
@@ -293,7 +351,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
           .from('appointments')
           .update({
             status: 'Realizado',
-            notes: JSON.stringify({ soap: soapData, soapRecordId: soapRecord.id })
+            notes: JSON.stringify({ soap: soapData, soapRecordId: soapRecord.id, exercises: sessionExercises })
           })
           .eq('id', appointmentId)
           .eq('organization_id', currentOrganization.id); // Garantir que só atualiza da própria organização
@@ -318,9 +376,9 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
       }
     } catch (error: any) {
       logger.error('Erro ao salvar sessão', error, 'SessionEvolutionContainer');
-      
+
       let errorMessage = 'Não foi possível salvar a evolução.';
-      
+
       if (error?.code === '42501') {
         errorMessage = 'Você não tem permissão para salvar evoluções.';
       } else if (error?.code === '23503') {
@@ -357,11 +415,11 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
     );
   }
 
-  const containerClass = mode === 'modal' 
-    ? 'fixed inset-0 z-50 bg-background' 
-    : mode === 'embedded' 
-    ? 'w-full h-full' 
-    : 'min-h-screen bg-background';
+  const containerClass = mode === 'modal'
+    ? 'fixed inset-0 z-50 bg-background'
+    : mode === 'embedded'
+      ? 'w-full h-full'
+      : 'min-h-screen bg-background';
 
   return (
     <div className={containerClass}>
@@ -383,7 +441,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
               )}
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2">
             {mandatoryTestsResult && !mandatoryTestsResult.canSave && (
               <div className="flex items-center gap-2 text-destructive text-sm">
@@ -443,7 +501,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
                   onSelectConduct={handleSelectConduct}
                 />
               )}
-              
+
               {/* Session History */}
               {patientId && (
                 <SessionHistoryPanel
@@ -451,7 +509,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
                   onReplicateConduct={handleReplicateConduct}
                 />
               )}
-              
+
               {/* Surgery Timeline */}
               {surgeries.length > 0 && (
                 <SurgeryTimeline surgeries={surgeries} />
@@ -467,10 +525,18 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="w-full">
                   <TabsTrigger value="evolution" className="flex-1">Evolução</TabsTrigger>
+                  <TabsTrigger value="exercises" className="flex-1">Exercícios</TabsTrigger>
                   <TabsTrigger value="pathologies" className="flex-1">Patologias</TabsTrigger>
                   <TabsTrigger value="insights" className="flex-1">Insights</TabsTrigger>
                 </TabsList>
-                
+
+                <TabsContent value="exercises" className="mt-4">
+                  <SessionExercisesPanel
+                    exercises={sessionExercises}
+                    onChange={setSessionExercises}
+                  />
+                </TabsContent>
+
                 <TabsContent value="evolution" className="mt-4">
                   {patientId && (
                     <TestEvolutionPanel
@@ -479,7 +545,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
                     />
                   )}
                 </TabsContent>
-                
+
                 <TabsContent value="pathologies" className="mt-4">
                   {pathologies.length > 0 ? (
                     <PathologyStatus pathologies={pathologies} />
@@ -489,7 +555,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
                     </div>
                   )}
                 </TabsContent>
-                
+
                 <TabsContent value="insights" className="mt-4">
                   {patientId && (
                     <MedicalReportSuggestions patientId={patientId} />

@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  Play, Search, Edit, Trash2, Heart, Dumbbell, 
+import {
+  Play, Search, Edit, Trash2, Heart, Dumbbell,
   Video, Clock, Repeat, LayoutGrid, List, VideoOff,
   Filter, SortAsc, Eye, MoreVertical, Sparkles
 } from 'lucide-react';
@@ -64,13 +64,13 @@ const categoryColors: Record<string, string> = {
   'Propriocepção': 'bg-indigo-500/10 text-indigo-600 border-indigo-500/30',
 };
 
-function ExerciseCard({ 
-  exercise, 
-  isFavorite, 
-  onToggleFavorite, 
-  onView, 
-  onEdit, 
-  onDelete 
+function ExerciseCard({
+  exercise,
+  isFavorite,
+  onToggleFavorite,
+  onView,
+  onEdit,
+  onDelete
 }: {
   exercise: Exercise;
   isFavorite: boolean;
@@ -87,8 +87,8 @@ function ExerciseCard({
       {/* Image Section */}
       <div className="relative h-44 bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
         {exercise.image_url ? (
-          <img 
-            src={exercise.image_url} 
+          <img
+            src={exercise.image_url}
             alt={exercise.name}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
@@ -99,10 +99,10 @@ function ExerciseCard({
             </div>
           </div>
         )}
-        
+
         {/* Overlay Gradient */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        
+
         {/* Top Badges */}
         <div className="absolute top-3 left-3 right-3 flex items-start justify-between">
           <Button
@@ -119,7 +119,7 @@ function ExerciseCard({
           >
             <Heart className={cn("h-4 w-4 transition-all", isFavorite && "fill-current scale-110")} />
           </Button>
-          
+
           <div className="flex gap-2">
             {exercise.video_url ? (
               <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg gap-1">
@@ -137,7 +137,7 @@ function ExerciseCard({
 
         {/* Quick View on Hover */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
-          <Button 
+          <Button
             onClick={onView}
             size="lg"
             className="shadow-2xl gap-2 bg-white/95 text-foreground hover:bg-white"
@@ -169,8 +169,8 @@ function ExerciseCard({
             </Badge>
           )}
           {exercise.difficulty && diffConfig && (
-            <Badge 
-              variant="outline" 
+            <Badge
+              variant="outline"
               className={cn("text-xs font-medium", diffConfig.color, diffConfig.bg, diffConfig.border)}
             >
               {exercise.difficulty}
@@ -239,13 +239,13 @@ function ExerciseCard({
   );
 }
 
-const ExerciseListItem = React.memo(function ExerciseListItem({ 
-  exercise, 
-  isFavorite, 
-  onToggleFavorite, 
-  onView, 
-  onEdit, 
-  onDelete 
+const ExerciseListItem = React.memo(function ExerciseListItem({
+  exercise,
+  isFavorite,
+  onToggleFavorite,
+  onView,
+  onEdit,
+  onDelete
 }: {
   exercise: Exercise;
   isFavorite: boolean;
@@ -263,8 +263,8 @@ const ExerciseListItem = React.memo(function ExerciseListItem({
         {/* Thumbnail */}
         <div className="h-16 w-16 flex-shrink-0 rounded-xl overflow-hidden bg-gradient-to-br from-muted to-muted/50">
           {exercise.image_url ? (
-            <img 
-              src={exercise.image_url} 
+            <img
+              src={exercise.image_url}
               alt={exercise.name}
               className="w-full h-full object-cover"
             />
@@ -295,8 +295,8 @@ const ExerciseListItem = React.memo(function ExerciseListItem({
               </Badge>
             )}
             {exercise.difficulty && diffConfig && (
-              <Badge 
-                variant="outline" 
+              <Badge
+                variant="outline"
                 className={cn("text-xs", diffConfig.color, diffConfig.bg, diffConfig.border)}
               >
                 {exercise.difficulty}
@@ -354,39 +354,61 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise }: ExerciseLi
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
+  const [selectedEquipment, setSelectedEquipment] = useState<string>('all');
+  const [selectedPathology, setSelectedPathology] = useState<string>('all');
+  const [selectedBodyPart, setSelectedBodyPart] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [activeFilter, setActiveFilter] = useState<'all' | 'favorites' | 'no-video'>('all');
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [viewExercise, setViewExercise] = useState<Exercise | null>(null);
-  
+
   const { exercises, loading, deleteExercise, isDeleting } = useExercises();
   const { isFavorite, toggleFavorite } = useExerciseFavorites();
 
-  const categories = useMemo(() => 
+  const categories = useMemo(() =>
     ['all', ...Array.from(new Set(exercises.map(e => e.category).filter(Boolean)))],
     [exercises]
   );
-  
-  const difficulties = useMemo(() => 
+
+  const difficulties = useMemo(() =>
     ['all', ...Array.from(new Set(exercises.map(e => e.difficulty).filter(Boolean)))],
+    [exercises]
+  );
+
+  const equipments = useMemo(() =>
+    ['all', ...Array.from(new Set(exercises.flatMap(e => e.equipment || []).filter(Boolean)))],
+    [exercises]
+  );
+
+  const pathologies = useMemo(() =>
+    ['all', ...Array.from(new Set(exercises.flatMap(e => e.indicated_pathologies || []).filter(Boolean)))],
+    [exercises]
+  );
+
+  const bodyParts = useMemo(() =>
+    ['all', ...Array.from(new Set(exercises.flatMap(e => e.body_parts || []).filter(Boolean)))],
     [exercises]
   );
 
   const filteredExercises = useMemo(() => {
     return exercises.filter(ex => {
-      const matchesSearch = searchTerm === '' || 
+      const matchesSearch = searchTerm === '' ||
         ex.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         ex.description?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === 'all' || ex.category === selectedCategory;
       const matchesDifficulty = selectedDifficulty === 'all' || ex.difficulty === selectedDifficulty;
-      
+
+      const matchesEquipment = selectedEquipment === 'all' || ex.equipment?.includes(selectedEquipment);
+      const matchesPathology = selectedPathology === 'all' || ex.indicated_pathologies?.includes(selectedPathology);
+      const matchesBodyPart = selectedBodyPart === 'all' || ex.body_parts?.includes(selectedBodyPart);
+
       let matchesFilter = true;
       if (activeFilter === 'favorites') matchesFilter = isFavorite(ex.id);
       if (activeFilter === 'no-video') matchesFilter = !ex.video_url;
-      
-      return matchesSearch && matchesCategory && matchesDifficulty && matchesFilter;
+
+      return matchesSearch && matchesCategory && matchesDifficulty && matchesEquipment && matchesPathology && matchesBodyPart && matchesFilter;
     });
-  }, [exercises, searchTerm, selectedCategory, selectedDifficulty, activeFilter, isFavorite]);
+  }, [exercises, searchTerm, selectedCategory, selectedDifficulty, selectedEquipment, selectedPathology, selectedBodyPart, activeFilter, isFavorite]);
 
   const exercisesWithoutVideo = exercises.filter(ex => !ex.video_url);
   const favoritesCount = exercises.filter(ex => isFavorite(ex.id)).length;
@@ -440,27 +462,69 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise }: ExerciseLi
             />
           </div>
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-full sm:w-[180px] h-11">
+            <SelectTrigger className="w-full sm:w-[140px] h-11">
               <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
               <SelectValue placeholder="Categoria" />
             </SelectTrigger>
             <SelectContent>
               {categories.map((category) => (
-                <SelectItem key={category} value={category}>
+                <SelectItem key={category} value={category as string}>
                   {category === 'all' ? 'Todas categorias' : category}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
-            <SelectTrigger className="w-full sm:w-[180px] h-11">
+            <SelectTrigger className="w-full sm:w-[140px] h-11">
               <SortAsc className="h-4 w-4 mr-2 text-muted-foreground" />
               <SelectValue placeholder="Dificuldade" />
             </SelectTrigger>
             <SelectContent>
               {difficulties.map((diff) => (
-                <SelectItem key={diff} value={diff}>
+                <SelectItem key={diff} value={diff as string}>
                   {diff === 'all' ? 'Todas dificuldades' : diff}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedEquipment} onValueChange={setSelectedEquipment}>
+            <SelectTrigger className="w-full sm:w-[140px] h-11">
+              <Dumbbell className="h-4 w-4 mr-2 text-muted-foreground" />
+              <SelectValue placeholder="Equipamento" />
+            </SelectTrigger>
+            <SelectContent>
+              {equipments.map((item) => (
+                <SelectItem key={item} value={item as string}>
+                  {item === 'all' ? 'Todos equip.' : item}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Select value={selectedPathology} onValueChange={setSelectedPathology}>
+            <SelectTrigger className="w-full sm:w-[200px] h-11">
+              <Heart className="h-4 w-4 mr-2 text-muted-foreground" />
+              <SelectValue placeholder="Patologia Indicada" />
+            </SelectTrigger>
+            <SelectContent>
+              {pathologies.map((item) => (
+                <SelectItem key={item} value={item as string}>
+                  {item === 'all' ? 'Todas patologias' : item}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedBodyPart} onValueChange={setSelectedBodyPart}>
+            <SelectTrigger className="w-full sm:w-[160px] h-11">
+              <Sparkles className="h-4 w-4 mr-2 text-muted-foreground" />
+              <SelectValue placeholder="Parte do Corpo" />
+            </SelectTrigger>
+            <SelectContent>
+              {bodyParts.map((item) => (
+                <SelectItem key={item} value={item as string}>
+                  {item === 'all' ? 'Todas partes' : item}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -498,7 +562,7 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise }: ExerciseLi
               Sem Vídeo ({exercisesWithoutVideo.length})
             </Button>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground hidden sm:block">
               {filteredExercises.length} resultado{filteredExercises.length !== 1 ? 's' : ''}

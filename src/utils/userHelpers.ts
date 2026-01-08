@@ -11,9 +11,18 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export async function getUserOrganizationId(): Promise<string | null> {
   const { data: { user } } = await supabase.auth.getUser();
-  
+
   if (!user) {
     throw new Error('Usuário não autenticado');
+  }
+
+  // Validação explícita de UUID para evitar erro 400 no Supabase
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(user.id)) {
+    console.error('CRITICAL: Malformed User ID detected (pre-check):', user.id);
+    await supabase.auth.signOut();
+    window.location.reload();
+    throw new Error('Sessão inválida: ID de usuário malformado');
   }
 
   const { data: profile, error } = await supabase
@@ -23,6 +32,13 @@ export async function getUserOrganizationId(): Promise<string | null> {
     .single();
 
   if (error) {
+    // Se o erro for de sintaxe de UUID (código 22P02), é um sinal claro de ID inválido
+    if (error.code === '22P02') {
+      console.error('CRITICAL: Invalid UUID syntax detected in RLS query', user.id);
+      await supabase.auth.signOut();
+      window.location.reload();
+      throw new Error('Sessão inválida detected via DB error');
+    }
     throw new Error(`Erro ao buscar organização do usuário: ${error.message}`);
   }
 
@@ -36,7 +52,7 @@ export async function getUserOrganizationId(): Promise<string | null> {
  */
 export async function requireUserOrganizationId(): Promise<string> {
   const organizationId = await getUserOrganizationId();
-  
+
   if (!organizationId) {
     throw new Error('Organização não encontrada. Você precisa estar vinculado a uma organização.');
   }

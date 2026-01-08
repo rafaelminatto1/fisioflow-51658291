@@ -12,9 +12,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, Loader2, Save } from 'lucide-react';
+import { CalendarIcon, Loader2, Save, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { generateFormSuggestions } from '@/services/ai/clinicalAnalysisService';
 
 interface FormRendererProps {
     form: EvaluationForm;
@@ -91,9 +92,34 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
         }
     };
 
+    const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+
+    const handleGenerateSuggestions = async (fieldId: string) => {
+        setIsGeneratingAI(true);
+        try {
+            const suggestion = await generateFormSuggestions(formData, fields);
+            handleInputChange(fieldId, suggestion);
+            toast({
+                title: "Sugestões Geradas",
+                description: "O campo foi preenchido com sugestões baseadas na avaliação.",
+            });
+        } catch (error) {
+            toast({
+                title: "Erro na IA",
+                description: "Não foi possível gerar sugestões agora.",
+                variant: "destructive"
+            });
+        } finally {
+            setIsGeneratingAI(false);
+        }
+    };
+
     const renderField = (field: EvaluationFormField) => {
         const value = formData[field.id];
         const error = errors[field.id];
+
+        // Check if this field is eligible for AI suggestions
+        const isAISuggestionField = field.label.includes("Sugestões de Conduta") || field.label.includes("IA/Protocolos");
 
         switch (field.tipo_campo) {
             case 'texto_curto':
@@ -109,13 +135,30 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
 
             case 'texto_longo':
                 return (
-                    <Textarea
-                        value={value || ''}
-                        onChange={(e) => handleInputChange(field.id, e.target.value)}
-                        placeholder={field.placeholder || ''}
-                        disabled={readOnly}
-                        className={`min-h-[100px] ${error ? 'border-destructive' : ''}`}
-                    />
+                    <div className="space-y-2">
+                        {isAISuggestionField && !readOnly && (
+                            <div className="flex justify-end">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleGenerateSuggestions(field.id)}
+                                    disabled={isGeneratingAI}
+                                    className="text-purple-600 border-purple-200 hover:bg-purple-50"
+                                >
+                                    {isGeneratingAI ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <Sparkles className="mr-2 h-3 w-3" />}
+                                    Gerar Sugestões com IA
+                                </Button>
+                            </div>
+                        )}
+                        <Textarea
+                            value={value || ''}
+                            onChange={(e) => handleInputChange(field.id, e.target.value)}
+                            placeholder={field.placeholder || ''}
+                            disabled={readOnly}
+                            className={`min-h-[100px] ${error ? 'border-destructive' : ''}`}
+                        />
+                    </div>
                 );
 
             case 'opcao_unica': // Radio

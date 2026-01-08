@@ -41,7 +41,21 @@ export function NewPrescriptionModal({
   patientName,
   onSuccess,
 }: NewPrescriptionModalProps) {
-  const { exercises: availableExercises, loading: loadingExercises } = useExercises();
+  const [filters, setFilters] = useState({
+    searchTerm: '',
+    category: 'all',
+    pathologies: [] as string[],
+    bodyParts: [] as string[],
+    equipment: [] as string[]
+  });
+
+  const { exercises: availableExercises, loading: loadingExercises } = useExercises({
+    searchTerm: filters.searchTerm,
+    category: filters.category === 'all' ? undefined : filters.category,
+    pathologies: filters.pathologies.length > 0 ? filters.pathologies : undefined,
+    bodyParts: filters.bodyParts.length > 0 ? filters.bodyParts : undefined,
+    equipment: filters.equipment.length > 0 ? filters.equipment : undefined,
+  });
   const { createPrescription, isCreating } = usePrescriptions();
 
   const [title, setTitle] = useState('Prescrição de Reabilitação');
@@ -100,7 +114,7 @@ export function NewPrescriptionModal({
 
       onOpenChange(false);
       onSuccess?.();
-      
+
       // Reset form
       setTitle('Prescrição de Reabilitação');
       setNotes('');
@@ -155,6 +169,43 @@ export function NewPrescriptionModal({
               </div>
             </div>
 
+            {/* Filters */}
+            <div className="space-y-3 p-3 bg-muted/20 rounded-lg border">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Filtros de Busca</Label>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="space-y-1">
+                  <Label className="text-xs">Categoria</Label>
+                  <Select
+                    value={filters.category}
+                    onValueChange={(val) => setFilters(prev => ({ ...prev, category: val }))}
+                  >
+                    <SelectTrigger className="h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas</SelectItem>
+                      <SelectItem value="Fortalecimento">Fortalecimento</SelectItem>
+                      <SelectItem value="Alongamento">Alongamento</SelectItem>
+                      <SelectItem value="Mobilidade">Mobilidade</SelectItem>
+                      <SelectItem value="Cardio">Cardio</SelectItem>
+                      <SelectItem value="Equilíbrio">Equilíbrio</SelectItem>
+                      <SelectItem value="Respiratório">Respiratório</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  {/* We could add more filters here like Body Parts simply as text search for now or multi-select if components exist */}
+                  <Label className="text-xs">Buscar por nome</Label>
+                  <Input
+                    placeholder="Nome do exercício..."
+                    value={filters.searchTerm}
+                    onChange={(e) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
+                    className="h-8"
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Add Exercise */}
             <div className="space-y-2">
               <Label>Adicionar Exercício</Label>
@@ -186,7 +237,7 @@ export function NewPrescriptionModal({
             {selectedExercises.length > 0 && (
               <div className="space-y-3">
                 <Label>Exercícios Selecionados ({selectedExercises.length})</Label>
-                
+
                 {selectedExercises.map((exercise, index) => (
                   <div
                     key={exercise.id}
