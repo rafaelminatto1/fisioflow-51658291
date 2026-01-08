@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { EvaluationForm, EvaluationFormField, ClinicalFieldType } from '@/types/clinical-forms';
+import { EvaluationForm, EvaluationFormField } from '@/types/clinical-forms';
 import { logger } from '@/lib/errors/logger';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,8 +20,8 @@ import { generateFormSuggestions } from '@/services/ai/clinicalAnalysisService';
 interface FormRendererProps {
     form: EvaluationForm;
     fields: EvaluationFormField[];
-    initialData?: Record<string, any>;
-    onSubmit: (data: Record<string, any>) => Promise<void>;
+    initialData?: Record<string, unknown>;
+    onSubmit: (data: Record<string, unknown>) => Promise<void>;
     isSubmitting?: boolean;
     readOnly?: boolean;
 }
@@ -34,11 +34,11 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
     isSubmitting = false,
     readOnly = false
 }) => {
-    const [formData, setFormData] = useState<Record<string, any>>(initialData);
+    const [formData, setFormData] = useState<Record<string, any>>(initialData || {}); // eslint-disable-line @typescript-eslint/no-explicit-any
     const [errors, setErrors] = useState<Record<string, string>>({});
     const { toast } = useToast();
 
-    const handleInputChange = (fieldId: string, value: any) => {
+    const handleInputChange = (fieldId: string, value: unknown) => {
         setFormData(prev => ({ ...prev, [fieldId]: value }));
         // Clear error if exists
         if (errors[fieldId]) {
@@ -103,7 +103,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                 title: "Sugestões Geradas",
                 description: "O campo foi preenchido com sugestões baseadas na avaliação.",
             });
-        } catch (error) {
+        } catch {
             toast({
                 title: "Erro na IA",
                 description: "Não foi possível gerar sugestões agora.",
@@ -179,7 +179,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                     </RadioGroup>
                 );
 
-            case 'selecao': // Checkboxes (Multi-select)
+            case 'selecao': { // Checkboxes (Multi-select)
                 const currentSelection = Array.isArray(value) ? value : [];
                 return (
                     <div className="flex flex-col gap-2">
@@ -203,6 +203,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                         ))}
                     </div>
                 );
+            }
 
             case 'lista': // Select dropdown
                 // Using native select for simplicity or could use Select component

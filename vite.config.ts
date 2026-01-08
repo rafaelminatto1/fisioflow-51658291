@@ -133,11 +133,14 @@ export default defineConfig(({ mode }) => {
             'date-vendor': ['date-fns'],
             'supabase': ['@supabase/supabase-js'],
             'cornerstone': ['@cornerstonejs/core', '@cornerstonejs/tools'],
-            'mediapipe': ['@mediapipe/pose', '@mediapipe/drawing_utils'],
+            'mediapipe': ['@mediapipe/pose', '@mediapipe/drawing_utils', '@mediapipe/tasks-vision'],
+            'konva': ['konva', 'react-konva'],
+            'pdf': ['jspdf', 'jspdf-autotable', 'react-pdf', '@react-pdf/renderer'],
+            'xlsx': ['xlsx'],
           },
         },
       },
-      chunkSizeWarningLimit: 1000,
+      chunkSizeWarningLimit: 2000,
     },
 
     optimizeDeps: {

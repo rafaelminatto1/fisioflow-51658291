@@ -5,7 +5,9 @@ export interface Point3D {
     visibility?: number;
 }
 
-export interface Landmark extends Point3D { }
+export interface Landmark extends Point3D {
+    id?: string | number;
+}
 
 /**
  * Calculates the angle between three points (A, B, C) where B is the vertex.

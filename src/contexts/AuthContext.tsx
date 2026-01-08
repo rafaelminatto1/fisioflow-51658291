@@ -1,4 +1,4 @@
-import { createContext } from 'react';
+import { createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { Profile, UserRole, RegisterFormData } from '@/types/auth';
 
@@ -25,4 +25,13 @@ interface AuthContextType {
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthContextProvider');
+  }
+  return context;
+};
+
 export type { AuthError, AuthContextType };

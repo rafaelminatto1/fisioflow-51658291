@@ -6,7 +6,7 @@ import { TherapistDashboard } from '@/components/dashboard/TherapistDashboard';
 import { IncompleteRegistrationAlert } from '@/components/dashboard/IncompleteRegistrationAlert';
 import { CustomizableDashboard } from '@/components/dashboard/CustomizableDashboard';
 import { RealtimeActivityFeed } from '@/components/dashboard/RealtimeActivityFeed';
-import { useAuth } from '@/contexts/AuthContextProvider';
+import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';

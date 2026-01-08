@@ -8,7 +8,7 @@ import { ptBR } from 'date-fns/locale';
 
 export function UpcomingAppointments() {
   const { appointments } = useData();
-  
+
   // Get upcoming appointments (next 5, sorted by date and time)
   const upcomingAppointments = appointments
     .filter(apt => new Date(apt.date) >= new Date())
@@ -63,7 +63,7 @@ export function UpcomingAppointments() {
                   <Clock className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium text-foreground">Paciente</p>
+                  <p className="font-medium text-foreground">{appointment.patientName}</p>
                   <p className="text-sm text-muted-foreground">{appointment.type}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <Badge className={`text-xs ${getStatusColor(appointment.status)}`}>

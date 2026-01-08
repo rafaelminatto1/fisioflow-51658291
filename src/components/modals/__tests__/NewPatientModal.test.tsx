@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NewPatientModal } from '../NewPatientModal';
+import { supabase } from '@/integrations/supabase/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Mock do Supabase
@@ -67,8 +68,11 @@ const createWrapper = () => {
 
 describe('NewPatientModal', () => {
   const mockOnOpenChange = vi.fn();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockInsert: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockSelect: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockSingle: any;
 
   beforeEach(() => {
@@ -80,7 +84,8 @@ describe('NewPatientModal', () => {
     mockSelect = vi.fn().mockReturnValue({ single: mockSingle });
     mockInsert = vi.fn().mockReturnValue({ select: mockSelect });
 
-    const { supabase } = require('@/integrations/supabase/client');
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase.from as any).mockReturnValue({ insert: mockInsert });
   });
 
@@ -121,15 +126,15 @@ describe('NewPatientModal', () => {
     // Preencher campos obrigatórios
     await user.type(screen.getByPlaceholderText('Nome completo do paciente'), 'João Silva');
     await user.type(screen.getByPlaceholderText(/condição principal/i), 'Lombalgia');
-    
+
     // Selecionar data de nascimento
     const dateButton = screen.getByText('Selecione uma data');
     await user.click(dateButton);
-    
+
     // Selecionar gênero
     const genderSelect = screen.getByRole('combobox', { name: /gênero/i });
     await user.click(genderSelect);
-    
+
     // Submeter formulário - CPF vazio deve ser aceito
     const submitButton = screen.getByRole('button', { name: /cadastrar paciente/i });
     await user.click(submitButton);
@@ -149,10 +154,10 @@ describe('NewPatientModal', () => {
 
     await user.type(screen.getByPlaceholderText('Nome completo do paciente'), 'João Silva');
     await user.type(screen.getByPlaceholderText(/condição principal/i), 'Lombalgia');
-    
+
     // Selecionar data e gênero (simplificado para teste)
     const submitButton = screen.getByRole('button', { name: /cadastrar paciente/i });
-    
+
     // Trigger submit (pode falhar validação, mas podemos verificar a estrutura)
     await user.click(submitButton);
 
@@ -170,6 +175,7 @@ describe('NewPatientModal', () => {
     // Mock useOrganizations para retornar null
     mockUseOrganizations.mockReturnValueOnce({
       currentOrganization: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(<NewPatientModal open={true} onOpenChange={mockOnOpenChange} />, {
@@ -215,7 +221,7 @@ describe('NewPatientModal', () => {
         const insertCall = mockInsert.mock.calls[0][0][0];
         expect(insertCall.name).toBe('  João Silva  '); // sanitizeString mantém, mas pode ser testado
       }
-    }, { timeout: 2000 }).catch(() => {});
+    }, { timeout: 2000 }).catch(() => { });
   });
 });
 

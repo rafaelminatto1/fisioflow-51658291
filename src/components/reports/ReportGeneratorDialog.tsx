@@ -12,7 +12,7 @@ import { ReportGeneratorService } from '@/lib/services/ReportGeneratorService';
 import { usePainEvolution, usePainStatistics } from '@/hooks/usePainMaps';
 import { usePatientSurgeries, usePatientPathologies, usePatientGoals } from '@/hooks/usePatientEvolution';
 import { TestEvolutionService } from '@/lib/services/testEvolutionService';
-import { useAuth } from '@/contexts/AuthContextProvider';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ReportGeneratorDialogProps {
   patientId: string;

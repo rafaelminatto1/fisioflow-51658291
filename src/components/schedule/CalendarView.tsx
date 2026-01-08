@@ -1,14 +1,14 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths, isSameMonth, isSameDay, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Calendar, Clock, User, GripVertical, Ban, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Clock, GripVertical, Ban, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import type { Appointment } from '@/types/appointment';
-import { AppointmentCard } from './AppointmentCard';
+
 import { generateTimeSlots } from '@/lib/config/agenda';
 import { RescheduleConfirmDialog } from './RescheduleConfirmDialog';
 import { AppointmentQuickView } from './AppointmentQuickView';
@@ -46,18 +46,18 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   onDateChange,
   viewType,
   onViewTypeChange,
-  onAppointmentClick,
+  onAppointmentClick: _onAppointmentClick,
   onTimeSlotClick,
   onAppointmentReschedule,
   isRescheduling = false,
   onEditAppointment,
-  onDeleteAppointment
+  onDeleteAppointment,
 }) => {
   // State for appointment quick view popover
   const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
   // Current time indicator
   const [currentTime, setCurrentTime] = useState(new Date());
-  
+
   // Drag and drop state
   const [dragState, setDragState] = useState<DragState>({ appointment: null, isDragging: false });
   const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
@@ -93,10 +93,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     if (!dragState.appointment || !onAppointmentReschedule) return;
 
     // Verificar se é o mesmo horário
-    const oldDate = typeof dragState.appointment.date === 'string' 
-      ? new Date(dragState.appointment.date) 
+    const oldDate = typeof dragState.appointment.date === 'string'
+      ? new Date(dragState.appointment.date)
       : dragState.appointment.date;
-    
+
     if (isSameDay(oldDate, date) && dragState.appointment.time === time) {
       handleDragEnd();
       return;
@@ -110,7 +110,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
   const handleConfirmReschedule = useCallback(async () => {
     if (!pendingReschedule || !onAppointmentReschedule) return;
-    
+
     try {
       await onAppointmentReschedule(pendingReschedule.appointment, pendingReschedule.newDate, pendingReschedule.newTime);
       setShowConfirmDialog(false);
@@ -163,10 +163,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     switch (viewType) {
       case 'day':
         return format(currentDate, "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR });
-      case 'week':
+      case 'week': {
         const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
         const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
         return `${format(weekStart, "d 'de' MMM", { locale: ptBR })} - ${format(weekEnd, "d 'de' MMM 'de' yyyy", { locale: ptBR })}`;
+      }
       case 'month':
         return format(currentDate, "MMMM 'de' yyyy", { locale: ptBR });
     }
@@ -184,42 +185,42 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     if (isOverCapacity) {
       return 'bg-gradient-to-br from-amber-600 to-orange-600 border-amber-400 shadow-amber-500/40 ring-2 ring-amber-400/50 ring-offset-1';
     }
-    
+
     switch (status.toLowerCase()) {
       case 'confirmado':
-      case 'confirmed': 
+      case 'confirmed':
         return 'bg-gradient-to-br from-emerald-500 to-emerald-600 border-emerald-400 shadow-emerald-500/30';
       case 'agendado':
-      case 'scheduled': 
+      case 'scheduled':
         return 'bg-gradient-to-br from-blue-500 to-blue-600 border-blue-400 shadow-blue-500/30';
       case 'concluido':
-      case 'completed': 
+      case 'completed':
         return 'bg-gradient-to-br from-purple-500 to-purple-600 border-purple-400 shadow-purple-500/30';
       case 'cancelado':
-      case 'cancelled': 
+      case 'cancelled':
         return 'bg-gradient-to-br from-red-500 to-red-600 border-red-400 shadow-red-500/30';
       case 'aguardando_confirmacao':
-      case 'awaiting': 
+      case 'awaiting':
         return 'bg-gradient-to-br from-amber-500 to-amber-600 border-amber-400 shadow-amber-500/30';
       case 'em_andamento':
-      case 'in_progress': 
+      case 'in_progress':
         return 'bg-gradient-to-br from-cyan-500 to-cyan-600 border-cyan-400 shadow-cyan-500/30';
       case 'remarcado':
-      case 'rescheduled': 
+      case 'rescheduled':
         return 'bg-gradient-to-br from-orange-500 to-orange-600 border-orange-400 shadow-orange-500/30';
       case 'nao_compareceu':
-      case 'no_show': 
+      case 'no_show':
         return 'bg-gradient-to-br from-rose-500 to-rose-600 border-rose-400 shadow-rose-500/30';
       case 'em_espera':
-      case 'waiting': 
+      case 'waiting':
         return 'bg-gradient-to-br from-indigo-500 to-indigo-600 border-indigo-400 shadow-indigo-500/30';
       case 'falta':
       case 'no_show_confirmed':
         return 'bg-gradient-to-br from-rose-500 to-rose-600 border-rose-400 shadow-rose-500/30';
       case 'atrasado':
-      case 'late': 
+      case 'late':
         return 'bg-gradient-to-br from-yellow-500 to-yellow-600 border-yellow-400 shadow-yellow-500/30';
-      default: 
+      default:
         return 'bg-gradient-to-br from-gray-500 to-gray-600 border-gray-400 shadow-gray-500/30';
     }
   };
@@ -235,7 +236,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   const renderDayView = () => {
     const dayAppointments = getAppointmentsForDate(currentDate);
     const timeSlots = dayTimeSlotInfo.length > 0 ? dayTimeSlotInfo.map(s => s.time) : generateTimeSlots(currentDate);
-    
+
     if (isDayClosed) {
       return (
         <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
@@ -245,7 +246,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         </div>
       );
     }
-    
+
     return (
       <div className="flex h-full bg-gradient-to-br from-background to-muted/20">
         {/* Time column com design melhorado */}
@@ -259,7 +260,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             </div>
           ))}
         </div>
-        
+
         {/* Day column com hover states */}
         <div className="flex-1 relative bg-background/50">
           <div className="h-16 border-b bg-gradient-to-r from-primary/10 to-primary/5 p-4 backdrop-blur-sm sticky top-0 z-10">
@@ -268,7 +269,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               {format(currentDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
             </div>
           </div>
-          
+
           {/* Time slots */}
           <div className="relative">
             {timeSlots.map(time => {
@@ -277,16 +278,16 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               const isDropTarget = dropTarget && isSameDay(dropTarget.date, currentDate) && dropTarget.time === time;
               const blocked = isTimeBlocked(time);
               const blockReason = getBlockReason(time);
-              
+
               return (
                 <TooltipProvider key={time}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div 
+                      <div
                         className={cn(
                           "h-16 border-b border-border cursor-pointer transition-colors group relative",
-                          blocked 
-                            ? "bg-destructive/10 cursor-not-allowed" 
+                          blocked
+                            ? "bg-destructive/10 cursor-not-allowed"
                             : "hover:bg-primary/5",
                           isCurrentHour && !blocked && "bg-primary/5",
                           isDropTarget && !blocked && "bg-primary/20 ring-2 ring-primary ring-inset"
@@ -320,10 +321,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 </TooltipProvider>
               );
             })}
-            
+
             {/* Current time indicator */}
             {isSameDay(currentDate, currentTime) && currentTimePosition >= 0 && currentTimePosition <= 100 && (
-              <div 
+              <div
                 className="absolute left-0 right-0 z-20 pointer-events-none"
                 style={{ top: `${currentTimePosition}%` }}
               >
@@ -346,13 +347,13 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 const [slotHour, slotMin] = slot.split(':').map(Number);
                 return slotHour === hours && slotMin === minutes;
               });
-              
+
               // Calcular altura baseada na duração (cada slot = 64px, cada slot = 30min)
               const duration = apt.duration || 60;
               const heightInPixels = (duration / 30) * 64;
               const top = slotIndex >= 0 ? slotIndex * 64 : 0;
               const isDraggable = !!onAppointmentReschedule;
-              
+
               return (
                 <AppointmentQuickView
                   key={apt.id}
@@ -374,8 +375,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50 scale-95",
                       isOverCapacity(apt) && "animate-pulse"
                     )}
-                    style={{ 
-                      top: `${top}px`, 
+                    style={{
+                      top: `${top}px`,
                       height: `${heightInPixels}px`
                     }}
                   >
@@ -412,20 +413,20 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   // Helper to check if time is blocked for any date
   const checkTimeBlocked = useCallback((date: Date, time: string): { blocked: boolean; reason?: string } => {
     if (!blockedTimes) return { blocked: false };
-    
+
     const dayOfWeek = date.getDay();
     const [timeH, timeM] = time.split(':').map(Number);
     const timeMinutes = timeH * 60 + timeM;
-    
+
     for (const block of blockedTimes) {
       const blockStart = new Date(block.start_date);
       const blockEnd = new Date(block.end_date);
       blockStart.setHours(0, 0, 0, 0);
       blockEnd.setHours(23, 59, 59, 999);
-      
+
       const checkDate = new Date(date);
       checkDate.setHours(0, 0, 0, 0);
-      
+
       if (checkDate >= blockStart && checkDate <= blockEnd) {
         if (block.is_all_day) {
           return { blocked: true, reason: block.title };
@@ -438,7 +439,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           }
         }
       }
-      
+
       if (block.is_recurring && block.recurring_days?.includes(dayOfWeek)) {
         if (block.is_all_day) {
           return { blocked: true, reason: block.title };
@@ -469,7 +470,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
     const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
     const timeSlots = generateTimeSlots(currentDate);
-    
+
     return (
       <div className="flex">
         {/* Time column - Sticky e otimizado */}
@@ -483,23 +484,23 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             </div>
           ))}
         </div>
-        
+
         {/* Week days - Grid com scroll horizontal suave */}
         <div className="flex-1 overflow-x-auto">
           <div className="inline-flex sm:grid sm:grid-cols-7 min-w-full bg-background/30">
             {weekDays.map(day => {
               const dayAppointments = getAppointmentsForDate(day);
               const isTodayDate = isToday(day);
-              
+
               return (
-                <div 
-                  key={day.toISOString()} 
+                <div
+                  key={day.toISOString()}
                   className="w-[140px] sm:w-auto border-r border-border/50 last:border-r-0 relative group flex-shrink-0"
                 >
                   <div className={cn(
                     "h-14 sm:h-16 border-b border-border/50 sticky top-0 z-10 p-2 sm:p-3 text-center text-xs sm:text-sm backdrop-blur-md transition-all duration-300 shadow-sm",
-                    isTodayDate 
-                      ? "bg-gradient-to-br from-primary via-primary/95 to-primary/85 text-primary-foreground shadow-xl shadow-primary/30 ring-2 ring-primary/40" 
+                    isTodayDate
+                      ? "bg-gradient-to-br from-primary via-primary/95 to-primary/85 text-primary-foreground shadow-xl shadow-primary/30 ring-2 ring-primary/40"
                       : "bg-gradient-to-br from-muted/60 to-muted/40 hover:from-muted/80 hover:to-muted/60"
                   )}>
                     <div className="font-extrabold uppercase tracking-wider text-[10px] sm:text-xs">
@@ -512,7 +513,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       {format(day, 'd')}
                     </div>
                   </div>
-                  
+
                   {/* Time slots interativos */}
                   <div className="relative">
                     {isDayClosedForDate(day) ? (
@@ -521,54 +522,54 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         Fechado
                       </div>
                     ) : (
-                    timeSlots.map(time => {
-                      const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === time;
-                      const { blocked, reason } = checkTimeBlocked(day, time);
-                      
-                      return (
-                        <TooltipProvider key={time}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div 
-                                className={cn(
-                                  "h-12 sm:h-16 border-b border-border/20 cursor-pointer transition-all duration-200 group/slot relative",
-                                  blocked 
-                                    ? "bg-destructive/10 cursor-not-allowed" 
-                                    : "hover:bg-gradient-to-r hover:from-primary/15 hover:to-primary/5 active:bg-primary/20",
-                                  isDropTarget && !blocked && "bg-primary/25 ring-2 ring-primary ring-inset"
-                                )}
-                                onClick={() => !blocked && onTimeSlotClick(day, time)}
-                                onDragOver={(e) => !blocked && handleDragOver(e, day, time)}
-                                onDragLeave={handleDragLeave}
-                                onDrop={(e) => !blocked && handleDrop(e, day, time)}
-                              >
-                                {blocked ? (
-                                  <span className="absolute inset-0 flex items-center justify-center text-[10px] text-destructive/60">
-                                    <Ban className="h-2 w-2" />
-                                  </span>
-                                ) : (
-                                  <span className={cn(
-                                    "absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs font-bold text-primary-foreground opacity-0 group-hover/slot:opacity-100 transition-all duration-200 scale-95 group-hover/slot:scale-100 pointer-events-none",
-                                    isDropTarget && "opacity-100"
-                                  )}>
-                                    <span className="bg-gradient-primary px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg shadow-lg">
-                                      {isDropTarget ? '↓ Soltar' : '+ Novo'}
+                      timeSlots.map(time => {
+                        const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === time;
+                        const { blocked, reason } = checkTimeBlocked(day, time);
+
+                        return (
+                          <TooltipProvider key={time}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div
+                                  className={cn(
+                                    "h-12 sm:h-16 border-b border-border/20 cursor-pointer transition-all duration-200 group/slot relative",
+                                    blocked
+                                      ? "bg-destructive/10 cursor-not-allowed"
+                                      : "hover:bg-gradient-to-r hover:from-primary/15 hover:to-primary/5 active:bg-primary/20",
+                                    isDropTarget && !blocked && "bg-primary/25 ring-2 ring-primary ring-inset"
+                                  )}
+                                  onClick={() => !blocked && onTimeSlotClick(day, time)}
+                                  onDragOver={(e) => !blocked && handleDragOver(e, day, time)}
+                                  onDragLeave={handleDragLeave}
+                                  onDrop={(e) => !blocked && handleDrop(e, day, time)}
+                                >
+                                  {blocked ? (
+                                    <span className="absolute inset-0 flex items-center justify-center text-[10px] text-destructive/60">
+                                      <Ban className="h-2 w-2" />
                                     </span>
-                                  </span>
-                                )}
-                              </div>
-                            </TooltipTrigger>
-                            {blocked && reason && (
-                              <TooltipContent>
-                                <p>{reason}</p>
-                              </TooltipContent>
-                            )}
-                          </Tooltip>
-                        </TooltipProvider>
-                      );
-                    })
+                                  ) : (
+                                    <span className={cn(
+                                      "absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs font-bold text-primary-foreground opacity-0 group-hover/slot:opacity-100 transition-all duration-200 scale-95 group-hover/slot:scale-100 pointer-events-none",
+                                      isDropTarget && "opacity-100"
+                                    )}>
+                                      <span className="bg-gradient-primary px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg shadow-lg">
+                                        {isDropTarget ? '↓ Soltar' : '+ Novo'}
+                                      </span>
+                                    </span>
+                                  )}
+                                </div>
+                              </TooltipTrigger>
+                              {blocked && reason && (
+                                <TooltipContent>
+                                  <p>{reason}</p>
+                                </TooltipContent>
+                              )}
+                            </Tooltip>
+                          </TooltipProvider>
+                        );
+                      })
                     )}
-                    
+
                     {/* Appointments overlay - Cards melhorados */}
                     {dayAppointments.map(apt => {
                       const [hours, minutes] = (apt.time || '09:00').split(':').map(Number);
@@ -576,7 +577,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         const [slotHour, slotMin] = slot.split(':').map(Number);
                         return slotHour === hours && slotMin === minutes;
                       });
-                      
+
                       // Altura e posição baseada na duração: 48px/slot mobile, 64px/slot desktop (cada slot = 30min)
                       const duration = apt.duration || 60;
                       const slots = duration / 30;
@@ -585,7 +586,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       const topMobile = slotIndex >= 0 ? slotIndex * 48 : 0;
                       const topDesktop = slotIndex >= 0 ? slotIndex * 64 : 0;
                       const isDraggable = !!onAppointmentReschedule;
-                      
+
                       return (
                         <AppointmentQuickView
                           key={apt.id}
@@ -607,15 +608,16 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                               dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50 scale-95",
                               isOverCapacity(apt) && "animate-pulse"
                             )}
-                            style={{ 
+                            style={{
                               top: `${topMobile}px`,
                               height: `${heightMobile}px`,
-                              ['--top-desktop' as any]: `${topDesktop}px`,
-                              ['--height-desktop' as any]: `${heightDesktop}px`
+                              ['--top-desktop' as any]: `${topDesktop}px`, // eslint-disable-line @typescript-eslint/no-explicit-any
+                              ['--height-desktop' as any]: `${heightDesktop}px` // eslint-disable-line @typescript-eslint/no-explicit-any
                             } as React.CSSProperties}
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <style dangerouslySetInnerHTML={{__html: `
+                            <style dangerouslySetInnerHTML={{
+                              __html: `
                               @media (min-width: 640px) {
                                 [style*="--top-desktop"][style*="--height-desktop"] {
                                   top: var(--top-desktop) !important;
@@ -657,16 +659,16 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     const monthEnd = endOfMonth(monthStart);
     const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
     const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
-    
+
     const weeks = [];
     let currentWeekStart = startDate;
-    
+
     while (currentWeekStart <= endDate) {
       const week = Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i));
       weeks.push(week);
       currentWeekStart = addWeeks(currentWeekStart, 1);
     }
-    
+
     return (
       <div className="h-full flex flex-col bg-gradient-to-br from-background to-muted/20">
         {/* Week headers com melhor estilo */}
@@ -677,7 +679,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             </div>
           ))}
         </div>
-        
+
         {/* Calendar grid */}
         <div className="flex-1 grid grid-rows-6">
           {weeks.map((week, weekIndex) => (
@@ -685,7 +687,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               {week.map(day => {
                 const dayAppointments = getAppointmentsForDate(day);
                 const isCurrentMonth = isSameMonth(day, currentDate);
-                
+
                 return (
                   <div
                     key={day.toISOString()}
@@ -698,13 +700,13 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                   >
                     <div className={cn(
                       "text-sm mb-2 font-medium transition-all duration-200",
-                      isToday(day) 
-                        ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center font-bold shadow-lg ring-2 ring-primary/20" 
+                      isToday(day)
+                        ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center font-bold shadow-lg ring-2 ring-primary/20"
                         : "group-hover:text-primary"
                     )}>
                       {format(day, 'd')}
                     </div>
-                    
+
                     <div className="space-y-1.5">
                       {dayAppointments.slice(0, 3).map(apt => (
                         <AppointmentQuickView
@@ -750,95 +752,95 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
   return (
     <>
-    <Card className="h-full flex flex-col border-0 shadow-xl overflow-hidden">
-      <CardContent className="p-0 flex flex-col h-full">
-        {/* Header - Melhorado */}
-        <div className="p-4 border-b bg-gradient-to-r from-muted/30 to-muted/10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 bg-background rounded-lg p-1 shadow-sm">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigateCalendar('prev')}
-                  className="h-9 w-9 p-0 hover-scale"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigateCalendar('next')}
-                  className="h-9 w-9 p-0 hover-scale"
-                >
-                  <ChevronRight className="h-5 w-5" />
-                </Button>
-              </div>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={goToToday}
-                className="hover-scale font-medium"
-              >
-                Hoje
-              </Button>
-              
-              <h2 className="text-lg font-semibold hidden sm:block">
-                {getHeaderTitle()}
-              </h2>
-            </div>
-            
-            <div className="flex items-center gap-1 bg-background rounded-lg p-1 shadow-sm">
-              {(['day', 'week', 'month'] as CalendarViewType[]).map(type => (
-                <Button
-                  key={type}
-                  variant={viewType === type ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => onViewTypeChange(type)}
-                  className={cn(
-                    "text-xs transition-all duration-200",
-                    viewType === type 
-                      ? "shadow-sm" 
-                      : "hover-scale"
-                  )}
-                >
-                  {type === 'day' ? 'Dia' : type === 'week' ? 'Semana' : 'Mês'}
-                </Button>
-              ))}
-            </div>
-          </div>
-          
-          {/* Mobile header */}
-          <h2 className="text-base font-semibold mt-3 sm:hidden">
-            {getHeaderTitle()}
-          </h2>
-        </div>
-        
-        {/* Calendar content - Scroll otimizado */}
-        <div className={cn(
-          "flex-1",
-          viewType === 'week' ? "overflow-x-hidden" : "overflow-visible"
-        )}>
-          {viewType === 'day' && renderDayView()}
-          {viewType === 'week' && renderWeekView()}
-          {viewType === 'month' && renderMonthView()}
-        </div>
-      </CardContent>
-    </Card>
+      <Card className="h-full flex flex-col border-0 shadow-xl overflow-hidden">
+        <CardContent className="p-0 flex flex-col h-full">
+          {/* Header - Melhorado */}
+          <div className="p-4 border-b bg-gradient-to-r from-muted/30 to-muted/10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 bg-background rounded-lg p-1 shadow-sm">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigateCalendar('prev')}
+                    className="h-9 w-9 p-0 hover-scale"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigateCalendar('next')}
+                    className="h-9 w-9 p-0 hover-scale"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </Button>
+                </div>
 
-    {/* Reschedule Confirmation Dialog */}
-    <RescheduleConfirmDialog
-      open={showConfirmDialog}
-      onOpenChange={(open) => {
-        if (!open) handleCancelReschedule();
-      }}
-      appointment={pendingReschedule?.appointment || null}
-      newDate={pendingReschedule?.newDate || null}
-      newTime={pendingReschedule?.newTime || null}
-      onConfirm={handleConfirmReschedule}
-      isPending={isRescheduling}
-    />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={goToToday}
+                  className="hover-scale font-medium"
+                >
+                  Hoje
+                </Button>
+
+                <h2 className="text-lg font-semibold hidden sm:block">
+                  {getHeaderTitle()}
+                </h2>
+              </div>
+
+              <div className="flex items-center gap-1 bg-background rounded-lg p-1 shadow-sm">
+                {(['day', 'week', 'month'] as CalendarViewType[]).map(type => (
+                  <Button
+                    key={type}
+                    variant={viewType === type ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => onViewTypeChange(type)}
+                    className={cn(
+                      "text-xs transition-all duration-200",
+                      viewType === type
+                        ? "shadow-sm"
+                        : "hover-scale"
+                    )}
+                  >
+                    {type === 'day' ? 'Dia' : type === 'week' ? 'Semana' : 'Mês'}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Mobile header */}
+            <h2 className="text-base font-semibold mt-3 sm:hidden">
+              {getHeaderTitle()}
+            </h2>
+          </div>
+
+          {/* Calendar content - Scroll otimizado */}
+          <div className={cn(
+            "flex-1",
+            viewType === 'week' ? "overflow-x-hidden" : "overflow-visible"
+          )}>
+            {viewType === 'day' && renderDayView()}
+            {viewType === 'week' && renderWeekView()}
+            {viewType === 'month' && renderMonthView()}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Reschedule Confirmation Dialog */}
+      <RescheduleConfirmDialog
+        open={showConfirmDialog}
+        onOpenChange={(open) => {
+          if (!open) handleCancelReschedule();
+        }}
+        appointment={pendingReschedule?.appointment || null}
+        newDate={pendingReschedule?.newDate || null}
+        newTime={pendingReschedule?.newTime || null}
+        onConfirm={handleConfirmReschedule}
+        isPending={isRescheduling}
+      />
     </>
   );
 };

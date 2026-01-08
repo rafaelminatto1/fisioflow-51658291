@@ -11,7 +11,7 @@ import { EvaScaleBar } from '@/components/pain-map/EvaScaleBar';
 import { PainPointsBottomSheet } from '@/components/pain-map/PainPointsBottomSheet';
 import { PainPointDetailPanel } from '@/components/pain-map/PainPointDetailPanel';
 import { usePainMaps, usePainEvolution, usePainStatistics, useCreatePainMap, useUpdatePainMap } from '@/hooks/usePainMaps';
-import { useAuth } from '@/contexts/AuthContextProvider';
+import { useAuth } from '@/contexts/AuthContext';
 import type { PainMapPoint, PainIntensity } from '@/types/painMap';
 import type { PainPoint } from '@/components/pain-map/BodyMap';
 import { TrendingDown, TrendingUp, Minus, CheckCircle2, Loader2, List, ToggleLeft, ToggleRight } from 'lucide-react';

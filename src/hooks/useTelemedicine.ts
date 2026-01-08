@@ -19,7 +19,7 @@ export interface TelemedicineRoom {
   created_at: string;
 }
 
-import { useAuth } from '@/contexts/AuthContextProvider';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function useTelemedicineRooms() {
   const { profile } = useAuth();
