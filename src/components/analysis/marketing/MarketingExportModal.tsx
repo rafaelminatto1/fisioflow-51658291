@@ -1,4 +1,3 @@
-```
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -136,7 +135,7 @@ const MarketingExportModal: React.FC<MarketingExportModalProps> = ({
                             <div className="bg-green-50 p-4 rounded border border-green-200 flex justify-between items-center mt-4">
                                 <span className="text-green-800 font-medium">Renderização Concluída</span>
                                 <Button asChild className="bg-green-600 hover:bg-green-700">
-                                    <a href={exportUrl}>
+                                    <a href={exportUrl} download={"comparativo_" + patientId + ".webm"}>
                                         <Download className="w-4 h-4 mr-2" /> Baixar Arquivo
                                     </a>
                                 </Button>
