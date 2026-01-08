@@ -21,10 +21,10 @@ import { ViewPatientModal } from '@/components/modals/ViewPatientModal';
 import { DeletePatientDialog } from '@/components/modals/DeletePatientDialog';
 import { usePatientsQuery, useDeletePatient, PatientDB } from '@/hooks/usePatientsQuery';
 import {
-  Plus, 
-  Search, 
-  Eye, 
-  Edit, 
+  Plus,
+  Search,
+  Eye,
+  Edit,
   Phone,
   Mail,
   Users,
@@ -59,15 +59,15 @@ const Patients = () => {
 
   const filteredPatients = useMemo(() => {
     return patients.filter(patient => {
-      const matchesSearch = 
-        patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      const matchesSearch =
+        (patient.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (patient.main_condition || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (patient.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (patient.phone || '').toLowerCase().includes(searchTerm.toLowerCase());
-      
+
       const matchesStatus = statusFilter === 'all' || patient.status === statusFilter;
       const matchesCondition = conditionFilter === 'all' || patient.main_condition === conditionFilter;
-      
+
       return matchesSearch && matchesStatus && matchesCondition;
     });
   }, [patients, searchTerm, statusFilter, conditionFilter]);
@@ -100,7 +100,7 @@ const Patients = () => {
       const csvContent = [
         'Nome,Email,Telefone,Idade,Gênero,Condição Principal,Status,Progresso',
         ...filteredPatients.map(patient => [
-          patient.name,
+          patient.name || 'Sem nome',
           patient.email || '',
           patient.phone || '',
           getPatientAge(patient.birth_date),
@@ -110,7 +110,7 @@ const Patients = () => {
           patient.progress || 0
         ].join(','))
       ].join('\n');
-      
+
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       if (link.download !== undefined) {
@@ -122,7 +122,7 @@ const Patients = () => {
         link.click();
         document.body.removeChild(link);
       }
-      
+
       toast({
         title: 'Exportação concluída!',
         description: 'Lista de pacientes exportada com sucesso.',
@@ -181,7 +181,7 @@ const Patients = () => {
                 <Download className="w-4 h-4 mr-2" />
                 Exportar
               </Button>
-              <Button 
+              <Button
                 size="sm"
                 className="shadow-md hover:shadow-lg transition-all w-full sm:w-auto"
                 onClick={() => setIsNewPatientModalOpen(true)}
@@ -208,7 +208,7 @@ const Patients = () => {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="hover:shadow-lg transition-all duration-300">
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center gap-2 sm:gap-3">
@@ -224,7 +224,7 @@ const Patients = () => {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="hover:shadow-lg transition-all duration-300">
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center gap-2 sm:gap-3">
@@ -240,7 +240,7 @@ const Patients = () => {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="hover:shadow-lg transition-all duration-300">
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center gap-2 sm:gap-3">
@@ -276,7 +276,7 @@ const Patients = () => {
                   className="pl-10 h-11 bg-background/50"
                 />
               </div>
-              
+
               {/* Filtros em grid responsivo */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -294,7 +294,7 @@ const Patients = () => {
                     <SelectItem value="Concluído">✅ Concluído</SelectItem>
                   </SelectContent>
                 </Select>
-                
+
                 <Select value={conditionFilter} onValueChange={setConditionFilter}>
                   <SelectTrigger className="h-11">
                     <div className="flex items-center gap-2">
@@ -312,14 +312,14 @@ const Patients = () => {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               {/* Indicador de filtros ativos */}
               {(statusFilter !== 'all' || conditionFilter !== 'all' || searchTerm) && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <span>{filteredPatients.length} paciente(s) encontrado(s)</span>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="h-7 text-xs"
                     onClick={() => {
                       setSearchTerm('');
@@ -341,24 +341,24 @@ const Patients = () => {
             icon={Users}
             title={searchTerm ? 'Nenhum paciente encontrado' : 'Nenhum paciente cadastrado'}
             description={
-              searchTerm 
-                ? 'Tente ajustar os filtros de busca.' 
+              searchTerm
+                ? 'Tente ajustar os filtros de busca.'
                 : 'Comece adicionando seu primeiro paciente.'
             }
             action={
               !searchTerm
                 ? {
-                    label: 'Novo Paciente',
-                    onClick: () => setIsNewPatientModalOpen(true)
-                  }
+                  label: 'Novo Paciente',
+                  onClick: () => setIsNewPatientModalOpen(true)
+                }
                 : undefined
             }
           />
         ) : (
           <div className="grid gap-4 animate-fade-in">
             {filteredPatients.map((patient, index) => (
-              <Card 
-                key={patient.id} 
+              <Card
+                key={patient.id}
                 className="group flex items-center gap-4 p-3 rounded-xl bg-card hover:bg-slate-50 dark:hover:bg-slate-800/50 active:bg-slate-100 dark:active:bg-slate-800 transition-colors cursor-pointer border border-transparent hover:border-border dark:hover:border-slate-700"
                 style={{ animationDelay: `${index * 50}ms` }}
                 onClick={() => setViewingPatient(patient.id)}
@@ -368,21 +368,21 @@ const Patients = () => {
                     <AvatarFallback className={cn(
                       "text-sm font-bold",
                       patient.status === 'Em Tratamento' ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400" :
-                      patient.status === 'Inicial' ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" :
-                      "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                        patient.status === 'Inicial' ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" :
+                          "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
                     )}>
-                      {patient.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                      {patient.name ? patient.name.split(' ').map(n => n[0]).join('').substring(0, 2) : 'P'}
                     </AvatarFallback>
                   </Avatar>
                 </div>
                 <div className="flex flex-col flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{patient.name}</p>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{patient.name || 'Paciente sem nome'}</p>
                     <Badge className={cn(
                       "inline-flex items-center rounded-full border border-transparent text-[10px] font-semibold px-2 py-0.5",
                       patient.status === 'Em Tratamento' ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" :
-                      patient.status === 'Inicial' ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400" :
-                      "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                        patient.status === 'Inicial' ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400" :
+                          "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
                     )}>
                       {patient.status || 'Inicial'}
                     </Badge>
@@ -403,7 +403,7 @@ const Patients = () => {
         open={isNewPatientModalOpen}
         onOpenChange={setIsNewPatientModalOpen}
       />
-      
+
       {editingPatient && (
         <EditPatientModal
           patientId={editingPatient}

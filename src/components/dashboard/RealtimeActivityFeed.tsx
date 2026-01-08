@@ -47,10 +47,11 @@ export function RealtimeActivityFeed() {
 
       while (retries < maxRetries && !appointments) {
         try {
+          // Fetch appointments first
           const result = await withTimeout(
             supabase
               .from('appointments')
-              .select('*, patients(name)')
+              .select('*')
               .order('created_at', { ascending: false })
               .limit(5),
             8000
@@ -58,6 +59,24 @@ export function RealtimeActivityFeed() {
 
           if (result.data) {
             appointments = result.data;
+
+            // Manually fetch patient names to avoid relationship 400 errors (safer)
+            const patientIds = [...new Set(appointments.map(a => a.patient_id).filter(Boolean))];
+            if (patientIds.length > 0) {
+              const { data: patientsData } = await supabase
+                .from('patients')
+                .select('id, name')
+                .in('id', patientIds);
+
+              const patientMap = new Map(patientsData?.map(p => [p.id, p.name]) || []);
+
+              // Attach names to appointments
+              appointments = appointments.map(apt => ({
+                ...apt,
+                patients: { name: patientMap.get(apt.patient_id) || 'Paciente desconhecido' }
+              }));
+            }
+
             break;
           }
         } catch {
