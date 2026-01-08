@@ -38,6 +38,7 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
       - uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
@@ -45,6 +46,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-playwright-
       - run: pnpm exec playwright install --with-deps chromium
+      - name: Start HTTP server
+        run: |
+          npx -y http-server dist -p 8080 &
+          sleep 5
       - run: pnpm run test:e2e --project=chromium
       - uses: actions/upload-artifact@v4
         if: always()
@@ -66,6 +71,7 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
       - uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
@@ -73,6 +79,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-playwright-
       - run: pnpm exec playwright install --with-deps chromium
+      - name: Start HTTP server
+        run: |
+          npx -y http-server dist -p 8080 &
+          sleep 5
       - run: pnpm run test:e2e --project=chromium accessibility.spec.ts
 
   performance:
@@ -88,6 +98,7 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
       - uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
@@ -95,4 +106,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-playwright-
       - run: pnpm exec playwright install --with-deps chromium
+      - name: Start HTTP server
+        run: |
+          npx -y http-server dist -p 8080 &
+          sleep 5
       - run: pnpm run test:e2e --project=chromium performance.spec.ts
