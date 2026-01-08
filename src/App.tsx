@@ -2,7 +2,7 @@ import React, { Suspense, lazy, useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { DataProvider } from "@/contexts/DataContext";
 import { AuthContextProvider } from "@/contexts/AuthContextProvider";
@@ -124,7 +124,7 @@ const queryClient = new QueryClient({
       retry: (failureCount, error) => {
         // Não retry para erros 4xx (client errors)
         if (error && typeof error === 'object' && 'status' in error) {
-          const status = (error as any).status;
+          const status = (error as { status: number }).status;
           if (status >= 400 && status < 409) {
             return false;
           }

@@ -1,0 +1,2032 @@
+
+> vite_react_shadcn_ts@0.0.0 lint
+> eslint .
+
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/public/sw.js
+  272:7  error  Parsing error: Unexpected token background
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/App.tsx
+    5:23  error  'QueryClientProvider' is defined but never used  @typescript-eslint/no-unused-vars
+  127:36  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/agenda/AppointmentModal.tsx
+  6:23  error  'MapPin' is defined but never used  @typescript-eslint/no-unused-vars
+  6:31  error  'Phone' is defined but never used   @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/ai/AIPredictionsPanel.tsx
+  16:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  44:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/ai/TreatmentAssistant.tsx
+   4:10  error  'Badge' is defined but never used         @typescript-eslint/no-unused-vars
+  48:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/analysis/dashboard/GeneralImageAnalyzer.tsx
+  8:8  error  'ReactMarkdown' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/analysis/dashboard/ImageAnalysisDashboard.tsx
+  16:7  error    'DicomBrowser' is assigned a value but never used                                                        @typescript-eslint/no-unused-vars
+  75:8  warning  React Hook useEffect has a missing dependency: 'mode'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/analysis/dicom/DicomBrowser.tsx
+   2:16  error  'CardHeader' is defined but never used                                            @typescript-eslint/no-unused-vars
+   2:28  error  'CardTitle' is defined but never used                                             @typescript-eslint/no-unused-vars
+   5:10  error  'Loader2' is defined but never used                                               @typescript-eslint/no-unused-vars
+  14:27  error  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  18:54  error  'onSelectSeries' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  22:42  error  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/analysis/dicom/DicomViewer.tsx
+   22:13  error  'cornerstone' is defined but never used                                             @typescript-eslint/no-unused-vars
+   26:40  error  'Activity' is defined but never used                                                @typescript-eslint/no-unused-vars
+   64:22  error  'e' is defined but never used                                                       @typescript-eslint/no-unused-vars
+  129:19  error  'viewport' is assigned a value but never used                                       @typescript-eslint/no-unused-vars
+  196:57  error  Unexpected any. Specify a different type                                            @typescript-eslint/no-explicit-any
+  258:45  error  'binding' is assigned a value but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/analysis/marketing/MarketingExportModal.tsx
+   6:39  error    'TabsContent' is defined but never used                                                                                                                                                                                                                                          @typescript-eslint/no-unused-vars
+  35:12  error    'isExporting' is assigned a value but never used                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  36:12  error    'exportBlob' is assigned a value but never used                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+  57:8   warning  React Hook useEffect has missing dependencies: 'metrics' and 'toast'. Either include them or remove the dependency array. If 'setSelectedMetrics' needs the current value of 'metrics', you can also switch to useReducer instead of useState and read 'metrics' in the reducer  react-hooks/exhaustive-deps
+  83:18  error    'e' is defined but never used                                                                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/analysis/posture/ClinicalPostureAnalysis.tsx
+   1:27   error  'useRef' is defined but never used                  @typescript-eslint/no-unused-vars
+   4:39   error  'TabsContent' is defined but never used             @typescript-eslint/no-unused-vars
+   6:33   error  'Save' is defined but never used                    @typescript-eslint/no-unused-vars
+   6:39   error  'CheckCircle2' is defined but never used            @typescript-eslint/no-unused-vars
+   6:67   error  'AlertTriangle' is defined but never used           @typescript-eslint/no-unused-vars
+   6:82   error  'SplitSquareHorizontal' is defined but never used   @typescript-eslint/no-unused-vars
+   6:105  error  'Video' is defined but never used                   @typescript-eslint/no-unused-vars
+  11:8    error  'LiveBiofeedbackSession' is defined but never used  @typescript-eslint/no-unused-vars
+  12:8    error  'CameraConsentModal' is defined but never used      @typescript-eslint/no-unused-vars
+  75:11   error  'handleSave' is assigned a value but never used     @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/analysis/posture/LandmarkEditor.tsx
+   1:17  error  'useRef' is defined but never used          @typescript-eslint/no-unused-vars
+  39:47  error  Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  42:15  error  'stage' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/analysis/posture/PoseAnalyzer.tsx
+  123:22  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/analysis/reports/ClinicalReportPDF.tsx
+    2:50   error  'Image' is defined but never used                                          @typescript-eslint/no-unused-vars
+    2:57   error  'Font' is defined but never used                                           @typescript-eslint/no-unused-vars
+  134:109  error  'logoUrl' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/analysis/reports/ShareReportModal.tsx
+   6:10  error  'Input' is defined but never used                                        @typescript-eslint/no-unused-vars
+  93:37  error  'blob' is defined but never used. Allowed unused args must match /^_/u   @typescript-eslint/no-unused-vars
+  93:43  error  'url' is defined but never used. Allowed unused args must match /^_/u    @typescript-eslint/no-unused-vars
+  93:57  error  'error' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/analysis/viewer/AssetViewer.tsx
+   6:28  error  'AlertCircle' is defined but never used                 @typescript-eslint/no-unused-vars
+   7:42  error  'Ruler' is defined but never used                       @typescript-eslint/no-unused-vars
+   7:67  error  'History' is defined but never used                     @typescript-eslint/no-unused-vars
+  42:9   error  'versions' is assigned a value but never used           @typescript-eslint/no-unused-vars
+  44:9   error  'setCurrentVersion' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  60:29  error  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/analytics/FinancialAnalytics.tsx
+  46:11  error  'total' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/analytics/InternalDashboard.tsx
+    6:27  error  'subWeeks' is defined but never used                     @typescript-eslint/no-unused-vars
+   17:10  error  'BarChart' is defined but never used                     @typescript-eslint/no-unused-vars
+   17:20  error  'Bar' is defined but never used                          @typescript-eslint/no-unused-vars
+  107:39  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+  108:40  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+  117:45  error  'loadingNewPatients' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/analytics/PatientAnalytics.tsx
+  4:52  error  'Legend' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/analytics/PatientRetention.tsx
+   25:3   error  'LineChart' is defined but never used     @typescript-eslint/no-unused-vars
+   26:3   error  'Line' is defined but never used          @typescript-eslint/no-unused-vars
+   34:3   error  'Legend' is defined but never used        @typescript-eslint/no-unused-vars
+   38:3   error  'TrendingUp' is defined but never used    @typescript-eslint/no-unused-vars
+  260:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  285:75  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  611:85  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/auth/AuthProvider.tsx
+    9:56  error    Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+   10:56  error    Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+   10:72  error    Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+   12:45  error    Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+   58:69  error    Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+  117:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/biofeedback/MovementAnalysis.tsx
+  91:84  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/chatbot/MedicalChatbot.tsx
+   16:3   error    'Clock' is defined but never used                                                                                               @typescript-eslint/no-unused-vars
+   19:3   error    'Heart' is defined but never used                                                                                               @typescript-eslint/no-unused-vars
+   21:3   error    'Calendar' is defined but never used                                                                                            @typescript-eslint/no-unused-vars
+   23:3   error    'Settings' is defined but never used                                                                                            @typescript-eslint/no-unused-vars
+   31:20  error    Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+   38:12  error    Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+   44:10  error    Unexpected any. Specify a different type                                                                                        @typescript-eslint/no-explicit-any
+  275:10  error    'transcript' is assigned a value but never used                                                                                 @typescript-eslint/no-unused-vars
+  320:5   error    'context' is assigned a value but never used                                                                                    @typescript-eslint/no-unused-vars
+  326:5   error    'endChatSession' is assigned a value but never used                                                                             @typescript-eslint/no-unused-vars
+  327:5   error    'clearChat' is assigned a value but never used                                                                                  @typescript-eslint/no-unused-vars
+  337:33  error    'setShowFrequentQuestions' is assigned a value but never used                                                                   @typescript-eslint/no-unused-vars
+  655:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/common/FileViewer.tsx
+  3:33  error  'DialogTrigger' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/computer-vision/ComputerVisionExercise.tsx
+    1:38   error  'useRef' is defined but never used                                           @typescript-eslint/no-unused-vars
+    2:24   error  'Pause' is defined but never used                                            @typescript-eslint/no-unused-vars
+    2:110  error  'Download' is defined but never used                                         @typescript-eslint/no-unused-vars
+    2:120  error  'RotateCcw' is defined but never used                                        @typescript-eslint/no-unused-vars
+    3:90   error  'calculateCaloriesBurned' is defined but never used                          @typescript-eslint/no-unused-vars
+    7:37   error  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+   11:50   error  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+   35:44   error  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+   35:66   error  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  179:43   error  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  179:77   error  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  281:74   error  'patientId' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  284:5    error  'currentExercise' is assigned a value but never used                         @typescript-eslint/no-unused-vars
+  308:10   error  'sessionHistory' is assigned a value but never used                          @typescript-eslint/no-unused-vars
+  308:56   error  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/crm/CRMAnalytics.tsx
+  5:26  error  'TrendingDown' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/crm/CRMAutomacoes.tsx
+  14:15  error  'Play' is defined but never used                @typescript-eslint/no-unused-vars
+  14:21  error  'Pause' is defined but never used               @typescript-eslint/no-unused-vars
+  14:28  error  'Settings' is defined but never used            @typescript-eslint/no-unused-vars
+  16:88  error  'CRMAutomacao' is defined but never used        @typescript-eslint/no-unused-vars
+  17:10  error  'format' is defined but never used              @typescript-eslint/no-unused-vars
+  18:10  error  'ptBR' is defined but never used                @typescript-eslint/no-unused-vars
+  43:34  error  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  57:34  error  'isLoading' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  86:71  error  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/crm/CRMCampanhas.tsx
+   2:29  error  'CardHeader' is defined but never used                    @typescript-eslint/no-unused-vars
+   2:41  error  'CardTitle' is defined but never used                     @typescript-eslint/no-unused-vars
+  13:17  error  'Eye' is defined but never used                           @typescript-eslint/no-unused-vars
+  57:10  error  'selectedCampanha' is assigned a value but never used     @typescript-eslint/no-unused-vars
+  57:28  error  'setSelectedCampanha' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  67:33  error  'isLoading' is assigned a value but never used            @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/crm/CRMTarefas.tsx
+  14:17  error  'Circle' is defined but never used              @typescript-eslint/no-unused-vars
+  14:25  error  'AlertCircle' is defined but never used         @typescript-eslint/no-unused-vars
+  16:78  error  'CRMTarefa' is defined but never used           @typescript-eslint/no-unused-vars
+  53:31  error  'isLoading' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  71:10  error  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/crm/LeadDetailSheet.tsx
+  10:10  error  'Separator' is defined but never used      @typescript-eslint/no-unused-vars
+  13:33  error  'MessageSquare' is defined but never used  @typescript-eslint/no-unused-vars
+  14:24  error  'ChevronRight' is defined but never used   @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/crm/LeadImport.tsx
+   8:62  error  'X' is defined but never used             @typescript-eslint/no-unused-vars
+  40:76  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/dashboard/LiveAppointmentsFeed.tsx
+   4:10  error  'useEffect' is defined but never used              @typescript-eslint/no-unused-vars
+  41:25  error  'metrics' is assigned a value but never used       @typescript-eslint/no-unused-vars
+  41:34  error  'isSubscribed' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/dashboard/PatientDashboard.tsx
+    6:10  error    'AppointmentWidget' is defined but never used                                                                                     @typescript-eslint/no-unused-vars
+   13:10  error    'Badge' is defined but never used                                                                                                 @typescript-eslint/no-unused-vars
+   14:10  error    'Progress' is defined but never used                                                                                              @typescript-eslint/no-unused-vars
+   24:3   error    'Target' is defined but never used                                                                                                @typescript-eslint/no-unused-vars
+   27:10  error    'ptBR' is defined but never used                                                                                                  @typescript-eslint/no-unused-vars
+   34:36  error    'lastUpdate' is defined but never used. Allowed unused args must match /^_/u                                                      @typescript-eslint/no-unused-vars
+   43:21  error    'setDocuments' is assigned a value but never used                                                                                 @typescript-eslint/no-unused-vars
+   90:6   warning  React Hook useCallback has a missing dependency: 'upcomingAppointments.length'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  100:7   warning  React Hook useMemo has a missing dependency: 'documents'. Either include it or remove the dependency array                        react-hooks/exhaustive-deps
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/dashboard/RealtimeMetrics.tsx
+   5:10  error  'useEffect' is defined but never used              @typescript-eslint/no-unused-vars
+   9:10  error  'logger' is defined but never used                 @typescript-eslint/no-unused-vars
+  13:11  error  'appointments' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/error/SentryErrorBoundary.tsx
+  1:10  error  'Component' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/eventos/CreateFromTemplateButton.tsx
+  23:10  error  'format' is defined but never used  @typescript-eslint/no-unused-vars
+  24:10  error  'ptBR' is defined but never used    @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/eventos/EditEventoModal.tsx
+   78:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   79:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   92:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  131:74  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  150:71  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/eventos/EventosAnalytics.tsx
+  3:20  error  'PieChart' is defined but never used    @typescript-eslint/no-unused-vars
+  3:30  error  'TrendingUp' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/eventos/FinanceiroTab.tsx
+   7:49  error  'TrendingUp' is defined but never used    @typescript-eslint/no-unused-vars
+  16:11  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  21:62  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  44:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/eventos/GlobalSearch.tsx
+   81:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  100:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/eventos/NewEventoModal.tsx
+   56:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  164:78  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/eventos/PagamentoModal.tsx
+  21:15  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  90:67  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/evolution/AddConductModal.tsx
+  86:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/evolution/ConductLibraryModal.tsx
+  39:32  error  'isLoading' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/evolution/DocumentUpload.tsx
+   29:3   error  'Eye' is defined but never used           @typescript-eslint/no-unused-vars
+   31:3   error  'AlertCircle' is defined but never used   @typescript-eslint/no-unused-vars
+  152:83  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/evolution/EvolutionChart.tsx
+  14:3  error  'Legend' is defined but never used                                          @typescript-eslint/no-unused-vars
+  28:3  error  'testName' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/evolution/EvolutionTable.tsx
+   3:10  error  'Badge' is defined but never used                                    @typescript-eslint/no-unused-vars
+  60:29  error  'i' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/evolution/GoalsManager.tsx
+  16:3  error  'Select' is defined but never used         @typescript-eslint/no-unused-vars
+  17:3  error  'SelectContent' is defined but never used  @typescript-eslint/no-unused-vars
+  18:3  error  'SelectItem' is defined but never used     @typescript-eslint/no-unused-vars
+  19:3  error  'SelectTrigger' is defined but never used  @typescript-eslint/no-unused-vars
+  20:3  error  'SelectValue' is defined but never used    @typescript-eslint/no-unused-vars
+  29:3  error  'XCircle' is defined but never used        @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/evolution/GoalsTracker.tsx
+  103:70  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/evolution/MandatoryTestAlert.tsx
+  27:10  error  'MandatoryTestAlertService' is defined but never used  @typescript-eslint/no-unused-vars
+  72:9   error  'getAlertIcon' is assigned a value but never used      @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/evolution/MeasurementCharts.tsx
+  50:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  89:73  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/evolution/MeasurementForm.tsx
+  83:57  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/evolution/PainMapCanvas.tsx
+   10:10  error  'BodyMap' is defined but never used       @typescript-eslint/no-unused-vars
+  135:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/evolution/PainMapManager.tsx
+   17:72  error  'ToggleLeft' is defined but never used                                           @typescript-eslint/no-unused-vars
+   17:84  error  'ToggleRight' is defined but never used                                          @typescript-eslint/no-unused-vars
+   18:10  error  'Badge' is defined but never used                                                @typescript-eslint/no-unused-vars
+   29:56  error  'appointmentId' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+   33:10  error  'notes' is assigned a value but never used                                       @typescript-eslint/no-unused-vars
+   33:17  error  'setNotes' is assigned a value but never used                                    @typescript-eslint/no-unused-vars
+   43:9   error  'updatePainMap' is assigned a value but never used                               @typescript-eslint/no-unused-vars
+   67:31  error  Unexpected any. Specify a different type                                         @typescript-eslint/no-explicit-any
+  178:43  error  'index' is defined but never used. Allowed unused args must match /^_/u          @typescript-eslint/no-unused-vars
+  241:49  error  Unexpected any. Specify a different type                                         @typescript-eslint/no-explicit-any
+  311:58  error  Unexpected any. Specify a different type                                         @typescript-eslint/no-explicit-any
+  323:45  error  Unexpected any. Specify a different type                                         @typescript-eslint/no-explicit-any
+  330:35  error  Unexpected any. Specify a different type                                         @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/evolution/PathologyStatus.tsx
+  93:67  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/evolution/PatientSummaryPanel.tsx
+  15:3  error  'Clock' is defined but never used         @typescript-eslint/no-unused-vars
+  16:3  error  'CheckCircle2' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/evolution/SOAPFormPanel.tsx
+   5:10  error  'Label' is defined but never used     @typescript-eslint/no-unused-vars
+  15:3   error  'Copy' is defined but never used      @typescript-eslint/no-unused-vars
+  16:3   error  'Sparkles' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/evolution/SessionExercisesPanel.tsx
+   3:29  error  'Exercise' is defined but never used          @typescript-eslint/no-unused-vars
+   9:10  error  'Plus' is defined but never used              @typescript-eslint/no-unused-vars
+   9:34  error  'GripVertical' is defined but never used      @typescript-eslint/no-unused-vars
+  34:44  error  'loading' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  60:84  error  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/evolution/SessionHistoryPanel.tsx
+  37:3  error  'onSelectSession' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  55:9  error  'getPainBadgeColor' is assigned a value but never used                             @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/evolution/StandardizedTests.tsx
+    8:32  error  'AlertCircle' is defined but never used   @typescript-eslint/no-unused-vars
+  364:61  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/evolution/SurgeryTimeline.tsx
+  58:38  error  'index' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  72:54  error  Unexpected any. Specify a different type                                 @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/evolution/TestEvolutionPanel.tsx
+  19:3   error  'Download' is defined but never used                                                      @typescript-eslint/no-unused-vars
+  25:61  error  'TestEvolutionData' is defined but never used                                             @typescript-eslint/no-unused-vars
+  55:3   error  'sessionNumber' is assigned a value but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/evolution/TreatmentDurationCard.tsx
+  3:27  error  'TrendingUp' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/evolution/__tests__/SessionEvolutionContainer.test.tsx
+  55:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/exercises/ExerciseLibrary.tsx
+    7:10  error  'ScrollArea' is defined but never used                                              @typescript-eslint/no-unused-vars
+  353:35  error  'onSelectExercise' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/exercises/ExerciseViewModal.tsx
+  68:9  error  'hasInfo' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/exercises/ProtocolsManager.tsx
+  118:73  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  296:69  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  324:73  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/exercises/TemplateDetailsModal.tsx
+  35:48  error  'updateItem' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/exercises/TemplateManager.tsx
+   2:32  error  'useTemplateItems' is defined but never used  @typescript-eslint/no-unused-vars
+  72:73  error  Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/exercises/TemplateModal.tsx
+  127:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/financial/TransactionModal.tsx
+  41:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  44:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  50:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/forms/builder/FormBuilder.tsx
+    9:10  error  'ScrollArea' is defined but never used           @typescript-eslint/no-unused-vars
+   25:45  error  'EvaluationFormField' is defined but never used  @typescript-eslint/no-unused-vars
+  179:25  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/gamification/PatientGamification.tsx
+   1:20  error  'useEffect' is defined but never used                                        @typescript-eslint/no-unused-vars
+  22:9   error  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  33:39  error  'patientId' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  34:17  error  'setLevel' is assigned a value but never used                                @typescript-eslint/no-unused-vars
+  35:14  error  'setXp' is assigned a value but never used                                   @typescript-eslint/no-unused-vars
+  36:18  error  'setStreak' is assigned a value but never used                               @typescript-eslint/no-unused-vars
+  37:23  error  'setTotalPoints' is assigned a value but never used                          @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/goals/GoalPanel.tsx
+   5:10  error  'Button' is defined but never used                                   @typescript-eslint/no-unused-vars
+   6:24  error  'AlertCircle' is defined but never used                              @typescript-eslint/no-unused-vars
+  11:10  error  'Tooltip' is defined but never used                                  @typescript-eslint/no-unused-vars
+  11:19  error  'TooltipContent' is defined but never used                           @typescript-eslint/no-unused-vars
+  11:35  error  'TooltipTrigger' is defined but never used                           @typescript-eslint/no-unused-vars
+  22:66  error  'p' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/layout/MainLayout.tsx
+  56:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/layout/Sidebar.tsx
+   40:3   error  'UserPlus' is defined but never used       @typescript-eslint/no-unused-vars
+  544:23  error  'Icon' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/metrics/DeltaCards.tsx
+  6:10  error  'metricRegistry' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/metrics/MetricsTrendChart.tsx
+  4:86  error  'Legend' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/modals/NewExerciseModal.tsx
+  100:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/modals/NewPatientModal.tsx
+  211:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  357:73  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/modals/QuickPatientModal.tsx
+  108:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  184:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/onboarding/OnboardingTour.tsx
+    5:10  error  'Card' is defined but never used          @typescript-eslint/no-unused-vars
+    5:16  error  'CardContent' is defined but never used   @typescript-eslint/no-unused-vars
+    9:3   error  'Sparkles' is defined but never used      @typescript-eslint/no-unused-vars
+  109:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/packages/PackageManager.tsx
+  16:10  error  'showNewModal' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/packages/PatientPackageCard.tsx
+  9:3  error  'Calendar' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/pain-map/BodyMap.tsx
+  116:3   error  'onPointUpdate' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  250:17  error  'hasPoint' is assigned a value but never used                                    @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/pain-map/BodyMapRealistic.tsx
+    1:41  error  'useEffect' is defined but never used                                     @typescript-eslint/no-unused-vars
+    7:44  error  'AlertCircle' is defined but never used                                   @typescript-eslint/no-unused-vars
+  208:32  error  'region' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  208:40  error  Unexpected any. Specify a different type                                  @typescript-eslint/no-explicit-any
+  318:96  error  Unexpected any. Specify a different type                                  @typescript-eslint/no-explicit-any
+  361:88  error  Unexpected any. Specify a different type                                  @typescript-eslint/no-explicit-any
+  383:84  error  Unexpected any. Specify a different type                                  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/pain-map/PainEvolutionChart.tsx
+  12:3   error  'ReferenceLine' is defined but never used  @typescript-eslint/no-unused-vars
+  17:37  error  'TrendingDown' is defined but never used   @typescript-eslint/no-unused-vars
+  42:45  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  72:27  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/pain-map/PainMapComparisonModal.tsx
+  16:10  error  'PainMapService' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/pain-map/PainMapEditor.tsx
+    6:10  error  'Slider' is defined but never used                                           @typescript-eslint/no-unused-vars
+   11:16  error  'RotateCcw' is defined but never used                                        @typescript-eslint/no-unused-vars
+   37:3   error  'sessionId' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+   55:9   error  'currentPoints' is assigned a value but never used                           @typescript-eslint/no-unused-vars
+  336:10  error  'getIntensityColor' is defined but never used                                @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/pain-map/PainPointDetailPanel.tsx
+   6:10  error  'Checkbox' is defined but never used                                     @typescript-eslint/no-unused-vars
+  67:37  error  'index' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/pain-map/PainPointModal.tsx
+  14:10  error  'cn' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/patient/MedicalRequestsTab.tsx
+  10:58  error  'Eye' is defined but never used                    @typescript-eslint/no-unused-vars
+  10:63  error  'Download' is defined but never used               @typescript-eslint/no-unused-vars
+  66:11  error  'getPublicUrl' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/patient/WearablesData.tsx
+   9:10   error  'Activity' is defined but never used                    @typescript-eslint/no-unused-vars
+   9:70   error  'CalendarIcon' is defined but never used                @typescript-eslint/no-unused-vars
+   9:84   error  'ArrowUp' is defined but never used                     @typescript-eslint/no-unused-vars
+   9:93   error  'ArrowDown' is defined but never used                   @typescript-eslint/no-unused-vars
+   9:104  error  'Minus' is defined but never used                       @typescript-eslint/no-unused-vars
+  10:86   error  'AreaChart' is defined but never used                   @typescript-eslint/no-unused-vars
+  10:97   error  'Area' is defined but never used                        @typescript-eslint/no-unused-vars
+  11:18   error  'subDays' is defined but never used                     @typescript-eslint/no-unused-vars
+  11:27   error  'isAfter' is defined but never used                     @typescript-eslint/no-unused-vars
+  11:36   error  'parseISO' is defined but never used                    @typescript-eslint/no-unused-vars
+  22:27   error  'isLoading' is assigned a value but never used          @typescript-eslint/no-unused-vars
+  24:12   error  'period' is assigned a value but never used             @typescript-eslint/no-unused-vars
+  24:20   error  'setPeriod' is assigned a value but never used          @typescript-eslint/no-unused-vars
+  25:12   error  'selectedMetric' is assigned a value but never used     @typescript-eslint/no-unused-vars
+  25:28   error  'setSelectedMetric' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/patients/PatientDashboard360.tsx
+   6:10  error  'Button' is defined but never used        @typescript-eslint/no-unused-vars
+  18:3   error  'TrendingUp' is defined but never used    @typescript-eslint/no-unused-vars
+  31:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  32:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/physiotherapy/PosturalAssessment.tsx
+  7:10  error  'Badge' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/prescriptions/NewPrescriptionModal.tsx
+  52:51  error  'loadingExercises' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  92:87  error  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/prescriptions/PrescriptionCard.tsx
+  104:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/pwa/PWAUpdatePrompt.tsx
+  11:32  error  'setNeedRefresh' is assigned a value but never used                    @typescript-eslint/no-unused-vars
+  18:7   error  Expected an assignment or function call and instead saw an expression  @typescript-eslint/no-unused-expressions
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/reports/IntelligentReports.tsx
+  50:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/reports/ReportGeneratorDialog.tsx
+  14:10  error  'TestEvolutionService' is defined but never used  @typescript-eslint/no-unused-vars
+  55:98  error  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  56:75  error  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  78:62  error  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/schedule/AppointmentCard.tsx
+  2:17  error  'MapPin' is defined but never used         @typescript-eslint/no-unused-vars
+  2:25  error  'MessageCircle' is defined but never used  @typescript-eslint/no-unused-vars
+  2:53  error  'Star' is defined but never used           @typescript-eslint/no-unused-vars
+  3:10  error  'Badge' is defined but never used          @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/schedule/AppointmentDialogSegments.tsx
+    2:31   error  'FieldErrors' is defined but never used                                                    @typescript-eslint/no-unused-vars
+   10:10   error  'Textarea' is defined but never used                                                       @typescript-eslint/no-unused-vars
+   64:80   error  Unexpected any. Specify a different type                                                   @typescript-eslint/no-explicit-any
+  391:5    error  'isRecurringCalendarOpen' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  457:120  error  Unexpected any. Specify a different type                                                   @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/schedule/AppointmentListView.tsx
+  53:16  error  'error' is defined but never used                                     @typescript-eslint/no-unused-vars
+  68:38  error  'id' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  75:37  error  'id' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  83:35  error  'id' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  89:39  error  'id' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/schedule/AppointmentModalRefactored.tsx
+   31:8   error  'AppointmentType' is defined but never used    @typescript-eslint/no-unused-vars
+   32:8   error  'AppointmentStatus' is defined but never used  @typescript-eslint/no-unused-vars
+  281:43  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  282:59  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  285:93  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  304:52  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  307:52  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  320:21  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/schedule/AppointmentQuickEditModal.tsx
+  46:3  error  'CheckCircle2' is defined but never used                                     @typescript-eslint/no-unused-vars
+  97:3  error  'onDeleted' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/schedule/AppointmentQuickView.tsx
+   2:10  error  'format' is defined but never used                @typescript-eslint/no-unused-vars
+   3:10  error  'ptBR' is defined but never used                  @typescript-eslint/no-unused-vars
+   4:37  error  'User' is defined but never used                  @typescript-eslint/no-unused-vars
+   4:43  error  'Phone' is defined but never used                 @typescript-eslint/no-unused-vars
+   4:50  error  'CreditCard' is defined but never used            @typescript-eslint/no-unused-vars
+   6:10  error  'Badge' is defined but never used                 @typescript-eslint/no-unused-vars
+  76:29  error  'hasInterest' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/schedule/AppointmentReminder.tsx
+    8:32   error  'Trash2' is defined but never used        @typescript-eslint/no-unused-vars
+  175:100  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  191:96   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/schedule/CalendarDayColumn.tsx
+    9:10  error  'Badge' is defined but never used         @typescript-eslint/no-unused-vars
+  204:61  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  205:64  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/schedule/CalendarDayView.tsx
+  66:5  error  'checkTimeBlocked' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/schedule/CalendarMonthView.tsx
+  3:10  error  'ptBR' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/schedule/CalendarView.tsx
+  42:3  error  'isRescheduling' is assigned a value but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/schedule/CalendarWeekView.tsx
+  2:10  error  'format' is defined but never used     @typescript-eslint/no-unused-vars
+  2:40  error  'isToday' is defined but never used    @typescript-eslint/no-unused-vars
+  2:49  error  'isSameDay' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/schedule/CapacityExceededDialog.tsx
+  4:3  error  'AlertDialogAction' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/schedule/DailyAppointmentList.tsx
+  7:10  error  'format' is defined but never used  @typescript-eslint/no-unused-vars
+  8:10  error  'ptBR' is defined but never used    @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/schedule/DuplicateAppointmentDialog.tsx
+    5:10  error  'Input' is defined but never used         @typescript-eslint/no-unused-vars
+    9:30  error  'Clock' is defined but never used         @typescript-eslint/no-unused-vars
+   10:18  error  'addDays' is defined but never used       @typescript-eslint/no-unused-vars
+   12:10  error  'cn' is defined but never used            @typescript-eslint/no-unused-vars
+   55:49  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  113:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  189:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/schedule/EquipmentSelector.tsx
+    2:10  error    'Checkbox' is defined but never used                                                                                            @typescript-eslint/no-unused-vars
+  130:9   error    'getSelectedEquipment' is assigned a value but never used                                                                       @typescript-eslint/no-unused-vars
+  248:10  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/schedule/RescheduleConfirmDialog.tsx
+  14:39  error  'User' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/schedule/ScheduleGrid.tsx
+  2:40  error  'MapPin' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/schedule/ScheduleSidebar.tsx
+   1:17  error  'useMemo' is defined but never used             @typescript-eslint/no-unused-vars
+   8:35  error  'User' is defined but never used                @typescript-eslint/no-unused-vars
+  55:11  error  'toggleAll' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/schedule/SwipeableAppointmentCard.tsx
+  2:42  error  'Clock' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/schedule/WaitlistNotification.tsx
+  17:3  error  'User' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/schedule/WaitlistQuickViewModal.tsx
+   2:10  error  'format' is defined but never used  @typescript-eslint/no-unused-vars
+  18:3   error  'User' is defined but never used    @typescript-eslint/no-unused-vars
+  21:3   error  'Plus' is defined but never used    @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/schedule/settings/BusinessHoursManager.tsx
+  34:76  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/security/DataExportPanel.tsx
+   18:5   error  'completedRequests' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  142:73  error  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/security/MFASetupPanel.tsx
+   6:10  error  'Input' is defined but never used              @typescript-eslint/no-unused-vars
+  18:5   error  'settings' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/signature/DigitalSignature.tsx
+   4:10  error  'Badge' is defined but never used      @typescript-eslint/no-unused-vars
+  12:3   error  'Undo2' is defined but never used      @typescript-eslint/no-unused-vars
+  13:3   error  'RotateCcw' is defined but never used  @typescript-eslint/no-unused-vars
+  18:10  error  'cn' is defined but never used         @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/signature/SignedDocumentBadge.tsx
+  3:24  error  'FileSignature' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/surveys/NPSSurveyForm.tsx
+   7:10  error  'Star' is defined but never used                             @typescript-eslint/no-unused-vars
+  27:31  error  'setFacilityCleanliness' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  28:26  error  'setSchedulingEase' is assigned a value but never used       @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/tarefas/KanbanBoard.tsx
+  3:30  error  'List' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/tarefas/TarefaModal.tsx
+  139:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/ui/OfflineIndicator.tsx
+  23:30  error  'Wifi' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/ui/OptimizedImage.tsx
+   99:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  115:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/ui/badge.tsx
+  17:17  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/ui/button.tsx
+  28:18  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/ui/calendar.tsx
+  60:25  error  'props' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  61:26  error  'props' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/ui/collapsible.tsx
+  1:13  error  'React' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/ui/sidebar.tsx
+  35:7   error  'defaultOpen' is assigned a value but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  36:13  error  'openProp' is defined but never used. Allowed unused args must match /^_/u              @typescript-eslint/no-unused-vars
+  37:21  error  'setOpenProp' is defined but never used. Allowed unused args must match /^_/u           @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/ui/use-toast.ts
+  14:7  error  'actionTypes' is assigned a value but only used as a type  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/waitlist/WaitlistCard.tsx
+  69:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/waitlist/WaitlistEntryModal.tsx
+   15:10  error  'useWaitlist' is defined but never used   @typescript-eslint/no-unused-vars
+  157:61  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/whatsapp/WhatsAppDashboard.tsx
+   23:3   error  'LineChart' is defined but never used     @typescript-eslint/no-unused-vars
+   24:3   error  'Line' is defined but never used          @typescript-eslint/no-unused-vars
+   42:3   error  'Settings' is defined but never used      @typescript-eslint/no-unused-vars
+   49:3   error  'Mail' is defined but never used          @typescript-eslint/no-unused-vars
+  177:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  414:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  500:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/whatsapp/WhatsAppIntegration.tsx
+  25:39  error  'patientId' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  83:14  error  'error' is defined but never used                                            @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/constants/appointments.ts
+  1:27  error  'AppointmentStatus' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/contexts/RealtimeContext.tsx
+   1:71  error    'ReactNode' is defined but never used                                                                                           @typescript-eslint/no-unused-vars
+   6:11  error    'RealtimeSubscription' is defined but never used                                                                                @typescript-eslint/no-unused-vars
+  44:14  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/generated/types/dynamic_compare_metrics.ts
+  1:1  warning  Unused eslint-disable directive (no problems were reported)
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/__tests__/useAppointmentActions.test.ts
+  4:10  error  'supabase' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/__tests__/useAppointments.test.tsx
+   73:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  112:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  137:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  171:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  233:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  267:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/__tests__/useAuth.test.ts
+  35:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  55:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/__tests__/useChecklist.test.ts
+  4:10  error  'supabase' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/__tests__/useDashboardStats.test.ts
+  4:10  error  'supabase' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/__tests__/useEventos.test.ts
+  45:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/__tests__/usePagamentos.test.ts
+  4:10  error  'supabase' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/__tests__/useParticipantes.test.ts
+  4:10  error  'supabase' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/__tests__/usePermissions.test.ts
+  27:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  36:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  52:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  61:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  77:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  86:10  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/__tests__/usePrestadores.test.ts
+  4:10  error  'supabase' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/index.ts
+   2:10  error  'useState' is defined but never used                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+   5:33  error  'variant' is defined but never used. Allowed unused args must match /^_/u                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  11:45  error  'variant' is defined but never used. Allowed unused args must match /^_/u                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  17:18  error  An empty interface declaration allows any non-nullish value, including literals like `0` and `""`.
+- If that's what you want, disable this lint rule with an inline comment or configure the 'allowInterfaces' rule option.
+- If you want a type meaning "any object", you probably want `object` instead.
+- If you want a type meaning "any value", you probably want `unknown` instead  @typescript-eslint/no-empty-object-type
+  18:31  error  'options' is defined but never used. Allowed unused args must match /^_/u                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  18:41  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  22:12  error  'files' is defined but never used. Allowed unused args must match /^_/u                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+  23:16  error  'id' is defined but never used. Allowed unused args must match /^_/u                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+  59:33  error  'variant' is defined but never used. Allowed unused args must match /^_/u                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useAdvancedAnalytics.ts
+   17:11  error  'ChartConfig' is defined but never used  @typescript-eslint/no-unused-vars
+  464:14  error  'err' is defined but never used          @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useAnalyticsSummary.ts
+  3:10  error  'format' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useAppointments.tsx
+  187:19  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  203:32  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  336:13  error  'conflict' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  496:17  error  'conflict' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  513:25  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  809:51  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useAssetAnnotations.ts
+  74:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useAttendanceReport.ts
+  213:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  266:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  267:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  270:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useAuditLogs.ts
+  12:13  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  13:13  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  14:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  74:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useAvailableTimeSlots.ts
+   16:7   error  'DEFAULT_BUSINESS_HOURS' is assigned a value but never used                     @typescript-eslint/no-unused-vars
+   75:11  error  'dateStr' is assigned a value but never used                                    @typescript-eslint/no-unused-vars
+  244:3   error  'blockedTimes' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useCRM.ts
+   45:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   46:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  189:87  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  251:89  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  334:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  420:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useCalendarDrag.ts
+  142:8  warning  React Hook useCallback has an unnecessary dependency: 'onAppointmentReschedule'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useChecklist.ts
+   31:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   45:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   63:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   78:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  117:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  148:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useConductLibrary.ts
+   73:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  103:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useConnectionStatus.ts
+   58:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  149:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useDashboardMetrics.ts
+    3:10  error  'format' is defined but never used        @typescript-eslint/no-unused-vars
+  183:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useDashboardWidgets.ts
+  21:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useDigitalSignature.ts
+  25:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  56:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  88:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useEmpresasParceiras.ts
+   55:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   88:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  118:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useEvaluationForms.ts
+  153:14  error  Unexpected any. Specify a different type                                  @typescript-eslint/no-explicit-any
+  174:30  error  'formId' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  175:25  error  Unexpected any. Specify a different type                                  @typescript-eslint/no-explicit-any
+  204:30  error  'formId' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useEventoTemplates.ts
+   51:64  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  117:69  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useEventos.ts
+   59:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   87:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  104:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  129:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  159:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useEvolutionTemplates.ts
+  11:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useExerciseProtocols.ts
+  22:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  23:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  24:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  24:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  49:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  57:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  77:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useExportPrestadores.ts
+  50:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useFinancial.ts
+  14:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useGamification.ts
+   13:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  149:68  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useIncompletePatients.ts
+  30:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useInnovations.ts
+   15:11  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  170:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  188:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  228:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  320:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  348:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  381:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useIntelligentConductSuggestions.ts
+  49:13  error  'allKeywords' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useMedicalChatbot.ts
+    1:20  error  'useEffect' is defined but never used                                             @typescript-eslint/no-unused-vars
+   13:16  error  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+   50:24  error  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+   51:22  error  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+   52:17  error  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+   53:23  error  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  241:23  error  'setIsConnected' is assigned a value but never used                               @typescript-eslint/no-unused-vars
+  331:14  error  'error' is defined but never used                                                 @typescript-eslint/no-unused-vars
+  351:57  error  'chatContext' is defined but never used. Allowed unused args must match /^_/u     @typescript-eslint/no-unused-vars
+  548:55  error  'limit' is assigned a value but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useMedicalRecords.ts
+   66:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  100:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  132:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useOnlineUsers.ts
+  19:10  error  'channel' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useOrganizations.ts
+   9:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  78:89  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/usePackages.ts
+   60:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   97:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  166:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  203:49  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  218:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  226:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  229:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  233:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  302:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  323:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  360:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/usePagamentos.ts
+   36:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   50:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   72:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   87:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  118:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/usePainMapHistory.ts
+  49:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  56:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/usePainMaps.ts
+   15:17  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  116:26  error  'view' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  141:14  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useParticipantes.ts
+   31:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   45:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   63:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   78:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  109:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  163:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/usePatientDocuments.ts
+   92:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  132:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  166:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/usePatientEvolution.ts
+  288:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/usePatientObjectives.ts
+  176:30  error  'patientId' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/usePatientRetention.ts
+  123:13  error  'thirtyDaysAgo' is assigned a value but never used                         @typescript-eslint/no-unused-vars
+  124:13  error  'ninetyDaysAgo' is assigned a value but never used                         @typescript-eslint/no-unused-vars
+  507:36  error  'patient' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/usePatients.ts
+  66:78  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/usePermissions.ts
+  52:22  error  'resource' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/usePrescriptions.ts
+  125:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/usePrestadores.ts
+   31:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   45:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   63:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   78:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  109:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  152:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/usePurchaseVoucher.ts
+   7:9   error  'queryClient' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  29:22  error  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  62:22  error  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/usePushNotifications.ts
+    7:11  error  'PushSubscription' is defined but never used       @typescript-eslint/no-unused-vars
+  199:10  error  'urlBase64ToUint8Array' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useReports.ts
+  106:60  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  112:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  119:71  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  170:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  177:61  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  181:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  198:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  223:60  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  230:76  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  277:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  278:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  421:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  429:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  445:11  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useSatisfactionSurveys.ts
+  103:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  195:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  221:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  244:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useScheduleCapacity.ts
+   73:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  116:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useSidebar.ts
+  6:7  error  'SIDEBAR_WIDTH' is assigned a value but never used         @typescript-eslint/no-unused-vars
+  7:7  error  'SIDEBAR_WIDTH_MOBILE' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  8:7  error  'SIDEBAR_WIDTH_ICON' is assigned a value but never used    @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useSoapRecords.ts
+   99:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  134:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  169:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useTeamPerformance.ts
+  105:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  124:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useTherapistOccupancy.ts
+  98:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  99:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useTransacoes.ts
+   14:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   58:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   83:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  105:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useWaitlist.ts
+  100:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  100:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  108:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  191:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  258:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  269:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  273:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  299:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  333:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  355:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  363:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useWaitlistMatch.ts
+  3:10  error  'format' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useWhatsAppMetrics.ts
+  3:27  error  'TEMPLATE_KEYS' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/lib/audit/auditMiddleware.ts
+   55:21  error  'user' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   57:42  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  150:56  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  150:85  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/lib/cornerstone/initCornerstone.ts
+  3:5  error  'getRenderingEngine' is defined but never used  @typescript-eslint/no-unused-vars
+  4:5  error  'RenderingEngine' is defined but never used     @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/lib/errors/logger.ts
+  94:18  error  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/lib/export/excelExport.ts
+   17:24  error  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+   30:7   error  'HEADER_STYLE' is assigned a value but never used         @typescript-eslint/no-unused-vars
+   36:7   error  'TITLE_STYLE' is assigned a value but never used          @typescript-eslint/no-unused-vars
+   41:7   error  'ALTERNATE_ROW_STYLE' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   48:29  error  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  114:24  error  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  117:4   error  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  118:17  error  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  137:76  error  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  631:28  error  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+  633:27  error  Unexpected any. Specify a different type                  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/lib/export/pdfExport.ts
+   72:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  119:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/lib/export/prescriptionPdfExport.ts
+  139:3  error  Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/lib/mockData.ts
+  159:9  error  'statuses' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/lib/monitoring.ts
+   12:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  111:67  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  128:75  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  196:61  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/lib/offline/AppointmentsCacheService.ts
+  147:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/lib/offline/SyncManager.ts
+  115:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  121:63  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  123:63  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  131:67  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  133:67  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  141:63  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  143:63  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/lib/openapi/generator.ts
+  12:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  14:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  15:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  22:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  40:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/lib/services/PatientService.ts
+   20:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   22:72  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   49:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   51:75  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   84:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   86:75  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   95:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  124:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  126:75  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/lib/services/ReportGeneratorService.ts
+  128:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  192:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  350:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  397:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  408:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  435:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  655:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  689:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/lib/services/WhatsAppService.ts
+  56:15  error  'data' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/lib/services/conductReplicationService.ts
+  34:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  51:61  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/lib/services/mandatoryTestAlertService.ts
+  26:13  error  'pathologies' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/lib/services/offlineStorage.ts
+   86:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  147:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  169:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/lib/services/painMapService.ts
+   13:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   19:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   24:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   30:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   35:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   36:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   41:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   46:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   47:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   53:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   58:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   67:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   78:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   78:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  138:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/lib/services/patientGoalsService.ts
+   3:28  error  'format' is defined but never used        @typescript-eslint/no-unused-vars
+   4:10  error  'ptBR' is defined but never used          @typescript-eslint/no-unused-vars
+  42:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/lib/services/sessionEvolutionService.ts
+  112:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/lib/validation/ajv.ts
+  11:1   error  Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+  12:33  error  'e' is defined but never used                                                                                        @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/lib/validations/notifications.ts
+  179:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/AdminCRUD.tsx
+  15:3  error  'Target' is defined but never used       @typescript-eslint/no-unused-vars
+  16:3  error  'Stethoscope' is defined but never used  @typescript-eslint/no-unused-vars
+  17:3  error  'Heart' is defined but never used        @typescript-eslint/no-unused-vars
+  18:3  error  'Scissors' is defined but never used     @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/ApiDocs.tsx
+   8:50  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  10:17  error  'setError' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  23:49  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  27:20  error  'yamlErr' is defined but never used            @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/AuditLogs.tsx
+  32:61   error  'AuditLog' is defined but never used      @typescript-eslint/no-unused-vars
+  41:122  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  65:63   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  65:77   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  65:91   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  69:62   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/Auth.tsx
+   7:10  error  'Card' is defined but never used             @typescript-eslint/no-unused-vars
+   7:16  error  'CardContent' is defined but never used      @typescript-eslint/no-unused-vars
+   7:29  error  'CardDescription' is defined but never used  @typescript-eslint/no-unused-vars
+   7:46  error  'CardHeader' is defined but never used       @typescript-eslint/no-unused-vars
+   7:58  error  'CardTitle' is defined but never used        @typescript-eslint/no-unused-vars
+  10:19  error  'Heart' is defined but never used            @typescript-eslint/no-unused-vars
+  10:26  error  'Shield' is defined but never used           @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/Communications.tsx
+  14:3  error  'Plus' is defined but never used           @typescript-eslint/no-unused-vars
+  33:8  error  'Communication' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/EventoDetalhes.tsx
+   8:10  error  'Skeleton' is defined but never used              @typescript-eslint/no-unused-vars
+  38:9   error  'queryClient' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/Eventos.tsx
+  16:10  error  'GlobalSearch' is defined but never used  @typescript-eslint/no-unused-vars
+  64:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/ExerciseLibraryExpanded.tsx
+  12:60  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/Exercises.tsx
+   22:10  error  'cn' is defined but never used            @typescript-eslint/no-unused-vars
+  236:75  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/FileUploadTest.tsx
+  23:10  error  'isDragging' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/Financial.tsx
+  115:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/Inventory.tsx
+    3:29   error  'CardHeader' is defined but never used              @typescript-eslint/no-unused-vars
+    3:41   error  'CardTitle' is defined but never used               @typescript-eslint/no-unused-vars
+   12:10   error  'AlertDialog' is defined but never used             @typescript-eslint/no-unused-vars
+   12:23   error  'AlertDialogAction' is defined but never used       @typescript-eslint/no-unused-vars
+   12:42   error  'AlertDialogCancel' is defined but never used       @typescript-eslint/no-unused-vars
+   12:61   error  'AlertDialogContent' is defined but never used      @typescript-eslint/no-unused-vars
+   12:81   error  'AlertDialogDescription' is defined but never used  @typescript-eslint/no-unused-vars
+   12:105  error  'AlertDialogFooter' is defined but never used       @typescript-eslint/no-unused-vars
+   12:124  error  'AlertDialogHeader' is defined but never used       @typescript-eslint/no-unused-vars
+   12:143  error  'AlertDialogTitle' is defined but never used        @typescript-eslint/no-unused-vars
+   12:161  error  'AlertDialogTrigger' is defined but never used      @typescript-eslint/no-unused-vars
+   15:9    error  'Trash2' is defined but never used                  @typescript-eslint/no-unused-vars
+   17:129  error  'InventoryMovement' is defined but never used       @typescript-eslint/no-unused-vars
+  514:99   error  Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/InvitationManagement.tsx
+  42:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/MedicalRecord.tsx
+   41:11  error  'Patient' is defined but never used                      @typescript-eslint/no-unused-vars
+   75:8   error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+  111:9   error  'appointmentId' is assigned a value but never used       @typescript-eslint/no-unused-vars
+  136:11  error  'prescriptions' is assigned a value but never used       @typescript-eslint/no-unused-vars
+  136:26  error  'deletePrescription' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  172:23  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+  172:43  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+  275:37  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+  279:37  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+  308:36  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+  660:56  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/Notifications.tsx
+  17:3   error  'Filter' is defined but never used           @typescript-eslint/no-unused-vars
+  22:29  error  'CardDescription' is defined but never used  @typescript-eslint/no-unused-vars
+  22:46  error  'CardHeader' is defined but never used       @typescript-eslint/no-unused-vars
+  22:58  error  'CardTitle' is defined but never used        @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/Partner.tsx
+   31:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  101:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  134:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/PatientEvolution.tsx
+   19:3   error    'User' is defined but never used                                                                                                             @typescript-eslint/no-unused-vars
+   27:3   error    'TrendingDown' is defined but never used                                                                                                     @typescript-eslint/no-unused-vars
+   33:3   error    'Download' is defined but never used                                                                                                         @typescript-eslint/no-unused-vars
+   34:3   error    'Share2' is defined but never used                                                                                                           @typescript-eslint/no-unused-vars
+   52:10  error    'logger' is defined but never used                                                                                                           @typescript-eslint/no-unused-vars
+   59:10  error    'ReportGeneratorDialog' is defined but never used                                                                                            @typescript-eslint/no-unused-vars
+  147:68  error    'appointmentError' is assigned a value but never used                                                                                        @typescript-eslint/no-unused-vars
+  184:60  error    'patientError' is assigned a value but never used                                                                                            @typescript-eslint/no-unused-vars
+  285:6   warning  React Hook useEffect has missing dependencies: 'handleCompleteSession' and 'handleSave'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  339:35  error    Unexpected any. Specify a different type                                                                                                     @typescript-eslint/no-explicit-any
+  353:51  error    Unexpected any. Specify a different type                                                                                                     @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/PatientGamificationPage.tsx
+  4:10  error  'Button' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/PatientPortal.tsx
+  16:3  error  'XCircle' is defined but never used      @typescript-eslint/no-unused-vars
+  17:3  error  'AlertCircle' is defined but never used  @typescript-eslint/no-unused-vars
+  20:3  error  'Star' is defined but never used         @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/Patients.tsx
+    4:29  error  'CardHeader' is defined but never used               @typescript-eslint/no-unused-vars
+    4:41  error  'CardTitle' is defined but never used                @typescript-eslint/no-unused-vars
+   26:3   error  'Eye' is defined but never used                      @typescript-eslint/no-unused-vars
+   27:3   error  'Edit' is defined but never used                     @typescript-eslint/no-unused-vars
+   28:3   error  'Phone' is defined but never used                    @typescript-eslint/no-unused-vars
+   29:3   error  'Mail' is defined but never used                     @typescript-eslint/no-unused-vars
+   33:3   error  'Trash2' is defined but never used                   @typescript-eslint/no-unused-vars
+   34:3   error  'TrendingUp' is defined but never used               @typescript-eslint/no-unused-vars
+   52:9   error  'navigate' is assigned a value but never used        @typescript-eslint/no-unused-vars
+  150:9   error  'getStatusColor' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/PreCadastro.tsx
+  23:9   error  'navigate' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  83:16  error  'err' is defined but never used                @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/PreCadastroAdmin.tsx
+   13:10  error  'Checkbox' is defined but never used                                         @typescript-eslint/no-unused-vars
+   17:29  error  'Trash2' is defined but never used                                           @typescript-eslint/no-unused-vars
+   17:37  error  'Eye' is defined but never used                                              @typescript-eslint/no-unused-vars
+  192:41  error  'tokenName' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/Profile.tsx
+  29:11  error  'user' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/Protocols.tsx
+     8:10  error  'ScrollArea' is defined but never used     @typescript-eslint/no-unused-vars
+     9:10  error  'Progress' is defined but never used       @typescript-eslint/no-unused-vars
+    10:10  error  'Separator' is defined but never used      @typescript-eslint/no-unused-vars
+    23:3   error  'Filter' is defined but never used         @typescript-eslint/no-unused-vars
+    23:49  error  'Printer' is defined but never used        @typescript-eslint/no-unused-vars
+    24:13  error  'BarChart3' is defined but never used      @typescript-eslint/no-unused-vars
+    25:3   error  'Bookmark' is defined but never used       @typescript-eslint/no-unused-vars
+    25:13  error  'BookmarkCheck' is defined but never used  @typescript-eslint/no-unused-vars
+    25:28  error  'RefreshCw' is defined but never used      @typescript-eslint/no-unused-vars
+   580:58  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   727:46  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   752:50  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  1125:75  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  1158:77  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/Reports.tsx
+  28:22  error  'LoadingSkeleton' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/Schedule.tsx
+    2:10   error  'Card' is defined but never used                             @typescript-eslint/no-unused-vars
+    2:16   error  'CardContent' is defined but never used                      @typescript-eslint/no-unused-vars
+    2:29   error  'CardDescription' is defined but never used                  @typescript-eslint/no-unused-vars
+    2:46   error  'CardHeader' is defined but never used                       @typescript-eslint/no-unused-vars
+    2:58   error  'CardTitle' is defined but never used                        @typescript-eslint/no-unused-vars
+    4:10   error  'Badge' is defined but never used                            @typescript-eslint/no-unused-vars
+    5:10   error  'Separator' is defined but never used                        @typescript-eslint/no-unused-vars
+    9:7    error  'SheetContent' is assigned a value but never used            @typescript-eslint/no-unused-vars
+   10:7    error  'SheetTrigger' is assigned a value but never used            @typescript-eslint/no-unused-vars
+   21:10   error  'ScheduleSidebar' is defined but never used                  @typescript-eslint/no-unused-vars
+   22:10   error  'QuickStats' is defined but never used                       @typescript-eslint/no-unused-vars
+   28:35   error  'Clock' is defined but never used                            @typescript-eslint/no-unused-vars
+   28:49   error  'TrendingUp' is defined but never used                       @typescript-eslint/no-unused-vars
+   28:93   error  'Bell' is defined but never used                             @typescript-eslint/no-unused-vars
+   28:99   error  'Filter' is defined but never used                           @typescript-eslint/no-unused-vars
+   28:107  error  'WifiOff' is defined but never used                          @typescript-eslint/no-unused-vars
+   28:116  error  'RefreshCw' is defined but never used                        @typescript-eslint/no-unused-vars
+   31:10   error  'cn' is defined but never used                               @typescript-eslint/no-unused-vars
+   32:22   error  'LoadingSkeleton' is defined but never used                  @typescript-eslint/no-unused-vars
+   37:37   error  'formatDistanceToNow' is defined but never used              @typescript-eslint/no-unused-vars
+   55:19   error  'setFilters' is assigned a value but never used              @typescript-eslint/no-unused-vars
+   60:21   error  'setDateRange' is assigned a value but never used            @typescript-eslint/no-unused-vars
+   78:12   error  'connectionState' is assigned a value but never used         @typescript-eslint/no-unused-vars
+   80:5    error  'tryReconnect' is assigned a value but never used            @typescript-eslint/no-unused-vars
+   96:9    error  'isLoadingOrChecking' is assigned a value but never used     @typescript-eslint/no-unused-vars
+  111:9    error  'stats' is assigned a value but never used                   @typescript-eslint/no-unused-vars
+  166:9    error  'upcomingAppointments' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  182:9    error  'filterOptions' is assigned a value but never used           @typescript-eslint/no-unused-vars
+  288:14   error  'error' is defined but never used                            @typescript-eslint/no-unused-vars
+  293:9    error  'createTestAppointments' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  332:44   error  Unexpected any. Specify a different type                     @typescript-eslint/no-explicit-any
+  333:52   error  Unexpected any. Specify a different type                     @typescript-eslint/no-explicit-any
+  337:14   error  Unexpected any. Specify a different type                     @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/Settings.tsx
+  11:15  error  'SettingsIcon' is defined but never used                 @typescript-eslint/no-unused-vars
+  16:3   error  'History' is defined but never used                      @typescript-eslint/no-unused-vars
+  35:31  error  'permissionsLoading' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/SmartDashboard.tsx
+   6:10   error  'Button' is defined but never used                 @typescript-eslint/no-unused-vars
+  11:13   error  'Target' is defined but never used                 @typescript-eslint/no-unused-vars
+  11:21   error  'Zap' is defined but never used                    @typescript-eslint/no-unused-vars
+  11:37   error  'Clock' is defined but never used                  @typescript-eslint/no-unused-vars
+  12:3    error  'XCircle' is defined but never used                @typescript-eslint/no-unused-vars
+  17:27   error  'startOfWeek' is defined but never used            @typescript-eslint/no-unused-vars
+  17:40   error  'endOfWeek' is defined but never used              @typescript-eslint/no-unused-vars
+  19:101  error  'PieChart' is defined but never used               @typescript-eslint/no-unused-vars
+  19:111  error  'Pie' is defined but never used                    @typescript-eslint/no-unused-vars
+  19:116  error  'Cell' is defined but never used                   @typescript-eslint/no-unused-vars
+  21:7    error  'COLORS' is assigned a value but never used        @typescript-eslint/no-unused-vars
+  35:60   error  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  37:9    error  'pendingToday' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/Surveys.tsx
+    3:29  error  'CardDescription' is defined but never used  @typescript-eslint/no-unused-vars
+    3:46  error  'CardHeader' is defined but never used       @typescript-eslint/no-unused-vars
+    3:58  error  'CardTitle' is defined but never used        @typescript-eslint/no-unused-vars
+   17:3   error  'Select' is defined but never used           @typescript-eslint/no-unused-vars
+   18:3   error  'SelectContent' is defined but never used    @typescript-eslint/no-unused-vars
+   19:3   error  'SelectItem' is defined but never used       @typescript-eslint/no-unused-vars
+   20:3   error  'SelectTrigger' is defined but never used    @typescript-eslint/no-unused-vars
+   21:3   error  'SelectValue' is defined but never used      @typescript-eslint/no-unused-vars
+   28:50  error  'Download' is defined but never used         @typescript-eslint/no-unused-vars
+   28:76  error  'Filter' is defined but never used           @typescript-eslint/no-unused-vars
+   45:11  error  'toast' is assigned a value but never used   @typescript-eslint/no-unused-vars
+  228:78  error  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/Telemedicine.tsx
+   51:14  error  'error' is defined but never used         @typescript-eslint/no-unused-vars
+  235:71  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/TelemedicineRoom.tsx
+    3:29  error    'CardHeader' is defined but never used                                                                        @typescript-eslint/no-unused-vars
+    3:41  error    'CardTitle' is defined but never used                                                                         @typescript-eslint/no-unused-vars
+   12:3   error    'MessageSquare' is defined but never used                                                                     @typescript-eslint/no-unused-vars
+   12:32  error    'Settings' is defined but never used                                                                          @typescript-eslint/no-unused-vars
+   12:42  error    'Maximize' is defined but never used                                                                          @typescript-eslint/no-unused-vars
+   13:11  error    'Copy' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+  112:6   warning  React Hook useEffect has a missing dependency: 'stopMedia'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  289:63  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  291:38  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  325:42  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/TherapistOccupancy.tsx
+  37:38  error  'TherapistOccupancyData' is defined but never used  @typescript-eslint/no-unused-vars
+  91:14  error  'error' is defined but never used                   @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/Vouchers.tsx
+   2:82  error    'Filter' is defined but never used                                                                                @typescript-eslint/no-unused-vars
+  34:10  error    'cn' is defined but never used                                                                                    @typescript-eslint/no-unused-vars
+  60:6   warning  React Hook useEffect has a missing dependency: 'verifyPayment'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/admin/goals/GoalProfileEditorPage.tsx
+   26:5   error  'CheckCircle2' is defined but never used  @typescript-eslint/no-unused-vars
+   34:10  error  'cn' is defined but never used            @typescript-eslint/no-unused-vars
+   94:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  140:74  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/admin/goals/GoalProfileListPage.tsx
+  34:29  error  'ProfileListItem' is defined but never used  @typescript-eslint/no-unused-vars
+  70:26  error  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  89:26  error  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/cadastros/CentrosCustoPage.tsx
+  3:41  error  'CardTitle' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/cadastros/EvaluationFormBuilderPage.tsx
+   19:10  error  'AssessmentTemplate' is defined but never used                           @typescript-eslint/no-unused-vars
+   43:11  error  'navigate' is assigned a value but never used                            @typescript-eslint/no-unused-vars
+  247:72  error  'index' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/cadastros/EvolutionTemplatesPage.tsx
+  8:29  error  'CardDescription' is defined but never used  @typescript-eslint/no-unused-vars
+  8:58  error  'CardTitle' is defined but never used        @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/cadastros/FeriadosPage.tsx
+    3:41  error  'CardTitle' is defined but never used     @typescript-eslint/no-unused-vars
+  268:65  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/cadastros/FornecedoresPage.tsx
+    3:41  error  'CardTitle' is defined but never used     @typescript-eslint/no-unused-vars
+   19:3   error  'User' is defined but never used          @typescript-eslint/no-unused-vars
+  266:72  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/cadastros/ServicosPage.tsx
+    3:41  error  'CardTitle' is defined but never used        @typescript-eslint/no-unused-vars
+    3:52  error  'CardDescription' is defined but never used  @typescript-eslint/no-unused-vars
+   20:3   error  'Palette' is defined but never used          @typescript-eslint/no-unused-vars
+  284:74  error  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/crm/LeadsPage.tsx
+    7:16  error  'TabsContent' is defined but never used              @typescript-eslint/no-unused-vars
+    8:54  error  'Filter' is defined but never used                   @typescript-eslint/no-unused-vars
+   34:29  error  'isLoading' is assigned a value but never used       @typescript-eslint/no-unused-vars
+  103:9   error  'getEstagioInfo' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/dashboard/dinamica/DynamicCompareDetailsPage.tsx
+   1:38  error  'useMemo' is defined but never used                                   @typescript-eslint/no-unused-vars
+   3:52  error  'CardDescription' is defined but never used                           @typescript-eslint/no-unused-vars
+  15:10  error  'PROM_SNAPSHOTS_SEED' is defined but never used                       @typescript-eslint/no-unused-vars
+  15:31  error  'getLatestPromByPatient' is defined but never used                    @typescript-eslint/no-unused-vars
+  18:33  error  'id' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  18:54  error  Unexpected any. Specify a different type                              @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/financeiro/FluxoCaixaPage.tsx
+  3:10  error  'Button' is defined but never used     @typescript-eslint/no-unused-vars
+  8:18  error  'subMonths' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/mobile/PatientApp.tsx
+   6:10  error    'Button' is defined but never used                                                                                   @typescript-eslint/no-unused-vars
+  15:52  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  22:6   warning  React Hook useEffect has a missing dependency: 'loadAppointments'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  58:18  error    'error' is defined but never used                                                                                    @typescript-eslint/no-unused-vars
+  87:20  error    'error' is defined but never used                                                                                    @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/patients/NewEvaluationPage.tsx
+  60:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  85:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/patients/PainMapHistoryPage.tsx
+   17:10  error  'Select' is defined but never used         @typescript-eslint/no-unused-vars
+   17:18  error  'SelectContent' is defined but never used  @typescript-eslint/no-unused-vars
+   17:33  error  'SelectItem' is defined but never used     @typescript-eslint/no-unused-vars
+   17:45  error  'SelectTrigger' is defined but never used  @typescript-eslint/no-unused-vars
+   17:60  error  'SelectValue' is defined but never used    @typescript-eslint/no-unused-vars
+   19:60  error  'Minus' is defined but never used          @typescript-eslint/no-unused-vars
+   20:26  error  'ChevronRight' is defined but never used   @typescript-eslint/no-unused-vars
+  153:30  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  166:29  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/prescricoes/PublicPrescriptionPage.tsx
+   18:3   error  'RefreshCw' is defined but never used     @typescript-eslint/no-unused-vars
+  142:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/relatorios/AniversariantesPage.tsx
+  10:10  error  'format' is defined but never used  @typescript-eslint/no-unused-vars
+  11:10  error  'ptBR' is defined but never used    @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/relatorios/AttendanceReport.tsx
+  122:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/relatorios/TeamPerformance.tsx
+  97:14  error  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/services/ai/clinicalAnalysisService.ts
+   2:10  error  'toast' is defined but never used                                          @typescript-eslint/no-unused-vars
+  26:55  error  Unexpected any. Specify a different type                                   @typescript-eslint/no-explicit-any
+  26:70  error  Unexpected any. Specify a different type                                   @typescript-eslint/no-explicit-any
+  44:72  error  Unexpected any. Specify a different type                                   @typescript-eslint/no-explicit-any
+  44:90  error  Unexpected any. Specify a different type                                   @typescript-eslint/no-explicit-any
+  72:30  error  'context' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  81:29  error  'metrics' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  81:38  error  Unexpected any. Specify a different type                                   @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/services/ai/geminiVisionService.ts
+  6:47  error  'base64Image' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/services/ai/poseDetectionService.ts
+  1:16  error  'PoseConfig' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/services/ai/videoPoseService.ts
+  48:11  error  'interval' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/services/dicom/dicomWebClient.ts
+   7:20  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  69:15  error  'formData' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  83:21  error  'data' is assigned a value but never used      @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/services/goals.ts
+   2:10   error  'Database' is defined but never used      @typescript-eslint/no-unused-vars
+  12:19   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  13:15   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  77:149  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  77:162  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/services/goals/goalsAdminService.ts
+  17:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  18:15  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/services/marketing/marketingService.ts
+   1:10  error  'supabase' is defined but never used           @typescript-eslint/no-unused-vars
+  25:11  error  'fileName' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/test/appointments/appointments.test.ts
+    4:3   error  'generateMockPatient' is defined but never used        @typescript-eslint/no-unused-vars
+    5:3   error  'generateMockTherapist' is defined but never used      @typescript-eslint/no-unused-vars
+   10:3   error  'formatTimeSlot' is defined but never used             @typescript-eslint/no-unused-vars
+   72:13  error  'invalidPatientId' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   91:46  error  Unexpected any. Specify a different type               @typescript-eslint/no-explicit-any
+  147:13  error  'therapistId' is assigned a value but never used       @typescript-eslint/no-unused-vars
+  220:13  error  'appointmentId' is assigned a value but never used     @typescript-eslint/no-unused-vars
+  221:13  error  'newTherapistId' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  240:13  error  'fakeId' is assigned a value but never used            @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/test/integration/workflow.test.ts
+    3:3   error  'generateMockPatient' is defined but never used    @typescript-eslint/no-unused-vars
+    6:3   error  'generateMockTherapist' is defined but never used  @typescript-eslint/no-unused-vars
+  151:18  error  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  152:18  error  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  153:37  error  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+  154:24  error  Unexpected any. Specify a different type           @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/test/patients/patients.test.ts
+  5:3  error  'createMockSupabaseError' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/test/transactions/transactions.test.ts
+  4:3  error  'generateMockAppointment' is defined but never used  @typescript-eslint/no-unused-vars
+  6:3  error  'createMockSupabaseError' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/test/utils/testHelpers.ts
+   76:63  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  166:16  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/types/analysis/dynamic_compare.ts
+  27:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/types/assessment.ts
+  61:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/types/jspdf-autotable.d.ts
+   5:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   6:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   9:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  10:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  11:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  12:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/types/notifications.ts
+   66:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   80:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   97:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  107:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  156:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  171:13  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  186:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/utils/__tests__/formatInputs.test.ts
+  28:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  32:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  67:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  71:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/utils/__tests__/userHelpers.test.ts
+   25:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   37:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   60:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   72:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   88:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   97:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  109:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  121:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  139:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  151:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  167:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  179:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/utils/agendaUtils.ts
+  172:9  error  'dateObj' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/utils/dynamicMetricsEngine.ts
+  100:39  error  Unexpected any. Specify a different type                                  @typescript-eslint/no-explicit-any
+  128:29  error  'frames' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/__tests__/_shared/api-helpers.test.ts
+  1:32  error  'vi' is defined but never used          @typescript-eslint/no-unused-vars
+  1:36  error  'beforeEach' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/__tests__/_shared/schemas.test.ts
+  6:3  error  'appointmentUpdateSchema' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/__tests__/api-appointments.test.ts
+  24:7   error  'mockUser' is assigned a value but never used   @typescript-eslint/no-unused-vars
+  62:13  error  'startDate' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  63:13  error  'endDate' is assigned a value but never used    @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/__tests__/api-patients.test.ts
+   46:76  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+   65:13  error  'request' is assigned a value but never used     @typescript-eslint/no-unused-vars
+   66:13  error  'handler' is assigned a value but never used     @typescript-eslint/no-unused-vars
+   74:13  error  'searchTerm' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  177:13  error  'updateData' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/__tests__/api-payments.test.ts
+  24:7   error  'mockUser' is assigned a value but never used      @typescript-eslint/no-unused-vars
+  93:13  error  'checkoutData' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/__tests__/api-sessions.test.ts
+  24:7  error  'mockUser' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/__tests__/helpers/mock-supabase.ts
+  45:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  45:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/__tests__/send-notification.test.ts
+  167:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  198:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/__tests__/setup.ts
+  16:6   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  23:9   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  43:6   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  50:9   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  52:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  66:6   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/__tests__/webhook-clerk.test.ts
+  18:13  error  'mockEvent' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  49:13  error  'mockEvent' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  66:13  error  'mockEvent' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/__tests__/webhook-stripe.test.ts
+  26:13  error  'mockEvent' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  48:13  error  'mockEvent' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/__tests__/webhook-whatsapp.test.ts
+  35:13  error  'mockEvent' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/_shared/api-helpers.ts
+  2:40  error  'captureMessage' is defined but never used  @typescript-eslint/no-unused-vars
+  2:56  error  'addBreadcrumb' is defined but never used   @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/_shared/rate-limit-upstash.ts
+  124:14  error  'e' is defined but never used             @typescript-eslint/no-unused-vars
+  137:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  148:12  error  'e' is defined but never used             @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/_shared/sentry.ts
+  83:12  error  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/ai-chat-v2/index.ts
+   6:61  error  'successResponse' is defined but never used       @typescript-eslint/no-unused-vars
+   9:7   error  'corsHeaders' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  27:13  error  'user' is assigned a value but never used         @typescript-eslint/no-unused-vars
+  34:34  error  'context' is assigned a value but never used      @typescript-eslint/no-unused-vars
+  90:36  error  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/ai-evolution-analysis/index.ts
+    9:7   error  'corsHeaders' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   27:13  error  'user' is assigned a value but never used         @typescript-eslint/no-unused-vars
+   88:21  error  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+   96:22  error  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  103:25  error  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  139:47  error  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  141:45  error  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/ai-exercise-prescription-v2/index.ts
+   10:7   error  'corsHeaders' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  104:48  error  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  107:48  error  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  110:33  error  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+  140:71  error  Unexpected any. Specify a different type          @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/ai-suggest-conduct/index.ts
+  11:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/ai-transcribe-session-v2/index.ts
+   9:7   error  'corsHeaders' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  72:11  error  'audioBase64' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/api-appointments/index.ts
+    6:3   error  'noContentResponse' is defined but never used  @typescript-eslint/no-unused-vars
+   95:53  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  140:41  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  168:58  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  227:58  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  236:21  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  278:45  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  302:58  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  310:61  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  311:60  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  339:54  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  387:52  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  393:52  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/api-exercises/index.ts
+   87:50  error  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  128:38  error  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  128:63  error  'organizationId' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  150:55  error  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  183:55  error  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  209:41  error  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  229:41  error  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/api-packages/index.ts
+   16:31  error  'patientPackageCreateSchema' is defined but never used  @typescript-eslint/no-unused-vars
+  103:39  error  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+  124:37  error  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+  147:54  error  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+  177:54  error  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+  203:46  error  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+  224:46  error  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+  240:56  error  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+  299:58  error  Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/api-pain-maps/index.ts
+   84:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  108:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  141:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  182:41  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  209:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  315:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  315:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  328:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  332:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/api-patients/index.ts
+   22:51  error  'addRateLimitHeaders' is defined but never used  @typescript-eslint/no-unused-vars
+   99:49  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  141:37  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  169:13  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  177:54  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  226:54  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  258:40  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  278:43  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  306:60  error  Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/api-payments/index.ts
+   84:49  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  131:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  158:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/api-prescriptions/index.ts
+   82:54  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  121:42  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  152:59  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  189:38  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  220:59  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  225:21  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  237:11  error  'data' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  255:45  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  285:49  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/api-reports/index.ts
+   79:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  109:67  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  125:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  126:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  127:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  164:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  186:65  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  190:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  218:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  229:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  258:72  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  274:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  314:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  315:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  365:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  397:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  425:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  461:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  523:13  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  543:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/api-sessions/index.ts
+   86:49  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  125:37  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  158:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  225:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  256:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/api-waitlist/index.ts
+   84:49  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  121:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  121:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  131:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  158:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  205:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  225:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  314:52  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/api-whatsapp/index.ts
+   68:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  160:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  191:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  251:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/create-voucher-checkout/index.ts
+  11:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/goals-admin/index.ts
+   41:82   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   41:95   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   41:107  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  203:21   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/goals-api/index.ts
+    4:10  error  'GOAL_PROFILES_SEED' is defined but never used  @typescript-eslint/no-unused-vars
+   12:7   error  'SEED_DATA' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  209:51  error  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+  234:21  error  Unexpected any. Specify a different type        @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/google-calendar-sync/index.ts
+    3:10  error  'createClient' is defined but never used                                          @typescript-eslint/no-unused-vars
+    4:51  error  'addRateLimitHeaders' is defined but never used                                   @typescript-eslint/no-unused-vars
+    8:7   error  'corsHeaders' is assigned a value but never used                                  @typescript-eslint/no-unused-vars
+   73:13  error  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  117:13  error  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  201:16  error  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  308:13  error  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  309:3   error  'organizationId' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  366:44  error  'supabase' is defined but never used. Allowed unused args must match /^_/u        @typescript-eslint/no-unused-vars
+  366:54  error  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  376:11  error  'resourceId' is assigned a value but never used                                   @typescript-eslint/no-unused-vars
+  376:23  error  'channelId' is assigned a value but never used                                    @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/notification-status/index.ts
+  15:41  error  Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  90:15  error  'data' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/process-notification-events/index.ts
+  216:86  error  'trigger' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/schedule-notifications/index.ts
+   13:25  error  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  199:64  error  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  212:62  error  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  225:60  error  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  290:41  error  'supabaseClient' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  290:57  error  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  290:62  error  'now' is defined but never used. Allowed unused args must match /^_/u             @typescript-eslint/no-unused-vars
+  290:73  error  'req' is defined but never used. Allowed unused args must match /^_/u             @typescript-eslint/no-unused-vars
+  296:40  error  'supabaseClient' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  296:56  error  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  296:61  error  'now' is defined but never used. Allowed unused args must match /^_/u             @typescript-eslint/no-unused-vars
+  296:72  error  'req' is defined but never used. Allowed unused args must match /^_/u             @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/schedule-reminders/index.ts
+  21:11  error  'in2Hours' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/send-appointment-email/index.ts
+  333:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/send-birthday-message/index.ts
+  75:15  error  'actualAge' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/send-expiring-vouchers-reminder/index.ts
+   31:11  error  'todayStr' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   74:58  error  Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  151:18  error  'prefsError' is defined but never used         @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/send-mfa-otp/index.ts
+  117:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/send-notification/index.ts
+   16:47  error  Unexpected any. Specify a different type     @typescript-eslint/no-explicit-any
+  213:15  error  'result' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  217:16  error  'error' is defined but never used            @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/send-nps-survey/index.ts
+  110:19  error  'patient' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/smart-reminders/index.ts
+  9:11  error  'PatientRiskProfile' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/verify-voucher-payment/index.ts
+  11:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/webhook-clerk/index.ts
+   29:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   74:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   82:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   94:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   95:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  120:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  132:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  133:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  135:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  165:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  186:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  209:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  241:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  251:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  280:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  311:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/webhook-stripe/index.ts
+   29:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  291:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/webhook-whatsapp/index.ts
+   62:43  error  Unexpected any. Specify a different type                                    @typescript-eslint/no-explicit-any
+   87:44  error  Unexpected any. Specify a different type                                    @typescript-eslint/no-explicit-any
+   87:49  error  'instance' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+   93:9   error  'messageContent' is assigned a value but never used                         @typescript-eslint/no-unused-vars
+  129:48  error  Unexpected any. Specify a different type                                    @typescript-eslint/no-explicit-any
+  129:53  error  'instance' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  155:45  error  Unexpected any. Specify a different type                                    @typescript-eslint/no-explicit-any
+  156:18  error  'statusReason' is assigned a value but never used                           @typescript-eslint/no-unused-vars
+  171:41  error  Unexpected any. Specify a different type                                    @typescript-eslint/no-explicit-any
+  188:38  error  Unexpected any. Specify a different type                                    @typescript-eslint/no-explicit-any
+  212:43  error  Unexpected any. Specify a different type                                    @typescript-eslint/no-explicit-any
+  212:58  error  Unexpected any. Specify a different type                                    @typescript-eslint/no-explicit-any
+  214:38  error  Unexpected any. Specify a different type                                    @typescript-eslint/no-explicit-any
+  215:9   error  'name' is assigned a value but never used                                   @typescript-eslint/no-unused-vars
+  255:47  error  Unexpected any. Specify a different type                                    @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/supabase/functions/whatsapp-webhook/index.ts
+  135:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  234:13  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  313:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/tests/dynamicCompare.validation.test.ts
+  28:9  error  Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+
+✖ 1303 problems (1284 errors, 19 warnings)
+  0 errors and 2 warnings potentially fixable with the `--fix` option.
+

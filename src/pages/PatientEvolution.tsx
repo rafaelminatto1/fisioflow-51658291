@@ -157,7 +157,7 @@ const PatientEvolution = () => {
               *,
               patients!inner(
                 id,
-                name,
+                full_name,
                 phone,
                 email,
                 birth_date,
