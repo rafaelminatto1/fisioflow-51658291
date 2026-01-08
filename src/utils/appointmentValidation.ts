@@ -16,7 +16,10 @@ export function checkAppointmentConflict({
   appointments
 }: ConflictCheckParams): { hasConflict: boolean; conflictingAppointment?: AppointmentBase; conflictCount?: number } {
   // Convert time to minutes for easier comparison
-  const timeToMinutes = (timeStr: string): number => {
+  const timeToMinutes = (timeStr: string | undefined | null): number => {
+    if (!timeStr) {
+      return 0;
+    }
     const [hours, minutes] = timeStr.split(':').map(Number);
     return hours * 60 + minutes;
   };
@@ -51,13 +54,16 @@ export function checkAppointmentConflict({
   };
 }
 
-export function formatTimeRange(time: string, duration: number): string {
+export function formatTimeRange(time: string | undefined | null, duration: number): string {
+  if (!time) {
+    return '';
+  }
   const [hours, minutes] = time.split(':').map(Number);
   const startMinutes = hours * 60 + minutes;
   const endMinutes = startMinutes + duration;
-  
+
   const endHours = Math.floor(endMinutes / 60);
   const endMins = endMinutes % 60;
-  
+
   return `${time} - ${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`;
 }

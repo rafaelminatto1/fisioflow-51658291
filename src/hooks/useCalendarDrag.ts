@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { isSameDay } from 'date-fns';
+import { isSameDay, startOfDay } from 'date-fns';
 import { Appointment } from '@/types/appointment';
 
 interface DragState {
@@ -16,6 +16,30 @@ interface UseCalendarDragProps {
     onAppointmentReschedule?: (appointment: Appointment, newDate: Date, newTime: string) => Promise<void>;
 }
 
+/**
+ * Normaliza uma data para garantir consistência de timezone.
+ * Usa startOfDay para evitar problemas com offset de horário que
+ * podem causar a data parecer ser do dia anterior.
+ */
+const normalizeDate = (date: Date | string): Date => {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    // Se a data veio como string ISO (ex: "2026-01-08"), ela será interpretada como UTC
+    // Precisamos garantir que seja tratada como local
+    if (typeof date === 'string' && date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        // Data no formato YYYY-MM-DD - interpretar como local
+        const [year, month, day] = date.split('-').map(Number);
+        return new Date(year, month - 1, day, 12, 0, 0); // Meio-dia para evitar edge cases
+    }
+    return startOfDay(d);
+};
+
+/**
+ * Cria uma data local a partir de componentes, evitando problemas de timezone.
+ */
+const createLocalDate = (year: number, month: number, day: number): Date => {
+    return new Date(year, month, day, 12, 0, 0); // Meio-dia para evitar edge cases
+};
+
 export const useCalendarDrag = ({ onAppointmentReschedule }: UseCalendarDragProps) => {
     const [dragState, setDragState] = useState<DragState>({ appointment: null, isDragging: false });
     const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
@@ -24,8 +48,22 @@ export const useCalendarDrag = ({ onAppointmentReschedule }: UseCalendarDragProp
 
     const handleDragStart = useCallback((e: React.DragEvent, appointment: Appointment) => {
         if (!onAppointmentReschedule) return;
+
+        // Configurar o drag transfer
         e.dataTransfer.setData('text/plain', appointment.id);
+        e.dataTransfer.setData('application/json', JSON.stringify({
+            id: appointment.id,
+            date: appointment.date,
+            time: appointment.time
+        }));
         e.dataTransfer.effectAllowed = 'move';
+
+        // Criar imagem de preview customizada (opcional)
+        if (e.currentTarget instanceof HTMLElement) {
+            const rect = e.currentTarget.getBoundingClientRect();
+            e.dataTransfer.setDragImage(e.currentTarget, rect.width / 2, 20);
+        }
+
         setDragState({ appointment, isDragging: true });
     }, [onAppointmentReschedule]);
 
@@ -41,26 +79,49 @@ export const useCalendarDrag = ({ onAppointmentReschedule }: UseCalendarDragProp
         setDropTarget({ date, time });
     }, [dragState.isDragging, onAppointmentReschedule]);
 
-    const handleDragLeave = useCallback(() => {
+    const handleDragLeave = useCallback((e?: React.DragEvent) => {
+        // Verificar se realmente saiu do elemento (não para elemento filho)
+        if (e) {
+            const relatedTarget = e.relatedTarget as Node | null;
+            if (relatedTarget && e.currentTarget.contains(relatedTarget)) {
+                return;
+            }
+        }
         setDropTarget(null);
     }, []);
 
-    const handleDrop = useCallback((e: React.DragEvent, date: Date, time: string) => {
+    const handleDrop = useCallback((e: React.DragEvent, targetDate: Date, time: string) => {
         e.preventDefault();
-        if (!dragState.appointment || !onAppointmentReschedule) return;
+        e.stopPropagation();
 
-        // Verificar se é o mesmo horário
-        const oldDate = typeof dragState.appointment.date === 'string'
-            ? new Date(dragState.appointment.date)
-            : dragState.appointment.date;
-
-        if (isSameDay(oldDate, date) && dragState.appointment.time === time) {
+        if (!dragState.appointment || !onAppointmentReschedule) {
             handleDragEnd();
             return;
         }
 
-        // Abrir diálogo de confirmação
-        setPendingReschedule({ appointment: dragState.appointment, newDate: date, newTime: time });
+        // Normalizar a data antiga do appointment para comparação
+        const oldDate = normalizeDate(dragState.appointment.date);
+
+        // Criar uma nova data local a partir dos componentes da targetDate
+        // Isso garante que não há offset de timezone
+        const newDate = createLocalDate(
+            targetDate.getFullYear(),
+            targetDate.getMonth(),
+            targetDate.getDate()
+        );
+
+        // Verificar se é o mesmo horário (sem mudança real)
+        if (isSameDay(oldDate, newDate) && dragState.appointment.time === time) {
+            handleDragEnd();
+            return;
+        }
+
+        // Abrir diálogo de confirmação com a data correta
+        setPendingReschedule({
+            appointment: dragState.appointment,
+            newDate: newDate,
+            newTime: time
+        });
         setShowConfirmDialog(true);
         handleDragEnd();
     }, [dragState.appointment, onAppointmentReschedule, handleDragEnd]);
@@ -69,11 +130,16 @@ export const useCalendarDrag = ({ onAppointmentReschedule }: UseCalendarDragProp
         if (!pendingReschedule || !onAppointmentReschedule) return;
 
         try {
-            await onAppointmentReschedule(pendingReschedule.appointment, pendingReschedule.newDate, pendingReschedule.newTime);
+            await onAppointmentReschedule(
+                pendingReschedule.appointment,
+                pendingReschedule.newDate,
+                pendingReschedule.newTime
+            );
             setShowConfirmDialog(false);
             setPendingReschedule(null);
         } catch (error) {
             console.error('Erro ao reagendar:', error);
+            // Manter o dialog aberto para que o usuário veja o erro
         }
     }, [pendingReschedule, onAppointmentReschedule]);
 

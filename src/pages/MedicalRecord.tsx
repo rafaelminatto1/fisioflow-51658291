@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useSearchParams } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -17,18 +17,14 @@ import {
   Search,
   Filter,
   User,
-  Calendar,
   Stethoscope,
   ClipboardList,
-  Heart,
   Activity,
   Save,
   Edit,
   Eye,
   Download,
-  X,
   Watch,
-  Share2,
   FileStack,
   Microscope
 } from 'lucide-react';
@@ -37,76 +33,102 @@ import { PatientExamsTab } from '@/components/patient/PatientExamsTab';
 import { WearablesData } from '@/components/patient/WearablesData';
 import { NewPrescriptionModal } from '@/components/prescriptions/NewPrescriptionModal';
 import { usePrescriptions } from '@/hooks/usePrescriptions';
-import { generatePrescriptionPDF } from '@/utils/pdfGenerator';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 
-import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import {
-  FileText,
-  Plus,
-  Search,
-  Filter,
-  User,
-  Calendar,
-  Stethoscope,
-  ClipboardList,
-  Heart,
-  Activity,
-  Save,
-  Edit,
-  Eye,
-  Download,
-  X,
-  Watch,
-  Share2,
-  FileStack,
-  Microscope
-} from 'lucide-react';
-import { MedicalRequestsTab } from '@/components/patient/MedicalRequestsTab';
-import { PatientExamsTab } from '@/components/patient/PatientExamsTab';
-import { WearablesData } from '@/components/patient/WearablesData';
-import { NewPrescriptionModal } from '@/components/prescriptions/NewPrescriptionModal';
-import { usePrescriptions } from '@/hooks/usePrescriptions';
-import { generatePrescriptionPDF } from '@/utils/pdfGenerator';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { toast } from 'sonner';
-import { useSearchParams } from 'react-router-dom';
+// Types
+interface Patient {
+  id: string;
+  name: string;
+  condition: string;
+}
+
+interface VitalSigns {
+  bloodPressure: string;
+  heartRate: string;
+  temperature: string;
+  respiratoryRate: string;
+}
+
+interface RecordFormData {
+  type: string;
+  title: string;
+  content: string;
+  patientId: string;
+  chiefComplaint: string;
+  currentHistory: string;
+  physicalExam: string;
+  diagnosis: string;
+  treatmentPlan: string;
+  nextGoals: string;
+  vitalSigns: VitalSigns;
+}
+
+interface MedicalRecordItem {
+  id: string;
+  type: string;
+  title: string;
+  content: string;
+  date: Date;
+  therapist: string;
+  raw: any;
+}
+
+const initialFormState: RecordFormData = {
+  type: 'anamnesis',
+  title: '',
+  content: '',
+  patientId: '',
+  chiefComplaint: '',
+  currentHistory: '',
+  physicalExam: '',
+  diagnosis: '',
+  treatmentPlan: '',
+  nextGoals: '',
+  vitalSigns: {
+    bloodPressure: '',
+    heartRate: '',
+    temperature: '',
+    respiratoryRate: ''
+  }
+};
+
+const recordTypes = [
+  { value: 'anamnesis', label: 'Anamnese', icon: ClipboardList },
+  { value: 'evolution', label: 'Evolução', icon: Activity },
+  { value: 'assessment', label: 'Avaliação', icon: Stethoscope },
+  { value: 'exam', label: 'Exame', icon: Microscope },
+  { value: 'prescription', label: 'Prescrição', icon: FileText },
+  { value: 'medical-requests', label: 'Pedidos Médicos', icon: FileStack },
+  { value: 'wearables', label: 'Wearables', icon: Watch },
+];
 
 const MedicalRecord = () => {
   const [searchParams] = useSearchParams();
   const initialPatientId = searchParams.get('patientId');
   const initialAction = searchParams.get('action');
+  const appointmentId = searchParams.get('appointmentId');
 
   const [selectedPatient, setSelectedPatient] = useState<string | null>(initialPatientId);
+  const [patientSearch, setPatientSearch] = useState('');
   const [activeTab, setActiveTab] = useState('anamnesis');
   const [isEditing, setIsEditing] = useState(initialAction === 'new');
-  const [viewingRecord, setViewingRecord] = useState<any | null>(null);
-  const [editingRecord, setEditingRecord] = useState<any | null>(null);
+  const [viewingRecord, setViewingRecord] = useState<MedicalRecordItem | null>(null);
+  const [editingRecord, setEditingRecord] = useState<MedicalRecordItem | null>(null);
   const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
+  const [recordForm, setRecordForm] = useState<RecordFormData>(initialFormState);
   const queryClient = useQueryClient();
 
+  // Effect to handle URL parameters
   useEffect(() => {
     if (initialPatientId) {
       setSelectedPatient(initialPatientId);
     }
     if (initialAction === 'new') {
       setIsEditing(true);
-      // Determine tab based on some logic if needed, or default to anamnesis
+      setEditingRecord(null);
+      setRecordForm(initialFormState);
     }
   }, [initialPatientId, initialAction]);
 
@@ -147,50 +169,63 @@ const MedicalRecord = () => {
 
       if (error) throw error;
 
-      return data.map(record => ({
+      return (data as any[]).map((record: any) => ({
         id: record.id,
         type: record.record_type || 'anamnesis',
         title: record.title || 'Registro Sem Título',
-        content: record.chief_complaint || record.medical_history || record.diagnosis || '', // Fallback content content
+        content: record.chief_complaint || record.medical_history || record.diagnosis || '',
         date: new Date(record.created_at),
         therapist: record.profiles?.full_name || 'Desconhecido',
-        raw: record // Keep raw data for editing
+        raw: record
       }));
     },
     enabled: !!selectedPatient
   });
 
   const saveRecordMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: RecordFormData) => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuario não autenticado');
+      if (!user) throw new Error('Usuário não autenticado');
+
+      // Build treatment_plan based on record type
+      let treatmentPlanData = null;
+      if (data.type === 'evolution') {
+        treatmentPlanData = { evolution: data.content, next_goals: data.nextGoals };
+      } else if (data.type === 'assessment') {
+        treatmentPlanData = { plan: data.treatmentPlan };
+      }
+
+      // Build physical_exam based on record type
+      let physicalExamData = null;
+      if (data.type === 'assessment') {
+        physicalExamData = { exam: data.physicalExam };
+      }
+
+      // Only include vital signs if at least one is filled
+      const hasVitalSigns = Object.values(data.vitalSigns).some(v => v && v.trim() !== '');
 
       const recordData = {
         patient_id: selectedPatient,
         created_by: user.id,
         record_type: data.type,
         title: data.title,
-        // Map form fields to DB columns
-        chief_complaint: data.chiefComplaint,
-        current_history: data.currentHistory,
-        vital_signs: data.vitalSigns,
-
-        // Evolution fields
-        treatment_plan: data.type === 'evolution' ? { evolution: data.content, next_goals: data.nextGoals } : null,
-
-        // Assessment fields
-        physical_exam: data.type === 'assessment' ? { exam: data.physicalExam } : null,
-        diagnosis: data.diagnosis,
-
+        chief_complaint: data.chiefComplaint || null,
+        current_history: data.currentHistory || null,
+        vital_signs: hasVitalSigns ? data.vitalSigns : null,
+        treatment_plan: treatmentPlanData,
+        physical_exam: physicalExamData,
+        diagnosis: data.diagnosis || null,
       };
 
-      if (editingRecord?.id && !isEditingNew) { // Updating existing
+      if (editingRecord?.id) {
+        // Updating existing record
         const { error } = await supabase
           .from('medical_records')
           .update(recordData)
           .eq('id', editingRecord.id);
         if (error) throw error;
-      } else { // Creating new
+      } else {
+        // Creating new record
         const { error } = await supabase
           .from('medical_records')
           .insert(recordData);
@@ -204,46 +239,20 @@ const MedicalRecord = () => {
       setEditingRecord(null);
       setRecordForm(initialFormState);
     },
-    onError: (error) => {
-      console.error(error);
-      toast.error('Erro ao salvar registro.');
+    onError: (error: Error) => {
+      console.error('Erro ao salvar registro:', error);
+      toast.error(`Erro ao salvar registro: ${error.message}`);
     }
   });
 
-  const recordTypes = [
-    { value: 'anamnesis', label: 'Anamnese', icon: ClipboardList },
-    { value: 'evolution', label: 'Evolução', icon: Activity },
-    { value: 'assessment', label: 'Avaliação', icon: Stethoscope },
-    { value: 'exam', label: 'Exame', icon: Microscope },
-    { value: 'prescription', label: 'Prescrição', icon: FileText },
-    { value: 'medical-requests', label: 'Pedidos Médicos', icon: FileStack },
-    { value: 'wearables', label: 'Wearables', icon: Watch },
-  ];
-
-  const initialFormState = {
-    type: 'anamnesis',
-    title: '',
-    content: '',
-    patientId: '',
-    chiefComplaint: '',
-    currentHistory: '',
-    physicalExam: '',
-    diagnosis: '',
-    treatmentPlan: '',
-    nextGoals: '',
-    vitalSigns: {
-      bloodPressure: '',
-      heartRate: '',
-      temperature: '',
-      respiratoryRate: ''
-    }
-  };
-
-  const [recordForm, setRecordForm] = useState(initialFormState);
-
-  // Flag to know if we are editing an existing record or creating a new one while "isEditing" is true.
-  // We can infer this by checking if editingRecord is null. 
-  const isEditingNew = !editingRecord;
+  // Filter patients by search term
+  const filteredPatients = useMemo(() => {
+    if (!patientSearch.trim()) return patients;
+    const searchLower = patientSearch.toLowerCase();
+    return patients.filter(p =>
+      p.name.toLowerCase().includes(searchLower)
+    );
+  }, [patients, patientSearch]);
 
   const handleSaveRecord = () => {
     if (!selectedPatient) {
@@ -373,26 +382,38 @@ const MedicalRecord = () => {
                 <Input
                   placeholder="Buscar paciente..."
                   className="pl-10"
+                  value={patientSearch}
+                  onChange={(e) => setPatientSearch(e.target.value)}
                 />
               </div>
 
               <div className="space-y-2 max-h-[600px] overflow-y-auto">
-                {patients.map((patient) => (
-                  <div
-                    key={patient.id}
-                    className={`p-3 rounded-lg border cursor-pointer transition-colors ${selectedPatient === patient.id
-                      ? 'bg-primary/10 border-primary/20'
-                      : 'hover:bg-muted/50'
-                      }`}
-                    onClick={() => {
-                      setSelectedPatient(patient.id);
-                      setIsEditing(false); // Close editor when switching patient
-                    }}
-                  >
-                    <p className="font-medium">{patient.name}</p>
-                    <p className="text-sm text-muted-foreground truncate">{patient.condition}</p>
+                {patientsLoading ? (
+                  <div className="text-center py-4 text-muted-foreground">Carregando...</div>
+                ) : filteredPatients.length === 0 ? (
+                  <div className="text-center py-4 text-muted-foreground">
+                    {patientSearch ? 'Nenhum paciente encontrado' : 'Nenhum paciente cadastrado'}
                   </div>
-                ))}
+                ) : (
+                  filteredPatients.map((patient) => (
+                    <div
+                      key={patient.id}
+                      className={`p-3 rounded-lg border cursor-pointer transition-colors ${selectedPatient === patient.id
+                        ? 'bg-primary/10 border-primary/20'
+                        : 'hover:bg-muted/50'
+                        }`}
+                      onClick={() => {
+                        setSelectedPatient(patient.id);
+                        setIsEditing(false);
+                        setEditingRecord(null);
+                        setRecordForm(initialFormState);
+                      }}
+                    >
+                      <p className="font-medium">{patient.name}</p>
+                      <p className="text-sm text-muted-foreground truncate">{patient.condition}</p>
+                    </div>
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>

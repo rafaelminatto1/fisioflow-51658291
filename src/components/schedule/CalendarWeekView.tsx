@@ -53,7 +53,13 @@ const CalendarWeekView = memo(({
     setOpenPopoverId
 }: CalendarWeekViewProps) => {
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
-    const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+    // Criar datas com horário fixo (meio-dia) para evitar problemas de timezone
+    // Quando datas são criadas à meia-noite, podem ser interpretadas como dia anterior em alguns fusos
+    const weekDays = Array.from({ length: 7 }, (_, i) => {
+        const day = addDays(weekStart, i);
+        // Normalizar para meio-dia para evitar edge cases de timezone
+        return new Date(day.getFullYear(), day.getMonth(), day.getDate(), 12, 0, 0);
+    });
     const timeSlots = generateTimeSlots(currentDate);
 
     return (

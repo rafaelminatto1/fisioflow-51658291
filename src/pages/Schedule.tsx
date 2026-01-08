@@ -25,16 +25,19 @@ import { WaitlistQuickViewModal } from '@/components/schedule/WaitlistQuickViewM
 import { useAppointments, useCreateAppointment, useRescheduleAppointment } from '@/hooks/useAppointments';
 import { useWaitlistMatch } from '@/hooks/useWaitlistMatch';
 import { logger } from '@/lib/errors/logger';
-import { AlertTriangle, Calendar, Clock, Users, TrendingUp, Plus, Settings as SettingsIcon, Bell, Filter } from 'lucide-react';
+import { AlertTriangle, Calendar, Clock, Users, TrendingUp, Plus, Settings as SettingsIcon, Bell, Filter, WifiOff, RefreshCw } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { cn } from '@/lib/utils';
 import { EmptyState, LoadingSkeleton } from '@/components/ui';
+import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
-import { format, isAfter, parseISO } from 'date-fns';
+import { format, isAfter, parseISO, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useConnectionStatus } from '@/hooks/useConnectionStatus';
+import { formatDateToLocalISO, formatDateToBrazilian } from '@/utils/dateUtils';
 
 // Lazy load CalendarView for better initial load performance
 const CalendarView = lazy(() => import('@/components/schedule/CalendarView').then(mod => ({ default: mod.CalendarView })));
@@ -62,12 +65,38 @@ const Schedule = () => {
   const [showWaitlistModal, setShowWaitlistModal] = useState(false);
   const [scheduleFromWaitlist, setScheduleFromWaitlist] = useState<{ patientId: string; patientName: string } | null>(null);
 
-  const { data: appointments = [], isLoading: loading, error, refetch } = useAppointments();
+  const { data: appointments = [], isLoading: loading, error, refetch, isFromCache, cacheTimestamp } = useAppointments();
   const createAppointmentMutation = useCreateAppointment();
   const { mutateAsync: rescheduleAppointment, isPending: isRescheduling } = useRescheduleAppointment();
   const { totalInWaitlist } = useWaitlistMatch();
 
+  // Connection status for offline handling
+  const {
+    isOnline,
+    isReconnecting,
+    isChecking,
+    state: connectionState,
+    checkConnection,
+    tryReconnect
+  } = useConnectionStatus({
+    onReconnect: () => {
+      refetch();
+      toast({ title: '✅ Conectado', description: 'Conexão restabelecida. Dados atualizados.' });
+    },
+    onDisconnect: () => {
+      toast({
+        title: '⚠️ Sem conexão',
+        description: 'Mostrando dados salvos localmente.',
+        variant: 'destructive'
+      });
+    },
+  });
+
+  // Combinar loading com checking
+  const isLoadingOrChecking = loading || isChecking;
+
   const handleRefresh = async () => {
+    await checkConnection();
     await refetch();
   };
 
@@ -212,13 +241,13 @@ const Schedule = () => {
     try {
       await rescheduleAppointment({
         appointmentId: appointment.id,
-        appointment_date: format(newDate, 'yyyy-MM-dd'),
+        appointment_date: formatDateToLocalISO(newDate),
         appointment_time: newTime,
         duration: appointment.duration
       });
       toast({
         title: '✅ Reagendado com sucesso',
-        description: `Atendimento de ${appointment.patientName} movido para ${format(newDate, 'dd/MM/yyyy')} às ${newTime}.`,
+        description: `Atendimento de ${appointment.patientName} movido para ${formatDateToBrazilian(newDate)} às ${newTime}.`,
       });
     } catch (error) {
       toast({
@@ -328,6 +357,18 @@ const Schedule = () => {
   return (
     <MainLayout>
       <div className="h-[calc(100vh-80px)] overflow-hidden flex flex-col gap-4 animate-fade-in relative">
+        {/* Offline/Cache Warning Banner */}
+        <OfflineIndicator
+          isFromCache={isFromCache}
+          isOnline={isOnline}
+          isChecking={isChecking}
+          isReconnecting={isReconnecting}
+          cacheTimestamp={cacheTimestamp}
+          itemCount={appointments.length}
+          itemLabel="agendamentos"
+          onRefresh={handleRefresh}
+        />
+
         {/* Header compacto */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shrink-0">
           <div className="flex items-center gap-3">
@@ -345,32 +386,7 @@ const Schedule = () => {
           <div className="flex items-center gap-2 flex-wrap">
             <AppointmentSearch value={searchTerm} onChange={setSearchTerm} onClear={() => setSearchTerm('')} />
 
-            {/* Mobile Sidebar Trigger */}
-            <div className="lg:hidden">
-              <Sheet>
-                {/* #region agent log */}
-                {console.log('[DEBUG] Rendering Sheet component')}
-                {/* #endregion */}
-                <SheetTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-9 gap-2">
-                    <Filter className="h-4 w-4" />
-                    <span className="hidden xs:inline">Filtros</span>
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-[300px] sm:w-[350px] p-0 border-l border-border/50">
-                  <div className="h-full py-4 overflow-y-auto">
-                    <ScheduleSidebar
-                      upcomingAppointments={upcomingAppointments}
-                      filters={filters}
-                      onFilterChange={setFilters}
-                      availableTherapists={filterOptions.therapists}
-                      availableRooms={filterOptions.rooms}
-                      availableServices={filterOptions.services}
-                    />
-                  </div>
-                </SheetContent>
-              </Sheet>
-            </div>
+
 
             <Link to="/schedule/settings">
               <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
@@ -391,52 +407,35 @@ const Schedule = () => {
           </div>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-4 gap-4">
-          {/* Left Col - Calendar (3 spans) */}
-          <div className="lg:col-span-3 flex flex-col gap-4 min-h-0">
-            <div className="flex-1 border rounded-xl overflow-hidden bg-background shadow-sm relative flex flex-col">
-              {/* View Filters bar inside calendar card */}
-
-              {viewType === 'list' ? (
-                <AppointmentListView
+        {/* Main Content */}
+        <div className="flex-1 min-h-0">
+          <div className="h-full border rounded-xl overflow-hidden bg-background shadow-sm relative flex flex-col">
+            {viewType === 'list' ? (
+              <AppointmentListView
+                appointments={filteredAppointments}
+                selectedDate={currentDate}
+                onAppointmentClick={handleAppointmentClick}
+                onRefresh={handleRefresh}
+              />
+            ) : (
+              <Suspense fallback={
+                <div className="flex items-center justify-center h-full"><div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" /></div>
+              }>
+                <CalendarView
                   appointments={filteredAppointments}
-                  selectedDate={currentDate}
+                  currentDate={currentDate}
+                  onDateChange={setCurrentDate}
+                  viewType={viewType as CalendarViewType}
+                  onViewTypeChange={(type) => setViewType(type)}
                   onAppointmentClick={handleAppointmentClick}
-                  onRefresh={handleRefresh}
+                  onTimeSlotClick={handleTimeSlotClick}
+                  onAppointmentReschedule={handleAppointmentReschedule}
+                  isRescheduling={isRescheduling}
+                  onEditAppointment={handleEditAppointment}
+                  onDeleteAppointment={handleDeleteAppointment}
                 />
-              ) : (
-                <Suspense fallback={
-                  <div className="flex items-center justify-center h-full"><div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" /></div>
-                }>
-                  <CalendarView
-                    appointments={filteredAppointments}
-                    currentDate={currentDate}
-                    onDateChange={setCurrentDate}
-                    viewType={viewType as CalendarViewType}
-                    onViewTypeChange={(type) => setViewType(type)}
-                    onAppointmentClick={handleAppointmentClick}
-                    onTimeSlotClick={handleTimeSlotClick}
-                    onAppointmentReschedule={handleAppointmentReschedule}
-                    isRescheduling={isRescheduling}
-                    onEditAppointment={handleEditAppointment}
-                    onDeleteAppointment={handleDeleteAppointment}
-                  />
-                </Suspense>
-              )}
-            </div>
-          </div>
-
-          {/* Right Col - Sidebar (1 span) */}
-          <div className="hidden lg:block lg:col-span-1 min-h-0">
-            <ScheduleSidebar
-              upcomingAppointments={upcomingAppointments}
-              filters={filters}
-              onFilterChange={setFilters}
-              availableTherapists={filterOptions.therapists}
-              availableRooms={filterOptions.rooms}
-              availableServices={filterOptions.services}
-            />
+              </Suspense>
+            )}
           </div>
         </div>
 
