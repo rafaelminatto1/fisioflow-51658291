@@ -51,6 +51,8 @@ export default defineConfig(({ mode }) => {
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff2}'],
+          // Exclude cornerstone WASM files from PWA caching to avoid build issues
+          globIgnores: ['**/node_modules/**/*', '**/*.wasm'],
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
@@ -96,6 +98,8 @@ export default defineConfig(({ mode }) => {
           skipWaiting: true,
           clientsClaim: true,
         },
+        // Disable injectManifest mode to avoid IIFE conflict with cornerstone
+        injectManifest: undefined,
         devOptions: {
           enabled: false,
         }
@@ -117,16 +121,35 @@ export default defineConfig(({ mode }) => {
       },
       rollupOptions: {
         output: {
-          manualChunks: {
-            'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-            'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
-            'form-vendor': ['react-hook-form', '@hookform/resolvers', 'zod'],
-            'query-vendor': ['@tanstack/react-query'],
-            'chart-vendor': ['recharts'],
-            'date-vendor': ['date-fns'],
-            'supabase': ['@supabase/supabase-js'],
-            'cornerstone': ['@cornerstonejs/core', '@cornerstonejs/tools', '@cornerstonejs/dicom-image-loader'],
-            'mediapipe': ['@mediapipe/pose', '@mediapipe/drawing_utils'],
+          manualChunks: (id) => {
+            // Exclude cornerstone from code-splitting to avoid IIFE conflict
+            if (id.includes('@cornerstonejs')) {
+              return 'cornerstone';
+            }
+            if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router-dom')) {
+              return 'react-vendor';
+            }
+            if (id.includes('@radix-ui')) {
+              return 'ui-vendor';
+            }
+            if (id.includes('react-hook-form') || id.includes('@hookform') || id.includes('node_modules/zod')) {
+              return 'form-vendor';
+            }
+            if (id.includes('@tanstack/react-query')) {
+              return 'query-vendor';
+            }
+            if (id.includes('recharts')) {
+              return 'chart-vendor';
+            }
+            if (id.includes('date-fns')) {
+              return 'date-vendor';
+            }
+            if (id.includes('@supabase')) {
+              return 'supabase';
+            }
+            if (id.includes('@mediapipe')) {
+              return 'mediapipe';
+            }
           },
         },
       },
