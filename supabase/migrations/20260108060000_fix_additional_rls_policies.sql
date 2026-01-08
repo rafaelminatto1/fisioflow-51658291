@@ -60,10 +60,16 @@ BEGIN
   END IF;
 END $$;
 
--- 4. Fix notifications policies if table exists  
+-- 4. Fix notifications policies if table and column exist  
 DO $$
 BEGIN
-  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'notifications' AND table_schema = 'public') THEN
+  -- Only proceed if both the table and recipient_id column exist
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'notifications' 
+    AND table_schema = 'public' 
+    AND column_name = 'recipient_id'
+  ) THEN
     -- The notifications table uses recipient_id which references profiles.id
     -- We need to check if recipient matches a profile belonging to the current user
     DROP POLICY IF EXISTS "Users can view their notifications" ON public.notifications;
