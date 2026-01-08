@@ -101,7 +101,12 @@ export const ScheduleSidebar: React.FC<ScheduleSidebarProps> = ({
                                             </span>
                                             <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                                                 <Calendar className="w-3 h-3" />
-                                                {format(new Date(apt.date), 'dd/MM', { locale: ptBR })}
+                                                {format(typeof apt.date === 'string'
+                                                    ? (() => {
+                                                        const [y, m, d] = apt.date.split('-').map(Number);
+                                                        return new Date(y, m - 1, d, 12, 0, 0);
+                                                    })()
+                                                    : apt.date, 'dd/MM', { locale: ptBR })}
                                             </span>
                                         </div>
 
@@ -118,7 +123,12 @@ export const ScheduleSidebar: React.FC<ScheduleSidebarProps> = ({
 
                                         <div className="flex items-center justify-between mt-2">
                                             <Badge variant="outline" className="text-[10px] h-5 px-1.5 bg-background">
-                                                {format(new Date(apt.date), 'HH:mm')} ({apt.duration}min)
+                                                {format(typeof apt.date === 'string'
+                                                    ? (() => {
+                                                        const [y, m, d] = apt.date.split('-').map(Number);
+                                                        return new Date(y, m - 1, d, 12, 0, 0);
+                                                    })()
+                                                    : apt.date, 'HH:mm')} ({apt.duration}min)
                                             </Badge>
                                             {apt.room && (
                                                 <div className="text-[10px] text-muted-foreground flex items-center gap-1">

@@ -1,4 +1,5 @@
 import { AppointmentBase } from '@/types/appointment';
+import { parseISO } from 'date-fns';
 
 interface ConflictCheckParams {
   date: Date;
@@ -31,9 +32,17 @@ export function checkAppointmentConflict({
   const sameDateTimeAppointments = appointments.filter(apt => {
     // Skip the appointment we're editing
     if (excludeId && apt.id === excludeId) return false;
-    
-    // Check if it's the same date
-    if (apt.date.toDateString() !== date.toDateString()) return false;
+
+    // Check if it's the same date - handle both Date objects and strings
+    const aptDate = typeof apt.date === 'string' ? parseISO(apt.date) : apt.date;
+    const checkDate = typeof date === 'string' ? parseISO(date) : date;
+
+    if (!aptDate || !checkDate || aptDate.toDateString() !== checkDate.toDateString()) return false;
+
+    // Valide que o horário existe antes de tentar converter
+    if (!apt.time || apt.time === '') {
+      return false;
+    }
 
     const existingStartTime = timeToMinutes(apt.time);
     const existingEndTime = existingStartTime + apt.duration;

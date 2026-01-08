@@ -239,9 +239,20 @@ const Schedule = () => {
 
   const handleAppointmentReschedule = useCallback(async (appointment: Appointment, newDate: Date, newTime: string) => {
     try {
+      // DEBUG: Log all date values to trace the issue
+      console.log('[DEBUG Reschedule] Input newDate:', newDate);
+      console.log('[DEBUG Reschedule] newDate.toString():', newDate.toString());
+      console.log('[DEBUG Reschedule] newDate.toISOString():', newDate.toISOString());
+      console.log('[DEBUG Reschedule] newDate.getFullYear():', newDate.getFullYear());
+      console.log('[DEBUG Reschedule] newDate.getMonth():', newDate.getMonth());
+      console.log('[DEBUG Reschedule] newDate.getDate():', newDate.getDate());
+
+      const formattedDate = formatDateToLocalISO(newDate);
+      console.log('[DEBUG Reschedule] formatDateToLocalISO result:', formattedDate);
+
       await rescheduleAppointment({
         appointmentId: appointment.id,
-        appointment_date: formatDateToLocalISO(newDate),
+        appointment_date: formattedDate,
         appointment_time: newTime,
         duration: appointment.duration
       });

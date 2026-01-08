@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
-// import { VitePWA } from 'vite-plugin-pwa';
+import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -20,93 +20,95 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       mode === 'development' && componentTagger(),
-      // VitePWA({
-      //   registerType: 'autoUpdate',
-      //   includeAssets: ['icons/*.svg', 'icons/*.png', 'favicon.ico'],
-      //   manifest: {
-      //     name: 'FisioFlow - Sistema de Gestão',
-      //     short_name: 'FisioFlow',
-      //     description: 'Sistema completo de gestão para clínica de fisioterapia e eventos',
-      //     theme_color: '#0EA5E9',
-      //     background_color: '#ffffff',
-      //     display: 'standalone',
-      //     orientation: 'portrait',
-      //     scope: '/',
-      //     start_url: '/',
-      //     icons: [
-      //       {
-      //         src: '/icons/icon-192x192.svg',
-      //         sizes: '192x192',
-      //         type: 'image/svg+xml',
-      //         purpose: 'any maskable'
-      //       },
-      //       {
-      //         src: '/icons/icon-512x512.svg',
-      //         sizes: '512x512',
-      //         type: 'image/svg+xml',
-      //         purpose: 'any maskable'
-      //       }
-      //     ],
-      //     categories: ['health', 'medical', 'productivity'],
-      //   },
-      //   workbox: {
-      //     globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff2}'],
-      //     globIgnores: ['**/node_modules/**/*','**/cornerstone-*', '**/*dicom-image-loader*'],
-      //     runtimeCaching: [
-      //       {
-      //         urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
-      //         handler: 'NetworkFirst',
-      //         options: {
-      //           cacheName: 'supabase-cache',
-      //           expiration: {
-      //             maxEntries: 50,
-      //             maxAgeSeconds: 5 * 60,
-      //           },
-      //           cacheableResponse: {
-      //             statuses: [0, 200]
-      //           }
-      //         }
-      //       },
-      //       {
-      //         urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-      //         handler: 'CacheFirst',
-      //         options: {
-      //           cacheName: 'google-fonts-cache',
-      //           expiration: {
-      //             maxEntries: 10,
-      //             maxAgeSeconds: 60 * 60 * 24 * 365
-      //           },
-      //           cacheableResponse: {
-      //             statuses: [0, 200]
-      //           }
-      //         }
-      //       },
-      //       {
-      //         urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
-      //         handler: 'CacheFirst',
-      //         options: {
-      //           cacheName: 'images-cache',
-      //           expiration: {
-      //             maxEntries: 100,
-      //             maxAgeSeconds: 60 * 60 * 24 * 30
-      //           }
-      //         }
-      //       }
-      //     ],
-      //     cleanupOutdatedCaches: true,
-      //     skipWaiting: true,
-      //     clientsClaim: true,
-      //     // Disable navigation preload to avoid issues with cornerstone
-      //     navigationPreload: false,
-      //   },
-      //   // Disable injectManifest mode to avoid IIFE conflict with cornerstone
-      //   injectManifest: undefined,
-      //   // Don't include cornerstone in any PWA processing
-      //   strategies: 'generateSW',
-      //   devOptions: {
-      //     enabled: false,
-      //   }
-      // })
+      VitePWA({
+        registerType: 'autoUpdate',
+        includeAssets: ['icons/*.svg', 'icons/*.png', 'favicon.ico'],
+        manifest: {
+          name: 'FisioFlow - Sistema de Gestão',
+          short_name: 'FisioFlow',
+          description: 'Sistema completo de gestão para clínica de fisioterapia e eventos',
+          theme_color: '#0EA5E9',
+          background_color: '#ffffff',
+          display: 'standalone',
+          orientation: 'portrait',
+          scope: '/',
+          start_url: '/',
+          icons: [
+            {
+              src: '/icons/icon-192x192.svg',
+              sizes: '192x192',
+              type: 'image/svg+xml',
+              purpose: 'any maskable'
+            },
+            {
+              src: '/icons/icon-512x512.svg',
+              sizes: '512x512',
+              type: 'image/svg+xml',
+              purpose: 'any maskable'
+            }
+          ],
+          categories: ['health', 'medical', 'productivity'],
+        },
+        workbox: {
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff2}'],
+          globIgnores: ['**/node_modules/**/*', '**/cornerstone-*', '**/*dicom-image-loader*'],
+          runtimeCaching: [
+            {
+              urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'supabase-cache',
+                expiration: {
+                  maxEntries: 50,
+                  maxAgeSeconds: 5 * 60,
+                },
+                cacheableResponse: {
+                  statuses: [0, 200]
+                }
+              }
+            },
+            {
+              urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'google-fonts-cache',
+                expiration: {
+                  maxEntries: 10,
+                  maxAgeSeconds: 60 * 60 * 24 * 365
+                },
+                cacheableResponse: {
+                  statuses: [0, 200]
+                }
+              }
+            },
+            {
+              urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'images-cache',
+                expiration: {
+                  maxEntries: 100,
+                  maxAgeSeconds: 60 * 60 * 24 * 30
+                }
+              }
+            }
+          ],
+          cleanupOutdatedCaches: true,
+          skipWaiting: true,
+          clientsClaim: true,
+          // Disable navigation preload to avoid issues with cornerstone
+          navigationPreload: false,
+        },
+        // Disable injectManifest mode to avoid IIFE conflict with cornerstone
+        injectManifest: undefined,
+        // Don't include cornerstone in any PWA processing
+        strategies: 'generateSW',
+        devOptions: {
+          enabled: false,
+        },
+        // Configure workbox to cache larger files
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB
+      })
     ].filter(Boolean),
     resolve: {
       alias: {
@@ -139,10 +141,9 @@ export default defineConfig(({ mode }) => {
             'xlsx': ['xlsx'],
           },
         },
-      },
-      chunkSizeWarningLimit: 2000,
+          },
+      chunkSizeWarningLimit: 5000,
     },
-
     optimizeDeps: {
       exclude: [
         '@cornerstonejs/dicom-image-loader',
@@ -151,6 +152,7 @@ export default defineConfig(({ mode }) => {
         '@cornerstonejs/codec-charls',
         '@cornerstonejs/codec-libjpeg-turbo-8bit',
         '@cornerstonejs/codec-openjpeg',
+        '@cornerstonejs/codec-openjph',
         '@cornerstonejs/codec-openjph',
       ],
       include: [
@@ -164,7 +166,6 @@ export default defineConfig(({ mode }) => {
         'recharts'
       ],
     },
-
     esbuild: {
       drop: isProduction ? ['console', 'debugger'] : [],
     },

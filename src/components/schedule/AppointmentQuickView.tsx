@@ -78,7 +78,10 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   const [showWaitlistQuickAdd, setShowWaitlistQuickAdd] = useState(false);
 
   const appointmentDate = typeof appointment.date === 'string'
-    ? new Date(appointment.date)
+    ? (() => {
+      const [y, m, d] = appointment.date.split('-').map(Number);
+      return new Date(y, m - 1, d, 12, 0, 0); // Local noon
+    })()
     : appointment.date;
 
   const interestCount = getInterestCount(appointmentDate, appointment.time);

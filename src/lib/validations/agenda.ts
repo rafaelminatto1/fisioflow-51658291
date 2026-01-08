@@ -27,7 +27,7 @@ export const userRoleSchema = z.enum(['admin', 'therapist', 'intern', 'patient']
 const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
 const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 
-export const timeSchema = z.string().regex(timeRegex, "Horário deve estar no formato HH:MM");
+export const timeSchema = z.string().regex(timeRegex, "Horário deve estar no formato HH:MM").optional();
 export const dateSchema = z.string().regex(dateRegex, "Data deve estar no formato YYYY-MM-DD");
 
 // Base schemas
