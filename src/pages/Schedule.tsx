@@ -171,8 +171,26 @@ const Schedule = () => {
 
   const handleCreateAppointment = useCallback(() => {
     setSelectedAppointment(null);
-    setModalDefaultDate(undefined);
-    setModalDefaultTime(undefined);
+
+    // Set current date
+    const now = new Date();
+    setModalDefaultDate(now);
+
+    // Calculate next available time slot (rounded up to next 30 min)
+    const currentMinutes = now.getMinutes();
+    const roundedMinutes = currentMinutes < 30 ? 30 : 0;
+    let nextHour = currentMinutes < 30 ? now.getHours() : now.getHours() + 1;
+
+    // If past working hours, default to next morning
+    if (nextHour >= 21) {
+      nextHour = 8;
+    } else if (nextHour < 7) {
+      nextHour = 8;
+    }
+
+    const nextTime = `${String(nextHour).padStart(2, '0')}:${String(roundedMinutes).padStart(2, '0')}`;
+    setModalDefaultTime(nextTime);
+
     setIsModalOpen(true);
   }, []);
 
