@@ -1,0 +1,235 @@
+{
+  "testPlan": {
+    "id": "FISIOFLOW-FRONTEND-TEST-001",
+    "title": "Teste de Frontend FisioFlow",
+    "description": "Plano de testes E2E automatizados para validar as funcionalidades principais do sistema FisioFlow, incluindo autenticação, dashboard, navegação, agendamento e pacientes"
+  },
+  "requirements": [
+    {
+      "id": "REQ-001",
+      "name": "Autenticação e Login",
+      "description": "Permite que usuários façam login no sistema com email e senha",
+      "test_cases": [
+        {
+          "id": "TC-001",
+          "name": "Login com credenciais válidas",
+          "description": "Verifica se é possível fazer login com email e senha corretos",
+          "steps": [
+            "Navegar para http://localhost:8080",
+            "Clicar no botão de login",
+            "Inserir email: rafael.minatto@yahoo.com.br",
+            "Inserir senha: Yukari30@",
+            "Clicar em Entrar",
+            "Verificar se o login foi bem-sucedido e o dashboard é exibido"
+          ],
+          "expected_result": "Usuário deve ser redirecionado para o dashboard principal após login bem-sucedido",
+          "priority": "high",
+          "status": "pending"
+        },
+        {
+          "id": "TC-002",
+          "name": "Login com credenciais inválidas",
+          "description": "Verifica se o sistema rejeita login com email ou senha incorretos",
+          "steps": [
+            "Navegar para http://localhost:8080",
+            "Clicar no botão de login",
+            "Inserir email: invalido@teste.com",
+            "Inserir senha: senhaerrada",
+            "Clicar em Entrar",
+            "Verificar se uma mensagem de erro é exibida"
+          ],
+          "expected_result": "Sistema deve exibir mensagem de erro e não permitir o acesso",
+          "priority": "high",
+          "status": "pending"
+        },
+        {
+          "id": "TC-003",
+          "name": "Logout e limpeza de sessão",
+          "description": "Verifica se o sistema permite fazer logout e limpa a sessão",
+          "steps": [
+            "Fazer login com credenciais válidas",
+            "Navegar até o dashboard principal",
+            "Clicar no botão de Sair",
+            "Verificar se o logout foi bem-sucedido",
+            "Verificar se o usuário foi redirecionado para a página de login",
+            "Verificar se localStorage foi limpo"
+          ],
+          "expected_result": "Sessão deve ser encerrada e dados de autenticação removidos do localStorage",
+          "priority": "medium",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "REQ-002",
+      "name": "Dashboard Principal",
+      "description": "Exibe visão geral do sistema com estatísticas e métricas",
+      "test_cases": [
+        {
+          "id": "TC-004",
+          "name": "Visualizar dashboard após login",
+          "description": "Verifica se o dashboard principal é exibido corretamente após login",
+          "steps": [
+            "Fazer login com credenciais válidas",
+            "Aguardar o carregamento do dashboard",
+            "Verificar se o dashboard principal foi carregado",
+            "Verificar se as métricas principais estão visíveis (total de agendamentos, taxa de ocupação, receita)",
+            "Verificar se os botões de navegação estão presentes"
+          ],
+          "expected_result": "Dashboard deve ser exibido com todas as métricas e navegação funcionando",
+          "priority": "high",
+          "status": "pending"
+        },
+        {
+          "id": "TC-005",
+          "name": "Verificar métricas iniciais",
+          "description": "Verifica se as métricas do dashboard são carregadas corretamente na inicialização",
+          "steps": [
+            "Fazer login",
+            "Aguardar o dashboard carregar completamente",
+            "Verificar se os contadores de agendamentos estão exibidos",
+            "Verificar se a taxa de ocupação está calculada corretamente",
+            "Verificar se a receita do dia está visível"
+          ],
+          "expected_result": "Todas as métricas devem ser exibidas com valores corretos desde o carregamento inicial",
+          "priority": "high",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "REQ-003",
+      "name": "Navegação Principal",
+      "description": "Permite navegar entre diferentes seções do sistema",
+      "test_cases": [
+        {
+          "id": "TC-006",
+          "name": "Navegar para Agenda",
+          "description": "Verifica se é possível navegar para a página de agenda",
+          "steps": [
+            "Fazer login",
+            "Localizar o link 'Agenda' na barra de navegação",
+            "Clicar no link 'Agenda'",
+            "Verificar se a página de agenda é carregada",
+            "Verificar se o calendário visível"
+          ],
+          "expected_result": "Página de agenda deve ser carregada com calendário visível e funcional",
+          "priority": "medium",
+          "status": "pending"
+        },
+        {
+          "id": "TC-007",
+          "name": "Navegar para Pacientes",
+          "description": "Verifica se é possível navegar para a página de pacientes",
+          "steps": [
+            "Fazer login",
+            "Localizar o link 'Paciente' na barra de navegação",
+            "Clicar no link 'Paciente'",
+            "Verificar se a página de pacientes é carregada",
+            "Verificar se a lista de pacientes está visível"
+          ],
+          "expected_result": "Página de pacientes deve ser carregada com lista de pacientes visível e funcional",
+          "priority": "medium",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "REQ-004",
+      "name": "Agendamento",
+      "description": "Permite visualizar e gerenciar consultas agendadas",
+      "test_cases": [
+        {
+          "id": "TC-008",
+          "name": "Visualizar calendário de agenda",
+          "description": "Verifica se o calendário de agenda é exibido corretamente",
+          "steps": [
+            "Fazer login",
+            "Navegar para a página de Agenda",
+            "Aguardar o calendário carregar",
+            "Verificar se o calendário é exibido",
+            "Verificar se os botões de filtro de período estão presentes (hoje, esta semana, este mês, custom)",
+            "Verificar se os agendamentos são mostrados no calendário"
+          ],
+          "expected_result": "Calendário deve ser exibido com filtros de período funcionando e agendamentos visíveis",
+          "priority": "high",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "REQ-005",
+      "name": "Gestão de Pacientes",
+      "description": "Permite gerenciar cadastro completo de pacientes com histórico médico",
+      "test_cases": [
+        {
+          "id": "TC-009",
+          "name": "Visualizar lista de pacientes",
+          "description": "Verifica se a lista de pacientes é exibida corretamente",
+          "steps": [
+            "Fazer login",
+            "Navegar para a página de Pacientes",
+            "Aguardar a lista de pacientes carregar",
+            "Verificar se a lista de pacientes está visível",
+            "Verificar se os cards de pacientes são exibidos corretamente",
+            "Verificar se as informações dos pacientes estão completas (nome, email, telefone)"
+          ],
+          "expected_result": "Lista de pacientes deve ser exibida com cards contendo nome, email, telefone e status",
+          "priority": "medium",
+          "status": "pending"
+        },
+        {
+          "id": "TC-010",
+          "name": "Buscar paciente existente",
+          "description": "Verifica se a funcionalidade de busca funciona corretamente",
+          "steps": [
+            "Navegar para a página de Pacientes",
+            "Verificar se há um campo de busca",
+            "Preencher o campo de busca com nome de um paciente existente",
+            "Clicar em buscar ou pressionar Enter",
+            "Verificar se o paciente buscado aparece nos resultados",
+            "Verificar se as informações do paciente estão corretas"
+          ],
+          "expected_result": "Sistema deve exibir o paciente buscado com todas as informações completas",
+          "priority": "low",
+          "status": "pending"
+        },
+        {
+          "id": "TC-011",
+          "name": "Editar paciente existente",
+          "description": "Verifica se a funcionalidade de edição funciona",
+          "steps": [
+            "Navegar para a página de Pacientes",
+            "Encontrar um paciente existente na lista",
+            "Clicar no botão de editar do paciente",
+            "Modificar informações do paciente (nome, email, telefone)",
+            "Clicar no botão de salvar",
+            "Verificar se as alterações foram salvas com sucesso",
+            "Verificar se uma mensagem de sucesso é exibida",
+            "Verificar se as informações atualizadas estão visíveis na lista"
+          ],
+          "expected_result": "Alterações no paciente devem ser salvas com sucesso e refletidas na interface",
+          "priority": "medium",
+          "status": "pending"
+        },
+        {
+          "id": "TC-012",
+          "name": "Deletar paciente",
+          "description": "Verifica se a funcionalidade de exclusão funciona",
+          "steps": [
+            "Navegar para a página de Pacientes",
+            "Encontrar um paciente existente na lista",
+            "Clicar no botão de deletar do paciente",
+            "Verificar se uma mensagem de confirmação é exibida",
+            "Clicar em confirmar",
+            "Verificar se o paciente foi removido da lista",
+            "Verificar se uma mensagem de sucesso é exibida"
+          ],
+          "expected_result": "Paciente deve ser removido do sistema após confirmação e lista atualizada",
+          "priority": "medium",
+          "status": "pending"
+        }
+      ]
+    }
+  ]
+}
