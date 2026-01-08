@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Patient } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/errors/logger';
-import { useAuth } from '@/contexts/AuthContextProvider';
+import { useAuth } from '@/contexts/AuthContext';
 import { useEffect } from 'react';
 
 export const useActivePatients = () => {

@@ -1,16 +1,28 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, lazy, Suspense } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileUp, X, Activity, Image as ImageIcon, Video, RotateCcw } from 'lucide-react';
-import DicomViewer from '../dicom/DicomViewer';
-import PoseAnalyzer from '../posture/PoseAnalyzer';
-import AssetViewer from '../viewer/AssetViewer';
-import ClinicalPostureAnalysis from '../posture/ClinicalPostureAnalysis';
-import DynamicAnalysisViewer from '../dynamic/DynamicAnalysisViewer';
-import DicomBrowser from '../dicom/DicomBrowser';
-import DynamicComparisonPage from '../dynamic/DynamicComparisonPage';
+import { FileUp, Activity, Image as ImageIcon, Video, RotateCcw, Loader2 } from 'lucide-react';
 import { GaitMetrics } from '@/types/analysis/schemas';
+
+// Lazy-loaded heavy components for code-splitting
+const DicomViewer = lazy(() => import('../dicom/DicomViewer'));
+const PoseAnalyzer = lazy(() => import('../posture/PoseAnalyzer'));
+const AssetViewer = lazy(() => import('../viewer/AssetViewer'));
+const ClinicalPostureAnalysis = lazy(() => import('../posture/ClinicalPostureAnalysis'));
+const DynamicAnalysisViewer = lazy(() => import('../dynamic/DynamicAnalysisViewer'));
+const DicomBrowser = lazy(() => import('../dicom/DicomBrowser'));
+const DynamicComparisonPage = lazy(() => import('../dynamic/DynamicComparisonPage'));
+
+// Loading fallback component
+const LoadingFallback = () => (
+    <div className="flex-1 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+            <Loader2 className="w-12 h-12 animate-spin text-primary" />
+            <p className="text-muted-foreground">Carregando módulo de análise...</p>
+        </div>
+    </div>
+);
 
 // MOCK DATA FOR DEMONSTRATION
 const MOCK_GAIT_DATA: GaitMetrics = {
@@ -140,39 +152,51 @@ const ImageAnalysisDashboard = () => {
             )}
 
             {mode === 'dicom' && file && (
-                <div className="flex-1 overflow-hidden border rounded-lg bg-black">
-                    <DicomViewer file={file} />
-                </div>
+                <Suspense fallback={<LoadingFallback />}>
+                    <div className="flex-1 overflow-hidden border rounded-lg bg-black">
+                        <DicomViewer file={file} />
+                    </div>
+                </Suspense>
             )}
 
             {mode === 'pose' && file && (
-                <div className="flex-1 overflow-hidden border rounded-lg">
-                    <PoseAnalyzer videoSrc={URL.createObjectURL(file)} />
-                </div>
+                <Suspense fallback={<LoadingFallback />}>
+                    <div className="flex-1 overflow-hidden border rounded-lg">
+                        <PoseAnalyzer videoSrc={URL.createObjectURL(file)} />
+                    </div>
+                </Suspense>
             )}
 
             {mode === 'image' && file && (
-                <div className="flex-1 overflow-hidden">
-                    <AssetViewer file={file} />
-                </div>
+                <Suspense fallback={<LoadingFallback />}>
+                    <div className="flex-1 overflow-hidden">
+                        <AssetViewer file={file} />
+                    </div>
+                </Suspense>
             )}
 
             {mode === 'clinical_posture' && (
-                <div className="flex-1 overflow-hidden border rounded-lg bg-white">
-                    <ClinicalPostureAnalysis />
-                </div>
+                <Suspense fallback={<LoadingFallback />}>
+                    <div className="flex-1 overflow-hidden border rounded-lg bg-white">
+                        <ClinicalPostureAnalysis />
+                    </div>
+                </Suspense>
             )}
 
             {mode === 'dynamic_demo' && (
-                <div className="flex-1 overflow-y-auto p-4 border rounded-lg bg-white">
-                    <DynamicAnalysisViewer data={MOCK_GAIT_DATA} />
-                </div>
+                <Suspense fallback={<LoadingFallback />}>
+                    <div className="flex-1 overflow-y-auto p-4 border rounded-lg bg-white">
+                        <DynamicAnalysisViewer data={MOCK_GAIT_DATA} />
+                    </div>
+                </Suspense>
             )}
 
             {mode === 'dynamic_compare' && (
-                <div className="flex-1 overflow-hidden bg-white border rounded-lg">
-                    <DynamicComparisonPage />
-                </div>
+                <Suspense fallback={<LoadingFallback />}>
+                    <div className="flex-1 overflow-hidden bg-white border rounded-lg">
+                        <DynamicComparisonPage />
+                    </div>
+                </Suspense>
             )}
         </div>
     );

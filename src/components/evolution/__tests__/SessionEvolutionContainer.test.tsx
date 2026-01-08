@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+
 import { SessionEvolutionContainer } from '../SessionEvolutionContainer';
+import { supabase } from '@/integrations/supabase/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 
@@ -51,7 +52,7 @@ vi.mock('@/lib/errors/logger', () => ({
 
 // Mock dos componentes filhos
 vi.mock('../SOAPFormPanel', () => ({
-  SOAPFormPanel: ({ onChange }: any) => (
+  SOAPFormPanel: ({ onChange }: { onChange: (data: any) => void }) => (
     <div data-testid="soap-form-panel">
       <button onClick={() => onChange({ subjective: 'test', objective: 'test', assessment: 'test', plan: 'test' })}>
         Preencher SOAP
@@ -120,8 +121,9 @@ const createWrapper = () => {
 describe('SessionEvolutionContainer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    const { supabase } = require('@/integrations/supabase/client');
+
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase.auth.getUser as any).mockResolvedValue({
       data: { user: { id: 'user-123' } },
       error: null,
@@ -162,8 +164,8 @@ describe('SessionEvolutionContainer', () => {
   });
 
   it('deve incluir organization_id ao atualizar appointment', async () => {
-    const { supabase } = require('@/integrations/supabase/client');
-    
+
+
     render(
       <SessionEvolutionContainer patientId="patient-123" appointmentId="appt-123" mode="modal" />,
       { wrapper: createWrapper() }
@@ -183,6 +185,7 @@ describe('SessionEvolutionContainer', () => {
     // Mock useOrganizations para retornar null
     mockUseOrganizations.mockReturnValueOnce({
       currentOrganization: null,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
 
     render(

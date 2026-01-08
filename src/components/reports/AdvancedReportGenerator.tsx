@@ -59,7 +59,8 @@ export function AdvancedReportGenerator() {
     return data;
   };
 
-  const generatePDF = async (data: any[]) => {
+  const generatePDF = async (data: unknown[]) => {
+    const formattedData = data as any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
     const doc = new jsPDF();
 
     // Header
@@ -81,7 +82,7 @@ export function AdvancedReportGenerator() {
       doc.setFontSize(10);
       doc.text(`Total de Agendamentos: ${data.length}`, 14, 48);
       doc.text(
-        `Receita Total: R$ ${data.reduce((sum, d) => sum + (d.payment_amount || 0), 0).toFixed(2)}`,
+        `Receita Total: R$ ${(data as any[]).reduce((sum, d) => sum + (d.payment_amount || 0), 0).toFixed(2)}`, // eslint-disable-line @typescript-eslint/no-explicit-any
         14,
         56
       );
@@ -89,7 +90,7 @@ export function AdvancedReportGenerator() {
 
     // Details table
     if (sections.find(s => s.id === 'details')?.enabled) {
-      const tableData = data.map(d => [
+      const tableData = formattedData.map(d => [
         format(new Date(d.appointment_date), 'dd/MM/yyyy'),
         d.patients?.name || 'N/A',
         d.type || 'N/A',
@@ -109,9 +110,10 @@ export function AdvancedReportGenerator() {
     return doc;
   };
 
-  const generateCSV = (data: any[]) => {
+  const generateCSV = (data: unknown[]) => {
+    const formattedData = data as any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
     const headers = ['Data', 'Paciente', 'Email', 'Telefone', 'Tipo', 'Status', 'Valor'];
-    const rows = data.map(d => [
+    const rows = formattedData.map(d => [
       format(new Date(d.appointment_date), 'dd/MM/yyyy'),
       d.patients?.name || '',
       d.patients?.email || '',
@@ -146,16 +148,18 @@ export function AdvancedReportGenerator() {
       let filename: string;
 
       switch (exportFormat) {
-        case 'pdf':
+        case 'pdf': {
           const pdf = await generatePDF(data);
           blob = pdf.output('blob');
           filename = `relatorio-${reportType}-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
           break;
-        case 'csv':
+        }
+        case 'csv': {
           const csv = generateCSV(data);
           blob = new Blob([csv], { type: 'text/csv' });
           filename = `relatorio-${reportType}-${format(new Date(), 'yyyy-MM-dd')}.csv`;
           break;
+        }
         case 'json':
           blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
           filename = `relatorio-${reportType}-${format(new Date(), 'yyyy-MM-dd')}.json`;

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile, UserRole, RegisterFormData } from '@/types/auth';
@@ -6,12 +6,7 @@ import { logger } from '@/lib/errors/logger';
 import { useToast } from '@/hooks/use-toast';
 import { AuthContextType } from './AuthContext';
 
-export interface AuthError {
-  message: string;
-  status?: number;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { AuthContext, AuthError } from './AuthContext';
 
 export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -196,10 +191,10 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
     };
   }, [fetchProfile, initialized]);
 
-  const signIn = async (email: string, password: string, remember?: boolean): Promise<{ error?: AuthError | null }> => {
+  const signIn = async (email: string, password: string, _remember?: boolean): Promise<{ error?: AuthError | null }> => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -217,10 +212,11 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
       // Profile será carregado pelo onAuthStateChange
       return { error: null };
-    } catch (err: any) {
-      logger.error('Erro no login', err, 'AuthContextProvider');
+    } catch (err: unknown) {
+      const error = err as Error;
+      logger.error('Erro no login', error, 'AuthContextProvider');
       setLoading(false);
-      return { error: { message: err.message || 'Erro ao fazer login' } };
+      return { error: { message: error.message || 'Erro ao fazer login' } };
     }
   };
 
@@ -249,10 +245,11 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
 
       return { user: authData.user, error: null };
-    } catch (err: any) {
-      logger.error('Erro no cadastro', err, 'AuthContextProvider');
+    } catch (err: unknown) {
+      const error = err as Error;
+      logger.error('Erro no cadastro', error, 'AuthContextProvider');
       setLoading(false);
-      return { error: { message: err.message || 'Erro ao cadastrar' } };
+      return { error: { message: error.message || 'Erro ao cadastrar' } };
     }
   };
 
@@ -284,9 +281,10 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
         return { error: { message: error.message, status: error.status } };
       }
       return { error: null };
-    } catch (err: any) {
-      logger.error('Erro ao resetar senha', err, 'AuthContextProvider');
-      return { error: { message: err.message || 'Erro ao resetar senha' } };
+    } catch (err: unknown) {
+      const error = err as Error;
+      logger.error('Erro ao resetar senha', error, 'AuthContextProvider');
+      return { error: { message: error.message || 'Erro ao resetar senha' } };
     }
   };
 
@@ -298,9 +296,10 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
         return { error: { message: error.message, status: error.status } };
       }
       return { error: null };
-    } catch (err: any) {
-      logger.error('Erro ao atualizar senha', err, 'AuthContextProvider');
-      return { error: { message: err.message || 'Erro ao atualizar senha' } };
+    } catch (err: unknown) {
+      const error = err as Error;
+      logger.error('Erro ao atualizar senha', error, 'AuthContextProvider');
+      return { error: { message: error.message || 'Erro ao atualizar senha' } };
     }
   };
 
@@ -312,12 +311,12 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
       const { error } = await supabase
         .from('profiles')
-        .update(updates as any)
+        .update(updates as any) // eslint-disable-line @typescript-eslint/no-explicit-any
         .eq('user_id', user.id);
 
       if (error) {
         logger.error('Erro ao atualizar perfil', error, 'AuthContextProvider');
-        return { error: { message: error.message, status: (error as any).status } };
+        return { error: { message: error.message, status: (error as any).status } }; // eslint-disable-line @typescript-eslint/no-explicit-any
       }
 
       // Atualizar estado local
@@ -326,9 +325,10 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
 
       return { error: null };
-    } catch (err: any) {
-      logger.error('Erro ao atualizar perfil', err, 'AuthContextProvider');
-      return { error: { message: err.message || 'Erro ao atualizar perfil' } };
+    } catch (err: unknown) {
+      const error = err as Error;
+      logger.error('Erro ao atualizar perfil', error, 'AuthContextProvider');
+      return { error: { message: error.message || 'Erro ao atualizar perfil' } };
     }
   };
 
@@ -354,11 +354,5 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthContextProvider');
-  }
-  return context;
-};
+
 

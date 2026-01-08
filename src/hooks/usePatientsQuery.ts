@@ -27,7 +27,7 @@ export interface PatientDB {
   updated_at?: string | null;
 }
 
-import { useAuth } from '@/contexts/AuthContextProvider';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const usePatientsQuery = () => {
   const { profile } = useAuth();

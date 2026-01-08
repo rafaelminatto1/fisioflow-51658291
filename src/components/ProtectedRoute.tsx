@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContextProvider';
+import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/types/auth';
 import { AlertTriangle, RefreshCw, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';

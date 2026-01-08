@@ -1,5 +1,5 @@
-import React, { useRef, useState } from 'react';
-import { Stage, Layer, Arrow, Circle, Rect, Text, Line, Transformer } from 'react-konva';
+import React, { useState } from 'react';
+import { Stage, Layer, Arrow, Circle, Rect, Text } from 'react-konva';
 import { Annotation } from '@/hooks/useAssetAnnotations';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -22,9 +22,9 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
 }) => {
     const [isDrawing, setIsDrawing] = useState(false);
     const [newAnnotation, setNewAnnotation] = useState<Annotation | null>(null);
-    const stageRef = useRef<any>(null);
 
-    const handleMouseDown = (e: any) => {
+
+    const handleMouseDown = (e: { target: { getStage: () => any } }) => { // eslint-disable-line @typescript-eslint/no-explicit-any
         if (activeTool === 'select' || activeTool === 'pan') return;
 
         const stage = e.target.getStage();
@@ -60,7 +60,7 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
             case 'rect':
                 ann = { id, type: 'rect', x: x, y: y, width: 1, height: 1, stroke: 'red', strokeWidth: 4 };
                 break;
-            case 'text':
+            case 'text': {
                 const text = prompt("Digite o texto:");
                 if (text) {
                     ann = { id, type: 'text', x, y, text, fontSize: 24, fill: 'red' };
@@ -68,6 +68,7 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
                 }
                 setIsDrawing(false);
                 return;
+            }
             default:
                 return;
         }
@@ -75,7 +76,7 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
         setNewAnnotation(ann);
     };
 
-    const handleMouseMove = (e: any) => {
+    const handleMouseMove = (e: { target: { getStage: () => any } }) => { // eslint-disable-line @typescript-eslint/no-explicit-any
         if (!isDrawing || !newAnnotation) return;
 
         const stage = e.target.getStage();
@@ -120,7 +121,7 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
             style={{ position: 'absolute', top: 0, left: 0, pointerEvents: activeTool === 'select' ? 'none' : 'auto' }}
         >
             <Layer>
-                {annotations.map((ann, i) => {
+                {annotations.map((ann) => {
                     if (ann.type === 'arrow') {
                         return <Arrow key={ann.id} points={ann.points} stroke={ann.stroke} strokeWidth={ann.strokeWidth || 4} />;
                     } else if (ann.type === 'circle') {

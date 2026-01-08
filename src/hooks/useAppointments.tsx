@@ -42,7 +42,7 @@ async function retryWithBackoff<T>(
 }
 
 // Fetch all appointments with improved error handling and validation
-import { useAuth } from '@/contexts/AuthContextProvider';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Fetch all appointments with improved error handling and validation
 async function fetchAppointments(organizationIdOverride?: string | null): Promise<AppointmentBase[]> {

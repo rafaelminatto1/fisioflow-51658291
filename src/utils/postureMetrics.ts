@@ -1,5 +1,5 @@
 import { UnifiedLandmark } from '@/utils/geometry';
-import { calculateAngle, POSE_LANDMARKS } from '@/utils/geometry';
+import { calculateAngle } from '@/utils/geometry';
 
 export interface PostureMetric {
     name: string;
@@ -96,7 +96,6 @@ export const calculatePostureMetrics = (landmarks: UnifiedLandmark[], view: 'fro
         // 2. Shoulder Alignment (Acromion height diff)
         const leftShoulder = landmarks[LM.LEFT_SHOULDER];
         const rightShoulder = landmarks[LM.RIGHT_SHOULDER];
-        const shoulderDiffY = Math.abs(leftShoulder.y - rightShoulder.y);
         // Relative to trunk length or something? For now raw Y diff is approximated by angle too.
 
         const dyShoulder = leftShoulder.y - rightShoulder.y;
@@ -183,7 +182,7 @@ export const calculatePostureMetrics = (landmarks: UnifiedLandmark[], view: 'fro
         const angleRad = Math.atan2(dx, -dy); // -dy because Y is down. Up is negative Y.
         // If perfectly vertical, dx=0, atan2(0, positive) = 0.
 
-        let fhpDeg = angleRad * (180 / Math.PI);
+        const fhpDeg = angleRad * (180 / Math.PI);
 
         metrics.push({
             name: 'forward_head',

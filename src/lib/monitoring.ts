@@ -41,7 +41,16 @@ export const trackMetric = (metric: string, data: number | MetricData) => {
 
   // Custom analytics endpoint (opcional)
   if (import.meta.env.VITE_ANALYTICS_ENDPOINT) {
-    fetch(import.meta.env.VITE_ANALYTICS_ENDPOINT, {
+    const endpoint = import.meta.env.VITE_ANALYTICS_ENDPOINT;
+    const isProduction = import.meta.env.PROD;
+    const isLocalhost = endpoint.includes('localhost') || endpoint.includes('127.0.0.1');
+
+    if (isProduction && isLocalhost) {
+      logger.warn('Endpoint de analytics ignorado em produção por ser localhost', { endpoint }, 'Monitoring');
+      return;
+    }
+
+    fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -67,7 +76,7 @@ export const trackPageLoad = () => {
   window.addEventListener('load', () => {
     // Performance metrics
     const perfData = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-    
+
     if (perfData) {
       trackMetric(METRICS.PAGE_LOAD, {
         value: perfData.loadEventEnd - perfData.fetchStart,
@@ -86,7 +95,7 @@ export const trackPageLoad = () => {
  */
 export const trackApiCall = (endpoint: string, startTime: number) => {
   const duration = performance.now() - startTime;
-  
+
   trackMetric(METRICS.API_RESPONSE, {
     value: duration,
     metadata: {
@@ -175,7 +184,7 @@ export const initMonitoring = () => {
   window.addEventListener('online', () => {
     trackEvent('connection_restored');
   });
-  
+
   window.addEventListener('offline', () => {
     trackEvent('connection_lost');
   });
