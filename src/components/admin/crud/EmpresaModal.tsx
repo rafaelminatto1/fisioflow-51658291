@@ -91,7 +91,7 @@ export function EmpresaModal({ isOpen, onClose, empresa }: EmpresaModalProps) {
         }
       );
     } else {
-      createMutation.mutate(data as any, {
+      createMutation.mutate(data, {
         onSuccess: () => {
           onClose();
           reset();

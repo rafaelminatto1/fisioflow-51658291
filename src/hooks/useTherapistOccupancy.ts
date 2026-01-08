@@ -19,7 +19,7 @@ export interface OccupancyMetrics {
   totalHorasTrabalhadas: number;
   fisioterapeutasAtivos: number;
   therapists: TherapistOccupancyData[];
-  hourlyData: { hour: string; [key: string]: number | string }[];
+  hourlyData: { hour: string;[key: string]: number | string }[];
   suggestions: { type: 'success' | 'warning' | 'info'; message: string }[];
 }
 
@@ -41,7 +41,7 @@ const getAvailableHours = (dayOfWeek: number): number => {
 
 const getDateRange = (period: PeriodFilter, startDate?: Date, endDate?: Date) => {
   const today = new Date();
-  
+
   switch (period) {
     case 'today':
       return { start: startOfDay(today), end: endOfDay(today) };
@@ -50,9 +50,9 @@ const getDateRange = (period: PeriodFilter, startDate?: Date, endDate?: Date) =>
     case 'month':
       return { start: startOfMonth(today), end: endOfMonth(today) };
     case 'custom':
-      return { 
-        start: startDate ? startOfDay(startDate) : startOfDay(today), 
-        end: endDate ? endOfDay(endDate) : endOfDay(today) 
+      return {
+        start: startDate ? startOfDay(startDate) : startOfDay(today),
+        end: endDate ? endOfDay(endDate) : endOfDay(today)
       };
     default:
       return { start: startOfDay(today), end: endOfDay(today) };
@@ -65,71 +65,71 @@ export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { 
     queryFn: async (): Promise<OccupancyMetrics> => {
       const { start, end } = getDateRange(options.period, options.startDate, options.endDate);
       const today = format(new Date(), 'yyyy-MM-dd');
-      
+
       // Buscar todos os user_ids com role de fisioterapeuta ou admin
       const { data: userRoles, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id, role')
         .in('role', ['admin', 'fisioterapeuta']);
-      
+
       if (rolesError) throw rolesError;
-      
+
       const therapistUserIds = [...new Set((userRoles || []).map(ur => ur.user_id))];
-      
+
       // Buscar profiles dos fisioterapeutas
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, user_id, full_name, avatar_url')
         .in('user_id', therapistUserIds);
-      
+
       if (profilesError) throw profilesError;
-      
+
       const therapists = (profiles || []).map(p => ({
         id: p.id,
         user_id: p.user_id,
         full_name: p.full_name,
         avatar_url: p.avatar_url
       }));
-      
+
       // Buscar agendamentos do período (usando therapist_id que é o profile id)
       const therapistIds = therapists.map(t => t.id);
-      
+
       // Se não há therapists, retornar arrays vazios
       let appointments: any[] = [];
       let todayAppointments: any[] = [];
-      
+
       if (therapistIds.length > 0) {
         const { data: appointmentsData, error: aptsError } = await supabase
           .from('appointments')
           .select('id, therapist_id, appointment_date, appointment_time, duration, status')
           .gte('appointment_date', format(start, 'yyyy-MM-dd'))
           .lte('appointment_date', format(end, 'yyyy-MM-dd'))
-          .not('status', 'eq', 'cancelado')
+          .neq('status', 'cancelado')
           .in('therapist_id', therapistIds);
-        
+
         if (aptsError) throw aptsError;
         appointments = appointmentsData || [];
-        
+
         // Buscar agendamentos de hoje para dados horários
         const { data: todayData } = await supabase
           .from('appointments')
           .select('id, therapist_id, appointment_time, duration, status')
           .eq('appointment_date', today)
-          .not('status', 'eq', 'cancelado')
+          .neq('status', 'cancelado')
           .in('therapist_id', therapistIds);
-        
+
         todayAppointments = todayData || [];
       }
-      
+
       // Calcular métricas por fisioterapeuta
       const therapistMetrics: TherapistOccupancyData[] = therapists.map(therapist => {
         const therapistAppointments = (appointments || []).filter(a => a.therapist_id === therapist.id);
         const todayTherapistAppointments = therapistAppointments.filter(a => a.appointment_date === today);
-        
+
         // Calcular horas trabalhadas
         const totalMinutes = therapistAppointments.reduce((acc, apt) => acc + (apt.duration || 50), 0);
         const horasTrabalhadas = totalMinutes / 60;
-        
+
         // Calcular capacidade total para o período
         let capacidadeTotal = 0;
         const currentDate = new Date(start);
@@ -137,13 +137,13 @@ export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { 
           capacidadeTotal += getAvailableHours(currentDate.getDay());
           currentDate.setDate(currentDate.getDate() + 1);
         }
-        
+
         const taxaOcupacao = capacidadeTotal > 0 ? Math.round((horasTrabalhadas / capacidadeTotal) * 100) : 0;
-        
+
         let status: 'otimo' | 'bom' | 'baixo' = 'baixo';
         if (taxaOcupacao >= 80) status = 'otimo';
         else if (taxaOcupacao >= 50) status = 'bom';
-        
+
         return {
           id: therapist.id,
           name: therapist.full_name || 'Sem nome',
@@ -155,13 +155,13 @@ export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { 
           status
         };
       });
-      
+
       // Calcular dados horários (7h-21h)
-      const hourlyData: { hour: string; [key: string]: number | string }[] = [];
+      const hourlyData: { hour: string;[key: string]: number | string }[] = [];
       for (let hour = 7; hour <= 21; hour++) {
         const hourStr = `${hour.toString().padStart(2, '0')}:00`;
-        const hourData: { hour: string; [key: string]: number | string } = { hour: hourStr };
-        
+        const hourData: { hour: string;[key: string]: number | string } = { hour: hourStr };
+
         therapistMetrics.forEach(therapist => {
           const appointmentsAtHour = (todayAppointments || []).filter(apt => {
             if (apt.therapist_id !== therapist.id) return false;
@@ -170,13 +170,13 @@ export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { 
           });
           hourData[therapist.name] = appointmentsAtHour.length;
         });
-        
+
         hourlyData.push(hourData);
       }
-      
+
       // Gerar sugestões
       const suggestions: { type: 'success' | 'warning' | 'info'; message: string }[] = [];
-      
+
       therapistMetrics.forEach(therapist => {
         if (therapist.taxaOcupacao >= 85) {
           suggestions.push({
@@ -190,7 +190,7 @@ export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { 
           });
         }
       });
-      
+
       // Verificar desequilíbrio
       const taxas = therapistMetrics.map(t => t.taxaOcupacao);
       if (taxas.length > 1) {
@@ -203,14 +203,14 @@ export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { 
           });
         }
       }
-      
+
       // Calcular totais
       const totalConsultasHoje = therapistMetrics.reduce((acc, t) => acc + t.consultasHoje, 0);
       const totalHorasTrabalhadas = therapistMetrics.reduce((acc, t) => acc + t.horasTrabalhadas, 0);
-      const ocupacaoMedia = therapistMetrics.length > 0 
+      const ocupacaoMedia = therapistMetrics.length > 0
         ? Math.round(therapistMetrics.reduce((acc, t) => acc + t.taxaOcupacao, 0) / therapistMetrics.length)
         : 0;
-      
+
       return {
         ocupacaoMedia,
         totalConsultasHoje,

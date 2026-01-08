@@ -3,23 +3,23 @@ import { test, expect } from '@playwright/test';
 test.describe('Performance Tests', () => {
   test('deve carregar página inicial em menos de 3 segundos', async ({ page }) => {
     const startTime = Date.now();
-    
+
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    
+
     const loadTime = Date.now() - startTime;
-    
+
     expect(loadTime).toBeLessThan(3000);
     console.log(`✓ Página carregou em ${loadTime}ms`);
   });
 
   test('deve ter bundle JavaScript otimizado', async ({ page }) => {
     const resources: Array<{ url: string; size: number; type: string }> = [];
-    
+
     page.on('response', async (response) => {
       const url = response.url();
       const contentType = response.headers()['content-type'] || '';
-      
+
       if (contentType.includes('javascript') || url.endsWith('.js')) {
         try {
           const body = await response.body();
@@ -28,7 +28,7 @@ test.describe('Performance Tests', () => {
             size: body.length,
             type: 'js'
           });
-        } catch (error) {
+        } catch {
           // Ignorar erros de leitura
         }
       }
@@ -43,7 +43,7 @@ test.describe('Performance Tests', () => {
 
     console.log(`\n📦 Análise de Bundle:`);
     console.log(`Total JS: ${totalSizeMB.toFixed(2)} MB (${resources.length} arquivos)`);
-    
+
     resources
       .sort((a, b) => b.size - a.size)
       .slice(0, 5)
@@ -59,7 +59,7 @@ test.describe('Performance Tests', () => {
 
   test('deve ter bom First Contentful Paint', async ({ page }) => {
     await page.goto('/');
-    
+
     const fcp = await page.evaluate(() => {
       return new Promise<number>((resolve) => {
         const observer = new PerformanceObserver((list) => {
@@ -71,14 +71,14 @@ test.describe('Performance Tests', () => {
           }
         });
         observer.observe({ entryTypes: ['paint'] });
-        
+
         // Timeout de segurança
         setTimeout(() => resolve(0), 5000);
       });
     });
 
     console.log(`\n🎨 First Contentful Paint: ${fcp.toFixed(0)}ms`);
-    
+
     // FCP deve ser < 1.5s (1500ms)
     expect(fcp).toBeLessThan(1500);
   });
@@ -86,23 +86,23 @@ test.describe('Performance Tests', () => {
   test('deve ter Cumulative Layout Shift baixo', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    
+
     // Aguardar um pouco para capturar shifts
     await page.waitForTimeout(2000);
 
     const cls = await page.evaluate(() => {
       return new Promise<number>((resolve) => {
         let clsValue = 0;
-        
+
         const observer = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
-            if ((entry as any).hadRecentInput) continue;
-            clsValue += (entry as any).value;
+            if ((entry as unknown as { hadRecentInput: boolean }).hadRecentInput) continue;
+            clsValue += (entry as unknown as { value: number }).value;
           }
         });
-        
+
         observer.observe({ entryTypes: ['layout-shift'] });
-        
+
         setTimeout(() => {
           observer.disconnect();
           resolve(clsValue);
@@ -111,7 +111,7 @@ test.describe('Performance Tests', () => {
     });
 
     console.log(`\n📏 Cumulative Layout Shift: ${cls.toFixed(4)}`);
-    
+
     // CLS deve ser < 0.1
     expect(cls).toBeLessThan(0.1);
   });
@@ -136,7 +136,8 @@ test.describe('Performance Tests', () => {
     const cachedResources = await page.evaluate(() => {
       return performance
         .getEntriesByType('resource')
-        .filter((r: any) => r.transferSize === 0).length;
+        .map((r) => r as PerformanceResourceTiming)
+        .filter((r) => r.transferSize === 0).length;
     });
 
     console.log(`\n💾 Cache Analysis:`);
@@ -151,46 +152,46 @@ test.describe('Performance Tests', () => {
 
   test('deve ter bom Time to Interactive', async ({ page }) => {
     const startTime = Date.now();
-    
+
     await page.goto('/');
-    
+
     // Aguardar página estar completamente interativa
     await page.waitForLoadState('networkidle');
     await page.waitForSelector('button', { state: 'visible' });
-    
+
     // Testar interatividade clicando em elemento
     const button = page.locator('button').first();
     await button.click({ timeout: 1000 });
-    
+
     const tti = Date.now() - startTime;
-    
+
     console.log(`\n⚡ Time to Interactive: ${tti}ms`);
-    
+
     // TTI deve ser < 2.5s (2500ms)
     expect(tti).toBeLessThan(2500);
   });
 
   test('deve ter poucas requisições HTTP', async ({ page }) => {
     let requestCount = 0;
-    
+
     page.on('request', () => requestCount++);
-    
+
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    
+
     console.log(`\n🌐 Total de requisições HTTP: ${requestCount}`);
-    
+
     // Deve fazer menos de 50 requisições na carga inicial
     expect(requestCount).toBeLessThan(50);
   });
 
   test('deve comprimir recursos', async ({ page }) => {
     const resources: Array<{ url: string; compressed: boolean }> = [];
-    
+
     page.on('response', async (response) => {
       const encoding = response.headers()['content-encoding'];
       const url = response.url();
-      
+
       if (url.includes('.js') || url.includes('.css')) {
         resources.push({
           url: url.split('/').pop() || url,
@@ -243,7 +244,7 @@ test.describe('Performance Tests', () => {
 
     if (initialMemory > 0 && finalMemory > 0) {
       const memoryIncrease = ((finalMemory - initialMemory) / initialMemory) * 100;
-      
+
       console.log(`\n🧠 Memory Analysis:`);
       console.log(`Inicial: ${(initialMemory / 1024 / 1024).toFixed(2)} MB`);
       console.log(`Final: ${(finalMemory / 1024 / 1024).toFixed(2)} MB`);

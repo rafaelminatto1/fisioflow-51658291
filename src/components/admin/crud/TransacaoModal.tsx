@@ -65,7 +65,7 @@ export function TransacaoModal({ isOpen, onClose, transacao }: TransacaoModalPro
         { onSuccess: () => onClose() }
       );
     } else {
-      createMutation.mutate(data as any, { onSuccess: () => onClose() });
+      createMutation.mutate(data, { onSuccess: () => onClose() });
     }
   };
 

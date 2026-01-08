@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useEmpresasParceiras, useCreateEmpresaParceira, useUpdateEmpresaParceira, useDeleteEmpresaParceira } from '@/hooks/useEmpresasParceiras';
+import { useEmpresasParceiras, useDeleteEmpresaParceira } from '@/hooks/useEmpresasParceiras';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,7 +27,7 @@ export function EmpresasManager() {
   const [editEmpresa, setEditEmpresa] = useState<EmpresaParceira | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const filteredEmpresas = empresas.filter(e => 
+  const filteredEmpresas = empresas.filter(e =>
     e.nome?.toLowerCase().includes(search.toLowerCase()) ||
     e.email?.toLowerCase().includes(search.toLowerCase())
   );

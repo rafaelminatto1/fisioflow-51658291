@@ -63,9 +63,10 @@ export function InviteUserModal({ open, onOpenChange }: InviteUserModalProps) {
         title: 'Convite criado com sucesso!',
         description: `Convite enviado para ${email}`,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error creating invitation:', err);
-      setError(err.message || 'Erro ao criar convite. Tente novamente.');
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao criar convite. Tente novamente.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
