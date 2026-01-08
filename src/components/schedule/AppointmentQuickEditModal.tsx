@@ -69,6 +69,11 @@ const statusLabels: Record<AppointmentStatus, string> = {
   concluido: 'Concluído',
   cancelado: 'Cancelado',
   falta: 'Faltou',
+  aguardando_confirmacao: 'Aguardando Confirmação',
+  atrasado: 'Atrasado',
+  avaliacao: 'Avaliação',
+  em_espera: 'Em Espera',
+  remarcado: 'Remarcado',
 };
 
 const statusColors: Record<AppointmentStatus, string> = {
@@ -78,6 +83,11 @@ const statusColors: Record<AppointmentStatus, string> = {
   concluido: 'bg-slate-500',
   cancelado: 'bg-red-500',
   falta: 'bg-orange-500',
+  aguardando_confirmacao: 'bg-amber-500',
+  atrasado: 'bg-rose-500',
+  avaliacao: 'bg-purple-500',
+  em_espera: 'bg-cyan-500',
+  remarcado: 'bg-indigo-500',
 };
 
 export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps> = ({

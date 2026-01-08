@@ -15,8 +15,8 @@ export const toast = ({ title, description, variant }: { title: string; descript
 export const useAuth = () => ({
   user: { id: '1', email: 'admin@fisioflow.com.br' },
   loading: false,
-  profile: { role: 'admin', full_name: 'Admin', avatar_url: '' },
-  userProfile: { role: 'admin', full_name: 'Admin', avatar_url: '' },
+  profile: { role: 'admin', full_name: 'Admin', avatar_url: '', organization_id: 'org-1' },
+  userProfile: { role: 'admin', full_name: 'Admin', avatar_url: '', organization_id: 'org-1' },
   initialized: true,
   sessionCheckFailed: false,
   role: 'admin' as const,

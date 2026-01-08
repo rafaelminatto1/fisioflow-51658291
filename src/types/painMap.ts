@@ -10,7 +10,13 @@ export type PainType =
   | 'formigamento' 
   | 'dormencia'
   | 'peso'
-  | 'pontada';
+  | 'pontada'
+  | 'sharp'
+  | 'throbbing'
+  | 'burning'
+  | 'tingling'
+  | 'numbness'
+  | 'stiffness';
 
 export type BodyRegion = 
   | 'cabeca'

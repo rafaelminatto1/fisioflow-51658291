@@ -91,14 +91,21 @@ export const GoalService = {
     /**
      * Create a new DRAFT profile
      */
-    async createProfile(profile: Partial<GoalProfile> & { id: string; name: string }) {
+    async createProfile(profile: Partial<GoalProfile> & { id: string; name: string; description: string }) {
+        const insertData = {
+            id: profile.id,
+            name: profile.name,
+            description: profile.description,
+            applicable_tests: profile.applicable_tests,
+            quality_gate: profile.quality_gate,
+            evidence: profile.evidence,
+            tags: profile.tags,
+            version: 1
+        };
+        
         const { data, error } = await supabase
             .from('goal_profiles')
-            .insert({
-                ...profile,
-                status: 'DRAFT',
-                version: 1
-            })
+            .insert(insertData)
             .select()
             .single();
 

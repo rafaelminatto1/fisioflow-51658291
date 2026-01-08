@@ -91,7 +91,7 @@ const getIntensityColor = (intensity: number): string => {
 };
 
 // Ícones por tipo de dor
-const PAIN_TYPE_ICONS: Record<PainPoint['painType'], string> = {
+const PAIN_TYPE_ICONS: Record<PainType, string> = {
   aguda: '⚡',
   cronica: '⏳',
   latejante: '💓',
@@ -100,6 +100,12 @@ const PAIN_TYPE_ICONS: Record<PainPoint['painType'], string> = {
   dormencia: '❄️',
   peso: '🔒',
   pontada: '📌',
+  sharp: '⚡',
+  throbbing: '💓',
+  burning: '🔥',
+  tingling: '✨',
+  numbness: '❄️',
+  stiffness: '🔒',
 };
 
 export function BodyMap({
