@@ -7,7 +7,7 @@ import {
 } from '@cornerstonejs/core';
 import {
     ToolGroupManager,
-    StackScrollMouseWheelTool,
+    StackScrollTool,
     PanTool,
     ZoomTool,
     LengthTool,
@@ -52,7 +52,7 @@ const DicomViewer: React.FC<DicomViewerProps> = ({ file, studyInstanceUid, serie
                 // Check if tool exists to avoid error? 
                 // Cornerstone addTool might throw if already added.
                 // We'll rely on try/catch
-                addTool(StackScrollMouseWheelTool);
+                addTool(StackScrollTool);
                 addTool(PanTool);
                 addTool(ZoomTool);
                 addTool(LengthTool);
@@ -134,7 +134,7 @@ const DicomViewer: React.FC<DicomViewerProps> = ({ file, studyInstanceUid, serie
             toolGroup = ToolGroupManager.createToolGroup(TOOL_GROUP_ID);
 
             if (toolGroup) {
-                toolGroup.addTool(StackScrollMouseWheelTool.toolName);
+                toolGroup.addTool(StackScrollTool.toolName);
                 toolGroup.addTool(PanTool.toolName);
                 toolGroup.addTool(ZoomTool.toolName);
                 toolGroup.addTool(LengthTool.toolName);
@@ -142,7 +142,7 @@ const DicomViewer: React.FC<DicomViewerProps> = ({ file, studyInstanceUid, serie
                 toolGroup.addTool(CobbAngleTool.toolName);
                 toolGroup.addTool(ProbeTool.toolName);
 
-                toolGroup.setToolActive(StackScrollMouseWheelTool.toolName);
+                toolGroup.setToolActive(StackScrollTool.toolName);
                 toolGroup.setToolActive(LengthTool.toolName, {
                     bindings: [{ mouseButton: ToolEnums.MouseBindings.Primary }],
                 });
@@ -247,7 +247,7 @@ const DicomViewer: React.FC<DicomViewerProps> = ({ file, studyInstanceUid, serie
         };
 
         loadFile();
-    }, [file, isInitialized]);
+    }, [file, isCornerstoneInitialized]);
 
     // 4. Toolbar Helpers
     const activateTool = (toolName: string, binding: string = 'Primary') => {
