@@ -65,7 +65,7 @@ export function RealtimeActivityFeed() {
             if (patientIds.length > 0) {
               const { data: patientsData } = await supabase
                 .from('patients')
-                .select('id, name')
+                .select('id, name:full_name')
                 .in('id', patientIds);
 
               const patientMap = new Map(patientsData?.map(p => [p.id, p.name]) || []);
@@ -126,7 +126,7 @@ export function RealtimeActivityFeed() {
         async (payload) => {
           const { data: patient } = await supabase
             .from('patients')
-            .select('name')
+            .select('name:full_name')
             .eq('id', payload.new.patient_id)
             .single();
 
