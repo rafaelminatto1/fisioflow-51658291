@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
+
 import {
   AlertTriangle,
   ArrowLeft,
@@ -494,273 +494,192 @@ const PatientEvolution = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-6 animate-fade-in pb-8">
-        {/* Modern Header with Enhanced Gradient and Stats */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/15 via-primary/8 to-background p-6 shadow-xl border border-primary/20">
-          <div className="absolute inset-0 bg-grid-pattern opacity-[0.02] dark:opacity-[0.05]" />
-          <div className="relative z-10">
-            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-              {/* Info Section */}
-              <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
+      <div className="space-y-4 animate-fade-in pb-8">
+        {/* Compact Modern Header */}
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-border/50 backdrop-blur-sm">
+          <div className="relative z-10 p-4 lg:p-5">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+              {/* Patient Info Section */}
+              <div className="flex items-center gap-3 flex-1 min-w-0">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="icon"
                   onClick={() => navigate('/schedule')}
-                  className="mt-1 hover:scale-105 transition-transform flex-shrink-0 shadow-sm hover:shadow-md"
+                  className="hover:bg-primary/10 transition-colors flex-shrink-0 h-9 w-9"
                 >
-                  <ArrowLeft className="h-5 w-5" />
+                  <ArrowLeft className="h-4 w-4" />
                 </Button>
-                <div className="flex-1 space-y-2 sm:space-y-3 min-w-0">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <div className="p-1.5 sm:p-2 bg-primary/20 rounded-xl flex-shrink-0 shadow-sm">
-                      <Stethoscope className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-                    </div>
-                    <div className="min-w-0">
-                      <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight truncate bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-                        Evolução do Paciente
-                      </h1>
-                      <p className="text-muted-foreground flex items-center gap-2 mt-0.5 sm:mt-1 text-sm sm:text-base truncate">
-                        <User className="h-4 w-4 flex-shrink-0" />
-                        {patient.name}
-                      </p>
-                    </div>
+
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center shadow-sm flex-shrink-0">
+                    <Stethoscope className="h-5 w-5 text-primary" />
                   </div>
-                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
-                    <Badge variant="outline" className="gap-1 text-xs shadow-sm">
-                      <Calendar className="h-3 w-3" />
-                      {format(new Date(appointment.appointment_date), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                    </Badge>
-                    {patient.phone && (
-                      <Badge variant="outline" className="gap-1 text-xs shadow-sm">
-                        <Phone className="h-3 w-3" />
-                        {patient.phone}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-lg font-semibold truncate">{patient.name}</h1>
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shadow-sm hidden sm:inline-flex">
+                        {treatmentDuration}
                       </Badge>
-                    )}
-                    <Badge variant="secondary" className="text-xs shadow-sm">
-                      {treatmentDuration}
-                    </Badge>
-                    {evolutionStats.totalEvolutions > 0 && (
-                      <Badge variant="outline" className="text-xs shadow-sm">
-                        <FileText className="h-3 w-3 mr-1" />
-                        {evolutionStats.totalEvolutions} evoluções
-                      </Badge>
-                    )}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        {format(new Date(appointment.appointment_date), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                      </span>
+                      {patient.phone && (
+                        <span className="flex items-center gap-1 hidden md:flex">
+                          <Phone className="h-3 w-3" />
+                          {patient.phone}
+                        </span>
+                      )}
+                      {evolutionStats.totalEvolutions > 0 && (
+                        <span className="flex items-center gap-1">
+                          <FileText className="h-3 w-3" />
+                          {evolutionStats.totalEvolutions} evoluções
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Actions Section */}
-              <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-2 lg:pt-0 border-t lg:border-t-0 border-border/30">
+              <div className="flex items-center gap-2 pl-12 lg:pl-0">
                 <SessionTimer startTime={sessionStartTime} />
+                <div className="h-6 w-px bg-border hidden lg:block" />
                 <Button
                   onClick={() => setShowApplyTemplate(true)}
                   size="sm"
-                  variant="secondary"
-                  className="shadow hover:shadow-lg transition-all text-xs sm:text-sm lg:size-default hover:scale-105"
+                  variant="ghost"
+                  className="h-8 px-2 lg:px-3 hover:bg-primary/10"
                 >
-                  <Zap className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Template</span>
+                  <Zap className="h-4 w-4" />
+                  <span className="hidden lg:inline ml-1.5 text-xs">Template</span>
                 </Button>
                 <Button
                   onClick={() => setShowInsights(!showInsights)}
                   size="sm"
-                  variant="outline"
-                  className="shadow hover:shadow-lg transition-all text-xs sm:text-sm lg:size-default hover:scale-105"
+                  variant="ghost"
+                  className="h-8 px-2 lg:px-3 hover:bg-primary/10"
                 >
-                  {showInsights ? <EyeOff className="h-4 w-4 sm:mr-2" /> : <Eye className="h-4 w-4 sm:mr-2" />}
-                  <span className="hidden sm:inline">Insights</span>
+                  {showInsights ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
                 <Button
                   onClick={handleSave}
                   size="sm"
                   variant="outline"
                   disabled={createSoapRecord.isPending}
-                  className="shadow hover:shadow-lg transition-all text-xs sm:text-sm lg:size-default hover:scale-105"
+                  className="h-8 px-2 lg:px-3 shadow-sm hover:shadow"
                 >
-                  <Save className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">{createSoapRecord.isPending ? 'Salvando...' : 'Salvar'}</span>
-                  <span className="hidden lg:inline text-xs ml-1 text-muted-foreground">(Ctrl+S)</span>
+                  <Save className="h-4 w-4" />
+                  <span className="hidden lg:inline ml-1.5 text-xs">{createSoapRecord.isPending ? 'Salvando...' : 'Salvar'}</span>
                 </Button>
                 <Button
                   onClick={handleCompleteSession}
                   size="sm"
                   disabled={createSoapRecord.isPending || isCompleting}
-                  className="shadow-lg hover:shadow-xl transition-all hover:scale-105 bg-gradient-to-r from-primary via-primary/90 to-primary/80 text-xs sm:text-sm lg:size-default"
+                  className="h-8 px-3 lg:px-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-md hover:shadow-lg transition-all"
                 >
-                  <CheckCircle2 className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">{isCompleting ? 'Finalizando...' : 'Concluir'}</span>
-                  <span className="hidden lg:inline text-xs ml-1 opacity-80">(Ctrl+Enter)</span>
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span className="hidden sm:inline ml-1.5 text-xs font-medium">{isCompleting ? 'Finalizando...' : 'Concluir'}</span>
                 </Button>
               </div>
             </div>
           </div>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -z-0 animate-pulse" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 rounded-full blur-3xl -z-0 animate-pulse delay-1000" />
+          {/* Subtle decorative elements */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/10 to-transparent rounded-full blur-2xl -z-0" />
         </div>
 
-        {/* Quick Stats Cards */}
+        {/* Quick Stats Row - Glassmorphism Style */}
         {showInsights && (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            <Card className="shadow-md hover:shadow-lg transition-shadow border-l-4 border-l-blue-500">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+            {[
+              { label: 'Evoluções', value: evolutionStats.totalEvolutions, icon: FileText, color: 'blue' },
+              { label: 'Metas', value: `${evolutionStats.completedGoals}/${evolutionStats.totalGoals}`, icon: Target, color: 'green' },
+              { label: 'Progresso', value: `${evolutionStats.avgGoalProgress}%`, icon: TrendingUp, color: 'purple' },
+              { label: 'Patologias', value: evolutionStats.activePathologiesCount, icon: Activity, color: 'orange' },
+              { label: 'Medições', value: evolutionStats.totalMeasurements, icon: BarChart3, color: 'cyan' },
+              { label: 'Sucesso', value: `${evolutionStats.completionRate}%`, icon: CheckCircle2, color: 'emerald' },
+            ].map((stat, idx) => (
+              <div
+                key={idx}
+                className="group relative overflow-hidden rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm p-3 hover:bg-card/80 hover:shadow-md transition-all cursor-default"
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br from-${stat.color}-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity`} />
+                <div className="relative flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-muted-foreground">Evoluções</p>
-                    <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{evolutionStats.totalEvolutions}</p>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{stat.label}</p>
+                    <p className={`text-lg font-bold text-${stat.color}-600 dark:text-${stat.color}-400 mt-0.5`}>{stat.value}</p>
                   </div>
-                  <FileText className="h-8 w-8 text-blue-500/30" />
+                  <stat.icon className={`h-5 w-5 text-${stat.color}-500/40 group-hover:text-${stat.color}-500/60 transition-colors`} />
                 </div>
-              </CardContent>
-            </Card>
-            <Card className="shadow-md hover:shadow-lg transition-shadow border-l-4 border-l-green-500">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Metas</p>
-                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                      {evolutionStats.completedGoals}/{evolutionStats.totalGoals}
-                    </p>
-                  </div>
-                  <Target className="h-8 w-8 text-green-500/30" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="shadow-md hover:shadow-lg transition-shadow border-l-4 border-l-purple-500">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Progresso</p>
-                    <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{evolutionStats.avgGoalProgress}%</p>
-                  </div>
-                  <TrendingUp className="h-8 w-8 text-purple-500/30" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="shadow-md hover:shadow-lg transition-shadow border-l-4 border-l-orange-500">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Patologias</p>
-                    <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{evolutionStats.activePathologiesCount}</p>
-                  </div>
-                  <Activity className="h-8 w-8 text-orange-500/30" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="shadow-md hover:shadow-lg transition-shadow border-l-4 border-l-cyan-500">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Medições</p>
-                    <p className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">{evolutionStats.totalMeasurements}</p>
-                  </div>
-                  <BarChart3 className="h-8 w-8 text-cyan-500/30" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="shadow-md hover:shadow-lg transition-shadow border-l-4 border-l-pink-500">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Taxa Sucesso</p>
-                    <p className="text-2xl font-bold text-pink-600 dark:text-pink-400">{evolutionStats.completionRate}%</p>
-                  </div>
-                  <CheckCircle2 className="h-8 w-8 text-pink-500/30" />
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            ))}
           </div>
         )}
 
-        {/* Wizard Progress - Melhorado */}
-        <Card className="shadow-lg hover:shadow-xl transition-shadow border-l-4 border-l-primary">
-          <CardHeader className="pb-4 bg-gradient-to-r from-background to-muted/20">
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">Progresso do Atendimento</CardTitle>
-                  <CardDescription className="text-xs mt-0.5">
-                    Complete todas as etapas para finalizar
-                  </CardDescription>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
-                  className="text-xs"
-                >
-                  <Save className={`h-3 w-3 mr-1 ${autoSaveEnabled ? 'text-green-500' : 'text-muted-foreground'}`} />
-                  Auto-save: {autoSaveEnabled ? 'Ativo' : 'Inativo'}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    toast({
-                      title: 'Atalhos de Teclado',
-                      description: 'Ctrl+S: Salvar | Ctrl+Enter: Concluir',
-                    });
-                  }}
-                  className="text-xs"
-                >
-                  <Keyboard className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
+        {/* Compact Progress Wizard */}
+        <div className="flex items-center justify-between gap-4 p-3 rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm">
+          <div className="flex items-center gap-3 overflow-x-auto flex-1">
             <SessionWizard
               steps={wizardSteps}
               currentStep={currentWizardStep}
               onStepClick={setCurrentWizardStep}
             />
-            <div className="mt-4 pt-4 border-t">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Etapas completadas</span>
-                <span className="font-semibold">
-                  {wizardSteps.filter(s => s.completed).length} / {wizardSteps.filter(s => !s.optional).length}
-                </span>
-              </div>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span>{wizardSteps.filter(s => s.completed).length}/{wizardSteps.filter(s => !s.optional).length}</span>
               <Progress
                 value={(wizardSteps.filter(s => s.completed).length / wizardSteps.filter(s => !s.optional).length) * 100}
-                className="h-2 mt-2"
+                className="h-1.5 w-16"
               />
             </div>
-          </CardContent>
-        </Card>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
+              className="h-7 px-2 text-xs gap-1"
+            >
+              <Save className={`h-3 w-3 ${autoSaveEnabled ? 'text-green-500' : 'text-muted-foreground'}`} />
+              <span className="hidden lg:inline">{autoSaveEnabled ? 'Auto' : 'Manual'}</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                toast({
+                  title: 'Atalhos de Teclado',
+                  description: 'Ctrl+S: Salvar | Ctrl+Enter: Concluir',
+                });
+              }}
+              className="h-7 w-7 p-0"
+            >
+              <Keyboard className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
 
-        {/* Tabs Navigation - Melhorado */}
+        {/* Modern Tab Navigation */}
         <Tabs defaultValue="soap" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid h-auto p-1 bg-muted/50">
-            <TabsTrigger value="soap" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <FileText className="h-4 w-4" />
-              <span className="hidden sm:inline">SOAP</span>
-            </TabsTrigger>
-            <TabsTrigger value="ai" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Sparkles className="h-4 w-4" />
-              <span className="hidden sm:inline">IA</span>
-            </TabsTrigger>
-            <TabsTrigger value="gamification" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Activity className="h-4 w-4" />
-              <span className="hidden sm:inline">Gamificação</span>
-            </TabsTrigger>
-            <TabsTrigger value="whatsapp" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Phone className="h-4 w-4" />
-              <span className="hidden sm:inline">WhatsApp</span>
-            </TabsTrigger>
-            <TabsTrigger value="measurements" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <BarChart3 className="h-4 w-4" />
-              <span className="hidden sm:inline">Medições</span>
-            </TabsTrigger>
-            <TabsTrigger value="exercises" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Sparkles className="h-4 w-4" />
-              <span className="hidden sm:inline">Exercícios</span>
-            </TabsTrigger>
+          <TabsList className="inline-flex h-9 items-center justify-start rounded-lg bg-muted/40 p-1 text-muted-foreground w-full lg:w-auto overflow-x-auto">
+            {[
+              { value: 'soap', label: 'SOAP', icon: FileText },
+              { value: 'exercises', label: 'Exercícios', icon: Activity },
+              { value: 'measurements', label: 'Medições', icon: BarChart3 },
+              { value: 'ai', label: 'IA', icon: Sparkles },
+              { value: 'gamification', label: 'Gamificação', icon: Target },
+              { value: 'whatsapp', label: 'WhatsApp', icon: Phone },
+            ].map(tab => (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-1.5"
+              >
+                <tab.icon className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{tab.label}</span>
+              </TabsTrigger>
+            ))}
           </TabsList>
 
           <TabsContent value="exercises" className="mt-6">
@@ -770,142 +689,127 @@ const PatientEvolution = () => {
             />
           </TabsContent>
 
-          <TabsContent value="soap" className="mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Coluna Principal - Evolução SOAP */}
-              <div className="lg:col-span-2 space-y-6">
-                <Card className="shadow-lg">
-                  <CardHeader className="bg-gradient-to-r from-primary/5 to-background">
-                    <CardTitle>Registro SOAP</CardTitle>
-                    <CardDescription>
-                      Preencha os campos abaixo para registrar a evolução do paciente
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6 pt-6">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="subjective" className="text-base font-semibold flex items-center gap-2">
-                          <span className="w-8 h-8 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center text-sm font-bold">S</span>
-                          Subjetivo
-                        </Label>
-                        <Badge variant="outline" className="text-xs">
-                          {wordCount.subjective} palavras
-                        </Badge>
-                      </div>
-                      <Textarea
-                        id="subjective"
-                        value={subjective}
-                        onChange={(e) => setSubjective(e.target.value)}
-                        placeholder="Queixa principal do paciente, relato de dor, desconforto..."
-                        rows={4}
-                        className="resize-none transition-all focus:ring-2 focus:ring-primary/20"
-                      />
-                      {wordCount.subjective < 10 && subjective.length > 0 && (
-                        <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                          <Lightbulb className="h-3 w-3" />
-                          Considere adicionar mais detalhes (mínimo recomendado: 10 palavras)
-                        </p>
-                      )}
-                    </div>
-
-                    <Separator />
-
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="objective" className="text-base font-semibold flex items-center gap-2">
-                          <span className="w-8 h-8 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 flex items-center justify-center text-sm font-bold">O</span>
-                          Objetivo
-                        </Label>
-                        <Badge variant="outline" className="text-xs">
-                          {wordCount.objective} palavras
-                        </Badge>
-                      </div>
-                      <Textarea
-                        id="objective"
-                        value={objective}
-                        onChange={(e) => setObjective(e.target.value)}
-                        placeholder="Observações clínicas, testes realizados, medições..."
-                        rows={4}
-                        className="resize-none transition-all focus:ring-2 focus:ring-primary/20"
-                      />
-                      {wordCount.objective < 10 && objective.length > 0 && (
-                        <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                          <Lightbulb className="h-3 w-3" />
-                          Considere adicionar mais detalhes (mínimo recomendado: 10 palavras)
-                        </p>
-                      )}
-                    </div>
-
-                    <Separator />
-
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="assessment" className="text-base font-semibold flex items-center gap-2">
-                          <span className="w-8 h-8 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center text-sm font-bold">A</span>
-                          Avaliação
-                        </Label>
-                        <Badge variant="outline" className="text-xs">
-                          {wordCount.assessment} palavras
-                        </Badge>
-                      </div>
-                      <Textarea
-                        id="assessment"
-                        value={assessment}
-                        onChange={(e) => setAssessment(e.target.value)}
-                        placeholder="Diagnóstico fisioterapêutico, análise da evolução..."
-                        rows={4}
-                        className="resize-none transition-all focus:ring-2 focus:ring-primary/20"
-                      />
-                      {wordCount.assessment < 10 && assessment.length > 0 && (
-                        <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                          <Lightbulb className="h-3 w-3" />
-                          Considere adicionar mais detalhes (mínimo recomendado: 10 palavras)
-                        </p>
-                      )}
-                    </div>
-
-                    <Separator />
-
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="plan" className="text-base font-semibold flex items-center gap-2">
-                          <span className="w-8 h-8 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center text-sm font-bold">P</span>
-                          Plano
-                        </Label>
-                        <Badge variant="outline" className="text-xs">
-                          {wordCount.plan} palavras
-                        </Badge>
-                      </div>
-                      <Textarea
-                        id="plan"
-                        value={plan}
-                        onChange={(e) => setPlan(e.target.value)}
-                        placeholder="Conduta, exercícios prescritos, orientações..."
-                        rows={4}
-                        className="resize-none transition-all focus:ring-2 focus:ring-primary/20"
-                      />
-                      {wordCount.plan < 10 && plan.length > 0 && (
-                        <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                          <Lightbulb className="h-3 w-3" />
-                          Considere adicionar mais detalhes (mínimo recomendado: 10 palavras)
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Progress Indicator */}
-                    <div className="pt-4 border-t">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Progresso do preenchimento</span>
-                          <span className="font-semibold">
-                            {Math.round(
-                              ((wordCount.subjective >= 10 ? 1 : 0) +
-                                (wordCount.objective >= 10 ? 1 : 0) +
-                                (wordCount.assessment >= 10 ? 1 : 0) +
-                                (wordCount.plan >= 10 ? 1 : 0)) / 4 * 100
-                            )}%
+          <TabsContent value="soap" className="mt-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Main Column - SOAP Form */}
+              <div className="lg:col-span-2 space-y-4">
+                <Card className="border-border/50 shadow-sm overflow-hidden">
+                  <CardContent className="p-0">
+                    {/* SOAP Form with compact sections */}
+                    <div className="divide-y divide-border/50">
+                      {/* Subjective Section */}
+                      <div className="p-4 hover:bg-muted/20 transition-colors">
+                        <div className="flex items-center justify-between mb-2">
+                          <Label htmlFor="subjective" className="text-sm font-medium flex items-center gap-2">
+                            <span className="w-6 h-6 rounded-md bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold">S</span>
+                            Subjetivo
+                          </Label>
+                          <span className="text-[10px] text-muted-foreground">
+                            {wordCount.subjective} palavras
                           </span>
                         </div>
+                        <Textarea
+                          id="subjective"
+                          value={subjective}
+                          onChange={(e) => setSubjective(e.target.value)}
+                          placeholder="Queixa principal do paciente, relato de dor, desconforto..."
+                          rows={3}
+                          className="resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 min-h-[60px] text-sm placeholder:text-muted-foreground/50"
+                        />
+                        {wordCount.subjective < 10 && subjective.length > 0 && (
+                          <p className="text-[10px] text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-2">
+                            <Lightbulb className="h-3 w-3" />
+                            Adicione mais detalhes
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Objective Section */}
+                      <div className="p-4 hover:bg-muted/20 transition-colors">
+                        <div className="flex items-center justify-between mb-2">
+                          <Label htmlFor="objective" className="text-sm font-medium flex items-center gap-2">
+                            <span className="w-6 h-6 rounded-md bg-green-500/15 text-green-600 dark:text-green-400 flex items-center justify-center text-xs font-bold">O</span>
+                            Objetivo
+                          </Label>
+                          <span className="text-[10px] text-muted-foreground">
+                            {wordCount.objective} palavras
+                          </span>
+                        </div>
+                        <Textarea
+                          id="objective"
+                          value={objective}
+                          onChange={(e) => setObjective(e.target.value)}
+                          placeholder="Observações clínicas, testes realizados, medições..."
+                          rows={3}
+                          className="resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 min-h-[60px] text-sm placeholder:text-muted-foreground/50"
+                        />
+                        {wordCount.objective < 10 && objective.length > 0 && (
+                          <p className="text-[10px] text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-2">
+                            <Lightbulb className="h-3 w-3" />
+                            Adicione mais detalhes
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Assessment Section */}
+                      <div className="p-4 hover:bg-muted/20 transition-colors">
+                        <div className="flex items-center justify-between mb-2">
+                          <Label htmlFor="assessment" className="text-sm font-medium flex items-center gap-2">
+                            <span className="w-6 h-6 rounded-md bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xs font-bold">A</span>
+                            Avaliação
+                          </Label>
+                          <span className="text-[10px] text-muted-foreground">
+                            {wordCount.assessment} palavras
+                          </span>
+                        </div>
+                        <Textarea
+                          id="assessment"
+                          value={assessment}
+                          onChange={(e) => setAssessment(e.target.value)}
+                          placeholder="Diagnóstico fisioterapêutico, análise da evolução..."
+                          rows={3}
+                          className="resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 min-h-[60px] text-sm placeholder:text-muted-foreground/50"
+                        />
+                        {wordCount.assessment < 10 && assessment.length > 0 && (
+                          <p className="text-[10px] text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-2">
+                            <Lightbulb className="h-3 w-3" />
+                            Adicione mais detalhes
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Plan Section */}
+                      <div className="p-4 hover:bg-muted/20 transition-colors">
+                        <div className="flex items-center justify-between mb-2">
+                          <Label htmlFor="plan" className="text-sm font-medium flex items-center gap-2">
+                            <span className="w-6 h-6 rounded-md bg-orange-500/15 text-orange-600 dark:text-orange-400 flex items-center justify-center text-xs font-bold">P</span>
+                            Plano
+                          </Label>
+                          <span className="text-[10px] text-muted-foreground">
+                            {wordCount.plan} palavras
+                          </span>
+                        </div>
+                        <Textarea
+                          id="plan"
+                          value={plan}
+                          onChange={(e) => setPlan(e.target.value)}
+                          placeholder="Conduta, exercícios prescritos, orientações..."
+                          rows={3}
+                          className="resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 min-h-[60px] text-sm placeholder:text-muted-foreground/50"
+                        />
+                        {wordCount.plan < 10 && plan.length > 0 && (
+                          <p className="text-[10px] text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-2">
+                            <Lightbulb className="h-3 w-3" />
+                            Adicione mais detalhes
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Progress Footer */}
+                    <div className="px-4 py-3 bg-muted/30 border-t border-border/50 flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Preenchimento</span>
+                      <div className="flex items-center gap-2">
                         <Progress
                           value={
                             ((wordCount.subjective >= 10 ? 1 : 0) +
@@ -913,8 +817,16 @@ const PatientEvolution = () => {
                               (wordCount.assessment >= 10 ? 1 : 0) +
                               (wordCount.plan >= 10 ? 1 : 0)) / 4 * 100
                           }
-                          className="h-2"
+                          className="h-1.5 w-20"
                         />
+                        <span className="text-xs font-medium">
+                          {Math.round(
+                            ((wordCount.subjective >= 10 ? 1 : 0) +
+                              (wordCount.objective >= 10 ? 1 : 0) +
+                              (wordCount.assessment >= 10 ? 1 : 0) +
+                              (wordCount.plan >= 10 ? 1 : 0)) / 4 * 100
+                          )}%
+                        </span>
                       </div>
                     </div>
                   </CardContent>
