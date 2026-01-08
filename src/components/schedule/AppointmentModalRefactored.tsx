@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
@@ -95,6 +95,15 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const { data: appointments = [] } = useAppointments();
   const { getCapacityForTime } = useScheduleCapacity();
 
+  // Verifica se o paciente já teve sessões/evoluções anteriores
+  const checkPatientHasPreviousSessions = useCallback((patientId: string): boolean => {
+    const previousAppointments = appointments.filter(
+      apt => apt.patientId === patientId && 
+      ['concluido', 'atendido', 'em_andamento', 'completado'].includes(apt.status)
+    );
+    return previousAppointments.length > 0;
+  }, [appointments]);
+
   const methods = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentFormSchema),
     defaultValues: {
@@ -117,6 +126,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   });
 
   const { handleSubmit, setValue, watch, reset } = methods;
+  const watchedPatientId = watch('patient_id');
 
   useEffect(() => {
     if (appointment && isOpen) {
@@ -138,13 +148,14 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         recurring_until: appointment.recurring_until ? format(new Date(appointment.recurring_until), 'yyyy-MM-dd') : '',
       });
     } else if (isOpen) {
+      // Para novos agendamentos, define o status padrão como 'agendado'
       reset({
         patient_id: defaultPatientId || '',
         appointment_date: defaultDate ? format(defaultDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
         appointment_time: defaultTime || '',
         duration: 60,
         type: 'Fisioterapia',
-        status: 'avaliacao',
+        status: 'agendado',
         notes: '',
         payment_status: 'pending',
         payment_amount: 170,
@@ -156,6 +167,20 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     setCurrentMode(initialMode);
     setActiveTab('info');
   }, [appointment, isOpen, defaultDate, defaultTime, defaultPatientId, initialMode, reset]);
+
+  // Monitora mudanças no paciente selecionado para ajustar o status automaticamente
+  useEffect(() => {
+    // Só aplica lógica automática para novos agendamentos (sem appointment definido)
+    if (!appointment && isOpen && watchedPatientId && currentMode === 'create') {
+      const hasPreviousSessions = checkPatientHasPreviousSessions(watchedPatientId);
+      // Se paciente nunca teve sessão, muda para "avaliacao"
+      if (!hasPreviousSessions) {
+        setValue('status', 'avaliacao');
+      } else {
+        setValue('status', 'agendado');
+      }
+    }
+  }, [watchedPatientId, isOpen, appointment, currentMode, setValue, checkPatientHasPreviousSessions]);
 
   const watchedDateStr = watch('appointment_date');
   const watchedTime = watch('appointment_time');
@@ -215,6 +240,29 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
 
   const handleSave = async (data: AppointmentFormData) => {
     try {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/components/schedule/AppointmentModalRefactored.tsx:217',message:'handleSave - Dados recebidos',data:{date:data.appointment_date,start_time:data.appointment_time,patient_id:data.patient_id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'G'})}).catch(()=>{});
+      // #endregion
+      // Validar campos obrigatórios ANTES de qualquer processamento
+      if (!data.appointment_time || data.appointment_time === '') {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/components/schedule/AppointmentModalRefactored.tsx:220',message:'Horário vazio - lançando erro',data:{appointment_time:data.appointment_time},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'F'})}).catch(()=>{});
+        // #endregion
+        throw new Error('Horário do agendamento é obrigatório');
+      }
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/components/schedule/AppointmentModalRefactored.tsx:225',message:'Horário validado com sucesso',data:{appointment_time:data.appointment_time},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'F'})}).catch(()=>{});
+      // #endregion
+      if (!data.patient_id || data.patient_id === '') {
+        throw new Error('ID do paciente é obrigatório');
+      }
+      if (!data.appointment_date || data.appointment_date === '') {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/components/schedule/AppointmentModalRefactored.tsx:232',message:'Data vazia - lançando erro',data:{appointment_date:data.appointment_date},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'G'})}).catch(()=>{});
+        // #endregion
+        throw new Error('Data do agendamento é obrigatória');
+      }
+
       const maxCapacity = watchedDate && watchedTime ? getCapacityForTime(watchedDate.getDay(), watchedTime) : 1;
       const currentCount = (conflictCheck?.conflictCount || 0);
 
@@ -234,8 +282,8 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       const formattedData = {
         patient_id: appointmentData.patient_id,
         therapist_id: appointmentData.therapist_id || '',
-        date: appointmentData.appointment_date,
-        start_time: appointmentData.appointment_time,
+        date: appointmentData.appointment_date, // Nova coluna
+        start_time: appointmentData.appointment_time, // Nova coluna
         end_time: endTimeString,
         duration: appointmentData.duration,
         status: appointmentData.status as any,
@@ -244,6 +292,10 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         room: appointmentData.room || '',
         session_type: (appointmentData.type === 'Fisioterapia' ? 'individual' : 'group') as any,
       };
+
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/components/schedule/AppointmentModalRefactored.tsx:270',message:'formattedData antes da mutation',data:{...formattedData,_note:'Using date and start_time columns'},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'I'})}).catch(()=>{});
+      // #endregion
 
       if (appointment?.id) {
         updateAppointmentMutation({

@@ -11,9 +11,29 @@ export function UpcomingAppointments() {
 
   // Get upcoming appointments (next 5, sorted by date and time)
   const upcomingAppointments = appointments
-    .filter(apt => new Date(apt.date) >= new Date())
+    .filter(apt => {
+      const d = typeof apt.date === 'string'
+        ? (() => {
+          const [y, m, d] = apt.date.split('-').map(Number);
+          return new Date(y, m - 1, d, 12, 0, 0);
+        })()
+        : apt.date;
+      return d >= new Date();
+    })
     .sort((a, b) => {
-      const dateCompare = new Date(a.date).getTime() - new Date(b.date).getTime();
+      const da = typeof a.date === 'string'
+        ? (() => {
+          const [y, m, d] = a.date.split('-').map(Number);
+          return new Date(y, m - 1, d, 12, 0, 0);
+        })()
+        : a.date;
+      const db = typeof b.date === 'string'
+        ? (() => {
+          const [y, m, d] = b.date.split('-').map(Number);
+          return new Date(y, m - 1, d, 12, 0, 0);
+        })()
+        : b.date;
+      const dateCompare = da.getTime() - db.getTime();
       if (dateCompare === 0) {
         return a.time.localeCompare(b.time);
       }
@@ -71,7 +91,12 @@ export function UpcomingAppointments() {
                     </Badge>
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
                       <Clock className="w-3 h-3" />
-                      {formatAppointmentDate(new Date(appointment.date))} - {appointment.time}
+                      {formatAppointmentDate(typeof appointment.date === 'string'
+                        ? (() => {
+                          const [y, m, d] = appointment.date.split('-').map(Number);
+                          return new Date(y, m - 1, d, 12, 0, 0);
+                        })()
+                        : appointment.date)} - {appointment.time}
                     </span>
                   </div>
                 </div>

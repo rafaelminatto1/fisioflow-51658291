@@ -113,7 +113,12 @@ export const CalendarView = memo(({
 
   const getAppointmentsForDate = useCallback((date: Date) => {
     return appointments.filter(apt => {
-      const aptDate = typeof apt.date === 'string' ? new Date(apt.date) : apt.date;
+      const aptDate = typeof apt.date === 'string'
+        ? (() => {
+          const [y, m, d] = apt.date.split('-').map(Number);
+          return new Date(y, m - 1, d, 12, 0, 0);
+        })()
+        : apt.date;
       return isSameDay(aptDate, date);
     });
   }, [appointments]);
@@ -366,7 +371,12 @@ export const CalendarView = memo(({
         open={showConfirmDialog}
         onConfirm={handleConfirmReschedule}
         onCancel={handleCancelReschedule}
-        oldDate={pendingReschedule?.appointment.date ? (typeof pendingReschedule.appointment.date === 'string' ? new Date(pendingReschedule.appointment.date) : pendingReschedule.appointment.date) : new Date()}
+        oldDate={pendingReschedule?.appointment.date ? (typeof pendingReschedule.appointment.date === 'string'
+          ? (() => {
+            const [y, m, d] = pendingReschedule.appointment.date.split('-').map(Number);
+            return new Date(y, m - 1, d, 12, 0, 0);
+          })()
+          : pendingReschedule.appointment.date) : new Date()}
         oldTime={pendingReschedule?.appointment.time || ''}
         newDate={pendingReschedule?.newDate || new Date()}
         newTime={pendingReschedule?.newTime || ''}

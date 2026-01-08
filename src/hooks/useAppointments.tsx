@@ -150,10 +150,15 @@ async function fetchAppointments(organizationIdOverride?: string | null): Promis
           return {
             id: apt.id,
             patientId: apt.patient_id,
-            patientName: apt.patients?.name || 'Paciente não identificado',
+            patientName: apt.patients?.full_name || apt.patients?.name || 'Paciente não identificado',
             phone: apt.patients?.phone || '',
-            date: apt.appointment_date ? new Date(apt.appointment_date) : new Date(),
-            time: apt.appointment_time || '',
+            date: (() => {
+              if (!apt.date && !apt.appointment_date) return new Date();
+              const dateStr = apt.date || apt.appointment_date;
+              const [y, m, d] = dateStr.split('-').map(Number);
+              return new Date(y, m - 1, d, 12, 0, 0);
+            })(),
+            time: apt.start_time || apt.appointment_time || '',
             duration: apt.duration || 60,
             type: (apt.type || 'Fisioterapia') as AppointmentType,
             status: (apt.status || 'agendado') as AppointmentStatus,
@@ -320,7 +325,7 @@ export function useCreateAppointment() {
 
   return useMutation({
     mutationFn: async (data: AppointmentFormData) => {
-      logger.info('Criando novo agendamento', { patientId: data.patient_id, date: data.appointment_date }, 'useAppointments');
+      logger.info('Criando novo agendamento', { patientId: data.patient_id, date: data.appointment_date || data.date }, 'useAppointments');
 
       // Obter organization_id do usuário (usar contexto ou fallback)
       const organizationId = profile?.organization_id || await requireUserOrganizationId();
@@ -342,19 +347,23 @@ export function useCreateAppointment() {
       if (!data.patient_id) {
         throw new Error('ID do paciente é obrigatório');
       }
-      if (!data.appointment_date) {
+      if (!data.appointment_date && !data.date) {
         throw new Error('Data do agendamento é obrigatória');
       }
-      if (!data.appointment_time) {
+      if (!data.appointment_time && !data.start_time) {
         throw new Error('Horário do agendamento é obrigatório');
       }
+
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/hooks/useAppointments.tsx:358', message: 'Inserindo no Supabase', data: { patient_id: data.patient_id, appointment_date: data.appointment_date, start_time: data.appointment_time }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'H' }) }).catch(() => { });
+      // #endregion
 
       const { data: newAppointment, error } = await supabase
         .from('appointments')
         .insert({
           patient_id: data.patient_id,
-          appointment_date: data.appointment_date,
-          appointment_time: data.appointment_time,
+          appointment_date: data.appointment_date || data.date,
+          appointment_time: data.appointment_time || data.start_time,
           duration: data.duration || 60,
           type: data.type || 'fisioterapia',
           status: data.status || 'agendado',
@@ -373,6 +382,10 @@ export function useCreateAppointment() {
           )
         `)
         .single();
+
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/hooks/useAppointments.tsx:385', message: 'Resultado do insert', data: { error: !!error, newAppointment: !!newAppointment }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'H' }) }).catch(() => { });
+      // #endregion
 
       if (error) {
         logger.error('Erro ao inserir agendamento no Supabase', error, 'useAppointments');
@@ -394,10 +407,10 @@ export function useCreateAppointment() {
       const appointment: AppointmentBase = {
         id: newAppointment.id,
         patientId: newAppointment.patient_id,
-        patientName: newAppointment.patients.name,
+        patientName: newAppointment.patients.full_name || newAppointment.patients.name,
         phone: newAppointment.patients.phone,
-        date: new Date(newAppointment.appointment_date),
-        time: newAppointment.appointment_time,
+        date: new Date(newAppointment.date || newAppointment.appointment_date),
+        time: newAppointment.start_time || newAppointment.appointment_time,
         duration: newAppointment.duration,
         type: newAppointment.type as AppointmentType,
         status: newAppointment.status as AppointmentStatus,
@@ -480,32 +493,37 @@ export function useUpdateAppointment() {
         }
       }
 
+      // Normalize update data
+      const updateDate = updates.appointment_date || updates.date;
+      const updateTime = updates.appointment_time || updates.start_time;
+
       const updateData: any = {};
-      if (updates.patient_id) updateData.patient_id = updates.patient_id;
 
-      // Sanitize date format to YYYY-MM-DD
-      if (updates.appointment_date) {
-        try {
-          // Ensure we have a valid date object
-          const dateObj = new Date(updates.appointment_date);
-          if (isNaN(dateObj.getTime())) {
-            throw new Error('Data inválida');
-          }
-          // Format as YYYY-MM-DD for Postgres date column
-          updateData.appointment_date = dateObj.toISOString().split('T')[0];
-        } catch (e) {
-          logger.error('Erro ao formatar data', { date: updates.appointment_date }, 'useAppointments');
-          throw new Error('Data inválida fornecida para atualização');
+      // Strict validation for date
+      if (updateDate) {
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!dateRegex.test(updateDate)) {
+          throw new Error(`Formato de data inválido: ${updateDate}. Use YYYY-MM-DD.`);
         }
+        updateData.appointment_date = updateDate;
+
+        // Log for debugging
+        console.log('[DEBUG useUpdateAppointment] Normalized date:', updateDate);
       }
 
-      // Sanitize time format to HH:MM
-      if (updates.appointment_time) {
-        // Simple regex check or just pass it if it looks like HH:MM
-        // Postgres time column usually accepts HH:MM or HH:MM:SS
-        updateData.appointment_time = updates.appointment_time;
+      // Strict validation for time
+      if (updateTime) {
+        // Accept HH:MM or HH:MM:SS
+        const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/;
+        if (!timeRegex.test(updateTime)) {
+          // Try to rescue simple HH:MM cases if they don't match strict for some reason, 
+          // but usually this regex covers it.
+          throw new Error(`Formato de horário inválido: ${updateTime}. Use HH:MM.`);
+        }
+        updateData.appointment_time = updateTime;
       }
 
+      if (updates.patient_id) updateData.patient_id = updates.patient_id;
       if (updates.duration) updateData.duration = updates.duration;
       if (updates.type) updateData.type = updates.type;
       if (updates.status) updateData.status = updates.status;
@@ -562,10 +580,16 @@ export function useUpdateAppointment() {
       const transformedAppointment: AppointmentBase = {
         id: updatedAppointment.id,
         patientId: updatedAppointment.patient_id,
-        patientName: updatedAppointment.patients?.name || 'Paciente não identificado',
+        patientName: updatedAppointment.patients?.full_name || updatedAppointment.patients?.name || 'Paciente não identificado',
         phone: updatedAppointment.patients?.phone || '',
-        date: new Date(updatedAppointment.appointment_date),
-        time: updatedAppointment.appointment_time,
+        // Use local component parsing to avoid UTC offset issues
+        date: (() => {
+          const dateStr = updatedAppointment.date || updatedAppointment.appointment_date;
+          if (!dateStr) return new Date();
+          const [y, m, d] = dateStr.split('-').map(Number);
+          return new Date(y, m - 1, d, 12, 0, 0);
+        })(),
+        time: updatedAppointment.start_time || updatedAppointment.appointment_time,
         duration: updatedAppointment.duration || 60,
         type: updatedAppointment.type as AppointmentType,
         status: updatedAppointment.status as AppointmentStatus,
@@ -577,7 +601,7 @@ export function useUpdateAppointment() {
       logger.info('Agendamento atualizado com sucesso', { appointmentId: transformedAppointment.id }, 'useAppointments');
 
       // Se data/hora mudou, notificar reagendamento
-      if (updates.appointment_date || updates.appointment_time) {
+      if (updates.date || updates.appointment_date || updates.start_time || updates.appointment_time) {
         AppointmentNotificationService.notifyReschedule(
           transformedAppointment.id,
           transformedAppointment.patientId,
