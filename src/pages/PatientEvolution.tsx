@@ -68,6 +68,7 @@ import { useAutoSave } from '@/hooks/useAutoSave';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
 import { ApplyTemplateModal } from '@/components/exercises/ApplyTemplateModal';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { SmartTextarea } from '@/components/ui/SmartTextarea';
 
 // Lazy loading para componentes pesados
 const LazyMeasurementCharts = lazy(() =>
@@ -565,6 +566,15 @@ const PatientEvolution = () => {
                   {showInsights ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
                 <Button
+                  onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 px-2 text-xs gap-1 hidden sm:flex"
+                >
+                  <Save className={`h-4 w-4 ${autoSaveEnabled ? 'text-green-500' : 'text-muted-foreground'}`} />
+                  <span className="hidden lg:inline">{autoSaveEnabled ? 'Auto Salvar' : 'Salvar Manual'}</span>
+                </Button>
+                <Button
                   onClick={handleSave}
                   size="sm"
                   variant="outline"
@@ -618,55 +628,13 @@ const PatientEvolution = () => {
           </div>
         )}
 
-        {/* Compact Progress Wizard */}
-        <div className="flex items-center justify-between gap-4 p-3 rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm">
-          <div className="flex items-center gap-3 overflow-x-auto flex-1">
-            <SessionWizard
-              steps={wizardSteps}
-              currentStep={currentWizardStep}
-              onStepClick={setCurrentWizardStep}
-            />
-          </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground">
-              <span>{wizardSteps.filter(s => s.completed).length}/{wizardSteps.filter(s => !s.optional).length}</span>
-              <Progress
-                value={(wizardSteps.filter(s => s.completed).length / wizardSteps.filter(s => !s.optional).length) * 100}
-                className="h-1.5 w-16"
-              />
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
-              className="h-7 px-2 text-xs gap-1"
-            >
-              <Save className={`h-3 w-3 ${autoSaveEnabled ? 'text-green-500' : 'text-muted-foreground'}`} />
-              <span className="hidden lg:inline">{autoSaveEnabled ? 'Auto' : 'Manual'}</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                toast({
-                  title: 'Atalhos de Teclado',
-                  description: 'Ctrl+S: Salvar | Ctrl+Enter: Concluir',
-                });
-              }}
-              className="h-7 w-7 p-0"
-            >
-              <Keyboard className="h-3 w-3" />
-            </Button>
-          </div>
-        </div>
-
         {/* Modern Tab Navigation */}
         <Tabs defaultValue="soap" className="w-full">
           <TabsList className="inline-flex h-9 items-center justify-start rounded-lg bg-muted/40 p-1 text-muted-foreground w-full lg:w-auto overflow-x-auto">
             {[
               { value: 'soap', label: 'SOAP', icon: FileText },
               { value: 'exercises', label: 'Exercícios', icon: Activity },
-              { value: 'measurements', label: 'Medições', icon: BarChart3 },
+              { value: 'history', label: 'Histórico', icon: Clock },
               { value: 'ai', label: 'IA', icon: Sparkles },
               { value: 'gamification', label: 'Gamificação', icon: Target },
               { value: 'whatsapp', label: 'WhatsApp', icon: Phone },
@@ -690,125 +658,97 @@ const PatientEvolution = () => {
           </TabsContent>
 
           <TabsContent value="soap" className="mt-4">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               {/* Main Column - SOAP Form */}
-              <div className="lg:col-span-2 space-y-4">
-                <Card className="border-border/50 shadow-sm overflow-hidden">
+              <div className="space-y-4">
+                <Card className="border-border/50 shadow-sm overflow-visible bg-card/60 backdrop-blur-sm">
                   <CardContent className="p-0">
                     {/* SOAP Form with compact sections */}
                     <div className="divide-y divide-border/50">
                       {/* Subjective Section */}
-                      <div className="p-4 hover:bg-muted/20 transition-colors">
+                      <div className="p-4 hover:bg-muted/10 transition-colors group">
                         <div className="flex items-center justify-between mb-2">
-                          <Label htmlFor="subjective" className="text-sm font-medium flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-md bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold">S</span>
+                          <Label htmlFor="subjective" className="text-sm font-medium flex items-center gap-2 text-primary">
+                            <span className="w-6 h-6 rounded-md bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold shadow-sm">S</span>
                             Subjetivo
                           </Label>
-                          <span className="text-[10px] text-muted-foreground">
+                          <span className="text-[10px] text-muted-foreground opacity-70 group-hover:opacity-100 transition-opacity">
                             {wordCount.subjective} palavras
                           </span>
                         </div>
-                        <Textarea
+                        <SmartTextarea
                           id="subjective"
                           value={subjective}
                           onChange={(e) => setSubjective(e.target.value)}
-                          placeholder="Queixa principal do paciente, relato de dor, desconforto..."
-                          rows={3}
-                          className="resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 min-h-[60px] text-sm placeholder:text-muted-foreground/50"
+                          placeholder="Queixa principal do paciente, relato de dor, desconforto, nível de estresse, sono..."
+                          className="min-h-[120px] text-base"
                         />
-                        {wordCount.subjective < 10 && subjective.length > 0 && (
-                          <p className="text-[10px] text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-2">
-                            <Lightbulb className="h-3 w-3" />
-                            Adicione mais detalhes
-                          </p>
-                        )}
                       </div>
 
                       {/* Objective Section */}
-                      <div className="p-4 hover:bg-muted/20 transition-colors">
+                      <div className="p-4 hover:bg-muted/10 transition-colors group">
                         <div className="flex items-center justify-between mb-2">
-                          <Label htmlFor="objective" className="text-sm font-medium flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-md bg-green-500/15 text-green-600 dark:text-green-400 flex items-center justify-center text-xs font-bold">O</span>
+                          <Label htmlFor="objective" className="text-sm font-medium flex items-center gap-2 text-primary">
+                            <span className="w-6 h-6 rounded-md bg-green-500/15 text-green-600 dark:text-green-400 flex items-center justify-center text-xs font-bold shadow-sm">O</span>
                             Objetivo
                           </Label>
-                          <span className="text-[10px] text-muted-foreground">
+                          <span className="text-[10px] text-muted-foreground opacity-70 group-hover:opacity-100 transition-opacity">
                             {wordCount.objective} palavras
                           </span>
                         </div>
-                        <Textarea
+                        <SmartTextarea
                           id="objective"
                           value={objective}
                           onChange={(e) => setObjective(e.target.value)}
-                          placeholder="Observações clínicas, testes realizados, medições..."
-                          rows={3}
-                          className="resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 min-h-[60px] text-sm placeholder:text-muted-foreground/50"
+                          placeholder="Achados do exame físico, amplitude de movimento, força, testes especiais..."
+                          className="min-h-[120px] text-base"
                         />
-                        {wordCount.objective < 10 && objective.length > 0 && (
-                          <p className="text-[10px] text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-2">
-                            <Lightbulb className="h-3 w-3" />
-                            Adicione mais detalhes
-                          </p>
-                        )}
                       </div>
 
                       {/* Assessment Section */}
-                      <div className="p-4 hover:bg-muted/20 transition-colors">
+                      <div className="p-4 hover:bg-muted/10 transition-colors group">
                         <div className="flex items-center justify-between mb-2">
-                          <Label htmlFor="assessment" className="text-sm font-medium flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-md bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xs font-bold">A</span>
+                          <Label htmlFor="assessment" className="text-sm font-medium flex items-center gap-2 text-primary">
+                            <span className="w-6 h-6 rounded-md bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xs font-bold shadow-sm">A</span>
                             Avaliação
                           </Label>
-                          <span className="text-[10px] text-muted-foreground">
+                          <span className="text-[10px] text-muted-foreground opacity-70 group-hover:opacity-100 transition-opacity">
                             {wordCount.assessment} palavras
                           </span>
                         </div>
-                        <Textarea
+                        <SmartTextarea
                           id="assessment"
                           value={assessment}
                           onChange={(e) => setAssessment(e.target.value)}
-                          placeholder="Diagnóstico fisioterapêutico, análise da evolução..."
-                          rows={3}
-                          className="resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 min-h-[60px] text-sm placeholder:text-muted-foreground/50"
+                          placeholder="Análise do progresso, resposta ao tratamento, correlações clínicas..."
+                          className="min-h-[120px] text-base"
                         />
-                        {wordCount.assessment < 10 && assessment.length > 0 && (
-                          <p className="text-[10px] text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-2">
-                            <Lightbulb className="h-3 w-3" />
-                            Adicione mais detalhes
-                          </p>
-                        )}
                       </div>
 
                       {/* Plan Section */}
-                      <div className="p-4 hover:bg-muted/20 transition-colors">
+                      <div className="p-4 hover:bg-muted/10 transition-colors group">
                         <div className="flex items-center justify-between mb-2">
-                          <Label htmlFor="plan" className="text-sm font-medium flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-md bg-orange-500/15 text-orange-600 dark:text-orange-400 flex items-center justify-center text-xs font-bold">P</span>
+                          <Label htmlFor="plan" className="text-sm font-medium flex items-center gap-2 text-primary">
+                            <span className="w-6 h-6 rounded-md bg-orange-500/15 text-orange-600 dark:text-orange-400 flex items-center justify-center text-xs font-bold shadow-sm">P</span>
                             Plano
                           </Label>
-                          <span className="text-[10px] text-muted-foreground">
+                          <span className="text-[10px] text-muted-foreground opacity-70 group-hover:opacity-100 transition-opacity">
                             {wordCount.plan} palavras
                           </span>
                         </div>
-                        <Textarea
+                        <SmartTextarea
                           id="plan"
                           value={plan}
                           onChange={(e) => setPlan(e.target.value)}
-                          placeholder="Conduta, exercícios prescritos, orientações..."
-                          rows={3}
-                          className="resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0 min-h-[60px] text-sm placeholder:text-muted-foreground/50"
+                          placeholder="Conduta realizada hoje, exercícios prescritos, orientações para casa, plano para próxima visita..."
+                          className="min-h-[120px] text-base"
                         />
-                        {wordCount.plan < 10 && plan.length > 0 && (
-                          <p className="text-[10px] text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-2">
-                            <Lightbulb className="h-3 w-3" />
-                            Adicione mais detalhes
-                          </p>
-                        )}
                       </div>
                     </div>
 
                     {/* Progress Footer */}
                     <div className="px-4 py-3 bg-muted/30 border-t border-border/50 flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">Preenchimento</span>
+                      <span className="text-xs text-muted-foreground">Preenchimento da Evolução</span>
                       <div className="flex items-center gap-2">
                         <Progress
                           value={
@@ -817,7 +757,7 @@ const PatientEvolution = () => {
                               (wordCount.assessment >= 10 ? 1 : 0) +
                               (wordCount.plan >= 10 ? 1 : 0)) / 4 * 100
                           }
-                          className="h-1.5 w-20"
+                          className="h-1.5 w-24"
                         />
                         <span className="text-xs font-medium">
                           {Math.round(
@@ -832,164 +772,157 @@ const PatientEvolution = () => {
                   </CardContent>
                 </Card>
 
-                {/* Alertas de Medições Obrigatórias */}
-                {requiredMeasurements.length > 0 && (
-                  <Card className="border-destructive/30 shadow-lg">
-                    <CardHeader className="bg-destructive/5">
-                      <CardTitle className="flex items-center gap-2 text-destructive">
-                        <AlertTriangle className="h-5 w-5" />
-                        Medições Obrigatórias
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3 pt-6">
-                      {requiredMeasurements.map((req) => (
-                        <Alert
-                          key={req.id}
-                          variant={req.alert_level === 'high' ? 'destructive' : 'default'}
-                        >
-                          <AlertTriangle className="h-4 w-4" />
-                          <AlertTitle>{req.measurement_name}</AlertTitle>
-                          <AlertDescription>
-                            {req.instructions}
-                            {req.measurement_unit && ` (${req.measurement_unit})`}
-                          </AlertDescription>
-                        </Alert>
-                      ))}
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Formulário de Medições */}
+                {/* Formulário de Medições Integrado */}
                 {patientId && (
-                  <MeasurementForm
-                    patientId={patientId}
-                    soapRecordId={currentSoapRecordId}
-                    requiredMeasurements={requiredMeasurements}
-                  />
-                )}
+                  <div className="space-y-4">
+                    <h2 className="text-lg font-semibold flex items-center gap-2 mt-8 mb-4">
+                      <BarChart3 className="h-5 w-5 text-primary" />
+                      Medições e Testes
+                    </h2>
 
-                {/* Gráficos de Medições - Lazy Loaded */}
-                {Object.keys(measurementsByType).length > 0 && (
-                  <Suspense fallback={<LoadingSkeleton type="card" />}>
-                    <LazyMeasurementCharts measurementsByType={measurementsByType} />
-                  </Suspense>
-                )}
-
-                {/* Mapa de Dor - Lazy Loaded */}
-                {patientId && (
-                  <Card className="shadow-lg">
-                    <CardHeader className="bg-gradient-to-r from-red-50/50 to-orange-100/50 dark:from-red-950/20 dark:to-orange-900/20">
-                      <CardTitle className="text-lg">Mapa de Dor</CardTitle>
-                      <CardDescription>Registre e acompanhe a evolução da dor do paciente</CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-6">
-                      <Suspense fallback={<LoadingSkeleton type="card" />}>
-                        <LazyPainMapManager
-                          patientId={patientId}
-                          sessionId={currentSoapRecordId}
-                          appointmentId={appointmentId}
-                        />
-                      </Suspense>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-
-              {/* Coluna Lateral - Informações Complementares */}
-              <div className="space-y-6">
-                {/* Cirurgias */}
-                <SurgeryTimeline surgeries={surgeries} />
-
-                {/* Objetivos */}
-                <GoalsTracker goals={goals} />
-
-                {/* Patologias */}
-                <PathologyStatus pathologies={pathologies} />
-
-                {/* Evoluções Anteriores - Melhorado */}
-                {previousEvolutions.length > 0 && (
-                  <Card className="shadow-lg hover:shadow-xl transition-shadow">
-                    <CardHeader className="bg-gradient-to-r from-indigo-50/50 via-indigo-100/50 to-indigo-50/50 dark:from-indigo-950/20 dark:via-indigo-900/20 dark:to-indigo-950/20">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <Clock className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                          Evoluções Anteriores
-                        </CardTitle>
-                        <Badge variant="secondary" className="text-xs">
-                          {previousEvolutions.length} registros
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-6">
-                      <ScrollArea className="h-[320px] pr-4">
-                        <div className="space-y-3">
-                          {previousEvolutions.map((evolution, index) => (
-                            <div
-                              key={evolution.id}
-                              className="group border rounded-xl p-4 space-y-3 hover:bg-muted/50 hover:shadow-md transition-all cursor-pointer bg-card"
-                              onClick={() => setShowComparison(!showComparison)}
+                    {/* Alertas de Medições Obrigatórias */}
+                    {requiredMeasurements.length > 0 && (
+                      <Card className="border-destructive/30 shadow-sm mb-4">
+                        <CardHeader className="bg-destructive/5 py-3">
+                          <CardTitle className="flex items-center gap-2 text-destructive text-base">
+                            <AlertTriangle className="h-4 w-4" />
+                            Medições Obrigatórias Pendentes
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2 pt-4">
+                          {requiredMeasurements.map((req) => (
+                            <Alert
+                              key={req.id}
+                              variant={req.alert_level === 'high' ? 'destructive' : 'default'}
+                              className="py-2"
                             >
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-8 h-8 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs font-bold">
-                                    {previousEvolutions.length - index}
-                                  </div>
-                                  <div>
-                                    <p className="text-sm font-semibold">
-                                      {format(new Date(evolution.record_date), 'dd/MM/yyyy', { locale: ptBR })}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                      {formatDistanceToNow(new Date(evolution.record_date), { locale: ptBR, addSuffix: true })}
-                                    </p>
-                                  </div>
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleCopyPreviousEvolution(evolution);
-                                  }}
-                                  className="hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  <Copy className="h-4 w-4" />
-                                </Button>
-                              </div>
-
-                              <div className="grid grid-cols-2 gap-2 text-xs">
-                                {evolution.subjective && (
-                                  <div className="p-2 rounded-lg bg-blue-500/5 border border-blue-500/10">
-                                    <p className="font-semibold text-blue-600 dark:text-blue-400 mb-1">S:</p>
-                                    <p className="text-muted-foreground line-clamp-2">{evolution.subjective}</p>
-                                  </div>
-                                )}
-                                {evolution.objective && (
-                                  <div className="p-2 rounded-lg bg-green-500/5 border border-green-500/10">
-                                    <p className="font-semibold text-green-600 dark:text-green-400 mb-1">O:</p>
-                                    <p className="text-muted-foreground line-clamp-2">{evolution.objective}</p>
-                                  </div>
-                                )}
-                                {evolution.assessment && (
-                                  <div className="p-2 rounded-lg bg-purple-500/5 border border-purple-500/10">
-                                    <p className="font-semibold text-purple-600 dark:text-purple-400 mb-1">A:</p>
-                                    <p className="text-muted-foreground line-clamp-2">{evolution.assessment}</p>
-                                  </div>
-                                )}
-                                {evolution.plan && (
-                                  <div className="p-2 rounded-lg bg-orange-500/5 border border-orange-500/10">
-                                    <p className="font-semibold text-orange-600 dark:text-orange-400 mb-1">P:</p>
-                                    <p className="text-muted-foreground line-clamp-2">{evolution.plan}</p>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
+                              <AlertTriangle className="h-4 w-4" />
+                              <AlertTitle className="text-sm font-semibold">{req.measurement_name}</AlertTitle>
+                              <AlertDescription className="text-xs">
+                                {req.instructions}
+                                {req.measurement_unit && ` (${req.measurement_unit})`}
+                              </AlertDescription>
+                            </Alert>
                           ))}
-                        </div>
-                      </ScrollArea>
-                    </CardContent>
-                  </Card>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    <MeasurementForm
+                      patientId={patientId}
+                      soapRecordId={currentSoapRecordId}
+                      requiredMeasurements={requiredMeasurements}
+                    />
+
+                    {/* Gráficos de Medições - Lazy Loaded */}
+                    {Object.keys(measurementsByType).length > 0 && (
+                      <div className="mt-6">
+                        <Suspense fallback={<LoadingSkeleton type="card" />}>
+                          <LazyMeasurementCharts measurementsByType={measurementsByType} />
+                        </Suspense>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="history" className="mt-6">
+            {/* Coluna Lateral antiga, agora em aba separada ou abaixo */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Cirurgias */}
+              <SurgeryTimeline surgeries={surgeries} />
+
+              {/* Objetivos */}
+              <GoalsTracker goals={goals} />
+
+              {/* Patologias */}
+              <PathologyStatus pathologies={pathologies} />
+
+              {/* Evoluções Anteriores - Melhorado */}
+              {previousEvolutions.length > 0 && (
+                <Card className="shadow-sm hover:shadow-md transition-shadow">
+                  <CardHeader className="bg-muted/20">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Clock className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                        Evoluções Anteriores
+                      </CardTitle>
+                      <Badge variant="secondary" className="text-xs">
+                        {previousEvolutions.length} registros
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <ScrollArea className="h-[320px] pr-4">
+                      <div className="space-y-3">
+                        {previousEvolutions.map((evolution, index) => (
+                          <div
+                            key={evolution.id}
+                            className="group border rounded-xl p-4 space-y-3 hover:bg-muted/50 hover:shadow-md transition-all cursor-pointer bg-card"
+                            onClick={() => setShowComparison(!showComparison)}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs font-bold">
+                                  {previousEvolutions.length - index}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-semibold">
+                                    {format(new Date(evolution.record_date), 'dd/MM/yyyy', { locale: ptBR })}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {formatDistanceToNow(new Date(evolution.record_date), { locale: ptBR, addSuffix: true })}
+                                  </p>
+                                </div>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCopyPreviousEvolution(evolution);
+                                }}
+                                className="hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 text-xs">
+                              {evolution.subjective && (
+                                <div className="p-2 rounded-lg bg-blue-500/5 border border-blue-500/10">
+                                  <p className="font-semibold text-blue-600 dark:text-blue-400 mb-1">S:</p>
+                                  <p className="text-muted-foreground line-clamp-2">{evolution.subjective}</p>
+                                </div>
+                              )}
+                              {evolution.objective && (
+                                <div className="p-2 rounded-lg bg-green-500/5 border border-green-500/10">
+                                  <p className="font-semibold text-green-600 dark:text-green-400 mb-1">O:</p>
+                                  <p className="text-muted-foreground line-clamp-2">{evolution.objective}</p>
+                                </div>
+                              )}
+                              {evolution.assessment && (
+                                <div className="p-2 rounded-lg bg-purple-500/5 border border-purple-500/10">
+                                  <p className="font-semibold text-purple-600 dark:text-purple-400 mb-1">A:</p>
+                                  <p className="text-muted-foreground line-clamp-2">{evolution.assessment}</p>
+                                </div>
+                              )}
+                              {evolution.plan && (
+                                <div className="p-2 rounded-lg bg-orange-500/5 border border-orange-500/10">
+                                  <p className="font-semibold text-orange-600 dark:text-orange-400 mb-1">P:</p>
+                                  <p className="text-muted-foreground line-clamp-2">{evolution.plan}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </TabsContent>
 
@@ -1009,15 +942,6 @@ const PatientEvolution = () => {
             <Suspense fallback={<LoadingSkeleton type="card" />}>
               <LazyWhatsAppIntegration patientId={patientId!} patientPhone={patient.phone} />
             </Suspense>
-          </TabsContent>
-
-          <TabsContent value="measurements" className="mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <MeasurementForm patientId={patientId!} soapRecordId={currentSoapRecordId} />
-              {Object.keys(measurementsByType).length > 0 && (
-                <MeasurementCharts measurementsByType={measurementsByType} />
-              )}
-            </div>
           </TabsContent>
         </Tabs>
       </div>
