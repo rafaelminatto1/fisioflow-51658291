@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format, startOfMonth, subMonths, subDays, startOfWeek, endOfWeek } from 'date-fns';
+import { formatDateToLocalISO } from '@/utils/dateUtils';
 
 export interface TherapistPerformance {
   id: string;
@@ -42,13 +43,13 @@ export const useDashboardMetrics = () => {
   return useQuery({
     queryKey: ['dashboard-metrics'],
     queryFn: async (): Promise<DashboardMetrics> => {
-      const today = format(new Date(), 'yyyy-MM-dd');
-      const startOfCurrentMonth = format(startOfMonth(new Date()), 'yyyy-MM-dd');
-      const startOfLastMonth = format(startOfMonth(subMonths(new Date(), 1)), 'yyyy-MM-dd');
-      const endOfLastMonth = format(startOfMonth(new Date()), 'yyyy-MM-dd');
-      const thirtyDaysAgo = format(subMonths(new Date(), 1), 'yyyy-MM-dd');
-      const weekStart = format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd');
-      const weekEnd = format(endOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd');
+      const today = formatDateToLocalISO(new Date());
+      const startOfCurrentMonth = formatDateToLocalISO(startOfMonth(new Date()));
+      const startOfLastMonth = formatDateToLocalISO(startOfMonth(subMonths(new Date(), 1)));
+      const endOfLastMonth = formatDateToLocalISO(startOfMonth(new Date()));
+      const thirtyDaysAgo = formatDateToLocalISO(subMonths(new Date(), 1));
+      const weekStart = formatDateToLocalISO(startOfWeek(new Date(), { weekStartsOn: 1 }));
+      const weekEnd = formatDateToLocalISO(endOfWeek(new Date(), { weekStartsOn: 1 }));
 
       // Total de pacientes
       const { count: totalPacientes } = await supabase
@@ -211,7 +212,7 @@ export const useDashboardMetrics = () => {
 
       for (let i = 0; i < 7; i++) {
         const day = subDays(new Date(weekEnd), 6 - i);
-        const dayStr = format(day, 'yyyy-MM-dd');
+        const dayStr = formatDateToLocalISO(day);
         const dayAppointments = weeklyData?.filter(a => a.appointment_date === dayStr) || [];
 
         tendenciaSemanal.push({
