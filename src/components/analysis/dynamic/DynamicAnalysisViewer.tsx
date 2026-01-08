@@ -9,13 +9,16 @@ import { DynamicAnalysis, GaitMetrics, OverheadSquatMetrics, RombergMetrics } fr
 import { DynamicCompareMetrics } from '@/types/analysis/dynamic_compare';
 
 interface DynamicAnalysisViewerProps {
-    data: DynamicAnalysis | DynamicCompareMetrics | any;
+    data: DynamicAnalysis | DynamicCompareMetrics | Record<string, unknown>;
 }
 
 const DynamicAnalysisViewer: React.FC<DynamicAnalysisViewerProps> = ({ data }) => {
     // 1. Detect New Schema (Dynamic Compare)
-    if (data?.schema_version?.includes('dynamic_compare')) {
-        const metrics = data as DynamicCompareMetrics;
+    const isDynamicCompare = (d: unknown): d is DynamicCompareMetrics =>
+        (d as DynamicCompareMetrics)?.schema_version?.includes('dynamic_compare');
+
+    if (isDynamicCompare(data)) {
+        const metrics = data;
         return (
             <div className="space-y-4">
                 <Card>
@@ -55,9 +58,12 @@ const DynamicAnalysisViewer: React.FC<DynamicAnalysisViewerProps> = ({ data }) =
     }
 
     // 2. Legacy Dashboards (Gait, Squat, Romberg)
-    if (data?.trial_type === 'GAIT') return <GaitDashboard data={data as GaitMetrics} />;
-    if (data?.trial_type === 'SQUAT_OVERHEAD') return <SquatDashboard data={data as OverheadSquatMetrics} />;
-    if (data?.trial_type === 'ROMBERG') return <RombergDashboard data={data as RombergMetrics} />;
+    // Cast to any to access trial_type safely since we know it exists in legacy schemas
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const legacyData = data as any;
+    if (legacyData?.trial_type === 'GAIT') return <GaitDashboard data={legacyData as GaitMetrics} />;
+    if (legacyData?.trial_type === 'SQUAT_OVERHEAD') return <SquatDashboard data={legacyData as OverheadSquatMetrics} />;
+    if (legacyData?.trial_type === 'ROMBERG') return <RombergDashboard data={legacyData as RombergMetrics} />;
 
     // 3. Generic Fallback
     return (

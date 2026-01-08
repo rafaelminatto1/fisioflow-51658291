@@ -84,12 +84,12 @@ export function LiveAppointmentsFeed() {
               .limit(10),
             8000
           );
-          
+
           if (result.data) {
             data = result.data;
             break;
           }
-        } catch (error) {
+        } catch {
           retries++;
           if (retries < maxRetries) {
             await new Promise(resolve => setTimeout(resolve, 1000 * retries));
@@ -99,6 +99,7 @@ export function LiveAppointmentsFeed() {
 
       if (data) {
         setAppointments(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           data.map((apt: any) => ({
             id: apt.id,
             start_time: apt.start_time,
@@ -145,6 +146,7 @@ export function LiveAppointmentsFeed() {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function updateAppointment(updated: any) {
     setAppointments((prev) =>
       prev.map((apt) => (apt.id === updated.id ? { ...apt, ...updated } : apt))

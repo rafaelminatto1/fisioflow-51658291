@@ -127,7 +127,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
     } finally {
       setLoading(false);
     }
-  }, [profile.id]);
+  }, [profile.id, todayAppointments.length]);
 
   // Update stats when appointments change
   useEffect(() => {

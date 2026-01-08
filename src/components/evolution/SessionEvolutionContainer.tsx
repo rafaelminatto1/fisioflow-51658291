@@ -45,13 +45,18 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [patient, setPatient] = useState<any>(null);
-  const [appointment, setAppointment] = useState<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [, setAppointment] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('evolution');
 
   // Patient data
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [surgeries, setSurgeries] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [pathologies, setPathologies] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [goals, setGoals] = useState<any[]>([]);
 
   // SOAP Form State
@@ -73,11 +78,9 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   // Session number for test frequency
   const [sessionNumber, setSessionNumber] = useState(1);
 
-  useEffect(() => {
-    loadData();
-  }, [appointmentId, propPatientId]);
 
-  const loadData = async () => {
+
+  const loadData = React.useCallback(async () => {
     setIsLoading(true);
     try {
       let currentPatientId = propPatientId || '';
@@ -136,7 +139,8 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
           .eq('patient_id', currentPatientId)
           .eq('status', 'Realizado');
 
-        setSessionNumber((count || 0) + 1);
+        const calculatedSessionNumber = (count || 0) + 1;
+        setSessionNumber(calculatedSessionNumber);
 
         // Load surgeries
         const { data: surgeryData } = await supabase
@@ -166,7 +170,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
         // Check mandatory tests
         const result = await MandatoryTestAlertService.checkMandatoryTests(
           currentPatientId,
-          sessionNumber,
+          calculatedSessionNumber,
           testsCompleted
         );
         setMandatoryTestsResult(result);
@@ -182,7 +186,11 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [appointmentId, propPatientId, testsCompleted, toast]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleSoapChange = (data: typeof soapData) => {
     setSoapData(data);
@@ -196,6 +204,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
     });
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleReplicateConduct = (conduct: any) => {
     if (conduct.plan) {
       setSoapData(prev => ({
@@ -374,6 +383,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
       } else if (mode === 'page') {
         navigate('/agenda');
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       logger.error('Erro ao salvar sessão', error, 'SessionEvolutionContainer');
 

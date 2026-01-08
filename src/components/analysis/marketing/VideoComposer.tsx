@@ -16,6 +16,7 @@ const VideoComposer: React.FC<VideoComposerProps> = ({
     videoUrlA,
     videoUrlB,
     watermarkText = "FisioFlow",
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     metricsOverlay = [],
     onExportComplete,
     isAnonymized = false
@@ -26,11 +27,11 @@ const VideoComposer: React.FC<VideoComposerProps> = ({
 
     // Playback State
     const [isPlaying, setIsPlaying] = useState(false);
-    const [progress, setProgress] = useState(0);
+    // const [progress, setProgress] = useState(0);
     const [isRecording, setIsRecording] = useState(false);
     const [recordingProgress, setRecordingProgress] = useState(0);
 
-    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    // const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const chunksRef = useRef<Blob[]>([]);
     const animationFrameRef = useRef<number>();
 
@@ -54,7 +55,7 @@ const VideoComposer: React.FC<VideoComposerProps> = ({
     }, [videoUrlA, videoUrlB]);
 
     // Draw Loop
-    const drawParams = () => {
+    const drawParams = React.useCallback(() => {
         const canvas = canvasRef.current;
         const ctx = canvas?.getContext('2d');
         const vA = videoRefA.current;
@@ -132,7 +133,7 @@ const VideoComposer: React.FC<VideoComposerProps> = ({
         if (isPlaying || isRecording) {
             animationFrameRef.current = requestAnimationFrame(drawParams);
         }
-    };
+    }, [isAnonymized, isPlaying, isRecording, watermarkText]);
 
     // Control Sync
     const togglePlay = async () => {
@@ -157,7 +158,7 @@ const VideoComposer: React.FC<VideoComposerProps> = ({
             drawParams();
         }, 500);
         return () => clearTimeout(t);
-    }, [videoUrlA, videoUrlB, isAnonymized]);
+    }, [videoUrlA, videoUrlB, isAnonymized, drawParams]);
 
 
     // Export Logic

@@ -4,11 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { 
-  Lightbulb, 
-  Copy, 
-  Check, 
-  TrendingUp, 
+import {
+  Lightbulb,
+  Copy,
+  Check,
+  TrendingUp,
   TrendingDown,
   Activity,
   Target,
@@ -18,8 +18,8 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { format, differenceInDays } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { differenceInDays } from 'date-fns';
+
 
 interface MedicalReportSuggestionsProps {
   patientId: string;
@@ -31,7 +31,7 @@ interface Insight {
   icon: React.ReactNode;
   title: string;
   description: string;
-  data?: any;
+  data?: unknown;
   priority: 'high' | 'medium' | 'low';
 }
 
@@ -43,17 +43,15 @@ export const MedicalReportSuggestions: React.FC<MedicalReportSuggestionsProps> =
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    generateInsights();
-  }, [patientId]);
 
-  const generateInsights = async () => {
+
+  const generateInsights = React.useCallback(async () => {
     setIsLoading(true);
     try {
       const generatedInsights: Insight[] = [];
 
-      // Fetch patient data
-      const { data: patient } = await supabase
+      // Fetch patient data (Check if exists)
+      await supabase
         .from('patients')
         .select('*')
         .eq('id', patientId)
@@ -88,7 +86,7 @@ export const MedicalReportSuggestions: React.FC<MedicalReportSuggestionsProps> =
         .eq('patient_id', patientId);
 
       // Generate pain evolution insight
-      const painMeasurements = measurements?.filter(m => 
+      const painMeasurements = measurements?.filter(m =>
         m.measurement_type === 'pain' || m.measurement_name.toLowerCase().includes('dor')
       );
 
@@ -110,7 +108,7 @@ export const MedicalReportSuggestions: React.FC<MedicalReportSuggestionsProps> =
       }
 
       // Generate ROM improvement insight
-      const romMeasurements = measurements?.filter(m => 
+      const romMeasurements = measurements?.filter(m =>
         m.measurement_type === 'rom' || m.measurement_name.toLowerCase().includes('amplitude')
       );
 
@@ -183,7 +181,7 @@ export const MedicalReportSuggestions: React.FC<MedicalReportSuggestionsProps> =
       }
 
       // Generate strength improvement insight
-      const strengthMeasurements = measurements?.filter(m => 
+      const strengthMeasurements = measurements?.filter(m =>
         m.measurement_type === 'strength' || m.measurement_name.toLowerCase().includes('força')
       );
 
@@ -221,7 +219,12 @@ export const MedicalReportSuggestions: React.FC<MedicalReportSuggestionsProps> =
     } finally {
       setIsLoading(false);
     }
-  };
+
+  }, [patientId]);
+
+  useEffect(() => {
+    generateInsights();
+  }, [generateInsights]);
 
   const copyToClipboard = (insight: Insight) => {
     navigator.clipboard.writeText(insight.description);

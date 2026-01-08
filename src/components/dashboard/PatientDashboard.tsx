@@ -9,9 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Calendar, 
-  Activity, 
+import {
+  Calendar,
+  Activity,
   TrendingUp,
   FileText,
   MessageSquare,
@@ -133,7 +133,7 @@ export function PatientDashboard({ lastUpdate, profile }: PatientDashboardProps)
       }
 
       // Calculate today's exercises
-      const allExercises = exercisePlans?.flatMap(plan => 
+      const allExercises = exercisePlans?.flatMap(plan =>
         plan.exercise_plan_items?.map(item => ({
           id: item.id,
           name: item.exercises?.name || 'Exercício',
@@ -186,7 +186,7 @@ export function PatientDashboard({ lastUpdate, profile }: PatientDashboardProps)
     } finally {
       setLoading(false);
     }
-  }, [profile.id, profile.full_name, profile.user_id, profile.birth_date]);
+  }, [profile.id, profile.full_name, profile.phone]);
 
   useEffect(() => {
     loadDashboardData();
@@ -194,7 +194,7 @@ export function PatientDashboard({ lastUpdate, profile }: PatientDashboardProps)
     // Set up real-time subscriptions
     const appointmentsSubscription = supabase
       .channel('patient-appointments')
-      .on('postgres_changes', 
+      .on('postgres_changes',
         { event: '*', schema: 'public', table: 'appointments' },
         () => loadDashboardData()
       )
@@ -272,7 +272,7 @@ export function PatientDashboard({ lastUpdate, profile }: PatientDashboardProps)
             height={300}
           />
         </div>
-        
+
         <AppointmentWidget
           title="Próximas Consultas"
           appointments={upcomingAppointments}
@@ -328,7 +328,7 @@ export function PatientDashboard({ lastUpdate, profile }: PatientDashboardProps)
                 </div>
               ))
             )}
-            
+
             <div className="mt-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-muted-foreground">Progresso Diário</span>
@@ -336,8 +336,8 @@ export function PatientDashboard({ lastUpdate, profile }: PatientDashboardProps)
                   {todayExercises.filter(e => e.completed).length}/{todayExercises.length}
                 </span>
               </div>
-              <Progress 
-                value={(todayExercises.filter(e => e.completed).length / Math.max(todayExercises.length, 1)) * 100} 
+              <Progress
+                value={(todayExercises.filter(e => e.completed).length / Math.max(todayExercises.length, 1)) * 100}
                 className="h-2"
               />
             </div>

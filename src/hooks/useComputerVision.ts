@@ -244,6 +244,7 @@ export const useComputerVision = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const modelRef = useRef<any>(null);
   const recordingRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
@@ -265,7 +266,7 @@ export const useComputerVision = () => {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
         setCameraPermission('granted');
-        
+
         return new Promise<void>((resolve) => {
           if (videoRef.current) {
             videoRef.current.onloadedmetadata = () => {
@@ -287,14 +288,14 @@ export const useComputerVision = () => {
     try {
       // Em produção, carregar modelo real (TensorFlow.js, MediaPipe, etc.)
       await new Promise(resolve => setTimeout(resolve, 2000)); // Simular carregamento
-      
+
       modelRef.current = {
-        detect: (imageData: ImageData) => {
+        detect: (_imageData: ImageData) => {
           // Mock de detecção de pose
           return mockPoseDetection();
         }
       };
-      
+
       setModelLoaded(true);
     } catch (error) {
       logger.error('Erro ao carregar modelo de pose detection', error, 'useComputerVision');
@@ -337,11 +338,11 @@ export const useComputerVision = () => {
   const calculateAngle = useCallback((p1: PoseKeypoint, p2: PoseKeypoint, p3: PoseKeypoint): number => {
     const radians = Math.atan2(p3.y - p2.y, p3.x - p2.x) - Math.atan2(p1.y - p2.y, p1.x - p2.x);
     let angle = Math.abs(radians * 180.0 / Math.PI);
-    
+
     if (angle > 180.0) {
       angle = 360 - angle;
     }
-    
+
     return angle;
   }, []);
 
@@ -384,16 +385,16 @@ export const useComputerVision = () => {
       const leftKnee = keypoints.find(kp => kp.name === 'left_knee');
       const leftHip = keypoints.find(kp => kp.name === 'left_hip');
       const leftAnkle = keypoints.find(kp => kp.name === 'left_ankle');
-      
+
       if (leftKnee && leftHip && leftAnkle) {
         const kneeAngle = calculateAngle(leftHip, leftKnee, leftAnkle);
         analysis.range.maxAngle = kneeAngle;
-        
+
         if (kneeAngle < 90) {
           analysis.form.corrections.push('Desça mais para atingir 90 graus no joelho');
           analysis.form.score -= 10;
         }
-        
+
         if (kneeAngle > 160) {
           analysis.form.feedback.push('Boa amplitude de movimento');
         }
@@ -406,7 +407,7 @@ export const useComputerVision = () => {
   // Gerar feedback em tempo real
   const generateRealTimeFeedback = useCallback((analysis: ExerciseAnalysis): RealTimeFeedback[] => {
     const feedback: RealTimeFeedback[] = [];
-    
+
     // Feedback de forma
     if (analysis.form.score < 70) {
       feedback.push({
@@ -417,7 +418,7 @@ export const useComputerVision = () => {
         timestamp: Date.now()
       });
     }
-    
+
     // Feedback de amplitude
     if (analysis.range.score < 60) {
       feedback.push({
@@ -428,7 +429,7 @@ export const useComputerVision = () => {
         timestamp: Date.now()
       });
     }
-    
+
     // Feedback de estabilidade
     if (analysis.stability.score < 70) {
       feedback.push({
@@ -439,76 +440,9 @@ export const useComputerVision = () => {
         timestamp: Date.now()
       });
     }
-    
+
     return feedback;
   }, []);
-
-  // Processar frame
-  const processFrame = useCallback(async () => {
-    if (!videoRef.current || !canvasRef.current || !modelRef.current || !isActive) {
-      return;
-    }
-
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    
-    if (!ctx) return;
-
-    // Ajustar tamanho do canvas
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
-    // Desenhar frame do vídeo
-    if (settings.mirrorMode) {
-      ctx.scale(-1, 1);
-      ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
-      ctx.scale(-1, 1);
-    } else {
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    }
-    
-    // Detectar pose
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const detection = modelRef.current.detect(imageData);
-    
-    // Atualizar detecções
-    setPoseDetections(prev => {
-      const updated = [...prev, detection].slice(-30); // Manter últimas 30 detecções
-      return updated;
-    });
-    
-    // Analisar exercício se ativo
-    if (currentExercise) {
-      const analysis = analyzeExercise(detection, currentExercise);
-      const feedback = generateRealTimeFeedback(analysis);
-      
-      setRealTimeFeedback(prev => {
-        const updated = [...prev, ...feedback].slice(-10); // Manter últimos 10 feedbacks
-        return updated;
-      });
-    }
-    
-    // Desenhar skeleton se habilitado
-    if (settings.showSkeleton) {
-      drawSkeleton(ctx, detection.keypoints);
-    }
-    
-    // Desenhar ângulos se habilitado
-    if (settings.showAngles && currentExercise) {
-      drawAngles(ctx, detection.keypoints, currentExercise);
-    }
-    
-    // Atualizar stats
-    setProcessingStats(prev => ({
-      fps: Math.round(1000 / (Date.now() - prev.fps || 16)),
-      latency: Date.now() - detection.timestamp,
-      accuracy: detection.confidence
-    }));
-    
-    // Continuar processamento
-    animationFrameRef.current = requestAnimationFrame(processFrame);
-  }, [isActive, currentExercise, settings, analyzeExercise, generateRealTimeFeedback]);
 
   // Desenhar skeleton
   const drawSkeleton = useCallback((ctx: CanvasRenderingContext2D, keypoints: PoseKeypoint[]) => {
@@ -526,15 +460,15 @@ export const useComputerVision = () => {
       ['right_hip', 'right_knee'],
       ['right_knee', 'right_ankle']
     ];
-    
+
     // Desenhar conexões
     ctx.strokeStyle = '#00ff00';
     ctx.lineWidth = 2;
-    
+
     connections.forEach(([start, end]) => {
       const startPoint = keypoints.find(kp => kp.name === start);
       const endPoint = keypoints.find(kp => kp.name === end);
-      
+
       if (startPoint && endPoint && startPoint.confidence > 0.5 && endPoint.confidence > 0.5) {
         ctx.beginPath();
         ctx.moveTo(startPoint.x, startPoint.y);
@@ -542,7 +476,7 @@ export const useComputerVision = () => {
         ctx.stroke();
       }
     });
-    
+
     // Desenhar keypoints
     keypoints.forEach(kp => {
       if (kp.confidence > 0.5) {
@@ -558,34 +492,102 @@ export const useComputerVision = () => {
   const drawAngles = useCallback((ctx: CanvasRenderingContext2D, keypoints: PoseKeypoint[], exerciseType: string) => {
     const template = exerciseTemplates[exerciseType];
     if (!template) return;
-    
+
     ctx.fillStyle = '#ffffff';
     ctx.font = '14px Arial';
     ctx.strokeStyle = '#000000';
     ctx.lineWidth = 1;
-    
+
     // Exemplo: desenhar ângulo do joelho para agachamento
     if (exerciseType === 'squat') {
       const leftHip = keypoints.find(kp => kp.name === 'left_hip');
       const leftKnee = keypoints.find(kp => kp.name === 'left_knee');
       const leftAnkle = keypoints.find(kp => kp.name === 'left_ankle');
-      
+
       if (leftHip && leftKnee && leftAnkle) {
         const angle = calculateAngle(leftHip, leftKnee, leftAnkle);
         const text = `${Math.round(angle)}°`;
-        
+
         ctx.strokeText(text, leftKnee.x + 10, leftKnee.y - 10);
         ctx.fillText(text, leftKnee.x + 10, leftKnee.y - 10);
       }
     }
   }, [calculateAngle]);
 
+  // Processar frame
+  const processFrame = useCallback(async () => {
+    if (!videoRef.current || !canvasRef.current || !modelRef.current || !isActive) {
+      return;
+    }
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) return;
+
+    // Ajustar tamanho do canvas
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    // Desenhar frame do vídeo
+    if (settings.mirrorMode) {
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+      ctx.scale(-1, 1);
+    } else {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    }
+
+    // Detectar pose
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const detection = modelRef.current.detect(imageData);
+
+    // Atualizar detecções
+    setPoseDetections(prev => {
+      const updated = [...prev, detection].slice(-30); // Manter últimas 30 detecções
+      return updated;
+    });
+
+    // Analisar exercício se ativo
+    if (currentExercise) {
+      const analysis = analyzeExercise(detection, currentExercise);
+      const feedback = generateRealTimeFeedback(analysis);
+
+      setRealTimeFeedback(prev => {
+        const updated = [...prev, ...feedback].slice(-10); // Manter últimos 10 feedbacks
+        return updated;
+      });
+    }
+
+    // Desenhar skeleton se habilitado
+    if (settings.showSkeleton) {
+      drawSkeleton(ctx, detection.keypoints);
+    }
+
+    // Desenhar ângulos se habilitado
+    if (settings.showAngles && currentExercise) {
+      drawAngles(ctx, detection.keypoints, currentExercise);
+    }
+
+    // Atualizar stats
+    setProcessingStats(prev => ({
+      fps: Math.round(1000 / (Date.now() - prev.fps || 16)),
+      latency: Date.now() - detection.timestamp,
+      accuracy: detection.confidence
+    }));
+
+    // Continuar processamento
+    animationFrameRef.current = requestAnimationFrame(processFrame);
+  }, [isActive, currentExercise, settings, analyzeExercise, generateRealTimeFeedback, drawSkeleton, drawAngles]);
+
+
   // Iniciar sessão de exercício
   const startExerciseSession = useCallback(async (exerciseType: string) => {
     if (!isCalibrated) {
       throw new Error('Sistema não calibrado');
     }
-    
+
     const session: ExerciseSession = {
       id: `session-${Date.now()}`,
       exerciseType,
@@ -596,26 +598,26 @@ export const useComputerVision = () => {
       analyses: [],
       screenshots: []
     };
-    
+
     setCurrentSession(session);
     setCurrentExercise(exerciseType);
     setIsActive(true);
-    
+
     // Iniciar gravação se habilitado
     if (settings.recordSession && streamRef.current) {
       const recorder = new MediaRecorder(streamRef.current);
       recordedChunksRef.current = [];
-      
+
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           recordedChunksRef.current.push(event.data);
         }
       };
-      
+
       recorder.start();
       recordingRef.current = recorder;
     }
-    
+
     // Iniciar processamento
     processFrame();
   }, [isCalibrated, settings.recordSession, processFrame]);
@@ -624,15 +626,15 @@ export const useComputerVision = () => {
   const stopExerciseSession = useCallback(() => {
     setIsActive(false);
     setCurrentExercise(null);
-    
+
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
     }
-    
+
     // Parar gravação
     if (recordingRef.current && recordingRef.current.state === 'recording') {
       recordingRef.current.stop();
-      
+
       recordingRef.current.onstop = () => {
         const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
         if (currentSession) {
@@ -640,7 +642,7 @@ export const useComputerVision = () => {
         }
       };
     }
-    
+
     // Finalizar sessão
     if (currentSession) {
       setCurrentSession(prev => prev ? { ...prev, endTime: new Date() } : null);
@@ -652,20 +654,20 @@ export const useComputerVision = () => {
     if (!videoRef.current || !modelRef.current) {
       throw new Error('Câmera ou modelo não inicializados');
     }
-    
+
     // Capturar pose de referência
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    
+
     if (!ctx) throw new Error('Erro ao criar canvas');
-    
+
     canvas.width = videoRef.current.videoWidth;
     canvas.height = videoRef.current.videoHeight;
     ctx.drawImage(videoRef.current, 0, 0);
-    
+
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const detection = modelRef.current.detect(imageData);
-    
+
     const calibration: CalibrationData = {
       userHeight,
       armSpan,
@@ -673,7 +675,7 @@ export const useComputerVision = () => {
       cameraDistance: 2.0, // Estimativa
       cameraAngle: 0
     };
-    
+
     setCalibrationData(calibration);
     setIsCalibrated(true);
   }, []);
@@ -681,7 +683,7 @@ export const useComputerVision = () => {
   // Tirar screenshot
   const takeScreenshot = useCallback((): string | null => {
     if (!canvasRef.current) return null;
-    
+
     return canvasRef.current.toDataURL('image/png');
   }, []);
 
@@ -690,11 +692,11 @@ export const useComputerVision = () => {
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
     }
-    
+
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
     }
-    
+
     if (recordingRef.current && recordingRef.current.state === 'recording') {
       recordingRef.current.stop();
     }
@@ -729,21 +731,21 @@ export const useComputerVision = () => {
     cameraPermission,
     modelLoaded,
     processingStats,
-    
+
     // Refs
     videoRef,
     canvasRef,
-    
+
     // Ações
     initializeSystem,
     startExerciseSession,
     stopExerciseSession,
     calibrateSystem,
     takeScreenshot,
-    
+
     // Configurações
     setSettings,
-    
+
     // Utilitários
     exerciseTemplates,
     cleanup
@@ -754,7 +756,7 @@ export const useComputerVision = () => {
 export const getExerciseInstructions = (exerciseType: string): string[] => {
   const template = exerciseTemplates[exerciseType];
   if (!template) return [];
-  
+
   return template.phases.flatMap(phase => phase.keyPositions);
 };
 
@@ -790,7 +792,7 @@ export const calculateCaloriesBurned = (exerciseType: string, repetitions: numbe
     pushup: 0.3,
     plank: 0.2 // por segundo
   };
-  
+
   const baseCalories = caloriesPerRep[exerciseType as keyof typeof caloriesPerRep] || 0.3;
   return Math.round(baseCalories * repetitions * (userWeight / 70));
 };
