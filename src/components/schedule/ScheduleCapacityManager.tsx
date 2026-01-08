@@ -260,7 +260,6 @@ export function ScheduleCapacityManager() {
                 onClick={handleAdd}
                 disabled={
                   isCreating ||
-                  !organizationId ||
                   newCapacity.selectedDays.length === 0 ||
                   !newCapacity.start_time ||
                   !newCapacity.end_time
