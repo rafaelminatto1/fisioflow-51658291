@@ -61,7 +61,7 @@ export function StatCard({
   }
 
   return (
-    <Card 
+    <Card
       className={cn(
         "border-border/50 transition-all duration-300 hover:shadow-medical cursor-pointer group overflow-hidden relative min-h-[120px]",
         gradient ? "bg-gradient-card" : "bg-card/80 backdrop-blur-sm",
@@ -76,16 +76,16 @@ export function StatCard({
             <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-gradient-primary/10 group-hover:bg-gradient-primary/20 transition-colors shrink-0">
               {icon}
             </div>
-            <p className="text-xs sm:text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors line-clamp-2 leading-tight">{title}</p>
+            <p className="text-xs sm:text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors leading-tight flex-1">{title}</p>
           </div>
           <div className="flex-1 flex flex-col justify-end">
             <div className="flex items-baseline gap-2 mb-1">
               <h3 className="text-2xl sm:text-3xl font-bold text-foreground">{value}</h3>
             </div>
             {change && (
-              <div className={cn("flex items-center gap-1 text-xs sm:text-sm font-medium truncate", getTrendColor())}>
+              <div className={cn("flex items-center gap-1 text-xs sm:text-sm font-medium flex-wrap", getTrendColor())}>
                 {getTrendIcon()}
-                <span className="truncate">{change}</span>
+                <span>{change}</span>
               </div>
             )}
           </div>
