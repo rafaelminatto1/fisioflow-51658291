@@ -39,6 +39,14 @@ const PAIN_TYPE_ICONS: Record<PainPoint['painType'], string> = {
   tingling: '✨',
   numbness: '❄️',
   stiffness: '🔒',
+  aguda: '⚡',
+  cronica: '⏳',
+  latejante: '💓',
+  queimacao: '🔥',
+  formigamento: '✨',
+  dormencia: '❄️',
+  peso: '🔒',
+  pontada: '📌',
 };
 
 const PAIN_TYPE_LABELS: Record<PainPoint['painType'], string> = {
@@ -48,6 +56,14 @@ const PAIN_TYPE_LABELS: Record<PainPoint['painType'], string> = {
   tingling: 'Formigamento',
   numbness: 'Dormência',
   stiffness: 'Rigidez',
+  aguda: 'Aguda',
+  cronica: 'Crônica',
+  latejante: 'Latejante',
+  queimacao: 'Queimação',
+  formigamento: 'Formigamento',
+  dormencia: 'Dormência',
+  peso: 'Peso',
+  pontada: 'Pontada',
 };
 
 export function PainPointsBottomSheet({
