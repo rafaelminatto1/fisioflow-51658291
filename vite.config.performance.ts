@@ -1,5 +1,4 @@
-import { defineConfig } from 'vite';
-import { resolve } from 'path';
+
 
 // Configurações de performance para produção
 export const performanceConfig = {
@@ -16,7 +15,7 @@ export const performanceConfig = {
           'date-vendor': ['date-fns'],
           'form-vendor': ['react-hook-form', '@hookform/resolvers'],
           'query-vendor': ['@tanstack/react-query'],
-          
+
           // Feature chunks
           'analytics': [
             './src/pages/analytics/AnalyticsDashboard.tsx',
@@ -35,14 +34,11 @@ export const performanceConfig = {
           ]
         },
         // Nomes de arquivo com hash para cache busting
-        chunkFileNames: (chunkInfo: any) => {
-          const facadeModuleId = chunkInfo.facadeModuleId
-            ? chunkInfo.facadeModuleId.split('/').pop()?.replace('.tsx', '').replace('.ts', '')
-            : 'chunk';
+        chunkFileNames: (_chunkInfo: { facadeModuleId: string | null }) => {
           return `assets/js/[name]-[hash].js`;
         },
         entryFileNames: 'assets/js/[name]-[hash].js',
-        assetFileNames: (assetInfo: any) => {
+        assetFileNames: (assetInfo: { name?: string }) => {
           const info = assetInfo.name?.split('.') || [];
           const ext = info[info.length - 1];
           if (/\.(png|jpe?g|svg|gif|tiff|bmp|ico)$/i.test(assetInfo.name || '')) {
@@ -55,18 +51,18 @@ export const performanceConfig = {
         }
       }
     },
-    
+
     // Otimizações de build
     target: 'esnext',
     minify: 'esbuild',
-    
+
     // Chunk size warnings
     chunkSizeWarningLimit: 1000,
-    
+
     // Source maps para produção (opcional)
     sourcemap: false
   },
-  
+
   // Otimizações de servidor de desenvolvimento
   server: {
     // Preload de módulos
@@ -79,7 +75,7 @@ export const performanceConfig = {
       ]
     }
   },
-  
+
   // Configurações de preview (produção local)
   preview: {
     headers: {
@@ -87,7 +83,7 @@ export const performanceConfig = {
       'Cache-Control': 'public, max-age=31536000, immutable'
     }
   },
-  
+
   // Otimizações de dependências
   optimizeDeps: {
     include: [
@@ -112,20 +108,20 @@ export const cacheHeaders = {
     'Cache-Control': 'public, max-age=31536000, immutable',
     'Expires': new Date(Date.now() + 31536000000).toUTCString()
   },
-  
+
   // JavaScript e CSS com hash
   hashed: {
     'Cache-Control': 'public, max-age=31536000, immutable',
     'Expires': new Date(Date.now() + 31536000000).toUTCString()
   },
-  
+
   // HTML (sem cache para sempre buscar a versão mais recente)
   html: {
     'Cache-Control': 'no-cache, no-store, must-revalidate',
     'Pragma': 'no-cache',
     'Expires': '0'
   },
-  
+
   // API responses
   api: {
     'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -142,7 +138,7 @@ export const compressionConfig = {
     level: 6, // Nível de compressão (1-9)
     memLevel: 8
   },
-  
+
   // Brotli compression (melhor que gzip)
   brotli: {
     threshold: 1024,
@@ -160,7 +156,7 @@ export const preloadConfig = {
     '/src/components/layout/Sidebar.tsx',
     '/src/components/layout/Header.tsx'
   ],
-  
+
   // Recursos para prefetch (baixa prioridade)
   prefetch: [
     '/src/pages/analytics/AnalyticsDashboard.tsx',
