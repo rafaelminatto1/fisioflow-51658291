@@ -23,7 +23,8 @@ ALTER FUNCTION public.check_appointment_conflict(uuid, date, time, time, uuid) S
 ALTER FUNCTION public.publish_goal_profile(text) SET search_path = public, extensions;
 ALTER FUNCTION public.update_schedule_capacity_config_updated_at() SET search_path = public, extensions;
 ALTER FUNCTION public.get_available_time_slots(uuid, date, integer) SET search_path = public, extensions;
-ALTER FUNCTION public.create_test_user(text, text) SET search_path = public, extensions;
+-- ALTER FUNCTION public.create_test_user(text, text) SET search_path = public, extensions; -- Function does not exist
+
 ALTER FUNCTION public.update_modified_column() SET search_path = public, extensions;
 ALTER FUNCTION public.update_appointment_payment_status() SET search_path = public, extensions;
 ALTER FUNCTION public.calculate_patient_trends(uuid, integer) SET search_path = public, extensions;
