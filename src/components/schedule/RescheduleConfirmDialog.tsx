@@ -35,8 +35,11 @@ export const RescheduleConfirmDialog: React.FC<RescheduleConfirmDialogProps> = (
 }) => {
   if (!appointment || !newDate || !newTime) return null;
 
-  const oldDate = typeof appointment.date === 'string' 
-    ? new Date(appointment.date) 
+  const oldDate = typeof appointment.date === 'string'
+    ? (() => {
+      const [y, m, d] = appointment.date.split('-').map(Number);
+      return new Date(y, m - 1, d, 12, 0, 0); // Local noon
+    })()
     : appointment.date;
 
   return (
@@ -52,7 +55,7 @@ export const RescheduleConfirmDialog: React.FC<RescheduleConfirmDialogProps> = (
               <p className="text-sm text-muted-foreground">
                 Deseja reagendar o atendimento de <strong className="text-foreground">{appointment.patientName}</strong>?
               </p>
-              
+
               <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
                 {/* De */}
                 <div className="flex-1 space-y-1">
@@ -66,10 +69,10 @@ export const RescheduleConfirmDialog: React.FC<RescheduleConfirmDialogProps> = (
                     {appointment.time}
                   </div>
                 </div>
-                
+
                 {/* Seta */}
                 <ArrowRight className="h-5 w-5 text-primary flex-shrink-0" />
-                
+
                 {/* Para */}
                 <div className="flex-1 space-y-1">
                   <span className="text-xs font-medium text-primary uppercase tracking-wide">Para</span>

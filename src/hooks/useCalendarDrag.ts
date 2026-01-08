@@ -94,10 +94,15 @@ export const useCalendarDrag = ({ onAppointmentReschedule }: UseCalendarDragProp
         e.preventDefault();
         e.stopPropagation();
 
-        if (!dragState.appointment || !onAppointmentReschedule) {
-            handleDragEnd();
-            return;
-        }
+        console.log('!!! CALENDAR DRAG HANDLE DROP TRIGGERED !!!');
+        console.log('[SAFE_DATE_LOG] targetDate:', targetDate);
+        console.log('[DEBUG handleDrop] targetDate.toString():', targetDate.toString());
+        console.log('[DEBUG handleDrop] targetDate components:', {
+            year: targetDate.getFullYear(),
+            month: targetDate.getMonth(),
+            date: targetDate.getDate(),
+            hours: targetDate.getHours()
+        });
 
         // Normalizar a data antiga do appointment para comparação
         const oldDate = normalizeDate(dragState.appointment.date);
@@ -109,6 +114,16 @@ export const useCalendarDrag = ({ onAppointmentReschedule }: UseCalendarDragProp
             targetDate.getMonth(),
             targetDate.getDate()
         );
+
+        // DEBUG: Log the created newDate
+        console.log('[DEBUG handleDrop] createLocalDate result:', newDate);
+        console.log('[DEBUG handleDrop] newDate.toString():', newDate.toString());
+        console.log('[DEBUG handleDrop] newDate components:', {
+            year: newDate.getFullYear(),
+            month: newDate.getMonth(),
+            date: newDate.getDate(),
+            hours: newDate.getHours()
+        });
 
         // Verificar se é o mesmo horário (sem mudança real)
         if (isSameDay(oldDate, newDate) && dragState.appointment.time === time) {

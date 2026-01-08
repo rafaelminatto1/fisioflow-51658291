@@ -326,8 +326,10 @@ export interface CalendarSettings {
 // Form data types
 export type AppointmentFormData = {
   patient_id: string;
-  appointment_date: string;
-  appointment_time: string;
+  appointment_date?: string;  // Legacy - for backward compatibility
+  appointment_time?: string; // Legacy - for backward compatibility
+  date?: string;           // New standardized column
+  start_time?: string;      // New standardized column
   duration: number;
   type: AppointmentType;
   status: AppointmentStatus;
