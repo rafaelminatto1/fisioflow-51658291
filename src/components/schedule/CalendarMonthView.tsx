@@ -95,18 +95,37 @@ const CalendarMonthView = memo(({
                                             >
                                                 <div
                                                     className={cn(
-                                                        "text-xs p-2 rounded-lg text-white cursor-pointer truncate shadow-md border-l-3 transition-all duration-300",
+                                                        "text-[10px] p-1.5 rounded-md text-white cursor-pointer shadow-sm border-l-[3px] transition-all duration-200 group/card bg-opacity-90 backdrop-blur-sm",
                                                         getStatusColor(apt.status, isOverCapacity(apt)),
-                                                        "hover:shadow-xl hover:scale-110 hover:-translate-x-0.5",
+                                                        "hover:shadow-md hover:scale-[1.03] hover:z-10 ring-1 ring-white/5",
                                                         isOverCapacity(apt) && "animate-pulse"
                                                     )}
                                                     onClick={(e) => e.stopPropagation()}
+                                                    title={`${apt.patientName} - ${apt.time}`}
                                                 >
-                                                    <div className="font-bold truncate drop-shadow-sm flex items-center gap-1">
-                                                        {isOverCapacity(apt) && <AlertTriangle className="h-3 w-3 flex-shrink-0" />}
-                                                        {apt.time}
+                                                    <div className="flex flex-col gap-0.5 min-w-0">
+                                                        <div className="flex items-center justify-between gap-1">
+                                                            <span className="font-bold truncate leading-tight flex-1">
+                                                                {isOverCapacity(apt) && <AlertTriangle className="h-2 w-2 inline mr-0.5 text-amber-300" />}
+                                                                {apt.patientName}
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="flex items-center justify-between opacity-90 text-[9px]">
+                                                            <span className="font-medium">{apt.time}</span>
+                                                            {/* Therapist indicator (dot or tiny name) */}
+                                                            {apt.therapistId && (
+                                                                <span className={cn(
+                                                                    "truncate max-w-[50px] text-[8px] uppercase tracking-wider font-semibold",
+                                                                    apt.therapistId?.includes('Ana') ? "text-yellow-200" :
+                                                                        apt.therapistId?.includes('Paulo') ? "text-cyan-200" :
+                                                                            apt.therapistId?.includes('Carla') ? "text-purple-200" : "text-white/80"
+                                                                )}>
+                                                                    {apt.therapistId.split(' ')[1] || apt.therapistId}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                    <div className="truncate opacity-95 text-xs font-medium">{apt.patientName}</div>
                                                 </div>
                                             </AppointmentQuickView>
                                         ))}

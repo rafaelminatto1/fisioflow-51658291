@@ -112,11 +112,19 @@ export default function Auth() {
     setLoading(true);
     setError('');
 
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/pages/Auth.tsx:114',message:'handleSignIn - Login attempt',data:{email,passwordLength:password.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+    // #endregion
+
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/pages/Auth.tsx:124',message:'handleSignIn - Supabase response',data:{error:error?.message,errorStatus:error?.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
 
       if (error) {
         setError(error.message);
@@ -125,10 +133,16 @@ export default function Auth() {
           title: "Login realizado com sucesso!",
           description: "Bem-vindo ao FisioFlow",
         });
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/pages/Auth.tsx:134',message:'handleSignIn - Success, redirecting',data:{success:true},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
         navigate('/');
       }
     } catch (err: unknown) {
       logger.error('Erro no login', err, 'Auth');
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/pages/Auth.tsx:140',message:'handleSignIn - Exception',data:{error:err instanceof Error ? err.message : String(err)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
       setError('Erro inesperado. Tente novamente.');
     } finally {
       setLoading(false);

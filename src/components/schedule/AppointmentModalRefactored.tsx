@@ -214,60 +214,98 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   };
 
   const handleSave = async (data: AppointmentFormData) => {
-    const maxCapacity = watchedDate && watchedTime ? getCapacityForTime(watchedDate.getDay(), watchedTime) : 1;
-    const currentCount = (conflictCheck?.conflictCount || 0);
+    // #region agent log
+    console.log('[DEBUG] handleSave called', { status: data.status, patient_id: data.patient_id, appointmentId: appointment?.id });
+    fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/components/schedule/AppointmentModalRefactored.tsx:216', message: 'handleSave called', data: { status: data.status, patient_id: data.patient_id, appointmentId: appointment?.id, hasAppointment: !!appointment }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'A' }) }).catch(() => { });
+    // #endregion
+    try {
+      const maxCapacity = watchedDate && watchedTime ? getCapacityForTime(watchedDate.getDay(), watchedTime) : 1;
+      const currentCount = (conflictCheck?.conflictCount || 0);
 
-    if (currentCount >= maxCapacity) {
-      setPendingFormData({
-        ...data,
-        appointment_date: format(new Date(), 'yyyy-MM-dd') // Fallback date if needed, or adjust as per logic
-      });
-      setCapacityDialogOpen(true);
-      return;
-    }
+      if (currentCount >= maxCapacity) {
+        setPendingFormData({
+          ...data,
+          appointment_date: format(new Date(), 'yyyy-MM-dd') // Fallback date if needed, or adjust as per logic
+        });
+        setCapacityDialogOpen(true);
+        return;
+      }
 
-    const appointmentData = data;
-    const endTime = new Date(new Date(`${appointmentData.appointment_date}T${appointmentData.appointment_time}`).getTime() + appointmentData.duration * 60000);
-    const endTimeString = format(endTime, 'HH:mm');
+      const appointmentData = data;
+      const endTime = new Date(new Date(`${appointmentData.appointment_date}T${appointmentData.appointment_time}`).getTime() + appointmentData.duration * 60000);
+      const endTimeString = format(endTime, 'HH:mm');
 
-    const formattedData = {
-      patient_id: appointmentData.patient_id,
-      therapist_id: appointmentData.therapist_id || '',
-      date: appointmentData.appointment_date,
-      start_time: appointmentData.appointment_time,
-      end_time: endTimeString,
-      duration: appointmentData.duration,
-      status: appointmentData.status as any, // Cast to avoid type mismatch with database enum if needed
-      payment_status: appointmentData.payment_status as any,
-      notes: appointmentData.notes || '',
-      room: appointmentData.room || '',
-      session_type: (appointmentData.type === 'Fisioterapia' ? 'individual' : 'group') as any, // Simple mapping, should be refined based on type
-    };
+      const formattedData = {
+        patient_id: appointmentData.patient_id,
+        therapist_id: appointmentData.therapist_id || '',
+        date: appointmentData.appointment_date,
+        start_time: appointmentData.appointment_time,
+        end_time: endTimeString,
+        duration: appointmentData.duration,
+        status: appointmentData.status as any, // Cast to avoid type mismatch with database enum if needed
+        payment_status: appointmentData.payment_status as any,
+        notes: appointmentData.notes || '',
+        room: appointmentData.room || '',
+        session_type: (appointmentData.type === 'Fisioterapia' ? 'individual' : 'group') as any, // Simple mapping, should be refined based on type
+      };
 
-    if (appointment?.id) {
-      updateAppointmentMutation({
-        appointmentId: appointment.id,
-        updates: formattedData
-      }, {
-        onSuccess: () => {
-          if (appointmentData.status === 'avaliacao') {
-            navigate(`/patients/${appointmentData.patient_id}/evaluations/new?appointmentId=${appointment.id}`);
-          }
-          onClose();
-        }
-      });
-    } else {
-      createAppointmentMutation(formattedData as any, { // Cast to avoid strict type check on mutation payload vs inferred
-        onSuccess: (newAppointment) => {
-          if (appointmentData.status === 'avaliacao') {
-            const createdId = (newAppointment as any)?.id;
-            if (createdId) {
-              navigate(`/patients/${appointmentData.patient_id}/evaluations/new?appointmentId=${createdId}`);
+      if (appointment?.id) {
+        updateAppointmentMutation({
+          appointmentId: appointment.id,
+          updates: formattedData
+        }, {
+          onSuccess: () => {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/components/schedule/AppointmentModalRefactored.tsx:252', message: 'updateAppointmentMutation onSuccess', data: { status: appointmentData.status, isAvaliacao: appointmentData.status === 'avaliacao', patient_id: appointmentData.patient_id, appointmentId: appointment.id }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'B' }) }).catch(() => { });
+            // #endregion
+            if (appointmentData.status === 'avaliacao') {
+              const navPath = `/medical-record?patientId=${appointmentData.patient_id}&action=new&appointmentId=${appointment.id}`;
+              // #region agent log
+              fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/components/schedule/AppointmentModalRefactored.tsx:258', message: 'Navigating to medical record', data: { navPath }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'C' }) }).catch(() => { });
+              // #endregion
+              navigate(navPath);
             }
+            onClose();
           }
-          onClose();
-        }
-      });
+        });
+      } else {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/components/schedule/AppointmentModalRefactored.tsx:270', message: 'Calling createAppointmentMutation', data: { status: appointmentData.status, patient_id: appointmentData.patient_id }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'D' }) }).catch(() => { });
+        // #endregion
+        createAppointmentMutation(formattedData as any, { // Cast to avoid strict type check on mutation payload vs inferred
+          onSuccess: (newAppointment) => {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/components/schedule/AppointmentModalRefactored.tsx:273', message: 'createAppointmentMutation onSuccess', data: { status: appointmentData.status, isAvaliacao: appointmentData.status === 'avaliacao', newAppointment }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'B' }) }).catch(() => { });
+            // #endregion
+            if (appointmentData.status === 'avaliacao') {
+              const createdId = (newAppointment as any)?.id;
+              // #region agent log
+              fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/components/schedule/AppointmentModalRefactored.tsx:280', message: 'Avaliacao status - createdId', data: { createdId, patient_id: appointmentData.patient_id }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'D' }) }).catch(() => { });
+              // #endregion
+              if (createdId) {
+                const navPath = `/medical-record?patientId=${appointmentData.patient_id}&action=new&appointmentId=${createdId}`;
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/components/schedule/AppointmentModalRefactored.tsx:285', message: 'Navigating to medical record (new)', data: { navPath }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'C' }) }).catch(() => { });
+                // #endregion
+                navigate(navPath);
+              }
+            }
+            onClose();
+          },
+          onError: (error) => {
+            // #region agent log
+            console.error('[DEBUG] createAppointmentMutation onError', error);
+            fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/components/schedule/AppointmentModalRefactored.tsx:298', message: 'createAppointmentMutation onError', data: { error: error?.message, errorName: error?.name, stack: error?.stack }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'E' }) }).catch(() => { });
+            // #endregion
+          }
+        });
+      }
+    } catch (error: any) {
+      // #region agent log
+      console.error('[DEBUG] handleSave error', error);
+      fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/components/schedule/AppointmentModalRefactored.tsx:306', message: 'handleSave catch error', data: { error: error?.message, errorName: error?.name, stack: error?.stack }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'F' }) }).catch(() => { });
+      // #endregion
+      throw error;
     }
   };
 
@@ -351,7 +389,18 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
             </div>
 
             <div className="flex-1 min-h-0 overflow-y-auto">
-              <form id="appointment-form" onSubmit={handleSubmit(handleSave as any)} className="px-4 sm:px-6 py-3">
+              <form id="appointment-form" onSubmit={handleSubmit((data) => {
+                // #region agent log
+                console.log('[DEBUG] Form onSubmit triggered');
+                fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/components/schedule/AppointmentModalRefactored.tsx:354', message: 'Form onSubmit triggered', data: { status: watch('status'), patient_id: watch('patient_id') }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'A' }) }).catch(() => { });
+                // #endregion
+                handleSave(data);
+              }, (errors) => {
+                // #region agent log
+                console.error('[DEBUG] Form validation errors', errors);
+                fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'src/components/schedule/AppointmentModalRefactored.tsx:359', message: 'Form validation errors', data: { errors }, timestamp: Date.now(), sessionId: 'debug-session', hypothesisId: 'G' }) }).catch(() => { });
+                // #endregion
+              })} className="px-4 sm:px-6 py-3">
                 <TabsContent value="info" className="mt-0 space-y-2.5 sm:space-y-3">
                   <PatientSelectionSection
                     patients={activePatients || []}

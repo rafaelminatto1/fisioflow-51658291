@@ -42,13 +42,73 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 
+import React, { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { MainLayout } from '@/components/layout/MainLayout';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+  FileText,
+  Plus,
+  Search,
+  Filter,
+  User,
+  Calendar,
+  Stethoscope,
+  ClipboardList,
+  Heart,
+  Activity,
+  Save,
+  Edit,
+  Eye,
+  Download,
+  X,
+  Watch,
+  Share2,
+  FileStack,
+  Microscope
+} from 'lucide-react';
+import { MedicalRequestsTab } from '@/components/patient/MedicalRequestsTab';
+import { PatientExamsTab } from '@/components/patient/PatientExamsTab';
+import { WearablesData } from '@/components/patient/WearablesData';
+import { NewPrescriptionModal } from '@/components/prescriptions/NewPrescriptionModal';
+import { usePrescriptions } from '@/hooks/usePrescriptions';
+import { generatePrescriptionPDF } from '@/utils/pdfGenerator';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { toast } from 'sonner';
+import { useSearchParams } from 'react-router-dom';
+
 const MedicalRecord = () => {
-  const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const initialPatientId = searchParams.get('patientId');
+  const initialAction = searchParams.get('action');
+
+  const [selectedPatient, setSelectedPatient] = useState<string | null>(initialPatientId);
   const [activeTab, setActiveTab] = useState('anamnesis');
-  const [isEditing, setIsEditing] = useState(false);
-  const [viewingRecord, setViewingRecord] = useState<typeof medicalRecords[0] | null>(null);
-  const [editingRecord, setEditingRecord] = useState<typeof medicalRecords[0] | null>(null);
+  const [isEditing, setIsEditing] = useState(initialAction === 'new');
+  const [viewingRecord, setViewingRecord] = useState<any | null>(null);
+  const [editingRecord, setEditingRecord] = useState<any | null>(null);
   const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (initialPatientId) {
+      setSelectedPatient(initialPatientId);
+    }
+    if (initialAction === 'new') {
+      setIsEditing(true);
+      // Determine tab based on some logic if needed, or default to anamnesis
+    }
+  }, [initialPatientId, initialAction]);
 
   // Load prescriptions for selected patient
   const { prescriptions, deletePrescription } = usePrescriptions(selectedPatient || undefined);
@@ -71,6 +131,85 @@ const MedicalRecord = () => {
     }
   });
 
+  // Load medical records for selected patient
+  const { data: medicalRecords = [], isLoading: recordsLoading } = useQuery({
+    queryKey: ['medical-records', selectedPatient],
+    queryFn: async () => {
+      if (!selectedPatient) return [];
+      const { data, error } = await supabase
+        .from('medical_records')
+        .select(`
+                  *,
+                  profiles:created_by (full_name)
+              `)
+        .eq('patient_id', selectedPatient)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return data.map(record => ({
+        id: record.id,
+        type: record.record_type || 'anamnesis',
+        title: record.title || 'Registro Sem Título',
+        content: record.chief_complaint || record.medical_history || record.diagnosis || '', // Fallback content content
+        date: new Date(record.created_at),
+        therapist: record.profiles?.full_name || 'Desconhecido',
+        raw: record // Keep raw data for editing
+      }));
+    },
+    enabled: !!selectedPatient
+  });
+
+  const saveRecordMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuario não autenticado');
+
+      const recordData = {
+        patient_id: selectedPatient,
+        created_by: user.id,
+        record_type: data.type,
+        title: data.title,
+        // Map form fields to DB columns
+        chief_complaint: data.chiefComplaint,
+        current_history: data.currentHistory,
+        vital_signs: data.vitalSigns,
+
+        // Evolution fields
+        treatment_plan: data.type === 'evolution' ? { evolution: data.content, next_goals: data.nextGoals } : null,
+
+        // Assessment fields
+        physical_exam: data.type === 'assessment' ? { exam: data.physicalExam } : null,
+        diagnosis: data.diagnosis,
+
+      };
+
+      if (editingRecord?.id && !isEditingNew) { // Updating existing
+        const { error } = await supabase
+          .from('medical_records')
+          .update(recordData)
+          .eq('id', editingRecord.id);
+        if (error) throw error;
+      } else { // Creating new
+        const { error } = await supabase
+          .from('medical_records')
+          .insert(recordData);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['medical-records', selectedPatient] });
+      toast.success('Registro salvo com sucesso!');
+      setIsEditing(false);
+      setEditingRecord(null);
+      setRecordForm(initialFormState);
+    },
+    onError: (error) => {
+      console.error(error);
+      toast.error('Erro ao salvar registro.');
+    }
+  });
+
   const recordTypes = [
     { value: 'anamnesis', label: 'Anamnese', icon: ClipboardList },
     { value: 'evolution', label: 'Evolução', icon: Activity },
@@ -81,34 +220,7 @@ const MedicalRecord = () => {
     { value: 'wearables', label: 'Wearables', icon: Watch },
   ];
 
-  const medicalRecords = [
-    {
-      id: '1',
-      type: 'anamnesis',
-      title: 'Avaliação Inicial - Dor Lombar',
-      content: 'Paciente relata dor lombar há 3 meses...',
-      date: new Date('2024-01-15'),
-      therapist: 'Dr. João Silva'
-    },
-    {
-      id: '2',
-      type: 'evolution',
-      title: 'Evolução - 5ª sessão',
-      content: 'Paciente apresenta melhora significativa...',
-      date: new Date('2024-01-22'),
-      therapist: 'Dr. João Silva'
-    },
-    {
-      id: '3',
-      type: 'assessment',
-      title: 'Avaliação Funcional',
-      content: 'Teste de flexibilidade e força...',
-      date: new Date('2024-01-29'),
-      therapist: 'Dr. João Silva'
-    }
-  ];
-
-  const [recordForm, setRecordForm] = useState({
+  const initialFormState = {
     type: 'anamnesis',
     title: '',
     content: '',
@@ -118,36 +230,73 @@ const MedicalRecord = () => {
     physicalExam: '',
     diagnosis: '',
     treatmentPlan: '',
+    nextGoals: '',
     vitalSigns: {
       bloodPressure: '',
       heartRate: '',
       temperature: '',
       respiratoryRate: ''
     }
-  });
+  };
+
+  const [recordForm, setRecordForm] = useState(initialFormState);
+
+  // Flag to know if we are editing an existing record or creating a new one while "isEditing" is true.
+  // We can infer this by checking if editingRecord is null. 
+  const isEditingNew = !editingRecord;
 
   const handleSaveRecord = () => {
-    console.log('Saving record:', recordForm);
-    setIsEditing(false);
-    setEditingRecord(null);
-  };
+    if (!selectedPatient) {
+      toast.error('Selecione um paciente.');
+      return;
+    }
+    // Set default title if empty
+    let titleToSave = recordForm.title;
+    if (!titleToSave) {
+      const typeLabel = recordTypes.find(t => t.value === recordForm.type)?.label;
+      titleToSave = `${typeLabel} - ${format(new Date(), 'dd/MM/yyyy')}`;
+    }
 
-  const handleViewRecord = (record: typeof medicalRecords[0]) => {
-    setViewingRecord(record);
-  };
-
-  const handleEditRecord = (record: typeof medicalRecords[0]) => {
-    setEditingRecord(record);
-    setIsEditing(true);
-    setRecordForm({
+    saveRecordMutation.mutate({
       ...recordForm,
-      type: record.type,
-      title: record.title,
-      content: record.content,
+      title: titleToSave
     });
   };
 
-  const handleExportPDF = (record: typeof medicalRecords[0]) => {
+  const handleViewRecord = (record: any) => {
+    setViewingRecord(record);
+  };
+
+  const handleEditRecord = (record: any) => {
+    setEditingRecord(record);
+    setIsEditing(true);
+
+    // Populate form
+    const raw = record.raw;
+    setRecordForm({
+      ...initialFormState,
+      type: raw.record_type || 'anamnesis',
+      title: raw.title || record.title,
+      chiefComplaint: raw.chief_complaint || '',
+      currentHistory: raw.current_history || '',
+      diagnosis: raw.diagnosis || '',
+      vitalSigns: raw.vital_signs || initialFormState.vitalSigns,
+
+      // Map specific content back
+      content: raw.treatment_plan?.evolution || '',
+      nextGoals: raw.treatment_plan?.next_goals || '',
+      physicalExam: raw.physical_exam?.exam || '',
+    });
+    setActiveTab(raw.record_type || 'anamnesis');
+  };
+
+  const handleNewRecord = () => {
+    setEditingRecord(null);
+    setRecordForm(initialFormState);
+    setIsEditing(true);
+  }
+
+  const handleExportPDF = (record: any) => {
     import('jspdf').then(({ jsPDF }) => {
       const doc = new jsPDF();
       doc.setFontSize(18);
@@ -157,7 +306,7 @@ const MedicalRecord = () => {
       doc.text(`Data: ${format(record.date, 'dd/MM/yyyy', { locale: ptBR })}`, 20, 45);
       doc.text(`Profissional: ${record.therapist}`, 20, 55);
       doc.setFontSize(10);
-      const contentLines = doc.splitTextToSize(record.content, 170);
+      const contentLines = doc.splitTextToSize(record.content || 'Sem conteúdo', 170);
       doc.text(contentLines, 20, 70);
       doc.save(`registro-${record.id}.pdf`);
       toast.success('PDF exportado com sucesso!');
@@ -201,7 +350,7 @@ const MedicalRecord = () => {
             </Button>
             <Button
               className="bg-gradient-primary hover:bg-gradient-primary/90 shadow-medical"
-              onClick={() => setIsEditing(true)}
+              onClick={handleNewRecord}
             >
               <Plus className="w-4 h-4 mr-2" />
               Novo Registro
@@ -227,7 +376,7 @@ const MedicalRecord = () => {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-[600px] overflow-y-auto">
                 {patients.map((patient) => (
                   <div
                     key={patient.id}
@@ -235,10 +384,13 @@ const MedicalRecord = () => {
                       ? 'bg-primary/10 border-primary/20'
                       : 'hover:bg-muted/50'
                       }`}
-                    onClick={() => setSelectedPatient(patient.id)}
+                    onClick={() => {
+                      setSelectedPatient(patient.id);
+                      setIsEditing(false); // Close editor when switching patient
+                    }}
                   >
                     <p className="font-medium">{patient.name}</p>
-                    <p className="text-sm text-muted-foreground">{patient.condition}</p>
+                    <p className="text-sm text-muted-foreground truncate">{patient.condition}</p>
                   </div>
                 ))}
               </div>
@@ -274,20 +426,31 @@ const MedicalRecord = () => {
                 </Card>
 
                 {isEditing ? (
-                  /* New Record Form */
+                  /* New/Edit Record Form */
                   <Card>
                     <CardHeader>
-                      <CardTitle>Novo Registro Médico</CardTitle>
+                      <CardTitle>{editingRecord ? 'Editar Registro' : 'Novo Registro Médico'}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                        <TabsList className="grid w-full grid-cols-5">
+                      <div className="mb-4">
+                        <Label>Título do Registro</Label>
+                        <Input
+                          placeholder="Ex: Evolução Semanal"
+                          value={recordForm.title}
+                          onChange={(e) => setRecordForm({ ...recordForm, title: e.target.value })}
+                        />
+                      </div>
+                      <Tabs value={activeTab} onValueChange={(val) => {
+                        setActiveTab(val);
+                        setRecordForm({ ...recordForm, type: val });
+                      }} className="space-y-6">
+                        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-7 h-auto">
                           {recordTypes.map((type) => {
                             const IconComponent = type.icon;
                             return (
-                              <TabsTrigger key={type.value} value={type.value} className="flex items-center gap-1">
+                              <TabsTrigger key={type.value} value={type.value} className="flex flex-col items-center gap-1 py-2 h-auto">
                                 <IconComponent className="w-4 h-4" />
-                                <span className="hidden sm:inline">{type.label}</span>
+                                <span className="hidden sm:inline text-xs">{type.label}</span>
                               </TabsTrigger>
                             );
                           })}
@@ -383,6 +546,8 @@ const MedicalRecord = () => {
                               <Label>Próximos Objetivos</Label>
                               <Textarea
                                 placeholder="Objetivos para as próximas sessões..."
+                                value={recordForm.nextGoals}
+                                onChange={(e) => setRecordForm({ ...recordForm, nextGoals: e.target.value })}
                                 rows={3}
                               />
                             </div>
@@ -427,95 +592,8 @@ const MedicalRecord = () => {
                         </TabsContent>
 
                         <TabsContent value="prescription" className="space-y-6">
-                          <div className="flex justify-between items-center">
-                            <h3 className="text-lg font-semibold">Prescrições do Paciente</h3>
-                            <Button onClick={() => setIsPrescriptionModalOpen(true)}>
-                              <Plus className="w-4 h-4 mr-2" />
-                              Nova Prescrição
-                            </Button>
-                          </div>
-
-                          {prescriptions.length === 0 ? (
-                            <div className="text-center py-12 bg-muted/30 rounded-lg">
-                              <FileText className="w-16 h-16 mx-auto text-muted-foreground mb-4 opacity-50" />
-                              <h3 className="text-lg font-semibold mb-2">Nenhuma prescrição encontrada</h3>
-                              <p className="text-muted-foreground">
-                                Crie a primeira prescrição de exercícios para este paciente.
-                              </p>
-                            </div>
-                          ) : (
-                            <div className="grid gap-4">
-                              {prescriptions.map((prescription) => (
-                                <Card key={prescription.id} className="hover:shadow-md transition-shadow">
-                                  <CardHeader className="flex flex-row items-start justify-between pb-2">
-                                    <div>
-                                      <CardTitle className="text-base font-semibold">
-                                        {prescription.title}
-                                      </CardTitle>
-                                      <CardDescription>
-                                        Criado em {format(new Date(prescription.created_at), 'dd/MM/yyyy')} •
-                                        Válido até {prescription.valid_until && format(new Date(prescription.valid_until), 'dd/MM/yyyy')}
-                                      </CardDescription>
-                                    </div>
-                                    <Badge variant={prescription.status === 'ativo' ? 'default' : 'secondary'}>
-                                      {prescription.status}
-                                    </Badge>
-                                  </CardHeader>
-                                  <CardContent>
-                                    <div className="space-y-2">
-                                      <div className="flex gap-2 text-sm text-muted-foreground">
-                                        <Badge variant="outline">{prescription.exercises?.length || 0} exercícios</Badge>
-                                        <Badge variant="outline">{prescription.view_count} visualizações</Badge>
-                                      </div>
-                                      <div className="flex gap-2 mt-4">
-                                        <Button variant="outline" size="sm" onClick={() => window.open(`/prescription/${prescription.qr_code}`, '_blank')}>
-                                          <Eye className="w-4 h-4 mr-2" />
-                                          Visualizar
-                                        </Button>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() => generatePrescriptionPDF(prescription)}
-                                        >
-                                          <Download className="w-4 h-4 mr-2" />
-                                          PDF
-                                        </Button>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() => {
-                                            const url = `${window.location.origin}/prescription/${prescription.qr_code}`;
-                                            if (navigator.share) {
-                                              navigator.share({
-                                                title: prescription.title,
-                                                text: 'Acesse sua prescrição de exercícios:',
-                                                url: url
-                                              }).catch(console.error);
-                                            } else {
-                                              navigator.clipboard.writeText(url);
-                                              toast.success('Link copiado!');
-                                            }
-                                          }}
-                                        >
-                                          <Share2 className="w-4 h-4 mr-2" />
-                                          Compartilhar
-                                        </Button>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          className="text-destructive hover:text-destructive"
-                                          onClick={() => deletePrescription(prescription.id)}
-                                        >
-                                          <X className="w-4 h-4 mr-2" />
-                                          Excluir
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  </CardContent>
-                                </Card>
-                              ))}
-                            </div>
-                          )}
+                          {/* Simplified prescription view for editing context if needed, or keeping standalone */}
+                          <div className="text-muted-foreground text-sm">Gerencie prescrições na aba principal ou use o botão Nova Prescrição.</div>
                         </TabsContent>
 
                         <TabsContent value="wearables" className="space-y-6">
@@ -537,9 +615,10 @@ const MedicalRecord = () => {
                         <Button
                           onClick={handleSaveRecord}
                           className="bg-primary hover:bg-primary/90"
+                          disabled={saveRecordMutation.isPending}
                         >
-                          <Save className="w-4 h-4 mr-2" />
-                          Salvar Registro
+                          {saveRecordMutation.isPending ? 'Salvando...' : 'Salvar Registro'}
+                          <Save className="w-4 h-4 ml-2" />
                         </Button>
                       </div>
                     </CardContent>
@@ -548,53 +627,59 @@ const MedicalRecord = () => {
                   /* Medical Records List */
                   <Card>
                     <CardHeader>
-                      <CardTitle>Registros Médicos</CardTitle>
+                      <CardTitle>Histórico Clínico</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        {medicalRecords.map((record) => (
-                          <div
-                            key={record.id}
-                            className="p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                                  {getRecordIcon(record.type)}
-                                </div>
-                                <div>
-                                  <div className="flex items-center gap-2">
-                                    <h3 className="font-medium">{record.title}</h3>
-                                    <Badge variant="outline" className="text-xs">
-                                      {getRecordTypeLabel(record.type)}
-                                    </Badge>
+                      {recordsLoading ? (
+                        <div className="text-center py-4">Carregando registros...</div>
+                      ) : medicalRecords.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">Nenhum registro encontrado.</div>
+                      ) : (
+                        <div className="space-y-4">
+                          {medicalRecords.map((record: any) => (
+                            <div
+                              key={record.id}
+                              className="p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                                    {getRecordIcon(record.type)}
                                   </div>
-                                  <p className="text-sm text-muted-foreground">
-                                    {record.therapist} • {format(record.date, 'dd/MM/yyyy', { locale: ptBR })}
-                                  </p>
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <h3 className="font-medium">{record.title}</h3>
+                                      <Badge variant="outline" className="text-xs">
+                                        {getRecordTypeLabel(record.type)}
+                                      </Badge>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                      {record.therapist} • {format(record.date, 'dd/MM/yyyy', { locale: ptBR })}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button variant="outline" size="sm" onClick={() => handleViewRecord(record)}>
+                                    <Eye className="w-4 h-4 mr-2" />
+                                    Ver
+                                  </Button>
+                                  <Button variant="outline" size="sm" onClick={() => handleEditRecord(record)}>
+                                    <Edit className="w-4 h-4 mr-2" />
+                                    Editar
+                                  </Button>
+                                  <Button variant="outline" size="sm" onClick={() => handleExportPDF(record)}>
+                                    <Download className="w-4 h-4 mr-2" />
+                                    PDF
+                                  </Button>
                                 </div>
                               </div>
-                              <div className="flex gap-2">
-                                <Button variant="outline" size="sm" onClick={() => handleViewRecord(record)}>
-                                  <Eye className="w-4 h-4 mr-2" />
-                                  Ver
-                                </Button>
-                                <Button variant="outline" size="sm" onClick={() => handleEditRecord(record)}>
-                                  <Edit className="w-4 h-4 mr-2" />
-                                  Editar
-                                </Button>
-                                <Button variant="outline" size="sm" onClick={() => handleExportPDF(record)}>
-                                  <Download className="w-4 h-4 mr-2" />
-                                  PDF
-                                </Button>
-                              </div>
+                              <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                                {record.content}
+                              </p>
                             </div>
-                            <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                              {record.content}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 )}
@@ -638,6 +723,12 @@ const MedicalRecord = () => {
           <div className="mt-4 p-4 bg-muted/50 rounded-lg">
             <p className="text-sm whitespace-pre-wrap">{viewingRecord?.content}</p>
           </div>
+          {viewingRecord?.raw?.treatment_plan?.next_goals && (
+            <div className="mt-2 text-sm">
+              <strong>Próximos Objetivos:</strong>
+              <p>{viewingRecord.raw.treatment_plan.next_goals}</p>
+            </div>
+          )}
           <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" onClick={() => viewingRecord && handleExportPDF(viewingRecord)}>
               <Download className="w-4 h-4 mr-2" />
