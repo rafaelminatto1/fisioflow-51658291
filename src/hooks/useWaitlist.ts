@@ -78,7 +78,7 @@ export function useWaitlist(filters?: {
         .from('waitlist')
         .select(`
           *,
-          patient:patients(id, name, phone, email)
+          patient:patients(id, name:full_name, phone, email)
         `)
         .order('created_at', { ascending: true });
 
@@ -177,7 +177,7 @@ export function useAddToWaitlist() {
         })
         .select(`
           *,
-          patient:patients(id, name, phone)
+          patient:patients(id, name:full_name, phone)
         `)
         .single();
 
@@ -230,7 +230,7 @@ export function useOfferSlot() {
       // Buscar entrada da lista
       const { data: entry, error: fetchError } = await supabase
         .from('waitlist')
-        .select('*, patient:patients(id, name, phone)')
+        .select('*, patient:patients(id, name:full_name, phone)')
         .eq('id', waitlist_id)
         .eq('status', 'waiting')
         .single();
@@ -420,7 +420,7 @@ export function useWaitlistOffers(patientId?: string) {
           waitlist:waitlist(
             id,
             patient_id,
-            patient:patients(id, name, phone)
+            patient:patients(id, name:full_name, phone)
           )
         `)
         .order('created_at', { ascending: false });
