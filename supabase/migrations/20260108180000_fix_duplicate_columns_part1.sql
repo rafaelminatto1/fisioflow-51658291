@@ -145,23 +145,14 @@ SELECT
     a.reminder_sent,
     a.created_at,
     a.updated_at,
-    -- Check if created_by exists
-    CASE 
-        WHEN EXISTS (SELECT 1 FROM information_schema.columns 
-                    WHERE table_name = 'appointments' AND column_name = 'created_by')
-        THEN a.created_by::uuid
-        ELSE NULL::uuid
-    END as created_by,
+    -- Removed dynamic check for created_by as it fails SQL parsing if column missing
+    NULL::uuid as created_by,
     p.name as patient_name,
     p.phone as patient_phone,
     p.email as patient_email,
     pr.full_name as therapist_name,
-    CASE 
-        WHEN EXISTS (SELECT 1 FROM information_schema.columns 
-                    WHERE table_name = 'profiles' AND column_name = 'crefito')
-        THEN pr.crefito
-        ELSE NULL
-    END as therapist_crefito,
+    -- Removed dynamic check for crefito
+    NULL as therapist_crefito,
     CONCAT(COALESCE(a.date::text, ''), ' ', COALESCE(a.start_time::text, '')) as full_datetime
 FROM public.appointments a
 LEFT JOIN public.patients p ON a.patient_id = p.id
@@ -186,4 +177,7 @@ LEFT JOIN profiles p ON p.id = a.therapist_id
 WHERE is_patient_owner(a.patient_id);
 
 -- Log completion
-RAISE NOTICE 'Migration Part 1 completed: Data migrated and views updated';
+DO $$
+BEGIN
+    RAISE NOTICE 'Migration Part 1 completed: Data migrated and views updated';
+END $$;
