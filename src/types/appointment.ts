@@ -44,11 +44,14 @@ export type AppointmentStatus =
   | 'concluido'
   | 'cancelado'
   | 'falta'
+  | 'faltou'
   | 'avaliacao'
   | 'aguardando_confirmacao'
   | 'em_espera'
   | 'atrasado'
-  | 'remarcado';
+  | 'remarcado'
+  | 'reagendado'
+  | 'atendido';
 
 export interface EnhancedAppointment extends AppointmentBase {
   // Therapist assignment
