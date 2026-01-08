@@ -57,6 +57,26 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
     'Outro'
   ];
 
+  const presets = [
+    { label: 'Fisioterapia Ortopédica', type: 'Amplitude de Movimento', name: 'Flexão' },
+    { label: 'Esportiva (Hop Test)', type: 'Teste Funcional', name: 'Hop Test' },
+    { label: 'Esportiva (Y Test)', type: 'Teste Funcional', name: 'Y Test' },
+    { label: 'Dor (EVA)', type: 'Dor (EVA)', name: 'EVA' },
+  ];
+
+  const handleQuickAdd = (preset: { type: string, name: string }) => {
+    setMeasurements([
+      ...measurements,
+      {
+        measurement_type: preset.type,
+        measurement_name: preset.name,
+        value: '',
+        unit: '',
+        notes: ''
+      }
+    ]);
+  };
+
   const handleAddMeasurement = () => {
     setMeasurements([
       ...measurements,
@@ -130,6 +150,22 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Presets */}
+        <div className="flex flex-wrap gap-2 mb-4 p-3 bg-muted/20 rounded-lg">
+          <span className="text-sm font-medium mr-2 flex items-center">Modelos Rápidos:</span>
+          {presets.map((preset) => (
+            <Badge
+              key={preset.label}
+              variant="outline"
+              className="cursor-pointer hover:bg-primary/10 transition-colors"
+              onClick={() => handleQuickAdd(preset)}
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              {preset.label}
+            </Badge>
+          ))}
+        </div>
+
         {/* Quick fill buttons for required measurements */}
         {requiredMeasurements.length > 0 && measurements.length > 0 && (
           <div className="space-y-2">
@@ -224,8 +260,8 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
           </div>
         ))}
 
-        <Button 
-          onClick={handleSave} 
+        <Button
+          onClick={handleSave}
           className="w-full"
           disabled={createMeasurement.isPending || measurements.every(m => !m.measurement_name || !m.value)}
         >
