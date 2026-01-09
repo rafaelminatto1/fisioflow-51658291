@@ -16,11 +16,21 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Use UTC for consistent calculations, then apply offset for Brasilia (UTC-3)
+    // Note: This is a simplified handling. For strict correctness consider date-fns-tz or similar.
     const now = new Date();
-    const in24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    const in2Hours = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+    // Brasilia is UTC-3. We want to find appointments for 'tomorrow' in Brasilia time.
+
+    // Get current time in Brasilia
+    const brasiliaOffset = -3 * 60 * 60 * 1000;
+    const nowBrasilia = new Date(now.getTime() + brasiliaOffset);
+
+    // Prepare 24h target (Tomorrow in Brasilia)
+    const tomorrowBrasilia = new Date(nowBrasilia.getTime() + 24 * 60 * 60 * 1000);
+    const tomorrowDateString = tomorrowBrasilia.toISOString().split('T')[0];
 
     // Buscar agendamentos que precisam de lembrete de 24h
+    // We compare against the date string column 'appointment_date'
     const { data: appointments24h } = await supabase
       .from('appointments')
       .select(`
@@ -28,10 +38,10 @@ serve(async (req) => {
         patients(id, name, phone)
       `)
       .is('reminder_sent_24h', null)
-      .gte('appointment_date', in24Hours.toISOString().split('T')[0])
-      .lte('appointment_date', in24Hours.toISOString().split('T')[0]);
+      .eq('appointment_date', tomorrowDateString); // Exact match for the date string
 
     // Buscar agendamentos que precisam de lembrete de 2h
+    // Here logic needs to be precise with time
     const { data: appointments2h } = await supabase
       .from('appointments')
       .select(`
@@ -39,8 +49,7 @@ serve(async (req) => {
         patients(id, name, phone)
       `)
       .is('reminder_sent_2h', null)
-      .gte('appointment_date', now.toISOString().split('T')[0])
-      .lte('appointment_date', now.toISOString().split('T')[0]);
+      .eq('appointment_date', nowBrasilia.toISOString().split('T')[0]); // Must be today
 
     const results = {
       reminders_24h: 0,
@@ -48,9 +57,22 @@ serve(async (req) => {
       errors: [] as string[],
     };
 
-    // Enviar lembretes de 24h
+    // Helper for batched parallel execution
+    const processInBatches = async <T>(
+      items: T[],
+      batchSize: number,
+      processFn: (item: T) => Promise<void>
+    ) => {
+      for (let i = 0; i < items.length; i += batchSize) {
+        const batch = items.slice(i, i + batchSize);
+        await Promise.all(batch.map(processFn));
+      }
+    };
+
+    // Enviar lembretes de 24h (parallel, batched)
     if (appointments24h && appointments24h.length > 0) {
-      for (const apt of appointments24h) {
+      console.log(`Processing ${appointments24h.length} 24h reminders...`);
+      await processInBatches(appointments24h, 5, async (apt) => {
         try {
           const message = `🏥 *Lembrete de Consulta - Activity Fisioterapia*
 
@@ -66,24 +88,17 @@ Você tem uma consulta agendada para amanhã:
 Até breve! 💙`;
 
           await supabase.functions.invoke('send-whatsapp', {
-            body: {
-              to: apt.patients.phone,
-              message
-            }
+            body: { to: apt.patients.phone, message }
           });
 
-          // Registrar envio
-          await supabase
-            .from('whatsapp_messages')
-            .insert({
-              appointment_id: apt.id,
-              patient_id: apt.patient_id,
-              message_type: 'reminder_24h',
-              message_content: message,
-              status: 'sent'
-            });
+          await supabase.from('whatsapp_messages').insert({
+            appointment_id: apt.id,
+            patient_id: apt.patient_id,
+            message_type: 'reminder_24h',
+            message_content: message,
+            status: 'sent'
+          });
 
-          // Marcar lembrete como enviado
           await supabase
             .from('appointments')
             .update({ reminder_sent_24h: now.toISOString() })
@@ -91,14 +106,17 @@ Até breve! 💙`;
 
           results.reminders_24h++;
         } catch (error) {
-          results.errors.push(`Erro ao enviar lembrete 24h para ${apt.id}: ${error.message}`);
+          const errMsg = error instanceof Error ? error.message : String(error);
+          console.error(`Error sending 24h reminder for ${apt.id}:`, errMsg);
+          results.errors.push(`24h reminder ${apt.id}: ${errMsg}`);
         }
-      }
+      });
     }
 
-    // Enviar lembretes de 2h
+    // Enviar lembretes de 2h (parallel, batched)
     if (appointments2h && appointments2h.length > 0) {
-      for (const apt of appointments2h) {
+      console.log(`Processing ${appointments2h.length} 2h reminders...`);
+      await processInBatches(appointments2h, 5, async (apt) => {
         try {
           const aptTime = apt.appointment_time.split(':');
           const aptDateTime = new Date(apt.appointment_date);
@@ -107,7 +125,6 @@ Até breve! 💙`;
           const timeDiff = aptDateTime.getTime() - now.getTime();
           const hoursDiff = timeDiff / (1000 * 60 * 60);
 
-          // Só enviar se faltarem entre 1.5 e 2.5 horas
           if (hoursDiff >= 1.5 && hoursDiff <= 2.5) {
             const message = `⏰ *Lembrete Urgente - Activity Fisioterapia*
 
@@ -121,24 +138,17 @@ Sua consulta é daqui a 2 horas:
 Nos vemos em breve! 💙`;
 
             await supabase.functions.invoke('send-whatsapp', {
-              body: {
-                to: apt.patients.phone,
-                message
-              }
+              body: { to: apt.patients.phone, message }
             });
 
-            // Registrar envio
-            await supabase
-              .from('whatsapp_messages')
-              .insert({
-                appointment_id: apt.id,
-                patient_id: apt.patient_id,
-                message_type: 'reminder_2h',
-                message_content: message,
-                status: 'sent'
-              });
+            await supabase.from('whatsapp_messages').insert({
+              appointment_id: apt.id,
+              patient_id: apt.patient_id,
+              message_type: 'reminder_2h',
+              message_content: message,
+              status: 'sent'
+            });
 
-            // Marcar lembrete como enviado
             await supabase
               .from('appointments')
               .update({ reminder_sent_2h: now.toISOString() })
@@ -147,29 +157,24 @@ Nos vemos em breve! 💙`;
             results.reminders_2h++;
           }
         } catch (error) {
-          results.errors.push(`Erro ao enviar lembrete 2h para ${apt.id}: ${error.message}`);
+          const errMsg = error instanceof Error ? error.message : String(error);
+          console.error(`Error sending 2h reminder for ${apt.id}:`, errMsg);
+          results.errors.push(`2h reminder ${apt.id}: ${errMsg}`);
         }
-      }
+      });
     }
 
-    console.log('Lembretes enviados:', results);
+    console.log('Reminders processed:', results);
 
     return new Response(
       JSON.stringify(results),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Erro ao processar lembretes:', error);
+    console.error('Error processing reminders:', error);
     return new Response(
-      JSON.stringify({ 
-        error: error instanceof Error ? error.message : "Erro desconhecido" 
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
