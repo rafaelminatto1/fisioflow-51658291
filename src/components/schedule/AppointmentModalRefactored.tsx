@@ -373,7 +373,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-[95vw] sm:max-w-[600px] h-[90vh] flex flex-col p-0">
+      <DialogContent className="max-w-[95vw] sm:max-w-[600px] max-h-[95vh] h-auto flex flex-col p-0">
         <DialogHeader className="px-4 sm:px-6 py-4 border-b shrink-0">
           <DialogTitle className="text-xl font-semibold">
             {currentMode === 'view' ? 'Detalhes do Agendamento' : currentMode === 'edit' ? 'Editar Agendamento' : 'Novo Agendamento'}
