@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -23,20 +23,14 @@ import { usePatientsQuery, useDeletePatient, PatientDB } from '@/hooks/usePatien
 import {
   Plus,
   Search,
-  Eye,
-  Edit,
-  Phone,
-  Mail,
   Users,
   Filter,
   Download,
-  Trash2,
-  TrendingUp,
   ChevronRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { LazyComponent } from '@/components/common/LazyComponent';
 
 const Patients = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -49,7 +43,6 @@ const Patients = () => {
   const { data: patients = [], isLoading: loading } = usePatientsQuery();
   const deletePatient = useDeletePatient();
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   // Get unique conditions and statuses for filters
   const uniqueConditions = useMemo(() => {
@@ -144,18 +137,6 @@ const Patients = () => {
       </MainLayout>
     );
   }
-
-
-
-  const getStatusColor = (status: string) => {
-    const colors = {
-      'Inicial': 'bg-blue-100 text-blue-800',
-      'Em Tratamento': 'bg-green-100 text-green-800',
-      'Recuperação': 'bg-yellow-100 text-yellow-800',
-      'Concluído': 'bg-gray-100 text-gray-800'
-    };
-    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
-  };
 
   return (
     <MainLayout>
@@ -357,42 +338,47 @@ const Patients = () => {
         ) : (
           <div className="grid gap-4 animate-fade-in">
             {filteredPatients.map((patient, index) => (
-              <Card
+              <LazyComponent
                 key={patient.id}
-                className="group flex items-center gap-4 p-3 rounded-xl bg-card hover:bg-slate-50 dark:hover:bg-slate-800/50 active:bg-slate-100 dark:active:bg-slate-800 transition-colors cursor-pointer border border-transparent hover:border-border dark:hover:border-slate-700"
-                style={{ animationDelay: `${index * 50}ms` }}
-                onClick={() => setViewingPatient(patient.id)}
+                placeholder={<div className="h-[74px] w-full bg-muted/50 rounded-xl animate-pulse" />}
+                rootMargin="200px" // Load items 200px before they appear
               >
-                <div className="relative shrink-0">
-                  <Avatar className="h-12 w-12 ring-2 ring-border dark:ring-slate-700 shrink-0">
-                    <AvatarFallback className={cn(
-                      "text-sm font-bold",
-                      patient.status === 'Em Tratamento' ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400" :
-                        patient.status === 'Inicial' ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" :
-                          "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-                    )}>
-                      {patient.name ? patient.name.split(' ').map(n => n[0]).join('').substring(0, 2) : 'P'}
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
-                <div className="flex flex-col flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{patient.name || 'Paciente sem nome'}</p>
-                    <Badge className={cn(
-                      "inline-flex items-center rounded-full border border-transparent text-[10px] font-semibold px-2 py-0.5",
-                      patient.status === 'Em Tratamento' ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" :
-                        patient.status === 'Inicial' ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400" :
-                          "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-                    )}>
-                      {patient.status || 'Inicial'}
-                    </Badge>
+                <Card
+                  className="group flex items-center gap-4 p-3 rounded-xl bg-card hover:bg-slate-50 dark:hover:bg-slate-800/50 active:bg-slate-100 dark:active:bg-slate-800 transition-colors cursor-pointer border border-transparent hover:border-border dark:hover:border-slate-700"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                  onClick={() => setViewingPatient(patient.id)}
+                >
+                  <div className="relative shrink-0">
+                    <Avatar className="h-12 w-12 ring-2 ring-border dark:ring-slate-700 shrink-0">
+                      <AvatarFallback className={cn(
+                        "text-sm font-bold",
+                        patient.status === 'Em Tratamento' ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400" :
+                          patient.status === 'Inicial' ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" :
+                            "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                      )}>
+                        {patient.name ? patient.name.split(' ').map(n => n[0]).join('').substring(0, 2) : 'P'}
+                      </AvatarFallback>
+                    </Avatar>
                   </div>
-                  <p className="text-xs text-muted-foreground truncate mt-0.5">{patient.phone || patient.email || `${getPatientAge(patient.birth_date)} anos`}</p>
-                </div>
-                <div className="shrink-0 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
-                  <ChevronRight className="w-5 h-5" />
-                </div>
-              </Card>
+                  <div className="flex flex-col flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{patient.name || 'Paciente sem nome'}</p>
+                      <Badge className={cn(
+                        "inline-flex items-center rounded-full border border-transparent text-[10px] font-semibold px-2 py-0.5",
+                        patient.status === 'Em Tratamento' ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" :
+                          patient.status === 'Inicial' ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400" :
+                            "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                      )}>
+                        {patient.status || 'Inicial'}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">{patient.phone || patient.email || `${getPatientAge(patient.birth_date)} anos`}</p>
+                  </div>
+                  <div className="shrink-0 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
+                    <ChevronRight className="w-5 h-5" />
+                  </div>
+                </Card>
+              </LazyComponent>
             ))}
           </div>
         )}
