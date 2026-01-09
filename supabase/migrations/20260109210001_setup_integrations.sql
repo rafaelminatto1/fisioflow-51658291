@@ -5,22 +5,28 @@ create extension if not exists pg_cron with schema extensions;
 create extension if not exists pg_net with schema extensions;
 
 -- Ensure supabase_realtime publication exists and includes appointments
--- Note: 'supabase_realtime' publication is usually created by default.
--- We safely add tables to it.
-
+-- We use a DO block to safely handle "already exists" errors for publication membership
 do $$
 begin
+  -- Create publication if it doesn't exist
   if not exists (select 1 from pg_publication where pubname = 'supabase_realtime') then
     create publication supabase_realtime;
   end if;
+
+  -- Add appointments to publication if not already present
+  if not exists (
+    select 1 from pg_publication_tables 
+    where pubname = 'supabase_realtime' and tablename = 'appointments'
+  ) then
+    alter publication supabase_realtime add table public.appointments;
+  end if;
+
+  -- Add notifications to publication if not already present
+  if not exists (
+    select 1 from pg_publication_tables 
+    where pubname = 'supabase_realtime' and tablename = 'notifications'
+  ) then
+    alter publication supabase_realtime add table public.notifications;
+  end if;
 end;
 $$;
-
--- Add appointments to publication if not already present
-alter publication supabase_realtime add table public.appointments;
-
--- Add notifications to publication if not already present
-alter publication supabase_realtime add table public.notifications;
-
--- Example: Create a sample cron job to cleanup old logs (inactive by default or safe idempotent)
--- We won't actually schedule it to avoid side effects, but the extension is now ready.

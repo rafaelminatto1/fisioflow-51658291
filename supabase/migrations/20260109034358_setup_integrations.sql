@@ -1,0 +1,2 @@
+-- Migration captured from remote history to fix sync
+-- Original: setup_integrations (20260109034358)
