@@ -141,8 +141,6 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
 
   // Expanded variant
   return (
-  // Expanded variant
-  return (
     <div
       onClick={onClick}
       className={cn(
