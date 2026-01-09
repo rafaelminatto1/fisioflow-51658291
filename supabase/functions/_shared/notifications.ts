@@ -6,7 +6,7 @@ import { Config, isFeatureEnabled } from './config.ts';
 import { createSupabaseServiceClient } from './api-helpers.ts';
 
 export interface NotificationPayload {
-  type: 'appointment_reminder' | 'appointment_confirmation' | 'waitlist_offer' | 'package_expiring' | 'generic';
+  type: 'appointment_reminder' | 'appointment_confirmation' | 'waitlist_offer' | 'package_expiring' | 'generic' | 'nps_survey';
   recipientId: string;
   recipientPhone?: string;
   recipientEmail?: string;
@@ -147,6 +147,7 @@ function getEmojiForType(type: NotificationPayload['type']): string {
     appointment_confirmation: '✅',
     waitlist_offer: '🎉',
     package_expiring: '⚠️',
+    nps_survey: '⭐',
     generic: '📢',
   };
   return emojis[type] || '📢';
@@ -201,6 +202,12 @@ export const MessageTemplates = {
     type: 'package_expiring' as const,
     title: 'Pacote Expirando',
     message: `Olá ${patientName}!\n\nSeu pacote de sessões está expirando em ${expiryDate}.\n\nVocê ainda tem ${remainingSessions} sessão(ões) disponível(is).\n\nAgende agora para não perder! 📅`,
+  }),
+
+  npsSurvey: (patientName: string, surveyLink: string) => ({
+    type: 'nps_survey' as const,
+    title: 'Pesquisa de Satisfação',
+    message: `Olá ${patientName}!\n\nSua opinião é muito importante para nós. Poderia dedicar um momento para avaliar seu atendimento?\n\n${surveyLink}\n\nAgradecemos sua participação! 🙏`,
   }),
 };
 
