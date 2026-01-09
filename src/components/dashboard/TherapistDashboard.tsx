@@ -73,7 +73,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
       // Load patients assigned to this therapist
       const { data: patients, error: patientsError } = await supabase
         .from('patients')
-        .select('id, name, status, phone, email, created_at')
+        .select('id, name:full_name, status, phone, email, created_at')
         .limit(5)
         .order('created_at', { ascending: false });
 
