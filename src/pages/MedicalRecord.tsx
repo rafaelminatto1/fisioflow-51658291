@@ -26,7 +26,8 @@ import {
   Watch,
   FileStack,
   Microscope,
-  LayoutDashboard
+  LayoutDashboard,
+  Settings
 } from 'lucide-react';
 import { MedicalRequestsTab } from '@/components/patient/MedicalRequestsTab';
 import { PatientExamsTab } from '@/components/patient/PatientExamsTab';
@@ -39,6 +40,8 @@ import { AssessmentComparison } from '@/components/patient/AssessmentComparison'
 import { PatientDashboard360 } from '@/components/patient/dashboard/PatientDashboard360';
 import { AnamnesisForm } from '@/components/patient/forms/AnamnesisForm';
 import { PhysicalExamForm } from '@/components/patient/forms/PhysicalExamForm';
+import { EvaluationTemplateManager } from '@/components/admin/EvaluationTemplateManager';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 
 // Types
 interface Patient {
@@ -139,6 +142,8 @@ const MedicalRecord = () => {
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [selectedForComparison, setSelectedForComparison] = useState<string[]>([]);
   const [isComparing, setIsComparing] = useState(false);
+  const [showTemplateManager, setShowTemplateManager] = useState(false);
+
   const queryClient = useQueryClient();
 
   const toggleComparisonSelection = (id: string) => {
@@ -234,7 +239,8 @@ const MedicalRecord = () => {
                   *,
                   profiles:created_by (full_name),
                   surgeries(*),
-                  goals(*)
+                  goals(*),
+                   pathologies(*)
               `)
         .eq('patient_id', selectedPatient)
         .order('created_at', { ascending: false });
@@ -250,11 +256,31 @@ const MedicalRecord = () => {
         therapist: record.profiles?.full_name || 'Desconhecido',
         raw: record,
         surgeries: record.surgeries,
-        goals: record.goals
+        goals: record.goals,
+        pathologies: record.pathologies
       }));
     },
     enabled: !!selectedPatient
   });
+
+  // Aggregate Data for Dashboard
+  const { aggregatedSurgeries, aggregatedGoals, aggregatedPathologies } = useMemo(() => {
+    const surgeries = medicalRecords.flatMap(r => r.surgeries || []);
+    // Filter pending goals
+    const goals = medicalRecords
+      .flatMap(r => r.goals || [])
+      .filter((g: any) => g.status !== 'achieved' && g.status !== 'abandoned');
+
+    const pathologies = medicalRecords
+      .flatMap(r => r.pathologies || [])
+      .filter((p: any) => p.status === 'active');
+
+    return {
+      aggregatedSurgeries: surgeries,
+      aggregatedGoals: goals,
+      aggregatedPathologies: pathologies
+    };
+  }, [medicalRecords]);
 
   // Load evaluation templates
   const { data: templates = [], isLoading: templatesLoading } = useQuery({
@@ -263,6 +289,7 @@ const MedicalRecord = () => {
       const { data, error } = await supabase
         .from('evaluation_templates')
         .select('*')
+        .eq('is_active', true)
         .order('title');
 
       if (error) throw error;
@@ -496,6 +523,17 @@ const MedicalRecord = () => {
             </p>
           </div>
           <div className="flex gap-3">
+            <Dialog open={showTemplateManager} onOpenChange={setShowTemplateManager}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="hidden sm:flex">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Templates
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                <EvaluationTemplateManager />
+              </DialogContent>
+            </Dialog>
             <Button
               className="bg-gradient-primary hover:bg-gradient-primary/90 shadow-medical"
               onClick={handleNewRecord}
@@ -732,8 +770,10 @@ const MedicalRecord = () => {
                   <TabsContent value="dashboard" className="animate-in slide-in-from-left-2 duration-300">
                     <PatientDashboard360
                       patient={currentPatientData}
-                      medicalRecord={medicalRecords.length > 0 ? medicalRecords[0] : null} // Pass latest or aggregated
                       appointments={appointments}
+                      activeGoals={aggregatedGoals}
+                      activePathologies={aggregatedPathologies}
+                      surgeries={aggregatedSurgeries}
                       onAction={handleDashboardAction}
                     />
                   </TabsContent>

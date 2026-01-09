@@ -21,18 +21,24 @@ import { ptBR } from 'date-fns/locale';
 
 interface PatientDashboardProps {
     patient: any;
-    medicalRecord: any;
     appointments: any[];
+    activeGoals: any[];
+    activePathologies: any[];
+    surgeries: any[];
     onAction: (action: string) => void;
 }
 
-export const PatientDashboard360 = ({ patient, medicalRecord, appointments, onAction }: PatientDashboardProps) => {
+export const PatientDashboard360 = ({
+    patient,
+    appointments,
+    activeGoals = [],
+    activePathologies = [],
+    surgeries = [],
+    onAction
+}: PatientDashboardProps) => {
     if (!patient) return null;
 
-    // Mock data for demo purposes if medicalRecord is missing stuff
-    const alerts = medicalRecord?.allergies?.map((a: any) => a.allergen) || patient?.alerts || [];
-    const activePathologies = medicalRecord?.pathologies?.filter((p: any) => p.status === 'active') || [];
-    const pendingGoals = medicalRecord?.goals?.filter((g: any) => g.status !== 'achieved') || [];
+    const alerts = patient?.alerts || [];
     const nextAppointment = appointments?.find(a => new Date(a.date) > new Date());
 
     return (
@@ -112,7 +118,7 @@ export const PatientDashboard360 = ({ patient, medicalRecord, appointments, onAc
                                         {format(new Date(nextAppointment.date), "dd 'de' MMM", { locale: ptBR })}
                                     </div>
                                     <div className="opacity-90 mt-1">
-                                        {format(new Date(nextAppointment.date), "HH:mm", { locale: ptBR })} - {nextAppointment.type}
+                                        {format(new Date(nextAppointment.date), "HH:mm", { locale: ptBR })} - {nextAppointment.type || 'Sessão'}
                                     </div>
                                 </div>
                             ) : (
@@ -149,9 +155,9 @@ export const PatientDashboard360 = ({ patient, medicalRecord, appointments, onAc
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        {pendingGoals.length > 0 ? (
+                        {activeGoals.length > 0 ? (
                             <div className="space-y-4">
-                                {pendingGoals.map((goal: any, i: number) => (
+                                {activeGoals.map((goal: any, i: number) => (
                                     <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/40">
                                         <div>
                                             <p className="font-medium">{goal.description}</p>
@@ -170,7 +176,10 @@ export const PatientDashboard360 = ({ patient, medicalRecord, appointments, onAc
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-muted-foreground text-sm">Nenhum objetivo pendente.</p>
+                            <p className="text-muted-foreground text-sm flex items-center gap-2">
+                                <Target className="w-4 h-4 opacity-50" />
+                                Nenhum objetivo pendente.
+                            </p>
                         )}
                         <Button variant="link" className="px-0 mt-2 text-violet-600" onClick={() => onAction('goals')}>
                             Gerenciar Objetivos
@@ -218,7 +227,7 @@ export const PatientDashboard360 = ({ patient, medicalRecord, appointments, onAc
                 </CardHeader>
                 <CardContent>
                     <div className="relative pl-6 border-l-2 border-muted space-y-6">
-                        {(medicalRecord?.surgeries || []).map((surgery: any, i: number) => (
+                        {(surgeries || []).map((surgery: any, i: number) => (
                             <div key={i} className="relative">
                                 <div className="absolute -left-[29px] top-1 h-3 w-3 rounded-full bg-blue-500 ring-4 ring-background" />
                                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
@@ -230,19 +239,23 @@ export const PatientDashboard360 = ({ patient, medicalRecord, appointments, onAc
                                     </div>
                                     <div className="mt-2 sm:mt-0 text-right">
                                         <p className="font-medium text-blue-600">
-                                            {format(new Date(surgery.surgeryDate), "dd MMM yyyy", { locale: ptBR })}
+                                            {surgery.surgeryDate ? format(new Date(surgery.surgeryDate), "dd MMM yyyy", { locale: ptBR }) : 'Data não inf.'}
                                         </p>
-                                        <p className="text-xs text-muted-foreground">
-                                            há {Math.floor((new Date().getTime() - new Date(surgery.surgeryDate).getTime()) / (1000 * 60 * 60 * 24 * 30))} meses
-                                        </p>
+                                        {surgery.surgeryDate && (
+                                            <p className="text-xs text-muted-foreground">
+                                                há {Math.floor((new Date().getTime() - new Date(surgery.surgeryDate).getTime()) / (1000 * 60 * 60 * 24 * 30))} meses
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
-                                <p className="mt-2 text-sm text-foreground/80 bg-muted/30 p-3 rounded-md">
-                                    {surgery.notes || 'Sem observações adicionais.'}
-                                </p>
+                                {surgery.notes && (
+                                    <p className="mt-2 text-sm text-foreground/80 bg-muted/30 p-3 rounded-md">
+                                        {surgery.notes}
+                                    </p>
+                                )}
                             </div>
                         ))}
-                        {(!medicalRecord?.surgeries || medicalRecord.surgeries.length === 0) && (
+                        {(!surgeries || surgeries.length === 0) && (
                             <p className="text-muted-foreground text-sm italic">Nenhuma cirurgia registrada.</p>
                         )}
                     </div>
