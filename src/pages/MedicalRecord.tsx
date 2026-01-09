@@ -36,6 +36,7 @@ import { usePrescriptions } from '@/hooks/usePrescriptions';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { AssessmentComparison } from '@/components/patient/AssessmentComparison';
 
 // Types
 interface Patient {
@@ -109,6 +110,7 @@ const MedicalRecord = () => {
   const initialPatientId = searchParams.get('patientId');
   const initialAction = searchParams.get('action');
   const appointmentId = searchParams.get('appointmentId');
+  const initialType = searchParams.get('type');
 
   const [selectedPatient, setSelectedPatient] = useState<string | null>(initialPatientId);
   const [patientSearch, setPatientSearch] = useState('');
@@ -118,7 +120,16 @@ const MedicalRecord = () => {
   const [editingRecord, setEditingRecord] = useState<MedicalRecordItem | null>(null);
   const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
   const [recordForm, setRecordForm] = useState<RecordFormData>(initialFormState);
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+  const [selectedForComparison, setSelectedForComparison] = useState<string[]>([]);
+  const [isComparing, setIsComparing] = useState(false);
   const queryClient = useQueryClient();
+
+  const toggleComparisonSelection = (id: string) => {
+    setSelectedForComparison(prev =>
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
 
   // Effect to handle URL parameters
   useEffect(() => {
@@ -129,8 +140,15 @@ const MedicalRecord = () => {
       setIsEditing(true);
       setEditingRecord(null);
       setRecordForm(initialFormState);
+      if (initialType) {
+        setActiveTab(initialType);
+        setRecordForm(prev => ({ ...prev, type: initialType }));
+        if (initialType === 'assessment') {
+          setShowTemplateSelector(true);
+        }
+      }
     }
-  }, [initialPatientId, initialAction]);
+  }, [initialPatientId, initialAction, initialType]);
 
   // Load prescriptions for selected patient
   const { prescriptions, deletePrescription } = usePrescriptions(selectedPatient || undefined);
@@ -181,6 +199,39 @@ const MedicalRecord = () => {
     },
     enabled: !!selectedPatient
   });
+
+  // Load evaluation templates
+  const { data: templates = [], isLoading: templatesLoading } = useQuery({
+    queryKey: ['evaluation-templates'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('evaluation_templates')
+        .select('*')
+        .order('title');
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const handleSelectTemplate = (template: any) => {
+    const content = template.content;
+    setRecordForm(prev => ({
+      ...prev,
+      type: 'assessment',
+      title: `${template.title} - ${format(new Date(), 'dd/MM/yyyy')}`,
+      // Map template fields to form
+      content: content.treatment_plan?.evolution || '', // Fallback or mapping
+      physicalExam: content.physical_exam?.exam || '',
+      diagnosis: content.diagnosis || '',
+      treatmentPlan: content.treatment_plan?.plan || '',
+      vitalSigns: {
+        ...prev.vitalSigns,
+        ...content.vital_signs
+      }
+    }));
+    setShowTemplateSelector(false);
+  };
 
   const saveRecordMutation = useMutation({
     mutationFn: async (data: RecordFormData) => {
@@ -647,11 +698,29 @@ const MedicalRecord = () => {
                 ) : (
                   /* Medical Records List */
                   <Card>
-                    <CardHeader>
+                    <CardHeader className="flex flex-row items-center justify-between">
                       <CardTitle>Histórico Clínico</CardTitle>
+                      {selectedForComparison.length >= 2 && !isComparing && (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => setIsComparing(true)}
+                          className="bg-primary/10 text-primary hover:bg-primary/20"
+                        >
+                          Comparar ({selectedForComparison.length})
+                        </Button>
+                      )}
                     </CardHeader>
                     <CardContent>
-                      {recordsLoading ? (
+                      {isComparing ? (
+                        <AssessmentComparison
+                          records={medicalRecords.filter((r: any) => selectedForComparison.includes(r.id))}
+                          onClose={() => {
+                            setIsComparing(false);
+                            setSelectedForComparison([]);
+                          }}
+                        />
+                      ) : recordsLoading ? (
                         <div className="text-center py-4">Carregando registros...</div>
                       ) : medicalRecords.length === 0 ? (
                         <div className="text-center py-8 text-muted-foreground">Nenhum registro encontrado.</div>
@@ -664,6 +733,17 @@ const MedicalRecord = () => {
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
+                                  {record.type === 'assessment' && (
+                                    <div className="flex items-center h-full">
+                                      <input
+                                        type="checkbox"
+                                        className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                        checked={selectedForComparison.includes(record.id)}
+                                        onChange={() => toggleComparisonSelection(record.id)}
+                                        onClick={(e) => e.stopPropagation()}
+                                      />
+                                    </div>
+                                  )}
                                   <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
                                     {getRecordIcon(record.type)}
                                   </div>
@@ -775,6 +855,46 @@ const MedicalRecord = () => {
           patientName={patients.find(p => p.id === selectedPatient)?.name || ''}
         />
       )}
+      <Dialog open={showTemplateSelector} onOpenChange={setShowTemplateSelector}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Selecione um Modelo de Avaliação</DialogTitle>
+            <DialogDescription>
+              Escolha um modelo para preencher automaticamente os campos da avaliação.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            {templatesLoading ? (
+              <div className="col-span-2 text-center py-8">Carregando modelos...</div>
+            ) : templates.length === 0 ? (
+              <div className="col-span-2 text-center py-8 text-muted-foreground">Nenhum modelo encontrado.</div>
+            ) : (
+              templates.map((template: any) => (
+                <Card
+                  key={template.id}
+                  className="cursor-pointer hover:bg-muted/50 transition-colors border-2 hover:border-primary/50"
+                  onClick={() => handleSelectTemplate(template)}
+                >
+                  <CardHeader className="p-4">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Stethoscope className="w-4 h-4 text-primary" />
+                      {template.title}
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground">{template.specialty}</p>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0 text-sm text-muted-foreground line-clamp-2">
+                    {/* Show a preview of fields if possible, or just ignore */}
+                    Campos predefinidos para {template.specialty}
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+          <div className="flex justify-end mt-4">
+            <Button variant="ghost" onClick={() => setShowTemplateSelector(false)}>Continuar sem modelo</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 };

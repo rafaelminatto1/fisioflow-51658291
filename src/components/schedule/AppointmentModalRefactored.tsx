@@ -294,7 +294,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         }, {
           onSuccess: () => {
             if (appointmentData.status === 'avaliacao') {
-              const navPath = `/medical-record?patientId=${appointmentData.patient_id}&action=new&appointmentId=${appointment.id}`;
+              const navPath = `/medical-record?patientId=${appointmentData.patient_id}&action=new&appointmentId=${appointment.id}&type=assessment`;
               navigate(navPath);
             }
             onClose();
@@ -306,7 +306,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
             if (appointmentData.status === 'avaliacao') {
               const createdId = (newAppointment as any)?.id;
               if (createdId) {
-                const navPath = `/medical-record?patientId=${appointmentData.patient_id}&action=new&appointmentId=${createdId}`;
+                const navPath = `/medical-record?patientId=${appointmentData.patient_id}&action=new&appointmentId=${createdId}&type=assessment`;
                 navigate(navPath);
               }
             }

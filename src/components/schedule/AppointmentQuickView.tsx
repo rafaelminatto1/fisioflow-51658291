@@ -91,7 +91,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
 
   const handleStartAttendance = () => {
     if (appointment.status === 'avaliacao') {
-      navigate(`/patient-evolution/${appointment.id}`);
+      navigate(`/medical-record?patientId=${appointment.patientId}&action=new&appointmentId=${appointment.id}&type=assessment`);
       toast.success('Iniciando avaliação', {
         description: `Avaliação de ${appointment.patientName}`,
       });
