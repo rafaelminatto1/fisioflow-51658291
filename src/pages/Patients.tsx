@@ -28,7 +28,7 @@ import {
   Download,
   ChevronRight
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, calculateAge, exportToCSV } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { LazyComponent } from '@/components/common/LazyComponent';
 
@@ -43,6 +43,8 @@ const Patients = () => {
   const { data: patients = [], isLoading: loading } = usePatientsQuery();
   const deletePatient = useDeletePatient();
   const { toast } = useToast();
+
+
 
   // Get unique conditions and statuses for filters
   const uniqueConditions = useMemo(() => {
@@ -72,55 +74,28 @@ const Patients = () => {
     });
   };
 
-  const getPatientAge = (birthDate?: string | null) => {
-    if (!birthDate) return 0;
-    try {
-      const today = new Date();
-      const birth = new Date(birthDate);
-      const age = today.getFullYear() - birth.getFullYear();
-      const monthDiff = today.getMonth() - birth.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-        return age - 1;
-      }
-      return age;
-    } catch {
-      return 0;
-    }
-  };
-
   const exportPatients = () => {
-    try {
-      const csvContent = [
-        'Nome,Email,Telefone,Idade,Gênero,Condição Principal,Status,Progresso',
-        ...filteredPatients.map(patient => [
-          patient.name || 'Sem nome',
-          patient.email || '',
-          patient.phone || '',
-          getPatientAge(patient.birth_date),
-          patient.gender || '',
-          patient.main_condition || '',
-          patient.status || '',
-          patient.progress || 0
-        ].join(','))
-      ].join('\n');
+    const data = filteredPatients.map(patient => ({
+      name: patient.name || 'Sem nome',
+      email: patient.email || '',
+      phone: patient.phone || '',
+      age: calculateAge(patient.birth_date),
+      gender: patient.gender || '',
+      condition: patient.main_condition || '',
+      status: patient.status || '',
+      progress: patient.progress || 0
+    }));
 
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      if (link.download !== undefined) {
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', 'pacientes.csv');
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
+    const headers = ['Nome', 'Email', 'Telefone', 'Idade', 'Gênero', 'Condição Principal', 'Status', 'Progresso'];
 
+    const success = exportToCSV(data, 'pacientes.csv', headers);
+
+    if (success) {
       toast({
         title: 'Exportação concluída!',
         description: 'Lista de pacientes exportada com sucesso.',
       });
-    } catch {
+    } else {
       toast({
         title: 'Erro na exportação',
         description: 'Não foi possível exportar a lista de pacientes.',
@@ -372,7 +347,7 @@ const Patients = () => {
                         {patient.status || 'Inicial'}
                       </Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground truncate mt-0.5">{patient.phone || patient.email || `${getPatientAge(patient.birth_date)} anos`}</p>
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">{patient.phone || patient.email || `${calculateAge(patient.birth_date)} anos`}</p>
                   </div>
                   <div className="shrink-0 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
                     <ChevronRight className="w-5 h-5" />
