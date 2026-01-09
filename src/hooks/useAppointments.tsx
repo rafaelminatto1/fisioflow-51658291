@@ -5,6 +5,7 @@ import { AppointmentBase, AppointmentFormData, AppointmentStatus, AppointmentTyp
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
 import { logger } from '@/lib/errors/logger';
 import { useEffect } from 'react';
+import { useRealtimeSubscription } from './useRealtimeSubscription';
 import { AppointmentNotificationService } from '@/lib/services/AppointmentNotificationService';
 import { requireUserOrganizationId, getUserOrganizationId } from '@/utils/userHelpers';
 import { dateSchema, timeSchema } from '@/lib/validations/agenda';
@@ -247,25 +248,29 @@ export function useAppointments() {
   const { profile, user } = useAuth();
   const organizationId = profile?.organization_id;
 
-  // Setup Realtime subscription
+  // Setup Realtime subscription using custom hook
+  useRealtimeSubscription({
+    table: 'appointments',
+    queryKey: ['appointments'],
+    enabled: !!organizationId
+  });
+
+  // Listener específico para toasts (opcional, mantendo comportamento anterior se desejado, 
+  // mas idealmente movido para um lugar central ou mantido aqui apenas para UX específica)
   useEffect(() => {
-    logger.info('Configurando Supabase Realtime para appointments', {}, 'useAppointments');
+    if (!organizationId) return;
 
     const channel = supabase
-      .channel('appointments-changes')
+      .channel('appointments-toasts')
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
-          table: 'appointments'
+          table: 'appointments',
+          filter: `organization_id=eq.${organizationId}`
         },
         (payload) => {
-          logger.info('Realtime event recebido', { event: payload.eventType }, 'useAppointments');
-
-          // Invalidate and refetch appointments when changes occur
-          queryClient.invalidateQueries({ queryKey: ['appointments'] });
-
           // Show toast notification for changes made by other users
           if (payload.eventType === 'INSERT') {
             toast({
@@ -288,10 +293,9 @@ export function useAppointments() {
       .subscribe();
 
     return () => {
-      logger.info('Removendo subscription Realtime', {}, 'useAppointments');
       supabase.removeChannel(channel);
     };
-  }, [queryClient, toast]);
+  }, [toast, organizationId]);
 
   const query = useQuery({
     queryKey: ['appointments', organizationId], // Include organizationId in query key
