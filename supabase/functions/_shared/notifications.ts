@@ -6,7 +6,7 @@ import { Config, isFeatureEnabled } from './config.ts';
 import { createSupabaseServiceClient } from './api-helpers.ts';
 
 export interface NotificationPayload {
-  type: 'appointment_reminder' | 'appointment_confirmation' | 'waitlist_offer' | 'package_expiring' | 'generic' | 'nps_survey';
+  type: 'appointment_reminder' | 'appointment_confirmation' | 'waitlist_offer' | 'package_expiring' | 'generic' | 'nps_survey' | 'backup_failed' | 'backup_success';
   recipientId: string;
   recipientPhone?: string;
   recipientEmail?: string;
@@ -70,7 +70,7 @@ async function sendWhatsAppNotification(payload: NotificationPayload): Promise<N
 
   try {
     const phone = formatPhoneForWhatsApp(payload.recipientPhone);
-    
+
     const response = await fetch(`${Config.EVOLUTION_API_URL}/message/sendText/${Config.EVOLUTION_INSTANCE}`, {
       method: 'POST',
       headers: {
@@ -92,10 +92,10 @@ async function sendWhatsAppNotification(payload: NotificationPayload): Promise<N
 
     return { success: true, channel: 'whatsapp', messageId: result.key?.id };
   } catch (error) {
-    return { 
-      success: false, 
-      channel: 'whatsapp', 
-      error: error instanceof Error ? error.message : 'Erro desconhecido' 
+    return {
+      success: false,
+      channel: 'whatsapp',
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
     };
   }
 }
@@ -108,7 +108,7 @@ async function sendEmailNotification(payload: NotificationPayload): Promise<Noti
 
   // TODO: Implementar integração com serviço de email
   console.log('Email notification:', payload);
-  
+
   return { success: false, channel: 'email', error: 'Serviço de email não configurado' };
 }
 
@@ -116,22 +116,22 @@ async function sendEmailNotification(payload: NotificationPayload): Promise<Noti
 async function sendPushNotification(payload: NotificationPayload): Promise<NotificationResult> {
   // TODO: Implementar integração com serviço de push
   console.log('Push notification:', payload);
-  
+
   return { success: false, channel: 'push', error: 'Serviço de push não configurado' };
 }
 
 // Formatar telefone para WhatsApp (formato: 55XXXXXXXXXXX)
 function formatPhoneForWhatsApp(phone: string): string {
   const cleaned = phone.replace(/\D/g, '');
-  
+
   if (cleaned.startsWith('55')) {
     return cleaned;
   }
-  
+
   if (cleaned.length === 11 || cleaned.length === 10) {
     return `55${cleaned}`;
   }
-  
+
   return cleaned;
 }
 
@@ -148,6 +148,8 @@ function getEmojiForType(type: NotificationPayload['type']): string {
     waitlist_offer: '🎉',
     package_expiring: '⚠️',
     nps_survey: '⭐',
+    backup_failed: '❌',
+    backup_success: '✅',
     generic: '📢',
   };
   return emojis[type] || '📢';
@@ -157,10 +159,10 @@ function getEmojiForType(type: NotificationPayload['type']): string {
 async function logNotification(payload: NotificationPayload, results: NotificationResult[]) {
   try {
     const supabase = createSupabaseServiceClient();
-    
+
     const succeeded = results.some(r => r.success);
     const failedChannels = results.filter(r => !r.success).map(r => r.channel);
-    
+
     await supabase.from('notification_logs').insert({
       type: payload.type,
       recipient_id: payload.recipientId,
@@ -209,6 +211,16 @@ export const MessageTemplates = {
     title: 'Pesquisa de Satisfação',
     message: `Olá ${patientName}!\n\nSua opinião é muito importante para nós. Poderia dedicar um momento para avaliar seu atendimento?\n\n${surveyLink}\n\nAgradecemos sua participação! 🙏`,
   }),
+
+  backupFailed: (error: string) => ({
+    type: 'backup_failed' as const,
+    title: 'Backup Falhou',
+    message: `Atenção! O backup do banco de dados falhou.\n\nErro: ${error}\n\nVerifique os logs imediatamente.`,
+  }),
+
+  backupSuccess: (fileName: string, sizeBytes: number) => ({
+    type: 'backup_success' as const,
+    title: 'Backup Realizado',
+    message: `O backup do banco de dados foi concluído com sucesso.\n\nArquivo: ${fileName}\nTamanho: ${(sizeBytes / 1024 / 1024).toFixed(2)} MB`,
+  }),
 };
-
-
