@@ -2,6 +2,8 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { captureException, captureMessage } from '../_shared/sentry.ts';
+import { sendNotification, MessageTemplates } from '../_shared/notifications.ts';
+import { Config } from '../_shared/config.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
@@ -155,18 +157,47 @@ async function cleanupOldBackups(): Promise<void> {
  */
 async function notifyBackupFailure(error: string): Promise<void> {
   try {
-    // Enviar email ou WhatsApp de notificação
-    // Por enquanto, apenas log
     captureMessage(`Backup falhou: ${error}`, 'error');
     
-    // TODO: Integrar com serviço de notificações
-    // await sendNotification({
-    //   type: 'backup_failed',
-    //   message: `Backup do banco de dados falhou: ${error}`,
-    //   severity: 'high',
-    // });
+    if (!Config.ADMIN_PHONE) {
+      console.warn('ADMIN_PHONE não configurado. Pulando notificação.');
+      return;
+    }
+
+    const payload = {
+      ...MessageTemplates.backupFailed(error),
+      recipientId: 'admin',
+      recipientPhone: Config.ADMIN_PHONE,
+      channels: ['whatsapp'] as const,
+    };
+
+    await sendNotification(payload);
   } catch (err) {
     console.error('Erro ao enviar notificação de falha:', err);
+    captureException(err instanceof Error ? err : new Error(String(err)));
+  }
+}
+
+/**
+ * Envia notificação de sucesso de backup
+ */
+async function notifyBackupSuccess(fileName: string, size: number): Promise<void> {
+  try {
+    if (!Config.ADMIN_PHONE) {
+      return;
+    }
+
+    const payload = {
+      ...MessageTemplates.backupSuccess(fileName, size),
+      recipientId: 'admin',
+      recipientPhone: Config.ADMIN_PHONE,
+      channels: ['whatsapp'] as const,
+    };
+
+    await sendNotification(payload);
+  } catch (err) {
+    console.error('Erro ao enviar notificação de sucesso:', err);
+    captureException(err instanceof Error ? err : new Error(String(err)));
   }
 }
 
@@ -203,6 +234,11 @@ serve(async (req: Request) => {
     captureMessage(
       `Backup concluído: ${result.fileName} (${(result.size! / 1024 / 1024).toFixed(2)} MB)`,
       'info'
+    );
+
+    // Notificar sucesso (não-bloqueante)
+    notifyBackupSuccess(result.fileName!, result.size!).catch(err =>
+      console.error('Falha ao enviar notificação de sucesso:', err)
     );
 
     return new Response(
