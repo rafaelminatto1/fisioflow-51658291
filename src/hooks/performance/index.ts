@@ -8,4 +8,3 @@ export {
   useInfiniteScroll, 
   useAnimateOnScroll 
 } from './useIntersectionObserver';
-export { LazyComponent, VirtualizedList } from './LazyComponent';
