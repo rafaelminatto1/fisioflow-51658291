@@ -71,7 +71,7 @@ export default function ClinicalTestsLibrary() {
         let matchesCategory = true;
         if (activeFilter !== 'Todos') {
             // Logic to match the prototype's filters
-            if (['Esportiva', 'Ortopedica', 'PosOp'].some(f => activeFilter.includes(f))) {
+            if (['Esportiva', 'Ortopedia', 'Pós-Operatório'].some(f => activeFilter.includes(f))) {
                 // Now mapped directly to the new 'category' column
                 matchesCategory = test.category === activeFilter;
             } else {
@@ -86,7 +86,7 @@ export default function ClinicalTestsLibrary() {
     const getBadgeColor = (category: string) => {
         switch (category) {
             case 'Esportiva': return 'bg-orange-50 text-orange-700 border-orange-100';
-            case 'PosOp': return 'bg-emerald-50 text-emerald-700 border-emerald-100';
+            case 'Pós-Operatório': return 'bg-emerald-50 text-emerald-700 border-emerald-100';
             default: return 'bg-blue-50 text-blue-700 border-blue-100'; // Ortopedia defaults here
         }
     };
@@ -105,8 +105,8 @@ export default function ClinicalTestsLibrary() {
                         <nav className="hidden md:flex gap-6 text-sm font-medium">
                             <button onClick={() => filterTests('Todos')} className={`hover:text-teal-200 transition ${activeFilter === 'Todos' ? 'text-white font-bold underline decoration-2 underline-offset-4' : 'text-teal-100'}`}>Todos</button>
                             <button onClick={() => filterTests('Esportiva')} className={`hover:text-teal-200 transition ${activeFilter === 'Esportiva' ? 'text-white font-bold underline decoration-2 underline-offset-4' : 'text-teal-100'}`}>Esportiva</button>
-                            <button onClick={() => filterTests('Ortopedica')} className={`hover:text-teal-200 transition ${activeFilter === 'Ortopedica' ? 'text-white font-bold underline decoration-2 underline-offset-4' : 'text-teal-100'}`}>Ortopédica</button>
-                            <button onClick={() => filterTests('PosOp')} className={`hover:text-teal-200 transition ${activeFilter === 'PosOp' ? 'text-white font-bold underline decoration-2 underline-offset-4' : 'text-teal-100'}`}>Pós-Operatório</button>
+                            <button onClick={() => filterTests('Ortopedia')} className={`hover:text-teal-200 transition ${activeFilter === 'Ortopedia' ? 'text-white font-bold underline decoration-2 underline-offset-4' : 'text-teal-100'}`}>Ortopedia</button>
+                            <button onClick={() => filterTests('Pós-Operatório')} className={`hover:text-teal-200 transition ${activeFilter === 'Pós-Operatório' ? 'text-white font-bold underline decoration-2 underline-offset-4' : 'text-teal-100'}`}>Pós-Operatório</button>
                         </nav>
                     </div>
                 </header>
