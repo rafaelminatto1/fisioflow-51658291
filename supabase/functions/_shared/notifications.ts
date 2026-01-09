@@ -6,7 +6,7 @@ import { Config, isFeatureEnabled } from './config.ts';
 import { createSupabaseServiceClient } from './api-helpers.ts';
 
 export interface NotificationPayload {
-  type: 'appointment_reminder' | 'appointment_confirmation' | 'waitlist_offer' | 'package_expiring' | 'generic';
+  type: 'appointment_reminder' | 'appointment_confirmation' | 'waitlist_offer' | 'package_expiring' | 'generic' | 'backup_failed' | 'backup_success';
   recipientId: string;
   recipientPhone?: string;
   recipientEmail?: string;
@@ -147,6 +147,8 @@ function getEmojiForType(type: NotificationPayload['type']): string {
     appointment_confirmation: '✅',
     waitlist_offer: '🎉',
     package_expiring: '⚠️',
+    backup_failed: '❌',
+    backup_success: '✅',
     generic: '📢',
   };
   return emojis[type] || '📢';
@@ -201,6 +203,18 @@ export const MessageTemplates = {
     type: 'package_expiring' as const,
     title: 'Pacote Expirando',
     message: `Olá ${patientName}!\n\nSeu pacote de sessões está expirando em ${expiryDate}.\n\nVocê ainda tem ${remainingSessions} sessão(ões) disponível(is).\n\nAgende agora para não perder! 📅`,
+  }),
+
+  backupFailed: (error: string) => ({
+    type: 'backup_failed' as const,
+    title: 'Backup Falhou',
+    message: `Atenção! O backup do banco de dados falhou.\n\nErro: ${error}\n\nVerifique os logs imediatamente.`,
+  }),
+
+  backupSuccess: (fileName: string, sizeBytes: number) => ({
+    type: 'backup_success' as const,
+    title: 'Backup Realizado',
+    message: `O backup do banco de dados foi concluído com sucesso.\n\nArquivo: ${fileName}\nTamanho: ${(sizeBytes / 1024 / 1024).toFixed(2)} MB`,
   }),
 };
 
