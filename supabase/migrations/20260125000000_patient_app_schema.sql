@@ -49,7 +49,7 @@ CREATE POLICY "Users can view their own pain records"
     ON public.patient_pain_records FOR SELECT
     USING (auth.uid() = patient_id OR EXISTS (
         -- Therapists can view their patients' records (assuming a patient-therapist link exists in generic way or just allow therapists)
-        SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('therapist', 'admin')
+        SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('fisioterapeuta', 'admin')
     ));
 
 -- Policies for prescribed_exercises
@@ -59,7 +59,7 @@ CREATE POLICY "Users can view their prescribed exercises"
 
 CREATE POLICY "Therapists can manage prescriptions"
     ON public.prescribed_exercises FOR ALL
-    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('therapist', 'admin')));
+    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('fisioterapeuta', 'admin')));
 
 -- Policies for exercise_logs
 CREATE POLICY "Users can log their own exercises"
@@ -72,7 +72,7 @@ CREATE POLICY "Users can view their own exercise logs"
 
 CREATE POLICY "Therapists can view exercise logs"
     ON public.exercise_logs FOR SELECT
-    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('therapist', 'admin')));
+    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('fisioterapeuta', 'admin')));
 
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_pain_records_patient ON public.patient_pain_records(patient_id);

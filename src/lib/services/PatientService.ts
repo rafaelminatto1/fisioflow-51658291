@@ -139,4 +139,80 @@ export class PatientService {
 
     if (error) throw error;
   }
+
+  static async getPatientByProfileId(profileId: string): Promise<Patient | null> {
+    const { data, error } = await supabase
+      .from('patients')
+      .select('*')
+      .eq('profile_id', profileId)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) return null;
+
+    return {
+      id: data.id,
+      name: data.full_name || data.name,
+      email: data.email || undefined,
+      phone: data.phone || undefined,
+      cpf: data.cpf || undefined,
+      birthDate: data.birth_date || new Date().toISOString(),
+      gender: 'outro' as any,
+      mainCondition: data.observations || '',
+      status: (data.status === 'active' ? 'Em Tratamento' : 'Inicial') as any,
+      progress: 0,
+      incomplete_registration: data.incomplete_registration || false,
+      createdAt: data.created_at || new Date().toISOString(),
+      updatedAt: data.updated_at || new Date().toISOString(),
+    };
+  }
+
+  static async getPrescribedExercises(patientId: string) {
+    const { data, error } = await supabase
+      .from('prescribed_exercises')
+      .select('*, exercise:exercises(*)')
+      .eq('patient_id', patientId)
+      .eq('is_active', true);
+
+    if (error) throw error;
+    return data;
+  }
+
+  static async logExercise(patientId: string, prescriptionId: string, difficulty: string, notes?: string) {
+    const { error } = await supabase
+      .from('exercise_logs')
+      .insert({
+        patient_id: patientId,
+        prescribed_exercise_id: prescriptionId,
+        difficulty_rating: difficulty as any,
+        notes,
+      });
+
+    if (error) throw error;
+  }
+
+  static async getPainRecords(patientId: string) {
+    const { data, error } = await supabase
+      .from('patient_pain_records')
+      .select('*')
+      .eq('patient_id', patientId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data;
+  }
+
+  static async savePainRecord(patientId: string, level: number, type: string, bodyPart: string, notes?: string) {
+    const { error } = await supabase
+      .from('patient_pain_records')
+      .insert({
+        patient_id: patientId,
+        pain_level: level,
+        pain_type: type,
+        body_part: bodyPart,
+        notes,
+      });
+
+    if (error) throw error;
+  }
 }

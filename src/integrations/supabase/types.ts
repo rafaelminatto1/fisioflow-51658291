@@ -3841,6 +3841,48 @@ export type Database = {
           },
         ]
       }
+      exercise_logs: {
+        Row: {
+          completed_at: string | null
+          difficulty_rating: string | null
+          id: string
+          notes: string | null
+          patient_id: string
+          prescribed_exercise_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          difficulty_rating?: string | null
+          id?: string
+          notes?: string | null
+          patient_id: string
+          prescribed_exercise_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          difficulty_rating?: string | null
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          prescribed_exercise_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercise_logs_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercise_logs_prescribed_exercise_id_fkey"
+            columns: ["prescribed_exercise_id"]
+            isOneToOne: false
+            referencedRelation: "prescribed_exercises"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exercises: {
         Row: {
           body_parts: string[] | null
@@ -7279,6 +7321,47 @@ export type Database = {
           },
         ]
       }
+      patient_pain_records: {
+        Row: {
+          body_part: string
+          created_at: string | null
+          id: string
+          notes: string | null
+          pain_level: number
+          pain_type: string
+          patient_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          body_part: string
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          pain_level: number
+          pain_type: string
+          patient_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          body_part?: string
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          pain_level?: number
+          pain_type?: string
+          patient_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_pain_records_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       patient_pathologies: {
         Row: {
           created_at: string
@@ -8334,6 +8417,63 @@ export type Database = {
             referencedRelation: "eventos_resumo"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      prescribed_exercises: {
+        Row: {
+          created_at: string | null
+          duration_seconds: number | null
+          exercise_id: string
+          frequency: string
+          id: string
+          is_active: boolean | null
+          notes: string | null
+          patient_id: string
+          reps: number
+          sets: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          duration_seconds?: number | null
+          exercise_id: string
+          frequency: string
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          patient_id: string
+          reps?: number
+          sets?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          duration_seconds?: number | null
+          exercise_id?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          patient_id?: string
+          reps?: number
+          sets?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prescribed_exercises_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prescribed_exercises_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
         ]
       }
       professional_chats: {
