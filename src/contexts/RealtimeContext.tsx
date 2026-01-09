@@ -1,6 +1,9 @@
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/lib/errors/logger';
+import { useAppointments } from '@/hooks/useAppointments';
+import { AppointmentType, AppointmentStatus } from '@/types/appointment';
 
 // Tipos para as subscrições realtime
 interface RealtimeSubscription {
@@ -54,6 +57,8 @@ export const useRealtime = () => {
  * Elimina a duplicação de subscriptions em múltiplos componentes
  */
 export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { profile } = useAuth();
+  const organizationId = profile?.organization_id;
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [metrics, setMetrics] = useState<DashboardMetrics>({
     totalAppointments: 0,
@@ -81,10 +86,11 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           event: '*',
           schema: 'public',
           table: 'appointments',
+          filter: organizationId ? `organization_id=eq.${organizationId}` : undefined,
         },
         (payload) => {
           logger.info('Realtime: Appointment change received', { event: payload.eventType }, 'RealtimeContext');
-          
+
           if (payload.eventType === 'INSERT') {
             setAppointments(prev => [...prev, payload.new as Appointment]);
           } else if (payload.eventType === 'UPDATE') {
@@ -92,20 +98,20 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           } else if (payload.eventType === 'DELETE') {
             setAppointments(prev => prev.filter(a => a.id !== payload.old.id));
           }
-          
+
           setLastUpdate(Date.now());
         }
       )
       .subscribe();
 
     setIsSubscribed(true);
-    
+
     return () => {
       logger.info('Realtime: Unsubscribing from appointments channel', {}, 'RealtimeContext');
       supabase.removeChannel(channel);
       setIsSubscribed(false);
     };
-  }, []);
+  }, [organizationId]);
 
   /**
    * Carregar appointments iniciais ao montar o provider
@@ -115,12 +121,18 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const loadInitialAppointments = async () => {
       try {
         logger.info('Realtime: Loading initial appointments', {}, 'RealtimeContext');
-        
-        const { data, error } = await supabase
+
+        let query = supabase
           .from('appointments')
           .select('*')
           .order('start_time', { ascending: false })
           .limit(50);
+
+        if (organizationId) {
+          query = query.eq('organization_id', organizationId);
+        }
+
+        const { data, error } = await query;
 
         if (error) {
           logger.error('Realtime: Error loading initial appointments', error, 'RealtimeContext');
@@ -137,7 +149,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
 
     loadInitialAppointments();
-  }, []); // Executar apenas uma vez ao montar
+  }, [organizationId]); // Recarregar se mudar a organização
 
   /**
    * Atualizar métricas baseadas nos appointments atuais
@@ -145,13 +157,13 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
    */
   const updateMetrics = useCallback(async () => {
     logger.info('Realtime: Updating metrics', {}, 'RealtimeContext');
-    
+
     try {
       // Calcular métricas a partir dos appointments
       const total = appointments.length;
       const confirmed = appointments.filter(a => a.status === 'confirmed').length;
       const cancelled = appointments.filter(a => a.status === 'cancelled').length;
-      
+
       // Calcular receita de hoje
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0); // Meia-noite
@@ -161,10 +173,10 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           return apptDate >= todayStart && a.status === 'confirmed';
         })
         .reduce((sum, a) => sum + (a.type === 'paid' ? 100 : 0), 0); // Simulação: 100 por consulta paga
-      
+
       // Calcular taxa de ocupação
       const occupancyRate = total > 0 ? Math.round((confirmed / total) * 100) : 0;
-      
+
       // Buscar pacientes em sessão (simplificado)
       const patientsInSession = appointments
         .filter(a => a.status === 'confirmed')
@@ -184,7 +196,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       logger.info('Realtime: Metrics updated', { total, confirmed, cancelled, revenue, occupancyRate }, 'RealtimeContext');
     } catch (error) {
       logger.error('Realtime: Error in updateMetrics', error, 'RealtimeContext');
-      
+
       // Manter valores padrão em caso de erro
       setMetrics(prev => ({
         ...prev,
