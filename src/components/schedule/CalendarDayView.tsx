@@ -86,10 +86,10 @@ const CalendarDayView = memo(({
     }
 
     return (
-        <div className="flex bg-gradient-to-br from-background to-muted/20 h-full overflow-hidden">
+        <div className="flex bg-gradient-to-br from-background to-muted/20 min-h-[800px]">
             {/* Time column com design melhorado */}
-            <div className="w-24 border-r bg-muted/30 backdrop-blur-sm overflow-y-auto hide-scrollbar">
-                <div className="h-16 border-b flex items-center justify-center sticky top-0 bg-muted/30 z-10 backdrop-blur-sm">
+            <div className="w-24 border-r bg-muted/30 backdrop-blur-sm">
+                <div className="h-16 border-b flex items-center justify-center sticky top-0 bg-muted/30 z-10 backdrop-blur-sm shadow-sm">
                     <Clock className="h-4 w-4 text-muted-foreground" />
                 </div>
                 {timeSlots.map(time => (
@@ -100,8 +100,8 @@ const CalendarDayView = memo(({
             </div>
 
             {/* Day column com hover states */}
-            <div className="flex-1 relative bg-background/50 overflow-y-auto">
-                <div className="h-16 border-b bg-gradient-to-r from-primary/10 to-primary/5 p-4 backdrop-blur-sm sticky top-0 z-10">
+            <div className="flex-1 relative bg-background/50">
+                <div className="h-16 border-b bg-gradient-to-r from-primary/10 to-primary/5 p-4 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
                     <div className="font-semibold text-center flex items-center justify-center gap-2">
                         <Calendar className="h-4 w-4" />
                         {format(currentDate, "EEEE, d 'de' MMMM", { locale: ptBR })}

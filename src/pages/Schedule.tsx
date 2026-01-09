@@ -367,7 +367,7 @@ const Schedule = () => {
 
   return (
     <MainLayout>
-      <div className="h-[calc(100vh-80px)] overflow-hidden flex flex-col gap-4 animate-fade-in relative">
+      <div className="flex flex-col gap-4 animate-fade-in relative min-h-[calc(100vh-80px)]">
         {/* Offline/Cache Warning Banner */}
         <OfflineIndicator
           isFromCache={isFromCache}
@@ -420,7 +420,7 @@ const Schedule = () => {
 
         {/* Main Content */}
         <div className="flex-1 min-h-0">
-          <div className="h-full border rounded-xl overflow-hidden bg-background shadow-sm relative flex flex-col">
+          <div className="h-full border rounded-xl bg-background shadow-sm relative flex flex-col">
             {viewType === 'list' ? (
               <AppointmentListView
                 appointments={filteredAppointments}

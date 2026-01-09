@@ -141,6 +141,8 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
 
   // Expanded variant
   return (
+  // Expanded variant
+  return (
     <div
       onClick={onClick}
       className={cn(
@@ -174,7 +176,8 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
           {statusConfig.label}
         </span>
       </div>
-      <h3 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-1">
+      {/* Changed to allow full name display with wrapping */}
+      <h3 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-1 leading-tight break-words">
         {appointment.patientName}
       </h3>
       <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">

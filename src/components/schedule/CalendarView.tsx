@@ -236,7 +236,7 @@ export const CalendarView = memo(({
 
   return (
     <>
-      <Card className="h-full flex flex-col border-0 shadow-xl overflow-hidden">
+      <Card className="flex flex-col border-0 shadow-xl min-h-[600px]">
         <CardContent className="p-0 flex flex-col h-full">
           {/* Header - Melhorado */}
           <div className="p-4 border-b bg-gradient-to-r from-muted/30 to-muted/10">
@@ -291,7 +291,7 @@ export const CalendarView = memo(({
             </div>
           </div>
 
-          <div className="flex-1 overflow-hidden relative">
+          <div className="flex-1 relative">
             {viewType === 'day' && (
               <CalendarDayView
                 currentDate={currentDate}
