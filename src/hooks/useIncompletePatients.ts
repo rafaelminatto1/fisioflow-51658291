@@ -19,13 +19,19 @@ export const useIncompletePatients = () => {
       try {
         const { data: patients, error } = await supabase
           .from('patients')
-          .select('id, name, phone')
+          .select('id, full_name, phone')
           .eq('incomplete_registration', true)
           .order('created_at', { ascending: false });
 
         if (error) throw error;
 
-        setData(patients || []);
+        // Map full_name to name for the frontend
+        const mappedPatients = (patients || []).map(p => ({
+          ...p,
+          name: p.full_name
+        }));
+
+        setData(mappedPatients);
         setError(null);
       } catch (err: any) {
         logger.error('Erro ao buscar pacientes incompletos', err, 'useIncompletePatients');

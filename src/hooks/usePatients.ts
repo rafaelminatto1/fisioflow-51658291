@@ -56,7 +56,7 @@ export const useActivePatients = () => {
         if (supabasePatients && supabasePatients.length > 0) {
           return supabasePatients.map(p => ({
             id: p.id,
-            name: p.name,
+            name: p.full_name || p.name,
             email: p.email || undefined,
             phone: p.phone || undefined,
             cpf: p.cpf || undefined,
