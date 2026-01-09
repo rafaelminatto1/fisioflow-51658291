@@ -300,7 +300,7 @@ export function useAppointments() {
   const query = useQuery({
     queryKey: ['appointments', organizationId], // Include organizationId in query key
     queryFn: () => fetchAppointments(organizationId),
-    staleTime: 1000 * 60 * 2, // 2 minutos (dados dinâmicos)
+    staleTime: 1000 * 10, // 10 segundos (dados mais frescos conforme solicitado)
     gcTime: 1000 * 60 * 5, // 5 minutos
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Backoff exponencial
@@ -314,11 +314,17 @@ export function useAppointments() {
   // Extrair dados do resultado
   const result = query.data as AppointmentsQueryResult | undefined;
 
+  // Função helper para forçar atualização como Promise
+  const refreshAppointments = async () => {
+    return await query.refetch();
+  };
+
   return {
     ...query,
     data: result?.data || [],
     isFromCache: result?.isFromCache || false,
     cacheTimestamp: result?.cacheTimestamp || null,
+    refreshAppointments, // Expose promise-based refresh
   };
 }
 
