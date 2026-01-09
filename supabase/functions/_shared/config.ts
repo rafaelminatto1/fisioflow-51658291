@@ -7,6 +7,9 @@ export const Config = {
   // URLs
   FRONTEND_URL: Deno.env.get('FRONTEND_URL') || 'http://localhost:5173',
   SUPABASE_URL: Deno.env.get('SUPABASE_URL') || '',
+
+  // Admin
+  ADMIN_PHONE: Deno.env.get('ADMIN_PHONE') || '',
   
   // Rate Limiting
   RATE_LIMIT_MAX_REQUESTS: parseInt(Deno.env.get('RATE_LIMIT_MAX_REQUESTS') || '100'),
