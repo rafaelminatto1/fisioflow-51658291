@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { checkRateLimit, createRateLimitResponse } from '../_shared/rate-limit.ts';
+import { sendNotification, MessageTemplates } from '../_shared/notifications.ts';
+import { Config } from '../_shared/config.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -113,14 +115,24 @@ serve(async (req) => {
       .eq('id', patient_id)
       .single();
 
-    // TODO: Send notification via WhatsApp/Email
-    // For now, just return success
+    // Send notification via WhatsApp/Email
+    const surveyLink = `${Config.FRONTEND_URL}/survey/${survey.id}`;
+    const notificationPayload = MessageTemplates.npsSurvey(patient.name || 'Paciente', surveyLink);
+
+    const notificationResults = await sendNotification({
+      ...notificationPayload,
+      recipientId: patient_id,
+      recipientPhone: patient.phone,
+      recipientEmail: patient.email,
+      channels: ['whatsapp', 'email']
+    });
 
     return new Response(
       JSON.stringify({
         success: true,
         survey_id: survey.id,
         message: "NPS survey sent successfully",
+        notifications: notificationResults
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
