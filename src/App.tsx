@@ -108,6 +108,7 @@ const DynamicCompareDetailsPage = lazy(() => import("./pages/dashboard/dinamica/
 // Goals Admin
 const GoalProfileListPage = lazy(() => import("./pages/admin/goals/GoalProfileListPage"));
 const GoalProfileEditorPage = lazy(() => import("./pages/admin/goals/GoalProfileEditorPage"));
+const ClinicalTestsLibrary = lazy(() => import("./pages/ClinicalTestsLibrary"));
 
 
 
@@ -303,6 +304,8 @@ const App = () => {
                     {/* Goals Admin */}
                     <Route path="/admin/goals" element={<ProtectedRoute allowedRoles={['admin', 'fisioterapeuta']}><GoalProfileListPage /></ProtectedRoute>} />
                     <Route path="/admin/goals/:id" element={<ProtectedRoute allowedRoles={['admin', 'fisioterapeuta']}><GoalProfileEditorPage /></ProtectedRoute>} />
+
+                    <Route path="/clinical-tests" element={<ProtectedRoute><ClinicalTestsLibrary /></ProtectedRoute>} />
 
 
                     {/* Catch-all route */}
