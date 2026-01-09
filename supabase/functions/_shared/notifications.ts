@@ -107,7 +107,7 @@ async function sendEmailNotification(payload: NotificationPayload): Promise<Noti
   }
 
   // TODO: Implementar integração com serviço de email
-  console.log('Email notification:', payload);
+  console.warn('Email notification not implemented:', payload);
 
   return { success: false, channel: 'email', error: 'Serviço de email não configurado' };
 }
@@ -115,7 +115,7 @@ async function sendEmailNotification(payload: NotificationPayload): Promise<Noti
 // Push Notification (placeholder - integrar com FCM, OneSignal, etc)
 async function sendPushNotification(payload: NotificationPayload): Promise<NotificationResult> {
   // TODO: Implementar integração com serviço de push
-  console.log('Push notification:', payload);
+  console.warn('Push notification not implemented:', payload);
 
   return { success: false, channel: 'push', error: 'Serviço de push não configurado' };
 }
