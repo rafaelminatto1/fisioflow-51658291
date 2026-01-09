@@ -11,3 +11,6 @@ ALTER TABLE clinical_test_templates ADD COLUMN sensitivity_specificity TEXT;
 DROP INDEX IF EXISTS idx_clinical_test_templates_category;
 CREATE INDEX IF NOT EXISTS idx_clinical_test_templates_target_joint ON clinical_test_templates(target_joint);
 CREATE INDEX IF NOT EXISTS idx_clinical_test_templates_new_category ON clinical_test_templates(category);
+
+-- Add name_en for bilingual support
+ALTER TABLE clinical_test_templates ADD COLUMN name_en TEXT;

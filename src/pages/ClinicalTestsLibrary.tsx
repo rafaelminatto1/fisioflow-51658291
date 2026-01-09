@@ -35,10 +35,25 @@ const MediaPlaceholder = ({ label }: { label: string }) => (
     </div>
 );
 
+interface ClinicalTest {
+    id: string;
+    name: string;
+    name_en?: string;
+    category: string;
+    target_joint: string;
+    purpose: string;
+    execution: string;
+    positive_sign?: string;
+    reference?: string;
+    tags?: string[];
+    media_urls?: any;
+    description?: string; // Fallback
+}
+
 export default function ClinicalTestsLibrary() {
     const [activeFilter, setActiveFilter] = useState("Todos");
     const [searchTerm, setSearchTerm] = useState("");
-    const [selectedTest, setSelectedTest] = useState<any>(null);
+    const [selectedTest, setSelectedTest] = useState<ClinicalTest | null>(null);
     const navigate = useNavigate();
 
     const { data: tests = [], isLoading } = useQuery({
@@ -50,7 +65,7 @@ export default function ClinicalTestsLibrary() {
                 .order('name');
 
             if (error) throw error;
-            return data;
+            return data as ClinicalTest[];
         }
     });
 
@@ -62,7 +77,7 @@ export default function ClinicalTestsLibrary() {
         setActiveFilter(criteria);
     };
 
-    const filteredTests = tests.filter((test: any) => {
+    const filteredTests = tests.filter((test: ClinicalTest) => {
         const query = searchTerm.toLowerCase();
         const matchesSearch = test.name.toLowerCase().includes(query) ||
             (test.tags && test.tags.some((t: string) => t.toLowerCase().includes(query))) ||
@@ -160,7 +175,7 @@ export default function ClinicalTestsLibrary() {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {filteredTests.map((test: any) => {
+                            {filteredTests.map((test: ClinicalTest) => {
                                 // Determine badge style based on category
                                 const badgeClass = getBadgeColor(test.category);
 
@@ -189,6 +204,11 @@ export default function ClinicalTestsLibrary() {
 
                                             <h3 className="font-bold text-slate-800 text-lg mb-2 group-hover:text-teal-700 transition-colors leading-tight">
                                                 {test.name}
+                                                {test.name_en && (
+                                                    <span className="block text-xs font-normal text-slate-400 mt-1 italic">
+                                                        {test.name_en}
+                                                    </span>
+                                                )}
                                             </h3>
 
                                             <p className="text-sm text-slate-500 line-clamp-3 mb-5 flex-1 leading-relaxed font-medium">
@@ -241,8 +261,13 @@ export default function ClinicalTestsLibrary() {
                                         <span className="text-xs font-bold uppercase tracking-wider text-teal-600 bg-teal-50 px-2 py-1 rounded">
                                             {selectedTest.category}
                                         </span>
-                                        <DialogTitle className="text-2xl font-bold text-slate-800 mt-1 leading-tight">
-                                            {selectedTest.name}
+                                        <DialogTitle className="text-2xl font-bold text-slate-800 mt-1 leading-tight flex flex-col">
+                                            <span>{selectedTest.name}</span>
+                                            {selectedTest.name_en && (
+                                                <span className="text-sm font-normal text-slate-400 italic mt-0.5">
+                                                    {selectedTest.name_en}
+                                                </span>
+                                            )}
                                         </DialogTitle>
                                     </div>
                                     <div onClick={() => setSelectedTest(null)} className="text-slate-400 hover:text-red-500 transition p-2 bg-white rounded-full shadow-sm cursor-pointer border border-slate-100">
