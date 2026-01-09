@@ -187,7 +187,7 @@ export const usePublicPrescription = (qrCode: string) => {
         .from('exercise_prescriptions')
         .select(`
           *,
-          patient:patients(id, name),
+          patient:patients(id, name:full_name),
           therapist:profiles!exercise_prescriptions_therapist_id_fkey(id, full_name)
         `)
         .eq('qr_code', qrCode)
@@ -217,10 +217,10 @@ export const usePublicPrescription = (qrCode: string) => {
         .eq('id', prescriptionId)
         .single();
 
-      const completedExercises = Array.isArray(current?.completed_exercises) 
-        ? current.completed_exercises 
+      const completedExercises = Array.isArray(current?.completed_exercises)
+        ? current.completed_exercises
         : [];
-      
+
       const isCompleted = completedExercises.includes(exerciseId);
       const newCompleted = isCompleted
         ? completedExercises.filter((id: string) => id !== exerciseId)
