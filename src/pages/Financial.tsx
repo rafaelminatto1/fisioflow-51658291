@@ -11,22 +11,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { 
-  DollarSign, 
-  TrendingUp, 
-  Calendar, 
-  CreditCard, 
-  AlertCircle, 
-  Plus, 
-  Download, 
+import {
+  DollarSign,
+  TrendingUp,
+  Calendar,
+  CreditCard,
+  AlertCircle,
+  Plus,
+  Download,
   Filter,
   Edit,
   Trash2,
-  Check
+  Check,
+  Package
 } from 'lucide-react';
 import { EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useFinancial, type Transaction } from '@/hooks/useFinancial';
-import { TransactionModal } from '@/components/financial/TransactionModal';
+import { TransactionModal, PackagesManager } from '@/components/financial';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -89,7 +90,7 @@ const Financial = () => {
 
   const handleExport = async () => {
     if (!stats || transactions.length === 0) return;
-    
+
     setIsExporting(true);
     try {
       await exportFinancialReport({
@@ -182,9 +183,9 @@ const Financial = () => {
             <p className="text-sm sm:text-base text-muted-foreground">Gerencie cobranças e acompanhe sua receita</p>
           </div>
           <div className="flex gap-2 sm:gap-3">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               className="hover:bg-accent/80 border-border/50 flex-1 sm:flex-none"
               onClick={handleExport}
               disabled={isExporting || transactions.length === 0}
@@ -192,7 +193,7 @@ const Financial = () => {
               <Download className={cn("w-4 h-4 sm:mr-2", isExporting && "animate-pulse")} />
               <span className="hidden sm:inline">Relatório</span>
             </Button>
-            <Button 
+            <Button
               onClick={handleNewTransaction}
               size="sm"
               className="bg-gradient-primary hover:bg-gradient-primary/90 shadow-medical flex-1 sm:flex-none"
@@ -321,9 +322,13 @@ const Financial = () => {
 
         {/* Financial Management Tabs */}
         <Tabs defaultValue="transactions" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="transactions">Todas as Transações</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="transactions">Transações</TabsTrigger>
             <TabsTrigger value="pending">Pendências</TabsTrigger>
+            <TabsTrigger value="packages" className="gap-1">
+              <Package className="h-4 w-4" />
+              Pacotes
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="transactions" className="space-y-6">
@@ -452,8 +457,8 @@ const Financial = () => {
                                 {transaction.created_at ? new Date(transaction.created_at).toLocaleDateString('pt-BR') : ''}
                               </p>
                             </div>
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               onClick={() => markAsPaid(transaction.id)}
                             >
                               Marcar como Pago
@@ -465,6 +470,10 @@ const Financial = () => {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          <TabsContent value="packages" className="space-y-6">
+            <PackagesManager />
           </TabsContent>
         </Tabs>
       </div>
