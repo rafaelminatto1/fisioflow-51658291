@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, BookOpen } from 'lucide-react';
 import { useCreateMeasurement, type EvolutionMeasurement } from '@/hooks/usePatientEvolution';
 
 interface MeasurementFormProps {
@@ -35,6 +36,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
   soapRecordId,
   requiredMeasurements = []
 }) => {
+  const navigate = useNavigate();
   const [measurements, setMeasurements] = useState<MeasurementInput[]>([
     {
       measurement_type: '',
@@ -143,13 +145,31 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Registrar Medições</span>
-          <Button onClick={handleAddMeasurement} size="sm" variant="outline">
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => navigate('/clinical-tests')}
+              size="sm"
+              variant="outline"
+              className="hidden sm:flex"
+              title="Acessar Biblioteca de Testes"
+            >
+              <BookOpen className="h-4 w-4 mr-2" />
+              Biblioteca de Testes
+            </Button>
+            <Button onClick={handleAddMeasurement} size="sm" variant="outline">
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar
+            </Button>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Mobile link for tests */}
+        <Button onClick={() => navigate('/clinical-tests')} size="sm" variant="outline" className="w-full sm:hidden mb-4">
+          <BookOpen className="h-4 w-4 mr-2" />
+          Biblioteca de Testes
+        </Button>
+
         {/* Presets */}
         <div className="flex flex-wrap gap-2 mb-4 p-3 bg-muted/20 rounded-lg">
           <span className="text-sm font-medium mr-2 flex items-center">Modelos Rápidos:</span>
