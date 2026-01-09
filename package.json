@@ -148,7 +148,7 @@
     "jsdom": "^26.1.0",
     "json-schema-to-typescript": "^15.0.4",
     "json-schema-to-zod": "^2.7.0",
-    "lovable-tagger": "^1.1.9",
+    "lovable-tagger": "^1.1.13",
     "postcss": "^8.5.6",
     "supabase": "^2.71.3",
     "tailwindcss": "^3.4.17",

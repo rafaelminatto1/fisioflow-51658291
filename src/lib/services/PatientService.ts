@@ -6,13 +6,13 @@ export class PatientService {
     const { data, error } = await supabase
       .from('patients')
       .select('*')
-      .order('name');
-    
+      .order('full_name');
+
     if (error) throw error;
-    
+
     return data.map(p => ({
       id: p.id,
-      name: p.name,
+      name: p.full_name || p.name,
       email: p.email || undefined,
       phone: p.phone || undefined,
       cpf: p.cpf || undefined,
@@ -33,15 +33,15 @@ export class PatientService {
       .select('*')
       .eq('id', id)
       .single();
-    
+
     if (error) {
       if (error.code === 'PGRST116') return null;
       throw error;
     }
-    
+
     return {
       id: data.id,
-      name: data.name,
+      name: data.full_name || data.name,
       email: data.email || undefined,
       phone: data.phone || undefined,
       cpf: data.cpf || undefined,
@@ -60,7 +60,7 @@ export class PatientService {
     const { data, error } = await supabase
       .from('patients')
       .insert({
-        name: patient.name,
+        full_name: patient.name,
         email: patient.email,
         phone: patient.phone,
         cpf: patient.cpf,
@@ -71,12 +71,12 @@ export class PatientService {
       })
       .select()
       .single();
-    
+
     if (error) throw error;
-    
+
     return {
       id: data.id,
-      name: data.name,
+      name: data.full_name || data.name,
       email: data.email || undefined,
       phone: data.phone || undefined,
       cpf: data.cpf || undefined,
@@ -93,8 +93,8 @@ export class PatientService {
 
   static async updatePatient(id: string, updates: Partial<Patient>): Promise<Patient> {
     const updateData: any = {};
-    
-    if (updates.name) updateData.name = updates.name;
+
+    if (updates.name) updateData.full_name = updates.name;
     if (updates.email !== undefined) updateData.email = updates.email;
     if (updates.phone !== undefined) updateData.phone = updates.phone;
     if (updates.cpf !== undefined) updateData.cpf = updates.cpf;
@@ -102,21 +102,21 @@ export class PatientService {
     if (updates.mainCondition !== undefined) updateData.observations = updates.mainCondition;
     if (updates.status) updateData.status = updates.status === 'Em Tratamento' ? 'active' : 'inactive';
     if (updates.incomplete_registration !== undefined) updateData.incomplete_registration = updates.incomplete_registration;
-    
+
     updateData.updated_at = new Date().toISOString();
-    
+
     const { data, error } = await supabase
       .from('patients')
       .update(updateData)
       .eq('id', id)
       .select()
       .single();
-    
+
     if (error) throw error;
-    
+
     return {
       id: data.id,
-      name: data.name,
+      name: data.full_name || data.name,
       email: data.email || undefined,
       phone: data.phone || undefined,
       cpf: data.cpf || undefined,
@@ -136,7 +136,7 @@ export class PatientService {
       .from('patients')
       .delete()
       .eq('id', id);
-    
+
     if (error) throw error;
   }
 }
