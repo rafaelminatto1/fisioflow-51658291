@@ -273,8 +273,40 @@ async function offerSlot(req: Request, supabase: any, waitlistId: string, user: 
     organization_id: user.organization_id,
   });
 
-  // TODO: Enviar notificação WhatsApp para o paciente
-  // Isso será feito pela integração WhatsApp
+  // Enviar notificação WhatsApp para o paciente
+  if (entry.patient.phone) {
+    try {
+      const slotDate = new Date(validation.data.appointment_slot);
+      const dateStr = slotDate.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+      const timeStr = slotDate.toLocaleTimeString('pt-BR', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'America/Sao_Paulo'
+      });
+
+      const message = `Olá ${entry.patient.name}! 🎉\n\nSurgiu uma vaga para ${dateStr} às ${timeStr}!\n\nResponda SIM em até 24 horas para garantir.\n\nActivity Fisioterapia 💪`;
+
+      const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+      const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+      await fetch(`${SUPABASE_URL}/functions/v1/send-whatsapp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+        body: JSON.stringify({
+          to: entry.patient.phone,
+          message: message,
+          patientId: entry.patient_id,
+        }),
+      });
+
+    } catch (error) {
+      console.error('Erro ao enviar notificação WhatsApp:', error);
+      // Não falha a requisição se a notificação falhar
+    }
+  }
 
   return successResponse({
     ...updated,
