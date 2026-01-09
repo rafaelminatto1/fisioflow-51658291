@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { useIntersectionObserver } from './useIntersectionObserver';
+import { useIntersectionObserver } from '@/hooks/performance/useIntersectionObserver';
 
 interface LazyComponentProps {
   children: React.ReactNode;
