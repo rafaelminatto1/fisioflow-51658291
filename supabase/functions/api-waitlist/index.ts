@@ -6,7 +6,6 @@ import {
   noContentResponse,
   optionsResponse,
   createSupabaseClient,
-  createSupabaseServiceClient,
   validateAuth,
   extractIdFromPath,
   isValidUUID,
@@ -17,6 +16,7 @@ import {
 } from '../_shared/api-helpers.ts';
 import { waitlistCreateSchema, waitlistOfferSchema, validateSchema } from '../_shared/schemas.ts';
 import { checkRateLimit, createRateLimitResponse } from '../_shared/rate-limit.ts';
+import { findWaitlistCandidate, processWaitlistOffer } from '../_shared/waitlist-utils.ts';
 
 const BASE_PATH = '/api-waitlist';
 
@@ -247,109 +247,29 @@ async function offerSlot(req: Request, supabase: any, waitlistId: string, user: 
     return errorResponse('Entrada não encontrada ou não está aguardando', 404);
   }
 
-  // Atualizar status para offered
-  const { data: updated, error: updateError } = await supabase
-    .from('waitlist')
-    .update({
-      status: 'offered',
-      offered_slot: validation.data.appointment_slot,
-      offered_at: new Date().toISOString(),
-      offer_expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24h
-    })
-    .eq('id', waitlistId)
-    .select()
-    .single();
+  try {
+    const updated = await processWaitlistOffer(
+      waitlistId,
+      new Date(validation.data.appointment_slot),
+      user.id,
+      user.organization_id!,
+      entry.patient,
+      supabase
+    );
 
-  if (updateError) {
-    return handleSupabaseError(updateError);
+    return successResponse({
+      ...updated,
+      message: `Vaga oferecida para ${entry.patient.name}. Aguardando resposta em até 24h.`,
+    });
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    return handleSupabaseError({ message: err.message });
   }
 
-  // Criar log de oferta
-  await supabase.from('waitlist_offers').insert({
-    waitlist_id: waitlistId,
-    patient_id: entry.patient_id,
-    offered_slot: validation.data.appointment_slot,
-    offered_by: user.id,
-    organization_id: user.organization_id,
-  });
-
-  // Enviar notificação WhatsApp para o paciente
-  if (entry.patient.phone) {
-    try {
-      const slotDate = new Date(validation.data.appointment_slot);
-      const dateStr = slotDate.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-      const timeStr = slotDate.toLocaleTimeString('pt-BR', {
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: 'America/Sao_Paulo'
-      });
-
-      const message = `Olá ${entry.patient.name}! 🎉\n\nSurgiu uma vaga para ${dateStr} às ${timeStr}!\n\nResponda SIM em até 24 horas para garantir.\n\nActivity Fisioterapia 💪`;
-
-      const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
-      const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-
-      await fetch(`${SUPABASE_URL}/functions/v1/send-whatsapp`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        },
-        body: JSON.stringify({
-          to: entry.patient.phone,
-          message: message,
-          patientId: entry.patient_id,
-        }),
-      });
-
-    } catch (error) {
-      console.error('Erro ao enviar notificação WhatsApp:', error);
-      // Não falha a requisição se a notificação falhar
-    }
-  }
-
-  return successResponse({
-    ...updated,
-    message: `Vaga oferecida para ${entry.patient.name}. Aguardando resposta em até 24h.`,
-  });
 }
 
 // ========== AUTO OFFER (para uso interno) ==========
 export async function autoOfferSlots(organizationId: string, cancelledSlot: Date) {
-  const supabase = createSupabaseServiceClient();
-
-  // Determinar dia da semana e período
-  const dayOfWeek = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][cancelledSlot.getDay()];
-  const hour = cancelledSlot.getHours();
-  const period = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
-
-  // Buscar candidatos da lista de espera
-  const { data: candidates, error } = await supabase
-    .from('waitlist')
-    .select(`
-      *,
-      patient:patients(id, name, phone, email)
-    `)
-    .eq('organization_id', organizationId)
-    .eq('status', 'waiting')
-    .contains('preferred_days', [dayOfWeek])
-    .contains('preferred_periods', [period])
-    .order('priority', { ascending: false })
-    .order('created_at', { ascending: true })
-    .limit(5);
-
-  if (error || !candidates || candidates.length === 0) {
-    return null;
-  }
-
-  // Filtrar por número de recusas (máx 3)
-  const eligibleCandidates = candidates.filter((c: any) => c.refusal_count < 3);
-
-  if (eligibleCandidates.length === 0) {
-    return null;
-  }
-
-  // Retornar o primeiro candidato elegível
-  return eligibleCandidates[0];
+  return await findWaitlistCandidate(organizationId, cancelledSlot);
 }
 
