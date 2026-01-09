@@ -172,7 +172,7 @@ async function logNotification(payload: NotificationPayload, results: Notificati
       message: payload.message,
       channels: payload.channels || ['whatsapp'],
       success: succeeded,
-      results: JSON.stringify(results),
+      results: results,
       failed_channels: failedChannels,
     });
   } catch (error) {

@@ -17,6 +17,7 @@ import {
 import { appointmentCreateSchema, appointmentUpdateSchema, appointmentCancelSchema, validateSchema } from '../_shared/schemas.ts';
 import { checkRateLimit, createRateLimitResponse } from '../_shared/rate-limit.ts';
 import { captureException } from '../_shared/sentry.ts';
+import { findWaitlistCandidate, processWaitlistOffer } from '../_shared/waitlist-utils.ts';
 
 const BASE_PATH = '/api-appointments';
 
@@ -330,7 +331,28 @@ async function cancelAppointment(req: Request, supabase: any, appointmentId: str
     return handleSupabaseError(error);
   }
 
-  // TODO: Trigger waitlist offer
+  // Trigger waitlist offer
+  try {
+    const cancelledSlot = new Date(data.start_time);
+    // Use service client (undefined) to bypass RLS when searching waitlist
+    const candidate = await findWaitlistCandidate(organizationId!, cancelledSlot);
+
+    if (candidate) {
+      console.log(`[Waitlist] Found candidate for cancelled slot: ${candidate.id}`);
+      // Use service client (undefined) to update waitlist and send notification
+      await processWaitlistOffer(
+        candidate.id,
+        cancelledSlot,
+        'system',
+        organizationId!,
+        candidate.patient
+      );
+    }
+  } catch (err) {
+    // Non-blocking error
+    console.error('Error processing waitlist offer:', err);
+    captureException(err instanceof Error ? err : new Error(String(err)));
+  }
 
   return successResponse(data);
 }
