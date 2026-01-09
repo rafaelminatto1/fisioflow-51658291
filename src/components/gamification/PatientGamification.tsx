@@ -1,194 +1,228 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { 
-  Trophy, 
-  Star, 
-  Flame, 
-  Target, 
+import {
+  Trophy,
+  Star,
+  Flame,
+  Target,
   Award,
   TrendingUp,
   Zap,
-  Heart
+  Heart,
+  Plus,
+  Loader2,
+  Lock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useGamification } from '@/hooks/useGamification';
+import { useToast } from '@/hooks/use-toast';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
-interface Achievement {
-  id: string;
-  title: string;
-  description: string;
-  icon: any;
-  color: string;
-  progress: number;
-  maxProgress: number;
-  completed: boolean;
-}
+import * as Icons from 'lucide-react';
 
 interface PatientGamificationProps {
   patientId: string;
 }
 
 export function PatientGamification({ patientId }: PatientGamificationProps) {
-  const [level, setLevel] = useState(3);
-  const [xp, setXp] = useState(750);
-  const [streak, setStreak] = useState(5);
-  const [totalPoints, setTotalPoints] = useState(1250);
-  
-  const xpToNextLevel = 1000;
-  const xpProgress = (xp / xpToNextLevel) * 100;
+  const {
+    profile,
+    allAchievements,
+    unlockedAchievements,
+    isLoading,
+    xpProgress,
+    xpPerLevel,
+    currentLevel,
+    currentXp,
+    awardXp,
+    recentTransactions
+  } = useGamification(patientId);
 
-  const achievements: Achievement[] = [
-    {
-      id: '1',
-      title: '🔥 Sequência de Fogo',
-      description: 'Complete exercícios por 7 dias seguidos',
-      icon: Flame,
-      color: 'text-orange-500',
-      progress: 5,
-      maxProgress: 7,
-      completed: false
-    },
-    {
-      id: '2',
-      title: '🎯 Precisão Total',
-      description: 'Complete 20 exercícios com perfeição',
-      icon: Target,
-      color: 'text-blue-500',
-      progress: 20,
-      maxProgress: 20,
-      completed: true
-    },
-    {
-      id: '3',
-      title: '⚡ Superação',
-      description: 'Melhore sua pontuação de dor em 50%',
-      icon: Zap,
-      color: 'text-yellow-500',
-      progress: 30,
-      maxProgress: 50,
-      completed: false
-    },
-    {
-      id: '4',
-      title: '❤️ Dedicação',
-      description: 'Participe de 30 sessões',
-      icon: Heart,
-      color: 'text-red-500',
-      progress: 18,
-      maxProgress: 30,
-      completed: false
+  const { toast } = useToast();
+  const [isGivingXp, setIsGivingXp] = useState(false);
+
+  // Helper to dynamically get icon component
+  const getIcon = (iconName: string, defaultIcon: any) => {
+    // @ts-ignore
+    const IconComponent = Icons[iconName] || defaultIcon;
+    return IconComponent;
+  };
+
+  const handleManualAward = async () => {
+    setIsGivingXp(true);
+    try {
+      await awardXp.mutateAsync({
+        amount: 50,
+        reason: 'manual_award',
+        description: 'Recompensa manual do terapeuta'
+      });
+    } catch (error) {
+      // Toast handled in hook
+    } finally {
+      setIsGivingXp(false);
     }
-  ];
+  };
 
-  const recentRewards = [
-    { title: '+50 XP', description: 'Exercícios completados', time: '2h atrás' },
-    { title: '+100 XP', description: 'Sessão de fisioterapia', time: '1 dia atrás' },
-    { title: '+25 XP', description: 'Check-in diário', time: '2 dias atrás' },
-  ];
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Level and Progress Card */}
-      <Card className="border-2 border-primary/30 shadow-xl bg-gradient-to-br from-primary/10 via-background to-background">
+      <Card className="border-2 border-primary/20 shadow-xl bg-gradient-to-br from-primary/5 via-background to-background relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-0 pointer-events-none" />
+
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-gradient-primary rounded-xl shadow-medical">
-                <Trophy className="h-6 w-6 text-primary-foreground" />
+          <CardTitle className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 blur opacity-40 animate-pulse" />
+                <div className="p-4 bg-gradient-to-br from-yellow-100 to-yellow-50 dark:from-yellow-900/40 dark:to-yellow-800/20 rounded-full border border-yellow-200 dark:border-yellow-700/50 shadow-inner relative">
+                  <Trophy className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
+                </div>
+                <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full border-2 border-background">
+                  {currentLevel}
+                </div>
               </div>
               <div>
-                <p className="text-2xl font-bold">Nível {level}</p>
-                <p className="text-sm text-muted-foreground">Fisioterapeuta em Treinamento</p>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
+                    Nível {currentLevel}
+                  </h2>
+                </div>
+                <p className="text-sm text-muted-foreground font-medium">
+                  {currentLevel < 5 ? 'Iniciante' : currentLevel < 10 ? 'Intermediário' : 'Especialista'} em Reabilitação
+                </p>
               </div>
             </div>
-            <Badge className="text-lg px-4 py-2 bg-gradient-primary">
-              {totalPoints} pontos
-            </Badge>
+            <div className="flex flex-col items-end gap-2">
+              <Badge className="text-sm px-3 py-1 bg-primary/10 text-primary hover:bg-primary/20 transition-colors border-primary/20">
+                Total: {profile?.total_points || 0} pts
+              </Badge>
+              {/* Only show manual award for therapists - assuming parent controls visibility or we check role here. 
+                  For now, we just show it as a feature. */}
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1 h-8 text-xs border-dashed border-primary/40 hover:border-primary/60 hover:bg-primary/5"
+                onClick={handleManualAward}
+                disabled={isGivingXp}
+              >
+                {isGivingXp ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+                Dar 50 XP
+              </Button>
+            </div>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6 relative z-10">
           <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Progresso para Nível {level + 1}</span>
-              <span className="font-bold">{xp} / {xpToNextLevel} XP</span>
+            <div className="flex justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <span>Progresso Nível {currentLevel + 1}</span>
+              <span>{Math.round(currentXp)} / {xpPerLevel} XP</span>
             </div>
-            <Progress value={xpProgress} className="h-3" />
+            <div className="h-4 w-full bg-secondary/50 rounded-full overflow-hidden p-1 shadow-inner">
+              <div
+                className="h-full bg-gradient-to-r from-primary to-primary/80 rounded-full transition-all duration-1000 ease-out shadow-sm relative group"
+                style={{ width: `${Math.min(100, xpProgress)}%` }}
+              >
+                <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+              </div>
+            </div>
+            <p className="text-xs text-center text-muted-foreground pt-1">
+              Faltam <span className="font-bold text-primary">{Math.max(0, xpPerLevel - currentXp)} XP</span> para o próximo nível
+            </p>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 pt-4">
-            <div className="text-center p-4 bg-muted/50 rounded-xl">
-              <Flame className="h-8 w-8 text-orange-500 mx-auto mb-2" />
-              <p className="text-2xl font-bold">{streak}</p>
-              <p className="text-xs text-muted-foreground">Dias de sequência</p>
+          <div className="grid grid-cols-3 gap-4 pt-2">
+            <div className="text-center p-4 bg-background/50 backdrop-blur-sm rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-shadow">
+              <div className="bg-orange-100 dark:bg-orange-900/20 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2">
+                <Flame className="h-5 w-5 text-orange-500" />
+              </div>
+              <p className="text-2xl font-bold text-foreground">{profile?.current_streak || 0}</p>
+              <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide">Dias Seguidos</p>
             </div>
-            <div className="text-center p-4 bg-muted/50 rounded-xl">
-              <Star className="h-8 w-8 text-yellow-500 mx-auto mb-2" />
-              <p className="text-2xl font-bold">12</p>
-              <p className="text-xs text-muted-foreground">Conquistas</p>
+            <div className="text-center p-4 bg-background/50 backdrop-blur-sm rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-shadow">
+              <div className="bg-blue-100 dark:bg-blue-900/20 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2">
+                <Target className="h-5 w-5 text-blue-500" />
+              </div>
+              <p className="text-2xl font-bold text-foreground">{unlockedAchievements.length}</p>
+              <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide">Conquistas</p>
             </div>
-            <div className="text-center p-4 bg-muted/50 rounded-xl">
-              <TrendingUp className="h-8 w-8 text-green-500 mx-auto mb-2" />
-              <p className="text-2xl font-bold">89%</p>
-              <p className="text-xs text-muted-foreground">Melhora</p>
+            <div className="text-center p-4 bg-background/50 backdrop-blur-sm rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-shadow">
+              <div className="bg-green-100 dark:bg-green-900/20 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2">
+                <TrendingUp className="h-5 w-5 text-green-500" />
+              </div>
+              <p className="text-2xl font-bold text-foreground">{Math.floor((profile?.total_points || 0) / 100)}%</p>
+              <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide">Engajamento</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Achievements Grid */}
-      <div>
-        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+      <div className="space-y-4">
+        <h3 className="text-lg font-bold flex items-center gap-2 px-1">
           <Award className="h-5 w-5 text-primary" />
           Conquistas
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {achievements.map((achievement) => {
-            const Icon = achievement.icon;
+          {allAchievements.map((achievement) => {
+            const unlocked = unlockedAchievements.find(ua => ua.achievement_id === achievement.id);
+            const Icon = getIcon(achievement.icon, Star);
+
             return (
-              <Card 
+              <Card
                 key={achievement.id}
                 className={cn(
-                  "transition-all hover:shadow-lg",
-                  achievement.completed && "border-2 border-primary/50 bg-primary/5"
+                  "transition-all duration-300 hover:scale-[1.02]",
+                  unlocked
+                    ? "border-primary/40 bg-gradient-to-br from-primary/5 to-transparent shadow-md"
+                    : "border-border/60 bg-muted/20 opacity-80"
                 )}
               >
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className={cn(
-                      "p-3 rounded-lg",
-                      achievement.completed ? "bg-primary/20" : "bg-muted"
-                    )}>
-                      <Icon className={cn("h-6 w-6", achievement.color)} />
-                    </div>
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-semibold">{achievement.title}</h4>
-                        {achievement.completed && (
-                          <Badge variant="default" className="bg-green-500">
-                            Completo!
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        {achievement.description}
-                      </p>
-                      {!achievement.completed && (
-                        <div className="space-y-1">
-                          <div className="flex justify-between text-xs">
-                            <span>Progresso</span>
-                            <span className="font-medium">
-                              {achievement.progress} / {achievement.maxProgress}
-                            </span>
-                          </div>
-                          <Progress 
-                            value={(achievement.progress / achievement.maxProgress) * 100}
-                            className="h-2"
-                          />
+                <CardContent className="p-4 flex items-start gap-4">
+                  <div className={cn(
+                    "p-3 rounded-xl shadow-sm transition-colors",
+                    unlocked
+                      ? "bg-gradient-to-br from-primary/20 to-primary/10 text-primary ring-1 ring-primary/20"
+                      : "bg-muted text-muted-foreground grayscale"
+                  )}>
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <h4 className={cn("font-semibold", !unlocked && "text-muted-foreground")}>
+                        {achievement.title}
+                      </h4>
+                      {unlocked ? (
+                        <Badge variant="secondary" className="bg-green-500/15 text-green-600 dark:text-green-400 hover:bg-green-500/25 border-green-500/20 text-[10px] px-2">
+                          Completo
+                        </Badge>
+                      ) : (
+                        <div className="flex items-center text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                          <Lock className="h-3 w-3 mr-1" />
+                          {achievement.xp_reward} XP
                         </div>
                       )}
                     </div>
+                    <p className="text-sm text-muted-foreground leading-snug">
+                      {achievement.description}
+                    </p>
+                    {unlocked && (
+                      <p className="text-[10px] text-muted-foreground pt-1 flex items-center">
+                        <Icons.CheckCheck className="h-3 w-3 mr-1 text-primary" />
+                        Desbloqueado {unlocked.unlocked_at && formatDistanceToNow(new Date(unlocked.unlocked_at), { addSuffix: true, locale: ptBR })}
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -197,57 +231,61 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
         </div>
       </div>
 
-      {/* Recent Rewards */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Star className="h-5 w-5 text-yellow-500" />
-            Recompensas Recentes
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {recentRewards.map((reward, idx) => (
-              <div 
-                key={idx}
-                className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
-                    <Star className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+      {/* Recent Rewards / History */}
+      {recentTransactions && recentTransactions.length > 0 && (
+        <Card className="border-none shadow-none bg-transparent">
+          <CardHeader className="px-0 pt-0 pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Icons.History className="h-5 w-5 text-muted-foreground/70" />
+              Histórico Recente
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-0">
+            <div className="space-y-2">
+              {recentTransactions.map((tx) => (
+                <div
+                  key={tx.id}
+                  className="flex items-center justify-between p-3 bg-card border border-border/50 rounded-lg text-sm hover:bg-accent/5 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-md text-primary">
+                      <Star className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{tx.reason === 'manual_award' ? 'Bônus do Terapeuta' : 'Atividade Realizada'}</p>
+                      <p className="text-xs text-muted-foreground">{tx.description || 'XP ganho por atividade'}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-semibold">{reward.title}</p>
-                    <p className="text-sm text-muted-foreground">{reward.description}</p>
+                  <div className="text-right">
+                    <span className="font-bold text-green-600 dark:text-green-400 block">+{tx.amount} XP</span>
+                    <span className="text-[10px] text-muted-foreground">{formatDistanceToNow(new Date(tx.created_at), { addSuffix: true, locale: ptBR })}</span>
                   </div>
                 </div>
-                <span className="text-xs text-muted-foreground">{reward.time}</span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Motivational Banner */}
-      <Card className="bg-gradient-to-r from-primary/20 via-primary/10 to-background border-2 border-primary/30">
-        <CardContent className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="p-4 bg-primary/20 rounded-full">
-              <Trophy className="h-8 w-8 text-primary" />
+      {(xpPerLevel - currentXp) <= 200 && (
+        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-1 shadow-lg animate-pulse-slow">
+          <div className="bg-background/95 backdrop-blur-md rounded-lg p-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-full">
+                <Zap className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <div>
+                <h4 className="font-bold text-sm">Quase lá!</h4>
+                <p className="text-xs text-muted-foreground">Faltam apenas {xpPerLevel - currentXp} XP para subir de nível.</p>
+              </div>
             </div>
-            <div className="flex-1">
-              <h4 className="font-bold text-lg mb-1">Continue assim! 🎉</h4>
-              <p className="text-muted-foreground">
-                Você está a apenas <strong>250 XP</strong> de atingir o Nível {level + 1}!
-                Complete seus exercícios diários para manter a sequência.
-              </p>
-            </div>
-            <Button className="shadow-lg">
-              Ver Exercícios
+            <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white border-none shadow-md">
+              Treinar Agora
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      )}
     </div>
   );
 }
