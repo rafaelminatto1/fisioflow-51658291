@@ -6,13 +6,18 @@ export class AppointmentNotificationService {
    * Agenda notificação para um agendamento criado
    */
   static async scheduleNotification(
-    appointmentId: string, 
+    appointmentId: string,
     patientId: string,
-    date: Date, 
+    date: Date,
     time: string,
     patientName: string
   ) {
     try {
+      if (!appointmentId || !patientId || !date || !time) {
+        logger.error('Dados incompletos para notificação', { appointmentId, patientId, date, time }, 'AppointmentNotificationService');
+        return null;
+      }
+
       logger.info('Agendando notificação para consulta', { appointmentId, date, time }, 'AppointmentNotificationService');
 
       // Chamar edge function para agendar notificação
@@ -55,6 +60,11 @@ export class AppointmentNotificationService {
     patientName: string
   ) {
     try {
+      if (!appointmentId || !patientId || !newDate || !newTime) {
+        logger.error('Dados incompletos para notificação de reagendamento', { appointmentId, patientId, newDate, newTime }, 'AppointmentNotificationService');
+        return null;
+      }
+
       logger.info('Notificando reagendamento', { appointmentId, newDate, newTime }, 'AppointmentNotificationService');
 
       const { data, error } = await supabase.functions.invoke('schedule-notifications', {
@@ -95,6 +105,11 @@ export class AppointmentNotificationService {
     patientName: string
   ) {
     try {
+      if (!appointmentId || !patientId || !date || !time) {
+        logger.error('Dados incompletos para notificação de cancelamento', { appointmentId, patientId, date, time }, 'AppointmentNotificationService');
+        return null;
+      }
+
       logger.info('Notificando cancelamento', { appointmentId }, 'AppointmentNotificationService');
 
       const { data, error } = await supabase.functions.invoke('schedule-notifications', {

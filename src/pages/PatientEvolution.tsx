@@ -60,6 +60,7 @@ import { ReportGeneratorDialog } from '@/components/reports/ReportGeneratorDialo
 import { TreatmentAssistant } from '@/components/ai/TreatmentAssistant';
 import { SessionExercisesPanel, type SessionExercise } from '@/components/evolution/SessionExercisesPanel';
 import { PatientGamification } from '@/components/gamification/PatientGamification';
+import { useGamification } from '@/hooks/useGamification';
 import { WhatsAppIntegration } from '@/components/whatsapp/WhatsAppIntegration';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SessionWizard, WizardStep } from '@/components/evolution/SessionWizard';
@@ -110,6 +111,7 @@ const PatientEvolution = () => {
   const [sessionExercises, setSessionExercises] = useState<SessionExercise[]>([]);
 
   const { completeAppointment, isCompleting } = useAppointmentActions();
+  const { awardXp } = useGamification(appointment?.patient_id || '');
 
   // Função auxiliar para timeout
   const withTimeout = useCallback(<T,>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> => {
@@ -451,7 +453,20 @@ const PatientEvolution = () => {
     // Marcar appointment como concluído
     if (appointmentId) {
       completeAppointment(appointmentId, {
-        onSuccess: () => {
+        onSuccess: async () => {
+          // Award XP for session completion
+          try {
+            if (patientId) {
+              await awardXp.mutateAsync({
+                amount: 100,
+                reason: 'session_completed',
+                description: 'Sessão de fisioterapia concluída'
+              });
+            }
+          } catch (e) {
+            console.error("Failed to award XP", e);
+          }
+
           toast({
             title: 'Atendimento concluído',
             description: 'O atendimento foi marcado como concluído com sucesso.'
