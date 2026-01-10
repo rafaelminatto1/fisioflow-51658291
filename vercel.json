@@ -4,6 +4,28 @@
   "devCommand": "pnpm dev",
   "framework": "vite",
   "outputDirectory": "dist",
+  "crons": [
+    {
+      "path": "/api/crons/daily-reports",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/crons/expiring-vouchers",
+      "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/crons/birthdays",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/crons/weekly-summary",
+      "schedule": "0 9 * * 1"
+    },
+    {
+      "path": "/api/crons/cleanup",
+      "schedule": "0 3 * * *"
+    }
+  ],
   "env": {
     "VITE_SUPABASE_URL": "https://ycvbtjfrchcyvmkvuocu.supabase.co",
     "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljdmJ0amZyY2hjeXZta3Z1b2N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTA5OTQsImV4cCI6MjA3NTE2Njk5NH0.L5maWG2hc3LVHEUMOzfTRTjYwIAJFXx3zan3G-Y1zAA",
