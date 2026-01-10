@@ -3,10 +3,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
+import {
   Play, Heart, Share2, ExternalLink, Edit,
   Clock, Repeat, Dumbbell, FileText, Video, Image as ImageIcon,
-  AlertTriangle
+  AlertTriangle, Printer
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';
@@ -30,42 +30,41 @@ const difficultyColors: Record<string, string> = {
 
 function getEmbedUrl(url: string): string | null {
   if (!url) return null;
-  
+
   // YouTube
   const youtubeMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
   if (youtubeMatch) {
     return `https://www.youtube.com/embed/${youtubeMatch[1]}`;
   }
-  
+
   // Vimeo
   const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
   if (vimeoMatch) {
     return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
   }
-  
+
   // Direct video URL
   if (url.match(/\.(mp4|webm|ogg)$/i)) {
     return url;
   }
-  
+
   return null;
 }
 
-export function ExerciseViewModal({ 
-  open, 
-  onOpenChange, 
+export function ExerciseViewModal({
+  open,
+  onOpenChange,
   exercise,
-  onEdit 
+  onEdit
 }: ExerciseViewModalProps) {
   const { isFavorite, toggleFavorite } = useExerciseFavorites();
-  
+
   if (!exercise) return null;
 
   const embedUrl = exercise.video_url ? getEmbedUrl(exercise.video_url) : null;
   const isDirectVideo = embedUrl?.match(/\.(mp4|webm|ogg)$/i);
   const hasVideo = !!exercise.video_url;
   const hasImage = !!exercise.image_url;
-  const hasInfo = !!(exercise.description || exercise.instructions);
 
   const defaultTab = hasVideo ? 'video' : hasImage ? 'image' : 'info';
 
@@ -93,7 +92,7 @@ export function ExerciseViewModal({
                   <Badge variant="secondary">{exercise.category}</Badge>
                 )}
                 {exercise.difficulty && (
-                  <Badge 
+                  <Badge
                     variant="outline"
                     className={cn(difficultyColors[exercise.difficulty])}
                   >
@@ -126,6 +125,10 @@ export function ExerciseViewModal({
             <Button variant="ghost" size="sm" onClick={handleShare}>
               <Share2 className="h-4 w-4 mr-2" />
               Compartilhar
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => window.print()}>
+              <Printer className="h-4 w-4 mr-2" />
+              Imprimir
             </Button>
             {onEdit && (
               <Button variant="ghost" size="sm" onClick={() => {
@@ -180,8 +183,8 @@ export function ExerciseViewModal({
                   <div className="aspect-video bg-muted rounded-lg overflow-hidden">
                     {embedUrl ? (
                       isDirectVideo ? (
-                        <video 
-                          controls 
+                        <video
+                          controls
                           className="w-full h-full"
                           src={embedUrl}
                         >
@@ -199,7 +202,7 @@ export function ExerciseViewModal({
                       <div className="w-full h-full flex flex-col items-center justify-center gap-4">
                         <Play className="w-16 h-16 text-muted-foreground/50" />
                         <p className="text-muted-foreground">Formato de vídeo não suportado</p>
-                        <Button 
+                        <Button
                           variant="outline"
                           onClick={() => window.open(exercise.video_url, '_blank')}
                         >
@@ -209,8 +212,8 @@ export function ExerciseViewModal({
                       </div>
                     )}
                   </div>
-                  <Button 
-                    variant="link" 
+                  <Button
+                    variant="link"
                     className="p-0 h-auto text-xs"
                     onClick={() => window.open(exercise.video_url, '_blank')}
                   >
@@ -223,8 +226,8 @@ export function ExerciseViewModal({
                   <Video className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>Nenhum vídeo disponível para este exercício</p>
                   {onEdit && (
-                    <Button 
-                      variant="link" 
+                    <Button
+                      variant="link"
                       className="mt-2"
                       onClick={() => {
                         onOpenChange(false);
@@ -241,8 +244,8 @@ export function ExerciseViewModal({
             <TabsContent value="image" className="mt-4">
               {hasImage ? (
                 <div className="rounded-lg overflow-hidden bg-muted">
-                  <img 
-                    src={exercise.image_url!} 
+                  <img
+                    src={exercise.image_url!}
                     alt={exercise.name}
                     className="w-full max-h-[400px] object-contain"
                   />
@@ -267,7 +270,7 @@ export function ExerciseViewModal({
                   </p>
                 </div>
               )}
-              
+
               {exercise.instructions && (
                 <div>
                   <h4 className="font-semibold mb-2 flex items-center gap-2 text-sm">
@@ -285,8 +288,8 @@ export function ExerciseViewModal({
                   <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>Nenhuma informação adicional disponível</p>
                   {onEdit && (
-                    <Button 
-                      variant="link" 
+                    <Button
+                      variant="link"
                       className="mt-2"
                       onClick={() => {
                         onOpenChange(false);
@@ -300,6 +303,18 @@ export function ExerciseViewModal({
               )}
             </TabsContent>
           </Tabs>
+
+          {/* Related Exercises (Simple Implementation) */}
+          {exercise.category && (
+            <div className="mt-8 pt-6 border-t">
+              <h4 className="font-semibold mb-4 text-sm">Exercícios Relacionados</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 opacity-60 hover:opacity-100 transition-opacity">
+                <p className="col-span-full text-xs text-muted-foreground">
+                  Outros exercícios de {exercise.category} podem ser interessantes.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
