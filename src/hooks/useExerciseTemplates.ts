@@ -45,13 +45,13 @@ export const useExerciseTemplates = (category?: string) => {
         .from('exercise_templates')
         .select('*')
         .order('condition_name');
-      
+
       if (category) {
         query = query.eq('category', category);
       }
-      
+
       const { data, error } = await query;
-      
+
       if (error) throw error;
       return data as ExerciseTemplate[];
     },
@@ -64,7 +64,7 @@ export const useExerciseTemplates = (category?: string) => {
         .insert([template])
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -85,7 +85,7 @@ export const useExerciseTemplates = (category?: string) => {
         .eq('id', id)
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -104,7 +104,7 @@ export const useExerciseTemplates = (category?: string) => {
         .from('exercise_templates')
         .delete()
         .eq('id', id);
-      
+
       if (error) throw error;
     },
     onSuccess: () => {
@@ -121,6 +121,7 @@ export const useExerciseTemplates = (category?: string) => {
     loading: isLoading,
     error,
     createTemplate: createMutation.mutate,
+    createTemplateAsync: createMutation.mutateAsync,
     updateTemplate: updateMutation.mutate,
     deleteTemplate: deleteMutation.mutate,
     isCreating: createMutation.isPending,
@@ -136,7 +137,7 @@ export const useTemplateItems = (templateId?: string) => {
     queryKey: ['exercise-template-items', templateId],
     queryFn: async () => {
       if (!templateId) return [];
-      
+
       const { data, error } = await supabase
         .from('exercise_template_items')
         .select(`
@@ -145,7 +146,7 @@ export const useTemplateItems = (templateId?: string) => {
         `)
         .eq('template_id', templateId)
         .order('order_index');
-      
+
       if (error) throw error;
       return data as ExerciseTemplateItem[];
     },
@@ -159,7 +160,7 @@ export const useTemplateItems = (templateId?: string) => {
         .insert([item])
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -178,7 +179,7 @@ export const useTemplateItems = (templateId?: string) => {
         .from('exercise_template_items')
         .delete()
         .eq('id', id);
-      
+
       if (error) throw error;
     },
     onSuccess: () => {
@@ -198,7 +199,7 @@ export const useTemplateItems = (templateId?: string) => {
         .eq('id', id)
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },

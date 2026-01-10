@@ -357,6 +357,7 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise }: ExerciseLi
   const [selectedEquipment, setSelectedEquipment] = useState<string>('all');
   const [selectedPathology, setSelectedPathology] = useState<string>('all');
   const [selectedBodyPart, setSelectedBodyPart] = useState<string>('all');
+  const [selectedTargetMuscle, setSelectedTargetMuscle] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [activeFilter, setActiveFilter] = useState<'all' | 'favorites' | 'no-video'>('all');
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -390,6 +391,11 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise }: ExerciseLi
     [exercises]
   );
 
+  const targetMuscles = useMemo(() =>
+    ['all', ...Array.from(new Set(exercises.flatMap(e => e.targetMuscles || []).filter(Boolean)))],
+    [exercises]
+  );
+
   const filteredExercises = useMemo(() => {
     return exercises.filter(ex => {
       const matchesSearch = searchTerm === '' ||
@@ -401,14 +407,15 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise }: ExerciseLi
       const matchesEquipment = selectedEquipment === 'all' || ex.equipment?.includes(selectedEquipment);
       const matchesPathology = selectedPathology === 'all' || ex.indicated_pathologies?.includes(selectedPathology);
       const matchesBodyPart = selectedBodyPart === 'all' || ex.body_parts?.includes(selectedBodyPart);
+      const matchesTargetMuscle = selectedTargetMuscle === 'all' || ex.targetMuscles?.includes(selectedTargetMuscle);
 
       let matchesFilter = true;
       if (activeFilter === 'favorites') matchesFilter = isFavorite(ex.id);
       if (activeFilter === 'no-video') matchesFilter = !ex.video_url;
 
-      return matchesSearch && matchesCategory && matchesDifficulty && matchesEquipment && matchesPathology && matchesBodyPart && matchesFilter;
+      return matchesSearch && matchesCategory && matchesDifficulty && matchesEquipment && matchesPathology && matchesBodyPart && matchesTargetMuscle && matchesFilter;
     });
-  }, [exercises, searchTerm, selectedCategory, selectedDifficulty, selectedEquipment, selectedPathology, selectedBodyPart, activeFilter, isFavorite]);
+  }, [exercises, searchTerm, selectedCategory, selectedDifficulty, selectedEquipment, selectedPathology, selectedBodyPart, selectedTargetMuscle, activeFilter, isFavorite]);
 
   const exercisesWithoutVideo = exercises.filter(ex => !ex.video_url);
   const favoritesCount = exercises.filter(ex => isFavorite(ex.id)).length;
@@ -450,19 +457,23 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise }: ExerciseLi
   return (
     <div className="space-y-4">
       {/* Search and Filters */}
+      {/* Search and Filters */}
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar exercícios..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 h-11"
-            />
-          </div>
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar exercícios..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 h-11"
+          />
+        </div>
+
+        {/* Filters Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-full sm:w-[140px] h-11">
+            <SelectTrigger className="h-10">
               <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
               <SelectValue placeholder="Categoria" />
             </SelectTrigger>
@@ -474,8 +485,9 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise }: ExerciseLi
               ))}
             </SelectContent>
           </Select>
+
           <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
-            <SelectTrigger className="w-full sm:w-[140px] h-11">
+            <SelectTrigger className="h-10">
               <SortAsc className="h-4 w-4 mr-2 text-muted-foreground" />
               <SelectValue placeholder="Dificuldade" />
             </SelectTrigger>
@@ -487,9 +499,41 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise }: ExerciseLi
               ))}
             </SelectContent>
           </Select>
-          <Select value={selectedEquipment} onValueChange={setSelectedEquipment}>
-            <SelectTrigger className="w-full sm:w-[140px] h-11">
+
+          <Select value={selectedBodyPart} onValueChange={setSelectedBodyPart}>
+            <SelectTrigger className="h-10">
+              <Sparkles className="h-4 w-4 mr-2 text-muted-foreground" />
+              <SelectValue placeholder="Parte do Corpo" />
+            </SelectTrigger>
+            <SelectContent>
+              {bodyParts.map((item) => (
+                <SelectItem key={item} value={item as string}>
+                  {item === 'all' ? 'Todas partes' : item}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={selectedTargetMuscle} onValueChange={setSelectedTargetMuscle}>
+            <SelectTrigger className="h-10">
               <Dumbbell className="h-4 w-4 mr-2 text-muted-foreground" />
+              <SelectValue placeholder="Músculo Alvo" />
+            </SelectTrigger>
+            <SelectContent>
+              {targetMuscles.map((item) => (
+                <SelectItem key={item} value={item as string}>
+                  {item === 'all' ? 'Todos músculos' : item}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Secondary Filters Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3">
+          <Select value={selectedEquipment} onValueChange={setSelectedEquipment}>
+            <SelectTrigger className="h-10">
+              <LayoutGrid className="h-4 w-4 mr-2 text-muted-foreground" />
               <SelectValue placeholder="Equipamento" />
             </SelectTrigger>
             <SelectContent>
@@ -500,11 +544,9 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise }: ExerciseLi
               ))}
             </SelectContent>
           </Select>
-        </div>
 
-        <div className="flex flex-col sm:flex-row gap-3">
           <Select value={selectedPathology} onValueChange={setSelectedPathology}>
-            <SelectTrigger className="w-full sm:w-[200px] h-11">
+            <SelectTrigger className="h-10">
               <Heart className="h-4 w-4 mr-2 text-muted-foreground" />
               <SelectValue placeholder="Patologia Indicada" />
             </SelectTrigger>
@@ -512,19 +554,6 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise }: ExerciseLi
               {pathologies.map((item) => (
                 <SelectItem key={item} value={item as string}>
                   {item === 'all' ? 'Todas patologias' : item}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={selectedBodyPart} onValueChange={setSelectedBodyPart}>
-            <SelectTrigger className="w-full sm:w-[160px] h-11">
-              <Sparkles className="h-4 w-4 mr-2 text-muted-foreground" />
-              <SelectValue placeholder="Parte do Corpo" />
-            </SelectTrigger>
-            <SelectContent>
-              {bodyParts.map((item) => (
-                <SelectItem key={item} value={item as string}>
-                  {item === 'all' ? 'Todas partes' : item}
                 </SelectItem>
               ))}
             </SelectContent>
