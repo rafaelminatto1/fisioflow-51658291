@@ -1,4 +1,5 @@
-import { useState } from 'react';
+```javascript
+import { useState, useMemo } from 'react';
 import { useExerciseProtocols, type ExerciseProtocol } from '@/hooks/useExerciseProtocols';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -44,21 +45,21 @@ export function ProtocolsManager() {
 
   const { protocols, loading, createProtocol, updateProtocol, deleteProtocol, isCreating, isUpdating, isDeleting } = useExerciseProtocols();
 
-  const filteredProtocols = protocols.filter(p =>
+  const filteredProtocols = useMemo(() => protocols.filter(p =>
     (p.name?.toLowerCase().includes(search.toLowerCase()) ||
       p.condition_name?.toLowerCase().includes(search.toLowerCase())) &&
     p.protocol_type === activeTab
-  );
+  ), [protocols, search, activeTab]);
 
   // Agrupar por condição
-  const groupedProtocols = filteredProtocols.reduce((acc, protocol) => {
+  const groupedProtocols = useMemo(() => filteredProtocols.reduce((acc, protocol) => {
     const key = protocol.condition_name;
     if (!acc[key]) {
       acc[key] = [];
     }
     acc[key].push(protocol);
     return acc;
-  }, {} as Record<string, ExerciseProtocol[]>);
+  }, {} as Record<string, ExerciseProtocol[]>), [filteredProtocols]);
 
   const handleDelete = () => {
     if (deleteId) {
@@ -328,7 +329,7 @@ export function ProtocolsManager() {
                             <div>
                               <p className="font-medium text-sm">
                                 Semana {restriction.week_start}
-                                {restriction.week_end && ` - ${restriction.week_end}`}
+                                {restriction.week_end && ` - ${ restriction.week_end } `}
                               </p>
                               <p className="text-muted-foreground text-sm">{restriction.description}</p>
                             </div>

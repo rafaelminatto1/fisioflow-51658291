@@ -16,8 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { 
-  Search, Calendar, Clock, Target, AlertTriangle, CheckCircle2, 
+import {
+  Search, Calendar, Clock, Target, AlertTriangle, CheckCircle2,
   Activity, Dumbbell, Shield, ArrowRight, ChevronDown, ChevronUp,
   Play, FileText, Users, TrendingUp, Zap, Heart, Star, StarOff,
   Filter, SortAsc, Grid3X3, List, Copy, Share2, Printer, BookOpen,
@@ -226,14 +226,14 @@ function ProtocolCardEnhanced({ protocol, onClick, onEdit, onDelete, onDuplicate
 
   if (viewMode === 'list') {
     return (
-      <Card 
+      <Card
         className="p-4 hover:shadow-lg transition-all cursor-pointer group border hover:border-primary/30 flex items-center gap-4"
         onClick={onClick}
       >
         <div className={cn('h-12 w-12 rounded-xl flex items-center justify-center flex-shrink-0', categoryInfo.color + '/10')}>
           <categoryInfo.icon className={cn('h-6 w-6', categoryInfo.color.replace('bg-', 'text-'))} />
         </div>
-        
+
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="font-semibold truncate group-hover:text-primary transition-colors">
@@ -287,7 +287,7 @@ function ProtocolCardEnhanced({ protocol, onClick, onEdit, onDelete, onDuplicate
               {isFavorite ? 'Remover Favorito' : 'Favoritar'}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onClick={(e) => { e.stopPropagation(); onDelete(protocol.id); }}
               className="text-destructive focus:text-destructive"
             >
@@ -303,13 +303,13 @@ function ProtocolCardEnhanced({ protocol, onClick, onEdit, onDelete, onDuplicate
   }
 
   return (
-    <Card 
+    <Card
       className="overflow-hidden hover:shadow-xl transition-all cursor-pointer group border-2 hover:border-primary/30 relative"
       onClick={onClick}
     >
       {/* Category ribbon */}
       <div className={cn('h-1.5 w-full', categoryInfo.color)} />
-      
+
       {/* Favorite badge */}
       {isFavorite && (
         <div className="absolute top-4 right-4 z-10">
@@ -329,7 +329,7 @@ function ProtocolCardEnhanced({ protocol, onClick, onEdit, onDelete, onDuplicate
             </h3>
             <p className="text-sm text-muted-foreground line-clamp-1">{protocol.condition_name}</p>
           </div>
-          
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
               <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -354,7 +354,7 @@ function ProtocolCardEnhanced({ protocol, onClick, onEdit, onDelete, onDuplicate
                 {isFavorite ? 'Remover Favorito' : 'Favoritar'}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={(e) => { e.stopPropagation(); onDelete(protocol.id); }}
                 className="text-destructive focus:text-destructive"
               >
@@ -373,7 +373,7 @@ function ProtocolCardEnhanced({ protocol, onClick, onEdit, onDelete, onDuplicate
               <span className="font-medium">{protocol.weeks_total} semanas</span>
             </div>
             <div className="h-2 bg-muted rounded-full overflow-hidden">
-              <div 
+              <div
                 className={cn('h-full rounded-full', `bg-gradient-to-r ${categoryInfo.color.replace('bg-', 'from-')} to-green-500`)}
                 style={{ width: '100%' }}
               />
@@ -441,8 +441,8 @@ function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: ProtocolDeta
   };
 
   const togglePhase = (phaseName: string) => {
-    setExpandedPhases(prev => 
-      prev.includes(phaseName) 
+    setExpandedPhases(prev =>
+      prev.includes(phaseName)
         ? prev.filter(p => p !== phaseName)
         : [...prev, phaseName]
     );
@@ -476,14 +476,14 @@ function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: ProtocolDeta
             <p className="text-muted-foreground">{protocol.condition_name}</p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-base px-3 py-1.5 gap-2">
             <Clock className="h-4 w-4" />
             {protocol.weeks_total} semanas
           </Badge>
-          <Badge 
-            variant={protocol.protocol_type === 'pos_operatorio' ? 'default' : 'secondary'} 
+          <Badge
+            variant={protocol.protocol_type === 'pos_operatorio' ? 'default' : 'secondary'}
             className="text-base px-3 py-1.5"
           >
             {protocol.protocol_type === 'pos_operatorio' ? 'Pós-Operatório' : 'Patologia'}
@@ -608,8 +608,8 @@ function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: ProtocolDeta
           </h3>
           <div className="space-y-3">
             {details.phases.map((phase, i) => (
-              <Collapsible 
-                key={i} 
+              <Collapsible
+                key={i}
                 open={expandedPhases.includes(phase.name.split(' - ')[0])}
                 onOpenChange={() => togglePhase(phase.name.split(' - ')[0])}
               >
@@ -622,10 +622,10 @@ function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: ProtocolDeta
                       <div className="flex items-center gap-4">
                         <div className={cn(
                           'h-12 w-12 rounded-xl flex items-center justify-center text-white font-bold text-lg',
-                          i === 0 ? 'bg-gradient-to-br from-red-500 to-rose-600' : 
-                          i === 1 ? 'bg-gradient-to-br from-amber-500 to-orange-600' : 
-                          i === 2 ? 'bg-gradient-to-br from-yellow-500 to-lime-600' : 
-                          'bg-gradient-to-br from-green-500 to-emerald-600'
+                          i === 0 ? 'bg-gradient-to-br from-red-500 to-rose-600' :
+                            i === 1 ? 'bg-gradient-to-br from-amber-500 to-orange-600' :
+                              i === 2 ? 'bg-gradient-to-br from-yellow-500 to-lime-600' :
+                                'bg-gradient-to-br from-green-500 to-emerald-600'
                         )}>
                           {i + 1}
                         </div>
@@ -854,29 +854,30 @@ export default function ProtocolsPage() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [favorites, setFavorites] = useState<string[]>([]);
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
-  
+
   // CRUD State
   const [showModal, setShowModal] = useState(false);
   const [editingProtocol, setEditingProtocol] = useState<ExerciseProtocol | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const { 
-    protocols, 
-    loading, 
-    createProtocol, 
-    updateProtocol, 
+  const {
+    protocols,
+    loading,
+    createProtocol,
+    updateProtocol,
     deleteProtocol,
     isCreating,
     isUpdating,
     isDeleting
-  } = useExerciseProtocols(activeTab);
+  } = useExerciseProtocols();
 
   const filteredAndSortedProtocols = useMemo(() => {
-    const result = protocols.filter(p => 
+    const result = protocols.filter(p =>
       (p.name?.toLowerCase().includes(search.toLowerCase()) ||
-      p.condition_name?.toLowerCase().includes(search.toLowerCase())) &&
+        p.condition_name?.toLowerCase().includes(search.toLowerCase())) &&
       (categoryFilter === 'all' || getProtocolCategory(p.condition_name) === categoryFilter) &&
-      (!showOnlyFavorites || favorites.includes(p.id))
+      (!showOnlyFavorites || favorites.includes(p.id)) &&
+      p.protocol_type === activeTab
     );
 
     // Sort
@@ -892,10 +893,10 @@ export default function ProtocolsPage() {
     });
 
     return result;
-  }, [protocols, search, categoryFilter, sortBy, showOnlyFavorites, favorites]);
+  }, [protocols, search, categoryFilter, sortBy, showOnlyFavorites, favorites, activeTab]);
 
   const toggleFavorite = (id: string) => {
-    setFavorites(prev => 
+    setFavorites(prev =>
       prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
     );
   };
@@ -952,14 +953,14 @@ export default function ProtocolsPage() {
     return (
       <MainLayout>
         <div className="p-6 max-w-6xl mx-auto">
-          <ProtocolDetailView 
-            protocol={selectedProtocol} 
+          <ProtocolDetailView
+            protocol={selectedProtocol}
             onBack={() => setSelectedProtocol(null)}
             onEdit={() => handleEditProtocol(selectedProtocol)}
             onDelete={handleDeleteFromDetail}
           />
         </div>
-        
+
         {/* Delete Confirmation */}
         <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
           <AlertDialogContent>
@@ -977,7 +978,7 @@ export default function ProtocolsPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-        
+
         {/* Edit Modal */}
         <NewProtocolModal
           open={showModal}
@@ -1011,7 +1012,7 @@ export default function ProtocolsPage() {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <Button variant="outline" className="gap-2">
                 <Brain className="h-4 w-4" />
@@ -1027,7 +1028,7 @@ export default function ProtocolsPage() {
           {/* Quick category badges */}
           <div className="flex flex-wrap gap-2 mt-6">
             {PROTOCOL_CATEGORIES.map(cat => (
-              <Badge 
+              <Badge
                 key={cat.id}
                 variant={categoryFilter === cat.id ? 'default' : 'outline'}
                 className="cursor-pointer hover:bg-primary/10 transition-colors py-1.5 px-3 gap-1.5"
@@ -1053,7 +1054,7 @@ export default function ProtocolsPage() {
               </div>
             </div>
           </Card>
-          
+
           <Card className="p-5 hover:shadow-lg transition-all group cursor-pointer">
             <div className="flex items-center justify-between">
               <div>
@@ -1067,7 +1068,7 @@ export default function ProtocolsPage() {
               </div>
             </div>
           </Card>
-          
+
           <Card className="p-5 hover:shadow-lg transition-all group cursor-pointer">
             <div className="flex items-center justify-between">
               <div>
@@ -1081,7 +1082,7 @@ export default function ProtocolsPage() {
               </div>
             </div>
           </Card>
-          
+
           <Card className="p-5 hover:shadow-lg transition-all group cursor-pointer" onClick={() => setShowOnlyFavorites(!showOnlyFavorites)}>
             <div className="flex items-center justify-between">
               <div>
@@ -1103,8 +1104,8 @@ export default function ProtocolsPage() {
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {QUICK_TEMPLATES.map((template, i) => (
-              <Card 
-                key={i} 
+              <Card
+                key={i}
                 className="p-4 cursor-pointer hover:shadow-lg transition-all group overflow-hidden relative"
               >
                 <div className={cn('absolute inset-0 opacity-10 bg-gradient-to-br', template.color)} />
@@ -1168,8 +1169,8 @@ export default function ProtocolsPage() {
                 </Select>
 
                 {/* Favorites filter */}
-                <Button 
-                  variant={showOnlyFavorites ? 'default' : 'outline'} 
+                <Button
+                  variant={showOnlyFavorites ? 'default' : 'outline'}
                   size="icon"
                   onClick={() => setShowOnlyFavorites(!showOnlyFavorites)}
                 >
@@ -1178,16 +1179,16 @@ export default function ProtocolsPage() {
 
                 {/* View mode */}
                 <div className="flex items-center border rounded-lg">
-                  <Button 
-                    variant={viewMode === 'grid' ? 'secondary' : 'ghost'} 
+                  <Button
+                    variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
                     size="icon"
                     className="rounded-r-none"
                     onClick={() => setViewMode('grid')}
                   >
                     <Grid3X3 className="h-4 w-4" />
                   </Button>
-                  <Button 
-                    variant={viewMode === 'list' ? 'secondary' : 'ghost'} 
+                  <Button
+                    variant={viewMode === 'list' ? 'secondary' : 'ghost'}
                     size="icon"
                     className="rounded-l-none"
                     onClick={() => setViewMode('list')}
@@ -1242,9 +1243,9 @@ export default function ProtocolsPage() {
                   viewMode === 'grid' ? 'grid md:grid-cols-2 lg:grid-cols-3' : 'flex flex-col'
                 )}>
                   {filteredAndSortedProtocols.map(protocol => (
-                    <ProtocolCardEnhanced 
-                      key={protocol.id} 
-                      protocol={protocol} 
+                    <ProtocolCardEnhanced
+                      key={protocol.id}
+                      protocol={protocol}
                       onClick={() => setSelectedProtocol(protocol)}
                       onEdit={handleEditProtocol}
                       onDelete={(id) => setDeleteId(id)}
@@ -1260,7 +1261,7 @@ export default function ProtocolsPage() {
           </Tabs>
         </Card>
       </div>
-      
+
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
@@ -1278,7 +1279,7 @@ export default function ProtocolsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      
+
       {/* Create/Edit Modal */}
       <NewProtocolModal
         open={showModal}
