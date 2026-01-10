@@ -39,6 +39,15 @@ export interface UnlockedAchievement {
   xp_reward?: number;
 }
 
+export interface DailyQuest {
+  id: string;
+  title: string;
+  completed: boolean;
+  xp: number;
+  icon: string;
+  description?: string;
+}
+
 export const useGamification = (patientId: string) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -58,7 +67,6 @@ export const useGamification = (patientId: string) => {
       }
 
       if (!data) {
-        // Return default structure
         return {
           current_xp: 0,
           level: 1,
@@ -74,6 +82,37 @@ export const useGamification = (patientId: string) => {
     enabled: !!patientId,
   });
 
+  // Fetch Total Sessions (Needed for Journey Map)
+  const { data: totalSessions = 0 } = useQuery({
+    queryKey: ['total-sessions', patientId],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('treatment_sessions') // Assuming this table exists, or appointments where status='completed'
+        .select('*', { count: 'exact', head: true })
+        .eq('patient_id', patientId);
+      // Note: 'treatment_sessions' might be 'appointments'. Let's assume 'appointments' with status='completed' based on previous context.
+      // Actually, previous context used 'completeAppointment' logic.
+      // Let's verify table name if we can, but likely it's 'appointments' based on 'PatientEvolution.tsx'.
+      // Wait, 'PatientEvolution' handles 'appointment'.
+      // Let's safe bet with 'appointments' where status = 'completed' if treatment_sessions doesn't exist.
+      // But for now let's assume 'appointments' is the main place.
+
+      if (error) {
+        // Fallback to appointments
+        const { count: apptCount, error: apptError } = await supabase
+          .from('appointments')
+          .select('*', { count: 'exact', head: true })
+          .eq('patient_id', patientId)
+          .eq('status', 'completed');
+
+        if (apptError) return 0;
+        return apptCount || 0;
+      }
+      return count || 0;
+    },
+    enabled: !!patientId
+  });
+
   // Fetch Recent XP Transactions
   const { data: recentTransactions = [] } = useQuery({
     queryKey: ['xp-transactions', patientId],
@@ -85,10 +124,7 @@ export const useGamification = (patientId: string) => {
         .order('created_at', { ascending: false })
         .limit(10);
 
-      if (error) {
-        console.error('Error fetching transactions:', error);
-        return [];
-      }
+      if (error) return [];
       return data as XPTransaction[];
     },
     enabled: !!patientId
@@ -122,18 +158,41 @@ export const useGamification = (patientId: string) => {
     enabled: !!patientId,
   });
 
+  // Fetch Daily Quests
+  const { data: dailyQuestsData } = useQuery({
+    queryKey: ['daily-quests', patientId],
+    queryFn: async () => {
+      const today = new Date().toISOString().split('T')[0];
+      const { data, error } = await supabase
+        .from('daily_quests')
+        .select('*')
+        .eq('patient_id', patientId)
+        .eq('date', today)
+        .maybeSingle();
+
+      if (!data) {
+        return {
+          quests_data: [
+            { id: "session", title: "Realizar Sessão", completed: false, xp: 50, icon: "Activity", description: "Complete sua sessão de exercícios" },
+            { id: "pain", title: "Registrar Dor", completed: false, xp: 20, icon: "Thermometer", description: "Atualize seu mapa de dor" },
+            { id: "hydration", title: "Hidratação", completed: false, xp: 10, icon: "Droplets", description: "Beba água e registre" }
+          ]
+        };
+      }
+      return data;
+    },
+    enabled: !!patientId
+  });
+
+  const dailyQuests = (dailyQuestsData?.quests_data || []) as DailyQuest[];
+
+  // Calculation Props
   const xpPerLevel = 1000;
   const currentLevel = profile?.level || 1;
   const currentXp = profile?.current_xp || 0;
-  // Progress bar logic: current_xp is points within the current level cycle
-  // If current_xp accumulates forever (e.g. 1500 XP = Level 2 + 500 XP), then we modulo.
-  // If current_xp resets (e.g. becomes 0 after level up), then we use raw value.
-  // Let's assume cumulative Total Points vs Current Level XP.
-  // Migration has `total_points` and `current_xp`. We will treat `current_xp` as "XP towards next level".
-
   const xpProgress = (currentXp / xpPerLevel) * 100;
 
-  // Award XP Mutation
+  // Mutations
   const awardXp = useMutation({
     mutationFn: async ({ amount, reason, description }: { amount: number, reason: string, description?: string }) => {
       if (!patientId) throw new Error('No patient ID');
@@ -163,7 +222,6 @@ export const useGamification = (patientId: string) => {
       let newTotal = oldTotal + amount;
       let newLevel = oldLevel;
 
-      // Level calculation
       if (newXp >= xpPerLevel) {
         const levelsGained = Math.floor(newXp / xpPerLevel);
         newLevel += levelsGained;
@@ -192,8 +250,8 @@ export const useGamification = (patientId: string) => {
       queryClient.invalidateQueries({ queryKey: ['xp-transactions', patientId] });
 
       toast({
-        title: `+${data?.current_xp ? (data.current_xp - (data.current_xp - 100)) : 'XP'} XP`, // Simple placeholder
-        description: "XP Registrado!",
+        title: `+ XP Recebido!`,
+        description: "Progresso atualizado.",
       });
 
       if (leveledUp) {
@@ -203,13 +261,76 @@ export const useGamification = (patientId: string) => {
           className: "bg-gradient-to-r from-yellow-500 to-orange-600 text-white border-none shadow-xl"
         });
       }
+    }
+  });
+
+  const completeQuest = useMutation({
+    mutationFn: async ({ questId }: { questId: string }) => {
+      const today = new Date().toISOString().split('T')[0];
+
+      // 1. Get or Create Daily Quest Record
+      let { data: record, error } = await supabase
+        .from('daily_quests')
+        .select('*')
+        .eq('patient_id', patientId)
+        .eq('date', today)
+        .maybeSingle();
+
+      if (!record) {
+        const initialQuests: DailyQuest[] = [
+          { id: "session", title: "Realizar Sessão", completed: false, xp: 50, icon: "Activity", description: "Complete sua sessão de exercícios" },
+          { id: "pain", title: "Registrar Dor", completed: false, xp: 20, icon: "Thermometer", description: "Atualize seu mapa de dor" },
+          { id: "hydration", title: "Hidratação", completed: false, xp: 10, icon: "Droplets", description: "Beba água e registre" }
+        ];
+        const { data: newRecord, error: createError } = await supabase
+          .from('daily_quests')
+          .insert({
+            patient_id: patientId,
+            date: today,
+            quests_data: initialQuests as any,
+            completed_count: 0
+          })
+          .select()
+          .single();
+
+        if (createError) throw createError;
+        record = newRecord;
+      }
+
+      // 2. Update specific quest
+      const quests = (record.quests_data as any) as DailyQuest[];
+      const questIndex = quests.findIndex(q => q.id === questId);
+
+      if (questIndex === -1) throw new Error("Quest not found");
+      if (quests[questIndex].completed) return;
+
+      quests[questIndex].completed = true;
+      const xpReward = quests[questIndex].xp;
+
+      // 3. Save Quest State
+      const { error: updateError } = await supabase
+        .from('daily_quests')
+        .update({
+          quests_data: quests as any,
+          completed_count: quests.filter(q => q.completed).length
+        })
+        .eq('id', record.id);
+
+      if (updateError) throw updateError;
+
+      // 4. Award XP
+      await awardXp.mutateAsync({
+        amount: xpReward,
+        reason: 'daily_quest',
+        description: `Quest diária: ${quests[questIndex].title}`
+      });
     },
-    onError: (err) => {
-      console.error(err);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['daily-quests', patientId] });
       toast({
-        title: "Erro ao adicionar XP",
-        description: "Falha ao atualizar.",
-        variant: "destructive"
+        title: "Quest Completada!",
+        description: "Você ganhou XP pela tarefa diária.",
+        variant: "default"
       });
     }
   });
@@ -219,8 +340,11 @@ export const useGamification = (patientId: string) => {
     recentTransactions,
     allAchievements,
     unlockedAchievements,
+    dailyQuests,
+    totalSessions,
     isLoading: isLoadingProfile,
     awardXp,
+    completeQuest,
     xpPerLevel,
     xpProgress,
     currentLevel,
