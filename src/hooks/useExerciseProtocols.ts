@@ -28,23 +28,17 @@ export interface ExerciseProtocol {
   updated_at?: string;
 }
 
-export const useExerciseProtocols = (protocolType?: string) => {
+export const useExerciseProtocols = () => {
   const queryClient = useQueryClient();
 
   const { data: protocols = [], isLoading, error } = useQuery({
-    queryKey: ['exercise-protocols', protocolType],
+    queryKey: ['exercise-protocols'],
     queryFn: async () => {
-      let query = supabase
+      const { data, error } = await supabase
         .from('exercise_protocols')
         .select('*')
         .order('condition_name');
-      
-      if (protocolType) {
-        query = query.eq('protocol_type', protocolType);
-      }
-      
-      const { data, error } = await query;
-      
+
       if (error) throw error;
       return (data || []) as any as ExerciseProtocol[];
     },
@@ -57,7 +51,7 @@ export const useExerciseProtocols = (protocolType?: string) => {
         .insert([protocol as any])
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -78,7 +72,7 @@ export const useExerciseProtocols = (protocolType?: string) => {
         .eq('id', id)
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -97,7 +91,7 @@ export const useExerciseProtocols = (protocolType?: string) => {
         .from('exercise_protocols')
         .delete()
         .eq('id', id);
-      
+
       if (error) throw error;
     },
     onSuccess: () => {
