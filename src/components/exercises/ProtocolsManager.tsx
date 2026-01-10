@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Plus, Edit, Trash2, Search, ChevronRight, Calendar, 
-  AlertTriangle, CheckCircle2, Clock, Target, Milestone 
+import {
+  Plus, Edit, Trash2, Search, ChevronRight, Calendar,
+  AlertTriangle, CheckCircle2, Clock, Target, Milestone
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -42,11 +42,12 @@ export function ProtocolsManager() {
   const [showModal, setShowModal] = useState(false);
   const [editingProtocol, setEditingProtocol] = useState<ExerciseProtocol | null>(null);
 
-  const { protocols, loading, createProtocol, updateProtocol, deleteProtocol, isCreating, isUpdating, isDeleting } = useExerciseProtocols(activeTab);
+  const { protocols, loading, createProtocol, updateProtocol, deleteProtocol, isCreating, isUpdating, isDeleting } = useExerciseProtocols();
 
-  const filteredProtocols = protocols.filter(p => 
-    p.name?.toLowerCase().includes(search.toLowerCase()) ||
-    p.condition_name?.toLowerCase().includes(search.toLowerCase())
+  const filteredProtocols = protocols.filter(p =>
+    (p.name?.toLowerCase().includes(search.toLowerCase()) ||
+      p.condition_name?.toLowerCase().includes(search.toLowerCase())) &&
+    p.protocol_type === activeTab
   );
 
   // Agrupar por condição
@@ -173,8 +174,8 @@ export function ProtocolsManager() {
                   </h3>
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {protocols.map((protocol) => (
-                      <Card 
-                        key={protocol.id} 
+                      <Card
+                        key={protocol.id}
                         className="p-4 hover:shadow-md transition-all hover:border-primary/30 cursor-pointer group"
                         onClick={() => setViewProtocol(protocol)}
                       >
@@ -192,7 +193,7 @@ export function ProtocolsManager() {
                           </div>
                           <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                         </div>
-                        
+
                         <div className="space-y-2 text-sm text-muted-foreground">
                           {getMilestones(protocol).length > 0 && (
                             <div className="flex items-center gap-2">
@@ -345,8 +346,8 @@ export function ProtocolsManager() {
                   <Edit className="h-4 w-4 mr-2" />
                   Editar Protocolo
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="text-destructive"
                   onClick={() => {
                     setDeleteId(viewProtocol.id);
