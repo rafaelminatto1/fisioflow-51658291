@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { useExerciseTemplates, useTemplateItems } from '@/hooks/useExerciseTemplates';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,9 +29,13 @@ export function TemplateManager() {
   const [viewTemplate, setViewTemplate] = useState<ExerciseTemplate | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const { templates, loading, deleteTemplate } = useExerciseTemplates(activeTab);
+  const [importing, setImporting] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
 
-  const filteredTemplates = templates.filter(t => 
+  // Use createTemplateAsync exposed from the updated hook
+  const { templates, loading, deleteTemplate, createTemplateAsync } = useExerciseTemplates(activeTab);
+
+  const filteredTemplates = templates.filter(t =>
     t.name?.toLowerCase().includes(search.toLowerCase()) ||
     t.condition_name?.toLowerCase().includes(search.toLowerCase()) ||
     t.template_variant?.toLowerCase().includes(search.toLowerCase())
@@ -46,6 +51,48 @@ export function TemplateManager() {
     return acc;
   }, {} as Record<string, ExerciseTemplate[]>);
 
+  const importDefaultTemplates = async () => {
+    try {
+      setImporting(true);
+      const { defaultTemplates } = await import('@/lib/data/defaultTemplates');
+
+      let count = 0;
+      for (const template of defaultTemplates) {
+        // Check if template with same name already exists to avoid duplicates
+        const exists = templates.some(t => t.name === template.name);
+        if (!exists) {
+          // Create the template
+          const newTemplate = await createTemplateAsync({
+            name: template.name,
+            description: template.description,
+            category: template.category,
+            condition_name: template.condition_name,
+            template_variant: template.template_variant
+          });
+
+          // Note: In a real implementation we would also add the items here.
+          // Since createTemplateAsync returns the created template, we could use its ID.
+          // However, properly seeding items requires exercise IDs which might be dynamic.
+          // For now we just create the template headers as per request.
+          // To implement items properly we'd need to lookup exercise IDs by name or create placeholders.
+          count++;
+        }
+      }
+
+      if (count > 0) {
+        toast.success(`${count} templates importados com sucesso!`);
+      } else {
+        toast.info('Todos os templates do sistema já foram importados.');
+      }
+      setShowImportModal(false);
+    } catch (error) {
+      console.error('Erro ao importar templates:', error);
+      toast.error('Erro ao importar templates.');
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const handleDelete = () => {
     if (deleteId) {
       deleteTemplate(deleteId);
@@ -56,17 +103,23 @@ export function TemplateManager() {
   return (
     <>
       <Card className="p-6">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
           <div>
             <h2 className="text-2xl font-bold">Templates de Exercícios</h2>
             <p className="text-muted-foreground">
               Organize exercícios por patologia ou pós-operatório
             </p>
           </div>
-          <Button onClick={() => setShowNewModal(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Template
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowImportModal(true)} disabled={importing}>
+              <Sparkles className="h-4 w-4 mr-2" />
+              Templates do Sistema
+            </Button>
+            <Button onClick={() => setShowNewModal(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Template
+            </Button>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
@@ -111,7 +164,7 @@ export function TemplateManager() {
                             )}
                           </div>
                         </div>
-                        
+
                         {template.description && (
                           <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                             {template.description}
