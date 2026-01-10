@@ -1,4 +1,4 @@
-```javascript
+
 import { useState, useMemo } from 'react';
 import { useExerciseProtocols, type ExerciseProtocol } from '@/hooks/useExerciseProtocols';
 import { Card } from '@/components/ui/card';
@@ -329,7 +329,7 @@ export function ProtocolsManager() {
                             <div>
                               <p className="font-medium text-sm">
                                 Semana {restriction.week_start}
-                                {restriction.week_end && ` - ${ restriction.week_end } `}
+                                {restriction.week_end ? (' - ' + restriction.week_end + ' ') : null}
                               </p>
                               <p className="text-muted-foreground text-sm">{restriction.description}</p>
                             </div>
