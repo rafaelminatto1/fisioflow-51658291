@@ -10,7 +10,10 @@
       "Bash(npm run:*)",
       "Bash(powershell:*)",
       "Bash(find:*)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(wc:*)",
+      "WebSearch",
+      "Bash(pnpm add:*)"
     ],
     "deny": [],
     "ask": []
