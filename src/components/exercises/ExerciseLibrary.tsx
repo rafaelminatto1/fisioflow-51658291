@@ -370,7 +370,28 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise }: ExerciseLi
   const { exercises, loading, deleteExercise, isDeleting } = useExercises();
   const { isFavorite, toggleFavorite } = useExerciseFavorites();
 
-  // ... (existing memos: categories, difficulties, etc.)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  const filteredExercises = useMemo(() => {
+    return exercises.filter(exercise => {
+      const matchesSearch = (exercise.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (exercise.description?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+
+      if (!matchesSearch) return false;
+
+      if (activeFilter === 'favorites') return isFavorite(exercise.id);
+      if (activeFilter === 'no-video') return !exercise.video_url;
+
+      return true;
+    });
+  }, [exercises, searchTerm, activeFilter, isFavorite]);
+
+  const handleDelete = async () => {
+    if (deleteId) {
+      await deleteExercise(deleteId);
+      setDeleteId(null);
+    }
+  };
 
   const toggleSelection = (id: string) => {
     setSelectedExercises(prev =>
@@ -386,25 +407,79 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise }: ExerciseLi
     }
   };
 
-  // ... (existing filteredExercises memo)
-
-  // ... (existing handlers)
-
   if (loading) {
-    // ... (existing loading state)
-    return <div>Loading...</div>; // (placeholder for brevity, keeping original loading is fine)
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {Array.from({ length: 9 }).map((_, i) => (
+          <Skeleton key={i} className="h-[200px] w-full rounded-xl" />
+        ))}
+      </div>
+    );
   }
 
   return (
     <div className="space-y-4 pb-20"> {/* pb-20 for floating bar space */}
       {/* Search and Filters */}
       <div className="flex flex-col gap-4">
-        {/* ... (existing search bar and filters) */}
+        <div className="flex items-center gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar exercícios..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <div className="flex items-center border rounded-lg p-1">
+            <Button
+              variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setViewMode('grid')}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setViewMode('list')}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
 
         {/* Filter Chips & View Toggle & Selection Mode */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-2 flex-wrap">
-            {/* ... (existing filter buttons) */}
+            <Button
+              variant={activeFilter === 'all' ? 'secondary' : 'outline'}
+              size="sm"
+              onClick={() => setActiveFilter('all')}
+              className="h-8"
+            >
+              Todos
+            </Button>
+            <Button
+              variant={activeFilter === 'favorites' ? 'secondary' : 'outline'}
+              size="sm"
+              onClick={() => setActiveFilter('favorites')}
+              className="h-8"
+            >
+              <Heart className="h-3 w-3 mr-2" />
+              Favoritos
+            </Button>
+            <Button
+              variant={activeFilter === 'no-video' ? 'secondary' : 'outline'}
+              size="sm"
+              onClick={() => setActiveFilter('no-video')}
+              className="h-8"
+            >
+              <VideoOff className="h-3 w-3 mr-2" />
+              Sem Vídeo
+            </Button>
             <Button
               variant={isSelectionMode ? 'secondary' : 'outline'}
               size="sm"
@@ -520,10 +595,39 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise }: ExerciseLi
       )}
 
       {/* Delete Dialog */}
-      {/* ... (existing AlertDialog) */}
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. Isso excluirá permanentemente o exercício
+              da sua biblioteca.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* View Modal */}
-      {/* ... (existing ExerciseViewModal) */}
+      {viewExercise && (
+        <ExerciseViewModal
+          exercise={viewExercise}
+          open={!!viewExercise}
+          onOpenChange={(open) => !open && setViewExercise(null)}
+          onEdit={() => {
+            setViewExercise(null);
+            onEditExercise(viewExercise);
+          }}
+        />
+      )}
 
       {/* Create Template Modal */}
       <CreateTemplateFromSelectionModal
