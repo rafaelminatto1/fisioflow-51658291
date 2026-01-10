@@ -65,7 +65,7 @@ export const AssessmentComparison: React.FC<ComparisonProps> = ({ records, onClo
                         const isLatest = index === sortedRecords.length - 1;
                         const content = record.raw || {};
                         const vitalSigns = content.vital_signs || {};
-                        const physicalExam = content.physical_exam?.exam || '';
+                        const physicalExam = content.physical_exam || {}; // Expecting object
                         const treatmentPlan = content.treatment_plan?.plan || '';
 
                         return (
@@ -90,7 +90,23 @@ export const AssessmentComparison: React.FC<ComparisonProps> = ({ records, onClo
                                 <Separator />
                                 <div className="pt-2"></div>
                                 <ScrollArea className="h-40 w-full rounded border p-2 bg-muted/30">
-                                    <p className="text-sm whitespace-pre-wrap">{physicalExam || 'Não informado'}</p>
+                                    <div className="text-sm space-y-2">
+                                        {physicalExam.inspection && (
+                                            <div>
+                                                <span className="font-semibold text-xs text-muted-foreground block">Inspeção:</span>
+                                                {physicalExam.inspection}
+                                            </div>
+                                        )}
+                                        {physicalExam.palpation && (
+                                            <div>
+                                                <span className="font-semibold text-xs text-muted-foreground block">Palpação:</span>
+                                                {physicalExam.palpation}
+                                            </div>
+                                        )}
+                                        {(!physicalExam.inspection && !physicalExam.palpation) && (
+                                            <span className="text-muted-foreground italic">Sem dados estruturados.</span>
+                                        )}
+                                    </div>
                                 </ScrollArea>
                                 <Separator />
                                 <div className="pt-2"></div>
