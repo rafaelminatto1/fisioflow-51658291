@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Plus, BookOpen, Target, FileText, Heart, 
+import {
+  Plus, BookOpen, Target, FileText, Heart,
   Dumbbell, VideoOff, Sparkles, TrendingUp,
-  Activity, Zap, ArrowRight
+  Activity, Zap, ArrowRight, LayoutDashboard
 } from 'lucide-react';
 import { ExerciseLibrary } from '@/components/exercises/ExerciseLibrary';
 import { TemplateManager } from '@/components/exercises/TemplateManager';
@@ -26,7 +26,7 @@ export default function Exercises() {
   const { favorites } = useExerciseFavorites();
   const { protocols, loading: loadingProtocols } = useExerciseProtocols();
   const { templates, loading: loadingTemplates } = useExerciseTemplates();
-  
+
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
   const [activeTab, setActiveTab] = useState<'library' | 'templates' | 'protocols'>('library');
   const [showNewModal, setShowNewModal] = useState(false);
@@ -68,7 +68,7 @@ export default function Exercises() {
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-primary/20 p-6 sm:p-8">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/5 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
-          
+
           <div className="relative flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
             <div className="space-y-3">
               <div className="flex items-center gap-3">
@@ -84,7 +84,7 @@ export default function Exercises() {
                   </p>
                 </div>
               </div>
-              
+
               {/* Quick Categories */}
               {!isLoading && topCategories.length > 0 && (
                 <div className="flex items-center gap-2 flex-wrap">
@@ -102,7 +102,7 @@ export default function Exercises() {
                 </div>
               )}
             </div>
-            
+
             <Button onClick={handleNewExercise} size="lg" className="shadow-lg shadow-primary/20 gap-2 group">
               <Plus className="h-5 w-5 transition-transform group-hover:rotate-90" />
               Novo Exercício
@@ -219,9 +219,9 @@ export default function Exercises() {
                   Adicione vídeos demonstrativos para melhorar a experiência dos pacientes
                 </p>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 className="border-orange-500/30 text-orange-700 hover:bg-orange-500/10"
                 onClick={() => setActiveTab('library')}
               >
@@ -236,8 +236,8 @@ export default function Exercises() {
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
             <div className="border-b bg-muted/30">
               <TabsList className="w-full justify-start rounded-none border-0 bg-transparent h-14 p-0">
-                <TabsTrigger 
-                  value="library" 
+                <TabsTrigger
+                  value="library"
                   className="gap-2 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6"
                 >
                   <BookOpen className="h-4 w-4" />
@@ -246,8 +246,8 @@ export default function Exercises() {
                     {exercises.length}
                   </Badge>
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="templates" 
+                <TabsTrigger
+                  value="templates"
                   className="gap-2 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6"
                 >
                   <FileText className="h-4 w-4" />
@@ -256,8 +256,8 @@ export default function Exercises() {
                     {templates.length}
                   </Badge>
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="protocols" 
+                <TabsTrigger
+                  value="protocols"
                   className="gap-2 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-6"
                 >
                   <Target className="h-4 w-4" />
