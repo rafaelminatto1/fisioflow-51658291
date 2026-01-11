@@ -12,3 +12,9 @@ export * from './appointments';
 
 // Sessions & SOAP (RF01.3, RF01.4)
 export * from './sessions';
+
+// Gamification & Engagement
+export * from './gamification';
+
+// Evaluation Templates
+export * from './evaluation_templates';

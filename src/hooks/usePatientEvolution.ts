@@ -285,7 +285,7 @@ export const useUpdateGoalStatus = () => {
 
   return useMutation({
     mutationFn: async ({ goalId, status }: { goalId: string; status: 'em_andamento' | 'concluido' | 'cancelado' }) => {
-      const updates: any = { status };
+      const updates: { status: string; completed_at?: string } = { status };
       if (status === 'concluido') {
         updates.completed_at = new Date().toISOString();
       }
@@ -296,7 +296,7 @@ export const useUpdateGoalStatus = () => {
         .eq('id', goalId)
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },

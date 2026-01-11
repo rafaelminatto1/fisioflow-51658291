@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/errors/logger';
+import { PatientHelpers } from '@/types';
 
 export interface DashboardKPIs {
   activePatients: number;
@@ -312,7 +313,7 @@ export function usePatientEvolution(patientId: string | undefined) {
 
       return {
         patientId,
-        patientName: patient.name,
+        patientName: PatientHelpers.getName(patient),
         totalSessions,
         treatmentDuration,
         painEvolution,

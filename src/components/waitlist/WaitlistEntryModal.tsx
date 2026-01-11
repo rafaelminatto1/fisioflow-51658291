@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
+import { PatientHelpers } from '@/types';
 
 interface WaitlistEntryModalProps {
   open: boolean;
@@ -121,9 +122,12 @@ export function WaitlistEntryModal({ open, onOpenChange, entry }: WaitlistEntryM
                 <SelectValue placeholder="Selecione o paciente" />
               </SelectTrigger>
               <SelectContent>
-                {patients.map((patient) => (
-                  <SelectItem key={patient.id} value={patient.id}>{patient.name}</SelectItem>
-                ))}
+                {patients.map((patient) => {
+                  const patientName = PatientHelpers.getName(patient);
+                  return (
+                  <SelectItem key={patient.id} value={patient.id}>{patientName}</SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>

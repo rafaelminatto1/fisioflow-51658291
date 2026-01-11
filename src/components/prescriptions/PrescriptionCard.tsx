@@ -26,6 +26,7 @@ import { ptBR } from 'date-fns/locale';
 import { Prescription } from '@/hooks/usePrescriptions';
 import { downloadPrescriptionPDF } from '@/lib/export/prescriptionPdfExport';
 import { toast } from 'sonner';
+import { PatientHelpers } from '@/types';
 
 interface PrescriptionCardProps {
   prescription: Prescription;
@@ -80,9 +81,10 @@ export function PrescriptionCard({ prescription, onDelete, onView }: Prescriptio
     setIsSendingWhatsApp(true);
     
     try {
+      const patientName = PatientHelpers.getName(prescription.patient);
       const message = `🏋️ *Sua prescrição está pronta!*
 
-Olá ${prescription.patient.name}!
+Olá ${patientName}!
 
 Sua nova prescrição de exercícios foi criada com ${exercises.length} exercícios personalizados.
 

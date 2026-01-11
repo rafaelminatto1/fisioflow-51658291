@@ -21,6 +21,7 @@ import {
 import { format, isSameDay } from 'date-fns';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAppointments } from '@/hooks/useAppointments';
+import { PatientHelpers } from '@/types';
 
 interface TherapistDashboardProps {
   lastUpdate: Date;
@@ -267,11 +268,14 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
                 <div key={patient.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
                   <Avatar className="w-10 h-10">
                     <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                      {patient.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'PA'}
+                      {(() => {
+                        const name = PatientHelpers.getName(patient);
+                        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'PA';
+                      })()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <h4 className="font-medium text-foreground">{patient.name}</h4>
+                    <h4 className="font-medium text-foreground">{PatientHelpers.getName(patient)}</h4>
                     <div className="flex items-center gap-2 mt-1">
                       <Badge variant="outline" className="text-xs">
                         {patient.status}

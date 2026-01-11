@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { AlertTriangle, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { PatientHelpers } from '@/types';
 
 interface Patient {
   id: string;
@@ -98,7 +99,7 @@ export const IncompleteRegistrationAlert: React.FC = () => {
                   key={patient.id}
                   className="flex items-center justify-between gap-2 sm:gap-3 p-2.5 sm:p-3 bg-background/50 rounded-lg"
                 >
-                  <span className="text-xs sm:text-sm font-medium truncate min-w-0 flex-1">{patient.name}</span>
+                  <span className="text-xs sm:text-sm font-medium truncate min-w-0 flex-1">{PatientHelpers.getName(patient)}</span>
                   <div className="flex gap-1.5 sm:gap-2 shrink-0">
                     <Button
                       size="sm"

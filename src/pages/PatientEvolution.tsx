@@ -73,6 +73,8 @@ import { useAppointmentActions } from '@/hooks/useAppointmentActions';
 import { ApplyTemplateModal } from '@/components/exercises/ApplyTemplateModal';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { SmartTextarea } from '@/components/ui/SmartTextarea';
+import { PatientHelpers } from '@/types';
+import { executeWithRetry } from '@/lib/utils/async';
 
 // Lazy loading para componentes pesados
 const LazyMeasurementCharts = lazy(() =>
@@ -116,47 +118,14 @@ const PatientEvolution = () => {
   const { completeAppointment, isCompleting } = useAppointmentActions();
   const { awardXp } = useGamification(appointment?.patient_id || '');
 
-  // Função auxiliar para timeout
-  const withTimeout = useCallback(<T,>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> => {
-    return Promise.race([
-      Promise.resolve(promise),
-      new Promise<T>((_, reject) =>
-        setTimeout(() => reject(new Error(`Timeout após ${timeoutMs}ms`)), timeoutMs)
-      ),
-    ]);
-  }, []);
-
-  // Função auxiliar para retry
-  const retryWithBackoff = useCallback(async <T,>(
-    fn: () => Promise<T>,
-    maxRetries: number = 3,
-    initialDelay: number = 1000
-  ): Promise<T> => {
-    let lastError: Error | unknown;
-
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-      try {
-        return await fn();
-      } catch (error) {
-        lastError = error;
-        if (attempt < maxRetries - 1) {
-          const delay = initialDelay * Math.pow(2, attempt);
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
-      }
-    }
-
-    throw lastError;
-  }, []);
-
   // Buscar dados do agendamento do Supabase com retry e timeout
   const { data: appointment, isLoading: appointmentLoading, error: appointmentError } = useQuery({
     queryKey: ['appointment', appointmentId],
     queryFn: async () => {
       if (!appointmentId) throw new Error('ID do agendamento não fornecido');
 
-      const result = await retryWithBackoff(() =>
-        withTimeout(
+      const result = await executeWithRetry(
+        () =>
           supabase
             .from('appointments')
             .select(`
@@ -173,8 +142,7 @@ const PatientEvolution = () => {
             `)
             .eq('id', appointmentId)
             .maybeSingle(),
-          8000
-        )
+        { timeoutMs: 8000, maxRetries: 3 }
       );
       return result.data;
     },
@@ -192,15 +160,14 @@ const PatientEvolution = () => {
     queryFn: async () => {
       if (!patientId) throw new Error('ID do paciente não fornecido');
 
-      const result = await retryWithBackoff(() =>
-        withTimeout(
+      const result = await executeWithRetry(
+        () =>
           supabase
             .from('patients')
             .select('*')
             .eq('id', patientId)
             .maybeSingle(),
-          8000
-        )
+        { timeoutMs: 8000, maxRetries: 3 }
       );
       return result.data;
     },
@@ -452,7 +419,11 @@ const PatientEvolution = () => {
       }
 
       if (sessionError) {
-        console.warn('Error saving treatment_sessions:', sessionError);
+        toast({
+          title: 'Aviso',
+          description: 'Evolução salva, mas houve um erro ao salvar a sessão de exercícios.',
+          variant: 'default'
+        });
       }
     }
   };
@@ -530,48 +501,49 @@ const PatientEvolution = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-4 animate-fade-in pb-8">
-        {/* Compact Modern Header */}
+      <div className="space-y-3 sm:space-y-4 animate-fade-in pb-8">
+        {/* Compact Modern Header - Otimizado para mobile/tablet */}
         <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-border/50 backdrop-blur-sm">
-          <div className="relative z-10 p-4 lg:p-5">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-              {/* Patient Info Section */}
-              <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="relative z-10 p-3 sm:p-4 lg:p-5">
+            <div className="flex flex-col gap-3">
+              {/* Patient Info Section - Top row on mobile */}
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => navigate('/schedule')}
-                  className="hover:bg-primary/10 transition-colors flex-shrink-0 h-9 w-9"
+                  className="hover:bg-primary/10 transition-colors flex-shrink-0 h-8 w-8 sm:h-9 sm:w-9 touch-target"
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
 
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center shadow-sm flex-shrink-0">
-                    <Stethoscope className="h-5 w-5 text-primary" />
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                  <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center shadow-sm flex-shrink-0">
+                    <Stethoscope className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <h1 className="text-lg font-semibold truncate">{patient.name}</h1>
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shadow-sm hidden sm:inline-flex">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h1 className="text-base sm:text-lg font-semibold truncate">{PatientHelpers.getName(patient)}</h1>
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 shadow-sm">
                         {treatmentDuration}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-muted-foreground mt-0.5 flex-wrap">
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
                         {format(new Date(appointment.appointment_date), "dd/MM 'às' HH:mm", { locale: ptBR })}
                       </span>
                       {patient.phone && (
-                        <span className="flex items-center gap-1 hidden md:flex">
+                        <span className="flex items-center gap-1">
                           <Phone className="h-3 w-3" />
-                          {patient.phone}
+                          <span className="hidden xs:inline">{patient.phone}</span>
+                          <span className="xs:hidden">Tel</span>
                         </span>
                       )}
                       {evolutionStats.totalEvolutions > 0 && (
                         <span className="flex items-center gap-1">
                           <FileText className="h-3 w-3" />
-                          {evolutionStats.totalEvolutions} evoluções
+                          {evolutionStats.totalEvolutions} evol.
                         </span>
                       )}
                     </div>
@@ -579,24 +551,24 @@ const PatientEvolution = () => {
                 </div>
               </div>
 
-              {/* Actions Section */}
-              <div className="flex items-center gap-2 pl-12 lg:pl-0">
+              {/* Actions Section - Bottom row with better mobile layout */}
+              <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1">
                 <SessionTimer startTime={sessionStartTime} />
-                <div className="h-6 w-px bg-border hidden lg:block" />
+                <div className="h-6 w-px bg-border hidden sm:block" />
                 <Button
                   onClick={() => setShowApplyTemplate(true)}
                   size="sm"
                   variant="ghost"
-                  className="h-8 px-2 lg:px-3 hover:bg-primary/10"
+                  className="h-8 px-2 sm:px-3 hover:bg-primary/10 touch-target flex-shrink-0"
                 >
                   <Zap className="h-4 w-4" />
-                  <span className="hidden lg:inline ml-1.5 text-xs">Template</span>
+                  <span className="hidden sm:inline ml-1 text-[10px] xs:text-xs">Template</span>
                 </Button>
                 <Button
                   onClick={() => setShowInsights(!showInsights)}
                   size="sm"
                   variant="ghost"
-                  className="h-8 px-2 lg:px-3 hover:bg-primary/10"
+                  className="h-8 w-8 px-2 hover:bg-primary/10 touch-target flex-shrink-0"
                 >
                   {showInsights ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
@@ -604,40 +576,40 @@ const PatientEvolution = () => {
                   onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
                   size="sm"
                   variant="ghost"
-                  className="h-8 px-2 text-xs gap-1 hidden sm:flex"
+                  className="h-8 w-8 px-2 hover:bg-primary/10 touch-target flex-shrink-0"
+                  title={autoSaveEnabled ? 'Auto Salvar Ativado' : 'Auto Salvar Desativado'}
                 >
                   <Save className={`h-4 w-4 ${autoSaveEnabled ? 'text-green-500' : 'text-muted-foreground'}`} />
-                  <span className="hidden lg:inline">{autoSaveEnabled ? 'Auto Salvar' : 'Salvar Manual'}</span>
                 </Button>
                 <Button
                   onClick={handleSave}
                   size="sm"
                   variant="outline"
                   disabled={createSoapRecord.isPending}
-                  className="h-8 px-2 lg:px-3 shadow-sm hover:shadow"
+                  className="h-8 px-3 sm:px-3 shadow-sm hover:shadow touch-target flex-shrink-0 min-w-[70px]"
                 >
                   <Save className="h-4 w-4" />
-                  <span className="hidden lg:inline ml-1.5 text-xs">{createSoapRecord.isPending ? 'Salvando...' : 'Salvar'}</span>
+                  <span className="hidden xs:inline ml-1 text-xs">{createSoapRecord.isPending ? '...' : 'Salvar'}</span>
                 </Button>
                 <Button
                   onClick={handleCompleteSession}
                   size="sm"
                   disabled={createSoapRecord.isPending || isCompleting}
-                  className="h-8 px-3 lg:px-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-md hover:shadow-lg transition-all"
+                  className="h-8 px-3 sm:px-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-md hover:shadow-lg transition-all touch-target flex-shrink-0 min-w-[90px]"
                 >
                   <CheckCircle2 className="h-4 w-4" />
-                  <span className="hidden sm:inline ml-1.5 text-xs font-medium">{isCompleting ? 'Finalizando...' : 'Concluir'}</span>
+                  <span className="hidden xs:inline ml-1.5 text-xs font-medium">{isCompleting ? '...' : 'Concluir'}</span>
                 </Button>
               </div>
             </div>
           </div>
           {/* Subtle decorative elements */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-primary/10 to-transparent rounded-full blur-2xl -z-0" />
+          <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-bl from-primary/10 to-transparent rounded-full blur-2xl -z-0" />
         </div>
 
-        {/* Quick Stats Row - Glassmorphism Style */}
+        {/* Quick Stats Row - Glassmorphism Style - Responsive grid */}
         {showInsights && (
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+          <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-2">
             {[
               { label: 'Evoluções', value: evolutionStats.totalEvolutions, icon: FileText, color: 'blue' },
               { label: 'Metas', value: `${evolutionStats.completedGoals}/${evolutionStats.totalGoals}`, icon: Target, color: 'green' },
@@ -648,15 +620,15 @@ const PatientEvolution = () => {
             ].map((stat, idx) => (
               <div
                 key={idx}
-                className="group relative overflow-hidden rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm p-3 hover:bg-card/80 hover:shadow-md transition-all cursor-default"
+                className="group relative overflow-hidden rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm p-2.5 sm:p-3 hover:bg-card/80 hover:shadow-md transition-all cursor-default"
               >
                 <div className={`absolute inset-0 bg-gradient-to-br from-${stat.color}-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity`} />
-                <div className="relative flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{stat.label}</p>
-                    <p className={`text-lg font-bold text-${stat.color}-600 dark:text-${stat.color}-400 mt-0.5`}>{stat.value}</p>
+                <div className="relative flex items-center justify-between gap-1">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[9px] sm:text-[10px] uppercase tracking-wider text-muted-foreground font-medium truncate">{stat.label}</p>
+                    <p className={`text-sm sm:text-lg font-bold text-${stat.color}-600 dark:text-${stat.color}-400 mt-0.5 truncate`}>{stat.value}</p>
                   </div>
-                  <stat.icon className={`h-5 w-5 text-${stat.color}-500/40 group-hover:text-${stat.color}-500/60 transition-colors`} />
+                  <stat.icon className={`h-4 w-4 sm:h-5 sm:w-5 text-${stat.color}-500/40 group-hover:text-${stat.color}-500/60 transition-colors flex-shrink-0`} />
                 </div>
               </div>
             ))}
@@ -702,64 +674,7 @@ const PatientEvolution = () => {
           </TabsList>
 
 
-          <TabsContent value="history" className="mt-6 h-[600px]">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
-              <SessionHistoryPanel
-                sessions={previousEvolutions.map(e => ({
-                  id: e.id,
-                  created_at: e.created_at,
-                  subjective: e.subjective,
-                  objective: e.objective,
-                  assessment: e.assessment,
-                  plan: e.plan,
-                  pain_level_after: 0 // Mock or fetch real pain level
-                }))}
-                onReplicate={handleCopyPreviousEvolution}
-              />
-              <div className="space-y-6">
-                <MedicalReportSuggestions patientId={patientId || ''} />
-                {/* Only show surgery timeline if surgeries exist */}
-                {surgeries.length > 0 && <SurgeryTimeline surgeries={surgeries} />}
-              </div>
-            </div>
-          </TabsContent>
 
-          <TabsContent value="measurements" className="mt-6">
-            <MeasurementCharts
-              measurements={measurements}
-              activePathologies={activePathologies}
-            />
-          </TabsContent>
-
-
-          <TabsContent value="history" className="mt-6 h-[600px]">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
-              <SessionHistoryPanel
-                sessions={previousEvolutions.map(e => ({
-                  id: e.id,
-                  created_at: e.created_at,
-                  subjective: e.subjective,
-                  objective: e.objective,
-                  assessment: e.assessment,
-                  plan: e.plan,
-                  pain_level_after: 0 // Mock or fetch real pain level
-                }))}
-                onReplicate={handleCopyPreviousEvolution}
-              />
-              <div className="space-y-6">
-                <MedicalReportSuggestions patientId={patientId || ''} />
-                {/* Only show surgery timeline if surgeries exist */}
-                {surgeries.length > 0 && <SurgeryTimeline surgeries={surgeries} />}
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="measurements" className="mt-6">
-            <MeasurementCharts
-              measurements={measurements}
-              activePathologies={activePathologies}
-            />
-          </TabsContent>
 
           <TabsContent value="exercises" className="mt-6">
             <SessionExercisesPanel
@@ -942,6 +857,10 @@ const PatientEvolution = () => {
           <TabsContent value="history" className="mt-6">
             {/* Coluna Lateral antiga, agora em aba separada ou abaixo */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Sugestões de Relatório */}
+              <div className="md:col-span-2 space-y-6">
+                <MedicalReportSuggestions patientId={patientId || ''} />
+              </div>
               {/* Cirurgias */}
               <SurgeryTimeline surgeries={surgeries} />
 
@@ -1037,9 +956,16 @@ const PatientEvolution = () => {
             </div>
           </TabsContent>
 
+          <TabsContent value="measurements" className="mt-6">
+            <MeasurementCharts
+              measurements={measurements}
+              activePathologies={activePathologies}
+            />
+          </TabsContent>
+
           <TabsContent value="ai" className="mt-6">
             <Suspense fallback={<LoadingSkeleton type="card" />}>
-              <LazyTreatmentAssistant patientId={patientId!} patientName={patient.name} />
+              <LazyTreatmentAssistant patientId={patientId!} patientName={PatientHelpers.getName(patient)} />
             </Suspense>
           </TabsContent>
 
@@ -1063,7 +989,7 @@ const PatientEvolution = () => {
           open={showApplyTemplate}
           onOpenChange={setShowApplyTemplate}
           patientId={patientId}
-          patientName={patient.name}
+          patientName={PatientHelpers.getName(patient)}
         />
       )}
     </MainLayout>

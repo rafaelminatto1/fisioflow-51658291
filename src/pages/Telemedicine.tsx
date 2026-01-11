@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { Video, Plus, Clock, Users, Play, Copy, Loader2, Calendar, PhoneCall } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { PatientHelpers } from '@/types';
 
 const Telemedicine = () => {
   const navigate = useNavigate();
@@ -112,11 +113,14 @@ const Telemedicine = () => {
                       <SelectValue placeholder="Selecione um paciente" />
                     </SelectTrigger>
                     <SelectContent>
-                      {patients?.map((patient) => (
+                      {patients?.map((patient) => {
+                        const patientName = PatientHelpers.getName(patient);
+                        return (
                         <SelectItem key={patient.id} value={patient.id}>
-                          {patient.name}
+                          {patientName}
                         </SelectItem>
-                      ))}
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>

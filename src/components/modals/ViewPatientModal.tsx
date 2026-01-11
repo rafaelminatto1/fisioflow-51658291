@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { PatientHelpers } from '@/types';
 
 export const ViewPatientModal: React.FC<{
   open: boolean;
@@ -91,10 +92,13 @@ export const ViewPatientModal: React.FC<{
               {/* Header with Avatar */}
               <div className="flex items-center gap-4 p-4 bg-accent/50 rounded-lg">
                 <div className="h-16 w-16 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground text-2xl font-bold">
-                  {patient.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
+                  {(() => {
+                    const name = PatientHelpers.getName(patient);
+                    return name.split(' ').map((n: string) => n[0]).join('').substring(0, 2);
+                  })()}
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold">{patient.name}</h3>
+                  <h3 className="text-xl font-bold">{PatientHelpers.getName(patient)}</h3>
                   {patient.birth_date && (
                     <p className="text-sm text-muted-foreground">
                       {getAge(patient.birth_date)} anos • {format(new Date(patient.birth_date), "dd/MM/yyyy", { locale: ptBR })}

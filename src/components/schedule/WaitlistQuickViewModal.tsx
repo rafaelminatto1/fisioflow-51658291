@@ -27,6 +27,7 @@ import {
 import { useWaitlist, type WaitlistEntry } from '@/hooks/useWaitlist';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
+import { PatientHelpers } from '@/types';
 
 interface WaitlistQuickViewModalProps {
   open: boolean;
@@ -90,7 +91,8 @@ export function WaitlistQuickViewModal({
 
   const handleSchedule = (entry: WaitlistEntry) => {
     if (onSchedulePatient && entry.patient) {
-      onSchedulePatient(entry.patient_id, entry.patient.name);
+      const patientName = PatientHelpers.getName(entry.patient);
+      onSchedulePatient(entry.patient_id, patientName);
       onOpenChange(false);
     }
   };
