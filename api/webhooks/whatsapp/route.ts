@@ -1,11 +1,11 @@
 /**
- * Vercel Edge Function for WhatsApp Webhooks
- * Migrated from Supabase for better performance
+ * Vercel Function for WhatsApp Webhooks
+ * Using Node.js runtime for better performance and library support
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 export const maxDuration = 30;
 
 export async function GET(req: NextRequest) {

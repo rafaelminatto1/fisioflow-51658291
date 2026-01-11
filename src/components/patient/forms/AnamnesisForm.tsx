@@ -78,8 +78,8 @@ export const AnamnesisForm = ({ data, onChange, readOnly = false }: AnamnesisFor
                             <Label>Medicamentos em Uso</Label>
                             <Textarea
                                 placeholder="Liste os medicamentos..."
-                                value={''} // TODO: Map structured medications
-                                onChange={() => { }}
+                                value={data.medications || ''}
+                                onChange={(e) => handleChange('medications', e.target.value)}
                                 readOnly={readOnly}
                             />
                         </div>
@@ -87,8 +87,8 @@ export const AnamnesisForm = ({ data, onChange, readOnly = false }: AnamnesisFor
                             <Label>Alergias</Label>
                             <Textarea
                                 placeholder="Liste as alergias..."
-                                value={''} // TODO: Map structured allergies
-                                onChange={() => { }}
+                                value={data.allergies || ''}
+                                onChange={(e) => handleChange('allergies', e.target.value)}
                                 readOnly={readOnly}
                             />
                         </div>

@@ -6,11 +6,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Shield, FileCheck, Lock, Key, Activity } from "lucide-react";
 import { LGPDConsentModal } from "@/components/security/LGPDConsentModal";
 import { DataExportPanel } from "@/components/security/DataExportPanel";
-import { MFASetupPanel } from "@/components/security/MFASetupPanel";
+import { MFASettings } from "@/components/auth/MFASettings";
+import { useAuth } from "@/hooks/useAuth";
 import { useLGPDConsents } from "@/hooks/useLGPDConsents";
 
 export default function SecuritySettings() {
   const [consentModalOpen, setConsentModalOpen] = useState(false);
+  const { user } = useAuth();
   const { consents, isLoading } = useLGPDConsents();
 
   const grantedConsents = consents?.filter((c) => c.granted).length || 0;
@@ -119,9 +121,8 @@ export default function SecuritySettings() {
                             {consent.consent_type.replace(/_/g, " ")}
                           </span>
                           <span
-                            className={`text-xs font-medium ${
-                              consent.granted ? "text-green-600" : "text-red-600"
-                            }`}
+                            className={`text-xs font-medium ${consent.granted ? "text-green-600" : "text-red-600"
+                              }`}
                           >
                             {consent.granted ? "Concedido" : "Negado"}
                           </span>
@@ -135,7 +136,7 @@ export default function SecuritySettings() {
           </TabsContent>
 
           <TabsContent value="mfa" className="space-y-4">
-            <MFASetupPanel />
+            {user && <MFASettings userId={user.id} />}
           </TabsContent>
 
           <TabsContent value="data" className="space-y-4">
