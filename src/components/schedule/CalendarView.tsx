@@ -369,18 +369,11 @@ export const CalendarView = memo(({
 
       <RescheduleConfirmDialog
         open={showConfirmDialog}
+        onOpenChange={(open) => !open && handleCancelReschedule()}
+        appointment={pendingReschedule?.appointment || null}
+        newDate={pendingReschedule?.newDate || null}
+        newTime={pendingReschedule?.newTime || null}
         onConfirm={handleConfirmReschedule}
-        onCancel={handleCancelReschedule}
-        oldDate={pendingReschedule?.appointment.date ? (typeof pendingReschedule.appointment.date === 'string'
-          ? (() => {
-            const [y, m, d] = pendingReschedule.appointment.date.split('-').map(Number);
-            return new Date(y, m - 1, d, 12, 0, 0);
-          })()
-          : pendingReschedule.appointment.date) : new Date()}
-        oldTime={pendingReschedule?.appointment.time || ''}
-        newDate={pendingReschedule?.newDate || new Date()}
-        newTime={pendingReschedule?.newTime || ''}
-        appointment={pendingReschedule?.appointment}
       />
     </>
   );
