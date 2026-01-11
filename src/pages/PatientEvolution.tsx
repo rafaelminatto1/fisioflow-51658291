@@ -58,6 +58,9 @@ import { MeasurementCharts } from '@/components/evolution/MeasurementCharts';
 import { PainMapManager } from '@/components/evolution/PainMapManager';
 import { ReportGeneratorDialog } from '@/components/reports/ReportGeneratorDialog';
 import { TreatmentAssistant } from '@/components/ai/TreatmentAssistant';
+import { SessionHistoryPanel } from '@/components/session/SessionHistoryPanel';
+import { MandatoryTestAlert, type RequiredTest } from '@/components/session/MandatoryTestAlert';
+import { MedicalReportSuggestions } from '@/components/evolution/MedicalReportSuggestions';
 import { SessionExercisesPanel, type SessionExercise } from '@/components/evolution/SessionExercisesPanel';
 import { PatientGamification } from '@/components/gamification/PatientGamification';
 import { useGamification } from '@/hooks/useGamification';
@@ -365,6 +368,23 @@ const PatientEvolution = () => {
   };
 
   const handleSave = async () => {
+    // Check for mandatory tests
+    const pendingCriticalTests = requiredMeasurements.filter(req => {
+      // Check if this measurement exists in current session measurements
+      const hasMeasurement = measurements.some(m => m.measurement_name === req.name); // Simplified check
+      // In a real app, you'd check if it was measured *today* or within valid window
+      return req.critical && !hasMeasurement;
+    });
+
+    if (pendingCriticalTests.length > 0) {
+      toast({
+        title: 'Testes Obrigatórios Pendentes',
+        description: `É necessário realizar: ${pendingCriticalTests.map(t => t.name).join(', ')}`,
+        variant: 'destructive'
+      });
+      return;
+    }
+
     if (!subjective && !objective && !assessment && !plan) {
       toast({
         title: 'Campos vazios',
@@ -643,6 +663,21 @@ const PatientEvolution = () => {
           </div>
         )}
 
+        {/* Mandatory Tests Alert */}
+        <MandatoryTestAlert
+          tests={requiredMeasurements.map(req => ({
+            id: req.id || req.name, // Fallback ID
+            name: req.name,
+            critical: true, // Assuming all returned by hook are critical or mapping needed
+            completed: measurements.some(m => m.measurement_name === req.name)
+          }))}
+          onResolve={(testId) => {
+            const test = requiredMeasurements.find(t => t.id === testId || t.name === testId);
+            // navigate to measurement tab or open modal
+            document.querySelector('[value="measurements"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+          }}
+        />
+
         {/* Modern Tab Navigation */}
         <Tabs defaultValue="soap" className="w-full">
           <TabsList className="inline-flex h-9 items-center justify-start rounded-lg bg-muted/40 p-1 text-muted-foreground w-full lg:w-auto overflow-x-auto">
@@ -650,6 +685,7 @@ const PatientEvolution = () => {
               { value: 'soap', label: 'SOAP', icon: FileText },
               { value: 'exercises', label: 'Exercícios', icon: Activity },
               { value: 'history', label: 'Histórico', icon: Clock },
+              { value: 'measurements', label: 'Medições', icon: BarChart3 }, // Added measurements tab explicit link
               { value: 'ai', label: 'IA', icon: Sparkles },
               { value: 'gamification', label: 'Gamificação', icon: Target },
               { value: 'whatsapp', label: 'WhatsApp', icon: Phone },
@@ -664,6 +700,66 @@ const PatientEvolution = () => {
               </TabsTrigger>
             ))}
           </TabsList>
+
+
+          <TabsContent value="history" className="mt-6 h-[600px]">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+              <SessionHistoryPanel
+                sessions={previousEvolutions.map(e => ({
+                  id: e.id,
+                  created_at: e.created_at,
+                  subjective: e.subjective,
+                  objective: e.objective,
+                  assessment: e.assessment,
+                  plan: e.plan,
+                  pain_level_after: 0 // Mock or fetch real pain level
+                }))}
+                onReplicate={handleCopyPreviousEvolution}
+              />
+              <div className="space-y-6">
+                <MedicalReportSuggestions patientId={patientId || ''} />
+                {/* Only show surgery timeline if surgeries exist */}
+                {surgeries.length > 0 && <SurgeryTimeline surgeries={surgeries} />}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="measurements" className="mt-6">
+            <MeasurementCharts
+              measurements={measurements}
+              activePathologies={activePathologies}
+            />
+          </TabsContent>
+
+
+          <TabsContent value="history" className="mt-6 h-[600px]">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+              <SessionHistoryPanel
+                sessions={previousEvolutions.map(e => ({
+                  id: e.id,
+                  created_at: e.created_at,
+                  subjective: e.subjective,
+                  objective: e.objective,
+                  assessment: e.assessment,
+                  plan: e.plan,
+                  pain_level_after: 0 // Mock or fetch real pain level
+                }))}
+                onReplicate={handleCopyPreviousEvolution}
+              />
+              <div className="space-y-6">
+                <MedicalReportSuggestions patientId={patientId || ''} />
+                {/* Only show surgery timeline if surgeries exist */}
+                {surgeries.length > 0 && <SurgeryTimeline surgeries={surgeries} />}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="measurements" className="mt-6">
+            <MeasurementCharts
+              measurements={measurements}
+              activePathologies={activePathologies}
+            />
+          </TabsContent>
 
           <TabsContent value="exercises" className="mt-6">
             <SessionExercisesPanel

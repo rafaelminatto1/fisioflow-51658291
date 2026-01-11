@@ -13,9 +13,18 @@
       "Bash(npx eslint:*)",
       "Bash(wc:*)",
       "WebSearch",
-      "Bash(pnpm add:*)"
+      "Bash(pnpm add:*)",
+      "mcp__web-reader__webReader",
+      "Bash(vercel:*)",
+      "Bash(test:*)",
+      "Bash(chmod:*)",
+      "Bash(bash:*)"
     ],
     "deny": [],
     "ask": []
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "shadcn"
+  ]
 }
