@@ -9,6 +9,7 @@ import { ArrowLeft, FileDown, Printer, Activity } from "lucide-react";
 import { LoadingSkeleton, EmptyState } from "@/components/ui";
 import { generateEvolutionPDF } from "@/lib/export/evolutionPdfExport";
 import { toast } from "sonner";
+import { PatientHelpers } from "@/types";
 
 const PatientEvolutionReport = () => {
   const { patientId } = useParams<{ patientId: string }>();
@@ -29,10 +30,11 @@ const PatientEvolutionReport = () => {
       return;
     }
 
+    const patientName = PatientHelpers.getName(patient);
     try {
       const pdf = generateEvolutionPDF(
         {
-          name: patient.name,
+          name: patientName,
           phone: patient.phone || undefined,
           email: patient.email || undefined,
           birthDate: patient.birthDate,
@@ -46,7 +48,7 @@ const PatientEvolutionReport = () => {
         }
       );
 
-      pdf.save(`evolucao-${patient.name.replace(/\s/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
+      pdf.save(`evolucao-${patientName.replace(/\s/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
       toast.success('PDF gerado com sucesso!');
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);

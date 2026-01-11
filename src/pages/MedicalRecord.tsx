@@ -42,6 +42,7 @@ import { AnamnesisForm } from '@/components/patient/forms/AnamnesisForm';
 import { PhysicalExamForm } from '@/components/patient/forms/PhysicalExamForm';
 import { EvaluationTemplateManager } from '@/components/admin/EvaluationTemplateManager';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { PatientHelpers } from '@/types';
 
 // Types
 interface Patient {
@@ -590,10 +591,10 @@ const MedicalRecord = () => {
                     >
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
-                          {patient.name.substring(0, 2).toUpperCase()}
+                          {PatientHelpers.getName(patient).substring(0, 2).toUpperCase()}
                         </div>
                         <div className="overflow-hidden">
-                          <p className="font-medium text-sm truncate">{patient.name}</p>
+                          <p className="font-medium text-sm truncate">{PatientHelpers.getName(patient)}</p>
                           <p className="text-xs text-muted-foreground truncate">{patient.condition}</p>
                         </div>
                       </div>

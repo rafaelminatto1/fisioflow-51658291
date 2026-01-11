@@ -1,6 +1,14 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { ConductTemplate } from '@/types/evolution';
 
+export interface ConductData {
+  plan?: string;
+  techniques?: string[];
+  exercises?: string[];
+  recommendations?: string;
+  [key: string]: unknown;
+}
+
 export class ConductReplicationService {
   static async getSavedConducts(patientId: string): Promise<ConductTemplate[]> {
     // For now, we'll get recent SOAP records as conduct templates
@@ -31,7 +39,7 @@ export class ConductReplicationService {
 
   static async saveConductAsTemplate(
     patientId: string,
-    conduct: any,
+    conduct: ConductData,
     name: string
   ): Promise<ConductTemplate> {
     // This would ideally save to a separate templates table
