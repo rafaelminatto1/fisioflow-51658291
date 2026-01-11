@@ -94,7 +94,7 @@ export const RescheduleConfirmDialog: React.FC<RescheduleConfirmDialogProps> = (
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending} onClick={() => onOpenChange(false)}>Cancelar</AlertDialogCancel>
           <AlertDialogAction onClick={onConfirm} disabled={isPending}>
             {isPending ? 'Reagendando...' : 'Confirmar Reagendamento'}
           </AlertDialogAction>
