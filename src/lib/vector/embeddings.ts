@@ -21,11 +21,14 @@ const getEnv = (key: string) => {
 };
 
 // Initialize Gemini
-const genAI = new GoogleGenerativeAI(
-  getEnv('GOOGLE_GENERATIVE_AI_API_KEY') ||
-  getEnv('VITE_GOOGLE_GENERATIVE_AI_API_KEY') ||
-  ''
-);
+const apiKey = getEnv('GOOGLE_GENERATIVE_AI_API_KEY') ||
+  getEnv('VITE_GOOGLE_GENERATIVE_AI_API_KEY');
+
+if (!apiKey) {
+  console.warn('⚠️ Google Gemini API Key is missing. AI features will not work.');
+}
+
+const genAI = new GoogleGenerativeAI(apiKey || '');
 
 const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
 
