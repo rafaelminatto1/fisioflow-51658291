@@ -3,10 +3,10 @@
  * Using Node.js runtime for better performance and OpenAI compatibility
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-
-export const runtime = 'nodejs';
-export const maxDuration = 30;
+export const config = {
+  runtime: 'nodejs',
+  maxDuration: 30,
+};
 
 interface TranscribeRequest {
   audioUrl: string;
@@ -20,15 +20,23 @@ interface TranscribeResponse {
   confidence?: number;
 }
 
-export async function POST(req: NextRequest) {
+function jsonResponse(data: unknown, status = 200): Response {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+export default async function handler(req: Request): Promise<Response> {
+  if (req.method !== 'POST') {
+    return jsonResponse({ error: 'Method not allowed' }, 405);
+  }
+
   try {
     const { audioUrl, language = 'pt-BR' }: TranscribeRequest = await req.json();
 
     if (!audioUrl) {
-      return NextResponse.json(
-        { error: 'audioUrl is required' },
-        { status: 400 }
-      );
+      return jsonResponse({ error: 'audioUrl is required' }, 400);
     }
 
     // Download audio file
@@ -61,7 +69,7 @@ export async function POST(req: NextRequest) {
 
     const data: TranscribeResponse = await openaiResponse.json();
 
-    return NextResponse.json({
+    return jsonResponse({
       transcription: data.transcription,
       language: data.language,
       duration: data.duration,
@@ -69,12 +77,12 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error('Transcription error:', error);
-    return NextResponse.json(
+    return jsonResponse(
       {
         error: 'Transcription failed',
         message: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      500
     );
   }
 }

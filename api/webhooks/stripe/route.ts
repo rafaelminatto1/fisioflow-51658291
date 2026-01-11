@@ -3,22 +3,29 @@
  * Using Node.js runtime for better crypto library support
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import crypto from 'crypto';
+export const config = {
+  runtime: 'nodejs',
+  maxDuration: 30,
+};
 
-export const runtime = 'nodejs';
-export const maxDuration = 30;
+function jsonResponse(data: unknown, status = 200): Response {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
 
-export async function POST(req: NextRequest) {
+export default async function handler(req: Request): Promise<Response> {
+  if (req.method !== 'POST') {
+    return jsonResponse({ error: 'Method not allowed' }, 405);
+  }
+
   try {
     const body = await req.text();
     const signature = req.headers.get('stripe-signature');
 
     if (!signature) {
-      return NextResponse.json(
-        { error: 'No signature provided' },
-        { status: 400 }
-      );
+      return jsonResponse({ error: 'No signature provided' }, 400);
     }
 
     // Verify webhook signature
@@ -74,15 +81,15 @@ export async function POST(req: NextRequest) {
         console.log(`Unhandled event type: ${event.type}`);
     }
 
-    return NextResponse.json({ received: true });
+    return jsonResponse({ received: true });
   } catch (error) {
     console.error('Webhook error:', error);
-    return NextResponse.json(
+    return jsonResponse(
       {
         error: 'Webhook handler failed',
         message: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      500
     );
   }
 }

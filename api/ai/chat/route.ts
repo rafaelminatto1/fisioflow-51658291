@@ -3,10 +3,10 @@
  * Using Node.js runtime for better performance and OpenAI compatibility
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-
-export const runtime = 'nodejs';
-export const maxDuration = 30;
+export const config = {
+  runtime: 'nodejs',
+  maxDuration: 30,
+};
 
 interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
@@ -20,16 +20,18 @@ interface ChatRequest {
   maxTokens?: number;
 }
 
-interface ChatResponse {
-  message: string;
-  usage?: {
-    promptTokens: number;
-    completionTokens: number;
-    totalTokens: number;
-  };
+function jsonResponse(data: unknown, status = 200): Response {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
 }
 
-export async function POST(req: NextRequest) {
+export default async function handler(req: Request): Promise<Response> {
+  if (req.method !== 'POST') {
+    return jsonResponse({ error: 'Method not allowed' }, 405);
+  }
+
   try {
     const {
       messages,
@@ -39,10 +41,7 @@ export async function POST(req: NextRequest) {
     }: ChatRequest = await req.json();
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return NextResponse.json(
-        { error: 'messages array is required' },
-        { status: 400 }
-      );
+      return jsonResponse({ error: 'messages array is required' }, 400);
     }
 
     // Call OpenAI Chat API
@@ -67,7 +66,7 @@ export async function POST(req: NextRequest) {
 
     const data = await openaiResponse.json();
 
-    return NextResponse.json({
+    return jsonResponse({
       message: data.choices[0].message.content,
       usage: {
         promptTokens: data.usage.prompt_tokens,
@@ -77,12 +76,12 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error('Chat error:', error);
-    return NextResponse.json(
+    return jsonResponse(
       {
         error: 'Chat failed',
         message: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      500
     );
   }
 }
