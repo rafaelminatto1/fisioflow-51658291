@@ -32,6 +32,9 @@ importers:
       '@cornerstonejs/tools':
         specifier: ^4.15.5
         version: 4.15.5(@cornerstonejs/core@4.15.5(@babel/preset-env@7.28.5(@babel/core@7.28.5))(autoprefixer@10.4.21(postcss@8.5.6))(webpack@5.104.1(@swc/core@1.13.5(@swc/helpers@0.5.18))(esbuild@0.25.12))(wslink@2.5.0))(@kitware/vtk.js@34.15.1(@babel/preset-env@7.28.5(@babel/core@7.28.5))(autoprefixer@10.4.21(postcss@8.5.6))(webpack@5.104.1(@swc/core@1.13.5(@swc/helpers@0.5.18))(esbuild@0.25.12))(wslink@2.5.0))(@types/d3-array@3.2.1)(@types/d3-interpolate@3.0.4)(d3-array@3.2.4)(d3-interpolate@3.0.1)(gl-matrix@3.4.3)
+      '@google/generative-ai':
+        specifier: ^0.24.1
+        version: 0.24.1
       '@hello-pangea/dnd':
         specifier: ^18.0.1
         version: 18.0.1(@types/react@18.3.24)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1942,6 +1945,10 @@ packages:
 
   '@floating-ui/utils@0.2.10':
     resolution: {integrity: sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==}
+
+  '@google/generative-ai@0.24.1':
+    resolution: {integrity: sha512-MqO+MLfM6kjxcKoy0p1wRzG3b4ZZXtPI+z2IE26UogS2Cm/XHO+7gGRBh6gcJsOiIVoH93UwKvW4HdgiOZCy9Q==}
+    engines: {node: '>=18.0.0'}
 
   '@hello-pangea/dnd@18.0.1':
     resolution: {integrity: sha512-xojVWG8s/TGrKT1fC8K2tIWeejJYTAeJuj36zM//yEm/ZrnZUSFGS15BpO+jGZT1ybWvyXmeDJwPYb4dhWlbZQ==}
@@ -10369,6 +10376,8 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
 
   '@floating-ui/utils@0.2.10': {}
+
+  '@google/generative-ai@0.24.1': {}
 
   '@hello-pangea/dnd@18.0.1(@types/react@18.3.24)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
