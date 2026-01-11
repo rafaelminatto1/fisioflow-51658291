@@ -51,37 +51,39 @@ export const RescheduleConfirmDialog: React.FC<RescheduleConfirmDialogProps> = (
             Confirmar Reagendamento
           </AlertDialogTitle>
           <AlertDialogDescription asChild>
-            <div className="space-y-4 pt-2">
-              <p className="text-sm text-muted-foreground">
+            <div className="space-y-6 pt-4">
+              <p className="text-base text-muted-foreground">
                 Deseja reagendar o atendimento de <strong className="text-foreground">{appointment.patientName}</strong>?
               </p>
 
-              <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+              <div className="flex flex-col gap-4 p-4 bg-muted/50 rounded-lg sm:flex-row sm:items-start sm:gap-6">
                 {/* De */}
-                <div className="flex-1 space-y-1">
-                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">De</span>
-                  <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    {format(oldDate, "dd/MM/yyyy", { locale: ptBR })}
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-2 text-base font-medium text-foreground">
+                    <Calendar className="h-5 w-5 text-muted-foreground" />
+                    <span className="font-bold text-muted-foreground uppercase">De</span>
+                    <span>{format(oldDate, "dd/MM/yyyy", { locale: ptBR })}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4" />
+                  <div className="flex items-center gap-2 text-base text-muted-foreground pl-7">
+                    <Clock className="h-5 w-5" />
                     {appointment.time}
                   </div>
                 </div>
 
                 {/* Seta */}
-                <ArrowRight className="h-5 w-5 text-primary flex-shrink-0" />
+                <div className="flex items-center justify-center pt-2 sm:pt-0">
+                  <ArrowRight className="h-6 w-6 text-primary rotate-90 sm:rotate-0" />
+                </div>
 
                 {/* Para */}
-                <div className="flex-1 space-y-1">
-                  <span className="text-xs font-medium text-primary uppercase tracking-wide">Para</span>
-                  <div className="flex items-center gap-2 text-sm font-medium text-primary">
-                    <Calendar className="h-4 w-4" />
-                    {format(newDate, "dd/MM/yyyy", { locale: ptBR })}
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-2 text-base font-medium text-primary">
+                    <Calendar className="h-5 w-5" />
+                    <span className="font-bold uppercase">Para</span>
+                    <span>{format(newDate, "dd/MM/yyyy", { locale: ptBR })}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-primary">
-                    <Clock className="h-4 w-4" />
+                  <div className="flex items-center gap-2 text-base text-primary pl-7">
+                    <Clock className="h-5 w-5" />
                     {newTime}
                   </div>
                 </div>
@@ -90,7 +92,7 @@ export const RescheduleConfirmDialog: React.FC<RescheduleConfirmDialogProps> = (
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending} onClick={() => onOpenChange(false)}>Cancelar</AlertDialogCancel>
           <AlertDialogAction onClick={onConfirm} disabled={isPending}>
             {isPending ? 'Reagendando...' : 'Confirmar Reagendamento'}
           </AlertDialogAction>
