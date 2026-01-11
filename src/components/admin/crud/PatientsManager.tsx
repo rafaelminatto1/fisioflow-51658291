@@ -10,6 +10,7 @@ import { NewPatientModal } from '@/components/modals/NewPatientModal';
 import { ViewPatientModal } from '@/components/modals/ViewPatientModal';
 import { EditPatientModal } from '@/components/modals/EditPatientModal';
 import type { Patient } from '@/types';
+import { PatientHelpers } from '@/types';
 
 export function PatientsManager() {
   const { data: patients = [], isLoading } = usePatients();
@@ -18,11 +19,14 @@ export function PatientsManager() {
   const [viewPatient, setViewPatient] = useState<Patient | null>(null);
   const [editPatient, setEditPatient] = useState<Patient | null>(null);
 
-  const filteredPatients = patients.filter(p => 
-    p.name?.toLowerCase().includes(search.toLowerCase()) ||
-    p.email?.toLowerCase().includes(search.toLowerCase()) ||
-    p.phone?.includes(search)
-  );
+  const filteredPatients = patients.filter(p => {
+    const patientName = PatientHelpers.getName(p);
+    return (
+      patientName.toLowerCase().includes(search.toLowerCase()) ||
+      p.email?.toLowerCase().includes(search.toLowerCase()) ||
+      p.phone?.includes(search)
+    );
+  });
 
   return (
     <>
@@ -66,7 +70,7 @@ export function PatientsManager() {
               <TableBody>
                 {filteredPatients.map((patient) => (
                   <TableRow key={patient.id}>
-                    <TableCell className="font-medium">{patient.name}</TableCell>
+                    <TableCell className="font-medium">{PatientHelpers.getName(patient)}</TableCell>
                     <TableCell>{patient.email || '-'}</TableCell>
                     <TableCell>{patient.phone || '-'}</TableCell>
                     <TableCell>

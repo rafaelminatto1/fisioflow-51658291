@@ -65,6 +65,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { PatientHelpers } from '@/types';
 
 const Communications = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -394,14 +395,16 @@ const Communications = () => {
                         <CommandList>
                           <CommandEmpty>Nenhum paciente encontrado.</CommandEmpty>
                           <CommandGroup>
-                            {filteredPatients.map((patient) => (
+                            {filteredPatients.map((patient) => {
+                              const patientName = PatientHelpers.getName(patient);
+                              return (
                               <CommandItem
                                 key={patient.id}
-                                value={patient.name}
+                                value={patientName}
                                 onSelect={() => {
-                                  setSelectedPatient({ 
-                                    id: patient.id, 
-                                    name: patient.name,
+                                  setSelectedPatient({
+                                    id: patient.id,
+                                    name: patientName,
                                     email: patient.email,
                                     phone: patient.phone
                                   });
@@ -409,9 +412,10 @@ const Communications = () => {
                                   setPatientSearch('');
                                 }}
                               >
-                                {patient.name}
+                                {patientName}
                               </CommandItem>
-                            ))}
+                              );
+                            })}
                           </CommandGroup>
                         </CommandList>
                       </Command>

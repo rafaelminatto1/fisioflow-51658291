@@ -16,6 +16,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { PatientHelpers } from "@/types";
 
 interface Patient {
   id: string;
@@ -47,9 +48,9 @@ export function PatientCombobox({
 
   const filteredPatients = React.useMemo(() => {
     if (!searchTerm) return patients;
-    
+
     return patients.filter((patient) =>
-      patient.name.toLowerCase().includes(searchTerm.toLowerCase())
+      PatientHelpers.getName(patient).toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [patients, searchTerm]);
 
@@ -77,7 +78,7 @@ export function PatientCombobox({
         >
           {selectedPatient ? (
             <div className="flex items-center gap-2">
-              <span className="truncate">{selectedPatient.name}</span>
+              <span className="truncate">{PatientHelpers.getName(selectedPatient)}</span>
               {selectedPatient.incomplete_registration && (
                 <span className="text-xs px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-full">
                   ⚠️
@@ -138,7 +139,7 @@ export function PatientCombobox({
                         )}
                       />
                       <div className="flex items-center gap-2 flex-1">
-                        <span>{patient.name}</span>
+                        <span>{PatientHelpers.getName(patient)}</span>
                         {patient.incomplete_registration && (
                           <span className="text-xs px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-full">
                             ⚠️ Cadastro incompleto

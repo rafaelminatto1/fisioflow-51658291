@@ -24,6 +24,7 @@ import { usePainMapHistory } from '@/hooks/usePainMapHistory';
 import { PainMapComparisonModal } from '@/components/pain-map/PainMapComparisonModal';
 import { PainMapService } from '@/lib/services/painMapService';
 import type { PainMapPoint, BodyRegion } from '@/types/painMap';
+import { PatientHelpers } from '@/types';
 
 // Mini body SVG for cards
 const bodyPaths: Record<BodyRegion, { path: string }> = {
@@ -125,7 +126,7 @@ export default function PainMapHistoryPage() {
     // Patient info
     doc.setFontSize(12);
     doc.setTextColor(0, 0, 0);
-    doc.text(`Paciente: ${patient.name}`, 14, 35);
+    doc.text(`Paciente: ${PatientHelpers.getName(patient)}`, 14, 35);
     doc.text(`Data do Relatório: ${format(new Date(), "dd/MM/yyyy HH:mm", { locale: ptBR })}`, 14, 42);
     
     // Statistics
@@ -213,7 +214,8 @@ export default function PainMapHistoryPage() {
       );
     }
 
-    doc.save(`fisioflow_mapa_dor_${patient.name.replace(/\s/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
+    const patientName = PatientHelpers.getName(patient);
+    doc.save(`fisioflow_mapa_dor_${patientName.replace(/\s/g, '_')}_${format(new Date(), 'yyyyMMdd')}.pdf`);
   };
 
   if (!patientId) {
@@ -241,7 +243,7 @@ export default function PainMapHistoryPage() {
                 Histórico de Mapas de Dor
               </h1>
               {patient && (
-                <p className="text-muted-foreground">{patient.name}</p>
+                <p className="text-muted-foreground">{PatientHelpers.getName(patient)}</p>
               )}
             </div>
           </div>

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { PatientHelpers } from '@/types';
 
 interface PatientDashboardProps {
     patient: any;
@@ -54,14 +55,14 @@ export const PatientDashboard360 = ({
                             <Avatar className="w-24 h-24 border-4 border-background shadow-lg">
                                 <AvatarImage src={patient.photoUrl} />
                                 <AvatarFallback className="text-xl bg-primary/20 text-primary">
-                                    {patient.name?.substring(0, 2).toUpperCase()}
+                                    {PatientHelpers.getName(patient).substring(0, 2).toUpperCase()}
                                 </AvatarFallback>
                             </Avatar>
 
                             <div className="flex-1 space-y-2">
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <h2 className="text-2xl font-bold tracking-tight text-foreground">{patient.name}</h2>
+                                        <h2 className="text-2xl font-bold tracking-tight text-foreground">{PatientHelpers.getName(patient)}</h2>
                                         <p className="text-muted-foreground flex items-center gap-2 mt-1">
                                             <User className="w-4 h-4" />
                                             {patient.age} anos • {patient.profession || 'Profissão não informada'}
