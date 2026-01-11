@@ -124,7 +124,7 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
       const { data: newPatient, error } = await supabase
         .from('patients')
         .insert([{
-          name: data.name.trim(),
+          full_name: data.name.trim(),
           phone: cleanPhone || null,
           status: 'active',
           incomplete_registration: true,
@@ -180,7 +180,7 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
 
       reset();
       onOpenChange(false);
-      onPatientCreated(newPatient.id, newPatient.name);
+      onPatientCreated(newPatient.id, newPatient.full_name);
     } catch (error: any) {
       logger.error('Erro ao criar paciente rápido', error, 'QuickPatientModal');
 
