@@ -1,13 +1,14 @@
 /**
  * Vercel Function for AI Exercise Suggestions
- * Using Node.js runtime for better performance and OpenAI compatibility
+ * Using Node.js runtime for better performance and Google AI compatibility
  */
 
-import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-export const runtime = 'nodejs';
-export const maxDuration = 30;
+export const config = {
+  runtime: 'nodejs',
+  maxDuration: 30,
+};
 
 interface ExerciseSuggestionRequest {
   patientCondition: string;
@@ -54,7 +55,18 @@ Provide exercise recommendations in JSON format with the following structure:
   "rationale": "Overall explanation of the exercise program"
 }`;
 
-export async function POST(req: NextRequest) {
+function jsonResponse(data: unknown, status = 200): Response {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+export default async function handler(req: Request): Promise<Response> {
+  if (req.method !== 'POST') {
+    return jsonResponse({ error: 'Method not allowed' }, 405);
+  }
+
   try {
     const {
       patientCondition,
@@ -65,9 +77,9 @@ export async function POST(req: NextRequest) {
     }: ExerciseSuggestionRequest = await req.json();
 
     if (!patientCondition || !patientGoals || patientGoals.length === 0) {
-      return NextResponse.json(
+      return jsonResponse(
         { error: 'patientCondition and patientGoals are required' },
-        { status: 400 }
+        400
       );
     }
 
@@ -98,15 +110,15 @@ Please suggest appropriate exercises for this patient.`;
 
     const results: ExerciseSuggestionResponse = JSON.parse(cleanJson);
 
-    return NextResponse.json(results);
+    return jsonResponse(results);
   } catch (error) {
     console.error('Exercise suggestion error:', error);
-    return NextResponse.json(
+    return jsonResponse(
       {
         error: 'Exercise suggestion failed',
         message: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      500
     );
   }
 }

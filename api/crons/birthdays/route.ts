@@ -4,21 +4,33 @@
  * Sends birthday wishes to patients
  */
 
-import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-export const runtime = 'nodejs';
-export const maxDuration = 300;
+export const config = {
+  runtime: 'nodejs',
+  maxDuration: 300,
+};
 
-function verifyCronSecret(req: NextRequest): boolean {
+function jsonResponse(data: unknown, status = 200): Response {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+function verifyCronSecret(req: Request): boolean {
   const authHeader = req.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
   return authHeader === `Bearer ${cronSecret}`;
 }
 
-export async function GET(req: NextRequest) {
+export default async function handler(req: Request): Promise<Response> {
+  if (req.method !== 'GET') {
+    return jsonResponse({ error: 'Method not allowed' }, 405);
+  }
+
   if (!verifyCronSecret(req)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return jsonResponse({ error: 'Unauthorized' }, 401);
   }
 
   try {
@@ -61,19 +73,19 @@ export async function GET(req: NextRequest) {
 
     console.log(`Birthday messages completed: ${messagesSent} messages sent`);
 
-    return NextResponse.json({
+    return jsonResponse({
       success: true,
       messagesSent,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Birthday messages cron job error:', error);
-    return NextResponse.json(
+    return jsonResponse(
       {
         error: 'Cron job failed',
         message: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      500
     );
   }
 }

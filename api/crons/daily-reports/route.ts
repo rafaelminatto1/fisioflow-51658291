@@ -4,14 +4,22 @@
  * Generates and sends daily reports to patients and therapists
  */
 
-import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-export const runtime = 'nodejs';
-export const maxDuration = 300; // 5 minutes
+export const config = {
+  runtime: 'nodejs',
+  maxDuration: 300, // 5 minutes
+};
+
+function jsonResponse(data: unknown, status = 200): Response {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
 
 // Verify cron secret to prevent unauthorized access
-function verifyCronSecret(req: NextRequest): boolean {
+function verifyCronSecret(req: Request): boolean {
   const authHeader = req.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET;
 
@@ -23,13 +31,14 @@ function verifyCronSecret(req: NextRequest): boolean {
   return authHeader === `Bearer ${cronSecret}`;
 }
 
-export async function GET(req: NextRequest) {
+export default async function handler(req: Request): Promise<Response> {
+  if (req.method !== 'GET') {
+    return jsonResponse({ error: 'Method not allowed' }, 405);
+  }
+
   // Verify cron secret
   if (!verifyCronSecret(req)) {
-    return NextResponse.json(
-      { error: 'Unauthorized' },
-      { status: 401 }
-    );
+    return jsonResponse({ error: 'Unauthorized' }, 401);
   }
 
   try {
@@ -90,7 +99,7 @@ export async function GET(req: NextRequest) {
 
     console.log(`Daily reports completed: ${reportsGenerated} reports, ${emailsSent} emails sent`);
 
-    return NextResponse.json({
+    return jsonResponse({
       success: true,
       reportsGenerated,
       emailsSent,
@@ -98,12 +107,12 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('Daily reports cron job error:', error);
-    return NextResponse.json(
+    return jsonResponse(
       {
         error: 'Cron job failed',
         message: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      500
     );
   }
 }
