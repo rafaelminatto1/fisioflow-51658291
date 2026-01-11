@@ -141,12 +141,8 @@ export const PhysicalExamForm = ({ data, onChange, readOnly = false }: PhysicalE
                             <Label>ADM (Graus)</Label>
                             <Textarea
                                 placeholder="Ex: Flexão Joelho D: 120º, E: 135º..."
-                                value={JSON.stringify(data.rangeOfMotion || {}, null, 2).replace(/[\{\}"]/g, '')}
-                                onChange={(e) => {
-                                    // Simple text handler for now, ideally structured
-                                    // For this demo we just keep it as text in the state if simplified
-                                    // but for real implementation we ideally want structured inputs per joint
-                                }}
+                                value={typeof data.rangeOfMotion === 'string' ? data.rangeOfMotion : ''}
+                                onChange={(e) => handleChange('rangeOfMotion', e.target.value)}
                                 readOnly={readOnly}
                             />
                             <p className="text-xs text-muted-foreground">Descreva as amplitudes de movimento mensuradas.</p>
@@ -155,8 +151,8 @@ export const PhysicalExamForm = ({ data, onChange, readOnly = false }: PhysicalE
                             <Label>Força Muscular (Grau 0-5)</Label>
                             <Textarea
                                 placeholder="Ex: Quadríceps D: 4, E: 5..."
-                                value={JSON.stringify(data.muscleStrength || {}, null, 2).replace(/[\{\}"]/g, '')}
-                                onChange={(e) => { }}
+                                value={typeof data.muscleStrength === 'string' ? data.muscleStrength : ''}
+                                onChange={(e) => handleChange('muscleStrength', e.target.value)}
                                 readOnly={readOnly}
                             />
                         </div>

@@ -1,11 +1,11 @@
 /**
- * Vercel Edge Function for AI Transcription
- * Migrated from Supabase Edge Function for better performance
+ * Vercel Function for AI Transcription
+ * Using Node.js runtime for better performance and OpenAI compatibility
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 export const maxDuration = 30;
 
 interface TranscribeRequest {
