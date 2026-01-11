@@ -6,7 +6,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const getEnv = (key: string) => {
   // @ts-ignore
@@ -20,17 +20,18 @@ const getEnv = (key: string) => {
   return undefined;
 };
 
-const openai = new OpenAI({
-  apiKey: getEnv('VITE_OPENAI_API_KEY') || getEnv('OPENAI_API_KEY'),
-});
+// Initialize Gemini
+const genAI = new GoogleGenerativeAI(
+  getEnv('GOOGLE_GENERATIVE_AI_API_KEY') ||
+  getEnv('VITE_GOOGLE_GENERATIVE_AI_API_KEY') ||
+  ''
+);
+
+const embeddingModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
 
 export interface EmbeddingResult {
   embedding: number[];
   model: string;
-  usage: {
-    prompt_tokens: number;
-    total_tokens: number;
-  };
 }
 
 export interface SemanticSearchResult<T = any> {
@@ -40,43 +41,37 @@ export interface SemanticSearchResult<T = any> {
 }
 
 /**
- * Generate embedding for text using OpenAI
+ * Generate embeddings for multiple texts (batch) - Not directly supported by simple SDK call, loop instead
  */
-export async function generateEmbedding(
-  text: string,
-  model: string = 'text-embedding-3-small'
-): Promise<number[]> {
+export async function generateEmbeddingsBatch(
+  texts: string[],
+  model: string = 'text-embedding-004'
+): Promise<number[][]> {
   try {
-    const response = await openai.embeddings.create({
-      model,
-      input: text,
-      encoding_format: 'float',
-    });
-
-    return response.data[0].embedding;
+    const embeddings: number[][] = [];
+    for (const text of texts) {
+      const result = await embeddingModel.embedContent(text);
+      embeddings.push(result.embedding.values);
+    }
+    return embeddings;
   } catch (error) {
-    console.error('Error generating embedding:', error);
+    console.error('Error generating batch embeddings:', error);
     throw error;
   }
 }
 
 /**
- * Generate embeddings for multiple texts (batch)
+ * Generate embedding for text using Google Gemini
  */
-export async function generateEmbeddingsBatch(
-  texts: string[],
-  model: string = 'text-embedding-3-small'
-): Promise<number[][]> {
+export async function generateEmbedding(
+  text: string,
+  model: string = 'text-embedding-004'
+): Promise<number[]> {
   try {
-    const response = await openai.embeddings.create({
-      model,
-      input: texts,
-      encoding_format: 'float',
-    });
-
-    return response.data.map(item => item.embedding);
+    const result = await embeddingModel.embedContent(text);
+    return result.embedding.values;
   } catch (error) {
-    console.error('Error generating batch embeddings:', error);
+    console.error('Error generating embedding:', error);
     throw error;
   }
 }
@@ -169,7 +164,7 @@ export class ExerciseEmbeddingService {
       organizationId?: string;
     } = {}
   ): Promise<SemanticSearchResult[]> {
-    const { threshold = 0.75, limit = 10, organizationId } = options;
+    const { threshold = 0.3, limit = 10, organizationId } = options;
 
     try {
       // Generate query embedding
@@ -312,7 +307,7 @@ export class ProtocolEmbeddingService {
       organizationId?: string;
     } = {}
   ): Promise<SemanticSearchResult[]> {
-    const { threshold = 0.75, limit = 10, organizationId } = options;
+    const { threshold = 0.3, limit = 10, organizationId } = options;
 
     try {
       const queryEmbedding = await generateEmbedding(query);

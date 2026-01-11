@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30;
@@ -79,34 +80,25 @@ Session Number: ${sessionCount}
 
 Please suggest appropriate exercises for this patient.`;
 
-    // Call OpenAI API
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4-turbo-preview',
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: userMessage },
-        ],
-        temperature: 0.7,
-        response_format: { type: 'json_object' },
-      }),
-    });
+    // Call Google Gemini API
+    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY || '');
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    if (!openaiResponse.ok) {
-      const error = await openaiResponse.text();
-      throw new Error(`OpenAI API error: ${error}`);
-    }
+    const result = await model.generateContent([
+      { text: SYSTEM_PROMPT },
+      { text: userMessage }
+    ]);
 
-    const data = await openaiResponse.json();
-    const content = data.choices[0].message.content;
-    const result: ExerciseSuggestionResponse = JSON.parse(content);
+    const response = await result.response;
+    const text = response.text();
 
-    return NextResponse.json(result);
+    // Extract JSON from potential code blocks
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const cleanJson = jsonMatch ? jsonMatch[0] : text;
+
+    const results: ExerciseSuggestionResponse = JSON.parse(cleanJson);
+
+    return NextResponse.json(results);
   } catch (error) {
     console.error('Exercise suggestion error:', error);
     return NextResponse.json(
