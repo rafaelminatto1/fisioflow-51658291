@@ -1,12 +1,12 @@
 /**
- * Vercel Edge Function for Stripe Webhooks
- * Migrated from Supabase for better performance
+ * Vercel Function for Stripe Webhooks
+ * Using Node.js runtime for better crypto library support
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 export const maxDuration = 30;
 
 export async function POST(req: NextRequest) {

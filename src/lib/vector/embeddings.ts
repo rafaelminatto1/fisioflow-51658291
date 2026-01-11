@@ -8,8 +8,20 @@
 import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
 
+const getEnv = (key: string) => {
+  // @ts-ignore
+  if (typeof import.meta !== 'undefined' && import.meta.env) {
+    // @ts-ignore
+    return import.meta.env[key];
+  }
+  if (typeof process !== 'undefined' && process.env) {
+    return process.env[key];
+  }
+  return undefined;
+};
+
 const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY || process.env.OPENAI_API_KEY,
+  apiKey: getEnv('VITE_OPENAI_API_KEY') || getEnv('OPENAI_API_KEY'),
 });
 
 export interface EmbeddingResult {
@@ -98,8 +110,8 @@ export function cosineSimilarity(
  */
 export class ExerciseEmbeddingService {
   private supabase = createClient(
-    import.meta.env.VITE_SUPABASE_URL,
-    import.meta.env.VITE_SUPABASE_ANON_KEY
+    getEnv('VITE_SUPABASE_URL') || '',
+    getEnv('VITE_SUPABASE_ANON_KEY') || ''
   );
 
   /**
@@ -245,8 +257,8 @@ export class ExerciseEmbeddingService {
  */
 export class ProtocolEmbeddingService {
   private supabase = createClient(
-    import.meta.env.VITE_SUPABASE_URL,
-    import.meta.env.VITE_SUPABASE_ANON_KEY
+    getEnv('VITE_SUPABASE_URL') || '',
+    getEnv('VITE_SUPABASE_ANON_KEY') || ''
   );
 
   /**
@@ -338,8 +350,8 @@ export class ProtocolEmbeddingService {
  */
 export class PatientSimilarityService {
   private supabase = createClient(
-    import.meta.env.VITE_SUPABASE_URL,
-    import.meta.env.VITE_SUPABASE_ANON_KEY
+    getEnv('VITE_SUPABASE_URL') || '',
+    getEnv('VITE_SUPABASE_ANON_KEY') || ''
   );
 
   /**
