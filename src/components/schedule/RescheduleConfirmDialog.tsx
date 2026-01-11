@@ -35,12 +35,14 @@ export const RescheduleConfirmDialog: React.FC<RescheduleConfirmDialogProps> = (
 }) => {
   if (!appointment || !newDate || !newTime) return null;
 
-  const oldDate = typeof appointment.date === 'string'
-    ? (() => {
-      const [y, m, d] = appointment.date.split('-').map(Number);
-      return new Date(y, m - 1, d, 12, 0, 0); // Local noon
-    })()
-    : appointment.date;
+  const parseDate = (date: Date | string): Date => {
+    if (date instanceof Date) return date;
+    // Handle string dates in YYYY-MM-DD format
+    const [y, m, d] = String(date).split('-').map(Number);
+    return new Date(y, m - 1, d, 12, 0, 0);
+  };
+
+  const oldDate = parseDate(appointment.date);
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
