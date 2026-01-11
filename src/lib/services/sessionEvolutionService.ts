@@ -109,7 +109,7 @@ export class SessionEvolutionService {
   }
 
   static async updateSessionEvolution(sessionId: string, data: Partial<SessionEvolutionFormData>): Promise<SessionEvolution> {
-    const updates: any = {};
+    const updates: Partial<SessionEvolution> = {};
     if (data.subjective !== undefined) updates.subjective = data.subjective;
     if (data.objective !== undefined) updates.objective = data.objective;
     if (data.assessment !== undefined) updates.assessment = data.assessment;

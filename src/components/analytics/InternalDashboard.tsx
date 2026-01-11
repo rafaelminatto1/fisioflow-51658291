@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
+import { PatientHelpers } from '@/types';
 
 export function InternalDashboard() {
   // Pacientes ativos (com consulta nos últimos 30 dias)
@@ -359,7 +360,7 @@ export function InternalDashboard() {
                 <TableBody>
                   {inactivePatients?.list?.map((patient) => (
                     <TableRow key={patient.id}>
-                      <TableCell className="font-medium">{patient.name}</TableCell>
+                      <TableCell className="font-medium">{PatientHelpers.getName(patient)}</TableCell>
                       <TableCell>{patient.phone || "-"}</TableCell>
                       <TableCell>
                         {patient.lastAppointment 

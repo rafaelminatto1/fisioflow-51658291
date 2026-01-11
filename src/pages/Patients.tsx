@@ -31,6 +31,7 @@ import {
 import { cn, calculateAge, exportToCSV } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { LazyComponent } from '@/components/common/LazyComponent';
+import { PatientHelpers } from '@/types';
 
 const Patients = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -54,8 +55,9 @@ const Patients = () => {
 
   const filteredPatients = useMemo(() => {
     return patients.filter(patient => {
+      const patientName = PatientHelpers.getName(patient);
       const matchesSearch =
-        (patient.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (patient.main_condition || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (patient.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (patient.phone || '').toLowerCase().includes(searchTerm.toLowerCase());
@@ -75,8 +77,10 @@ const Patients = () => {
   };
 
   const exportPatients = () => {
-    const data = filteredPatients.map(patient => ({
-      name: patient.name || 'Sem nome',
+    const data = filteredPatients.map(patient => {
+      const patientName = PatientHelpers.getName(patient);
+      return {
+      name: patientName || 'Sem nome',
       email: patient.email || '',
       phone: patient.phone || '',
       age: calculateAge(patient.birth_date),
@@ -84,7 +88,8 @@ const Patients = () => {
       condition: patient.main_condition || '',
       status: patient.status || '',
       progress: patient.progress || 0
-    }));
+    };
+    });
 
     const headers = ['Nome', 'Email', 'Telefone', 'Idade', 'Gênero', 'Condição Principal', 'Status', 'Progresso'];
 
@@ -331,13 +336,16 @@ const Patients = () => {
                           patient.status === 'Inicial' ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" :
                             "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
                       )}>
-                        {patient.name ? patient.name.split(' ').map(n => n[0]).join('').substring(0, 2) : 'P'}
+                        {(() => {
+                          const name = PatientHelpers.getName(patient);
+                          return name ? name.split(' ').map(n => n[0]).join('').substring(0, 2) : 'P';
+                        })()}
                       </AvatarFallback>
                     </Avatar>
                   </div>
                   <div className="flex flex-col flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{patient.name || 'Paciente sem nome'}</p>
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{PatientHelpers.getName(patient) || 'Paciente sem nome'}</p>
                       <Badge className={cn(
                         "inline-flex items-center rounded-full border border-transparent text-[10px] font-semibold px-2 py-0.5",
                         patient.status === 'Em Tratamento' ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" :

@@ -28,6 +28,7 @@ import { useAppointments } from '@/hooks/useAppointments';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PainMapRegistration } from '@/components/patient/PainMapRegistration';
+import { PatientHelpers } from '@/types';
 import { ExercisePlayer } from '@/components/patient/ExercisePlayer';
 
 const PatientPortal = () => {
@@ -118,12 +119,15 @@ const PatientPortal = () => {
             <Avatar className="h-16 w-16 border-4 border-primary/30">
               <AvatarImage src={profile?.avatar_url || ''} />
               <AvatarFallback className="bg-primary/20 text-primary text-xl font-bold">
-                {patient.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                {(() => {
+                  const name = PatientHelpers.getName(patient);
+                  return name.split(' ').map(n => n[0]).join('').substring(0, 2);
+                })()}
               </AvatarFallback>
             </Avatar>
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold italic tracking-tight text-primary">
-                Olá, {patient.name.split(' ')[0]}! 👋
+                Olá, {PatientHelpers.getName(patient).split(' ')[0]}! 👋
               </h1>
               <p className="text-muted-foreground">
                 Que bom ver você de novo. Como estamos hoje?

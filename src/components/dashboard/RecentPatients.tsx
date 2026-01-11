@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Eye } from 'lucide-react';
 import { useData } from '@/hooks/useData';
+import { PatientHelpers } from '@/types';
 
 export function RecentPatients() {
   const { patients } = useData();
@@ -37,16 +38,18 @@ export function RecentPatients() {
             <p className="text-muted-foreground">Nenhum paciente cadastrado ainda</p>
           </div>
         ) : (
-          recentPatients.map((patient) => (
+          recentPatients.map((patient) => {
+            const patientName = PatientHelpers.getName(patient);
+            return (
             <div key={patient.id} className="flex items-center justify-between p-3 bg-accent/30 rounded-lg hover:bg-accent/50 transition-colors">
               <div className="flex items-center gap-3">
                 <Avatar>
                   <AvatarFallback className="bg-gradient-primary text-primary-foreground">
-                    {patient.name.split(' ').map(n => n[0]).join('')}
+                    {patientName.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-medium text-foreground">{patient.name}</p>
+                  <p className="font-medium text-foreground">{patientName}</p>
                   <p className="text-sm text-muted-foreground">{patient.mainCondition}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <Badge className={`text-xs ${getStatusColor(patient.status)}`}>
@@ -62,7 +65,8 @@ export function RecentPatients() {
                 <Eye className="w-4 h-4" />
               </Button>
             </div>
-          ))
+            );
+          })
         )}
       </CardContent>
     </Card>

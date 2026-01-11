@@ -150,9 +150,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
           </div>
         </header>
 
-        {/* Main Content - Com padding para mobile header e bottom navigation */}
-        <main className="flex-1 p-4 md:p-6 pt-16 md:pt-6 pb-20 md:pb-6 overflow-visible bg-gradient-to-b from-transparent to-accent/5">
-          <div className="max-w-7xl mx-auto">
+        {/* Main Content - Com padding para mobile header e bottom navigation - Otimizado para iPhone/iPad */}
+        <main className="flex-1 p-3 xs:p-4 sm:p-5 md:p-6 pt-[60px] md:pt-6 pb-20 md:pb-6 overflow-visible bg-gradient-to-b from-transparent to-accent/5">
+          <div className="max-w-7xl mx-auto px-1 xs:px-0">
             {showBreadcrumbs && <PageBreadcrumbs customLabels={customBreadcrumbLabels} />}
             {children}
           </div>

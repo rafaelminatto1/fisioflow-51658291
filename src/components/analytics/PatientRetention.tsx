@@ -55,6 +55,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { PatientHelpers } from '@/types';
 
 // Metric Card Component
 function MetricCard({ 
@@ -194,7 +195,7 @@ function PatientAtRiskRow({
       />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className="font-medium truncate">{patient.name}</p>
+          <p className="font-medium truncate">{PatientHelpers.getName(patient)}</p>
           <RiskBadge score={patient.riskScore} />
         </div>
         <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
@@ -378,7 +379,7 @@ export function PatientRetention() {
       if (riskFilter === 'low' && patient.riskScore >= 50) return false;
 
       // Search filter
-      if (searchTerm && !patient.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+      if (searchTerm && !PatientHelpers.getName(patient).toLowerCase().includes(searchTerm.toLowerCase())) return false;
 
       return true;
     });

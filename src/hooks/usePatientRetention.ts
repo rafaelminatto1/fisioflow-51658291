@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { subDays, subMonths, format, differenceInDays, startOfMonth, parseISO } from 'date-fns';
 import { CACHE_TIMES, STALE_TIMES } from '@/lib/queryConfig';
+import { PatientHelpers } from '@/types';
 
 // Query keys for retention
 const RETENTION_KEYS = {
@@ -272,7 +273,7 @@ export function usePatientsAtRisk(minRiskScore: number = 30) {
 
           patientsAtRisk.push({
             id: patient.id,
-            name: patient.name,
+            name: PatientHelpers.getName(patient),
             email: patient.email,
             phone: patient.phone,
             lastAppointmentDate: lastAppointment?.appointment_date || null,

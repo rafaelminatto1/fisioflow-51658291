@@ -26,6 +26,7 @@ import {
   usePatientPathologies
 } from '@/hooks/usePatientEvolution';
 import { useSoapRecords } from '@/hooks/useSoapRecords';
+import { PatientHelpers } from '@/types';
 
 interface PatientDashboard360Props {
   patient: any;
@@ -72,13 +73,13 @@ export const PatientDashboard360: React.FC<PatientDashboard360Props> = ({
           <div className="flex items-start gap-6">
             <Avatar className="h-24 w-24 border-2 border-primary">
               <AvatarFallback className="text-2xl bg-primary/10 text-primary">
-                {getInitials(patient.name)}
+                {getInitials(PatientHelpers.getName(patient))}
               </AvatarFallback>
             </Avatar>
-            
+
             <div className="flex-1 space-y-4">
               <div>
-                <h2 className="text-3xl font-bold">{patient.name}</h2>
+                <h2 className="text-3xl font-bold">{PatientHelpers.getName(patient)}</h2>
                 <div className="flex items-center gap-4 mt-2 text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <User className="h-4 w-4" />

@@ -4,6 +4,76 @@
 export * from './agenda';
 export type { EnhancedAppointment } from './appointment';
 
+// Unified Appointment type that consolidates both camelCase and snake_case
+// This provides compatibility between database schema (snake_case) and app code (camelCase)
+export interface AppointmentUnified {
+  // Primary fields
+  id: string;
+
+  // Patient fields - both naming conventions supported
+  patientId?: string;
+  patient_id?: string;
+  patientName?: string;
+  patient?: {
+    id: string;
+    name: string;
+    full_name?: string; // Database field
+    phone?: string;
+    email?: string;
+  };
+
+  // Therapist fields
+  therapistId?: string;
+  therapist_id?: string;
+  therapist?: {
+    id: string;
+    name: string;
+    email?: string;
+  };
+
+  // Date/Time fields - both naming conventions supported
+  date?: string; // Legacy format
+  appointment_date?: string; // Database format
+  time?: string; // Legacy format
+  appointment_time?: string; // Database format
+  start_time?: string; // New agenda format
+  end_time?: string; // New agenda format
+  duration?: number;
+
+  // Status fields
+  status?: AppointmentStatus;
+  payment_status?: 'pending' | 'paid' | 'partial';
+  session_type?: 'individual' | 'group';
+
+  // Notes and metadata
+  notes?: string;
+  phone?: string;
+
+  // Timestamps
+  createdAt?: string;
+  created_at?: string;
+  updatedAt?: string;
+  updated_at?: string;
+
+  // Type for appointments
+  type?: 'Consulta Inicial' | 'Fisioterapia' | 'Reavaliação' | 'Consulta de Retorno';
+}
+
+export type AppointmentStatus =
+  | 'scheduled'
+  | 'confirmed'
+  | 'completed'
+  | 'missed'
+  | 'cancelled'
+  | 'rescheduled'
+  | 'Confirmado'
+  | 'Pendente'
+  | 'Reagendado'
+  | 'Cancelado'
+  | 'Realizado'
+  | 'no_show'
+  | 'in_progress';
+
 export interface Patient {
   id: string;
   name: string;
@@ -279,3 +349,47 @@ export type ExerciseFormData = Omit<Exercise, 'id' | 'createdAt' | 'updatedAt'>;
 export type MedicalRecordFormData = Omit<MedicalRecord, 'id' | 'createdAt' | 'updatedAt'>;
 export type TreatmentSessionFormData = Omit<TreatmentSession, 'id' | 'createdAt' | 'updatedAt'>;
 export type SmartExercisePlanFormData = Omit<SmartExercisePlan, 'id' | 'createdAt' | 'updatedAt' | 'lastProgressionDate'>;
+
+// Helper functions for type-safe data access
+export namespace PatientHelpers {
+  export function getName(patient: Patient | { name?: string; full_name?: string } | null | undefined): string {
+    if (!patient) return 'Paciente';
+    return patient.full_name || patient.name || 'Paciente';
+  }
+
+  export function getPhone(patient: Patient | { phone?: string } | null | undefined): string | undefined {
+    return patient?.phone;
+  }
+
+  export function getId(patient: Patient | { id: string } | null | undefined): string {
+    if (!patient) return '';
+    return patient.id;
+  }
+}
+
+export namespace AppointmentHelpers {
+  export function getPatientName(appointment: AppointmentUnified | { patient?: { name?: string; full_name?: string }; patientName?: string } | null | undefined): string {
+    if (!appointment) return 'Paciente';
+    return appointment.patientName || appointment.patient?.full_name || appointment.patient?.name || 'Paciente';
+  }
+
+  export function getPatientId(appointment: AppointmentUnified | { patientId?: string; patient_id?: string } | null | undefined): string {
+    if (!appointment) return '';
+    return appointment.patientId || appointment.patient_id || '';
+  }
+
+  export function getDate(appointment: AppointmentUnified | { date?: string; appointment_date?: string } | null | undefined): string {
+    if (!appointment) return '';
+    return appointment.appointment_date || appointment.date || '';
+  }
+
+  export function getTime(appointment: AppointmentUnified | { time?: string; appointment_time?: string; start_time?: string } | null | undefined): string {
+    if (!appointment) return '';
+    return appointment.appointment_time || appointment.start_time || appointment.time || '';
+  }
+
+  export function getStatus(appointment: AppointmentUnified | { status?: string } | null | undefined): string {
+    if (!appointment) return 'scheduled';
+    return appointment.status || 'scheduled';
+  }
+}

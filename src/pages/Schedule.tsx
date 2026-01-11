@@ -9,10 +9,6 @@ const Sheet = SheetComponents.Sheet;
 const SheetContent = SheetComponents.SheetContent;
 const SheetTrigger = SheetComponents.SheetTrigger;
 
-// #region agent log
-console.log('[DEBUG] Sheet component imported:', Sheet);
-// #endregion
-
 import { CalendarViewType } from '@/components/schedule/CalendarView';
 import { AppointmentModalRefactored as AppointmentModal } from '@/components/schedule/AppointmentModalRefactored';
 import { AppointmentQuickEditModal } from '@/components/schedule/AppointmentQuickEditModal';
@@ -239,16 +235,7 @@ const Schedule = () => {
 
   const handleAppointmentReschedule = useCallback(async (appointment: Appointment, newDate: Date, newTime: string) => {
     try {
-      // DEBUG: Log all date values to trace the issue
-      console.log('[DEBUG Reschedule] Input newDate:', newDate);
-      console.log('[DEBUG Reschedule] newDate.toString():', newDate.toString());
-      console.log('[DEBUG Reschedule] newDate.toISOString():', newDate.toISOString());
-      console.log('[DEBUG Reschedule] newDate.getFullYear():', newDate.getFullYear());
-      console.log('[DEBUG Reschedule] newDate.getMonth():', newDate.getMonth());
-      console.log('[DEBUG Reschedule] newDate.getDate():', newDate.getDate());
-
       const formattedDate = formatDateToLocalISO(newDate);
-      console.log('[DEBUG Reschedule] formatDateToLocalISO result:', formattedDate);
 
       await rescheduleAppointment({
         appointmentId: appointment.id,
@@ -380,40 +367,38 @@ const Schedule = () => {
           onRefresh={handleRefresh}
         />
 
-        {/* Header compacto */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-primary rounded-lg shadow-sm">
-              <Calendar className="h-5 w-5 text-primary-foreground" />
+        {/* Header compacto - Otimizado para mobile/tablet */}
+        <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2 xs:gap-3 shrink-0">
+          <div className="flex items-center gap-2 xs:gap-3 min-w-0 flex-1">
+            <div className="p-1.5 xs:p-2 bg-gradient-primary rounded-lg shadow-sm flex-shrink-0">
+              <Calendar className="h-4 w-4 xs:h-5 xs:w-5 text-primary-foreground" />
             </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Agenda</h1>
-              <p className="text-xs text-muted-foreground hidden sm:block">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-lg xs:text-xl sm:text-2xl font-bold tracking-tight truncate">Agenda</h1>
+              <p className="text-[10px] xs:text-xs text-muted-foreground">
                 {format(currentDate, "MMMM 'de' yyyy", { locale: ptBR })}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 xs:gap-2 overflow-x-auto scrollbar-hide flex-shrink-0">
             <AppointmentSearch value={searchTerm} onChange={setSearchTerm} onClear={() => setSearchTerm('')} />
 
-
-
             <Link to="/schedule/settings">
-              <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
+              <Button variant="ghost" size="sm" className="h-11 w-11 xs:h-11 xs:w-11 p-0 touch-target flex-shrink-0">
                 <SettingsIcon className="h-4 w-4" />
               </Button>
             </Link>
 
-            <Button onClick={() => setShowWaitlistModal(true)} variant="outline" size="sm" className="h-9 gap-2">
+            <Button onClick={() => setShowWaitlistModal(true)} variant="outline" size="sm" className="h-11 xs:h-11 gap-2 touch-target flex-shrink-0 min-w-[44px]">
               {totalInWaitlist > 0 && <span className="bg-primary text-primary-foreground text-[10px] px-1.5 rounded-full">{totalInWaitlist}</span>}
               <Users className="h-4 w-4" />
-              <span className="hidden sm:inline">Lista de Espera</span>
+              <span className="hidden xs:inline text-xs">Lista</span>
             </Button>
 
-            <Button onClick={handleCreateAppointment} size="sm" className="h-9 shadow-sm bg-primary hover:bg-primary/90 text-white">
-              <Plus className="h-4 w-4 mr-1" />
-              Novo Agendamento
+            <Button onClick={handleCreateAppointment} size="sm" className="h-11 xs:h-11 shadow-sm bg-primary hover:bg-primary/90 text-white touch-target flex-shrink-0 min-w-[44px]">
+              <Plus className="h-4 w-4" />
+              <span className="hidden xs:inline text-xs ml-1">Novo</span>
             </Button>
           </div>
         </div>

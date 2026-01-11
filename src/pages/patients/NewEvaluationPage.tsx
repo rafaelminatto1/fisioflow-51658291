@@ -14,6 +14,7 @@ import { AnamnesisForm } from '@/components/patient/forms/AnamnesisForm';
 import { PhysicalExamForm } from '@/components/patient/forms/PhysicalExamForm';
 import { PainMapManager } from '@/components/evolution/PainMapManager';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PatientHelpers } from '@/types';
 
 export default function NewEvaluationPage() {
     const { patientId } = useParams();
@@ -137,7 +138,7 @@ export default function NewEvaluationPage() {
                         </Button>
                         <div>
                             <h1 className="text-xl font-bold text-primary">Avaliação Inicial</h1>
-                            <p className="text-xs text-muted-foreground">Paciente: {patient.name}</p>
+                            <p className="text-xs text-muted-foreground">Paciente: {PatientHelpers.getName(patient)}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">

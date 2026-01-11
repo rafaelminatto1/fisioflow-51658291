@@ -21,6 +21,7 @@ import { ptBR } from 'date-fns/locale';
 import { GoalCountdown } from './GoalCountdown';
 import { TreatmentDurationCard } from './TreatmentDurationCard';
 import type { PatientGoal } from '@/types/evolution';
+import { PatientHelpers } from '@/types';
 
 interface PatientInfo {
   id: string;
@@ -89,11 +90,14 @@ export const PatientSummaryPanel: React.FC<PatientSummaryPanelProps> = ({
               <Avatar className="h-14 w-14">
                 <AvatarImage src={patient.avatar_url} />
                 <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                  {getInitials(patient.name)}
+                  {(() => {
+                    const name = PatientHelpers.getName(patient);
+                    return getInitials(name);
+                  })()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold truncate">{patient.name}</h3>
+                <h3 className="font-semibold truncate">{PatientHelpers.getName(patient)}</h3>
                 {age && (
                   <p className="text-sm text-muted-foreground">{age} anos</p>
                 )}

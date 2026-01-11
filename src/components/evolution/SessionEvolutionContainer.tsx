@@ -21,6 +21,7 @@ import { ConductReplication } from './ConductReplication';
 import { MedicalReportSuggestions } from './MedicalReportSuggestions';
 import { MandatoryTestAlertService, type AlertCheckResult } from '@/lib/services/mandatoryTestAlertService';
 import { SessionExercisesPanel, type SessionExercise } from './SessionExercisesPanel';
+import { PatientHelpers } from '@/types';
 
 interface SessionEvolutionContainerProps {
   appointmentId?: string;
@@ -446,7 +447,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
               </h1>
               {patient && (
                 <p className="text-sm text-muted-foreground">
-                  {patient.name} • Sessão #{sessionNumber}
+                  {PatientHelpers.getName(patient)} • Sessão #{sessionNumber}
                 </p>
               )}
             </div>

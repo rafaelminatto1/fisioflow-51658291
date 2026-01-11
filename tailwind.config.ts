@@ -16,7 +16,18 @@ export default {
 			center: true,
 			padding: '2rem',
 			screens: {
-				'2xl': '1400px'
+				'xs': '475px',
+				'sm': '640px',
+				'md': '768px',
+				'lg': '1024px',
+				'xl': '1280px',
+				'2xl': '1400px',
+				// iPad specific breakpoints
+				'ipad': '834px',
+				'ipad-pro': '1024px',
+				// iPhone specific breakpoints
+				'iphone': '390px',
+				'iphone-max': '430px'
 			}
 		},
 		extend: {
@@ -240,6 +251,17 @@ export default {
 						'transform': 'translateY(-2px)',
 						'box-shadow': 'var(--shadow-hover)'
 					}
+				},
+				'.scrollbar-hide': {
+					'-ms-overflow-style': 'none',
+					'scrollbar-width': 'none',
+					'&::-webkit-scrollbar': {
+						'display': 'none'
+					}
+				},
+				'.touch-target': {
+					'min-height': '44px',
+					'min-width': '44px'
 				}
 			})
 		})

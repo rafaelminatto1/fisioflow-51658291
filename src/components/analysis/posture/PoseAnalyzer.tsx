@@ -120,7 +120,7 @@ const PoseAnalyzer: React.FC<PoseAnalyzerProps> = ({ videoSrc, onAnalysisUpdate:
                 tracks.forEach(track => track.stop());
             }
         };
-    }, [onResults]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [onResults]);  
 
     // 2. Handle Video Source Changes
     useEffect(() => {

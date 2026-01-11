@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,18 +6,31 @@ import { Label } from '@/components/ui/label';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { AlertTriangle, UserPlus } from 'lucide-react';
+import { AlertTriangle, UserPlus, Loader2, Phone, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/errors/logger';
 import { useOrganizations } from '@/hooks/useOrganizations';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
 
+// ===== Schema de validação =====
 const quickPatientSchema = z.object({
-  name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
-  phone: z.string().optional(),
+  name: z.string()
+    .min(2, 'Nome deve ter pelo menos 2 caracteres')
+    .max(150, 'Nome deve ter no máximo 150 caracteres')
+    .refine(val => val.trim().includes(' '), {
+      message: 'Por favor, informe o nome completo (nome e sobrenome)'
+    }),
+  phone: z.string()
+    .optional()
+    .refine(val => !val || val.replace(/\D/g, '').length >= 10, {
+      message: 'Telefone deve ter pelo menos 10 dígitos'
+    }),
 });
 
+type QuickPatientFormData = z.infer<typeof quickPatientSchema>;
+
+// ===== Tipos =====
 interface QuickPatientModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -25,6 +38,53 @@ interface QuickPatientModalProps {
   suggestedName?: string;
 }
 
+// ===== Funções utilitárias =====
+const formatPhoneNumber = (value: string): string => {
+  if (!value) return '';
+  const numbers = value.replace(/\D/g, '').slice(0, 11);
+
+  if (numbers.length <= 2) {
+    return `(${numbers}`;
+  } else if (numbers.length <= 7) {
+    return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+  } else {
+    return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7)}`;
+  }
+};
+
+const cleanPhoneNumber = (phone: string | undefined): string | null => {
+  if (!phone) return null;
+  const cleaned = phone.replace(/\D/g, '');
+  return cleaned.length >= 10 ? cleaned : null;
+};
+
+// ===== Mensagens de erro amigáveis =====
+const getErrorMessage = (error: any): string => {
+  const code = error?.code;
+  const message = error?.message || '';
+
+  const errorMessages: Record<string, string> = {
+    '23505': 'Já existe um paciente com este nome ou telefone cadastrado.',
+    '42501': 'Sem permissão para criar pacientes. Verifique suas permissões.',
+    '23503': 'Erro de referência: organização não encontrada.',
+  };
+
+  if (errorMessages[code]) {
+    return errorMessages[code];
+  }
+
+  if (message.includes('row-level security')) {
+    return 'Sem permissão para criar pacientes. Verifique suas permissões.';
+  }
+
+  if (message.includes('organization_id')) {
+    return 'Erro ao associar paciente à organização.';
+  }
+
+  return message || 'Não foi possível criar o paciente.';
+};
+
+// ===== Componente Principal =====
 export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
   open,
   onOpenChange,
@@ -35,277 +95,233 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
   const queryClient = useQueryClient();
   const { currentOrganization } = useOrganizations();
 
-  const form = useForm({
+  const form = useForm<QuickPatientFormData>({
     resolver: zodResolver(quickPatientSchema),
     defaultValues: {
       name: suggestedName,
       phone: '',
-    }
+    },
+    mode: 'onChange', // Validação em tempo real
   });
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset, setValue, watch } = form;
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+    reset,
+    setValue,
+    watch
+  } = form;
+
   const phoneValue = watch('phone');
   const nameValue = watch('name');
 
-  // Função para formatar telefone com máscara (XX) XXXXX-XXXX
-  const formatPhone = (value: string) => {
-    if (!value) return '';
-
-    // Remove tudo que não é dígito
-    const numbers = value.replace(/\D/g, '');
-
-    // Aplica a máscara
-    if (numbers.length <= 2) {
-      return `(${numbers}`;
-    } else if (numbers.length <= 7) {
-      return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
-    } else if (numbers.length <= 11) {
-      return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
-    } else {
-      return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
-    }
-  };
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPhone(e.target.value);
-    setValue('phone', formatted);
-  };
-
-  const handleSave = async (data: z.infer<typeof quickPatientSchema>) => {
-    try {
-      // Verifica sessão e papéis antes de tentar inserir (evita erro 401/RLS)
+  // ===== Mutation para criar paciente =====
+  const createPatientMutation = useMutation({
+    mutationFn: async (data: QuickPatientFormData) => {
+      // Verificar autenticação
       const { data: authData } = await supabase.auth.getUser();
       const user = authData?.user;
+
       if (!user) {
-        toast({
-          title: 'Sessão necessária',
-          description: 'Faça login para criar pacientes.',
-          variant: 'destructive',
-        });
-        return;
+        throw new Error('Sessão expirada. Faça login novamente.');
       }
 
       // Verificar organização
       if (!currentOrganization?.id) {
-        toast({
-          title: 'Organização não encontrada',
-          description: 'Não foi possível identificar sua organização. Tente fazer login novamente.',
-          variant: 'destructive',
-        });
-        return;
+        throw new Error('Organização não encontrada. Tente fazer login novamente.');
       }
 
-      const { data: roles, error: rolesError } = await supabase
+      // Verificar permissões (opcional - RLS já cuida disso)
+      const { data: roles } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id);
 
-      if (rolesError) {
-        logger.warn('Falha ao buscar papéis do usuário', rolesError, 'QuickPatientModal');
+      const allowedRoles = ['admin', 'fisioterapeuta', 'estagiario'];
+      const hasPermission = (roles || []).some((r: any) => allowedRoles.includes(String(r.role)));
+
+      if (!hasPermission) {
+        throw new Error('Você não tem permissão para criar pacientes.');
       }
 
-      const allowed = ['admin', 'fisioterapeuta', 'estagiario'];
-      const hasAllowedRole = (roles || []).some((r: any) => allowed.includes(String(r.role)));
-
-      if (!hasAllowedRole) {
-        toast({
-          title: 'Sem permissão',
-          description: 'Você precisa ser Admin, Fisioterapeuta ou Estagiário para criar pacientes.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      logger.info('Criando paciente rápido', { name: data.name, organizationId: currentOrganization.id }, 'QuickPatientModal');
-
-      // Limpar telefone (remover formatação)
-      const cleanPhone = data.phone ? data.phone.replace(/\D/g, '') : null;
-
+      // Criar paciente
       const { data: newPatient, error } = await supabase
         .from('patients')
-        .insert([{
+        .insert({
           full_name: data.name.trim(),
-          phone: cleanPhone || null,
+          phone: cleanPhoneNumber(data.phone),
           status: 'active',
           incomplete_registration: true,
           organization_id: currentOrganization.id,
-          // Campos mínimos para evitar erros
-          birth_date: null,
-        }])
-        .select()
+        })
+        .select('id, full_name')
         .single();
 
       if (error) {
-        logger.error('Erro do Supabase ao criar paciente', error, 'QuickPatientModal');
-
-        // Melhorar mensagens de erro
-        let errorMessage = error.message || 'Não foi possível criar o paciente.';
-
-        if (error.code === '23505') {
-          errorMessage = 'Já existe um paciente com este nome ou telefone cadastrado.';
-        } else if (error.code === '42501' || error.message?.includes('row-level security')) {
-          errorMessage = 'Sem permissão para criar pacientes. Verifique suas permissões.';
-        } else if (error.code === '23503') {
-          errorMessage = 'Erro de referência: organização não encontrada.';
-        } else if (error.message?.includes('organization_id')) {
-          errorMessage = 'Erro ao associar paciente à organização.';
-        }
-
-        toast({
-          title: 'Erro ao criar paciente',
-          description: errorMessage,
-          variant: 'destructive',
-        });
-        return;
+        logger.error('Erro ao criar paciente', error, 'QuickPatientModal');
+        throw error;
       }
 
       if (!newPatient) {
-        toast({
-          title: 'Erro ao criar paciente',
-          description: 'Paciente não foi criado. Tente novamente.',
-          variant: 'destructive',
-        });
-        return;
+        throw new Error('Paciente não foi criado. Tente novamente.');
       }
 
+      return newPatient;
+    },
+    onSuccess: (newPatient) => {
       logger.info('Paciente criado com sucesso', { patientId: newPatient.id }, 'QuickPatientModal');
 
-      // Invalidar cache de pacientes
+      // Invalidar cache
       queryClient.invalidateQueries({ queryKey: ['patients'] });
 
       toast({
-        title: 'Paciente criado!',
-        description: `${data.name} foi adicionado. Lembre-se de completar o cadastro posteriormente.`,
+        title: '✅ Paciente criado!',
+        description: `${newPatient.full_name} foi adicionado. Complete o cadastro quando possível.`,
       });
 
       reset();
       onOpenChange(false);
       onPatientCreated(newPatient.id, newPatient.full_name);
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       logger.error('Erro ao criar paciente rápido', error, 'QuickPatientModal');
-
-      let description = error?.message || 'Não foi possível criar o paciente.';
-      if (error?.code === '42501' || /row-level security/i.test(description) || error?.status === 401) {
-        description = 'Sem permissão para criar pacientes (RLS). Faça login e confirme seu papel (admin/fisio/estagiário).';
-      }
 
       toast({
         title: 'Erro ao criar paciente',
-        description,
+        description: getErrorMessage(error),
         variant: 'destructive',
       });
-    }
-  };
+    },
+  });
 
+  // ===== Handlers =====
+  const handlePhoneChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setValue('phone', formatPhoneNumber(e.target.value), { shouldValidate: true });
+  }, [setValue]);
+
+  const handleClose = useCallback(() => {
+    reset();
+    onOpenChange(false);
+  }, [reset, onOpenChange]);
+
+  const onSubmit = useCallback((data: QuickPatientFormData) => {
+    createPatientMutation.mutate(data);
+  }, [createPatientMutation]);
+
+  // ===== Sincronizar nome sugerido =====
   React.useEffect(() => {
     if (open && suggestedName) {
-      form.setValue('name', suggestedName);
+      setValue('name', suggestedName, { shouldValidate: true });
     }
-  }, [open, suggestedName, form]);
+  }, [open, suggestedName, setValue]);
+
+  // ===== Reset ao fechar =====
+  React.useEffect(() => {
+    if (!open) {
+      reset();
+    }
+  }, [open, reset]);
+
+  // ===== Computed values =====
+  const isFormDisabled = createPatientMutation.isPending;
+  const canSubmit = isValid && !isFormDisabled && nameValue?.trim();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <div className="p-2 bg-primary/10 rounded-lg">
+          <DialogTitle className="flex items-center gap-3">
+            <div className="p-2.5 bg-gradient-to-br from-primary/20 to-primary/5 rounded-xl">
               <UserPlus className="w-5 h-5 text-primary" />
             </div>
-            <span>Cadastro Rápido de Paciente</span>
+            <span className="text-lg">Cadastro Rápido</span>
           </DialogTitle>
-          <DialogDescription>
-            Crie um cadastro básico agora e complete as informações depois.
+          <DialogDescription className="text-muted-foreground/80">
+            Cadastre um paciente rapidamente e complete os dados depois.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(handleSave)} className="space-y-6">
-          {/* Aviso */}
-          <div className="flex items-start gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 pt-2">
+          {/* Aviso de cadastro incompleto */}
+          <div className="flex items-start gap-3 p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-xl">
             <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
                 Cadastro Incompleto
               </p>
-              <p className="text-xs text-amber-700 dark:text-amber-200">
-                Este paciente será marcado como "cadastro incompleto" e você receberá lembretes para completar os dados.
+              <p className="text-xs text-amber-700/90 dark:text-amber-200/80">
+                O paciente será marcado para completar dados posteriormente.
               </p>
             </div>
           </div>
 
-          {/* Nome do paciente - OBRIGATÓRIO */}
+          {/* Campo Nome */}
           <div className="space-y-2">
-            <Label htmlFor="name">Nome Completo *</Label>
+            <Label htmlFor="name" className="flex items-center gap-2 text-sm font-medium">
+              <User className="w-4 h-4 text-muted-foreground" />
+              Nome Completo <span className="text-destructive">*</span>
+            </Label>
             <Input
               id="name"
               {...register('name')}
-              placeholder="Digite o nome completo do paciente"
+              placeholder="Ex: João da Silva"
               autoFocus
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleSubmit(handleSave)();
-                }
-              }}
+              autoComplete="name"
+              disabled={isFormDisabled}
+              className={errors.name ? 'border-destructive focus-visible:ring-destructive' : ''}
             />
             {errors.name && (
-              <p className="text-sm text-destructive">{String(errors.name.message)}</p>
+              <p className="text-xs text-destructive flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {errors.name.message}
+              </p>
             )}
           </div>
 
-          {/* Telefone - OPCIONAL */}
+          {/* Campo Telefone */}
           <div className="space-y-2">
-            <Label htmlFor="phone">Telefone (Opcional)</Label>
+            <Label htmlFor="phone" className="flex items-center gap-2 text-sm font-medium">
+              <Phone className="w-4 h-4 text-muted-foreground" />
+              Telefone <span className="text-muted-foreground text-xs">(opcional)</span>
+            </Label>
             <Input
               id="phone"
+              type="tel"
               value={phoneValue || ''}
               onChange={handlePhoneChange}
               placeholder="(11) 99999-9999"
-              maxLength={15}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleSubmit(handleSave)();
-                }
-              }}
+              autoComplete="tel"
+              disabled={isFormDisabled}
+              className={errors.phone ? 'border-destructive focus-visible:ring-destructive' : ''}
             />
             {errors.phone && (
-              <p className="text-sm text-destructive">{String(errors.phone.message)}</p>
+              <p className="text-xs text-destructive flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {errors.phone.message}
+              </p>
             )}
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-3 pt-4">
+          {/* Botões de ação */}
+          <div className="flex justify-end gap-3 pt-3 border-t">
             <Button
               type="button"
-              variant="outline"
-              onClick={() => {
-                reset();
-                onOpenChange(false);
-              }}
+              variant="ghost"
+              onClick={handleClose}
+              disabled={isFormDisabled}
             >
               Cancelar
             </Button>
 
             <Button
               type="submit"
-              disabled={isSubmitting || !nameValue?.trim()}
-              className="bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={(e) => {
-                // Garantir que o evento seja tratado
-                if (!nameValue?.trim()) {
-                  e.preventDefault();
-                  toast({
-                    title: 'Nome obrigatório',
-                    description: 'Por favor, digite o nome do paciente.',
-                    variant: 'destructive',
-                  });
-                  return;
-                }
-              }}
+              disabled={!canSubmit}
+              className="min-w-[140px]"
             >
-              {isSubmitting ? (
+              {createPatientMutation.isPending ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Criando...
                 </>
               ) : (

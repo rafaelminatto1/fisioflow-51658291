@@ -23,6 +23,7 @@ import { Clock, Calendar, AlertCircle, User } from 'lucide-react';
 import { useAddToWaitlist } from '@/hooks/useWaitlist';
 import { usePatients } from '@/hooks/usePatients';
 import { toast } from 'sonner';
+import { PatientHelpers } from '@/types';
 
 interface WaitlistQuickAddProps {
   open: boolean;
@@ -113,14 +114,17 @@ export function WaitlistQuickAdd({ open, onOpenChange, date, time }: WaitlistQui
                 <SelectValue placeholder="Selecione o paciente" />
               </SelectTrigger>
               <SelectContent>
-                {patients.map((patient) => (
+                {patients.map((patient) => {
+                  const patientName = PatientHelpers.getName(patient);
+                  return (
                   <SelectItem key={patient.id} value={patient.id}>
                     <div className="flex items-center gap-2">
                       <User className="h-3 w-3" />
-                      {patient.name}
+                      {patientName}
                     </div>
                   </SelectItem>
-                ))}
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>

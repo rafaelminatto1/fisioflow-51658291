@@ -1,45 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Database } from '@/integrations/supabase/types';
 
-export interface GamificationProfile {
-  id: string;
-  patient_id: string;
-  current_xp: number;
-  level: number;
-  current_streak: number;
-  longest_streak: number;
-  total_points: number;
-  last_activity_date: string | null;
-}
+// Deriving types from Database definition
+type PatientGamification = Database['public']['Tables']['patient_gamification']['Row'];
+type XPTransaction = Database['public']['Tables']['xp_transactions']['Row'];
+type Achievement = Database['public']['Tables']['achievements']['Row'];
+type UnlockedAchievement = Database['public']['Tables']['achievements_log']['Row'];
 
-export interface XPTransaction {
-  id: string;
-  amount: number;
-  reason: string;
-  description: string;
-  created_at: string;
-}
+export interface GamificationProfile extends PatientGamification { }
 
-export interface Achievement {
-  id: string;
-  code: string;
-  title: string;
-  description: string;
-  xp_reward: number;
-  icon: string | any;
-  category: string;
-  requirements?: any;
-}
-
-export interface UnlockedAchievement {
-  achievement_id: string;
-  unlocked_at: string;
-  achievement_title?: string;
-  xp_reward?: number;
-}
-
-export interface DailyQuest {
+export interface DailyQuestItem {
   id: string;
   title: string;
   completed: boolean;
@@ -82,31 +54,19 @@ export const useGamification = (patientId: string) => {
     enabled: !!patientId,
   });
 
-  // Fetch Total Sessions (Needed for Journey Map)
+  // Fetch Total Sessions
   const { data: totalSessions = 0 } = useQuery({
     queryKey: ['total-sessions', patientId],
     queryFn: async () => {
       const { count, error } = await supabase
-        .from('treatment_sessions') // Assuming this table exists, or appointments where status='completed'
+        .from('appointments')
         .select('*', { count: 'exact', head: true })
-        .eq('patient_id', patientId);
-      // Note: 'treatment_sessions' might be 'appointments'. Let's assume 'appointments' with status='completed' based on previous context.
-      // Actually, previous context used 'completeAppointment' logic.
-      // Let's verify table name if we can, but likely it's 'appointments' based on 'PatientEvolution.tsx'.
-      // Wait, 'PatientEvolution' handles 'appointment'.
-      // Let's safe bet with 'appointments' where status = 'completed' if treatment_sessions doesn't exist.
-      // But for now let's assume 'appointments' is the main place.
+        .eq('patient_id', patientId)
+        .eq('status', 'completed');
 
       if (error) {
-        // Fallback to appointments
-        const { count: apptCount, error: apptError } = await supabase
-          .from('appointments')
-          .select('*', { count: 'exact', head: true })
-          .eq('patient_id', patientId)
-          .eq('status', 'completed');
-
-        if (apptError) return 0;
-        return apptCount || 0;
+        console.error("Error fetching total sessions", error);
+        return 0;
       }
       return count || 0;
     },
@@ -184,7 +144,8 @@ export const useGamification = (patientId: string) => {
     enabled: !!patientId
   });
 
-  const dailyQuests = (dailyQuestsData?.quests_data || []) as DailyQuest[];
+  // Cast JSONB to typed array safely
+  const dailyQuests = ((dailyQuestsData?.quests_data as unknown) || []) as DailyQuestItem[];
 
   // Calculation Props
   const xpPerLevel = 1000;
@@ -219,7 +180,7 @@ export const useGamification = (patientId: string) => {
       const oldLevel = current?.level || 1;
 
       let newXp = oldXp + amount;
-      let newTotal = oldTotal + amount;
+      const newTotal = oldTotal + amount;
       let newLevel = oldLevel;
 
       if (newXp >= xpPerLevel) {
@@ -233,6 +194,7 @@ export const useGamification = (patientId: string) => {
         .from('patient_gamification')
         .upsert({
           patient_id: patientId,
+          updated_at: new Date().toISOString(),
           current_xp: newXp,
           level: newLevel,
           total_points: newTotal,
@@ -245,7 +207,7 @@ export const useGamification = (patientId: string) => {
       if (error) throw error;
       return { data, leveledUp: newLevel > oldLevel, newLevel };
     },
-    onSuccess: ({ leveledUp, newLevel, data }) => {
+    onSuccess: ({ leveledUp, newLevel }) => {
       queryClient.invalidateQueries({ queryKey: ['gamification-profile', patientId] });
       queryClient.invalidateQueries({ queryKey: ['xp-transactions', patientId] });
 
@@ -276,8 +238,12 @@ export const useGamification = (patientId: string) => {
         .eq('date', today)
         .maybeSingle();
 
+      if (error && error.code !== 'PGRST116') {
+        // Handle error
+      }
+
       if (!record) {
-        const initialQuests: DailyQuest[] = [
+        const initialQuests: DailyQuestItem[] = [
           { id: "session", title: "Realizar Sessão", completed: false, xp: 50, icon: "Activity", description: "Complete sua sessão de exercícios" },
           { id: "pain", title: "Registrar Dor", completed: false, xp: 20, icon: "Thermometer", description: "Atualize seu mapa de dor" },
           { id: "hydration", title: "Hidratação", completed: false, xp: 10, icon: "Droplets", description: "Beba água e registre" }
@@ -287,7 +253,7 @@ export const useGamification = (patientId: string) => {
           .insert({
             patient_id: patientId,
             date: today,
-            quests_data: initialQuests as any,
+            quests_data: initialQuests as unknown as Json, // Valid cast for Supabase JSON
             completed_count: 0
           })
           .select()
@@ -297,8 +263,11 @@ export const useGamification = (patientId: string) => {
         record = newRecord;
       }
 
+      if (!record) throw new Error("Could not create/fetch quest record");
+
       // 2. Update specific quest
-      const quests = (record.quests_data as any) as DailyQuest[];
+      // We need to be careful with JSON types.
+      const quests = (record.quests_data as unknown) as DailyQuestItem[];
       const questIndex = quests.findIndex(q => q.id === questId);
 
       if (questIndex === -1) throw new Error("Quest not found");
@@ -311,7 +280,7 @@ export const useGamification = (patientId: string) => {
       const { error: updateError } = await supabase
         .from('daily_quests')
         .update({
-          quests_data: quests as any,
+          quests_data: quests as unknown as Json,
           completed_count: quests.filter(q => q.completed).length
         })
         .eq('id', record.id);
@@ -351,3 +320,6 @@ export const useGamification = (patientId: string) => {
     currentXp
   };
 };
+
+// Helper type for JSON if needed locally, though strictly we use Supabase Json
+type Json = Database['public']['Tables']['daily_quests']['Row']['quests_data'];

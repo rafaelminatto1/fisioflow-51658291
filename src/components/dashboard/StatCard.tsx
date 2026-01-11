@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { ReactNode } from 'react';
+import { ReactNode, memo } from 'react';
 
 interface StatCardProps {
   title: string;
@@ -14,7 +14,7 @@ interface StatCardProps {
   loading?: boolean;
 }
 
-export function StatCard({
+export const StatCard = memo(function StatCard({
   title,
   value,
   change,
@@ -93,4 +93,4 @@ export function StatCard({
       </CardContent>
     </Card>
   );
-}
+});

@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { PatientHelpers } from '@/types';
 
 interface PatientData {
   name: string;
@@ -70,8 +71,9 @@ export const generateEvolutionPDF = (
   yPosition += 15;
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  
-  doc.text(`Nome: ${patient.name}`, 20, yPosition);
+
+  const patientName = PatientHelpers.getName(patient as any);
+  doc.text(`Nome: ${patientName}`, 20, yPosition);
   yPosition += 6;
   
   if (patient.phone) {

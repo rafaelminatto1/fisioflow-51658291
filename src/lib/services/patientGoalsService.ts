@@ -39,7 +39,7 @@ export class PatientGoalsService {
     progress: number,
     currentValue?: string
   ): Promise<PatientGoal> {
-    const updates: any = { current_progress: progress };
+    const updates: { current_progress: number; current_value?: string } = { current_progress: progress };
     if (currentValue !== undefined) {
       updates.current_value = currentValue;
     }
