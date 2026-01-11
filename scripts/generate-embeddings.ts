@@ -98,7 +98,7 @@ async function generateProtocolEmbeddings() {
 
   const { data: protocols, error } = await supabase
     .from('exercise_protocols')
-    .select('id, name, description, objectives, category, indications, contraindications')
+    .select('id, name, condition_name, protocol_type, milestones, restrictions, progression_criteria')
     .is('embedding', null);
 
   if (error) {
@@ -115,11 +115,11 @@ async function generateProtocolEmbeddings() {
     try {
       const combinedText = [
         protocol.name,
-        protocol.description,
-        protocol.objectives || '',
-        protocol.category || '',
-        protocol.indications || '',
-        protocol.contraindications || '',
+        protocol.condition_name || '',
+        protocol.protocol_type || '',
+        JSON.stringify(protocol.milestones || {}),
+        JSON.stringify(protocol.restrictions || {}),
+        JSON.stringify(protocol.progression_criteria || {}),
       ].join(' ');
 
       console.log(`⚙️ Processando: ${protocol.name}`);
