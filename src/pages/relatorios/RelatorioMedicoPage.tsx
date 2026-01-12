@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,19 +14,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   FileText, Stethoscope, Plus, Download, Edit, Eye, Search, Calendar,
   User, Activity, Clock, CheckCircle2, Send, Info, AlertCircle, PenTool,
-  Brain, Bone, Heart, Wheelchair, TrendingUp
+  Brain, Bone, Heart, TrendingUp, Save
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Font } from '@react-pdf/renderer';
-
-// Fontes para PDF
-Font.register({
-  family: 'Helvetica',
-});
+import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer';
 
 const styles = StyleSheet.create({
   page: {
@@ -1065,28 +1060,6 @@ function RelatorioMedicoEditor({
   );
 }
 
-// Componente Save (importado de lucide-react)
-function Save({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-      <polyline points="17 21 17 13 7 13 7 21" />
-      <polyline points="7 3 7 8 15 8" />
-    </svg>
-  );
-}
-
 export default function RelatorioMedicoPage() {
   const queryClient = useQueryClient();
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -1387,7 +1360,7 @@ export default function RelatorioMedicoPage() {
                             <Eye className="h-4 w-4 mr-1" />
                             Visualizar
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => setEditingRelatorio(relatorio); setIsEditorOpen(true)}>
+                          <Button variant="ghost" size="sm" onClick={() => { setEditingRelatorio(relatorio); setIsEditorOpen(true); }}>
                             <Edit className="h-4 w-4 mr-1" />
                             Editar
                           </Button>
