@@ -36,7 +36,7 @@ export const useFinancial = () => {
         .from('transacoes')
         .select('*')
         .order('created_at', { ascending: false });
-      
+
       if (error) throw error;
       return data as Transaction[];
     },
@@ -48,13 +48,34 @@ export const useFinancial = () => {
     queryFn: async () => {
       const paidTransactions = transactions.filter(t => t.status === 'concluido');
       const pendingTransactions = transactions.filter(t => t.status === 'pendente');
-      
+
       const totalRevenue = paidTransactions.reduce((acc, t) => acc + Number(t.valor), 0);
       const pendingPayments = pendingTransactions.reduce((acc, t) => acc + Number(t.valor), 0);
-      
-      // Calcular crescimento mensal (placeholder - implementar lógica real)
-      const monthlyGrowth = 12.5;
-      
+
+      // Calcular crescimento mensal real
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+
+      const currentMonthRevenue = paidTransactions
+        .filter(t => {
+          const d = new Date(t.created_at || '');
+          return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+        })
+        .reduce((acc, t) => acc + Number(t.valor), 0);
+
+      const lastMonthRevenue = paidTransactions
+        .filter(t => {
+          const d = new Date(t.created_at || '');
+          const lastMonthDate = new Date();
+          lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
+          return d.getMonth() === lastMonthDate.getMonth() && d.getFullYear() === lastMonthDate.getFullYear();
+        })
+        .reduce((acc, t) => acc + Number(t.valor), 0);
+
+      const monthlyGrowth = lastMonthRevenue > 0
+        ? ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100
+        : currentMonthRevenue > 0 ? 100 : 0;
+
       const stats: FinancialStats = {
         totalRevenue,
         pendingPayments,
@@ -63,7 +84,7 @@ export const useFinancial = () => {
         totalCount: transactions.length,
         averageTicket: paidTransactions.length > 0 ? totalRevenue / paidTransactions.length : 0,
       };
-      
+
       return stats;
     },
     enabled: transactions.length > 0,
@@ -77,7 +98,7 @@ export const useFinancial = () => {
         .insert([transaction])
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -99,7 +120,7 @@ export const useFinancial = () => {
         .eq('id', id)
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -119,7 +140,7 @@ export const useFinancial = () => {
         .from('transacoes')
         .delete()
         .eq('id', id);
-      
+
       if (error) throw error;
     },
     onSuccess: () => {
@@ -140,7 +161,7 @@ export const useFinancial = () => {
         .eq('id', id)
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },

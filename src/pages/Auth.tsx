@@ -317,25 +317,25 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen gradient-background-login flex items-center justify-center p-4">
-      <div className="w-full max-w-md p-8 space-y-8 bg-white dark:bg-background-dark/80 rounded-xl shadow-xl m-4 transform transition duration-500 hover:scale-[1.01]">
+    <div className="min-h-screen gradient-background-login flex items-center justify-center p-2 sm:p-4">
+      <div className="w-full max-w-md p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 bg-white dark:bg-background-dark/80 rounded-xl shadow-xl m-2 sm:m-4 transform transition duration-500 hover:scale-[1.01]">
         <div className="text-center">
-          <h1 className="text-4xl font-extrabold text-primary dark:text-white flex items-center justify-center gap-2">
-            <Stethoscope className="h-10 w-10" />
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-primary dark:text-white flex items-center justify-center gap-1.5 sm:gap-2">
+            <Stethoscope className="h-6 w-6 sm:h-8 sm:w-8 lg:h-10 lg:w-10" />
             FisioFlow
           </h1>
-          <p className="mt-4 text-md text-gray-700 dark:text-gray-300">Bem-vindo à sua nova jornada conosco!</p>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Faça login para desbloquear seu perfil.</p>
+          <p className="mt-3 sm:mt-4 text-sm sm:text-base text-gray-700 dark:text-gray-300 hidden xs:block">Bem-vindo à sua nova jornada conosco!</p>
+          <p className="mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400">Faça login para desbloquear seu perfil.</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'register')} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="register">Cadastro</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 h-10 sm:h-11">
+            <TabsTrigger value="login" className="text-xs sm:text-sm">Login</TabsTrigger>
+            <TabsTrigger value="register" className="text-xs sm:text-sm">Cadastro</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="login" className="mt-8">
-            <form onSubmit={handleSignIn} className="space-y-6">
+          <TabsContent value="login" className="mt-4 sm:mt-6 lg:mt-8">
+            <form onSubmit={handleSignIn} className="space-y-4 sm:space-y-6">
 
               <div className="rounded-md shadow-sm -space-y-px">
                 <div>
@@ -346,7 +346,7 @@ export default function Auth() {
                     placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="rounded-t-xl relative block w-full px-4 py-3 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-gray-50 dark:bg-background-dark/20 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 transition duration-300"
+                    className="rounded-t-xl relative block w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-gray-50 dark:bg-background-dark/20 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 transition duration-300 text-sm sm:text-base"
                     required
                   />
                 </div>
@@ -358,7 +358,7 @@ export default function Auth() {
                     placeholder="Senha"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="rounded-b-xl relative block w-full px-4 py-3 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-gray-50 dark:bg-background-dark/20 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 transition duration-300"
+                    className="rounded-b-xl relative block w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-gray-50 dark:bg-background-dark/20 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 transition duration-300 text-sm sm:text-base"
                     required
                   />
                 </div>
@@ -366,28 +366,28 @@ export default function Auth() {
 
               {error && (
                 <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
+                  <AlertDescription className="text-xs sm:text-sm">{error}</AlertDescription>
                 </Alert>
               )}
 
               <Button
                 type="submit"
-                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-lg font-bold rounded-xl text-white bg-gradient-to-r from-primary to-blue-400 hover:from-primary/90 hover:to-blue-400/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-300 transform hover:-translate-y-0.5"
+                className="group relative w-full flex justify-center py-2.5 sm:py-3 px-4 border border-transparent text-base sm:text-lg font-bold rounded-xl text-white bg-gradient-to-r from-primary to-blue-400 hover:from-primary/90 hover:to-blue-400/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-300 transform hover:-translate-y-0.5 touch-target"
                 disabled={loading}
               >
                 {loading ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
                 ) : (
                   <>
                     Entrar
-                    <LogIn className="ml-2 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <LogIn className="ml-2 h-4 w-4 sm:h-5 sm:w-5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </>
                 )}
               </Button>
 
-              <div className="relative my-4">
+              <div className="relative my-3 sm:my-4">
                 <Separator />
-                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
+                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-[10px] sm:text-xs text-muted-foreground">
                   ou
                 </span>
               </div>
@@ -395,7 +395,7 @@ export default function Auth() {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full"
+                className="w-full text-xs sm:text-sm py-2.5 sm:py-3 touch-target"
                 onClick={handleGoogleSignIn}
                 disabled={loading}
               >
@@ -417,37 +417,38 @@ export default function Auth() {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   />
                 </svg>
-                Continuar com Google
+                <span className="hidden xs:inline">Continuar com Google</span>
+                <span className="xs:hidden">Google</span>
               </Button>
 
-              <div className="text-center mt-4">
-                <p className="text-sm text-muted-foreground">
+              <div className="text-center mt-3 sm:mt-4">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Não tem uma conta?{' '}
                   <button
                     type="button"
                     onClick={() => setActiveTab('register')}
                     className="text-primary hover:underline font-medium"
                   >
-                    Cadastre-se aqui
+                    Cadastre-se
                   </button>
                 </p>
               </div>
             </form>
           </TabsContent>
 
-          <TabsContent value="register" className="mt-8">
-            <form onSubmit={handleSignUp} className="space-y-6">
+          <TabsContent value="register" className="mt-4 sm:mt-6 lg:mt-8">
+            <form onSubmit={handleSignUp} className="space-y-3 sm:space-y-4 lg:space-y-6">
               {invitationData && (
                 <Alert>
                   <Mail className="h-4 w-4" />
-                  <AlertDescription>
+                  <AlertDescription className="text-xs sm:text-sm">
                     Você foi convidado como <strong>{invitationData.role}</strong>
                   </AlertDescription>
                 </Alert>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="register-name">Nome Completo</Label>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="register-name" className="text-xs sm:text-sm">Nome Completo</Label>
                 <Input
                   id="register-name"
                   type="text"
@@ -458,13 +459,14 @@ export default function Auth() {
                     setValidationErrors(prev => ({ ...prev, fullName: '' }));
                   }}
                   required
+                  className="text-sm sm:text-base"
                 />
                 {validationErrors.fullName && (
-                  <p className="text-sm text-destructive">{validationErrors.fullName}</p>
+                  <p className="text-xs sm:text-sm text-destructive">{validationErrors.fullName}</p>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="register-email">Email</Label>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="register-email" className="text-xs sm:text-sm">Email</Label>
                 <Input
                   id="register-email"
                   type="email"
@@ -476,13 +478,14 @@ export default function Auth() {
                   }}
                   required
                   disabled={!!invitationData}
+                  className="text-sm sm:text-base"
                 />
                 {validationErrors.email && (
-                  <p className="text-sm text-destructive">{validationErrors.email}</p>
+                  <p className="text-xs sm:text-sm text-destructive">{validationErrors.email}</p>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="register-password">Senha</Label>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="register-password" className="text-xs sm:text-sm">Senha</Label>
                 <Input
                   id="register-password"
                   type="password"
@@ -493,20 +496,21 @@ export default function Auth() {
                     setValidationErrors(prev => ({ ...prev, password: '' }));
                   }}
                   required
+                  className="text-sm sm:text-base"
                 />
                 {validationErrors.password && (
-                  <p className="text-sm text-destructive">{validationErrors.password}</p>
+                  <p className="text-xs sm:text-sm text-destructive">{validationErrors.password}</p>
                 )}
 
                 {/* Indicadores de requisitos de senha */}
                 {password && (
-                  <div className="mt-2 space-y-1">
+                  <div className="mt-1.5 sm:mt-2 space-y-0.5 sm:space-y-1">
                     {getPasswordRequirements().map((req, idx) => (
-                      <div key={idx} className="flex items-center gap-2 text-xs">
+                      <div key={idx} className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs">
                         {req.met ? (
-                          <CheckCircle className="h-3 w-3 text-green-600" />
+                          <CheckCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-green-600 shrink-0" />
                         ) : (
-                          <XCircle className="h-3 w-3 text-muted-foreground" />
+                          <XCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-muted-foreground shrink-0" />
                         )}
                         <span className={req.met ? 'text-green-600' : 'text-muted-foreground'}>
                           {req.label}
@@ -516,8 +520,8 @@ export default function Auth() {
                   </div>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="register-confirm-password">Confirmar Senha</Label>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="register-confirm-password" className="text-xs sm:text-sm">Confirmar Senha</Label>
                 <Input
                   id="register-confirm-password"
                   type="password"
@@ -528,21 +532,22 @@ export default function Auth() {
                     setValidationErrors(prev => ({ ...prev, confirmPassword: '' }));
                   }}
                   required
+                  className="text-sm sm:text-base"
                 />
                 {validationErrors.confirmPassword && (
-                  <p className="text-sm text-destructive">{validationErrors.confirmPassword}</p>
+                  <p className="text-xs sm:text-sm text-destructive">{validationErrors.confirmPassword}</p>
                 )}
               </div>
 
               {error && (
                 <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
+                  <AlertDescription className="text-xs sm:text-sm">{error}</AlertDescription>
                 </Alert>
               )}
 
               <Button
                 type="submit"
-                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-lg font-bold rounded-xl text-white bg-gradient-to-r from-primary to-blue-400 hover:from-primary/90 hover:to-blue-400/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-300 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="group relative w-full flex justify-center py-2.5 sm:py-3 px-4 border border-transparent text-base sm:text-lg font-bold rounded-xl text-white bg-gradient-to-r from-primary to-blue-400 hover:from-primary/90 hover:to-blue-400/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-300 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed touch-target"
                 disabled={loading || !fullName.trim() || !email.trim() || !password || !confirmPassword}
                 onClick={(e) => {
                   // Garantir que o evento seja tratado
@@ -553,13 +558,14 @@ export default function Auth() {
               >
                 {loading ? (
                   <>
-                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                    Criando conta...
+                    <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin mr-2" />
+                    <span className="hidden xs:inline">Criando conta...</span>
+                    <span className="xs:hidden">Criando...</span>
                   </>
                 ) : (
                   <>
                     Criar Conta
-                    <LogIn className="ml-2 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <LogIn className="ml-2 h-4 w-4 sm:h-5 sm:w-5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </>
                 )}
               </Button>

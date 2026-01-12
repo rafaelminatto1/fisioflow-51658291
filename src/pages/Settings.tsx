@@ -61,12 +61,12 @@ const Settings = () => {
     <MainLayout>
       <div className="space-y-4 sm:space-y-6 animate-fade-in">
         {/* Header responsivo */}
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3 sm:gap-4">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-foreground">
               Configurações
             </h1>
-            <p className="text-sm sm:text-base text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Gerencie as configurações do sistema e da sua conta
             </p>
           </div>
@@ -74,54 +74,54 @@ const Settings = () => {
 
         {/* Tabs for different settings sections */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="profile" className="flex items-center gap-2">
-              <User className="w-4 h-4" />
-              <span className="hidden sm:inline">Perfil</span>
+          <TabsList className="grid w-full grid-cols-4 h-9 sm:h-10 gap-0.5">
+            <TabsTrigger value="profile" className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs">
+              <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">Perfil</span>
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center gap-2">
-              <Bell className="w-4 h-4" />
-              <span className="hidden sm:inline">Notificações</span>
+            <TabsTrigger value="notifications" className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs">
+              <Bell className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">Notif</span>
             </TabsTrigger>
-            <TabsTrigger value="security" className="flex items-center gap-2">
-              <Shield className="w-4 h-4" />
-              <span className="hidden sm:inline">Segurança</span>
+            <TabsTrigger value="security" className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs">
+              <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">Segurança</span>
             </TabsTrigger>
-            <TabsTrigger value="schedule" className="flex items-center gap-2">
-              <Clock className="w-4 h-4" />
-              <span className="hidden sm:inline">Horários</span>
+            <TabsTrigger value="schedule" className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs">
+              <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">Horários</span>
             </TabsTrigger>
           </TabsList>
 
           {/* Profile Tab */}
-          <TabsContent value="profile" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <TabsContent value="profile" className="space-y-3 sm:space-y-4 lg:space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
               {/* Perfil do usuário */}
           <Card className="bg-gradient-card border-border shadow-card">
-            <CardHeader className="border-b border-border">
-              <CardTitle className="text-foreground flex items-center gap-2">
-                <User className="w-5 h-5" />
-                Perfil do Usuário
+            <CardHeader className="border-b border-border p-3 sm:p-4">
+              <CardTitle className="text-foreground flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base">
+                <User className="w-4 h-4 sm:w-5 sm:h-5" />
+                Perfil
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome completo</Label>
-                <Input id="name" defaultValue="Dr. João Silva" />
+            <CardContent className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="name" className="text-xs sm:text-sm">Nome completo</Label>
+                <Input id="name" defaultValue="Dr. João Silva" className="text-sm" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">E-mail</Label>
-                <Input id="email" type="email" defaultValue="joao@fisioflow.com.br" />
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="email" className="text-xs sm:text-sm">E-mail</Label>
+                <Input id="email" type="email" defaultValue="joao@fisioflow.com.br" className="text-sm" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Telefone</Label>
-                <Input id="phone" defaultValue="(11) 99999-9999" />
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="phone" className="text-xs sm:text-sm">Telefone</Label>
+                <Input id="phone" defaultValue="(11) 99999-9999" className="text-sm" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="crefito">CREFITO</Label>
-                <Input id="crefito" defaultValue="12345/F" />
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="crefito" className="text-xs sm:text-sm">CREFITO</Label>
+                <Input id="crefito" defaultValue="12345/F" className="text-sm" />
               </div>
-              <Button className="w-full bg-gradient-primary text-primary-foreground hover:shadow-medical">
+              <Button className="w-full bg-gradient-primary text-primary-foreground hover:shadow-medical text-sm touch-target">
                 Salvar Alterações
               </Button>
             </CardContent>
@@ -129,18 +129,18 @@ const Settings = () => {
 
           {/* Notificações */}
           <Card className="bg-gradient-card border-border shadow-card">
-            <CardHeader className="border-b border-border">
-              <CardTitle className="text-foreground flex items-center gap-2">
-                <Bell className="w-5 h-5" />
+            <CardHeader className="border-b border-border p-3 sm:p-4">
+              <CardTitle className="text-foreground flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base">
+                <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                 Notificações
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <Label className="text-sm font-medium">E-mail</Label>
-                    <p className="text-xs text-muted-foreground">
+            <CardContent className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4">
+              <div className="space-y-2 sm:space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="space-y-0.5 min-w-0">
+                    <Label className="text-xs sm:text-sm font-medium truncate">E-mail</Label>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">
                       Receber notificações por e-mail
                     </p>
                   </div>
@@ -152,10 +152,10 @@ const Settings = () => {
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <Label className="text-sm font-medium">SMS</Label>
-                    <p className="text-xs text-muted-foreground">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="space-y-0.5 min-w-0">
+                    <Label className="text-xs sm:text-sm font-medium truncate">SMS</Label>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">
                       Receber notificações por SMS
                     </p>
                   </div>
@@ -167,10 +167,10 @@ const Settings = () => {
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <Label className="text-sm font-medium">Push</Label>
-                    <p className="text-xs text-muted-foreground">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="space-y-0.5 min-w-0">
+                    <Label className="text-xs sm:text-sm font-medium truncate">Push</Label>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">
                       Notificações push no navegador
                     </p>
                   </div>
@@ -184,10 +184,10 @@ const Settings = () => {
 
                 <Separator />
 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <Label className="text-sm font-medium">Agendamentos</Label>
-                    <p className="text-xs text-muted-foreground">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="space-y-0.5 min-w-0">
+                    <Label className="text-xs sm:text-sm font-medium truncate">Agendamentos</Label>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">
                       Notificar sobre novos agendamentos
                     </p>
                   </div>
@@ -199,10 +199,10 @@ const Settings = () => {
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <Label className="text-sm font-medium">Lembretes</Label>
-                    <p className="text-xs text-muted-foreground">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="space-y-0.5 min-w-0">
+                    <Label className="text-xs sm:text-sm font-medium truncate">Lembretes</Label>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">
                       Lembretes automáticos de consultas
                     </p>
                   </div>
@@ -219,16 +219,16 @@ const Settings = () => {
 
           {/* Horário de funcionamento */}
           <Card className="bg-gradient-card border-border shadow-card">
-            <CardHeader className="border-b border-border">
-              <CardTitle className="text-foreground flex items-center gap-2">
-                <Clock className="w-5 h-5" />
+            <CardHeader className="border-b border-border p-3 sm:p-4">
+              <CardTitle className="text-foreground flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base">
+                <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
                 Horário de Funcionamento
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="start">Início</Label>
+            <CardContent className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4">
+              <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="start" className="text-xs sm:text-sm">Início</Label>
                   <Input
                     id="start"
                     type="time"
@@ -236,10 +236,11 @@ const Settings = () => {
                     onChange={(e) =>
                       setWorkingHours(prev => ({ ...prev, start: e.target.value }))
                     }
+                    className="text-sm"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="end">Fim</Label>
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="end" className="text-xs sm:text-sm">Fim</Label>
                   <Input
                     id="end"
                     type="time"
@@ -247,15 +248,16 @@ const Settings = () => {
                     onChange={(e) =>
                       setWorkingHours(prev => ({ ...prev, end: e.target.value }))
                     }
+                    className="text-sm"
                   />
                 </div>
               </div>
 
               <Separator />
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="lunchStart">Início do almoço</Label>
+              <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="lunchStart" className="text-xs sm:text-sm">Início do almoço</Label>
                   <Input
                     id="lunchStart"
                     type="time"
@@ -263,10 +265,11 @@ const Settings = () => {
                     onChange={(e) =>
                       setWorkingHours(prev => ({ ...prev, lunchStart: e.target.value }))
                     }
+                    className="text-sm"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lunchEnd">Fim do almoço</Label>
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="lunchEnd" className="text-xs sm:text-sm">Fim do almoço</Label>
                   <Input
                     id="lunchEnd"
                     type="time"
@@ -274,11 +277,12 @@ const Settings = () => {
                     onChange={(e) =>
                       setWorkingHours(prev => ({ ...prev, lunchEnd: e.target.value }))
                     }
+                    className="text-sm"
                   />
                 </div>
               </div>
 
-              <Button className="w-full bg-gradient-primary text-primary-foreground hover:shadow-medical">
+              <Button className="w-full bg-gradient-primary text-primary-foreground hover:shadow-medical text-sm touch-target">
                 Salvar Horários
               </Button>
             </CardContent>
@@ -286,33 +290,33 @@ const Settings = () => {
 
           {/* Segurança */}
           <Card className="bg-gradient-card border-border shadow-card">
-            <CardHeader className="border-b border-border">
-              <CardTitle className="text-foreground flex items-center gap-2">
-                <Shield className="w-5 h-5" />
+            <CardHeader className="border-b border-border p-3 sm:p-4">
+              <CardTitle className="text-foreground flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base">
+                <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
                 Segurança
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="currentPassword">Senha atual</Label>
-                <Input id="currentPassword" type="password" />
+            <CardContent className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="currentPassword" className="text-xs sm:text-sm">Senha atual</Label>
+                <Input id="currentPassword" type="password" className="text-sm" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="newPassword">Nova senha</Label>
-                <Input id="newPassword" type="password" />
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="newPassword" className="text-xs sm:text-sm">Nova senha</Label>
+                <Input id="newPassword" type="password" className="text-sm" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmar nova senha</Label>
-                <Input id="confirmPassword" type="password" />
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="confirmPassword" className="text-xs sm:text-sm">Confirmar nova senha</Label>
+                <Input id="confirmPassword" type="password" className="text-sm" />
               </div>
 
               <Separator />
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <Label className="text-sm font-medium">Autenticação de dois fatores</Label>
-                    <p className="text-xs text-muted-foreground">
+              <div className="space-y-2 sm:space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="space-y-0.5 min-w-0">
+                    <Label className="text-xs sm:text-sm font-medium">Autenticação de dois fatores</Label>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">
                       Adicione uma camada extra de segurança
                     </p>
                   </div>
@@ -320,7 +324,7 @@ const Settings = () => {
                 </div>
               </div>
 
-              <Button className="w-full bg-gradient-primary text-primary-foreground hover:shadow-medical">
+              <Button className="w-full bg-gradient-primary text-primary-foreground hover:shadow-medical text-sm touch-target">
                 Alterar Senha
               </Button>
             </CardContent>
@@ -329,98 +333,98 @@ const Settings = () => {
           </TabsContent>
 
           {/* Notifications Tab */}
-          <TabsContent value="notifications" className="space-y-6">
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <TabsContent value="notifications" className="space-y-3 sm:space-y-4 lg:space-y-6">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
               <NotificationPreferences />
               <NotificationHistory />
             </div>
           </TabsContent>
 
           {/* Security Tab */}
-          <TabsContent value="security" className="space-y-6">
+          <TabsContent value="security" className="space-y-3 sm:space-y-4 lg:space-y-6">
             {/* Gerenciamento de Usuários - Apenas Admins */}
             {isAdmin && (
               <Card className="bg-gradient-card border-border shadow-card">
-                <CardHeader className="border-b border-border">
-                  <CardTitle className="text-foreground flex items-center gap-2">
-                    <Shield className="w-5 h-5" />
+                <CardHeader className="border-b border-border p-3 sm:p-4">
+                  <CardTitle className="text-foreground flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base">
+                    <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
                     Gerenciamento de Usuários
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-xs sm:text-sm">
                     Convide novos membros para a equipe e gerencie permissões
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="p-4 sm:p-6 space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="space-y-1">
-                        <h3 className="font-medium">Convidar Usuário</h3>
-                        <p className="text-sm text-muted-foreground">
+                <CardContent className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4">
+                  <div className="space-y-2 sm:space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 sm:p-4 border rounded-lg">
+                      <div className="space-y-0.5">
+                        <h3 className="font-medium text-xs sm:text-sm">Convidar Usuário</h3>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground">
                           Envie convites para novos fisioterapeutas, estagiários ou administradores
                         </p>
                       </div>
-                      <Button onClick={() => setInviteModalOpen(true)}>
-                        <UserPlus className="mr-2 h-4 w-4" />
-                        Criar Convite
+                      <Button onClick={() => setInviteModalOpen(true)} size="sm" className="touch-target self-start sm:self-auto">
+                        <UserPlus className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        <span className="text-xs sm:text-sm">Criar Convite</span>
                       </Button>
                     </div>
 
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="space-y-1">
-                        <h3 className="font-medium">Gerenciar Usuários</h3>
-                        <p className="text-sm text-muted-foreground">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 sm:p-4 border rounded-lg">
+                      <div className="space-y-0.5">
+                        <h3 className="font-medium text-xs sm:text-sm">Gerenciar Usuários</h3>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground">
                           Visualize e gerencie todos os usuários e suas funções
                         </p>
                       </div>
-                      <Button variant="outline" onClick={() => navigate('/admin/users')}>
-                        <Users className="mr-2 h-4 w-4" />
-                        Ver Usuários
+                      <Button variant="outline" onClick={() => navigate('/admin/users')} size="sm" className="touch-target self-start sm:self-auto">
+                        <Users className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        <span className="text-xs sm:text-sm">Ver Usuários</span>
                       </Button>
                     </div>
 
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="space-y-1">
-                        <h3 className="font-medium">Logs de Auditoria</h3>
-                        <p className="text-sm text-muted-foreground">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 sm:p-4 border rounded-lg">
+                      <div className="space-y-0.5">
+                        <h3 className="font-medium text-xs sm:text-sm">Logs de Auditoria</h3>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground">
                           Visualize todos os eventos de segurança do sistema
                         </p>
                       </div>
-                      <Button variant="outline" onClick={() => navigate('/admin/audit-logs')}>
-                        <FileText className="mr-2 h-4 w-4" />
-                        Ver Logs
+                      <Button variant="outline" onClick={() => navigate('/admin/audit-logs')} size="sm" className="touch-target self-start sm:self-auto">
+                        <FileText className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        <span className="text-xs sm:text-sm">Ver Logs</span>
                       </Button>
                     </div>
 
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="space-y-1">
-                        <h3 className="font-medium">Gerenciar Convites</h3>
-                        <p className="text-sm text-muted-foreground">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 sm:p-4 border rounded-lg">
+                      <div className="space-y-0.5">
+                        <h3 className="font-medium text-xs sm:text-sm">Gerenciar Convites</h3>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground">
                           Visualize, revogue e copie links de convites pendentes
                         </p>
                       </div>
-                      <Button variant="outline" onClick={() => navigate('/admin/invitations')}>
-                        <Mail className="mr-2 h-4 w-4" />
-                        Ver Convites
+                      <Button variant="outline" onClick={() => navigate('/admin/invitations')} size="sm" className="touch-target self-start sm:self-auto">
+                        <Mail className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        <span className="text-xs sm:text-sm">Ver Convites</span>
                       </Button>
                     </div>
 
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="space-y-1">
-                        <h3 className="font-medium">Monitoramento de Segurança</h3>
-                        <p className="text-sm text-muted-foreground">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 sm:p-4 border rounded-lg">
+                      <div className="space-y-0.5">
+                        <h3 className="font-medium text-xs sm:text-sm">Monitoramento de Segurança</h3>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground">
                           Acompanhe tentativas de login e atividades suspeitas
                         </p>
                       </div>
-                      <Button variant="outline" onClick={() => navigate('/admin/security')}>
-                        <Shield className="mr-2 h-4 w-4" />
-                        Ver Monitoramento
+                      <Button variant="outline" onClick={() => navigate('/admin/security')} size="sm" className="touch-target self-start sm:self-auto">
+                        <Shield className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        <span className="text-xs sm:text-sm">Ver Monitoramento</span>
                       </Button>
                     </div>
                   </div>
 
-                  <Alert>
-                    <Shield className="h-4 w-4" />
-                    <AlertDescription>
+                  <Alert className="text-[10px] sm:text-xs">
+                    <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <AlertDescription className="text-[10px] sm:text-xs">
                       <strong>Segurança:</strong> Todos os convites expiram em 7 dias e são rastreados
                       no log de auditoria do sistema.
                     </AlertDescription>
@@ -430,33 +434,33 @@ const Settings = () => {
             )}
 
             <Card className="bg-gradient-card border-border shadow-card">
-              <CardHeader className="border-b border-border">
-                <CardTitle className="text-foreground flex items-center gap-2">
-                  <Shield className="w-5 h-5" />
+              <CardHeader className="border-b border-border p-3 sm:p-4">
+                <CardTitle className="text-foreground flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base">
+                  <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
                   Segurança da Conta
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-4 sm:p-6 space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="currentPassword">Senha atual</Label>
-                  <Input id="currentPassword" type="password" />
+              <CardContent className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4">
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="currentPassword" className="text-xs sm:text-sm">Senha atual</Label>
+                  <Input id="currentPassword" type="password" className="text-sm" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="newPassword">Nova senha</Label>
-                  <Input id="newPassword" type="password" />
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="newPassword" className="text-xs sm:text-sm">Nova senha</Label>
+                  <Input id="newPassword" type="password" className="text-sm" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirmar nova senha</Label>
-                  <Input id="confirmPassword" type="password" />
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="confirmPassword" className="text-xs sm:text-sm">Confirmar nova senha</Label>
+                  <Input id="confirmPassword" type="password" className="text-sm" />
                 </div>
 
                 <Separator />
 
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <Label className="text-sm font-medium">Autenticação de dois fatores</Label>
-                      <p className="text-xs text-muted-foreground">
+                <div className="space-y-2 sm:space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="space-y-0.5 min-w-0">
+                      <Label className="text-xs sm:text-sm font-medium">Autenticação de dois fatores</Label>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">
                         Adicione uma camada extra de segurança
                       </p>
                     </div>
@@ -464,7 +468,7 @@ const Settings = () => {
                   </div>
                 </div>
 
-                <Button className="w-full bg-gradient-primary text-primary-foreground hover:shadow-medical">
+                <Button className="w-full bg-gradient-primary text-primary-foreground hover:shadow-medical text-sm touch-target">
                   Alterar Senha
                 </Button>
               </CardContent>
@@ -472,18 +476,18 @@ const Settings = () => {
           </TabsContent>
 
           {/* Schedule Tab */}
-          <TabsContent value="schedule" className="space-y-6">
+          <TabsContent value="schedule" className="space-y-3 sm:space-y-4 lg:space-y-6">
             <Card className="bg-gradient-card border-border shadow-card">
-              <CardHeader className="border-b border-border">
-                <CardTitle className="text-foreground flex items-center gap-2">
-                  <Clock className="w-5 h-5" />
+              <CardHeader className="border-b border-border p-3 sm:p-4">
+                <CardTitle className="text-foreground flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base">
+                  <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
                   Horário de Funcionamento
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-4 sm:p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="start">Início</Label>
+              <CardContent className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4">
+                <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="start" className="text-xs sm:text-sm">Início</Label>
                     <Input
                       id="start"
                       type="time"
@@ -491,10 +495,11 @@ const Settings = () => {
                       onChange={(e) =>
                         setWorkingHours(prev => ({ ...prev, start: e.target.value }))
                       }
+                      className="text-sm"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="end">Fim</Label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="end" className="text-xs sm:text-sm">Fim</Label>
                     <Input
                       id="end"
                       type="time"
@@ -502,15 +507,16 @@ const Settings = () => {
                       onChange={(e) =>
                         setWorkingHours(prev => ({ ...prev, end: e.target.value }))
                       }
+                      className="text-sm"
                     />
                   </div>
                 </div>
 
                 <Separator />
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="lunchStart">Início do almoço</Label>
+                <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="lunchStart" className="text-xs sm:text-sm">Início do almoço</Label>
                     <Input
                       id="lunchStart"
                       type="time"
@@ -518,10 +524,11 @@ const Settings = () => {
                       onChange={(e) =>
                         setWorkingHours(prev => ({ ...prev, lunchStart: e.target.value }))
                       }
+                      className="text-sm"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="lunchEnd">Fim do almoço</Label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="lunchEnd" className="text-xs sm:text-sm">Fim do almoço</Label>
                     <Input
                       id="lunchEnd"
                       type="time"
@@ -529,11 +536,12 @@ const Settings = () => {
                       onChange={(e) =>
                         setWorkingHours(prev => ({ ...prev, lunchEnd: e.target.value }))
                       }
+                      className="text-sm"
                     />
                   </div>
                 </div>
 
-                <Button className="w-full bg-gradient-primary text-primary-foreground hover:shadow-medical">
+                <Button className="w-full bg-gradient-primary text-primary-foreground hover:shadow-medical text-sm touch-target">
                   Salvar Horários
                 </Button>
               </CardContent>
