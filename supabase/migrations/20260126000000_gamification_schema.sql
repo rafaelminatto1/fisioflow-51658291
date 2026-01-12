@@ -42,18 +42,18 @@ CREATE TABLE IF NOT EXISTS public.achievements (
 -- Patient Gamification
 ALTER TABLE public.patient_gamification ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view own gamification" 
-    ON public.patient_gamification FOR SELECT 
+CREATE POLICY "Users can view own gamification"
+    ON public.patient_gamification FOR SELECT
     USING (auth.uid() = patient_id OR EXISTS (
-        SELECT 1 FROM public.profiles 
-        WHERE id = auth.uid() AND role = 'therapist'
+        SELECT 1 FROM public.profiles
+        WHERE id = auth.uid() AND role = 'fisioterapeuta'
     ));
 
-CREATE POLICY "System/Therapists can update gamification" 
+CREATE POLICY "System/Therapists can update gamification"
     ON public.patient_gamification FOR UPDATE
     USING (EXISTS (
-        SELECT 1 FROM public.profiles 
-        WHERE id = auth.uid() AND role = 'therapist'
+        SELECT 1 FROM public.profiles
+        WHERE id = auth.uid() AND role = 'fisioterapeuta'
     ) OR auth.uid() = patient_id); -- Setup for triggers/functions, but typically client shouldn't update Level directly.
     -- Ideally we use a stored procedure for adding XP, but allowing update for now with RLS.
 
@@ -64,18 +64,18 @@ CREATE POLICY "System can insert gamification"
 -- XP Transactions
 ALTER TABLE public.xp_transactions ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view own transactions" 
-    ON public.xp_transactions FOR SELECT 
+CREATE POLICY "Users can view own transactions"
+    ON public.xp_transactions FOR SELECT
     USING (auth.uid() = patient_id);
 
-CREATE POLICY "Therapists can view all transactions" 
-    ON public.xp_transactions FOR SELECT 
+CREATE POLICY "Therapists can view all transactions"
+    ON public.xp_transactions FOR SELECT
     USING (EXISTS (
-        SELECT 1 FROM public.profiles 
-        WHERE id = auth.uid() AND role = 'therapist'
+        SELECT 1 FROM public.profiles
+        WHERE id = auth.uid() AND role = 'fisioterapeuta'
     ));
 
-CREATE POLICY "Therapists/System can insert transactions" 
+CREATE POLICY "Therapists/System can insert transactions"
     ON public.xp_transactions FOR INSERT
     WITH CHECK (true); -- Allow insert if authenticated (logic controlled by app)
 
