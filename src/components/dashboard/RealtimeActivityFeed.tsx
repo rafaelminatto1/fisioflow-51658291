@@ -62,23 +62,28 @@ export function RealtimeActivityFeed() {
 
             // Manually fetch patient names to avoid relationship 400 errors (safer)
             const patientIds = [...new Set(appointments.map(a => a.patient_id).filter(Boolean))];
+
+            // Only fetch if we have IDs to look up
+            let patientsData: { id: string, name: string }[] | null = null;
+
             if (patientIds.length > 0) {
-              const { data: patientsData } = await supabase
+              const { data } = await supabase
                 .from('patients')
                 .select('id, name:full_name')
                 .in('id', patientIds);
-
-              const patientMap = new Map(patientsData?.map(p => [p.id, p.name]) || []);
-
-              // Attach names to appointments
-              appointments = appointments.map(apt => ({
-                ...apt,
-                patients: { name: patientMap.get(apt.patient_id) || 'Paciente desconhecido' }
-              }));
+              patientsData = data;
             }
 
-            break;
+            const patientMap = new Map(patientsData?.map(p => [p.id, p.name]) || []);
+
+            // Attach names to appointments
+            appointments = appointments.map(apt => ({
+              ...apt,
+              patients: { name: patientMap.get(apt.patient_id) || 'Paciente desconhecido' }
+            }));
           }
+
+          break;
         } catch {
           retries++;
           if (retries < maxRetries) {
