@@ -31,8 +31,21 @@ export const useWaitlistMatch = () => {
    */
   const findMatchingEntries = useMemo(() => {
     return (date: Date | string, time: string): WaitlistMatch[] => {
+      // Safety check for missing data
+      if (!time || !date) {
+        console.warn('findMatchingEntries called with missing arguments', { date, time });
+        return [];
+      }
+
       const targetDate = typeof date === 'string' ? new Date(date) : date;
       const dayOfWeek = DAY_MAP[getDay(targetDate)];
+
+      // Additional safety check for time format
+      if (typeof time !== 'string' || !time.includes(':')) {
+        console.warn('findMatchingEntries called with invalid time format', { time });
+        return [];
+      }
+
       const [hour] = time.split(':').map(Number);
 
       // Determine which time slot this falls into
