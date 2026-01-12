@@ -1,9 +1,10 @@
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import { format, startOfWeek, addDays, isToday, isSameDay } from 'date-fns';
-import { Clock } from 'lucide-react';
+import { Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Appointment } from '@/types/appointment';
 import { generateTimeSlots } from '@/lib/config/agenda';
 import { DayColumn } from './CalendarDayColumn';
+import { Button } from '@/components/ui/button';
 
 interface CalendarWeekViewProps {
     currentDate: Date;
@@ -54,65 +55,165 @@ const CalendarWeekView = memo(({
 }: CalendarWeekViewProps) => {
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
     // Criar datas com horário fixo (meio-dia) para evitar problemas de timezone
-    // Quando datas são criadas à meia-noite, podem ser interpretadas como dia anterior em alguns fusos
     const weekDays = Array.from({ length: 7 }, (_, i) => {
         const day = addDays(weekStart, i);
-        // Normalizar para meio-dia para evitar edge cases de timezone
         return new Date(day.getFullYear(), day.getMonth(), day.getDate(), 12, 0, 0);
     });
     const timeSlots = generateTimeSlots(currentDate);
 
+    // Mobile: Show one day at a time with navigation
+    const [mobileDayIndex, setMobileDayIndex] = useState(() => {
+        const today = new Date();
+        const todayIndex = weekDays.findIndex(d => isSameDay(d, today));
+        return todayIndex >= 0 ? todayIndex : 0;
+    });
+
+    const currentMobileDay = weekDays[mobileDayIndex];
+    const dayAppointments = currentMobileDay ? getAppointmentsForDate(currentMobileDay) : [];
+    const isClosed = currentMobileDay ? isDayClosedForDate(currentMobileDay) : false;
+
+    const handlePrevDay = () => {
+        setMobileDayIndex(prev => Math.max(0, prev - 1));
+    };
+
+    const handleNextDay = () => {
+        setMobileDayIndex(prev => Math.min(weekDays.length - 1, prev + 1));
+    };
+
     return (
-        <div className="flex bg-background h-full overflow-hidden">
-            {/* Time column - Sticky e otimizado */}
-            <div className="w-16 sm:w-20 border-r border-border/50 bg-gradient-to-b from-card via-muted/30 to-muted/50 flex-shrink-0 flex flex-col">
-                <div className="h-14 sm:h-16 border-b border-border/50 flex items-center justify-center bg-gradient-primary backdrop-blur-sm z-20 shadow-md shrink-0">
-                    <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-primary-foreground" />
+        <div className="flex bg-background h-full overflow-hidden flex-col">
+            {/* Mobile Day Selector - Only visible on mobile */}
+            <div className="md:hidden flex items-center justify-between p-2 bg-gradient-to-r from-primary/10 to-primary/5 border-b border-border/50">
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handlePrevDay}
+                    disabled={mobileDayIndex === 0}
+                    className="h-9 w-9 p-0 touch-target"
+                >
+                    <ChevronLeft className="h-4 w-4" />
+                </Button>
+
+                <div className="flex flex-col items-center">
+                    <span className={`text-lg font-bold ${isToday(currentMobileDay) ? 'text-primary' : ''}`}>
+                        {format(currentMobileDay, 'd')}
+                    </span>
+                    <span className="text-[10px] uppercase text-muted-foreground">
+                        {format(currentMobileDay, 'EEE', { locale: { code: 'pt-BR', options: { weekday: 'short' } } })}
+                    </span>
                 </div>
-                <div className="flex-1 overflow-hidden">
-                    <div className="flex flex-col">
-                        {timeSlots.map(time => (
-                            <div key={time} className="h-12 sm:h-16 border-b border-border/30 p-1 sm:p-2 text-[10px] sm:text-xs text-foreground/70 font-bold flex items-center justify-center hover:bg-accent/50 transition-colors shrink-0">
-                                {time}
-                            </div>
-                        ))}
+
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleNextDay}
+                    disabled={mobileDayIndex === weekDays.length - 1}
+                    className="h-9 w-9 p-0 touch-target"
+                >
+                    <ChevronRight className="h-4 w-4" />
+                </Button>
+            </div>
+
+            {/* Week Grid - Desktop */}
+            <div className="hidden md:flex flex-1 overflow-hidden">
+                {/* Time column - Sticky e otimizado */}
+                <div className="w-20 border-r border-border/50 bg-gradient-to-b from-card via-muted/30 to-muted/50 flex-shrink-0 flex flex-col">
+                    <div className="h-16 border-b border-border/50 flex items-center justify-center bg-gradient-primary backdrop-blur-sm z-20 shadow-md shrink-0">
+                        <Clock className="h-4 w-4 text-primary-foreground" />
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                        <div className="flex flex-col">
+                            {timeSlots.map(time => (
+                                <div key={time} className="h-16 border-b border-border/30 p-2 text-xs text-foreground/70 font-bold flex items-center justify-center hover:bg-accent/50 transition-colors shrink-0">
+                                    {time}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Week days - Grid */}
+                <div className="flex-1 overflow-auto">
+                    <div className="grid grid-cols-7 min-w-full bg-background/30">
+                        {weekDays.map(day => {
+                            const dayAppointments = getAppointmentsForDate(day);
+                            const isClosed = isDayClosedForDate(day);
+
+                            return (
+                                <DayColumn
+                                    key={day.toISOString()}
+                                    day={day}
+                                    timeSlots={timeSlots}
+                                    appointments={dayAppointments}
+                                    isDayClosed={isClosed}
+                                    onTimeSlotClick={onTimeSlotClick}
+                                    onEditAppointment={onEditAppointment}
+                                    onDeleteAppointment={onDeleteAppointment}
+                                    dragState={dragState}
+                                    dropTarget={dropTarget}
+                                    handleDragStart={handleDragStart}
+                                    handleDragEnd={handleDragEnd}
+                                    handleDragOver={handleDragOver}
+                                    handleDragLeave={handleDragLeave}
+                                    handleDrop={handleDrop}
+                                    checkTimeBlocked={checkTimeBlocked}
+                                    getStatusColor={getStatusColor}
+                                    isOverCapacity={isOverCapacity}
+                                    openPopoverId={openPopoverId}
+                                    setOpenPopoverId={setOpenPopoverId}
+                                    onAppointmentReschedule={onAppointmentReschedule}
+                                />
+                            );
+                        })}
                     </div>
                 </div>
             </div>
 
-            {/* Week days - Grid com scroll horizontal suave */}
-            <div className="flex-1 overflow-auto">
-                <div className="inline-flex sm:grid sm:grid-cols-7 min-w-full bg-background/30">
-                    {weekDays.map(day => {
-                        const dayAppointments = getAppointmentsForDate(day);
-                        const isClosed = isDayClosedForDate(day);
+            {/* Mobile Single Day View */}
+            <div className="md:hidden flex-1 flex overflow-hidden">
+                {/* Time column - Mobile */}
+                <div className="w-14 border-r border-border/50 bg-gradient-to-b from-card via-muted/30 to-muted/50 flex-shrink-0 flex flex-col">
+                    <div className="h-14 border-b border-border/50 flex items-center justify-center bg-gradient-primary backdrop-blur-sm z-20 shadow-md shrink-0">
+                        <Clock className="h-3 w-3 text-primary-foreground" />
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                        <div className="flex flex-col">
+                            {timeSlots.map(time => (
+                                <div key={time} className="h-12 border-b border-border/30 p-1 text-[10px] text-foreground/70 font-bold flex items-center justify-center hover:bg-accent/50 transition-colors shrink-0">
+                                    {time}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
 
-                        return (
-                            <DayColumn
-                                key={day.toISOString()}
-                                day={day}
-                                timeSlots={timeSlots}
-                                appointments={dayAppointments}
-                                isDayClosed={isClosed}
-                                onTimeSlotClick={onTimeSlotClick}
-                                onEditAppointment={onEditAppointment}
-                                onDeleteAppointment={onDeleteAppointment}
-                                dragState={dragState}
-                                dropTarget={dropTarget}
-                                handleDragStart={handleDragStart}
-                                handleDragEnd={handleDragEnd}
-                                handleDragOver={handleDragOver}
-                                handleDragLeave={handleDragLeave}
-                                handleDrop={handleDrop}
-                                checkTimeBlocked={checkTimeBlocked}
-                                getStatusColor={getStatusColor}
-                                isOverCapacity={isOverCapacity}
-                                openPopoverId={openPopoverId}
-                                setOpenPopoverId={setOpenPopoverId}
-                                onAppointmentReschedule={onAppointmentReschedule}
-                            />
-                        );
-                    })}
+                {/* Single Day Column - Mobile */}
+                <div className="flex-1 overflow-auto">
+                    <div className="min-w-full bg-background/30">
+                        <DayColumn
+                            key={currentMobileDay.toISOString()}
+                            day={currentMobileDay}
+                            timeSlots={timeSlots}
+                            appointments={dayAppointments}
+                            isDayClosed={isClosed}
+                            onTimeSlotClick={onTimeSlotClick}
+                            onEditAppointment={onEditAppointment}
+                            onDeleteAppointment={onDeleteAppointment}
+                            dragState={dragState}
+                            dropTarget={dropTarget}
+                            handleDragStart={handleDragStart}
+                            handleDragEnd={handleDragEnd}
+                            handleDragOver={handleDragOver}
+                            handleDragLeave={handleDragLeave}
+                            handleDrop={handleDrop}
+                            checkTimeBlocked={checkTimeBlocked}
+                            getStatusColor={getStatusColor}
+                            isOverCapacity={isOverCapacity}
+                            openPopoverId={openPopoverId}
+                            setOpenPopoverId={setOpenPopoverId}
+                            onAppointmentReschedule={onAppointmentReschedule}
+                        />
+                    </div>
                 </div>
             </div>
         </div>
