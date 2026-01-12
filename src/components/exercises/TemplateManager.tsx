@@ -32,14 +32,26 @@ export function TemplateManager() {
   const [importing, setImporting] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
 
-  // Use createTemplateAsync exposed from the updated hook
-  const { templates, loading, deleteTemplate, createTemplateAsync } = useExerciseTemplates(activeTab);
+  // Fetch all templates and filter client-side to handle diverse categories
+  const { templates, loading, deleteTemplate, createTemplateAsync } = useExerciseTemplates();
 
-  const filteredTemplates = templates.filter(t =>
-    t.name?.toLowerCase().includes(search.toLowerCase()) ||
-    t.condition_name?.toLowerCase().includes(search.toLowerCase()) ||
-    t.template_variant?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredTemplates = templates.filter(t => {
+    // Basic search filtering
+    const matchesSearch =
+      t.name?.toLowerCase().includes(search.toLowerCase()) ||
+      t.condition_name?.toLowerCase().includes(search.toLowerCase()) ||
+      t.template_variant?.toLowerCase().includes(search.toLowerCase());
+
+    if (!matchesSearch) return false;
+
+    // Category filtering (Tab logic)
+    if (activeTab === 'pos_operatorio') {
+      return t.category === 'Pós-Operatório' || t.category === 'pos_operatorio';
+    } else {
+      // 'patologia' tab shows everything else (Ortopedia, Neurologia, etc.)
+      return t.category !== 'Pós-Operatório' && t.category !== 'pos_operatorio';
+    }
+  });
 
   // Agrupar por condição
   const groupedTemplates = filteredTemplates.reduce((acc, template) => {
