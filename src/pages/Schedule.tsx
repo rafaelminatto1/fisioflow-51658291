@@ -1,39 +1,34 @@
-import React, { useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import * as SheetComponents from '@/components/ui/sheet';
-
-const Sheet = SheetComponents.Sheet;
-const SheetContent = SheetComponents.SheetContent;
-const SheetTrigger = SheetComponents.SheetTrigger;
-
 import { CalendarViewType } from '@/components/schedule/CalendarView';
 import { AppointmentModalRefactored as AppointmentModal } from '@/components/schedule/AppointmentModalRefactored';
 import { AppointmentQuickEditModal } from '@/components/schedule/AppointmentQuickEditModal';
 import { AppointmentListView } from '@/components/schedule/AppointmentListView';
 import { AppointmentSearch } from '@/components/schedule/AppointmentSearch';
-import { ScheduleSidebar, FilterState } from '@/components/schedule/ScheduleSidebar'; // Updated import
-import { QuickStats } from '@/components/schedule/QuickStats';
 import { WaitlistQuickAdd } from '@/components/schedule/WaitlistQuickAdd';
 import { WaitlistQuickViewModal } from '@/components/schedule/WaitlistQuickViewModal';
 import { useAppointments, useCreateAppointment, useRescheduleAppointment } from '@/hooks/useAppointments';
 import { useWaitlistMatch } from '@/hooks/useWaitlistMatch';
 import { logger } from '@/lib/errors/logger';
-import { AlertTriangle, Calendar, Clock, Users, TrendingUp, Plus, Settings as SettingsIcon, Bell, Filter, WifiOff, RefreshCw } from 'lucide-react';
+import { AlertTriangle, Calendar, Users, Plus, Settings as SettingsIcon } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { cn } from '@/lib/utils';
-import { EmptyState, LoadingSkeleton } from '@/components/ui';
+import { EmptyState } from '@/components/ui';
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
-import { format, isAfter, parseISO, formatDistanceToNow } from 'date-fns';
+import { format, isAfter, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { formatDateToLocalISO, formatDateToBrazilian } from '@/utils/dateUtils';
+
+// Type for filters (keeping minimal)
+interface FilterState {
+  therapists: string[];
+  rooms: string[];
+  services: string[];
+}
 
 // Lazy load CalendarView for better initial load performance
 const CalendarView = lazy(() => import('@/components/schedule/CalendarView').then(mod => ({ default: mod.CalendarView })));
@@ -45,7 +40,11 @@ const Schedule = () => {
   const [modalDefaultDate, setModalDefaultDate] = useState<Date | undefined>();
   const [modalDefaultTime, setModalDefaultTime] = useState<string | undefined>();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewType, setViewType] = useState<CalendarViewType | 'list'>('week');
+  // Detect mobile and default to day view on mobile
+  const [viewType, setViewType] = useState<CalendarViewType | 'list'>(() => {
+    const isMobile = window.innerWidth < 768;
+    return isMobile ? 'day' : 'week';
+  });
 
   // Consolidated Filter State
   const [filters, setFilters] = useState<FilterState>({
