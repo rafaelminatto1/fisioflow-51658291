@@ -271,17 +271,16 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       const endTime = new Date(new Date(`${appointmentData.appointment_date}T${appointmentData.appointment_time}`).getTime() + appointmentData.duration * 60000);
       const endTimeString = format(endTime, 'HH:mm');
 
+      // Only include columns that actually exist in the database
       const formattedData = {
         patient_id: appointmentData.patient_id,
-        therapist_id: appointmentData.therapist_id || '',
-        date: appointmentData.appointment_date, // Nova coluna
-        start_time: appointmentData.appointment_time, // Nova coluna
+        therapist_id: appointmentData.therapist_id || null,
+        date: appointmentData.appointment_date,
+        start_time: appointmentData.appointment_time,
         end_time: endTimeString,
-        duration: appointmentData.duration,
         status: appointmentData.status as any,
         payment_status: appointmentData.payment_status as any,
         notes: appointmentData.notes || '',
-        room: appointmentData.room || '',
         session_type: (appointmentData.type === 'Fisioterapia' ? 'individual' : 'group') as any,
       };
 
@@ -336,11 +335,23 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const handleDuplicate = (config: DuplicateConfig) => {
     if (appointment) {
       config.dates.forEach(date => {
+        const newTime = config.newTime || appointment.time;
+        const newDate = format(date, 'yyyy-MM-dd');
+        const duration = appointment.duration || 60;
+        const endTime = new Date(new Date(`${newDate}T${newTime}`).getTime() + duration * 60000);
+        const endTimeString = format(endTime, 'HH:mm');
+
         createAppointmentMutation({
-          ...dataToDuplicate(appointment),
-          appointment_date: format(date, 'yyyy-MM-dd'),
-          appointment_time: config.newTime || appointment.time,
-        });
+          patient_id: appointment.patientId,
+          therapist_id: appointment.therapistId || null,
+          date: newDate,
+          start_time: newTime,
+          end_time: endTimeString,
+          status: appointment.status,
+          payment_status: appointment.payment_status || 'pending',
+          notes: appointment.notes || '',
+          session_type: (appointment.type === 'Fisioterapia' ? 'individual' : 'group') as any,
+        } as any);
       });
       setDuplicateDialogOpen(false);
     }
@@ -358,13 +369,28 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
 
   const handleScheduleAnyway = () => {
     if (pendingFormData) {
+      const endTime = new Date(new Date(`${pendingFormData.appointment_date}T${pendingFormData.appointment_time}`).getTime() + pendingFormData.duration * 60000);
+      const endTimeString = format(endTime, 'HH:mm');
+
+      const formattedData = {
+        patient_id: pendingFormData.patient_id,
+        therapist_id: pendingFormData.therapist_id || null,
+        date: pendingFormData.appointment_date,
+        start_time: pendingFormData.appointment_time,
+        end_time: endTimeString,
+        status: pendingFormData.status,
+        payment_status: pendingFormData.payment_status || 'pending',
+        notes: pendingFormData.notes || '',
+        session_type: (pendingFormData.type === 'Fisioterapia' ? 'individual' : 'group') as any,
+      };
+
       if (appointment?.id) {
         updateAppointmentMutation({
           appointmentId: appointment.id,
-          updates: pendingFormData
+          updates: formattedData as any
         });
       } else {
-        createAppointmentMutation(pendingFormData);
+        createAppointmentMutation(formattedData as any);
       }
       setCapacityDialogOpen(false);
       onClose();

@@ -107,12 +107,12 @@ export default function ClinicalTestsLibrary() {
     };
 
     return (
-        <MainLayout>
-            <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
+        <MainLayout maxWidth="7xl" showBreadcrumbs={false}>
+            <div className="min-h-screen bg-slate-50 text-slate-800 font-sans -mx-2 xs:-mx-4 md:mx-0">
 
                 {/* Header - Matching User Design */}
                 <header className="bg-teal-700 text-white sticky top-0 z-40 shadow-md">
-                    <div className="container mx-auto px-4 py-4 flex justify-between items-center max-w-7xl">
+                    <div className="px-4 py-4 flex justify-between items-center">
                         <div className="flex items-center gap-2">
                             <HeartPulse className="h-6 w-6" />
                             <h1 className="text-xl font-bold tracking-tight">PhysioTests DB</h1>
@@ -126,7 +126,7 @@ export default function ClinicalTestsLibrary() {
                     </div>
                 </header>
 
-                <main className="container mx-auto px-4 py-8 max-w-7xl animate-fade-in pb-24">
+                <main className="px-4 py-8 animate-fade-in pb-24">
 
                     {/* Search and Secondary Filter */}
                     <div className="mb-8 flex flex-col md:flex-row gap-4 justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-100/80">

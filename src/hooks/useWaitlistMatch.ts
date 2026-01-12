@@ -24,16 +24,15 @@ export interface WaitlistMatch {
 }
 
 export const useWaitlistMatch = () => {
-  const { data: waitlist = [], isLoading: loading } = useWaitlist();
+  const { data: waitlist = [], isLoading: loading, ...waitlistQuery } = useWaitlist();
 
   /**
    * Finds waitlist entries that match a specific date and time
    */
   const findMatchingEntries = useMemo(() => {
-    return (date: Date | string, time: string): WaitlistMatch[] => {
-      // Safety check for missing data
+    return (date: Date | string | undefined | null, time: string | undefined | null): WaitlistMatch[] => {
+      // Early return for missing data - don't log warnings for initial render state
       if (!time || !date) {
-        console.warn('findMatchingEntries called with missing arguments', { date, time });
         return [];
       }
 
@@ -41,7 +40,6 @@ export const useWaitlistMatch = () => {
 
       // Check for Invalid Date
       if (isNaN(targetDate.getTime())) {
-        console.warn('findMatchingEntries called with invalid date', { date });
         return [];
       }
 
@@ -49,7 +47,6 @@ export const useWaitlistMatch = () => {
 
       // Additional safety check for time format
       if (typeof time !== 'string' || !time.includes(':')) {
-        console.warn('findMatchingEntries called with invalid time format', { time });
         return [];
       }
 
@@ -150,5 +147,7 @@ export const useWaitlistMatch = () => {
     getInterestCount,
     loading,
     totalInWaitlist: waitlist.length,
+    isWaitlistFromCache: waitlistQuery.isFromCache,
+    waitlistCacheTimestamp: waitlistQuery.cacheTimestamp
   };
 };

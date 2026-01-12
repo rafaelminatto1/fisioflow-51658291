@@ -3,22 +3,19 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  Brain, TrendingUp, AlertTriangle, Users, DollarSign, 
-  Calendar, Target, Zap, BarChart3, Clock, CheckCircle,
-  XCircle, MessageSquare, Sparkles, Trophy, Package
+import {
+  Brain, TrendingUp, AlertTriangle, Users, DollarSign,
+  Calendar, BarChart3, CheckCircle,
+  MessageSquare, Sparkles, Trophy, Package
 } from 'lucide-react';
 import { useAppointmentPredictions, useRevenueForecasts, useStaffPerformance, useInventory } from '@/hooks/useInnovations';
 import { useAppointments } from '@/hooks/useAppointments';
 import { usePatients } from '@/hooks/usePatients';
-import { format, addDays, startOfWeek, endOfWeek } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
-
-const COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6'];
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 export default function SmartDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -34,7 +31,6 @@ export default function SmartDashboard() {
   const today = format(new Date(), 'yyyy-MM-dd');
   const todayAppointments = appointments.filter(a => (a as any).appointment_date === today);
   const completedToday = todayAppointments.filter(a => a.status === 'concluido').length;
-  const pendingToday = todayAppointments.filter(a => a.status === 'agendado').length;
   
   // High-risk appointments (no-show probability > 30%)
   const highRiskAppointments = predictions.filter(p => p.no_show_probability > 0.3);
@@ -58,11 +54,11 @@ export default function SmartDashboard() {
   }).length;
 
   return (
-    <MainLayout>
-      <div className="space-y-4 xs:space-y-6">
+    <MainLayout maxWidth="xl">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header - Mobile Optimized */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3">
             <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-primary/20 flex items-center justify-center">
               <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             </div>
@@ -70,7 +66,7 @@ export default function SmartDashboard() {
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold flex items-center gap-2">
                 Dashboard Inteligente
               </h1>
-              <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block mt-0.5">
+              <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block mt-1">
                 Análises preditivas e insights em tempo real
               </p>
             </div>
@@ -82,7 +78,7 @@ export default function SmartDashboard() {
         </div>
 
         {/* Quick Stats - Mobile Optimized */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 lg:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-4">
           <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/20">
             <CardContent className="p-3 sm:p-4">
               <div className="flex items-center gap-1.5 sm:gap-2">

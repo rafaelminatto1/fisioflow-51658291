@@ -122,14 +122,14 @@ const CalendarWeekView = memo(({
             {/* Week Grid - Desktop */}
             <div className="hidden md:flex flex-1 overflow-hidden">
                 {/* Time column - Sticky e otimizado */}
-                <div className="w-20 border-r border-border/50 bg-gradient-to-b from-card via-muted/30 to-muted/50 flex-shrink-0 flex flex-col">
-                    <div className="h-16 border-b border-border/50 flex items-center justify-center bg-gradient-primary backdrop-blur-sm z-20 shadow-md shrink-0">
-                        <Clock className="h-4 w-4 text-primary-foreground" />
+                <div className="w-16 lg:w-20 border-r border-border/50 bg-gradient-to-b from-card via-muted/30 to-muted/50 flex-shrink-0 flex flex-col">
+                    <div className="h-14 lg:h-16 border-b border-border/50 flex items-center justify-center bg-gradient-primary backdrop-blur-sm z-20 shadow-md shrink-0">
+                        <Clock className="h-3.5 lg:h-4 w-3.5 lg:w-4 text-primary-foreground" />
                     </div>
                     <div className="flex-1 overflow-hidden">
                         <div className="flex flex-col">
                             {timeSlots.map(time => (
-                                <div key={time} className="h-16 border-b border-border/30 p-2 text-xs text-foreground/70 font-bold flex items-center justify-center hover:bg-accent/50 transition-colors shrink-0">
+                                <div key={time} className="h-14 lg:h-16 border-b border-border/30 p-1 lg:p-2 text-xs text-foreground/70 font-bold flex items-center justify-center hover:bg-accent/50 transition-colors shrink-0">
                                     {time}
                                 </div>
                             ))}
@@ -139,7 +139,7 @@ const CalendarWeekView = memo(({
 
                 {/* Week days - Grid */}
                 <div className="flex-1 overflow-auto">
-                    <div className="grid grid-cols-7 min-w-full bg-background/30">
+                    <div className="grid grid-cols-7 min-w-full bg-background/30 [&>div]:min-w-[100px] md:[&>div]:min-w-[140px] lg:[&>div]:min-w-[180px] xl:[&>div]:min-w-[220px]">
                         {weekDays.map(day => {
                             const dayAppointments = getAppointmentsForDate(day);
                             const isClosed = isDayClosedForDate(day);

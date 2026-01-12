@@ -174,43 +174,32 @@ export const DayColumn = memo(({
                         const topDesktop = slotIndex >= 0 ? slotIndex * 64 : 0;
 
                         return (
-                            <AppointmentQuickView
+                            // Wrapper de posicionamento
+                            <div
                                 key={apt.id}
-                                appointment={apt}
-                                open={openPopoverId === apt.id}
-                                onOpenChange={(open) => setOpenPopoverId(open ? apt.id : null)}
-                                onEdit={onEditAppointment ? () => onEditAppointment(apt) : undefined}
-                                onDelete={onDeleteAppointment ? () => onDeleteAppointment(apt) : undefined}
+                                draggable={isDraggable}
+                                onDragStart={(e) => handleDragStart(e, apt)}
+                                onDragEnd={handleDragEnd}
+                                className={cn(
+                                    "absolute transition-all duration-200 group/card z-10",
+                                    dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50 scale-95",
+                                    "hover:z-20" // Garantir que o hover fique por cima
+                                )}
+                                style={{
+                                    top: `${topMobile}px`,
+                                    height: `${heightMobile}px`,
+                                    // Posicionamento dinâmico para appointments empilhados
+                                    left: stackCount > 1 ? `${leftPercent}%` : '2px',
+                                    right: stackCount > 1 ? 'auto' : '2px',
+                                    width: stackCount > 1 ? `${widthPercent}%` : 'calc(100% - 4px)',
+                                    ['--top-desktop' as any]: `${topDesktop}px`,
+                                    ['--height-desktop' as any]: `${heightDesktop}px`,
+                                    zIndex: stackCount > 1 ? 10 + stackIndex : undefined,
+                                } as React.CSSProperties}
+                                onPointerDownCapture={(e) => e.stopPropagation()}
                             >
-                                <div
-                                    draggable={isDraggable}
-                                    onDragStart={(e) => handleDragStart(e, apt)}
-                                    onDragEnd={handleDragEnd}
-                                    className={cn(
-                                        "absolute p-2 rounded-lg text-white cursor-pointer shadow-md border-l-[4px] backdrop-blur-sm animate-fade-in overflow-hidden flex flex-col justify-between",
-                                        getStatusColor(apt.status, isOverCapacity(apt)),
-                                        "hover:shadow-lg hover:scale-[1.02] transition-all duration-200 group/card ring-1 ring-white/10",
-                                        isDraggable && "cursor-grab active:cursor-grabbing",
-                                        dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50 scale-95",
-                                        isOverCapacity(apt) && "animate-pulse"
-                                    )}
-                                    style={{
-                                        top: `${topMobile}px`,
-                                        height: `${heightMobile}px`,
-                                        // Posicionamento dinâmico para appointments empilhados
-                                        left: stackCount > 1 ? `${leftPercent}%` : '2px',
-                                        right: stackCount > 1 ? 'auto' : '2px',
-                                        width: stackCount > 1 ? `${widthPercent}%` : 'calc(100% - 4px)',
-                                        ['--top-desktop' as any]: `${topDesktop}px`,
-                                        ['--height-desktop' as any]: `${heightDesktop}px`,
-                                        // Garantir que empilhados fiquem visíveis
-                                        zIndex: stackCount > 1 ? 10 + stackIndex : undefined,
-                                    } as React.CSSProperties}
-                                    onClick={(e) => e.stopPropagation()}
-                                    title={`${apt.patientName} - ${apt.type} (${apt.status})${stackCount > 1 ? ` [${stackIndex + 1}/${stackCount}]` : ''}`}
-                                >
-                                    <style dangerouslySetInnerHTML={{
-                                        __html: `
+                                <style dangerouslySetInnerHTML={{
+                                    __html: `
                   @media (min-width: 640px) {
                     [style*="--top-desktop"][style*="--height-desktop"] {
                       top: var(--top-desktop) !important;
@@ -218,49 +207,66 @@ export const DayColumn = memo(({
                     }
                   }
                 `}} />
-                                    <div className="flex flex-col gap-0.5 min-w-0">
-                                        {/* Therapist Name - Like the "Dr. Ana" in mockup */}
-                                        <div className={cn(
-                                            "text-[10px] font-bold uppercase tracking-wide opacity-90 truncate",
-                                            apt.therapistId?.includes('Ana') ? "text-yellow-200" :
-                                                apt.therapistId?.includes('Paulo') ? "text-cyan-200" :
-                                                    apt.therapistId?.includes('Carla') ? "text-purple-200" : "text-white/90"
-                                        )}>
-                                            {apt.therapistId || 'Sem Terapeuta'}
+                                <AppointmentQuickView
+                                    appointment={apt}
+                                    open={openPopoverId === apt.id}
+                                    onOpenChange={(open) => setOpenPopoverId(open ? apt.id : null)}
+                                    onEdit={onEditAppointment ? () => onEditAppointment(apt) : undefined}
+                                    onDelete={onDeleteAppointment ? () => onDeleteAppointment(apt) : undefined}
+                                >
+                                    <div
+                                        className={cn(
+                                            "w-full h-full p-2 rounded-lg text-white cursor-pointer shadow-md border-l-[4px] backdrop-blur-sm animate-fade-in overflow-hidden flex flex-col justify-between",
+                                            getStatusColor(apt.status, isOverCapacity(apt)),
+                                            "hover:shadow-lg ring-1 ring-white/10",
+                                            isDraggable && "cursor-grab active:cursor-grabbing",
+                                            isOverCapacity(apt) && "animate-pulse"
+                                        )}
+                                    >
+                                        <div className="flex flex-col gap-0.5 min-w-0">
+                                            {/* Therapist Name - Like the "Dr. Ana" in mockup */}
+                                            <div className={cn(
+                                                "text-[10px] font-bold uppercase tracking-wide opacity-90 truncate",
+                                                apt.therapistId?.includes('Ana') ? "text-yellow-200" :
+                                                    apt.therapistId?.includes('Paulo') ? "text-cyan-200" :
+                                                        apt.therapistId?.includes('Carla') ? "text-purple-200" : "text-white/90"
+                                            )}>
+                                                {apt.therapistId || 'Sem Terapeuta'}
+                                            </div>
+
+                                            {/* Patient Name */}
+                                            <div className="font-bold text-[11px] sm:text-xs leading-tight line-clamp-2 text-white shadow-sm">
+                                                {isOverCapacity(apt) && <AlertTriangle className="h-3 w-3 inline mr-1 text-amber-300" />}
+                                                {apt.patientName}
+                                            </div>
+
+                                            {/* Service Type */}
+                                            <div className="text-[9px] sm:text-[10px] opacity-80 truncate hidden sm:block">
+                                                {apt.type}
+                                            </div>
                                         </div>
 
-                                        {/* Patient Name */}
-                                        <div className="font-bold text-[11px] sm:text-xs leading-tight line-clamp-2 text-white shadow-sm">
-                                            {isOverCapacity(apt) && <AlertTriangle className="h-3 w-3 inline mr-1 text-amber-300" />}
-                                            {apt.patientName}
+                                        {/* Bottom Info: Time & Room */}
+                                        <div className="flex items-center justify-between text-[9px] sm:text-[10px] bg-black/10 -mx-2 -mb-2 px-2 py-1 mt-1 font-medium">
+                                            <div className="flex items-center gap-1">
+                                                <Clock className="h-2.5 w-2.5 opacity-70" />
+                                                {apt.time}
+                                            </div>
+                                            {apt.room && (
+                                                <div className="flex items-center gap-1 opacity-80">
+                                                    <span>{apt.room}</span>
+                                                </div>
+                                            )}
                                         </div>
 
-                                        {/* Service Type */}
-                                        <div className="text-[9px] sm:text-[10px] opacity-80 truncate hidden sm:block">
-                                            {apt.type}
-                                        </div>
-                                    </div>
-
-                                    {/* Bottom Info: Time & Room */}
-                                    <div className="flex items-center justify-between text-[9px] sm:text-[10px] bg-black/10 -mx-2 -mb-2 px-2 py-1 mt-1 font-medium">
-                                        <div className="flex items-center gap-1">
-                                            <Clock className="h-2.5 w-2.5 opacity-70" />
-                                            {apt.time}
-                                        </div>
-                                        {apt.room && (
-                                            <div className="flex items-center gap-1 opacity-80">
-                                                <span>{apt.room}</span>
+                                        {isDraggable && (
+                                            <div className="absolute top-1 right-1 opacity-0 group-hover/card:opacity-50 transition-opacity">
+                                                <GripVertical className="h-3 w-3 hidden sm:block" />
                                             </div>
                                         )}
                                     </div>
-
-                                    {isDraggable && (
-                                        <div className="absolute top-1 right-1 opacity-0 group-hover/card:opacity-50 transition-opacity">
-                                            <GripVertical className="h-3 w-3 hidden sm:block" />
-                                        </div>
-                                    )}
-                                </div>
-                            </AppointmentQuickView>
+                                </AppointmentQuickView>
+                            </div>
                         );
                     });
                 })()}

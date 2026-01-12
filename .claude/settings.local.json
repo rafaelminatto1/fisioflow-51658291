@@ -23,7 +23,16 @@
       "mcp__shadcn__search_items_in_registries",
       "mcp__context7__resolve-library-id",
       "mcp__context7__query-docs",
-      "mcp__Neon__run_sql"
+      "mcp__Neon__run_sql",
+      "mcp__zai-mcp-server__ui_to_artifact",
+      "mcp__shadcn__list_items_in_registries",
+      "mcp__shadcn__view_items_in_registries",
+      "mcp__shadcn__get_item_examples_from_registries",
+      "Bash(npx tsc:*)",
+      "Bash(grep:*)",
+      "mcp__Neon__list_projects",
+      "Bash(npx supabase:*)",
+      "Bash(supabase:*)"
     ],
     "deny": [],
     "ask": []

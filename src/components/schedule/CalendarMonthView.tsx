@@ -100,8 +100,8 @@ const CalendarMonthView = memo(({
                                                         "hover:shadow-md hover:scale-[1.03] hover:z-10 ring-1 ring-white/5",
                                                         isOverCapacity(apt) && "animate-pulse"
                                                     )}
-                                                    onClick={(e) => e.stopPropagation()}
                                                     title={`${apt.patientName} - ${apt.time}`}
+                                                    onPointerDownCapture={(e) => e.stopPropagation()}
                                                 >
                                                     <div className="flex flex-col gap-0.5 min-w-0">
                                                         <div className="flex items-center justify-between gap-1">
