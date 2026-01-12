@@ -13,6 +13,7 @@ import { CalendarDayView } from './CalendarDayView';
 import { CalendarWeekView } from './CalendarWeekView';
 import { CalendarMonthView } from './CalendarMonthView';
 import { useCalendarDrag } from '@/hooks/useCalendarDrag';
+import { logger } from '@/lib/errors/logger';
 
 export type CalendarViewType = 'day' | 'week' | 'month';
 
@@ -25,7 +26,6 @@ interface CalendarViewProps {
   onAppointmentClick: (appointment: Appointment) => void;
   onTimeSlotClick: (date: Date, time: string) => void;
   onAppointmentReschedule?: (appointment: Appointment, newDate: Date, newTime: string) => Promise<void>;
-  isRescheduling?: boolean;
   onEditAppointment?: (appointment: Appointment) => void;
   onDeleteAppointment?: (appointment: Appointment) => void;
 }
@@ -39,7 +39,6 @@ export const CalendarView = memo(({
   onAppointmentClick: _onAppointmentClick,
   onTimeSlotClick,
   onAppointmentReschedule,
-  isRescheduling = false,
   onEditAppointment,
   onDeleteAppointment,
 }: CalendarViewProps) => {
@@ -112,8 +111,14 @@ export const CalendarView = memo(({
   }, [viewType, currentDate]);
 
   const getAppointmentsForDate = useCallback((date: Date) => {
-    return (appointments || []).filter(apt => {
-      if (!apt || !apt.date) return false;
+    let filteredNoDate = 0;
+    let filteredInvalidDate = 0;
+
+    const result = (appointments || []).filter(apt => {
+      if (!apt || !apt.date) {
+        filteredNoDate++;
+        return false;
+      }
 
       const aptDate = typeof apt.date === 'string'
         ? (() => {
@@ -125,10 +130,30 @@ export const CalendarView = memo(({
         : apt.date;
 
       // Ensure we have a valid date object before comparison
-      if (!(aptDate instanceof Date) || isNaN(aptDate.getTime())) return false;
+      if (!(aptDate instanceof Date) || isNaN(aptDate.getTime())) {
+        filteredInvalidDate++;
+        logger.warn(`Agendamento com data inválida filtrado no CalendarView`, {
+          aptId: apt?.id,
+          aptDate: apt?.date,
+          patientName: apt?.patientName
+        }, 'CalendarView');
+        return false;
+      }
 
       return isSameDay(aptDate, date);
     });
+
+    // Log apenas se houver filtros (evitar spam)
+    if (filteredNoDate > 0 || filteredInvalidDate > 0) {
+      logger.warn(`Agendamentos filtrados no CalendarView`, {
+        date: format(date, 'yyyy-MM-dd'),
+        filteredNoDate,
+        filteredInvalidDate,
+        returnedCount: result.length
+      }, 'CalendarView');
+    }
+
+    return result;
   }, [appointments]);
 
   const getStatusColor = useCallback((status: string, isOverCapacity: boolean = false) => {
@@ -191,7 +216,8 @@ export const CalendarView = memo(({
     }
 
     const dayOfWeek = date.getDay();
-    const [timeH, timeM] = time.split(':').map(Number);
+    // Safety check for time split
+    const [timeH, timeM] = (time || '00:00').split(':').map(Number);
     const timeMinutes = timeH * 60 + timeM;
 
     for (const block of blockedTimes) {

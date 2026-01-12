@@ -184,7 +184,8 @@ const CalendarDayView = memo(({
                         // Agrupar appointments por horário para calcular offset horizontal
                         const appointmentsByTime: Record<string, Appointment[]> = {};
                         dayAppointments.forEach(apt => {
-                            const time = apt.time || '09:00';
+                            // Safety check for time - handle null, undefined, or empty string
+                            const time = apt.time && apt.time.trim() ? apt.time : '09:00';
                             if (!appointmentsByTime[time]) {
                                 appointmentsByTime[time] = [];
                             }
@@ -192,7 +193,9 @@ const CalendarDayView = memo(({
                         });
 
                         return dayAppointments.map(apt => {
-                            const [hours, minutes] = (apt.time || '09:00').split(':').map(Number);
+                            // Safety check for time - handle null, undefined, or empty string
+                            const aptTime = apt.time && apt.time.trim() ? apt.time : '09:00';
+                            const [hours, minutes] = aptTime.split(':').map(Number);
                             const slotIndex = timeSlots.findIndex(slot => {
                                 const [slotHour, slotMin] = slot.split(':').map(Number);
                                 return slotHour === hours && slotMin === minutes;
@@ -201,7 +204,7 @@ const CalendarDayView = memo(({
                             if (slotIndex === -1) return null;
 
                             // Calcular offset horizontal para appointments empilhados
-                            const sameTimeAppointments = appointmentsByTime[apt.time || '09:00'] || [];
+                            const sameTimeAppointments = appointmentsByTime[aptTime] || [];
                             const stackIndex = sameTimeAppointments.findIndex(a => a.id === apt.id);
                             const stackCount = sameTimeAppointments.length;
 
