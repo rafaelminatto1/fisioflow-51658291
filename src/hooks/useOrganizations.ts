@@ -69,7 +69,7 @@ export const useOrganizations = () => {
         console.warn('Organization not found (404/406) for ID:', profile.organization_id);
       }
 
-      return data as Organization;
+      return data as Organization | null;
     },
   });
 
