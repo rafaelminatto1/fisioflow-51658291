@@ -47,9 +47,9 @@ export function ScheduleCapacityManager() {
       return;
     }
 
-    // Verificar se horário de início é anterior ao fim
-    const startMinutes = newCapacity.start_time.split(':').map(Number);
-    const endMinutes = newCapacity.end_time.split(':').map(Number);
+    // Verificar se horário de início é anterior ao fim - safety check for null/undefined
+    const startMinutes = (newCapacity.start_time || '00:00').split(':').map(Number);
+    const endMinutes = (newCapacity.end_time || '00:00').split(':').map(Number);
     const startTime = startMinutes[0] * 60 + startMinutes[1];
     const endTime = endMinutes[0] * 60 + endMinutes[1];
 

@@ -101,12 +101,13 @@ export const ScheduleSidebar: React.FC<ScheduleSidebarProps> = ({
                                             </span>
                                             <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                                                 <Calendar className="w-3 h-3" />
-                                                {format(typeof apt.date === 'string'
+                                                {format(typeof apt.date === 'string' && apt.date
                                                     ? (() => {
+                                                        // Safety check for date string
                                                         const [y, m, d] = apt.date.split('-').map(Number);
                                                         return new Date(y, m - 1, d, 12, 0, 0);
                                                     })()
-                                                    : apt.date, 'dd/MM', { locale: ptBR })}
+                                                    : apt.date || new Date(), 'dd/MM', { locale: ptBR })}
                                             </span>
                                         </div>
 
@@ -123,12 +124,13 @@ export const ScheduleSidebar: React.FC<ScheduleSidebarProps> = ({
 
                                         <div className="flex items-center justify-between mt-2">
                                             <Badge variant="outline" className="text-[10px] h-5 px-1.5 bg-background">
-                                                {format(typeof apt.date === 'string'
+                                                {format(typeof apt.date === 'string' && apt.date
                                                     ? (() => {
+                                                        // Safety check for date string
                                                         const [y, m, d] = apt.date.split('-').map(Number);
                                                         return new Date(y, m - 1, d, 12, 0, 0);
                                                     })()
-                                                    : apt.date, 'HH:mm')} ({apt.duration}min)
+                                                    : apt.date || new Date(), 'HH:mm')} ({apt.duration}min)
                                             </Badge>
                                             {apt.room && (
                                                 <div className="text-[10px] text-muted-foreground flex items-center gap-1">

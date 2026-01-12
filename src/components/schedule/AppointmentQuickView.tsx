@@ -128,10 +128,10 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   };
 
   // Calculate end time
-  // Safety check for time
-  const time = appointment.time || '00:00';
-  const startHour = parseInt(time.split(':')[0]);
-  const startMinute = parseInt(time.split(':')[1]);
+  // Safety check for time - handle null, undefined, or empty string
+  const time = appointment.time && appointment.time.trim() ? appointment.time : '00:00';
+  const startHour = parseInt(time.split(':')[0] || '0');
+  const startMinute = parseInt(time.split(':')[1] || '0');
   const endMinutes = startHour * 60 + startMinute + (appointment.duration || 60);
   const endHour = Math.floor(endMinutes / 60);
   const endMinute = endMinutes % 60;

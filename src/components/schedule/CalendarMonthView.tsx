@@ -121,7 +121,8 @@ const CalendarMonthView = memo(({
                                                                         apt.therapistId?.includes('Paulo') ? "text-cyan-200" :
                                                                             apt.therapistId?.includes('Carla') ? "text-purple-200" : "text-white/80"
                                                                 )}>
-                                                                    {apt.therapistId.split(' ')[1] || apt.therapistId}
+                                                                    {/* Safety check for therapistId split */}
+                                                                    {apt.therapistId ? (apt.therapistId.split(' ')[1] || apt.therapistId) : 'N/A'}
                                                                 </span>
                                                             )}
                                                         </div>

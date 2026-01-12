@@ -145,22 +145,64 @@ async function fetchAppointments(organizationIdOverride?: string | null): Promis
     }
 
     // Validar e transformar dados
+    let filteredCount = 0;
+    let noTimeCount = 0;
+    let invalidDateCount = 0;
+
     const transformedAppointments = (data || [])
-      .filter(apt => apt && apt.id) // Filtrar registros inválidos
-      .map(apt => {
+      .map((apt, index) => {
+        // Filtrar registros sem ID - erro de dados
+        if (!apt?.id) {
+          filteredCount++;
+          logger.warn(`Agendamento ${index} sem ID, ignorando`, { apt }, 'useAppointments');
+          return null;
+        }
+
+        // Extrair e validar time - campo crítico para renderização
+        const time = apt.start_time || apt.appointment_time;
+        if (!time) {
+          noTimeCount++;
+          logger.warn(`Agendamento ${apt.id} sem horário (start_time e appointment_time são nulos)`, {
+            id: apt.id,
+            patient_id: apt.patient_id,
+            has_start_time: !!apt.start_time,
+            has_appointment_time: !!apt.appointment_time
+          }, 'useAppointments');
+          // Retornar com time padrão para não perder o agendamento completamente
+        }
+
+        // Extrair e validar data - campo crítico para renderização
+        let date: Date;
+        try {
+          const dateStr = apt.date || apt.appointment_date;
+          if (!dateStr) {
+            invalidDateCount++;
+            logger.warn(`Agendamento ${apt.id} sem data, usando data atual`, { id: apt.id }, 'useAppointments');
+            date = new Date();
+          } else {
+            const [y, m, d] = dateStr.split('-').map(Number);
+            date = new Date(y, m - 1, d, 12, 0, 0);
+            // Validar se a data é válida
+            if (isNaN(date.getTime())) {
+              invalidDateCount++;
+              logger.warn(`Agendamento ${apt.id} com data inválida: ${dateStr}`, { id: apt.id, dateStr }, 'useAppointments');
+              date = new Date();
+            }
+          }
+        } catch (dateError) {
+          invalidDateCount++;
+          logger.warn(`Agendamento ${apt.id} erro ao processar data`, { id: apt.id, error: dateError }, 'useAppointments');
+          date = new Date();
+        }
+
         try {
           return {
             id: apt.id,
             patientId: apt.patient_id,
             patientName: apt.patients?.full_name || apt.patients?.name || 'Paciente não identificado',
             phone: apt.patients?.phone || '',
-            date: (() => {
-              if (!apt.date && !apt.appointment_date) return new Date();
-              const dateStr = apt.date || apt.appointment_date;
-              const [y, m, d] = dateStr.split('-').map(Number);
-              return new Date(y, m - 1, d, 12, 0, 0);
-            })(),
-            time: apt.start_time || apt.appointment_time || '',
+            date,
+            time: time || '00:00', // Fallback seguro para não quebrar renderização
             duration: apt.duration || 60,
             type: (apt.type || 'Fisioterapia') as AppointmentType,
             status: (apt.status || 'agendado') as AppointmentStatus,
@@ -171,13 +213,30 @@ async function fetchAppointments(organizationIdOverride?: string | null): Promis
             room: apt.room,
           } as AppointmentBase;
         } catch (transformError) {
+          filteredCount++;
           logger.warn('Erro ao transformar agendamento', { appointmentId: apt.id, error: transformError }, 'useAppointments');
           return null;
         }
       })
       .filter((apt): apt is AppointmentBase => apt !== null); // Remover nulls
 
-    logger.info(`Agendamentos carregados: ${transformedAppointments.length} registros`, { count: transformedAppointments.length }, 'useAppointments');
+    // Log detalhado de estatísticas de transformação
+    logger.info(`Agendamentos carregados: ${transformedAppointments.length} registros`, {
+      count: transformedAppointments.length,
+      filteredCount,
+      noTimeCount,
+      invalidDateCount,
+      originalCount: data?.length || 0
+    }, 'useAppointments');
+
+    // Se muitos agendamentos foram filtrados, logar como warning
+    if (filteredCount > 0 || noTimeCount > 0 || invalidDateCount > 0) {
+      logger.warn(`Alguns agendamentos tiveram problemas de validação`, {
+        filteredCount,
+        noTimeCount,
+        invalidDateCount
+      }, 'useAppointments');
+    }
 
     // Salvar no cache para uso offline
     appointmentsCacheService.saveToCache(transformedAppointments, organizationId || undefined);

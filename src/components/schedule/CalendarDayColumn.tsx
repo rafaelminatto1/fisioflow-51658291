@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { Appointment } from '@/types/appointment';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AppointmentQuickView } from './AppointmentQuickView';
-import { Badge } from '@/components/ui/badge';
+import { logger } from '@/lib/errors/logger';
 
 interface DayColumnProps {
     day: Date;
@@ -148,13 +148,25 @@ export const DayColumn = memo(({
                     });
 
                     return appointments.map(apt => {
-                        const [hours, minutes] = (apt.time || '09:00').split(':').map(Number);
+                        // Safety check for time - handle null, undefined, or empty string
+                        const time = apt.time && apt.time.trim() ? apt.time : '00:00';
+                        const [hours, minutes] = time.split(':').map(Number);
                         const slotIndex = timeSlots.findIndex(slot => {
                             const [slotHour, slotMin] = slot.split(':').map(Number);
                             return slotHour === hours && slotMin === minutes;
                         });
 
-                        if (slotIndex === -1 && !isDayClosed) return null;
+                        // Log se o agendamento não pôde ser posicionado porque o horário não existe nos slots
+                        if (slotIndex === -1 && !isDayClosed) {
+                            logger.warn(`Agendamento não renderizado: horário não encontrado nos timeSlots`, {
+                                aptId: apt.id,
+                                aptTime: time,
+                                patientName: apt.patientName,
+                                day: format(day, 'yyyy-MM-dd'),
+                                availableSlots: timeSlots.slice(0, 5).join(', ')
+                            }, 'CalendarDayColumn');
+                            return null;
+                        }
 
                         // Calcular offset horizontal para appointments empilhados no mesmo horário
                         const sameTimeAppointments = appointmentsByTime[apt.time || '09:00'] || [];
@@ -192,8 +204,8 @@ export const DayColumn = memo(({
                                     left: stackCount > 1 ? `${leftPercent}%` : '2px',
                                     right: stackCount > 1 ? 'auto' : '2px',
                                     width: stackCount > 1 ? `${widthPercent}%` : 'calc(100% - 4px)',
-                                    ['--top-desktop' as any]: `${topDesktop}px`,
-                                    ['--height-desktop' as any]: `${heightDesktop}px`,
+                                    ['--top-desktop' as string]: `${topDesktop}px`,
+                                    ['--height-desktop' as string]: `${heightDesktop}px`,
                                     zIndex: stackCount > 1 ? 10 + stackIndex : undefined,
                                 } as React.CSSProperties}
                                 onPointerDownCapture={(e) => e.stopPropagation()}
