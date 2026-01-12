@@ -1,3 +1,5 @@
+npm warn Unknown project config "package-manager". This will stop working in the next major version of npm.
+Initialising login role...
 export type Json =
   | string
   | number
@@ -12,8 +14,69 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          category: string | null
+          code: string
+          created_at: string | null
+          description: string
+          icon: string | null
+          id: string
+          requirements: Json | null
+          title: string
+          xp_reward: number | null
+        }
+        Insert: {
+          category?: string | null
+          code: string
+          created_at?: string | null
+          description: string
+          icon?: string | null
+          id?: string
+          requirements?: Json | null
+          title: string
+          xp_reward?: number | null
+        }
+        Update: {
+          category?: string | null
+          code?: string
+          created_at?: string | null
+          description?: string
+          icon?: string | null
+          id?: string
+          requirements?: Json | null
+          title?: string
+          xp_reward?: number | null
+        }
+        Relationships: []
+      }
       achievements_log: {
         Row: {
           achievement_id: string
@@ -14335,6 +14398,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       app_role: ["admin", "fisioterapeuta", "estagiario", "paciente"],

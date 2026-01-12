@@ -32,7 +32,12 @@
       "Bash(grep:*)",
       "mcp__Neon__list_projects",
       "Bash(npx supabase:*)",
-      "Bash(supabase:*)"
+      "Bash(supabase:*)",
+      "mcp__zai-mcp-server__diagnose_error_screenshot",
+      "Bash(pnpm list:*)",
+      "Bash(git add:*)",
+      "Bash(git restore:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
