@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
+import {
   Trophy, Users, TrendingUp, Award, Search,
   Flame, Star, Crown, Medal, Zap
 } from 'lucide-react';
@@ -41,11 +41,19 @@ export default function PatientGamificationPage() {
         `)
         .order('total_xp', { ascending: false })
         .limit(50);
-      
+
       if (error) throw error;
 
       // Fetch patient names
       const patientIds = (data || []).map(d => d.patient_id);
+
+      if (patientIds.length === 0) {
+        return (data || []).map(entry => ({
+          ...entry,
+          patient_name: 'Paciente'
+        })) as LeaderboardEntry[];
+      }
+
       const { data: patients } = await supabase
         .from('patients')
         .select('id, name')
@@ -72,7 +80,7 @@ export default function PatientGamificationPage() {
         .select('*', { count: 'exact', head: true });
 
       const totalXP = (levels || []).reduce((sum, l) => sum + (l.total_xp || 0), 0);
-      const avgStreak = levels?.length 
+      const avgStreak = levels?.length
         ? Math.round((levels || []).reduce((sum, l) => sum + (l.current_streak || 0), 0) / levels.length)
         : 0;
 
@@ -189,18 +197,16 @@ export default function PatientGamificationPage() {
                 const isTopThree = index < 3;
 
                 return (
-                  <div 
+                  <div
                     key={entry.patient_id}
-                    className={`flex items-center gap-4 p-4 rounded-lg transition-colors ${
-                      isTopThree 
-                        ? 'bg-gradient-to-r from-primary/10 to-transparent border border-primary/20' 
+                    className={`flex items-center gap-4 p-4 rounded-lg transition-colors ${isTopThree
+                        ? 'bg-gradient-to-r from-primary/10 to-transparent border border-primary/20'
                         : 'bg-muted/50 hover:bg-muted'
-                    }`}
+                      }`}
                   >
                     {/* Rank */}
-                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                      isTopThree ? 'bg-primary/20' : 'bg-muted'
-                    }`}>
+                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${isTopThree ? 'bg-primary/20' : 'bg-muted'
+                      }`}>
                       {isTopThree ? (
                         <RankIcon className={`h-5 w-5 ${rankColor}`} />
                       ) : (

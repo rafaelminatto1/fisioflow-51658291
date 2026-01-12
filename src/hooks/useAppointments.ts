@@ -12,13 +12,23 @@ export const useAppointments = () => {
                 .from('appointments')
                 .select(`
           *,
-          patient:patients(name),
+          patient:patients(name:full_name),
           professional:profiles(full_name)
         `)
                 .order('appointment_date', { ascending: true });
 
             if (error) throw error;
-            return data as unknown as Appointment[];
+
+            // Map Supabase response to Appointment type
+            const mappedAppointments = (data || []).map((item: any) => ({
+                ...item,
+                patientName: item.patient?.name || 'Paciente sem nome',
+                therapistName: item.professional?.full_name || 'Profissional não atribuído',
+                // Ensure date objects are valid
+                date: new Date(item.appointment_date + 'T' + item.appointment_time),
+            }));
+
+            return mappedAppointments as unknown as Appointment[];
         },
     });
 };
