@@ -17,16 +17,43 @@ export const useAppointments = () => {
         `)
                 .order('appointment_date', { ascending: true });
 
-            if (error) throw error;
+            if (error) {
+                console.error('Error fetching appointments:', error);
+                throw error;
+            }
 
             // Map Supabase response to Appointment type
-            const mappedAppointments = (data || []).map((item: any) => ({
-                ...item,
-                patientName: item.patient?.name || 'Paciente sem nome',
-                therapistName: item.professional?.full_name || 'Profissional não atribuído',
-                // Ensure date objects are valid
-                date: new Date(item.appointment_date + 'T' + item.appointment_time),
-            }));
+            const mappedAppointments = (data || []).map((item: any) => {
+                try {
+                    // Combine date and time to create a valid Date object
+                    // Handle cases where time might be missing or invalid
+                    const dateStr = item.appointment_date;
+                    const timeStr = item.appointment_time || '00:00';
+                    const dateTimeStr = `${dateStr}T${timeStr}`;
+                    const dateObj = new Date(dateTimeStr);
+
+                    // Fallback if date is invalid
+                    if (isNaN(dateObj.getTime())) {
+                        console.warn('Invalid date for appointment:', item);
+                        return {
+                            ...item,
+                            patientName: item.patient?.name || 'Paciente sem nome',
+                            therapistName: item.professional?.full_name || 'Profissional não atribuído',
+                            date: new Date() // Fallback to now to prevent crash, or maybe filter out?
+                        };
+                    }
+
+                    return {
+                        ...item,
+                        patientName: item.patient?.name || 'Paciente sem nome',
+                        therapistName: item.professional?.full_name || 'Profissional não atribuído',
+                        date: dateObj,
+                    };
+                } catch (err) {
+                    console.error('Error mapping appointment:', err, item);
+                    return null;
+                }
+            }).filter(Boolean); // Remove failed mappings
 
             return mappedAppointments as unknown as Appointment[];
         },

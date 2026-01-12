@@ -112,13 +112,21 @@ export const CalendarView = memo(({
   }, [viewType, currentDate]);
 
   const getAppointmentsForDate = useCallback((date: Date) => {
-    return appointments.filter(apt => {
+    return (appointments || []).filter(apt => {
+      if (!apt || !apt.date) return false;
+
       const aptDate = typeof apt.date === 'string'
         ? (() => {
-          const [y, m, d] = apt.date.split('-').map(Number);
+          const parts = apt.date.split('-');
+          if (parts.length !== 3) return new Date('Invalid');
+          const [y, m, d] = parts.map(Number);
           return new Date(y, m - 1, d, 12, 0, 0);
         })()
         : apt.date;
+
+      // Ensure we have a valid date object before comparison
+      if (!(aptDate instanceof Date) || isNaN(aptDate.getTime())) return false;
+
       return isSameDay(aptDate, date);
     });
   }, [appointments]);
@@ -178,7 +186,7 @@ export const CalendarView = memo(({
 
   // Helper to check if time is blocked for any date
   const checkTimeBlocked = useCallback((date: Date, time: string): { blocked: boolean; reason?: string } => {
-    if (!blockedTimes) {
+    if (!blockedTimes || !time) {
       return { blocked: false };
     }
 
