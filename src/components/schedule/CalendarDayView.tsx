@@ -88,23 +88,24 @@ const CalendarDayView = memo(({
     return (
         <div className="flex bg-gradient-to-br from-background to-muted/20 min-h-[800px]">
             {/* Time column com design melhorado */}
-            <div className="w-24 border-r bg-muted/30 backdrop-blur-sm">
-                <div className="h-16 border-b flex items-center justify-center sticky top-0 bg-muted/30 z-10 backdrop-blur-sm shadow-sm">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
+            <div className="w-20 md:w-24 border-r bg-muted/30 backdrop-blur-sm flex-shrink-0">
+                <div className="h-14 md:h-16 border-b flex items-center justify-center sticky top-0 bg-muted/30 z-10 backdrop-blur-sm shadow-sm">
+                    <Clock className="h-3.5 md:h-4 w-3.5 md:w-4 text-muted-foreground" />
                 </div>
                 {timeSlots.map(time => (
-                    <div key={time} className="h-16 border-b border-border/50 p-3 text-sm font-medium text-muted-foreground flex items-center">
+                    <div key={time} className="h-14 md:h-16 border-b border-border/50 p-2 md:p-3 text-sm font-medium text-muted-foreground flex items-center">
                         {time}
                     </div>
                 ))}
             </div>
 
             {/* Day column com hover states */}
-            <div className="flex-1 relative bg-background/50">
-                <div className="h-16 border-b bg-gradient-to-r from-primary/10 to-primary/5 p-4 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
-                    <div className="font-semibold text-center flex items-center justify-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        {format(currentDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
+            <div className="flex-1 relative bg-background/50 min-w-0">
+                <div className="h-14 md:h-16 border-b bg-gradient-to-r from-primary/10 to-primary/5 p-2 md:p-4 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
+                    <div className="font-semibold text-center flex items-center justify-center gap-2 text-sm md:text-base">
+                        <Calendar className="h-3.5 md:h-4 w-3.5 md:w-4" />
+                        <span className="hidden sm:inline">{format(currentDate, "EEEE, d 'de' MMMM", { locale: ptBR })}</span>
+                        <span className="sm:hidden">{format(currentDate, "EEE, d/M", { locale: ptBR })}</span>
                     </div>
                 </div>
 
@@ -123,7 +124,7 @@ const CalendarDayView = memo(({
                                     <TooltipTrigger asChild>
                                         <div
                                             className={cn(
-                                                "h-16 border-b border-border cursor-pointer transition-colors group relative",
+                                                "h-14 md:h-16 border-b border-border cursor-pointer transition-colors group relative",
                                                 blocked
                                                     ? "bg-destructive/10 cursor-not-allowed"
                                                     : "hover:bg-primary/5",
@@ -215,59 +216,68 @@ const CalendarDayView = memo(({
                             const isDraggable = !!onAppointmentReschedule;
 
                             return (
-                                <AppointmentQuickView
+                                // Wrapper de posicionamento
+                                <div
                                     key={apt.id}
-                                    appointment={apt}
-                                    open={openPopoverId === apt.id}
-                                    onOpenChange={(open) => setOpenPopoverId(open ? apt.id : null)}
-                                    onEdit={onEditAppointment ? () => onEditAppointment(apt) : undefined}
-                                    onDelete={onDeleteAppointment ? () => onDeleteAppointment(apt) : undefined}
+                                    draggable={isDraggable}
+                                    onDragStart={(e) => handleDragStart(e, apt)}
+                                    onDragEnd={handleDragEnd}
+                                    className={cn(
+                                        "absolute transition-all duration-300 group/card",
+                                        dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50 scale-95",
+                                        "hover:z-20"
+                                    )}
+                                    style={{
+                                        top: `${top}px`,
+                                        height: `${heightInPixels}px`,
+                                        // Posicionamento dinâmico para appointments empilhados
+                                        left: stackCount > 1 ? `${leftOffset}%` : '4px',
+                                        right: stackCount > 1 ? 'auto' : '4px',
+                                        width: stackCount > 1 ? `${widthPercent}%` : 'calc(100% - 8px)',
+                                        zIndex: stackCount > 1 ? 10 + stackIndex : 1,
+                                    }}
+                                    onPointerDownCapture={(e) => e.stopPropagation()}
                                 >
-                                    <div
-                                        draggable={isDraggable}
-                                        onDragStart={(e) => handleDragStart(e, apt)}
-                                        onDragEnd={handleDragEnd}
-                                        className={cn(
-                                            "absolute p-2 rounded-xl text-white cursor-pointer shadow-xl border-l-4 backdrop-blur-sm animate-fade-in overflow-hidden",
-                                            getStatusColor(apt.status, isOverCapacity(apt)),
-                                            "hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 group/card",
-                                            isDraggable && "cursor-grab active:cursor-grabbing",
-                                            dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50 scale-95",
-                                            isOverCapacity(apt) && "animate-pulse"
-                                        )}
-                                        style={{
-                                            top: `${top}px`,
-                                            height: `${heightInPixels}px`,
-                                            // Posicionamento dinâmico para appointments empilhados
-                                            left: stackCount > 1 ? `${leftOffset}%` : '4px',
-                                            right: stackCount > 1 ? 'auto' : '4px',
-                                            width: stackCount > 1 ? `${widthPercent}%` : 'calc(100% - 8px)',
-                                            zIndex: stackCount > 1 ? 10 + stackIndex : 1,
-                                        }}
-                                        title={`${apt.patientName} - ${apt.type}${stackCount > 1 ? ` [${stackIndex + 1}/${stackCount}]` : ''}`}
+                                    <AppointmentQuickView
+                                        appointment={apt}
+                                        open={openPopoverId === apt.id}
+                                        onOpenChange={(open) => setOpenPopoverId(open ? apt.id : null)}
+                                        onEdit={onEditAppointment ? () => onEditAppointment(apt) : undefined}
+                                        onDelete={onDeleteAppointment ? () => onDeleteAppointment(apt) : undefined}
                                     >
-                                        <div className="flex items-start justify-between gap-1">
-                                            <div className="font-bold text-sm line-clamp-3 leading-tight flex-1 flex items-center gap-1">
-                                                {isOverCapacity(apt) && (
-                                                    <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 text-white" />
+                                        <div
+                                            className={cn(
+                                                "w-full h-full p-2 rounded-xl text-white cursor-pointer shadow-xl border-l-4 backdrop-blur-sm animate-fade-in overflow-hidden",
+                                                getStatusColor(apt.status, isOverCapacity(apt)),
+                                                "hover:shadow-2xl hover:scale-[1.02] transition-all duration-300",
+                                                isDraggable && "cursor-grab active:cursor-grabbing",
+                                                isOverCapacity(apt) && "animate-pulse"
+                                            )}
+                                            title={`${apt.patientName} - ${apt.type}${stackCount > 1 ? ` [${stackIndex + 1}/${stackCount}]` : ''}`}
+                                        >
+                                            <div className="flex items-start justify-between gap-1">
+                                                <div className="font-bold text-sm line-clamp-3 leading-tight flex-1 flex items-center gap-1">
+                                                    {isOverCapacity(apt) && (
+                                                        <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 text-white" />
+                                                    )}
+                                                    {apt.patientName}
+                                                </div>
+                                                {isDraggable && (
+                                                    <GripVertical className="h-4 w-4 opacity-50 flex-shrink-0 group-hover/card:opacity-100 transition-opacity" />
                                                 )}
-                                                {apt.patientName}
                                             </div>
-                                            {isDraggable && (
-                                                <GripVertical className="h-4 w-4 opacity-50 flex-shrink-0 group-hover/card:opacity-100 transition-opacity" />
-                                            )}
+                                            <div className="text-xs opacity-90 flex items-center gap-1 mt-1">
+                                                <Clock className="h-3 w-3 flex-shrink-0" />
+                                                <span>{apt.time}</span>
+                                                {isOverCapacity(apt) && (
+                                                    <Badge variant="secondary" className="text-[8px] px-1 py-0 h-4 bg-white/20 text-white ml-1">
+                                                        EXCEDENTE
+                                                    </Badge>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div className="text-xs opacity-90 flex items-center gap-1 mt-1">
-                                            <Clock className="h-3 w-3 flex-shrink-0" />
-                                            <span>{apt.time}</span>
-                                            {isOverCapacity(apt) && (
-                                                <Badge variant="secondary" className="text-[8px] px-1 py-0 h-4 bg-white/20 text-white ml-1">
-                                                    EXCEDENTE
-                                                </Badge>
-                                            )}
-                                        </div>
-                                    </div>
-                                </AppointmentQuickView>
+                                    </AppointmentQuickView>
+                                </div>
                             );
                         });
                     })()}

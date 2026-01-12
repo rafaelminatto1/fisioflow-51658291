@@ -49,14 +49,14 @@ vi.mock('@/integrations/supabase/client', () => ({
           error: null,
         })),
       })),
-    }),
-      channel: vi.fn(() => ({
-        on: vi.fn(() => ({
-          subscribe: vi.fn(() => ({
-            unsubscribe: vi.fn(),
-          })),
+    })),
+    channel: vi.fn(() => ({
+      on: vi.fn(() => ({
+        subscribe: vi.fn(() => ({
+          unsubscribe: vi.fn(),
         })),
       })),
+    })),
   },
 }));
 
