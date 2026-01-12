@@ -162,7 +162,7 @@ export function useRetentionMetrics() {
         const patientAppointments = appointmentsByPatient.get(patient.id) || [];
         const completedAppointments = patientAppointments.filter(a => a.status === 'concluido');
         const lastAppointment = completedAppointments[0];
-        
+
         // Calculate LTV
         const patientLTV = completedAppointments.reduce((sum, a) => sum + (Number(a.payment_amount) || 0), 0);
         totalLTV += patientLTV;
@@ -243,10 +243,10 @@ export function usePatientsAtRisk(minRiskScore: number = 30) {
         const patientAppointments = appointmentsByPatient.get(patient.id) || [];
         const completedAppointments = patientAppointments.filter(a => a.status === 'concluido');
         const cancelledAppointments = patientAppointments.filter(a => a.status === 'cancelado');
-        
+
         const totalAppointments = patientAppointments.length;
-        const cancellationRate = totalAppointments > 0 
-          ? cancelledAppointments.length / totalAppointments 
+        const cancellationRate = totalAppointments > 0
+          ? cancelledAppointments.length / totalAppointments
           : 0;
 
         // Find last appointment
@@ -267,8 +267,8 @@ export function usePatientsAtRisk(minRiskScore: number = 30) {
           const totalRevenue = completedAppointments.reduce(
             (sum, a) => sum + (Number(a.payment_amount) || 0), 0
           );
-          const avgValue = completedAppointments.length > 0 
-            ? totalRevenue / completedAppointments.length 
+          const avgValue = completedAppointments.length > 0
+            ? totalRevenue / completedAppointments.length
             : 0;
 
           patientsAtRisk.push({
@@ -300,7 +300,7 @@ export function useCohortAnalysis(months: number = 12) {
     queryKey: RETENTION_KEYS.cohorts(months),
     queryFn: async (): Promise<CohortData[]> => {
       const now = new Date();
-      
+
       // Get patients with creation date
       const { data: patients, error: patientsError } = await supabase
         .from('patients')
@@ -349,7 +349,7 @@ export function useCohortAnalysis(months: number = 12) {
             new Date(parseISO(cohortMonth + '-01').getTime() + i * 30 * 24 * 60 * 60 * 1000),
             'yyyy-MM'
           );
-          
+
           // Check if target month is in the future
           if (parseISO(targetMonth + '-01') > now) {
             break;
@@ -433,21 +433,21 @@ export function useChurnTrends(months: number = 12) {
           const sixtyDaysBeforeMonth = subDays(monthStart, 60);
           if (lastApt >= sixtyDaysBeforeMonth && lastApt < monthStart) {
             activeAtStart++;
-            
+
             // Check if churned during this month
             const nextApts = appointments?.filter(
-              a => a.patient_id === patient.id && 
-              parseISO(a.appointment_date) >= monthStart && 
-              parseISO(a.appointment_date) < monthEnd
+              a => a.patient_id === patient.id &&
+                parseISO(a.appointment_date) >= monthStart &&
+                parseISO(a.appointment_date) < monthEnd
             );
-            
+
             if (!nextApts?.length) {
               churnedDuringMonth++;
             }
           }
         });
 
-        const churnRate = activeAtStart > 0 
+        const churnRate = activeAtStart > 0
           ? Math.round((churnedDuringMonth / activeAtStart) * 100 * 10) / 10
           : 0;
 
@@ -471,12 +471,12 @@ export function useSendReactivationCampaign() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ 
-      patientIds, 
-      message, 
-      channel 
-    }: { 
-      patientIds: string[]; 
+    mutationFn: async ({
+      patientIds,
+      message,
+      channel
+    }: {
+      patientIds: string[];
       message: string;
       channel: 'whatsapp' | 'email' | 'sms';
     }) => {
@@ -494,6 +494,20 @@ export function useSendReactivationCampaign() {
         .single();
 
       if (campaignError) throw campaignError;
+
+      if (patientIds.length === 0) {
+        // If no patients to send to, just complete the campaign immediately
+        await supabase
+          .from('crm_campanhas')
+          .update({
+            status: 'concluida',
+            total_enviados: 0,
+            concluida_em: new Date().toISOString(),
+          })
+          .eq('id', campaign.id);
+
+        return campaign;
+      }
 
       // Get patient details for sending
       const { data: patients, error: patientsError } = await supabase
@@ -519,7 +533,7 @@ export function useSendReactivationCampaign() {
       // Update campaign status
       await supabase
         .from('crm_campanhas')
-        .update({ 
+        .update({
           status: 'concluida',
           total_enviados: patientIds.length,
           concluida_em: new Date().toISOString(),

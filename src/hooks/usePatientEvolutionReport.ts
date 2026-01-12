@@ -54,10 +54,15 @@ export const usePatientEvolutionReport = (patientId: string) => {
 
       // Buscar mapas de dor associados às sessões
       const soapIds = soapRecords.map(r => r.id);
-      const { data: painMaps } = await supabase
-        .from("pain_maps")
-        .select("session_id, global_pain_level")
-        .in("session_id", soapIds);
+
+      let painMaps: any[] | null = [];
+      if (soapIds.length > 0) {
+        const { data } = await supabase
+          .from("pain_maps")
+          .select("session_id, global_pain_level")
+          .in("session_id", soapIds);
+        painMaps = data;
+      }
 
       const painMapsBySession = new Map(
         painMaps?.map(pm => [pm.session_id, pm.global_pain_level]) || []
@@ -65,10 +70,15 @@ export const usePatientEvolutionReport = (patientId: string) => {
 
       // Buscar informações dos terapeutas
       const therapistIds = [...new Set(soapRecords.map(r => r.created_by))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, full_name")
-        .in("id", therapistIds);
+
+      let profiles: any[] | null = [];
+      if (therapistIds.length > 0) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", therapistIds);
+        profiles = data;
+      }
 
       const therapistMap = new Map(
         profiles?.map(p => [p.id, p.full_name]) || []
@@ -77,7 +87,7 @@ export const usePatientEvolutionReport = (patientId: string) => {
       // Processar sessões
       const sessions = soapRecords.map((record) => {
         const painLevel = painMapsBySession.get(record.id) || 0;
-        
+
         // Estimativa de mobilidade baseada no nível de dor (inverso)
         const mobilityScore = Math.max(0, 100 - (painLevel * 10));
 
@@ -106,8 +116,8 @@ export const usePatientEvolutionReport = (patientId: string) => {
           : 0;
         totalImprovement += percentImprovement;
       }
-      const averageImprovement = sessions.length > 1 
-        ? totalImprovement / (sessions.length - 1) 
+      const averageImprovement = sessions.length > 1
+        ? totalImprovement / (sessions.length - 1)
         : 0;
 
       return {
