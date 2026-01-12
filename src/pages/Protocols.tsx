@@ -28,7 +28,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { NewProtocolModal } from '@/components/modals/NewProtocolModal';
-import { PROTOCOL_CATEGORIES, QUICK_TEMPLATES } from '@/data/protocols';
+import { PROTOCOL_CATEGORIES, QUICK_TEMPLATES, getProtocolCategory } from '@/data/protocols';
 import { ProtocolCardEnhanced } from '@/components/protocols/ProtocolCardEnhanced';
 import { ProtocolDetailView } from '@/components/protocols/ProtocolDetailView';
 import { useToast } from '@/hooks/use-toast';
@@ -61,10 +61,10 @@ export default function Protocols() {
       if (!matchesSearch) return false;
 
       // Filter by category
-      // Note: This logic depends on the getProtocolCategory helper which is used inside ProtocolCardEnhanced
-      // For proper filtering here, we might need to expose that logic or store categories on the protocol object
-      // For now, we'll implement a basic filter if categories were strictly enforced, but 
-      // since they are derived, we skip strict category filtering in this demo refactor unless we import the helper.
+      if (categoryFilter !== 'all') {
+        const category = getProtocolCategory(p.condition_name);
+        if (category !== categoryFilter) return false;
+      }
       return true;
     });
   }, [protocols, search, activeTab, categoryFilter]);
@@ -182,8 +182,23 @@ export default function Protocols() {
         {/* Quick Templates */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {QUICK_TEMPLATES.map((template, i) => (
-            <Card key={i} className="p-4 hover:shadow-md transition-all cursor-pointer group border-l-4 overflow-hidden relative"
-              style={{ borderLeftColor: 'transparent' }}>
+            <Card
+              key={i}
+              className="p-4 hover:shadow-md transition-all cursor-pointer group border-l-4 overflow-hidden relative"
+              style={{ borderLeftColor: 'transparent' }}
+              onClick={() => {
+                if (template.name === 'Pós-Cirúrgico Ortopédico') setActiveTab('pos_operatorio');
+                if (template.name === 'Tratamento Conservador') setActiveTab('patologia');
+                if (template.name === 'Reabilitação Esportiva') {
+                  setActiveTab('patologia');
+                  setSearch('esportiva'); // Assuming search helps here, or add logic
+                }
+                if (template.name === 'Idosos e Geriatria') {
+                  setActiveTab('patologia');
+                  setSearch('idoso');
+                }
+              }}
+            >
               <div className={`absolute inset-y-0 left-0 w-1 bg-gradient-to-b ${template.color}`} />
               <div className="flex items-start justify-between">
                 <div>

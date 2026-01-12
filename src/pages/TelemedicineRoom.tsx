@@ -7,8 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  Video, VideoOff, Mic, MicOff, Phone, PhoneOff, 
+import {
+  Video, VideoOff, Mic, MicOff, Phone, PhoneOff,
   MessageSquare, Users, Clock, Settings, Maximize,
   Share2, Copy, Loader2
 } from 'lucide-react';
@@ -20,6 +20,7 @@ const TelemedicineRoom = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const selfVideoRef = useRef<HTMLVideoElement>(null);
   const [isVideoOn, setIsVideoOn] = useState(true);
   const [isAudioOn, setIsAudioOn] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
@@ -51,7 +52,7 @@ const TelemedicineRoom = () => {
     mutationFn: async () => {
       const { error } = await supabase
         .from('telemedicine_rooms')
-        .update({ 
+        .update({
           status: 'ativo',
           started_at: new Date().toISOString()
         })
@@ -70,7 +71,7 @@ const TelemedicineRoom = () => {
     mutationFn: async () => {
       const { error } = await supabase
         .from('telemedicine_rooms')
-        .update({ 
+        .update({
           status: 'encerrado',
           ended_at: new Date().toISOString(),
           duration_minutes: Math.floor(elapsedTime / 60),
@@ -96,7 +97,11 @@ const TelemedicineRoom = () => {
         });
         setStream(mediaStream);
         if (videoRef.current) {
-          videoRef.current.srcObject = mediaStream;
+          // Main video would typically be remote stream, but for local testing:
+          // videoRef.current.srcObject = mediaStream; 
+        }
+        if (selfVideoRef.current) {
+          selfVideoRef.current.srcObject = mediaStream;
         }
       } catch (err) {
         console.error('Error accessing media:', err);
@@ -200,7 +205,7 @@ const TelemedicineRoom = () => {
             playsInline
             className="w-full h-full object-cover"
           />
-          
+
           {/* Video overlay controls */}
           <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
             <div className="flex items-center justify-between">
@@ -215,7 +220,7 @@ const TelemedicineRoom = () => {
                   </Badge>
                 )}
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <Button
                   size="icon"
@@ -224,7 +229,7 @@ const TelemedicineRoom = () => {
                 >
                   {isAudioOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
                 </Button>
-                
+
                 <Button
                   size="icon"
                   variant={isVideoOn ? 'secondary' : 'destructive'}
@@ -232,7 +237,7 @@ const TelemedicineRoom = () => {
                 >
                   {isVideoOn ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
                 </Button>
-                
+
                 <Button
                   size="icon"
                   variant="outline"
@@ -240,14 +245,14 @@ const TelemedicineRoom = () => {
                 >
                   <Share2 className="h-5 w-5" />
                 </Button>
-                
+
                 {room.status === 'aguardando' ? (
                   <Button onClick={() => startSession.mutate()} className="bg-success hover:bg-success/90">
                     <Phone className="h-5 w-5 mr-2" />
                     Iniciar
                   </Button>
                 ) : (
-                  <Button 
+                  <Button
                     variant="destructive"
                     onClick={() => endSession.mutate()}
                   >
@@ -258,18 +263,19 @@ const TelemedicineRoom = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Self video (picture-in-picture) */}
-          <div className="absolute top-4 right-4 w-48 h-36 bg-muted rounded-lg overflow-hidden shadow-lg">
+          <div className="absolute top-4 right-4 w-48 h-36 bg-muted rounded-lg overflow-hidden shadow-lg border-2 border-primary/20">
             <video
+              ref={selfVideoRef}
               autoPlay
               muted
               playsInline
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transform scale-x-[-1]"
             />
           </div>
         </div>
-        
+
         {/* Sidebar */}
         <div className="w-full lg:w-80 border-l bg-card flex flex-col">
           <div className="p-4 border-b">
@@ -278,7 +284,7 @@ const TelemedicineRoom = () => {
               Sala: {room.room_code || roomId}
             </p>
           </div>
-          
+
           {/* Patient Info */}
           <div className="p-4 border-b">
             <div className="flex items-center gap-3">
@@ -293,7 +299,7 @@ const TelemedicineRoom = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Notes */}
           <div className="flex-1 p-4 flex flex-col">
             <label className="text-sm font-medium mb-2">
@@ -306,7 +312,7 @@ const TelemedicineRoom = () => {
               className="flex-1 resize-none"
             />
           </div>
-          
+
           {/* Session Info */}
           <div className="p-4 border-t bg-muted/30">
             <div className="space-y-2 text-sm">

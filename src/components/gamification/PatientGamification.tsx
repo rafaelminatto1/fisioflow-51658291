@@ -24,6 +24,7 @@ import { ptBR } from 'date-fns/locale';
 
 import * as Icons from 'lucide-react';
 import { JourneyMap } from './JourneyMap';
+import { DailyQuests } from './DailyQuests';
 
 interface PatientGamificationProps {
   patientId: string;
@@ -173,50 +174,11 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
       </Card>
 
       {/* Daily Quests Section */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-bold flex items-center gap-2 px-1">
-          <Icons.CalendarCheck className="h-5 w-5 text-primary" />
-          Missões Diárias
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {dailyQuests?.map((quest) => {
-            const Icon = getIcon(quest.icon, Icons.Activity);
-            return (
-              <Card
-                key={quest.id}
-                className={cn(
-                  "border-l-4 transition-all hover:shadow-md cursor-pointer",
-                  quest.completed
-                    ? "border-l-green-500 bg-green-50/50 dark:bg-green-900/10 opacity-80"
-                    : "border-l-primary/50"
-                )}
-                onClick={() => !quest.completed && completeQuest.mutate({ questId: quest.id })}
-              >
-                <CardContent className="p-4 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className={cn(
-                      "p-2 rounded-full",
-                      quest.completed ? "bg-green-100 text-green-600" : "bg-primary/10 text-primary"
-                    )}>
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h4 className={cn("font-semibold text-sm", quest.completed && "line-through text-muted-foreground")}>
-                        {quest.title}
-                      </h4>
-                      <p className="text-xs text-muted-foreground">+{quest.xp} XP</p>
-                    </div>
-                  </div>
-                  {quest.completed ? (
-                    <Icons.CheckCircle2 className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30" />
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+      <div className="h-[400px]">
+        <DailyQuests
+          quests={dailyQuests}
+          onComplete={(id) => completeQuest.mutate({ questId: id })}
+        />
       </div>
 
       {/* Journey Map Section */}

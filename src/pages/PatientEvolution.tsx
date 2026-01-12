@@ -652,23 +652,24 @@ const PatientEvolution = () => {
 
         {/* Modern Tab Navigation */}
         <Tabs defaultValue="soap" className="w-full">
-          <TabsList className="inline-flex h-9 items-center justify-start rounded-lg bg-muted/40 p-1 text-muted-foreground w-full lg:w-auto overflow-x-auto">
+          <TabsList className="inline-flex h-8 sm:h-9 items-center justify-start rounded-lg bg-muted/40 p-0.5 sm:p-1 text-muted-foreground w-full lg:w-auto overflow-x-auto scrollbar-hide gap-0.5">
             {[
-              { value: 'soap', label: 'SOAP', icon: FileText },
-              { value: 'exercises', label: 'Exercícios', icon: Activity },
-              { value: 'history', label: 'Histórico', icon: Clock },
-              { value: 'measurements', label: 'Medições', icon: BarChart3 }, // Added measurements tab explicit link
-              { value: 'ai', label: 'IA', icon: Sparkles },
-              { value: 'gamification', label: 'Gamificação', icon: Target },
-              { value: 'whatsapp', label: 'WhatsApp', icon: Phone },
+              { value: 'soap', label: 'SOAP', shortLabel: 'S', icon: FileText },
+              { value: 'exercises', label: 'Exercícios', shortLabel: 'Exer', icon: Activity },
+              { value: 'history', label: 'Histórico', shortLabel: 'Hist', icon: Clock },
+              { value: 'measurements', label: 'Medições', shortLabel: 'Med', icon: BarChart3 },
+              { value: 'ai', label: 'IA', shortLabel: 'IA', icon: Sparkles },
+              { value: 'gamification', label: 'Gamificação', shortLabel: 'Game', icon: Target },
+              { value: 'whatsapp', label: 'WhatsApp', shortLabel: 'Zap', icon: Phone },
             ].map(tab => (
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
-                className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-1.5"
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-1.5 sm:px-2.5 xs:px-3 py-1 text-[10px] sm:text-xs font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-0.5 sm:gap-1.5 min-w-fit touch-target"
               >
-                <tab.icon className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{tab.label}</span>
+                <tab.icon className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
+                <span className="hidden xs:inline">{tab.label}</span>
+                <span className="xs:hidden hidden sm:inline">{tab.shortLabel}</span>
               </TabsTrigger>
             ))}
           </TabsList>
@@ -683,22 +684,23 @@ const PatientEvolution = () => {
             />
           </TabsContent>
 
-          <TabsContent value="soap" className="mt-4">
-            <div className="grid grid-cols-1 gap-4">
+          <TabsContent value="soap" className="mt-3 sm:mt-4">
+            <div className="grid grid-cols-1 gap-3 sm:gap-4">
               {/* Main Column - SOAP Form */}
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <Card className="border-border/50 shadow-sm overflow-visible bg-card/60 backdrop-blur-sm">
                   <CardContent className="p-0">
                     {/* SOAP Form with compact sections */}
                     <div className="divide-y divide-border/50">
                       {/* Subjective Section */}
-                      <div className="p-4 hover:bg-muted/10 transition-colors group">
+                      <div className="p-3 sm:p-4 hover:bg-muted/10 transition-colors group">
                         <div className="flex items-center justify-between mb-2">
-                          <Label htmlFor="subjective" className="text-sm font-medium flex items-center gap-2 text-primary">
-                            <span className="w-6 h-6 rounded-md bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-bold shadow-sm">S</span>
-                            Subjetivo
+                          <Label htmlFor="subjective" className="text-xs sm:text-sm font-medium flex items-center gap-1.5 sm:gap-2 text-primary">
+                            <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] sm:text-xs font-bold shadow-sm">S</span>
+                            <span className="hidden xs:inline">Subjetivo</span>
+                            <span className="xs:hidden">Subj</span>
                           </Label>
-                          <span className="text-[10px] text-muted-foreground opacity-70 group-hover:opacity-100 transition-opacity">
+                          <span className="text-[9px] sm:text-[10px] text-muted-foreground opacity-70 group-hover:opacity-100 transition-opacity">
                             {wordCount.subjective} palavras
                           </span>
                         </div>
@@ -707,18 +709,18 @@ const PatientEvolution = () => {
                           value={subjective}
                           onChange={(e) => setSubjective(e.target.value)}
                           placeholder="Queixa principal do paciente, relato de dor, desconforto, nível de estresse, sono..."
-                          className="min-h-[120px] text-base"
+                          className="min-h-[100px] sm:min-h-[120px] text-sm sm:text-base"
                         />
                       </div>
 
                       {/* Objective Section */}
-                      <div className="p-4 hover:bg-muted/10 transition-colors group">
+                      <div className="p-3 sm:p-4 hover:bg-muted/10 transition-colors group">
                         <div className="flex items-center justify-between mb-2">
-                          <Label htmlFor="objective" className="text-sm font-medium flex items-center gap-2 text-primary">
-                            <span className="w-6 h-6 rounded-md bg-green-500/15 text-green-600 dark:text-green-400 flex items-center justify-center text-xs font-bold shadow-sm">O</span>
+                          <Label htmlFor="objective" className="text-xs sm:text-sm font-medium flex items-center gap-1.5 sm:gap-2 text-primary">
+                            <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-green-500/15 text-green-600 dark:text-green-400 flex items-center justify-center text-[10px] sm:text-xs font-bold shadow-sm">O</span>
                             Objetivo
                           </Label>
-                          <span className="text-[10px] text-muted-foreground opacity-70 group-hover:opacity-100 transition-opacity">
+                          <span className="text-[9px] sm:text-[10px] text-muted-foreground opacity-70 group-hover:opacity-100 transition-opacity">
                             {wordCount.objective} palavras
                           </span>
                         </div>
@@ -727,18 +729,18 @@ const PatientEvolution = () => {
                           value={objective}
                           onChange={(e) => setObjective(e.target.value)}
                           placeholder="Achados do exame físico, amplitude de movimento, força, testes especiais..."
-                          className="min-h-[120px] text-base"
+                          className="min-h-[100px] sm:min-h-[120px] text-sm sm:text-base"
                         />
                       </div>
 
                       {/* Assessment Section */}
-                      <div className="p-4 hover:bg-muted/10 transition-colors group">
+                      <div className="p-3 sm:p-4 hover:bg-muted/10 transition-colors group">
                         <div className="flex items-center justify-between mb-2">
-                          <Label htmlFor="assessment" className="text-sm font-medium flex items-center gap-2 text-primary">
-                            <span className="w-6 h-6 rounded-md bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xs font-bold shadow-sm">A</span>
+                          <Label htmlFor="assessment" className="text-xs sm:text-sm font-medium flex items-center gap-1.5 sm:gap-2 text-primary">
+                            <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center text-[10px] sm:text-xs font-bold shadow-sm">A</span>
                             Avaliação
                           </Label>
-                          <span className="text-[10px] text-muted-foreground opacity-70 group-hover:opacity-100 transition-opacity">
+                          <span className="text-[9px] sm:text-[10px] text-muted-foreground opacity-70 group-hover:opacity-100 transition-opacity">
                             {wordCount.assessment} palavras
                           </span>
                         </div>
@@ -747,18 +749,18 @@ const PatientEvolution = () => {
                           value={assessment}
                           onChange={(e) => setAssessment(e.target.value)}
                           placeholder="Análise do progresso, resposta ao tratamento, correlações clínicas..."
-                          className="min-h-[120px] text-base"
+                          className="min-h-[100px] sm:min-h-[120px] text-sm sm:text-base"
                         />
                       </div>
 
                       {/* Plan Section */}
-                      <div className="p-4 hover:bg-muted/10 transition-colors group">
+                      <div className="p-3 sm:p-4 hover:bg-muted/10 transition-colors group">
                         <div className="flex items-center justify-between mb-2">
-                          <Label htmlFor="plan" className="text-sm font-medium flex items-center gap-2 text-primary">
-                            <span className="w-6 h-6 rounded-md bg-orange-500/15 text-orange-600 dark:text-orange-400 flex items-center justify-center text-xs font-bold shadow-sm">P</span>
+                          <Label htmlFor="plan" className="text-xs sm:text-sm font-medium flex items-center gap-1.5 sm:gap-2 text-primary">
+                            <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-orange-500/15 text-orange-600 dark:text-orange-400 flex items-center justify-center text-[10px] sm:text-xs font-bold shadow-sm">P</span>
                             Plano
                           </Label>
-                          <span className="text-[10px] text-muted-foreground opacity-70 group-hover:opacity-100 transition-opacity">
+                          <span className="text-[9px] sm:text-[10px] text-muted-foreground opacity-70 group-hover:opacity-100 transition-opacity">
                             {wordCount.plan} palavras
                           </span>
                         </div>
@@ -767,15 +769,15 @@ const PatientEvolution = () => {
                           value={plan}
                           onChange={(e) => setPlan(e.target.value)}
                           placeholder="Conduta realizada hoje, exercícios prescritos, orientações para casa, plano para próxima visita..."
-                          className="min-h-[120px] text-base"
+                          className="min-h-[100px] sm:min-h-[120px] text-sm sm:text-base"
                         />
                       </div>
                     </div>
 
                     {/* Progress Footer */}
-                    <div className="px-4 py-3 bg-muted/30 border-t border-border/50 flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">Preenchimento da Evolução</span>
-                      <div className="flex items-center gap-2">
+                    <div className="px-3 sm:px-4 py-2 sm:py-3 bg-muted/30 border-t border-border/50 flex items-center justify-between gap-2">
+                      <span className="text-[10px] sm:text-xs text-muted-foreground"><span className="hidden xs:inline">Preenchimento da Evolução</span><span className="xs:hidden">Progresso</span></span>
+                      <div className="flex items-center gap-1.5 sm:gap-2">
                         <Progress
                           value={
                             ((wordCount.subjective >= 10 ? 1 : 0) +
@@ -783,9 +785,9 @@ const PatientEvolution = () => {
                               (wordCount.assessment >= 10 ? 1 : 0) +
                               (wordCount.plan >= 10 ? 1 : 0)) / 4 * 100
                           }
-                          className="h-1.5 w-24"
+                          className="h-1.5 w-16 sm:w-24"
                         />
-                        <span className="text-xs font-medium">
+                        <span className="text-[10px] sm:text-xs font-medium">
                           {Math.round(
                             ((wordCount.subjective >= 10 ? 1 : 0) +
                               (wordCount.objective >= 10 ? 1 : 0) +

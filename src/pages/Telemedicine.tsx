@@ -76,47 +76,48 @@ const Telemedicine = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-6 animate-fade-in">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-primary grid place-items-center shadow-medical">
-              <Video className="w-5 h-5 text-primary-foreground" />
+      <div className="space-y-4 sm:space-y-6 animate-fade-in">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gradient-primary grid place-items-center shadow-medical">
+              <Video className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Telemedicina</h1>
-              <p className="text-muted-foreground">
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground">Telemedicina</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
                 Realize consultas online com seus pacientes
               </p>
             </div>
           </div>
-          
+
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Nova Consulta
+              <Button size="sm" className="touch-target">
+                <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+                <span className="hidden xs:inline">Nova Consulta</span>
+                <span className="xs:hidden">Nova</span>
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-[90vw] sm:max-w-md">
               <DialogHeader>
-                <DialogTitle>Nova Teleconsulta</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="text-base sm:text-lg">Nova Teleconsulta</DialogTitle>
+                <DialogDescription className="text-xs sm:text-sm">
                   Crie uma sala de teleconsulta para um paciente
                 </DialogDescription>
               </DialogHeader>
-              
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label>Paciente</Label>
+
+              <div className="space-y-3 sm:space-y-4 py-4">
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label className="text-xs sm:text-sm">Paciente</Label>
                   <Select value={selectedPatient} onValueChange={setSelectedPatient}>
-                    <SelectTrigger>
+                    <SelectTrigger className="text-sm">
                       <SelectValue placeholder="Selecione um paciente" />
                     </SelectTrigger>
                     <SelectContent>
                       {patients?.map((patient) => {
                         const patientName = PatientHelpers.getName(patient);
                         return (
-                        <SelectItem key={patient.id} value={patient.id}>
+                        <SelectItem key={patient.id} value={patient.id} className="text-sm">
                           {patientName}
                         </SelectItem>
                         );
@@ -125,12 +126,12 @@ const Telemedicine = () => {
                   </Select>
                 </div>
               </div>
-              
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
+
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button variant="outline" onClick={() => setIsCreateOpen(false)} size="sm" className="flex-1 sm:flex-auto">
                   Cancelar
                 </Button>
-                <Button onClick={handleCreateRoom} disabled={createRoom.isPending}>
+                <Button onClick={handleCreateRoom} disabled={createRoom.isPending} size="sm" className="flex-1 sm:flex-auto">
                   {createRoom.isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
@@ -143,58 +144,58 @@ const Telemedicine = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-success/10 rounded-lg">
-                  <PhoneCall className="h-5 w-5 text-success" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
+          <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
+            <CardContent className="p-3 sm:pt-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-success/10 rounded-lg">
+                  <PhoneCall className="h-4 w-4 sm:h-5 sm:w-5 text-success" />
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Ao Vivo</p>
-                  <p className="text-2xl font-bold">{activeRooms.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-warning/10 rounded-lg">
-                  <Clock className="h-5 w-5 text-warning" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Aguardando</p>
-                  <p className="text-2xl font-bold">{waitingRooms.length}</p>
+                <div className="min-w-0">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Ao Vivo</p>
+                  <p className="text-lg sm:text-2xl font-bold">{activeRooms.length}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-          
-          <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-muted rounded-lg">
-                  <Calendar className="h-5 w-5 text-muted-foreground" />
+
+          <Card className="bg-gradient-to-br from-amber-500/10 to-amber-500/5 border-amber-500/20">
+            <CardContent className="p-3 sm:pt-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-warning/10 rounded-lg">
+                  <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-warning" />
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Concluídas</p>
-                  <p className="text-2xl font-bold">{completedRooms.length}</p>
+                <div className="min-w-0">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Aguardando</p>
+                  <p className="text-lg sm:text-2xl font-bold">{waitingRooms.length}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-          
-          <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Users className="h-5 w-5 text-primary" />
+
+          <Card className="bg-gradient-to-br from-muted/50 to-muted/30 border-border">
+            <CardContent className="p-3 sm:pt-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-muted rounded-lg">
+                  <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Total</p>
-                  <p className="text-2xl font-bold">{rooms?.length || 0}</p>
+                <div className="min-w-0">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Concluídas</p>
+                  <p className="text-lg sm:text-2xl font-bold">{completedRooms.length}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
+            <CardContent className="p-3 sm:pt-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg">
+                  <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Total</p>
+                  <p className="text-lg sm:text-2xl font-bold">{rooms?.length || 0}</p>
                 </div>
               </div>
             </CardContent>
@@ -203,21 +204,21 @@ const Telemedicine = () => {
 
         {/* Rooms List */}
         <Card>
-          <CardHeader>
-            <CardTitle>Salas de Teleconsulta</CardTitle>
-            <CardDescription>Gerencie suas consultas online</CardDescription>
+          <CardHeader className="p-3 sm:p-6">
+            <CardTitle className="text-base sm:text-lg">Salas de Teleconsulta</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">Gerencie suas consultas online</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-6 pt-0">
             {roomsLoading ? (
               <div className="flex justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin" />
               </div>
             ) : rooms?.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                <Video className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Nenhuma teleconsulta criada ainda</p>
-                <Button 
-                  variant="link" 
+                <Video className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-4 opacity-50" />
+                <p className="text-xs sm:text-sm">Nenhuma teleconsulta criada ainda</p>
+                <Button
+                  variant="link"
                   className="mt-2"
                   onClick={() => setIsCreateOpen(true)}
                 >
@@ -225,45 +226,48 @@ const Telemedicine = () => {
                 </Button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-2 sm:space-y-4">
                 {rooms?.map((room) => (
-                  <div 
-                    key={room.id} 
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                  <div
+                    key={room.id}
+                    className="flex items-center justify-between gap-2 p-3 sm:p-4 border rounded-lg hover:bg-accent/50 transition-colors"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                        <Video className="h-5 w-5 text-primary" />
+                    <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
+                        <Video className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                       </div>
-                      <div>
-                        <p className="font-medium">{(room.patients as any)?.name || 'Paciente'}</p>
-                        <p className="text-sm text-muted-foreground">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-xs sm:text-sm truncate">{(room.patients as any)?.name || 'Paciente'}</p>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
                           Código: {room.room_code}
                           {room.created_at && (
-                            <> • {format(new Date(room.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</>
+                            <> • {format(new Date(room.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}</>
                           )}
                         </p>
                       </div>
                     </div>
-                    
-                    <div className="flex items-center gap-3">
+
+                    <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
                       {getStatusBadge(room.status)}
-                      
+
                       <Button
-                        size="sm"
+                        size="icon"
                         variant="outline"
+                        className="h-8 w-8 touch-target"
                         onClick={() => copyRoomLink(room.id)}
                       >
-                        <Copy className="h-4 w-4" />
+                        <Copy className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </Button>
-                      
+
                       {room.status !== 'encerrado' && (
                         <Button
                           size="sm"
                           onClick={() => navigate(`/telemedicine-room/${room.id}`)}
+                          className="text-xs sm:text-sm touch-target"
                         >
-                          <Play className="h-4 w-4 mr-1" />
-                          Entrar
+                          <Play className="h-3 w-3 sm:h-4 sm:w-4 mr-0.5 sm:mr-1" />
+                          <span className="hidden xs:inline">Entrar</span>
+                          <span className="xs:hidden">Entrar</span>
                         </Button>
                       )}
                     </div>

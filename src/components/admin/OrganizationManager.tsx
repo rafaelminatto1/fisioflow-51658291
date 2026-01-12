@@ -7,6 +7,7 @@ import { useOrganizations } from '@/hooks/useOrganizations';
 import { useOrganizationMembers } from '@/hooks/useOrganizationMembers';
 import { Building2, Users, Settings, Plus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { InviteUserModal } from './InviteUserModal';
 
 import { Badge } from '@/components/ui/badge';
 
@@ -14,6 +15,7 @@ export const OrganizationManager = () => {
   const { currentOrganization, isLoading } = useOrganizations();
   const { members, isLoading: membersLoading } = useOrganizationMembers(currentOrganization?.id);
   const [newOrgOpen, setNewOrgOpen] = useState(false);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
 
   if (isLoading) {
     return <div>Carregando organização...</div>;
@@ -86,13 +88,17 @@ export const OrganizationManager = () => {
               <Users className="h-5 w-5" />
               <CardTitle>Membros</CardTitle>
             </div>
-            <Button size="sm">
+            <Button size="sm" onClick={() => setInviteModalOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Adicionar Membro
             </Button>
           </div>
         </CardHeader>
         <CardContent>
+          <InviteUserModal
+            open={inviteModalOpen}
+            onOpenChange={setInviteModalOpen}
+          />
           {membersLoading ? (
             <div>Carregando membros...</div>
           ) : (

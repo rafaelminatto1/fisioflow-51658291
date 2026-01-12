@@ -23,13 +23,6 @@ import { ptBR } from 'date-fns/locale';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { formatDateToLocalISO, formatDateToBrazilian } from '@/utils/dateUtils';
 
-// Type for filters (keeping minimal)
-interface FilterState {
-  therapists: string[];
-  rooms: string[];
-  services: string[];
-}
-
 // Lazy load CalendarView for better initial load performance
 const CalendarView = lazy(() => import('@/components/schedule/CalendarView').then(mod => ({ default: mod.CalendarView })));
 
@@ -40,19 +33,14 @@ const Schedule = () => {
   const [modalDefaultDate, setModalDefaultDate] = useState<Date | undefined>();
   const [modalDefaultTime, setModalDefaultTime] = useState<string | undefined>();
   const [currentDate, setCurrentDate] = useState(new Date());
+
   // Detect mobile and default to day view on mobile
   const [viewType, setViewType] = useState<CalendarViewType | 'list'>(() => {
-    const isMobile = window.innerWidth < 768;
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
     return isMobile ? 'day' : 'week';
   });
 
-  // Consolidated Filter State
-  const [filters, setFilters] = useState<FilterState>({
-    therapists: [],
-    rooms: [],
-    services: []
-  });
-  const [dateRange, setDateRange] = useState({ from: '', to: '' });
+  // Search state
   const [searchTerm, setSearchTerm] = useState('');
 
   // Waitlist state
@@ -70,9 +58,7 @@ const Schedule = () => {
     isOnline,
     isReconnecting,
     isChecking,
-    state: connectionState,
     checkConnection,
-    tryReconnect
   } = useConnectionStatus({
     onReconnect: () => {
       refetch();
@@ -87,9 +73,6 @@ const Schedule = () => {
     },
   });
 
-  // Combinar loading com checking
-  const isLoadingOrChecking = loading || isChecking;
-
   const handleRefresh = async () => {
     await checkConnection();
     await refetch();
@@ -102,91 +85,13 @@ const Schedule = () => {
     }, 'Schedule');
   }, [appointments.length, loading]);
 
-  // Memoized statistics calculation
-  const stats = useMemo(() => {
-    const today = new Date().toISOString().split('T')[0];
-    const todayAppointments = appointments.filter(apt =>
-      apt.date instanceof Date ? apt.date.toISOString().split('T')[0] === today : apt.date === today
-    );
-    const confirmedToday = todayAppointments.filter(apt => apt.status === 'confirmado').length;
-    const totalToday = todayAppointments.length;
-    const completedToday = todayAppointments.filter(apt => apt.status === 'concluido').length;
-
-    return {
-      totalToday,
-      confirmedToday,
-      completedToday,
-      pendingToday: totalToday - completedToday
-    };
-  }, [appointments]);
-
-  // Filter appointments based on current filters
+  // Filter appointments by search term
   const filteredAppointments = useMemo(() => {
-    return appointments.filter(appointment => {
-      // Search
-      if (searchTerm && !appointment.patientName.toLowerCase().includes(searchTerm.toLowerCase())) {
-        return false;
-      }
-
-      // Date Range
-      if (dateRange.from) {
-        const appointmentDate = appointment.date instanceof Date ?
-          appointment.date.toISOString().split('T')[0] :
-          appointment.date;
-        if (appointmentDate < dateRange.from) return false;
-      }
-      if (dateRange.to) {
-        const appointmentDate = appointment.date instanceof Date ?
-          appointment.date.toISOString().split('T')[0] :
-          appointment.date;
-        if (appointmentDate > dateRange.to) return false;
-      }
-
-      // Sidebar Filters
-      if (filters.therapists.length > 0 && appointment.therapistId && !filters.therapists.includes(appointment.therapistId)) {
-        return false;
-      }
-      if (filters.rooms.length > 0 && appointment.room && !filters.rooms.includes(appointment.room)) {
-        return false;
-      }
-      if (filters.services.length > 0 && appointment.type && !filters.services.includes(appointment.type)) {
-        return false;
-      }
-
-      return true;
-    });
-  }, [appointments, searchTerm, dateRange, filters]);
-
-  // Upcoming appointments for sidebar
-  const upcomingAppointments = useMemo(() => {
-    const now = new Date();
-    return appointments
-      .filter(apt => {
-        const aptDate = typeof apt.date === 'string' ? parseISO(apt.date) : apt.date;
-        return isAfter(aptDate, now);
-      })
-      .sort((a, b) => {
-        const dateA = typeof a.date === 'string' ? parseISO(a.date).getTime() : a.date.getTime();
-        const dateB = typeof b.date === 'string' ? parseISO(b.date).getTime() : b.date.getTime();
-        return dateA - dateB;
-      })
-      .slice(0, 5); // Take top 5
-  }, [appointments]);
-
-  // Available options for filters (dynamically derived)
-  const filterOptions = useMemo(() => {
-    const therapists = Array.from(new Set(appointments.map(a => a.therapistId).filter(Boolean))) as string[];
-    const rooms = Array.from(new Set(appointments.map(a => a.room).filter(Boolean))) as string[];
-    const services = Array.from(new Set(appointments.map(a => a.type).filter(Boolean))) as string[];
-
-    // Fallbacks if empty (mock data for better UX if no data yet)
-    return {
-      therapists: therapists.length ? therapists : ['Dr. Ana', 'Dr. Paulo', 'Dra. Carla'],
-      rooms: rooms.length ? rooms : ['Sala 1', 'Sala 2', 'Sala 3'],
-      services: services.length ? services : ['Fisioterapia', 'Osteopatia', 'Pilates']
-    };
-  }, [appointments]);
-
+    if (!searchTerm) return appointments;
+    return appointments.filter(appointment =>
+      appointment.patientName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [appointments, searchTerm]);
 
   // Handlers
   const handleAppointmentClick = useCallback((appointment: Appointment) => {
@@ -196,16 +101,13 @@ const Schedule = () => {
   const handleCreateAppointment = useCallback(() => {
     setSelectedAppointment(null);
 
-    // Set current date
     const now = new Date();
     setModalDefaultDate(now);
 
-    // Calculate next available time slot (rounded up to next 30 min)
     const currentMinutes = now.getMinutes();
     const roundedMinutes = currentMinutes < 30 ? 30 : 0;
     let nextHour = currentMinutes < 30 ? now.getHours() : now.getHours() + 1;
 
-    // If past working hours, default to next morning
     if (nextHour >= 21) {
       nextHour = 8;
     } else if (nextHour < 7) {
@@ -276,68 +178,6 @@ const Schedule = () => {
     }
   }, [refetch]);
 
-  const createTestAppointments = useCallback(async () => {
-    try {
-      const today = new Date();
-      const statuses = ['agendado', 'confirmado', 'aguardando_confirmacao', 'em_andamento', 'em_espera', 'atrasado', 'concluido', 'remarcado', 'cancelado', 'falta'] as const;
-      const types = ['Fisioterapia', 'Consulta Inicial', 'Reavaliação', 'Pilates Clínico', 'RPG', 'Terapia Manual', 'Dry Needling'] as const;
-      const therapists = ['Dr. Ana', 'Dr. Paulo', 'Dra. Carla'];
-      const rooms = ['Sala 1', 'Sala 2', 'Sala 3', 'Sala 4'];
-
-      // Buscar pacientes disponíveis
-      const { data: patients, error: patientsError } = await supabase
-        .from('patients')
-        .select('id, name')
-        .limit(5);
-
-      if (patientsError || !patients || patients.length === 0) {
-        toast({
-          title: '❌ Erro',
-          description: 'Nenhum paciente encontrado. Cadastre pacientes primeiro.',
-          variant: 'destructive'
-        });
-        return;
-      }
-
-      toast({ title: 'Criando agendamentos...', description: 'Por favor, aguarde.' });
-
-      // Criar 10 agendamentos diferentes
-      for (let i = 0; i < 10; i++) {
-        const dayOffset = Math.floor(i / 2);
-        const appointmentDate = new Date(today);
-        appointmentDate.setDate(today.getDate() + dayOffset);
-
-        const hour = 9 + (i % 5);
-        const time = `${hour.toString().padStart(2, '0')}:00`;
-
-        await createAppointmentMutation.mutateAsync({
-          patient_id: patients[i % patients.length].id,
-          appointment_date: appointmentDate.toISOString().split('T')[0],
-          appointment_time: time,
-          duration: 60,
-          type: types[i % types.length] as any,
-          status: statuses[i % statuses.length] as any,
-          notes: `Agendamento de teste - ${statuses[i % statuses.length]}`,
-          therapist_id: therapists[i % therapists.length], // Mocking ID as name for now for UI demo
-          room: rooms[i % rooms.length]
-        } as any); // Casting as any to bypass partial type mismatches if strict types aren't fully aligned yet
-      }
-
-      toast({
-        title: '✅ Sucesso',
-        description: '10 agendamentos de teste criados com diferentes status!'
-      });
-      refetch(); // Refresh appointments after creating test data
-    } catch (error) {
-      logger.error('Erro ao criar agendamentos de teste', error, 'Schedule');
-      toast({
-        title: '❌ Erro',
-        description: 'Não foi possível criar os agendamentos de teste.',
-        variant: 'destructive'
-      });
-    }
-  }, [createAppointmentMutation, refetch]);
-
   if (error) {
     logger.error('Erro na página Schedule', { error }, 'Schedule');
     return (
@@ -366,7 +206,7 @@ const Schedule = () => {
           onRefresh={handleRefresh}
         />
 
-        {/* Header compacto - Otimizado para mobile/tablet */}
+        {/* Header - Mobile Optimized */}
         <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2 xs:gap-3 shrink-0">
           <div className="flex items-center gap-2 xs:gap-3 min-w-0 flex-1">
             <div className="p-1.5 xs:p-2 bg-gradient-primary rounded-lg shadow-sm flex-shrink-0">
@@ -414,7 +254,9 @@ const Schedule = () => {
               />
             ) : (
               <Suspense fallback={
-                <div className="flex items-center justify-center h-full"><div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" /></div>
+                <div className="flex items-center justify-center h-full">
+                  <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
+                </div>
               }>
                 <CalendarView
                   appointments={filteredAppointments}

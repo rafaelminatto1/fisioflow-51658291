@@ -9,11 +9,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
+import {
+  User,
+  Mail,
+  Phone,
+  MapPin,
   Calendar,
   Shield,
   Bell,
@@ -24,30 +24,95 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export const Profile = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [profileData, setProfileData] = useState({
-    name: 'Dr. João Silva',
-    email: 'joao@fisioflow.com.br',
-    phone: '(11) 99999-9999',
-    crefito: '12345/F',
-    specialty: 'Fisioterapia Ortopédica',
-    bio: 'Especialista em reabilitação ortopédica com mais de 10 anos de experiência em fisioterapia.',
-    address: 'São Paulo, SP',
-    birthDate: '1985-03-15',
+    name: '',
+    email: '',
+    phone: '',
+    crefito: '',
+    specialty: '',
+    bio: '',
+    address: '',
+    birthDate: '',
     avatar: ''
   });
 
-  const handleSave = () => {
-    // Implement save logic here
-    toast({
-      title: 'Perfil atualizado!',
-      description: 'Suas informações foram salvas com sucesso.',
-    });
-    setIsEditing(false);
+  // Fetch profile data on load
+  React.useEffect(() => {
+    async function loadProfile() {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          setProfileData({
+            name: data.full_name || '',
+            email: user.email || '',
+            phone: data.phone || '',
+            crefito: data.crefito || '',
+            specialty: data.specialty || '',
+            bio: data.bio || '',
+            address: data.address || '',
+            birthDate: data.birth_date || '',
+            avatar: data.avatar_url || ''
+          });
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      }
+    }
+
+    loadProfile();
+  }, [user]);
+
+  const handleSave = async () => {
+    if (!user) return;
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: profileData.name,
+          phone: profileData.phone,
+          crefito: profileData.crefito,
+          specialty: profileData.specialty,
+          bio: profileData.bio,
+          address: profileData.address,
+          birth_date: profileData.birthDate || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Perfil atualizado!',
+        description: 'Suas informações foram salvas com sucesso.',
+      });
+      setIsEditing(false);
+    } catch (error) {
+      toast({
+        title: 'Erro ao atualizar',
+        description: 'Ocorreu um erro ao salvar suas informações.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -75,7 +140,7 @@ export const Profile = () => {
               Gerencie suas informações pessoais e preferências
             </p>
           </div>
-          <Button 
+          <Button
             onClick={() => setIsEditing(!isEditing)}
             variant={isEditing ? "outline" : "default"}
             className={isEditing ? "" : "bg-gradient-primary hover:bg-gradient-primary/90"}
@@ -119,8 +184,8 @@ export const Profile = () => {
                         </AvatarFallback>
                       </Avatar>
                       {isEditing && (
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           className="absolute bottom-0 right-0 rounded-full w-8 h-8 p-0 bg-primary hover:bg-primary/90"
                         >
                           <Camera className="w-4 h-4" />
@@ -236,9 +301,14 @@ export const Profile = () => {
                       <Button
                         onClick={handleSave}
                         className="bg-primary hover:bg-primary/90"
+                        disabled={isLoading}
                       >
-                        <Save className="w-4 h-4 mr-2" />
-                        Salvar Alterações
+                        {isLoading ? (
+                          <Settings className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Save className="w-4 h-4 mr-2" />
+                        )}
+                        {isLoading ? 'Salvando...' : 'Salvar Alterações'}
                       </Button>
                     </div>
                   )}

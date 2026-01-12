@@ -8,9 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdvancedReportGenerator } from '@/components/reports/AdvancedReportGenerator';
-import { 
-  FileText, 
-  Download, 
+import {
+  FileText,
+  Download,
   Calendar,
   TrendingUp,
   Users,
@@ -20,35 +20,58 @@ import {
   Search,
   Plus,
   BarChart3,
-  PieChart,
-  LineChart
+  PieChart as PieChartIcon,
+  LineChart as LineChartIcon
 } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Cell,
+  PieChart,
+  Pie,
+  Legend,
+  LineChart,
+  Line
+} from 'recharts';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { EmptyState, LoadingSkeleton } from '@/components/ui';
+import { useAppointments } from '@/hooks/useAppointments';
+import { usePatients } from '@/hooks/usePatients';
+import { useFinancial } from '@/hooks/useFinancial';
 
 const Reports = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
 
-  // Mock data para relatórios
+  // Real data hooks
+  const { data = [], isLoading: loadApp } = useAppointments();
+  const { data: patients = [], isLoading: loadPat } = usePatients();
+  const { activeTransactions, stats: finStats, isLoading: loadFin } = useFinancial();
+
+  // Calculate real reports data
   const reportsData = {
     patients: {
-      total: 156,
-      newThisMonth: 23,
-      active: 142,
-      completed: 14
+      total: patients.length,
+      newThisMonth: patients.filter(p => new Date(p.created_at).getMonth() === new Date().getMonth()).length,
+      active: patients.filter(p => p.status === 'Em Tratamento').length,
+      completed: patients.filter(p => p.status === 'Alta').length
     },
     appointments: {
-      total: 342,
-      completed: 318,
-      cancelled: 24,
-      noShow: 12
+      total: data.length,
+      completed: data.filter(a => a.status === 'concluido').length,
+      cancelled: data.filter(a => a.status === 'cancelado').length,
+      noShow: data.filter(a => a.status === 'falta').length
     },
     financial: {
-      revenue: 18750.00,
-      pending: 2340.00,
-      growth: 15.3
+      revenue: finStats.totalRevenue,
+      pending: finStats.pendingPayments,
+      growth: finStats.monthlyGrowth
     }
   };
 
@@ -276,10 +299,10 @@ const Reports = () => {
               {reportTemplates.map((template) => {
                 const IconComponent = template.icon;
                 const isGenerating = selectedReport === template.id;
-                
+
                 return (
-                  <Card 
-                    key={template.id} 
+                  <Card
+                    key={template.id}
                     className="bg-gradient-card border-border/50 hover:shadow-medical transition-all duration-300 group cursor-pointer"
                   >
                     <CardHeader>
@@ -301,8 +324,8 @@ const Reports = () => {
                       <p className="text-sm text-muted-foreground">
                         {template.description}
                       </p>
-                      
-                      <Button 
+
+                      <Button
                         className="w-full bg-gradient-primary hover:bg-gradient-primary/90"
                         onClick={() => generateReport(template.id)}
                         disabled={isGenerating}
@@ -362,8 +385,8 @@ const Reports = () => {
                         <Badge className={getStatusColor(report.status)}>
                           {report.status}
                         </Badge>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
                           onClick={() => {
                             console.log('Downloading report:', report.name);
@@ -387,15 +410,38 @@ const Reports = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="w-5 h-5" />
-                    Agendamentos por Mês
+                    Agendamentos por Status
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <EmptyState
-                    icon={BarChart3}
-                    title="Gráfico em desenvolvimento"
-                    description="Visualização de dados será implementada em breve"
-                  />
+                <CardContent className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={[
+                      { name: 'Concluídos', value: reportsData.appointments.completed },
+                      { name: 'Cancelados', value: reportsData.appointments.cancelled },
+                      { name: 'Faltas', value: reportsData.appointments.noShow },
+                      { name: 'Agendados', value: reportsData.appointments.total - (reportsData.appointments.completed + reportsData.appointments.cancelled + reportsData.appointments.noShow) }
+                    ]}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" fontSize={12} />
+                      <YAxis allowDecimals={false} fontSize={12} />
+                      <Tooltip
+                        contentStyle={{ backgroundColor: 'white', borderRadius: '8px' }}
+                        cursor={{ fill: 'transparent' }}
+                      />
+                      <Bar dataKey="value" fill="#8884d8" radius={[4, 4, 0, 0]}>
+                        {
+                          [
+                            { name: 'Concluídos', color: '#10B981' },
+                            { name: 'Cancelados', color: '#F59E0B' },
+                            { name: 'Faltas', color: '#EF4444' },
+                            { name: 'Agendados', color: '#3B82F6' }
+                          ].map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))
+                        }
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
                 </CardContent>
               </Card>
 
@@ -403,15 +449,37 @@ const Reports = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <PieChart className="w-5 h-5" />
-                    Distribuição por Tipo
+                    Status dos Pacientes
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <EmptyState
-                    icon={PieChart}
-                    title="Gráfico em desenvolvimento"
-                    description="Visualização de dados será implementada em breve"
-                  />
+                <CardContent className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'Em Tratamento', value: reportsData.patients.active },
+                          { name: 'Alta', value: reportsData.patients.completed },
+                          { name: 'Inativos', value: reportsData.patients.total - (reportsData.patients.active + reportsData.patients.completed) }
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {[
+                          { color: '#3B82F6' },
+                          { color: '#10B981' },
+                          { color: '#94A3B8' }
+                        ].map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </CardContent>
               </Card>
 
@@ -419,15 +487,27 @@ const Reports = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <LineChart className="w-5 h-5" />
-                    Evolução da Receita
+                    Receita Recente (Últimas Transações)
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <EmptyState
-                    icon={LineChart}
-                    title="Gráfico em desenvolvimento"
-                    description="Visualização de dados será implementada em breve"
-                  />
+                <CardContent className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={activeTransactions
+                      .filter(t => t.tipo === 'receita')
+                      .slice(0, 10)
+                      .map(t => ({
+                        date: format(new Date(t.data_create), 'dd/MM'),
+                        amount: Number(t.valor)
+                      }))
+                      .reverse()
+                    }>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" fontSize={12} />
+                      <YAxis fontSize={12} />
+                      <Tooltip formatter={(value) => `R$ ${Number(value).toFixed(2)}`} />
+                      <Line type="monotone" dataKey="amount" stroke="#10B981" strokeWidth={2} />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </CardContent>
               </Card>
             </div>
