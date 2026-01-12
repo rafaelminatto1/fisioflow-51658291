@@ -6,7 +6,7 @@ export interface ExerciseTemplate {
   id: string;
   name: string;
   description?: string;
-  category: 'patologia' | 'pos_operatorio';
+  category: string;
   condition_name: string;
   template_variant?: string;
   organization_id?: string;
