@@ -154,19 +154,19 @@ export function Sidebar() {
 
   return (
     <div className={cn(
-      "hidden md:flex bg-card border-r border-border/50 transition-all duration-300 flex-col h-screen sticky top-0 shadow-sm",
+      "hidden md:flex bg-card border-r border-border/50 transition-all duration-300 ease-in-out flex-col h-screen sticky top-0 shadow-sm",
       collapsed ? "w-16" : "w-64"
     )}>
       {/* Header */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between">
           {!collapsed && (
-            <div className="flex items-center gap-3 group">
-              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-sm transition-all group-hover:shadow-md group-hover:scale-105">
+            <div className="flex items-center gap-3 group overflow-hidden">
+              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-sm transition-all duration-200 group-hover:shadow-md group-hover:scale-105 flex-shrink-0">
                 <Stethoscope className="w-6 h-6 text-primary-foreground" />
               </div>
-              <div>
-                <h1 className="font-bold text-xl text-foreground group-hover:text-primary transition-colors">FisioFlow</h1>
+              <div className="transition-opacity duration-200">
+                <h1 className="font-bold text-xl text-foreground group-hover:text-primary transition-colors duration-200">FisioFlow</h1>
                 <p className="text-xs text-muted-foreground font-medium">Gestão Inteligente</p>
               </div>
             </div>
@@ -180,9 +180,9 @@ export function Sidebar() {
             variant="ghost"
             size="icon"
             onClick={() => setCollapsed(!collapsed)}
-            className={cn("hover:bg-secondary transition-colors", !collapsed && "ml-auto")}
+            className={cn("hover:bg-secondary transition-all duration-200 hover:scale-105 active:scale-95", !collapsed && "ml-auto")}
           >
-            {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            {collapsed ? <ChevronRight className="w-4 h-4 transition-transform duration-200" /> : <ChevronLeft className="w-4 h-4 transition-transform duration-200" />}
           </Button>
         </div>
       </div>

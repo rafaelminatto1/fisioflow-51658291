@@ -45,6 +45,7 @@ import {
   useRequiredMeasurements,
   useEvolutionMeasurements
 } from '@/hooks/usePatientEvolution';
+import { useAppointmentData } from '@/hooks/useAppointmentData';
 import { useCreateSoapRecord, useSoapRecords } from '@/hooks/useSoapRecords';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -116,66 +117,18 @@ const PatientEvolution = () => {
   const [sessionExercises, setSessionExercises] = useState<SessionExercise[]>([]);
 
   const { completeAppointment, isCompleting } = useAppointmentActions();
-  const { awardXp } = useGamification(appointment?.patient_id || '');
 
-  // Buscar dados do agendamento do Supabase com retry e timeout
-  const { data: appointment, isLoading: appointmentLoading, error: appointmentError } = useQuery({
-    queryKey: ['appointment', appointmentId],
-    queryFn: async () => {
-      if (!appointmentId) throw new Error('ID do agendamento não fornecido');
+  // Use custom hook for data fetching
+  const {
+    appointment,
+    patient,
+    patientId,
+    isLoading: dataLoading,
+    appointmentError,
+    patientError
+  } = useAppointmentData(appointmentId);
 
-      const result = await executeWithRetry(
-        () =>
-          supabase
-            .from('appointments')
-            .select(`
-              *,
-              patients!inner(
-                id,
-                full_name,
-                phone,
-                email,
-                birth_date,
-                status,
-                created_at
-              )
-            `)
-            .eq('id', appointmentId)
-            .maybeSingle(),
-        { timeoutMs: 8000, maxRetries: 3 }
-      );
-      return result.data;
-    },
-    enabled: !!appointmentId,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    staleTime: 1000 * 60 * 2, // 2 minutos
-  });
-
-  const patientId = appointment?.patient_id;
-
-  // Buscar informações do paciente do Supabase com retry e timeout
-  const { data: patient, isLoading: patientLoading, error: patientError } = useQuery({
-    queryKey: ['patient', patientId],
-    queryFn: async () => {
-      if (!patientId) throw new Error('ID do paciente não fornecido');
-
-      const result = await executeWithRetry(
-        () =>
-          supabase
-            .from('patients')
-            .select('*')
-            .eq('id', patientId)
-            .maybeSingle(),
-        { timeoutMs: 8000, maxRetries: 3 }
-      );
-      return result.data;
-    },
-    enabled: !!patientId,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    staleTime: 1000 * 60 * 5, // 5 minutos
-  });
+  const { awardXp } = useGamification(patientId || '');
 
   // Hooks de dados de evolução
   const { data: surgeries = [] } = usePatientSurgeries(patientId || '');
@@ -468,7 +421,7 @@ const PatientEvolution = () => {
     }
   };
 
-  if (appointmentLoading || patientLoading) {
+  if (dataLoading) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center h-[50vh]">
@@ -500,14 +453,14 @@ const PatientEvolution = () => {
   }
 
   return (
-    <MainLayout>
-      <div className="space-y-3 sm:space-y-4 animate-fade-in pb-8">
+    <MainLayout maxWidth="2xl">
+      <div className="space-y-4 animate-fade-in pb-8">
         {/* Compact Modern Header - Otimizado para mobile/tablet */}
         <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-border/50 backdrop-blur-sm">
-          <div className="relative z-10 p-3 sm:p-4 lg:p-5">
-            <div className="flex flex-col gap-3">
+          <div className="relative z-10 p-3 sm:p-4 lg:p-6">
+            <div className="flex flex-col gap-4">
               {/* Patient Info Section - Top row on mobile */}
-              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <div className="flex items-center gap-2 sm:gap-4 min-w-0">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -517,7 +470,7 @@ const PatientEvolution = () => {
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
 
-                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
                   <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center shadow-sm flex-shrink-0">
                     <Stethoscope className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   </div>
@@ -528,7 +481,7 @@ const PatientEvolution = () => {
                         {treatmentDuration}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-muted-foreground mt-0.5 flex-wrap">
+                    <div className="flex items-center gap-2 text-[10px] sm:text-xs text-muted-foreground mt-1 flex-wrap">
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
                         {format(new Date(appointment.appointment_date), "dd/MM 'às' HH:mm", { locale: ptBR })}
@@ -552,7 +505,7 @@ const PatientEvolution = () => {
               </div>
 
               {/* Actions Section - Bottom row with better mobile layout */}
-              <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1">
+              <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1">
                 <SessionTimer startTime={sessionStartTime} />
                 <div className="h-6 w-px bg-border hidden sm:block" />
                 <Button
@@ -609,7 +562,7 @@ const PatientEvolution = () => {
 
         {/* Quick Stats Row - Glassmorphism Style - Responsive grid */}
         {showInsights && (
-          <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-2">
+          <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-2 sm:gap-4">
             {[
               { label: 'Evoluções', value: evolutionStats.totalEvolutions, icon: FileText, color: 'blue' },
               { label: 'Metas', value: `${evolutionStats.completedGoals}/${evolutionStats.totalGoals}`, icon: Target, color: 'green' },
@@ -620,7 +573,7 @@ const PatientEvolution = () => {
             ].map((stat, idx) => (
               <div
                 key={idx}
-                className="group relative overflow-hidden rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm p-2.5 sm:p-3 hover:bg-card/80 hover:shadow-md transition-all cursor-default"
+                className="group relative overflow-hidden rounded-lg border border-border/50 bg-card/50 backdrop-blur-sm p-2 sm:p-3 hover:bg-card/80 hover:shadow-md transition-all cursor-default"
               >
                 <div className={`absolute inset-0 bg-gradient-to-br from-${stat.color}-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity`} />
                 <div className="relative flex items-center justify-between gap-1">
@@ -652,7 +605,7 @@ const PatientEvolution = () => {
 
         {/* Modern Tab Navigation */}
         <Tabs defaultValue="soap" className="w-full">
-          <TabsList className="inline-flex h-8 sm:h-9 items-center justify-start rounded-lg bg-muted/40 p-0.5 sm:p-1 text-muted-foreground w-full lg:w-auto overflow-x-auto scrollbar-hide gap-0.5">
+          <TabsList className="inline-flex h-9 sm:h-10 items-center justify-start rounded-lg bg-muted/40 p-1 text-muted-foreground w-full lg:w-auto overflow-x-auto scrollbar-hide">
             {[
               { value: 'soap', label: 'SOAP', shortLabel: 'S', icon: FileText },
               { value: 'exercises', label: 'Exercícios', shortLabel: 'Exer', icon: Activity },
@@ -665,7 +618,7 @@ const PatientEvolution = () => {
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
-                className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-1.5 sm:px-2.5 xs:px-3 py-1 text-[10px] sm:text-xs font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-0.5 sm:gap-1.5 min-w-fit touch-target"
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 xs:px-4 py-1.5 text-[10px] sm:text-xs font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-1 sm:gap-2 min-w-fit touch-target"
               >
                 <tab.icon className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
                 <span className="hidden xs:inline">{tab.label}</span>
@@ -684,10 +637,10 @@ const PatientEvolution = () => {
             />
           </TabsContent>
 
-          <TabsContent value="soap" className="mt-3 sm:mt-4">
-            <div className="grid grid-cols-1 gap-3 sm:gap-4">
+          <TabsContent value="soap" className="mt-4">
+            <div className="grid grid-cols-1 gap-4">
               {/* Main Column - SOAP Form */}
-              <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-4">
                 <Card className="border-border/50 shadow-sm overflow-visible bg-card/60 backdrop-blur-sm">
                   <CardContent className="p-0">
                     {/* SOAP Form with compact sections */}
@@ -695,7 +648,7 @@ const PatientEvolution = () => {
                       {/* Subjective Section */}
                       <div className="p-3 sm:p-4 hover:bg-muted/10 transition-colors group">
                         <div className="flex items-center justify-between mb-2">
-                          <Label htmlFor="subjective" className="text-xs sm:text-sm font-medium flex items-center gap-1.5 sm:gap-2 text-primary">
+                          <Label htmlFor="subjective" className="text-xs sm:text-sm font-medium flex items-center gap-2 text-primary">
                             <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] sm:text-xs font-bold shadow-sm">S</span>
                             <span className="hidden xs:inline">Subjetivo</span>
                             <span className="xs:hidden">Subj</span>
@@ -716,7 +669,7 @@ const PatientEvolution = () => {
                       {/* Objective Section */}
                       <div className="p-3 sm:p-4 hover:bg-muted/10 transition-colors group">
                         <div className="flex items-center justify-between mb-2">
-                          <Label htmlFor="objective" className="text-xs sm:text-sm font-medium flex items-center gap-1.5 sm:gap-2 text-primary">
+                          <Label htmlFor="objective" className="text-xs sm:text-sm font-medium flex items-center gap-2 text-primary">
                             <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-green-500/15 text-green-600 dark:text-green-400 flex items-center justify-center text-[10px] sm:text-xs font-bold shadow-sm">O</span>
                             Objetivo
                           </Label>
@@ -736,7 +689,7 @@ const PatientEvolution = () => {
                       {/* Assessment Section */}
                       <div className="p-3 sm:p-4 hover:bg-muted/10 transition-colors group">
                         <div className="flex items-center justify-between mb-2">
-                          <Label htmlFor="assessment" className="text-xs sm:text-sm font-medium flex items-center gap-1.5 sm:gap-2 text-primary">
+                          <Label htmlFor="assessment" className="text-xs sm:text-sm font-medium flex items-center gap-2 text-primary">
                             <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center text-[10px] sm:text-xs font-bold shadow-sm">A</span>
                             Avaliação
                           </Label>
@@ -756,7 +709,7 @@ const PatientEvolution = () => {
                       {/* Plan Section */}
                       <div className="p-3 sm:p-4 hover:bg-muted/10 transition-colors group">
                         <div className="flex items-center justify-between mb-2">
-                          <Label htmlFor="plan" className="text-xs sm:text-sm font-medium flex items-center gap-1.5 sm:gap-2 text-primary">
+                          <Label htmlFor="plan" className="text-xs sm:text-sm font-medium flex items-center gap-2 text-primary">
                             <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-orange-500/15 text-orange-600 dark:text-orange-400 flex items-center justify-center text-[10px] sm:text-xs font-bold shadow-sm">P</span>
                             Plano
                           </Label>
@@ -777,7 +730,7 @@ const PatientEvolution = () => {
                     {/* Progress Footer */}
                     <div className="px-3 sm:px-4 py-2 sm:py-3 bg-muted/30 border-t border-border/50 flex items-center justify-between gap-2">
                       <span className="text-[10px] sm:text-xs text-muted-foreground"><span className="hidden xs:inline">Preenchimento da Evolução</span><span className="xs:hidden">Progresso</span></span>
-                      <div className="flex items-center gap-1.5 sm:gap-2">
+                      <div className="flex items-center gap-2">
                         <Progress
                           value={
                             ((wordCount.subjective >= 10 ? 1 : 0) +

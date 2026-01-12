@@ -10,11 +10,12 @@ import { WaitlistQuickViewModal } from '@/components/schedule/WaitlistQuickViewM
 import { useAppointments, useCreateAppointment, useRescheduleAppointment } from '@/hooks/useAppointments';
 import { useWaitlistMatch } from '@/hooks/useWaitlistMatch';
 import { logger } from '@/lib/errors/logger';
-import { AlertTriangle, Calendar, Users, Plus, Settings as SettingsIcon } from 'lucide-react';
+import { AlertTriangle, Calendar, Users, Plus, Settings as SettingsIcon, RefreshCw } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { EmptyState } from '@/components/ui';
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
+import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -51,7 +52,7 @@ const Schedule = () => {
   const { data: appointments = [], isLoading: loading, error, refetch, isFromCache, cacheTimestamp } = useAppointments();
   const createAppointmentMutation = useCreateAppointment();
   const { mutateAsync: rescheduleAppointment, isPending: isRescheduling } = useRescheduleAppointment();
-  const { totalInWaitlist } = useWaitlistMatch();
+  const { totalInWaitlist, isWaitlistFromCache, waitlistCacheTimestamp } = useWaitlistMatch();
 
   // Connection status for offline handling
   const {
@@ -75,7 +76,8 @@ const Schedule = () => {
 
   const handleRefresh = async () => {
     await checkConnection();
-    await refetch();
+    // Force a complete refetch ignoring cache
+    await refetch({ cancelRefetch: false });
   };
 
   useEffect(() => {
@@ -192,9 +194,10 @@ const Schedule = () => {
   }
 
   return (
-    <MainLayout>
+    <MainLayout fullWidth showBreadcrumbs={false}>
       <div className="flex flex-col gap-4 animate-fade-in relative min-h-[calc(100vh-80px)]">
-        {/* Offline/Cache Warning Banner */}
+
+        {/* Offline/Cache Warning Banner for Appointments */}
         <OfflineIndicator
           isFromCache={isFromCache}
           isOnline={isOnline}
@@ -205,6 +208,21 @@ const Schedule = () => {
           itemLabel="agendamentos"
           onRefresh={handleRefresh}
         />
+
+        {/* Offline Warning for Waitlist (only if different from main) */}
+        <div className={cn("transition-all duration-300 overflow-hidden",
+          isWaitlistFromCache && !isFromCache ? "max-h-20 opacity-100 mb-4" : "max-h-0 opacity-0"
+        )}>
+          <OfflineIndicator
+            isFromCache={true}
+            isOnline={isOnline}
+            cacheTimestamp={waitlistCacheTimestamp}
+            itemCount={totalInWaitlist}
+            itemLabel="na lista de espera"
+            minimal={true}
+            className="w-full justify-center bg-amber-50/50 border-amber-200/50 text-amber-600"
+          />
+        </div>
 
         {/* Header - Mobile Optimized */}
         <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2 xs:gap-3 shrink-0">
@@ -233,6 +251,16 @@ const Schedule = () => {
               {totalInWaitlist > 0 && <span className="bg-primary text-primary-foreground text-[10px] px-1.5 rounded-full">{totalInWaitlist}</span>}
               <Users className="h-4 w-4" />
               <span className="hidden xs:inline text-xs">Lista</span>
+            </Button>
+
+            <Button
+              onClick={handleRefresh}
+              variant="outline"
+              size="sm"
+              className="h-11 xs:h-11 w-11 xs:w-auto gap-2 touch-target flex-shrink-0 min-w-[44px] text-muted-foreground hover:text-foreground"
+              title="Forçar atualização"
+            >
+              <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
             </Button>
 
             <Button onClick={handleCreateAppointment} size="sm" className="h-11 xs:h-11 shadow-sm bg-primary hover:bg-primary/90 text-white touch-target flex-shrink-0 min-w-[44px]">

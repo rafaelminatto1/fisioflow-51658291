@@ -245,9 +245,9 @@ export const CalendarView = memo(({
   return (
     <>
       <Card className="flex flex-col border-0 shadow-xl min-h-[500px] sm:min-h-[600px]">
-        <CardContent className="p-0 flex flex-col h-full">
-          {/* Header - Mobile Optimizado */}
-          <div className="p-2 sm:p-4 border-b bg-gradient-to-r from-muted/30 to-muted/10">
+        <CardContent className="p-2 md:p-3 lg:p-4 flex flex-col h-full">
+          {/* Header - Mobile Optimized */}
+          <div className="p-2 sm:p-3 border-b bg-gradient-to-r from-muted/30 to-muted/10">
             {/* Mobile Header Layout */}
             <div className="flex items-center justify-between sm:hidden gap-2">
               <div className="flex items-center gap-1 bg-background rounded-lg p-1 shadow-sm">

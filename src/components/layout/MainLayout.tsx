@@ -30,17 +30,24 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 interface MainLayoutProps {
   children: React.ReactNode;
   showBreadcrumbs?: boolean;
   customBreadcrumbLabels?: Record<string, string>;
+  /** Remove max-width constraint for full-width layouts like Agenda */
+  fullWidth?: boolean;
+  /** Control max-width granularity: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '7xl' | 'full' */
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '7xl' | 'full';
 }
 
 export const MainLayout: React.FC<MainLayoutProps> = ({
   children,
   showBreadcrumbs = true,
   customBreadcrumbLabels,
+  fullWidth = false,
+  maxWidth,
 }) => {
   const { profile, loading, getDisplayName, getInitials } = useUserProfile();
   const navigate = useNavigate();
@@ -151,8 +158,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         </header>
 
         {/* Main Content - Com padding para mobile header e bottom navigation - Otimizado para iPhone/iPad */}
-        <main className="flex-1 p-3 xs:p-4 sm:p-5 md:p-6 pt-[60px] md:pt-6 pb-20 md:pb-6 overflow-visible bg-gradient-to-b from-transparent to-accent/5">
-          <div className="max-w-7xl mx-auto px-1 xs:px-0">
+        <main className="flex-1 p-2 xs:p-3 sm:p-4 md:p-6 pt-[60px] md:pt-6 pb-20 md:pb-6 overflow-visible bg-gradient-to-b from-transparent to-accent/5">
+          <div className={cn(
+            "mx-auto",
+            fullWidth ? "w-full px-1 xs:px-0" : maxWidth ? `max-w-${maxWidth} mx-auto px-1 xs:px-0` : "max-w-7xl mx-auto px-1 xs:px-0"
+          )}>
             {showBreadcrumbs && <PageBreadcrumbs customLabels={customBreadcrumbLabels} />}
             {children}
           </div>

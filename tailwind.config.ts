@@ -30,6 +30,20 @@ export default {
 				'iphone-max': '430px'
 			}
 		},
+		screens: {
+			'xs': '480px',    // Large phones
+			'sm': '640px',    // Tablets landscape
+			'md': '768px',    // Tablets portrait
+			'lg': '1024px',   // Small desktops
+			'xl': '1280px',   // Desktops
+			'2xl': '1536px',  // Large desktops
+			// iPad specific breakpoints
+			'ipad': '834px',
+			'ipad-pro': '1024px',
+			// iPhone specific breakpoints
+			'iphone': '390px',
+			'iphone-max': '430px'
+		},
 		extend: {
 			colors: {
 				border: 'hsl(var(--border))',
@@ -207,6 +221,42 @@ export default {
 					'100%': {
 						transform: 'rotate(90deg)'
 					}
+				},
+				'stagger-in': {
+					'0%': {
+						opacity: '0',
+						transform: 'translateY(20px)'
+					},
+					'100%': {
+						opacity: '1',
+						transform: 'translateY(0)'
+					}
+				},
+				'shimmer': {
+					'0%': {
+						backgroundPosition: '-1000px 0'
+					},
+					'100%': {
+						backgroundPosition: '1000px 0'
+					}
+				},
+				'bounce-subtle': {
+					'0%, 100%': {
+						transform: 'translateY(0)'
+					},
+					'50%': {
+						transform: 'translateY(-4px)'
+					}
+				},
+				'rotate-in': {
+					'0%': {
+						opacity: '0',
+						transform: 'rotate(-8deg) scale(0.95)'
+					},
+					'100%': {
+						opacity: '1',
+						transform: 'rotate(0) scale(1)'
+					}
 				}
 			},
 			animation: {
@@ -219,7 +269,11 @@ export default {
 				'slide-up': 'slide-up 0.4s ease-out',
 				'wiggle': 'wiggle 0.5s ease-in-out',
 				'pulse-ring': 'pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite',
-				'gauge-rotate': 'gauge-rotate 0.5s ease-out'
+				'gauge-rotate': 'gauge-rotate 0.5s ease-out',
+				'stagger-in': 'stagger-in 0.4s ease-out',
+				'shimmer': 'shimmer 2s linear infinite',
+				'bounce-subtle': 'bounce-subtle 2s ease-in-out infinite',
+				'rotate-in': 'rotate-in 0.3s ease-out'
 			},
 			backgroundImage: {
 				'gradient-primary': 'var(--gradient-primary)',
@@ -262,6 +316,26 @@ export default {
 				'.touch-target': {
 					'min-height': '44px',
 					'min-width': '44px'
+				},
+				// Staggered animation delays for lists
+				'.animate-delay-0': { 'animation-delay': '0ms' },
+				'.animate-delay-1': { 'animation-delay': '50ms' },
+				'.animate-delay-2': { 'animation-delay': '100ms' },
+				'.animate-delay-3': { 'animation-delay': '150ms' },
+				'.animate-delay-4': { 'animation-delay': '200ms' },
+				'.animate-delay-5': { 'animation-delay': '250ms' },
+				'.animate-delay-6': { 'animation-delay': '300ms' },
+				'.animate-delay-7': { 'animation-delay': '350ms' },
+				'.animate-delay-8': { 'animation-delay': '400ms' },
+				'.animate-delay-9': { 'animation-delay': '450ms' },
+				'.animate-delay-10': { 'animation-delay': '500ms' },
+				// Card hover effect with shadow
+				'.card-hover': {
+					'transition': 'all 0.2s ease-out',
+					'&:hover': {
+						'transform': 'translateY(-2px)',
+						'box-shadow': '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'
+					}
 				}
 			})
 		})

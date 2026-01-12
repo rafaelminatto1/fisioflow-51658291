@@ -71,7 +71,7 @@ export function useWaitlist(filters?: {
   status?: string;
   priority?: string;
 }) {
-  return useQuery({
+  const query = useQuery({
     queryKey: ['waitlist', filters],
     queryFn: async () => {
       let query = supabase
@@ -94,7 +94,10 @@ export function useWaitlist(filters?: {
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        logger.error('Error fetching waitlist', error, 'useWaitlist');
+        throw error;
+      }
 
       // Ordenar por prioridade (urgent > high > normal) e depois por data
       const sorted = (data || []).sort((a: any, b: any) => {
@@ -114,7 +117,15 @@ export function useWaitlist(filters?: {
         preferred_therapist_id: item.preferred_therapist_ids?.[0],
       })) as WaitlistEntry[];
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 24 * 60 * 60 * 1000, // 24 hours
   });
+
+  return {
+    ...query,
+    isFromCache: query.isStale && !query.isLoading && !!query.data,
+    cacheTimestamp: query.dataUpdatedAt
+  };
 }
 
 // Hook para obter contagem por status
