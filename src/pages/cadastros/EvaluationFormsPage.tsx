@@ -8,17 +8,19 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClipboardList, Plus, Pencil, Trash2, Search, Eye, Settings } from 'lucide-react';
-import { 
-  useEvaluationForms, 
-  useCreateEvaluationForm, 
-  useUpdateEvaluationForm, 
+import {
+  useEvaluationForms,
+  useCreateEvaluationForm,
+  useUpdateEvaluationForm,
   useDeleteEvaluationForm,
   EvaluationFormFormData
 } from '@/hooks/useEvaluationForms';
 import { EvaluationForm } from '@/types/clinical-forms';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useNavigate } from 'react-router-dom';
+import { StandardFormsManager } from '@/components/clinical/StandardFormsManager';
 
 const TIPOS_FICHA = [
   { value: 'anamnese', label: 'Anamnese' },
@@ -29,6 +31,7 @@ const TIPOS_FICHA = [
 
 export default function EvaluationFormsPage() {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<'minhas' | 'padrao'>('minhas');
   const [search, setSearch] = useState('');
   const [selectedTipo, setSelectedTipo] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -106,16 +109,29 @@ export default function EvaluationFormsPage() {
               Fichas de Avaliação
             </h1>
             <p className="text-muted-foreground mt-1">
-              Crie fichas personalizáveis para avaliação de pacientes
+              Crie fichas personalizáveis ou use modelos prontos para avaliação de pacientes
             </p>
           </div>
-          <Button onClick={() => handleOpenDialog()}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Ficha
-          </Button>
         </div>
 
-        <Card>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'minhas' | 'padrao')}>
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="minhas">Minhas Fichas</TabsTrigger>
+            <TabsTrigger value="padrao">Fichas Padrão</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="minhas" className="space-y-4 mt-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Gerencie suas fichas de avaliação personalizadas
+              </p>
+              <Button onClick={() => handleOpenDialog()}>
+                <Plus className="h-4 w-4 mr-2" />
+                Nova Ficha
+              </Button>
+            </div>
+
+            <Card>
           <CardHeader>
             <div className="flex items-center gap-4">
               <div className="relative flex-1">
@@ -210,6 +226,12 @@ export default function EvaluationFormsPage() {
             )}
           </CardContent>
         </Card>
+          </TabsContent>
+
+          <TabsContent value="padrao" className="mt-4">
+            <StandardFormsManager />
+          </TabsContent>
+        </Tabs>
 
         {/* Create/Edit Dialog */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
