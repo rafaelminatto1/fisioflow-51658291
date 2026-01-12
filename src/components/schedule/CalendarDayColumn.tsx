@@ -58,7 +58,7 @@ export const DayColumn = memo(({
 
     return (
         <div
-            className="w-[140px] sm:w-auto border-r border-border/50 last:border-r-0 relative group flex-shrink-0"
+            className="w-full sm:w-auto border-r border-border/50 last:border-r-0 relative group flex-shrink-0"
         >
             <div className={cn(
                 "h-14 sm:h-16 border-b border-border/50 sticky top-0 z-10 p-2 sm:p-3 text-center text-xs sm:text-sm backdrop-blur-md transition-all duration-300 shadow-sm",

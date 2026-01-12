@@ -39,7 +39,11 @@ export const useExerciseProtocols = () => {
         .select('*')
         .order('condition_name');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching protocols:', error);
+        throw error;
+      }
+      console.log('Fetched protocols:', data?.length);
       return (data || []) as any as ExerciseProtocol[];
     },
   });

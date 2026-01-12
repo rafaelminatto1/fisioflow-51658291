@@ -236,11 +236,60 @@ export const CalendarView = memo(({
 
   return (
     <>
-      <Card className="flex flex-col border-0 shadow-xl min-h-[600px]">
+      <Card className="flex flex-col border-0 shadow-xl min-h-[500px] sm:min-h-[600px]">
         <CardContent className="p-0 flex flex-col h-full">
-          {/* Header - Melhorado */}
-          <div className="p-4 border-b bg-gradient-to-r from-muted/30 to-muted/10">
-            <div className="flex items-center justify-between">
+          {/* Header - Mobile Optimizado */}
+          <div className="p-2 sm:p-4 border-b bg-gradient-to-r from-muted/30 to-muted/10">
+            {/* Mobile Header Layout */}
+            <div className="flex items-center justify-between sm:hidden gap-2">
+              <div className="flex items-center gap-1 bg-background rounded-lg p-1 shadow-sm">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigateCalendar('prev')}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={goToToday}
+                  className="h-8 px-2 text-xs font-medium"
+                >
+                  Hoje
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigateCalendar('next')}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="text-xs font-semibold text-foreground/70 truncate max-w-[120px]">
+                {getHeaderTitle()}
+              </div>
+
+              <div className="flex items-center gap-1 bg-background rounded-lg p-1 shadow-sm">
+                {(['day', 'week'] as CalendarViewType[]).map(type => (
+                  <Button
+                    key={type}
+                    variant={viewType === type ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => onViewTypeChange(type)}
+                    className="capitalize text-[10px] px-1.5 py-1 h-7 min-w-[28px]"
+                  >
+                    {type === 'day' ? 'Dia' : 'Sem'}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Desktop Header Layout */}
+            <div className="hidden sm:flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 bg-background rounded-lg p-1 shadow-sm">
                   <Button
@@ -270,7 +319,7 @@ export const CalendarView = memo(({
                   Hoje
                 </Button>
 
-                <h2 className="text-lg font-semibold hidden sm:block">
+                <h2 className="text-lg font-semibold">
                   {getHeaderTitle()}
                 </h2>
               </div>

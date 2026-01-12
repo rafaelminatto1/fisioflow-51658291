@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Search, Calendar, SortAsc, Grid3X3, List, Filter,
-  Target, PlusCircle, Bookmark, Download, Printer, Plus
+  Target, PlusCircle, Bookmark, Download, Printer, Plus, Shield
 } from 'lucide-react';
 import { useExerciseProtocols, type ExerciseProtocol } from '@/hooks/useExerciseProtocols';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -322,13 +322,14 @@ export default function Protocols() {
                   ))}
                 </div>
               ) : filteredProtocols.length === 0 ? (
-                <div className="text-center py-16 bg-muted/20 rounded-xl border border-dashed">
+                <div className="text-center py-16 bg-muted/20 rounded-xl border border-dashed animate-fade-in">
                   <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                     <Target className="h-8 w-8 text-muted-foreground" />
                   </div>
                   <h3 className="text-xl font-semibold mb-2">Nenhum protocolo encontrado</h3>
                   <p className="text-muted-foreground max-w-sm mx-auto mb-6">
-                    Não encontramos protocolos com os filtros atuais. Tente buscar por outro termo ou limpe os filtros.
+                    Não encontramos protocolos com os filtros atuais.
+                    <br />Tente buscar por outro termo ou limpe os filtros.
                   </p>
                   <Button onClick={() => { setSearch(''); setCategoryFilter('all'); }}>
                     Limpar Filtros
