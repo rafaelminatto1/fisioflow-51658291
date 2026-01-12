@@ -34,12 +34,11 @@ export const useAppointments = () => {
 
                     // Fallback if date is invalid
                     if (isNaN(dateObj.getTime())) {
-                        console.warn('Invalid date for appointment:', item);
                         return {
                             ...item,
                             patientName: item.patient?.name || 'Paciente sem nome',
                             therapistName: item.professional?.full_name || 'Profissional não atribuído',
-                            date: new Date() // Fallback to now to prevent crash, or maybe filter out?
+                            date: new Date() // Fallback to now
                         };
                     }
 
@@ -50,7 +49,6 @@ export const useAppointments = () => {
                         date: dateObj,
                     };
                 } catch (err) {
-                    console.error('Error mapping appointment:', err, item);
                     return null;
                 }
             }).filter(Boolean); // Remove failed mappings
