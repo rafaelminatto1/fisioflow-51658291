@@ -304,7 +304,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
         open={showWaitlistNotification}
         onOpenChange={setShowWaitlistNotification}
         date={appointmentDate}
-        time={appointment.time}
+        time={time}
       />
 
       {/* Waitlist Quick Add Modal */}
@@ -312,7 +312,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
         open={showWaitlistQuickAdd}
         onOpenChange={setShowWaitlistQuickAdd}
         date={appointmentDate}
-        time={appointment.time}
+        time={time}
       />
     </>
   );
