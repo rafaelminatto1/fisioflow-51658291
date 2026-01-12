@@ -1,4 +1,9 @@
 import React, { memo, useState } from 'react';
+import { ptBR } from 'date-fns/locale';
+
+
+
+
 import { format, startOfWeek, addDays, isToday, isSameDay } from 'date-fns';
 import { Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Appointment } from '@/types/appointment';
@@ -99,7 +104,7 @@ const CalendarWeekView = memo(({
                         {format(currentMobileDay, 'd')}
                     </span>
                     <span className="text-[10px] uppercase text-muted-foreground">
-                        {format(currentMobileDay, 'EEE', { locale: { code: 'pt-BR', options: { weekday: 'short' } } })}
+                        {format(currentMobileDay, 'EEE', { locale: ptBR })}
                     </span>
                 </div>
 
