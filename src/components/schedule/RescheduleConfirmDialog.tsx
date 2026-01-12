@@ -37,8 +37,10 @@ export const RescheduleConfirmDialog: React.FC<RescheduleConfirmDialogProps> = (
 
   const parseDate = (date: Date | string): Date => {
     if (date instanceof Date) return date;
-    // Handle string dates in YYYY-MM-DD format
-    const [y, m, d] = String(date).split('-').map(Number);
+    // Handle string dates in YYYY-MM-DD format - safety check for empty string
+    const dateStr = String(date);
+    if (!dateStr || dateStr === 'Invalid Date') return new Date();
+    const [y, m, d] = dateStr.split('-').map(Number);
     return new Date(y, m - 1, d, 12, 0, 0);
   };
 
