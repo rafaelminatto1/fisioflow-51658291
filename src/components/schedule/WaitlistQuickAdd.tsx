@@ -43,7 +43,8 @@ const DAY_MAP: Record<number, string> = {
 };
 
 const getTimeSlot = (time: string): string => {
-  if (!time) return 'morning';
+  // Safety check for time - handle null, undefined, or empty string
+  if (!time || !time.trim()) return 'morning';
   const [hour] = time.split(':').map(Number);
   if (hour < 12) return 'morning';
   if (hour < 18) return 'afternoon';
