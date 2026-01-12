@@ -38,6 +38,13 @@ export const useWaitlistMatch = () => {
       }
 
       const targetDate = typeof date === 'string' ? new Date(date) : date;
+
+      // Check for Invalid Date
+      if (isNaN(targetDate.getTime())) {
+        console.warn('findMatchingEntries called with invalid date', { date });
+        return [];
+      }
+
       const dayOfWeek = DAY_MAP[getDay(targetDate)];
 
       // Additional safety check for time format

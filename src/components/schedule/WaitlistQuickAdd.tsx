@@ -43,13 +43,14 @@ const DAY_MAP: Record<number, string> = {
 };
 
 const getTimeSlot = (time: string): string => {
+  if (!time) return 'morning';
   const [hour] = time.split(':').map(Number);
   if (hour < 12) return 'morning';
   if (hour < 18) return 'afternoon';
   return 'evening';
 };
 
-export function WaitlistQuickAdd({ open, onOpenChange, date, time }: WaitlistQuickAddProps) {
+export function WaitlistQuickAdd({ open, onOpenChange, date, time = '00:00' }: WaitlistQuickAddProps) {
   const [patientId, setPatientId] = useState('');
   const [priority, setPriority] = useState<'normal' | 'high' | 'urgent'>('normal');
   const [notes, setNotes] = useState('');
@@ -117,12 +118,12 @@ export function WaitlistQuickAdd({ open, onOpenChange, date, time }: WaitlistQui
                 {patients.map((patient) => {
                   const patientName = PatientHelpers.getName(patient);
                   return (
-                  <SelectItem key={patient.id} value={patient.id}>
-                    <div className="flex items-center gap-2">
-                      <User className="h-3 w-3" />
-                      {patientName}
-                    </div>
-                  </SelectItem>
+                    <SelectItem key={patient.id} value={patient.id}>
+                      <div className="flex items-center gap-2">
+                        <User className="h-3 w-3" />
+                        {patientName}
+                      </div>
+                    </SelectItem>
                   );
                 })}
               </SelectContent>

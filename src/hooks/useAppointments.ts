@@ -131,8 +131,26 @@ export const useRescheduleAppointment = () => {
     return useMutation({
         mutationFn: async ({ appointmentId, appointment_date, appointment_time, duration }: { appointmentId: string, appointment_date: string, appointment_time: string, duration: number }) => {
             // Recalculate end_time
-            const endTime = new Date(new Date(`${appointment_date}T${appointment_time}`).getTime() + duration * 60000);
-            const endTimeString = endTime.toTimeString().slice(0, 5);
+            let endTimeString: string;
+
+            try {
+                if (!appointment_date || !appointment_time) {
+                    throw new Error("Date and time are required");
+                }
+
+                const startDateTime = new Date(`${appointment_date}T${appointment_time}`);
+                if (isNaN(startDateTime.getTime())) {
+                    throw new Error("Invalid date or time format");
+                }
+
+                const endTime = new Date(startDateTime.getTime() + duration * 60000);
+                endTimeString = endTime.toTimeString().slice(0, 5);
+            } catch (error) {
+                console.error("Error calculating end time", error);
+                // Fallback: simple addition if calculation fails, or just keep same time if very broken
+                // But better to throw to stop invalid update
+                throw new Error("Failed to calculate appointment duration: " + (error as Error).message);
+            }
 
             const { data, error } = await supabase
                 .from('appointments')
