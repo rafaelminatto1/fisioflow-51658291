@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, memo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,110 +17,147 @@ interface ActivityEvent {
   variant: 'default' | 'success' | 'warning' | 'destructive';
 }
 
-export function RealtimeActivityFeed() {
+const MAX_ACTIVITIES = 20; // Limitar para evitar crescimento infinito
+
+/**
+ * RealtimeActivityFeed otimizado com React.memo
+ * Não cria subscriptions duplicadas - usa dados iniciais do RealtimeContext
+ * Implementa cleanup adequado para evitar memory leaks
+ */
+export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
   const [activities, setActivities] = useState<ActivityEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  /**
+   * Carregar atividades recentes ao montar
+   * Cleanup adequado com AbortController
+   */
   useEffect(() => {
-    loadRecentActivities();
-    setupRealtimeSubscriptions();
-  }, []);
+    const abortController = new AbortController();
+    const signal = abortController.signal;
 
-  const loadRecentActivities = async () => {
-    try {
-      setIsLoading(true);
+    const loadRecentActivities = async () => {
+      try {
+        setIsLoading(true);
 
-      // Função auxiliar para timeout
-      const withTimeout = <T,>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> => {
-        return Promise.race([
-          Promise.resolve(promise),
-          new Promise<T>((_, reject) =>
-            setTimeout(() => reject(new Error(`Timeout após ${timeoutMs}ms`)), timeoutMs)
-          ),
-        ]);
-      };
+        // Função auxiliar para timeout com AbortSignal
+        const withTimeout = <T,>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> => {
+          return Promise.race([
+            Promise.resolve(promise),
+            new Promise<T>((_, reject) =>
+              setTimeout(() => {
+                if (!signal.aborted) reject(new Error(`Timeout após ${timeoutMs}ms`));
+              }, timeoutMs)
+            ),
+          ]);
+        };
 
-      // Tentar carregar com retry
-      let appointments = null;
-      let retries = 0;
-      const maxRetries = 3;
+        // Tentar carregar com retry
+        let appointments = null;
+        let retries = 0;
+        const maxRetries = 3;
 
-      while (retries < maxRetries && !appointments) {
-        try {
-          // Fetch appointments first
-          const result = await withTimeout(
-            supabase
-              .from('appointments')
-              .select('*')
-              .order('created_at', { ascending: false })
-              .limit(5),
-            8000
-          );
+        while (retries < maxRetries && !appointments && !signal.aborted) {
+          try {
+            // Fetch appointments first
+            const result = await withTimeout(
+              supabase
+                .from('appointments')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(5),
+              8000
+            );
 
-          if (result.data) {
-            appointments = result.data;
+            if (signal.aborted) return;
 
-            // Manually fetch patient names to avoid relationship 400 errors (safer)
-            const patientIds = [...new Set(appointments.map(a => a.patient_id).filter(Boolean))];
+            if (result.data) {
+              appointments = result.data;
 
-            // Only fetch if we have IDs to look up
-            let patientsData: { id: string, name: string }[] | null = null;
+              // Manually fetch patient names to avoid relationship 400 errors
+              const patientIds = [...new Set(appointments.map(a => a.patient_id).filter(Boolean))];
 
-            if (patientIds.length > 0) {
-              const { data } = await supabase
-                .from('patients')
-                .select('id, name:full_name')
-                .in('id', patientIds);
-              patientsData = data;
+              let patientsData: { id: string, name: string }[] | null = null;
+
+              if (patientIds.length > 0 && !signal.aborted) {
+                const { data } = await supabase
+                  .from('patients')
+                  .select('id, name:full_name')
+                  .in('id', patientIds);
+                patientsData = data;
+              }
+
+              if (signal.aborted) return;
+
+              const patientMap = new Map(patientsData?.map(p => [p.id, p.name]) || []);
+
+              // Attach names to appointments
+              appointments = appointments.map(apt => ({
+                ...apt,
+                patients: { name: patientMap.get(apt.patient_id) || 'Paciente desconhecido' }
+              }));
             }
 
-            const patientMap = new Map(patientsData?.map(p => [p.id, p.name]) || []);
-
-            // Attach names to appointments
-            appointments = appointments.map(apt => ({
-              ...apt,
-              patients: { name: patientMap.get(apt.patient_id) || 'Paciente desconhecido' }
-            }));
-          }
-
-          break;
-        } catch {
-          retries++;
-          if (retries < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * retries));
+            break;
+          } catch {
+            retries++;
+            if (retries < maxRetries && !signal.aborted) {
+              await new Promise(resolve => setTimeout(resolve, 1000 * retries));
+            }
           }
         }
-      }
 
-      const activityList: ActivityEvent[] = [];
+        if (signal.aborted) return;
 
-      if (appointments) {
-        appointments.forEach(apt => {
-          activityList.push({
-            id: apt.id,
-            type: 'appointment',
-            title: 'Novo Agendamento',
-            description: `${apt.patients?.name || 'Paciente'} - ${format(new Date(apt.appointment_date), 'dd/MM/yyyy HH:mm')}`,
-            timestamp: new Date(apt.created_at),
-            icon: Calendar,
-            variant: 'default',
+        const activityList: ActivityEvent[] = [];
+
+        if (appointments) {
+          appointments.forEach(apt => {
+            activityList.push({
+              id: apt.id,
+              type: 'appointment',
+              title: 'Novo Agendamento',
+              description: `${apt.patients?.name || 'Paciente'} - ${format(new Date(apt.appointment_date), 'dd/MM/yyyy HH:mm')}`,
+              timestamp: new Date(apt.created_at),
+              icon: Calendar,
+              variant: 'default',
+            });
           });
-        });
+        }
+
+        setActivities(activityList.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()));
+      } catch (error) {
+        if (!signal.aborted) {
+          console.error('Error loading activities:', error);
+          setActivities([]);
+        }
+      } finally {
+        if (!signal.aborted) {
+          setIsLoading(false);
+        }
       }
+    };
 
-      setActivities(activityList.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()));
-    } catch (error) {
-      console.error('Error loading activities:', error);
-      // Manter lista vazia em caso de erro
-      setActivities([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    loadRecentActivities();
 
-  const setupRealtimeSubscriptions = () => {
+    // Cleanup function - cancela operações pendentes
+    return () => {
+      abortController.abort();
+    };
+  }, []);
+
+  /**
+   * Setup realtime subscriptions com cleanup adequado
+   * Usa canais únicos para evitar duplicação com RealtimeContext
+   */
+  useEffect(() => {
+    // AbortController para cancelar operações pendentes
+    const abortController = new AbortController();
+    const signal = abortController.signal;
+
+    // Channel único com nome específico
     const appointmentsChannel = supabase
-      .channel('appointments-changes')
+      .channel('activity-feed-appointments')
       .on(
         'postgres_changes',
         {
@@ -129,29 +166,39 @@ export function RealtimeActivityFeed() {
           table: 'appointments',
         },
         async (payload) => {
-          const { data: patient } = await supabase
-            .from('patients')
-            .select('name:full_name')
-            .eq('id', payload.new.patient_id)
-            .single();
+          if (signal.aborted) return;
 
-          const newActivity: ActivityEvent = {
-            id: payload.new.id,
-            type: 'appointment',
-            title: 'Novo Agendamento',
-            description: `${patient?.name} - ${format(new Date(payload.new.appointment_date), 'dd/MM/yyyy HH:mm')}`,
-            timestamp: new Date(),
-            icon: Calendar,
-            variant: 'success',
-          };
+          try {
+            const { data: patient } = await supabase
+              .from('patients')
+              .select('name:full_name')
+              .eq('id', payload.new.patient_id)
+              .single();
 
-          setActivities(prev => [newActivity, ...prev].slice(0, 20));
+            if (signal.aborted) return;
+
+            const newActivity: ActivityEvent = {
+              id: `activity-${payload.new.id}-${Date.now()}`,
+              type: 'appointment',
+              title: 'Novo Agendamento',
+              description: `${patient?.name || 'Paciente'} - ${format(new Date(payload.new.appointment_date), 'dd/MM/yyyy HH:mm')}`,
+              timestamp: new Date(),
+              icon: Calendar,
+              variant: 'success',
+            };
+
+            setActivities(prev => [newActivity, ...prev].slice(0, MAX_ACTIVITIES));
+          } catch (error) {
+            if (!signal.aborted) {
+              console.error('Error processing appointment activity:', error);
+            }
+          }
         }
       )
       .subscribe();
 
     const patientsChannel = supabase
-      .channel('patients-changes')
+      .channel('activity-feed-patients')
       .on(
         'postgres_changes',
         {
@@ -160,28 +207,35 @@ export function RealtimeActivityFeed() {
           table: 'patients',
         },
         (payload) => {
+          if (signal.aborted) return;
+
           const newActivity: ActivityEvent = {
-            id: payload.new.id,
+            id: `patient-${payload.new.id}-${Date.now()}`,
             type: 'patient',
             title: 'Novo Paciente',
-            description: payload.new.name,
+            description: payload.new.name || 'Novo paciente cadastrado',
             timestamp: new Date(),
             icon: User,
             variant: 'success',
           };
 
-          setActivities(prev => [newActivity, ...prev].slice(0, 20));
+          setActivities(prev => [newActivity, ...prev].slice(0, MAX_ACTIVITIES));
         }
       )
       .subscribe();
 
+    // Cleanup - remove canais e cancela operações pendentes
     return () => {
+      abortController.abort();
       supabase.removeChannel(appointmentsChannel);
       supabase.removeChannel(patientsChannel);
     };
-  };
+  }, []);
 
-  const getIconColor = (variant: string) => {
+  /**
+   * Memoizar função de cor para evitar recriações
+   */
+  const getIconColor = useCallback((variant: string) => {
     switch (variant) {
       case 'success':
         return 'text-green-500';
@@ -192,7 +246,7 @@ export function RealtimeActivityFeed() {
       default:
         return 'text-primary';
     }
-  };
+  }, []);
 
   return (
     <Card>
@@ -245,4 +299,4 @@ export function RealtimeActivityFeed() {
       </CardContent>
     </Card>
   );
-}
+});

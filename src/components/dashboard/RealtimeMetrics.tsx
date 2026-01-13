@@ -1,17 +1,18 @@
 // Componente de métricas em tempo real usando RealtimeContext
 // Refatorado para eliminar duplicação de subscriptions
 // Agora usa o contexto central para obter dados de appointments
+// Otimizado com React.memo e useMemo
 
-import { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import { useRealtime } from '@/contexts/RealtimeContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Activity, Users, DollarSign, Calendar } from 'lucide-react';
 
-export function RealtimeMetrics() {
+export const RealtimeMetrics = memo(function RealtimeMetrics() {
   // Usar o contexto central para obter dados de appointments
-  const { metrics } = useRealtime();
+  const { metrics, isSubscribed } = useRealtime();
 
-  // Métricas formatadas para exibição
+  // Métricas formatadas para exibição - memoizadas para evitar recalculo
   const formattedRevenue = useMemo(() =>
     metrics.todayRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
     [metrics.todayRevenue]
@@ -22,8 +23,19 @@ export function RealtimeMetrics() {
     [metrics.occupancyRate]
   );
 
-  // Estado de loading baseado na subscription do contexto
-  const isLoading = !isSubscribed;
+  const confirmationRate = useMemo(() =>
+    metrics.totalAppointments > 0
+      ? ((metrics.confirmedAppointments / metrics.totalAppointments) * 100).toFixed(1)
+      : '0.0',
+    [metrics.totalAppointments, metrics.confirmedAppointments]
+  );
+
+  const cancellationRate = useMemo(() =>
+    metrics.totalAppointments > 0
+      ? ((metrics.cancelledAppointments / metrics.totalAppointments) * 100).toFixed(1)
+      : '0.0',
+    [metrics.totalAppointments, metrics.cancelledAppointments]
+  );
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -48,9 +60,7 @@ export function RealtimeMetrics() {
           <div className="text-2xl font-bold text-green-600">
             {metrics.confirmedAppointments}
           </div>
-          <CardDescription>
-            {((metrics.confirmedAppointments / Math.max(metrics.totalAppointments, 1)) * 100).toFixed(1)}%
-          </CardDescription>
+          <CardDescription>{confirmationRate}%</CardDescription>
         </CardContent>
       </Card>
 
@@ -64,9 +74,7 @@ export function RealtimeMetrics() {
           <div className="text-2xl font-bold text-red-600">
             {metrics.cancelledAppointments}
           </div>
-          <CardDescription>
-            {((metrics.cancelledAppointments / Math.max(metrics.totalAppointments, 1)) * 100).toFixed(1)}%
-          </CardDescription>
+          <CardDescription>{cancellationRate}%</CardDescription>
         </CardContent>
       </Card>
 
@@ -92,7 +100,7 @@ export function RealtimeMetrics() {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-green-600">
-            {formattedRevenue}
+            R$ {formattedRevenue}
           </div>
           <CardDescription>Consultas pagas hoje</CardDescription>
         </CardContent>
@@ -121,34 +129,35 @@ export function RealtimeMetrics() {
       {/* Última Atualização */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Última Atualização</CardTitle>
+          <CardTitle className="text-sm font-medium">Status da Conexão</CardTitle>
           <Activity className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-sm text-muted-foreground">
-            {isLoading ? (
-              <span className="flex items-center gap-2">
-                <span className="animate-pulse">Sincronizando...</span>
+            {isSubscribed ? (
+              <span className="flex items-center gap-2 text-green-600">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                </span>
+                Sincronização ativa
               </span>
             ) : (
-              <span>
-                {new Date(metrics.lastUpdate).toLocaleString('pt-BR', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: 'numeric'
-                })}
+              <span className="flex items-center gap-2 text-yellow-600">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-pulse relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
+                </span>
+                Conectando...
               </span>
             )}
           </div>
           <CardDescription>
             {isSubscribed
-              ? 'Sincronização ativa'
-              : 'Aguardando dados'}
+              ? 'Dados em tempo real'
+              : 'Aguardando conexão'}
           </CardDescription>
         </CardContent>
       </Card>
     </div>
   );
-}
+});

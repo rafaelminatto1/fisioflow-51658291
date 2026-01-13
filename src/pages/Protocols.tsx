@@ -89,7 +89,7 @@ export default function Protocols() {
     }
   };
 
-  const handleSubmitProtocol = (data: any) => {
+  const handleSubmitProtocol = (data: Omit<ExerciseProtocol, 'id' | 'created_at' | 'updated_at'>) => {
     if (editingProtocol) {
       updateProtocol({ id: editingProtocol.id, ...data });
     } else {
@@ -264,7 +264,7 @@ export default function Protocols() {
             </div>
           </div>
 
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="space-y-6">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'patologia' | 'pos_operatorio' | 'preventivo')} className="space-y-6">
             <ScrollArea className="w-full">
               <TabsList className="w-full justify-start h-auto p-1 bg-transparent border-b rounded-none mb-1 gap-6">
                 <TabsTrigger

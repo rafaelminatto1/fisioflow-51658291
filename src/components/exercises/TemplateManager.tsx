@@ -120,9 +120,7 @@ export function TemplateManager() {
   const [viewTemplate, setViewTemplate] = useState<ExerciseTemplate | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
-  // Note: setShowImportModal was missing in original code state, assuming it should be there or handled. 
-  // Based on reading the original file, it was used in code but not defined. 
-  // I will add it to state to fix potential bug, or if it was omitted in view, I'll add it.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [showImportModal, setShowImportModal] = useState(false);
 
   // Fetch all templates and filter client-side to handle diverse categories
@@ -160,10 +158,10 @@ export function TemplateManager() {
     }, {} as Record<string, ExerciseTemplate[]>);
   }, [filteredTemplates]);
 
-  const _importDefaultTemplates = async () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const importDefaultTemplates = async () => {
     try {
       setImporting(true);
-      // @ts-ignore - dynamic import might fail type check if file doesn't exist in analysis context
       const { defaultTemplates } = await import('@/lib/data/defaultTemplates');
 
       let count = 0;

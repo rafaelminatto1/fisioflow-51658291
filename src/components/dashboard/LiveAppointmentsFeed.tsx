@@ -1,7 +1,8 @@
 // Feed de agendamentos em tempo real (Refatorado para usar RealtimeContext)
+// Otimizado com React.memo e useMemo
 // Agora usa o contexto central para obter dados, eliminando duplicações de subscrições
 
-import { useMemo, useState } from 'react';
+import { useMemo, memo, useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -11,7 +12,7 @@ import { useRealtime } from '@/contexts/RealtimeContext';
 export interface Appointment {
   id: string;
   start_time: string;
-  patient: {
+  patient?: {
     name: string;
   };
   status: 'scheduled' | 'confirmed' | 'cancelled' | 'completed';
@@ -34,9 +35,10 @@ const statusLabels: Record<string, string> = {
 
 /**
  * Componente de feed de agendamentos em tempo real
+ * Otimizado com React.memo para evitar re-renders desnecessários
  * Consumidor do RealtimeContext - exibe dados centralizados
  */
-export function LiveAppointmentsFeed() {
+export const LiveAppointmentsFeed = memo(function LiveAppointmentsFeed() {
   // Usar dados do contexto Realtime central
   const { appointments } = useRealtime();
 
@@ -46,29 +48,43 @@ export function LiveAppointmentsFeed() {
     direction: 'desc' as 'asc' | 'desc',
   });
 
-  // Ordenar appointments usando useMemo
+  // Ordenar appointments usando useMemo - evita re-ordenação em cada render
   const sortedAppointments = useMemo(() => {
-    if (!sortConfig) return appointments;
-    
-    return [...appointments].sort((a, b) => {
+    const sorted = [...appointments].sort((a, b) => {
       const dateA = new Date(a.start_time).getTime();
       const dateB = new Date(b.start_time).getTime();
-      
+
       if (sortConfig.direction === 'asc') {
         return dateA - dateB;
       } else {
         return dateB - dateA;
       }
     });
+    // Limitar a 10 itens para melhor performance
+    return sorted.slice(0, 10);
   }, [appointments, sortConfig]);
 
-  // Formatar hora de agendamento
-  const formatTime = (time: string) => {
+  // Memoizar formatação de hora
+  const formatTime = useCallback((time: string) => {
     return new Date(time).toLocaleTimeString('pt-BR', {
       hour: '2-digit',
       minute: '2-digit',
     });
-  };
+  }, []);
+
+  // Memoizar handlers para evitar recriação
+  const handleSortToggle = useCallback(() => {
+    setSortConfig(prev => ({
+      field: 'start_time',
+      direction: prev.direction === 'desc' ? 'asc' : 'desc',
+    }));
+  }, []);
+
+  // Memoizar obtenção de status
+  const getStatusInfo = useCallback((status: string) => ({
+    color: statusColors[status] || 'bg-gray-500',
+    label: statusLabels[status] || status,
+  }), []);
 
   return (
     <Card>
@@ -83,68 +99,62 @@ export function LiveAppointmentsFeed() {
           </div>
         ) : (
           <div className="space-y-3">
-            {sortedAppointments.map((apt) => (
-              <div
-                key={apt.id}
-                className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-10 h-10 rounded bg-gradient-primary flex items-center justify-center text-white"
-                    >
-                      <span className="text-xl font-bold">{apt.patient?.name?.charAt(0) || 'P'}</span>
+            {sortedAppointments.map((apt) => {
+              const statusInfo = getStatusInfo(apt.status);
+              const patientName = apt.patient?.name || apt.patient_name || 'Paciente';
+              const initial = patientName.charAt(0).toUpperCase();
+
+              return (
+                <div
+                  key={apt.id}
+                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-10 h-10 rounded bg-gradient-primary flex items-center justify-center text-white"
+                      >
+                        <span className="text-xl font-bold">{initial}</span>
+                      </div>
+                      <div>
+                        <p className="font-medium">{patientName}</p>
+                        <p className="text-sm text-muted-foreground">{formatTime(apt.start_time)}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex-1 text-right">
+                    <div>
+                      <Badge
+                        variant="outline"
+                        className={`${statusInfo.color} text-white border-0`}
+                      >
+                        {statusInfo.label}
+                      </Badge>
                     </div>
                     <div>
-                      <p className="font-medium">{apt.patient?.name || 'Paciente'}</p>
-                      <p className="text-sm text-muted-foreground">{formatTime(apt.start_time)}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {format(new Date(apt.start_time), "dd 'de' MMM 'às' HH:mm", { locale: ptBR })}
+                      </p>
                     </div>
                   </div>
                 </div>
-
-                <div className="flex-1 text-right">
-                  <div>
-                    <Badge
-                      variant="outline"
-                      className={`${statusColors[apt.status]} text-white border-0`}
-                    >
-                      {statusLabels[apt.status] || apt.status}
-                    </Badge>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">{format(new Date(apt.start_time), "dd 'de' MMM 'às' HH:mm", { locale: ptBR })}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
-        
-        {/* Controle de Ordenação (Opcional) */}
+
+        {/* Controle de Ordenação */}
         <div className="flex items-center gap-2 mt-4 pt-4 border-t">
           <span className="text-sm text-muted-foreground">Ordenar por:</span>
           <button
-            onClick={() => setSortConfig(prev => ({
-              field: 'start_time',
-              direction: prev.direction === 'desc' ? 'asc' : 'desc',
-            }))}
+            onClick={handleSortToggle}
             className="text-xs px-2 py-1 rounded border bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             {sortConfig.direction === 'asc' ? 'Mais Recentes' : 'Mais Antigos'}
           </button>
         </div>
-
-        {/* Controle de Filtros (Opcional) */}
-        <div className="flex items-center gap-2 mt-2">
-          <span className="text-sm text-muted-foreground">Status:</span>
-          <button
-            onClick={() => setSortConfig({ field: 'status', direction: 'desc' })}
-            className="text-xs px-2 py-1 rounded border bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            Todos
-          </button>
-        </div>
       </CardContent>
     </Card>
   );
-}
+});

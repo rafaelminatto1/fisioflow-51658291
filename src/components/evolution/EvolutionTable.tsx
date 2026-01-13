@@ -1,6 +1,5 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Download, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import type { TestEvolutionData } from '@/types/evolution';
 import { format } from 'date-fns';
@@ -57,7 +56,7 @@ export const EvolutionTable: React.FC<EvolutionTableProps> = ({ data, testName }
             </tr>
           </thead>
           <tbody>
-            {data.map((row, i) => (
+            {data.map((row, _i) => (
               <tr key={row.id} className="border-t hover:bg-muted/50">
                 <td className="px-2 py-1.5">{format(new Date(row.date), 'dd/MM')}</td>
                 <td className="px-2 py-1.5 text-center">#{row.session_number}</td>

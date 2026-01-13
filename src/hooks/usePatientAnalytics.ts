@@ -22,7 +22,6 @@ import {
   OutcomeMeasureTrend,
   LifecycleEventType,
   PredictionType,
-  GoalStatus,
 } from '@/types/patientAnalytics';
 
 // ============================================================================
@@ -253,7 +252,7 @@ export function useOutcomeMeasureTrends(patientId: string) {
         if (Math.abs(changePercentage) < 5) {
           trend = 'stable';
         } else {
-          trend = improvement ? 'improving' : 'declining';
+          trend = isImprovement ? 'improving' : 'declining';
         }
 
         return {
@@ -576,7 +575,7 @@ export function useAcknowledgeInsight() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ insightId, patientId }: { insightId: string; patientId: string }) => {
+    mutationFn: async ({ insightId, _patientId }: { insightId: string; patientId: string }) => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('Usuário não autenticado');
 
@@ -669,30 +668,40 @@ export function usePatientAnalyticsDashboard(patientId: string) {
 
   const data: PatientAnalyticsData | undefined = !isLoading && !isError ? {
     patient_id: patientId,
-    progress_summary: progressSummary.data!,
+    progress_summary: progressSummary.data ?? {
+      total_sessions: 0,
+      avg_pain_reduction: null,
+      total_pain_reduction: 0,
+      avg_functional_improvement: null,
+      current_pain_level: null,
+      initial_pain_level: null,
+      goals_achieved: 0,
+      goals_in_progress: 0,
+      overall_progress_percentage: null,
+    },
     pain_trend: outcomeTrends.data?.find(t => t.measure_name.toLowerCase().includes('pain')) || null,
     function_trend: outcomeTrends.data?.find(t => t.measure_name.toLowerCase().includes('func')) || null,
-    risk_score: riskScore.data || null,
+    risk_score: riskScore.data ?? null,
     predictions: {
-      dropout_probability: predictions.data?.find(p => p.prediction_type === 'dropout_risk')?.predicted_value || 0,
-      dropout_risk_level: riskScore.data?.risk_level || 'low',
+      dropout_probability: predictions.data?.find(p => p.prediction_type === 'dropout_risk')?.predicted_value ?? 0,
+      dropout_risk_level: riskScore.data?.risk_level ?? 'low',
       predicted_recovery_date: predictions.data?.find(p => p.prediction_type === 'recovery_timeline')?.target_date,
-      predicted_recovery_confidence: predictions.data?.find(p => p.prediction_type === 'recovery_timeline')?.confidence_score || 0,
+      predicted_recovery_confidence: predictions.data?.find(p => p.prediction_type === 'recovery_timeline')?.confidence_score ?? 0,
       expected_sessions_remaining: predictions.data?.find(p => p.prediction_type === 'recovery_timeline')?.predicted_value,
-      success_probability: predictions.data?.find(p => p.prediction_type === 'outcome_success')?.predicted_value || 0,
+      success_probability: predictions.data?.find(p => p.prediction_type === 'outcome_success')?.predicted_value ?? 0,
       key_risk_factors: riskScore.data?.risk_factors ? Object.keys(riskScore.data.risk_factors) : [],
-      recommendations: riskScore.data?.recommended_actions || [],
+      recommendations: riskScore.data?.recommended_actions ?? [],
     },
-    lifecycle: lifecycleSummary.data || null,
+    lifecycle: lifecycleSummary.data ?? null,
     benchmark_comparisons: [],
-    recent_insights: insights.data?.slice(0, 5) || [],
-    actionable_insights: insights.data?.filter(i => i.insight_type === 'recommendation' || i.insight_type === 'risk_detected') || [],
-    goals: goals.data || [],
+    recent_insights: insights.data?.slice(0, 5) ?? [],
+    actionable_insights: insights.data?.filter(i => i.insight_type === 'recommendation' || i.insight_type === 'risk_detected') ?? [],
+    goals: goals.data ?? [],
     recent_sessions: sessionMetrics.data?.slice(-5).map(s => ({
       date: s.session_date,
-      pain_reduction: s.pain_reduction || 0,
-      satisfaction: s.patient_satisfaction || 0,
-    })) || [],
+      pain_reduction: s.pain_reduction ?? 0,
+      satisfaction: s.patient_satisfaction ?? 0,
+    })) ?? [],
   } : undefined;
 
   return {

@@ -55,8 +55,8 @@ export function useCreateTransacao() {
       queryClient.invalidateQueries({ queryKey: ['transacoes'] });
       toast.success('Transação criada com sucesso');
     },
-    onError: (error: any) => {
-      toast.error('Erro ao criar transação: ' + error.message);
+    onError: (error: unknown) => {
+      toast.error('Erro ao criar transação: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
     },
   });
 }
@@ -80,8 +80,8 @@ export function useUpdateTransacao() {
       queryClient.invalidateQueries({ queryKey: ['transacoes'] });
       toast.success('Transação atualizada com sucesso');
     },
-    onError: (error: any) => {
-      toast.error('Erro ao atualizar transação: ' + error.message);
+    onError: (error: unknown) => {
+      toast.error('Erro ao atualizar transação: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
     },
   });
 }
@@ -102,8 +102,8 @@ export function useDeleteTransacao() {
       queryClient.invalidateQueries({ queryKey: ['transacoes'] });
       toast.success('Transação excluída com sucesso');
     },
-    onError: (error: any) => {
-      toast.error('Erro ao excluir transação: ' + error.message);
+    onError: (error: unknown) => {
+      toast.error('Erro ao excluir transação: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
     },
   });
 }

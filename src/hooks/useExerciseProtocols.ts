@@ -19,9 +19,9 @@ export interface ExerciseProtocol {
   condition_name: string;
   protocol_type: 'pos_operatorio' | 'patologia';
   weeks_total?: number;
-  milestones: ProtocolMilestone[] | any;
-  restrictions: ProtocolRestriction[] | any;
-  progression_criteria: any[] | any;
+  milestones: ProtocolMilestone[] | Record<string, unknown>;
+  restrictions: ProtocolRestriction[] | Record<string, unknown>;
+  progression_criteria: Record<string, unknown>[] | Record<string, unknown>;
   organization_id?: string;
   created_by?: string;
   created_at?: string;
@@ -44,7 +44,7 @@ export const useExerciseProtocols = () => {
         throw error;
       }
       console.log('Fetched protocols:', data?.length);
-      return (data || []) as any as ExerciseProtocol[];
+      return (data || []) as ExerciseProtocol[];
     },
   });
 
@@ -52,7 +52,7 @@ export const useExerciseProtocols = () => {
     mutationFn: async (protocol: Omit<ExerciseProtocol, 'id' | 'created_at' | 'updated_at'>) => {
       const { data, error } = await supabase
         .from('exercise_protocols')
-        .insert([protocol as any])
+        .insert([protocol])
         .select()
         .single();
 
@@ -72,7 +72,7 @@ export const useExerciseProtocols = () => {
     mutationFn: async ({ id, ...protocol }: Partial<ExerciseProtocol> & { id: string }) => {
       const { data, error } = await supabase
         .from('exercise_protocols')
-        .update(protocol as any)
+        .update(protocol)
         .eq('id', id)
         .select()
         .single();

@@ -33,7 +33,7 @@ export function useCreatePagamento() {
 
       const { data, error } = await supabase
         .from('pagamentos')
-        .insert([dataToInsert as any])
+        .insert([dataToInsert])
         .select()
         .single();
 
@@ -47,10 +47,10 @@ export function useCreatePagamento() {
         description: 'Pagamento registrado com sucesso.',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao adicionar pagamento',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
     },
@@ -63,13 +63,13 @@ export function useUpdatePagamento() {
 
   return useMutation({
     mutationFn: async ({ id, data, eventoId }: { id: string; data: PagamentoUpdate & { pago_em?: Date }; eventoId: string }) => {
-      const dataToUpdate = data.pago_em 
+      const dataToUpdate = data.pago_em
         ? { ...data, pago_em: data.pago_em.toISOString().split('T')[0] }
         : data;
 
       const { data: updated, error } = await supabase
         .from('pagamentos')
-        .update(dataToUpdate as any)
+        .update(dataToUpdate)
         .eq('id', id)
         .select()
         .single();
@@ -84,10 +84,10 @@ export function useUpdatePagamento() {
         description: 'Alterações salvas com sucesso.',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao atualizar pagamento',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
     },
@@ -115,10 +115,10 @@ export function useDeletePagamento() {
         description: 'Pagamento excluído com sucesso.',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao remover pagamento',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
     },

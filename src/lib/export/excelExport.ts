@@ -95,11 +95,11 @@ const createReportHeader = (
  * Converte dados para formato de matriz do xlsx
  */
 const dataToAoa = (
-  data: Record<string, any>[], 
+  data: Record<string, unknown>[],
   columns: ExcelColumn[],
   includeHeader: boolean = true
-): any[][] => {
-  const result: any[][] = [];
+): (string | number)[][] => {
+  const result: (string | number)[][] = [];
   
   // Add headers
   if (includeHeader) {
@@ -118,7 +118,7 @@ const dataToAoa = (
 /**
  * Define largura das colunas automaticamente
  */
-const setColumnWidths = (ws: XLSX.WorkSheet, columns: ExcelColumn[], data: any[][]) => {
+const setColumnWidths = (ws: XLSX.WorkSheet, columns: ExcelColumn[], data: (string | number)[][]) => {
   const colWidths: XLSX.ColInfo[] = columns.map((col, index) => {
     if (col.width) {
       return { wch: col.width };
@@ -612,9 +612,9 @@ export const exportFinancialReport = async (data: FinancialExportData) => {
  */
 export interface GenericReportData {
   title: string;
-  summary?: Record<string, any>[];
+  summary?: Record<string, string | number>[];
   summaryColumns?: ExcelColumn[];
-  details: Record<string, any>[];
+  details: Record<string, string | number>[];
   detailColumns: ExcelColumn[];
 }
 

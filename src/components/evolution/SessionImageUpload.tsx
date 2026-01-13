@@ -26,7 +26,6 @@ import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle
@@ -46,7 +45,6 @@ import {
   AlertCircle,
   Image as ImageIcon,
   Upload,
-  X,
   ZoomIn,
   Download,
   Trash2,
@@ -193,15 +191,6 @@ export const SessionImageUpload: React.FC<SessionImageUploadProps> = ({
     } finally {
       setDeleteConfirm(null);
     }
-  };
-
-  const getThumbnailUrl = (attachment: SessionAttachment) => {
-    if (attachment.thumbnail_url) return attachment.thumbnail_url;
-    if (attachment.file_type === 'pdf') {
-      // Retorna um placeholder visual para PDF
-      return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIGZpbGw9IiNmNWY1ZjUiIHJ4PSI0Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk2OTZGNiI+UERGPC90ZXh0Pjwvc3ZnPg==';
-    }
-    return attachment.file_url;
   };
 
   const isImage = (attachment: SessionAttachment) => {

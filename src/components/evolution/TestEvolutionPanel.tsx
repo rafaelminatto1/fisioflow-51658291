@@ -16,13 +16,12 @@ import {
   LineChart,
   AreaChart,
   Table2,
-  Download,
   Loader2,
 } from 'lucide-react';
 import { MandatoryTestAlert } from './MandatoryTestAlert';
 import { EvolutionChart } from './EvolutionChart';
 import { EvolutionTable } from './EvolutionTable';
-import type { MandatoryTestAlert as MandatoryTestAlertType, TestEvolutionData } from '@/types/evolution';
+import type { MandatoryTestAlert as MandatoryTestAlertType } from '@/types/evolution';
 import { useQuery } from '@tanstack/react-query';
 import { TestEvolutionService } from '@/lib/services/testEvolutionService';
 
@@ -52,7 +51,7 @@ const CHART_TYPES = [
 
 export const TestEvolutionPanel: React.FC<TestEvolutionPanelProps> = ({
   patientId,
-  sessionNumber = 1,
+  sessionNumber: _sessionNumber = 1,
   mandatoryAlerts = [],
   onTestClick,
   onRegisterException,

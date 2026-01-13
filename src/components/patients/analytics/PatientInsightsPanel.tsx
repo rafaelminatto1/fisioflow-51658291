@@ -5,21 +5,18 @@
  * for individual patients based on their data patterns.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
 import {
   Sparkles,
   TrendingUp,
-  TrendingDown,
   AlertTriangle,
   Award,
   Activity,
-  Target,
   Info,
   X,
   ChevronDown,
@@ -27,7 +24,6 @@ import {
   Lightbulb,
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { usePatientInsights, useAcknowledgeInsight } from '@/hooks/usePatientAnalytics';
 import { InsightType } from '@/types/patientAnalytics';
@@ -313,16 +309,19 @@ export function PatientInsightsPanel({
     refetch();
   };
 
-  // Filter insights
-  const filteredInsights = insights?.filter(insight => {
-    if (filter === 'actionable') {
-      return insight.insight_type === 'recommendation' || insight.insight_type === 'risk_detected';
-    }
-    if (filter === 'alerts') {
-      return insight.insight_type === 'risk_detected' || insight.insight_type === 'trend_alert';
-    }
-    return true;
-  }).slice(0, limit) || [];
+  // Memoized filter insights for performance
+  const filteredInsights = useMemo(() =>
+    insights?.filter(insight => {
+      if (filter === 'actionable') {
+        return insight.insight_type === 'recommendation' || insight.insight_type === 'risk_detected';
+      }
+      if (filter === 'alerts') {
+        return insight.insight_type === 'risk_detected' || insight.insight_type === 'trend_alert';
+      }
+      return true;
+    }).slice(0, limit) || [],
+    [insights, filter, limit]
+  );
 
   if (isLoading) {
     return (
@@ -371,11 +370,13 @@ export function PatientInsightsPanel({
       <CardContent className="space-y-4">
         {/* Filters */}
         {insights && insights.length > 0 && (
-          <div className="flex gap-2">
+          <div className="flex gap-2" role="group" aria-label="Filtros de insights">
             <Button
               variant={filter === 'all' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setFilter('all')}
+              aria-pressed={filter === 'all'}
+              aria-label={`Mostrar todos os ${insights.length} insights`}
             >
               Todos ({insights.length})
             </Button>
@@ -383,6 +384,8 @@ export function PatientInsightsPanel({
               variant={filter === 'actionable' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setFilter('actionable')}
+              aria-pressed={filter === 'actionable'}
+              aria-label={`Mostrar insights que requerem ação`}
             >
               Ações ({insights.filter(i => i.insight_type === 'recommendation' || i.insight_type === 'risk_detected').length})
             </Button>
@@ -390,6 +393,8 @@ export function PatientInsightsPanel({
               variant={filter === 'alerts' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setFilter('alerts')}
+              aria-pressed={filter === 'alerts'}
+              aria-label={`Mostrar alertas e riscos`}
             >
               Alertas ({insights.filter(i => i.insight_type === 'risk_detected' || i.insight_type === 'trend_alert').length})
             </Button>

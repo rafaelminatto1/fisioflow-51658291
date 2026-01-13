@@ -20,3 +20,5 @@ declare module 'virtual:pwa-register/react' {
   }
 }
 
+
+declare const __APP_VERSION__: string;

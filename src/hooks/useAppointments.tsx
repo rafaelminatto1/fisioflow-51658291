@@ -135,7 +135,7 @@ async function fetchAppointments(organizationIdOverride?: string | null): Promis
 
     // Validar e transformar dados usando Zod
     const transformedAppointments: AppointmentBase[] = [];
-    const validationErrors: any[] = [];
+    const validationErrors: { id: string; error: unknown }[] = [];
 
     (data || []).forEach((item) => {
       // Mapear estrutura do banco para estrutura esperada pelo Zod Schema se necessário
@@ -187,7 +187,7 @@ async function fetchAppointments(organizationIdOverride?: string | null): Promis
     timer();
     return { data: transformedAppointments, isFromCache: false, cacheTimestamp: null };
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('Erro crítico no fetchAppointments', error, 'useAppointments');
 
     // Último recurso: tentar cache se algo crítico falhou
@@ -197,12 +197,12 @@ async function fetchAppointments(organizationIdOverride?: string | null): Promis
 }
 
 // Função auxiliar para detectar erros de rede
-function isNetworkError(error: any): boolean {
+function isNetworkError(error: unknown): boolean {
   if (!error) return false;
   // Log message para debug
   // console.log('Checking network error:', error); 
 
-  const message = (error.message || '').toLowerCase();
+  const message = (error instanceof Error ? error.message : '').toLowerCase();
 
   // Lista extensiva de erros de rede
   return (
@@ -213,7 +213,7 @@ function isNetworkError(error: any): boolean {
     message.includes('connection') ||
     message.includes('offline') ||
     message.includes('load failed') ||
-    error.name === 'TypeError' && message === 'failed to fetch' ||
+    error instanceof Error && error.name === 'TypeError' && message === 'failed to fetch' ||
     !navigator.onLine
   );
 }
@@ -522,7 +522,7 @@ export function useUpdateAppointment() {
       const updateDate = updates.appointment_date || updates.date;
       const updateTime = updates.appointment_time || updates.start_time;
 
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
 
       // Strict validation for date with Zod
       if (updateDate) {
@@ -818,7 +818,7 @@ export function useRescheduleAppointment() {
 }
 
 // Helper hooks for compatibility
-export function useAppointmentsFiltered(_filters: any) {
+export function useAppointmentsFiltered(_filters: Record<string, unknown>) {
   const { data: appointments = [], isLoading, error } = useAppointments();
   return { data: appointments, isLoading, error };
 }

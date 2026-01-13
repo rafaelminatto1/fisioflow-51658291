@@ -11,7 +11,7 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Plus, Search, AlertTriangle, Info, BookOpen, AlertCircle, X } from 'lucide-react';
-import { useTemplateItems, type ExerciseTemplate, type ExerciseTemplateItem } from '@/hooks/useExerciseTemplates';
+import { useTemplateItems, type ExerciseTemplate } from '@/hooks/useExerciseTemplates';
 import { useExercises } from '@/hooks/useExercises';
 import {
   Select,
@@ -38,7 +38,7 @@ export function TemplateDetailsModal({
   onOpenChange,
   template,
 }: TemplateDetailsModalProps) {
-  const { items, addItem, removeItem, updateItem, loading } = useTemplateItems(template.id);
+  const { items, addItem, removeItem, loading } = useTemplateItems(template.id);
   const { exercises } = useExercises();
   const [showAddExercise, setShowAddExercise] = useState(false);
   const [searchExercise, setSearchExercise] = useState('');

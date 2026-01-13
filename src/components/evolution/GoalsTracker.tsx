@@ -100,7 +100,7 @@ export const GoalsTracker: React.FC<GoalsTrackerProps> = ({ goals }) => {
                           </p>
                         )}
                       </div>
-                      <Badge variant={getStatusColor(goal.status) as any}>
+                      <Badge variant={getStatusColor(goal.status) as 'default' | 'secondary' | 'outline' | 'destructive'}>
                         {goal.status.replace('_', ' ')}
                       </Badge>
                     </div>

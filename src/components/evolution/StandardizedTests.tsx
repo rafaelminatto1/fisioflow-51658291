@@ -5,7 +5,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { FileText, TrendingUp, AlertCircle, History, Award } from 'lucide-react';
+import { FileText, TrendingUp, History, Award } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useStandardizedTests, useSaveStandardizedTest } from '@/hooks/useStandardizedTests';
 import { format } from 'date-fns';
@@ -361,7 +361,7 @@ export function StandardizedTests({ patientId, onSave }: StandardizedTestsProps)
                         <p className="text-xs text-muted-foreground mt-1">{interpretation.text}</p>
                       </div>
                     </div>
-                    <Badge variant={interpretation.color as any}>{interpretation.text}</Badge>
+                    <Badge variant={interpretation.color as 'default' | 'secondary' | 'outline' | 'destructive'}>{interpretation.text}</Badge>
                   </div>
                 </div>
               )}

@@ -16,7 +16,6 @@ import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   AlertTriangle,
-  AlertCircle,
   Info,
   CheckCircle2,
   XCircle,
@@ -24,7 +23,6 @@ import {
   ClipboardList,
 } from 'lucide-react';
 import type { MandatoryTestAlert as MandatoryTestAlertType } from '@/types/evolution';
-import { MandatoryTestAlertService } from '@/lib/services/mandatoryTestAlertService';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -67,19 +65,6 @@ export const MandatoryTestAlert: React.FC<MandatoryTestAlertProps> = ({
     onRegisterException?.(selectedTest, exceptionReason);
     setExceptionDialogOpen(false);
     toast.success('Exceção registrada. Você pode salvar a evolução.');
-  };
-
-  const getAlertIcon = (level: string) => {
-    switch (level) {
-      case 'critico':
-        return <XCircle className="h-5 w-5" />;
-      case 'importante':
-        return <AlertTriangle className="h-5 w-5" />;
-      case 'leve':
-        return <Info className="h-5 w-5" />;
-      default:
-        return <AlertCircle className="h-5 w-5" />;
-    }
   };
 
   const getAlertStyle = (level: string) => {

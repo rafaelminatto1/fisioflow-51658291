@@ -8,7 +8,7 @@ import {
 import {
     Calendar, Clock, Target, AlertTriangle, CheckCircle2,
     Activity, Dumbbell, Shield, ChevronDown, ChevronUp,
-    Play, BookOpen, Share2, Download, Edit, Trash2, ArrowLeft, TrendingUp
+    Play, BookOpen, Share2, Download, Edit, Trash2, ArrowLeft, TrendingUp, Zap
 } from 'lucide-react';
 import { ExerciseProtocol } from '@/hooks/useExerciseProtocols';
 import {
@@ -30,21 +30,31 @@ interface ProtocolDetailViewProps {
     onDelete: () => void;
 }
 
+interface Milestone {
+    week: number;
+    description: string;
+}
+
+interface Restriction {
+    week_start: number;
+    week_end?: number;
+    description: string;
+}
+
 export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: ProtocolDetailViewProps) {
     const details = PROTOCOL_DETAILS[protocol.condition_name];
     const [expandedPhases, setExpandedPhases] = useState<string[]>(['Fase 1']);
-    const [showApplyModal, setShowApplyModal] = useState(false);
     const { currentOrganization } = useOrganizations();
 
-    const getMilestones = () => {
+    const getMilestones = (): Milestone[] => {
         if (!protocol.milestones) return [];
-        if (Array.isArray(protocol.milestones)) return protocol.milestones;
+        if (Array.isArray(protocol.milestones)) return protocol.milestones as Milestone[];
         return [];
     };
 
-    const getRestrictions = () => {
+    const getRestrictions = (): Restriction[] => {
         if (!protocol.restrictions) return [];
-        if (Array.isArray(protocol.restrictions)) return protocol.restrictions;
+        if (Array.isArray(protocol.restrictions)) return protocol.restrictions as Restriction[];
         return [];
     };
 
@@ -107,7 +117,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
 
             {/* Action buttons */}
             <div className="flex flex-wrap gap-3">
-                <Button onClick={() => setShowApplyModal(true)} className="gap-2">
+                <Button onClick={() => { /* TODO: Implement apply to patient */ }} className="gap-2">
                     <Play className="h-4 w-4" />
                     Aplicar a Paciente
                 </Button>
@@ -191,7 +201,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                     <div className="absolute top-1/2 left-0 right-0 h-2 bg-muted rounded-full -translate-y-1/2" />
                     <div className="absolute top-1/2 left-0 h-2 bg-gradient-to-r from-red-500 via-amber-500 via-yellow-500 to-green-500 rounded-full -translate-y-1/2" style={{ width: '100%' }} />
                     <div className="relative flex justify-between">
-                        {getMilestones().slice(0, 6).map((milestone: any, i: number) => (
+                        {getMilestones().slice(0, 6).map((milestone: Milestone, i: number) => (
                             <TooltipProvider key={i}>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -338,7 +348,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                     <p className="text-muted-foreground text-center py-8">Nenhum marco definido para este protocolo.</p>
                 ) : (
                     <div className="grid md:grid-cols-2 gap-4">
-                        {getMilestones().map((milestone: any, i: number) => (
+                        {getMilestones().map((milestone: Milestone, i: number) => (
                             <div key={i} className="flex items-start gap-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl border border-green-200/50">
                                 <div className="h-12 w-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 text-white flex items-center justify-center font-bold flex-shrink-0 shadow-lg">
                                     {milestone.week}
@@ -363,7 +373,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                     <p className="text-muted-foreground text-center py-8">Nenhuma restrição definida para este protocolo.</p>
                 ) : (
                     <div className="grid md:grid-cols-2 gap-4">
-                        {getRestrictions().map((restriction: any, i: number) => (
+                        {getRestrictions().map((restriction: Restriction, i: number) => (
                             <div key={i} className="flex items-start gap-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-xl border border-amber-200/50">
                                 <AlertTriangle className="h-6 w-6 text-amber-600 flex-shrink-0" />
                                 <div>

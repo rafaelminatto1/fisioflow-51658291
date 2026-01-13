@@ -48,7 +48,7 @@ export function useCreateTemplateFromEvento() {
           categoria: evento.categoria,
           gratuito: evento.gratuito,
           valor_padrao_prestador: evento.valor_padrao_prestador,
-          checklist_padrao: evento.checklist_items?.map((item: any) => ({
+          checklist_padrao: evento.checklist_items?.map((item: Record<string, unknown>) => ({
             titulo: item.titulo,
             tipo: item.tipo,
             quantidade: item.quantidade,
@@ -114,12 +114,12 @@ export function useCreateEventoFromTemplate() {
       if (eventoError) throw eventoError;
 
       if (template.checklist_padrao && Array.isArray(template.checklist_padrao)) {
-        const checklistItems = template.checklist_padrao.map((item: any) => ({
+        const checklistItems = template.checklist_padrao.map((item: Record<string, unknown>) => ({
           evento_id: evento.id,
           titulo: item.titulo,
           tipo: item.tipo,
-          quantidade: item.quantidade || 1,
-          custo_unitario: item.custo_unitario || 0,
+          quantidade: typeof item.quantidade === 'number' ? item.quantidade : 1,
+          custo_unitario: typeof item.custo_unitario === 'number' ? item.custo_unitario : 0,
         }));
 
         const { error: checklistError } = await supabase

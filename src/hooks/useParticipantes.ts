@@ -28,7 +28,7 @@ export function useCreateParticipante() {
     mutationFn: async (participante: ParticipanteCreate) => {
       const { data, error } = await supabase
         .from('participantes')
-        .insert([participante as any])
+        .insert([participante])
         .select()
         .single();
 
@@ -42,10 +42,10 @@ export function useCreateParticipante() {
         description: 'Participante cadastrado com sucesso.',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao adicionar participante',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
     },
@@ -60,7 +60,7 @@ export function useUpdateParticipante() {
     mutationFn: async ({ id, data, eventoId }: { id: string; data: ParticipanteUpdate; eventoId: string }) => {
       const { data: updated, error } = await supabase
         .from('participantes')
-        .update(data as any)
+        .update(data)
         .eq('id', id)
         .select()
         .single();
@@ -75,10 +75,10 @@ export function useUpdateParticipante() {
         description: 'Alterações salvas com sucesso.',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao atualizar participante',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
     },
@@ -106,10 +106,10 @@ export function useDeleteParticipante() {
         description: 'Participante excluído com sucesso.',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao remover participante',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
     },
@@ -133,11 +133,11 @@ export function useExportParticipantes() {
       const csvContent = [
         headers.join(','),
         ...data.map(p => [
-          p.nome,
-          p.contato || '',
-          p.instagram || '',
-          p.segue_perfil ? 'Sim' : 'Não',
-          p.observacoes || ''
+          (p as Record<string, unknown>).nome,
+          (p as Record<string, unknown>).contato || '',
+          (p as Record<string, unknown>).instagram || '',
+          (p as Record<string, unknown>).segue_perfil ? 'Sim' : 'Não',
+          (p as Record<string, unknown>).observacoes || ''
         ].join(','))
       ].join('\n');
 
@@ -160,10 +160,10 @@ export function useExportParticipantes() {
         description: 'CSV de participantes baixado com sucesso.',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao exportar',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
     },

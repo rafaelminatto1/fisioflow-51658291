@@ -174,7 +174,16 @@ function TestMessageDialog() {
 }
 
 // Template edit dialog
-function TemplateEditDialog({ template }: { template: any }) {
+interface Template {
+  id: string;
+  name: string;
+  template_key: string;
+  content: string;
+  status: string;
+  variables?: string[];
+}
+
+function TemplateEditDialog({ template }: { template: Template }) {
   const [open, setOpen] = useState(false);
   const [content, setContent] = useState(template.content);
   const updateTemplate = useUpdateTemplate();
@@ -411,7 +420,14 @@ export function WhatsAppDashboard() {
               ) : (
                 <ScrollArea className="h-[400px]">
                   <div className="space-y-2">
-                    {messages?.map((msg: any) => (
+                    {messages?.map((msg: {
+                      id: string;
+                      created_at: string;
+                      phone_number: string;
+                      status: string;
+                      template_key?: string;
+                      patients?: { name: string };
+                    }) => (
                       <div key={msg.id} className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-muted rounded-full">
@@ -455,7 +471,7 @@ export function WhatsAppDashboard() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {templates?.map((template) => (
+                  {templates?.map((template: Template) => (
                     <div key={template.id} className="p-4 border rounded-lg">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -497,7 +513,14 @@ export function WhatsAppDashboard() {
             <CardContent>
               <ScrollArea className="h-[400px]">
                 <div className="space-y-2">
-                  {webhookLogs?.map((log: any) => (
+                  {webhookLogs?.map((log: {
+                    id: string;
+                    created_at: string;
+                    event_type: string;
+                    phone_number?: string;
+                    message_content?: string;
+                    processed: boolean;
+                  }) => (
                     <div key={log.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-full ${log.processed ? 'bg-emerald-100' : 'bg-amber-100'}`}>

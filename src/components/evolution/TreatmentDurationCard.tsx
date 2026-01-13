@@ -1,6 +1,6 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, TrendingUp } from 'lucide-react';
+import { Calendar, Clock } from 'lucide-react';
 import { differenceInDays, differenceInWeeks, differenceInMonths } from 'date-fns';
 
 interface TreatmentDurationCardProps {

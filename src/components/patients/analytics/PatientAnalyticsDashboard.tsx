@@ -5,13 +5,12 @@
  * risk scores, lifecycle, and insights.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { usePatientAnalyticsDashboard, useUpdatePatientRiskScore } from '@/hooks/usePatientAnalytics';
@@ -25,17 +24,13 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
-  BarChart,
-  Bar,
   RadarChart,
   PolarGrid,
   PolarAngleAxis,
   PolarRadiusAxis,
   Radar,
 } from 'recharts';
-import { format, subDays, differenceInDays } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { format } from 'date-fns';
 import {
   TrendingUp,
   TrendingDown,
@@ -353,6 +348,48 @@ export function PatientAnalyticsDashboard({ patientId, patientName }: PatientAna
   const { data, isLoading, isError, refetch } = usePatientAnalyticsDashboard(patientId);
   const updateRiskScore = useUpdatePatientRiskScore();
 
+  // Memoized chart data for performance - must be before early returns
+  const painChartData = useMemo(() =>
+    data?.pain_trend?.data_points.map(dp => ({
+      date: format(new Date(dp.date), 'dd/MM'),
+      fullDate: dp.date,
+      dor: dp.normalized_score ?? dp.score,
+    })) || [],
+    [data?.pain_trend?.data_points]
+  );
+
+  const functionChartData = useMemo(() =>
+    data?.function_trend?.data_points.map(dp => ({
+      date: format(new Date(dp.date), 'dd/MM'),
+      fullDate: dp.date,
+      função: dp.normalized_score ?? dp.score,
+    })) || [],
+    [data?.function_trend?.data_points]
+  );
+
+  // Combined chart data for tooltip lookup - memoized
+  const allChartData = useMemo(() =>
+    [...painChartData, ...functionChartData],
+    [painChartData, functionChartData]
+  );
+
+  // Memoized radar chart data for risk factors
+  const radarData = useMemo(() =>
+    data?.risk_score ? [
+      { factor: 'Risco de Abandono', value: data.risk_score.dropout_risk_score },
+      { factor: 'Risco de No-Show', value: data.risk_score.no_show_risk_score },
+      { factor: 'Risco de Desfecho', value: data.risk_score.poor_outcome_risk_score },
+      {
+        factor: 'Adesão',
+        value: 100 - (data.risk_score.risk_factors?.attendance_rate
+          ? (1 - data.risk_score.risk_factors.attendance_rate) * 100
+          : 50)
+      },
+      { factor: 'Engajamento', value: 70 }, // Placeholder - would come from actual data
+    ].map(d => ({ ...d, value: Math.min(100, Math.max(0, d.value)) })) : [],
+    [data?.risk_score]
+  );
+
   const handleRefreshRiskScore = async () => {
     await updateRiskScore.mutateAsync(patientId);
     refetch();
@@ -384,28 +421,6 @@ export function PatientAnalyticsDashboard({ patientId, patientName }: PatientAna
   }
 
   const { progress_summary, pain_trend, function_trend, risk_score, predictions, lifecycle, goals, recent_insights } = data;
-
-  // Prepare chart data
-  const painChartData = pain_trend?.data_points.map(dp => ({
-    date: format(new Date(dp.date), 'dd/MM'),
-    fullDate: dp.date,
-    dor: dp.normalized_score ?? dp.score,
-  })) || [];
-
-  const functionChartData = function_trend?.data_points.map(dp => ({
-    date: format(new Date(dp.date), 'dd/MM'),
-    fullDate: dp.date,
-    função: dp.normalized_score ?? dp.score,
-  })) || [];
-
-  // Radar chart data for risk factors
-  const radarData = risk_score ? [
-    { factor: 'Risco de Abandono', value: risk_score.dropout_risk_score },
-    { factor: 'Risco de No-Show', value: risk_score.no_show_risk_score },
-    { factor: 'Risco de Desfecho', value: risk_score.poor_outcome_risk_score },
-    { factor: 'Adesão', value: 100 - (risk_score.risk_factors?.attendance_rate ? (1 - risk_score.risk_factors.attendance_rate) * 100 : 50) },
-    { factor: 'Engajamento', value: 70 }, // Placeholder
-  ].map(d => ({ ...d, value: Math.min(100, Math.max(0, d.value)) })) : [];
 
   return (
     <div className="space-y-6">
@@ -477,7 +492,11 @@ export function PatientAnalyticsDashboard({ patientId, patientName }: PatientAna
               <CardContent>
                 {painChartData.length > 0 || functionChartData.length > 0 ? (
                   <ResponsiveContainer width="100%" height={250}>
-                    <AreaChart data={painChartData.length > 0 ? painChartData : functionChartData}>
+                    <AreaChart
+                      data={painChartData.length > 0 ? painChartData : functionChartData}
+                      aria-label="Gráfico de evolução clínica mostrando progresso ao longo do tempo"
+                      role="img"
+                    >
                       <defs>
                         <linearGradient id="colorProgress" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
@@ -494,6 +513,7 @@ export function PatientAnalyticsDashboard({ patientId, patientName }: PatientAna
                         domain={[0, 100]}
                         className="text-xs"
                         tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                        label={{ value: 'Nível (0-100)', angle: -90, position: 'insideLeft' }}
                       />
                       <Tooltip
                         contentStyle={{
@@ -502,7 +522,7 @@ export function PatientAnalyticsDashboard({ patientId, patientName }: PatientAna
                           borderRadius: '8px',
                         }}
                         labelFormatter={(label) => {
-                          const item = [...painChartData, ...functionChartData].find(d => d.date === label);
+                          const item = allChartData.find(d => d.date === label);
                           return item?.fullDate || label;
                         }}
                       />
@@ -512,13 +532,18 @@ export function PatientAnalyticsDashboard({ patientId, patientName }: PatientAna
                         stroke="hsl(var(--primary))"
                         strokeWidth={2}
                         fill="url(#colorProgress)"
+                        name={painChartData.length > 0 ? 'Nível de Dor' : 'Pontuação Funcional'}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="h-[250px] flex items-center justify-center text-muted-foreground">
+                  <div
+                    className="h-[250px] flex items-center justify-center text-muted-foreground"
+                    role="status"
+                    aria-live="polite"
+                  >
                     <div className="text-center">
-                      <Activity className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                      <Activity className="h-10 w-10 mx-auto mb-2 opacity-50" aria-hidden="true" />
                       <p className="text-sm">Dados insuficientes para gráfico</p>
                     </div>
                   </div>

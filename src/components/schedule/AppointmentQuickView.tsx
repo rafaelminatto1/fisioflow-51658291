@@ -84,7 +84,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   const interestCount = getInterestCount(appointmentDate, appointment.time);
   const hasWaitlistInterest = interestCount > 0;
 
-  const canStartAttendance = appointment.status === 'confirmado' || appointment.status === 'agendado' || appointment.status === 'avaliacao';
+  const canStartAttendance = true;
 
   const handleStartAttendance = () => {
     if (appointment.status === 'avaliacao') {

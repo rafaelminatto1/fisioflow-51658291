@@ -132,12 +132,12 @@ export const useActivePatients = () => {
         // Ideally save to cache here
         return validPatients;
 
-      } catch (err: any) {
+      } catch (err: unknown) {
         logger.error('Erro ao carregar pacientes', err, 'usePatients');
 
         // Mock fallback only if critical env var or specific mode set, otherwise empty
         // Keeping original behavior logic slightly adapted
-        if (err.message && (err.message.includes('fetch') || err.message.includes('network'))) {
+        if (err instanceof Error && err.message && (err.message.includes('fetch') || err.message.includes('network'))) {
           // Try cache?
           // return getFromCache();
         }

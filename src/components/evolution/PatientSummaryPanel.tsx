@@ -12,8 +12,6 @@ import {
   Calendar,
   Activity,
   Target,
-  Clock,
-  CheckCircle2,
   TrendingUp,
 } from 'lucide-react';
 import { format, differenceInYears } from 'date-fns';

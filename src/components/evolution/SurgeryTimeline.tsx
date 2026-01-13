@@ -55,7 +55,7 @@ export const SurgeryTimeline: React.FC<SurgeryTimelineProps> = ({ surgeries }) =
       <CardContent className="pt-6">
         <ScrollArea className="h-[280px] pr-4">
           <div className="space-y-4">
-            {surgeries.map((surgery, index) => {
+            {surgeries.map((surgery, _index) => {
               const daysSince = differenceInDays(new Date(), new Date(surgery.surgery_date));
               const phase = getRecoveryPhase(daysSince);
               

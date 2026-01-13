@@ -15,7 +15,7 @@ const transactionSchema = z.object({
   descricao: z.string().min(3, 'Descrição deve ter pelo menos 3 caracteres').optional(),
   valor: z.number().positive('Valor deve ser positivo'),
   status: z.enum(['pendente', 'concluido', 'cancelado']).default('pendente'),
-  metadata: z.any().optional(),
+  metadata: z.record<string, unknown>().optional(),
 });
 
 type TransactionFormData = z.infer<typeof transactionSchema>;
@@ -38,16 +38,16 @@ export function TransactionModal({
   const form = useForm<TransactionFormData>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
-      tipo: transaction?.tipo as any || 'receita',
+      tipo: (transaction?.tipo ?? 'receita') as TransactionFormData['tipo'],
       descricao: transaction?.descricao || '',
       valor: transaction?.valor ? Number(transaction.valor) : undefined,
-      status: transaction?.status as any || 'pendente',
-      metadata: transaction?.metadata || null,
+      status: (transaction?.status ?? 'pendente') as TransactionFormData['status'],
+      metadata: transaction?.metadata || undefined,
     },
   });
 
   const handleSubmit = (data: TransactionFormData) => {
-    onSubmit(data as any);
+    onSubmit(data as Omit<Transaction, 'id' | 'created_at' | 'updated_at'>);
     if (!transaction) {
       form.reset();
     }

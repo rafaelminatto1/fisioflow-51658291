@@ -104,20 +104,20 @@ export function useDashboardKPIs(period: string = 'month') {
       const { startDate, endDate } = getPeriodDates(period);
       
       // Pacientes ativos
-      const { count: activePatients } = await (supabase as any)
+      const { count: activePatients } = await supabase
         .from('patients')
         .select('id', { count: 'exact' })
         .eq('is_active', true);
 
       // Receita do período
-      const { data: payments } = await (supabase as any)
+      const { data: payments } = await supabase
         .from('payments')
         .select('amount')
         .eq('status', 'completed')
         .gte('paid_at', startDate)
         .lte('paid_at', endDate);
 
-      const monthlyRevenue = (payments || []).reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+      const monthlyRevenue = (payments || []).reduce((sum: number, p: { amount?: number }) => sum + (p.amount || 0), 0);
 
       // Agendamentos do período
       const { data: appointments } = await supabase
@@ -168,18 +168,18 @@ export function useFinancialReport(startDate: string, endDate: string) {
     queryKey: ['reports', 'financial', startDate, endDate],
     queryFn: async () => {
       // Receitas
-      const { data: payments } = await (supabase as any)
+      const { data: payments } = await supabase
         .from('payments')
         .select('amount, method')
         .eq('status', 'completed')
         .gte('paid_at', startDate)
         .lte('paid_at', endDate + 'T23:59:59');
 
-      const totalRevenue = (payments || []).reduce((sum, p: any) => sum + (p.amount || 0), 0);
+      const totalRevenue = (payments || []).reduce((sum, p: { amount?: number }) => sum + (p.amount || 0), 0);
 
       // Por método
       const revenueByMethod: Record<string, number> = {};
-      (payments || []).forEach((p: any) => {
+      (payments || []).forEach((p: { amount?: number; method?: string }) => {
         const method = p.method || 'outros';
         revenueByMethod[method] = (revenueByMethod[method] || 0) + (p.amount || 0);
       });
@@ -196,7 +196,7 @@ export function useFinancialReport(startDate: string, endDate: string) {
         .lte('started_at', endDate + 'T23:59:59');
 
       const therapistMap: Record<string, { name: string; revenue: number; sessions: number }> = {};
-      (sessions || []).forEach((s: any) => {
+      (sessions || []).forEach((s: { therapist_id?: string; therapist?: { name?: string } }) => {
         const id = s.therapist_id || 'unassigned';
         const name = s.therapist?.name || 'Não atribuído';
         if (!therapistMap[id]) {
@@ -221,14 +221,14 @@ export function useFinancialReport(startDate: string, endDate: string) {
         .sort((a, b) => b.revenue - a.revenue);
 
       // Taxa de inadimplência
-      const { data: pendingPayments } = await (supabase as any)
+      const { data: pendingPayments } = await supabase
         .from('payments')
         .select('amount')
         .eq('status', 'pending')
         .gte('created_at', startDate)
         .lte('created_at', endDate + 'T23:59:59');
 
-      const totalPending = (pendingPayments || []).reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+      const totalPending = (pendingPayments || []).reduce((sum: number, p: { amount?: number }) => sum + (p.amount || 0), 0);
       const delinquencyRate = (totalRevenue + totalPending) > 0 
         ? (totalPending / (totalRevenue + totalPending)) * 100 
         : 0;
@@ -275,10 +275,10 @@ export function usePatientEvolution(patientId: string | undefined) {
 
       // Evolução da dor
       const painEvolution = (sessions || [])
-        .filter((s: any) => s.eva_score !== null)
-        .map((s: any) => ({
-          date: s.started_at?.split('T')[0],
-          averageEva: s.eva_score,
+        .filter((s: { eva_score?: number | null }) => s.eva_score !== null)
+        .map((s: { started_at?: string; eva_score?: number }) => ({
+          date: s.started_at?.split('T')[0] || '',
+          averageEva: s.eva_score || 0,
         }));
 
       // Duração do tratamento
@@ -419,7 +419,7 @@ async function getRevenueChart(
   startDate: string,
   endDate: string
 ): Promise<{ date: string; revenue: number }[]> {
-  const { data } = await (supabase as any)
+  const { data } = await supabase
     .from('payments')
     .select('amount, paid_at')
     .eq('status', 'completed')
@@ -427,7 +427,7 @@ async function getRevenueChart(
     .lte('paid_at', endDate);
 
   const revenueByDate: Record<string, number> = {};
-  (data || []).forEach((p: any) => {
+  (data || []).forEach((p: { amount?: number; paid_at?: string }) => {
     const date = p.paid_at?.split('T')[0];
     if (date) {
       revenueByDate[date] = (revenueByDate[date] || 0) + (p.amount || 0);
@@ -443,7 +443,7 @@ async function getRevenueChart(
 export function useExportReport() {
   const exportToPDF = async (
     reportType: string,
-    data: any,
+    data: FinancialReport | Record<string, unknown>,
     fileName: string
   ) => {
     // Importar jspdf dinamicamente

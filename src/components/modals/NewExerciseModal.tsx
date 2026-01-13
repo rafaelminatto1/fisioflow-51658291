@@ -97,7 +97,7 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
   }, [exercise, form]);
 
   const handleSubmit = (data: ExerciseFormData) => {
-    onSubmit(data as any);
+    onSubmit(data as Omit<Exercise, 'id' | 'created_at' | 'updated_at'>);
     onOpenChange(false);
   };
 

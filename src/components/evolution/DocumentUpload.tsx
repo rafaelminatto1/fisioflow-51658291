@@ -26,9 +26,7 @@ import {
   Upload,
   Download,
   Trash2,
-  Eye,
   FileIcon,
-  AlertCircle,
   Loader2
 } from 'lucide-react';
 import { format } from 'date-fns';
