@@ -2,6 +2,8 @@
 
 Sistema completo de gestão para clínicas de fisioterapia, desenvolvido com React + TypeScript + Supabase.
 
+> **📚 Documentação Oficial**: [docs2026/](./docs2026/) - Documentação técnica completa do projeto
+
 ## 🚀 Funcionalidades Principais
 
 ### 👥 **Gestão de Pacientes**
@@ -139,19 +141,24 @@ npm run preview
 
 ## 📈 Roadmap
 
+Veja o [roadmap completo](./docs2026/13-roadmap.md) com:
+- Funcionalidades implementadas
+- Funcionalidades em desenvolvimento
+- Melhorias necessárias
+- Novas funcionalidades sugeridas
+
 ### Próximas Funcionalidades
-- [ ] App Mobile (React Native)
-- [ ] Sistema de Notificações Push
+- [ ] App Mobile (Capacitor)
+- [ ] Sistema de Notificações Push (completo)
 - [ ] Integração com WhatsApp
-- [ ] Relatórios PDF automáticos
-- [ ] Dashboard Financeiro
-- [ ] Sistema de Backup Automático
+- [ ] Telemedicina completa
+- [ ] IA para análise de movimento
 
 ### Melhorias Planejadas
-- [ ] Inteligência Artificial para sugestões de exercícios
-- [ ] Integração com equipamentos IoT
-- [ ] Telemedicina integrada
-- [ ] API pública para terceiros
+- [ ] TypeScript Strict Mode
+- [ ] Cobertura de testes >70%
+- [ ] Performance optimization
+- [ ] Acessibilidade WCAG 2.1 AA completo
 
 ## 🤝 Contribuição
 

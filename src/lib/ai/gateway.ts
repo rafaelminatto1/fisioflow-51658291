@@ -75,7 +75,8 @@ export interface AIStreamOptions extends AIRequestOptions {
 // CONFIGURATION
 // ============================================================================
 
-const GATEWAY_BASE_URL = process.env.VERCEL_AI_GATEWAY_URL || 'https://gateway.vercel.sh/api/v1';
+
+const GATEWAY_BASE_URL = import.meta.env.VITE_VERCEL_AI_GATEWAY_URL || import.meta.env.NEXT_PUBLIC_VERCEL_AI_GATEWAY_URL || 'https://gateway.vercel.sh/api/v1';
 
 /**
  * Provider configuration with base URLs and model mappings
@@ -84,22 +85,22 @@ const PROVIDER_CONFIG = {
   openai: {
     baseURL: `${GATEWAY_BASE_URL}/openai`,
     defaultModel: 'gpt-4o-mini',
-    apiKey: process.env.OPENAI_API_KEY,
+    apiKey: import.meta.env.VITE_OPENAI_API_KEY || import.meta.env.NEXT_PUBLIC_OPENAI_API_KEY,
   },
   google: {
     baseURL: `${GATEWAY_BASE_URL}/google`,
     defaultModel: 'gemini-2.0-flash-exp',
-    apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_AI_API_KEY,
+    apiKey: import.meta.env.VITE_GOOGLE_GENERATIVE_AI_API_KEY || import.meta.env.NEXT_PUBLIC_GOOGLE_AI_API_KEY || import.meta.env.VITE_GOOGLE_AI_API_KEY,
   },
   grok: {
     baseURL: `${GATEWAY_BASE_URL}/proxy/xai`,
     defaultModel: 'grok-2-1212',
-    apiKey: process.env.VERCEL_AI_GATEWAY_KEY || process.env.XAI_API_KEY,
+    apiKey: import.meta.env.VITE_VERCEL_AI_GATEWAY_KEY || import.meta.env.NEXT_PUBLIC_VERCEL_AI_GATEWAY_KEY || import.meta.env.VITE_XAI_API_KEY,
   },
   anthropic: {
     baseURL: `${GATEWAY_BASE_URL}/anthropic`,
     defaultModel: 'claude-3-5-sonnet',
-    apiKey: process.env.ANTHROPIC_API_KEY,
+    apiKey: import.meta.env.VITE_ANTHROPIC_API_KEY || import.meta.env.NEXT_PUBLIC_ANTHROPIC_API_KEY,
   },
 } as const;
 

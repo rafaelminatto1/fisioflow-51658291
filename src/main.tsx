@@ -10,6 +10,13 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 // Inicializar Sentry antes de renderizar a aplicação
 initSentry();
 
+// Global Chunk Load Error Handler for Vite
+window.addEventListener('vite:preloadError', (event) => {
+  console.error('Vite preload error detected:', event);
+  // Reloading the page to fetch the latest deployment
+  window.location.reload();
+});
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <DataProvider>

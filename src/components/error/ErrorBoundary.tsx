@@ -43,9 +43,23 @@ class ErrorBoundary extends Component<Props, State> {
     }
 
     this.setState({
-      error,
-      errorInfo,
     });
+
+    // Check for chunk load error
+    if (
+      error.message.includes('Failed to fetch dynamically imported module') ||
+      error.message.includes('Importing a module script failed')
+    ) {
+      // Check if we already tried reloading
+      const storageKey = 'chunk_load_error_reload';
+      const lastReload = sessionStorage.getItem(storageKey);
+
+      if (!lastReload) {
+        sessionStorage.setItem(storageKey, 'true');
+        window.location.reload();
+        return;
+      }
+    }
   }
 
   handleReload = () => {
