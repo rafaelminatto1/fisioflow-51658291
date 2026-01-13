@@ -43,9 +43,9 @@ const ScheduleHero = memo(({ currentDate, appointments, className }: ScheduleHer
       <div className="absolute -left-8 -bottom-8 w-24 h-24 bg-white/5 rounded-full blur-xl" aria-hidden="true" />
 
       <div className="schedule-hero-content">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6 w-full">
           {/* Title and description */}
-          <div className="space-y-2 min-w-0 flex-1">
+          <div className="space-y-2 min-w-0 flex-1 lg:flex-none">
             <div className="flex items-center gap-3">
               <div className="p-2.5 bg-white/20 rounded-xl backdrop-blur-sm shadow-lg">
                 <Calendar className="h-5 w-5 text-white" />
