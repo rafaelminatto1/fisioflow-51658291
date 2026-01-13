@@ -366,7 +366,7 @@ export const CalendarView = memo(({
                 </h2>
               </div>
 
-              <div className="flex items-center gap-1 bg-background rounded-lg p-1 shadow-sm" role="group" aria-label="Seleção de visualização" role="radiogroup">
+              <div className="flex items-center gap-1 bg-background rounded-lg p-1 shadow-sm" role="radiogroup" aria-label="Seleção de visualização">
                 {(['day', 'week', 'month'] as CalendarViewType[]).map(type => (
                   <Button
                     key={type}
