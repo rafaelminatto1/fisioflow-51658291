@@ -78,9 +78,10 @@ export const useActivePatients = () => {
       }
 
       try {
+        // Optimized query: select only used columns
         let query = supabase
           .from('patients')
-          .select('*')
+          .select('id, full_name, name, phone, email, cpf, birth_date, observations, status, incomplete_registration, created_at, updated_at, organization_id')
           .in('status', ['active', 'Em Tratamento', 'Inicial']);
 
         if (organizationId) {
