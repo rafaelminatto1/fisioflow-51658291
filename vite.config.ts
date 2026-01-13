@@ -57,7 +57,17 @@ export default defineConfig(({ mode }) => {
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff2}'],
-          globIgnores: ['**/node_modules/**/*', '**/cornerstone-*', '**/*dicom-image-loader*'],
+          globIgnores: [
+            '**/node_modules/**/*',
+            '**/cornerstone*',
+            '**/*dicom-image-loader*',
+            '**/computeWorker*'
+          ],
+          // Don't cache cornerstone chunks to avoid 404s when hash changes
+          navigateFallback: null,
+          skipWaiting: true,
+          clientsClaim: true,
+          cleanupOutdatedCaches: true,
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
@@ -99,9 +109,6 @@ export default defineConfig(({ mode }) => {
               }
             }
           ],
-          cleanupOutdatedCaches: true,
-          skipWaiting: true,
-          clientsClaim: true,
           // Disable navigation preload to avoid issues with cornerstone
           navigationPreload: false,
           maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB
