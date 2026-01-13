@@ -320,56 +320,40 @@ export default function Auth() {
     <div className="flex min-h-screen w-full bg-background">
       {/* Left Side - Hero & Branding (Hidden on mobile) */}
       <div className="hidden lg:flex w-1/2 relative overflow-hidden bg-primary/5">
-        <div className="absolute inset-0 z-0">
-          {/* Fallback pattern or gradient if image fails load, but we expect it to work */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-blue-600/20 mix-blend-multiply" />
+        <div className="absolute inset-0 z-0 scale-105 animate-pulse-slow">
+          <div className="absolute inset-0 bg-gradient-to-tr from-primary/40 to-blue-900/40 mix-blend-multiply" />
           <img
-            src="/hero-bg.jpg" // Assuming it's in public or we import. Let's try to import it at top, or if it is in src/assets I need to import it.
-            // Wait, if I use src/assets I MUST import it. I'll check imports first. 
-            // EDIT: I will output the FULL file content with imports included to be safe and correct.
+            src="/hero-bg.jpg"
             alt="Physiotherapy Session"
-            className="w-full h-full object-cover opacity-90"
+            className="w-full h-full object-cover opacity-90 grayscale-[20%] hover:grayscale-0 transition-all duration-1000 ease-in-out"
           />
         </div>
 
         {/* Overlay Content */}
-        <div className="relative z-10 w-full h-full flex flex-col justify-between p-12 text-white bg-black/20 backdrop-blur-[2px]">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/30">
-              <Stethoscope className="w-6 h-6 text-white" />
+        <div className="relative z-10 w-full h-full flex flex-col justify-between p-16 text-white bg-gradient-to-b from-black/10 via-transparent to-black/40">
+          <div className="flex items-center gap-4 animate-fade-in">
+            <div className="w-12 h-12 bg-white/20 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-white/20 shadow-xl">
+              <Stethoscope className="w-7 h-7 text-white" />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight">FisioFlow</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-white drop-shadow-md">FisioFlow</h1>
           </div>
 
-          <div className="space-y-6 max-w-lg">
-            <h2 className="text-4xl font-extrabold leading-tight tracking-tight">
-              Transforme a gestão da sua clínica.
+          <div className="space-y-8 max-w-xl animate-slide-up-fade delay-100">
+            <h2 className="text-5xl font-extrabold leading-[1.1] tracking-tight drop-shadow-lg">
+              Transforme a gestão <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-white">da sua clínica.</span>
             </h2>
-            <p className="text-lg text-white/90 leading-relaxed font-light">
+            <p className="text-xl text-blue-50 leading-relaxed font-light drop-shadow-md">
               Uma plataforma completa para fisioterapeutas que buscam eficiência,
               organização e a melhor experiência para seus pacientes.
             </p>
-
-            <div className="flex items-center gap-4 pt-4">
-              <div className="flex -space-x-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className={`w-10 h-10 rounded-full border-2 border-primary-foreground/50 bg-gray-300 overflow-hidden flex items-center justify-center text-xs font-bold text-gray-600 bg-white`}>
-                    {/* Placeholder avatars */}
-                    U{i}
-                  </div>
-                ))}
-              </div>
-              <div className="text-sm font-medium text-white/90">
-                <span className="font-bold text-white">Mais de 1.000+</span> profissionais confiam.
-              </div>
-            </div>
           </div>
 
-          <div className="flex justify-between items-center text-xs text-white/60 font-medium">
+          <div className="flex justify-between items-center text-xs text-white/50 font-medium animate-fade-in delay-200">
             <p>© 2026 FisioFlow Inc.</p>
-            <div className="flex gap-4">
-              <a href="#" className="hover:text-white transition-colors">Privacidade</a>
-              <a href="#" className="hover:text-white transition-colors">Termos</a>
+            <div className="flex gap-6">
+              <a href="#" className="hover:text-white transition-colors duration-200">Privacidade</a>
+              <a href="#" className="hover:text-white transition-colors duration-200">Termos</a>
             </div>
           </div>
         </div>
@@ -398,34 +382,36 @@ export default function Auth() {
           </div>
 
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'register')} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 h-12 p-1 bg-muted/40 rounded-xl mb-6">
-              <TabsTrigger value="login" className="rounded-lg text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm">Login</TabsTrigger>
-              <TabsTrigger value="register" className="rounded-lg text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm">Cadastro</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 h-14 p-1.5 bg-gray-100/80 dark:bg-gray-800/50 rounded-2xl mb-8">
+              <TabsTrigger value="login" className="rounded-xl text-sm font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:scale-[1.02]">Login</TabsTrigger>
+              <TabsTrigger value="register" className="rounded-xl text-sm font-semibold transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:scale-[1.02]">Cadastro</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="login" className="space-y-6 focus-visible:outline-none">
-              <form onSubmit={handleSignIn} className="space-y-4">
+            <TabsContent value="login" className="space-y-6 focus-visible:outline-none animate-in fade-in slide-in-from-left-4 duration-300">
+              <form onSubmit={handleSignIn} className="space-y-5">
 
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <div className="space-y-1.5">
+                    <Label htmlFor="login-email" className="font-medium text-gray-700 dark:text-gray-300 ml-1">Email</Label>
+                    <div className="relative group">
+                      <div className="absolute left-3 top-3.5 h-4 w-4 text-gray-400 group-hover:text-primary transition-colors duration-200">
+                        <Mail className="h-full w-full" />
+                      </div>
                       <Input
                         id="login-email"
                         type="email"
                         placeholder="nome@exemplo.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10 h-11 bg-white dark:bg-black/20 border-gray-200 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                        className="pl-10 h-12 bg-gray-50/50 dark:bg-black/20 border-gray-200 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all font-medium text-base shadow-sm group-hover:bg-white dark:group-hover:bg-black/40"
                         required
                       />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <Label htmlFor="login-password">Senha</Label>
-                      <a href="#" className="text-xs text-primary font-medium hover:underline tabindex-[-1]">Esqueceu a senha?</a>
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center ml-1">
+                      <Label htmlFor="login-password" className="font-medium text-gray-700 dark:text-gray-300">Senha</Label>
+                      <a href="#" className="text-xs text-primary font-semibold hover:text-primary/80 transition-colors">Esqueceu a senha?</a>
                     </div>
                     <Input
                       id="login-password"
@@ -433,21 +419,21 @@ export default function Auth() {
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="h-11 bg-white dark:bg-black/20 border-gray-200 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                      className="h-12 bg-gray-50/50 dark:bg-black/20 border-gray-200 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all font-medium text-base shadow-sm hover:bg-white dark:hover:bg-black/40"
                       required
                     />
                   </div>
                 </div>
 
                 {error && (
-                  <Alert variant="destructive" className="animate-slide-up-fade">
+                  <Alert variant="destructive" className="animate-slide-up-fade rounded-xl border-destructive/20 bg-destructive/5 text-destructive font-medium shadow-sm">
                     <AlertDescription>{error}</AlertDescription>
                   </Alert>
                 )}
 
                 <Button
                   type="submit"
-                  className="w-full h-11 text-base font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-300 rounded-lg"
+                  className="w-full h-12 text-base font-bold tracking-wide shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 rounded-xl bg-gradient-to-r from-primary to-blue-600 border border-transparent"
                   disabled={loading}
                 >
                   {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Entrar na Plataforma'}
@@ -455,7 +441,7 @@ export default function Auth() {
               </form>
             </TabsContent>
 
-            <TabsContent value="register" className="space-y-6 focus-visible:outline-none">
+            <TabsContent value="register" className="space-y-6 focus-visible:outline-none animate-in fade-in slide-in-from-right-4 duration-300">
               <form onSubmit={handleSignUp} className="space-y-4">
                 {invitationData && (
                   <Alert className="bg-primary/5 border-primary/20 text-primary">
@@ -468,7 +454,7 @@ export default function Auth() {
 
                 <div className="space-y-3">
                   <div className="space-y-1.5">
-                    <Label htmlFor="register-name">Nome Completo</Label>
+                    <Label htmlFor="register-name" className="font-medium text-gray-700 dark:text-gray-300 ml-1">Nome Completo</Label>
                     <Input
                       id="register-name"
                       type="text"
@@ -479,13 +465,13 @@ export default function Auth() {
                         setValidationErrors(prev => ({ ...prev, fullName: '' }));
                       }}
                       required
-                      className="h-11 bg-white dark:bg-black/20"
+                      className="h-12 bg-gray-50/50 dark:bg-black/20 border-gray-200 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all font-medium text-base shadow-sm hover:bg-white dark:hover:bg-black/40"
                     />
                     {validationErrors.fullName && <span className="text-xs text-destructive font-medium">{validationErrors.fullName}</span>}
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label htmlFor="register-email">Email</Label>
+                    <Label htmlFor="register-email" className="font-medium text-gray-700 dark:text-gray-300 ml-1">Email</Label>
                     <Input
                       id="register-email"
                       type="email"
@@ -497,14 +483,14 @@ export default function Auth() {
                       }}
                       required
                       disabled={!!invitationData}
-                      className="h-11 bg-white dark:bg-black/20"
+                      className="h-12 bg-gray-50/50 dark:bg-black/20 border-gray-200 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all font-medium text-base shadow-sm hover:bg-white dark:hover:bg-black/40"
                     />
                     {validationErrors.email && <span className="text-xs text-destructive font-medium">{validationErrors.email}</span>}
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label htmlFor="register-password">Senha</Label>
+                      <Label htmlFor="register-password" className="font-medium text-gray-700 dark:text-gray-300 ml-1">Senha</Label>
                       <Input
                         id="register-password"
                         type="password"
@@ -515,11 +501,11 @@ export default function Auth() {
                           setValidationErrors(prev => ({ ...prev, password: '' }));
                         }}
                         required
-                        className="h-11 bg-white dark:bg-black/20"
+                        className="h-12 bg-gray-50/50 dark:bg-black/20 border-gray-200 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all font-medium text-base shadow-sm hover:bg-white dark:hover:bg-black/40"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="register-confirm-password">Confirmar</Label>
+                      <Label htmlFor="register-confirm-password" className="font-medium text-gray-700 dark:text-gray-300 ml-1">Confirmar</Label>
                       <Input
                         id="register-confirm-password"
                         type="password"
@@ -530,17 +516,17 @@ export default function Auth() {
                           setValidationErrors(prev => ({ ...prev, confirmPassword: '' }));
                         }}
                         required
-                        className="h-11 bg-white dark:bg-black/20"
+                        className="h-12 bg-gray-50/50 dark:bg-black/20 border-gray-200 dark:border-gray-800 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all font-medium text-base shadow-sm hover:bg-white dark:hover:bg-black/40"
                       />
                     </div>
                   </div>
 
                   {/* Password Requirements simplified */}
                   {password && (
-                    <div className="p-3 bg-muted/30 rounded-lg space-y-1">
+                    <div className="p-4 bg-gray-50 dark:bg-black/20 rounded-xl space-y-2 border border-gray-100 dark:border-gray-800">
                       {getPasswordRequirements().map((req, idx) => (
-                        <div key={idx} className={`flex items-center gap-2 text-xs ${req.met ? 'text-green-600 font-medium' : 'text-muted-foreground'}`}>
-                          {req.met ? <CheckCircle className="h-3 w-3" /> : <div className="h-3 w-3 rounded-full border border-current" />}
+                        <div key={idx} className={`flex items-center gap-2 text-xs ${req.met ? 'text-green-600 font-medium' : 'text-gray-500'}`}>
+                          {req.met ? <CheckCircle className="h-3.5 w-3.5" /> : <div className="h-3.5 w-3.5 rounded-full border border-current opacity-50" />}
                           {req.label}
                         </div>
                       ))}
@@ -550,14 +536,14 @@ export default function Auth() {
                 </div>
 
                 {error && (
-                  <Alert variant="destructive">
+                  <Alert variant="destructive" className="rounded-xl border-destructive/20 bg-destructive/5 text-destructive font-medium shadow-sm">
                     <AlertDescription>{error}</AlertDescription>
                   </Alert>
                 )}
 
                 <Button
                   type="submit"
-                  className="w-full h-11 text-base font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-300 rounded-lg"
+                  className="w-full h-12 text-base font-bold tracking-wide shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 rounded-xl bg-gradient-to-r from-primary to-blue-600 border border-transparent"
                   disabled={loading || !fullName.trim() || !email.trim() || !password || !confirmPassword}
                 >
                   {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Criar Conta Gratuita'}
@@ -576,10 +562,10 @@ export default function Auth() {
             variant="outline"
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="w-full h-11 rounded-lg border-muted-foreground/20 hover:bg-muted/30 hover:border-muted-foreground/40 transition-all"
+            className="w-full h-12 rounded-xl text-base font-medium text-gray-700 bg-white border border-gray-200 shadow-sm hover:shadow-md hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 group"
           >
-            <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" /><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" /><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" /><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" /></svg>
-            Google
+            <svg className="mr-3 h-5 w-5 text-gray-900 group-hover:scale-110 transition-transform duration-200" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" /><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" /><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" /><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" /></svg>
+            Continuar com Google
           </Button>
 
           <p className="text-center text-xs text-muted-foreground mt-8">
