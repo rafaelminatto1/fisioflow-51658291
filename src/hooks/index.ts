@@ -1,17 +1,4 @@
 // Basic hooks
-import { useState } from 'react';
-
-export const useToast = () => ({
-  toast: ({ title, description, variant }: { title: string; description?: string; variant?: string }) => {
-    console.log(`Toast: ${title} - ${description}`);
-  },
-  toasts: []
-});
-
-export const toast = ({ title, description, variant }: { title: string; description?: string; variant?: string }) => {
-  console.log(`Toast: ${title} - ${description}`);
-};
-
 export const useNavPreload = () => ({});
 
 export interface UseFileUploadOptions { }
@@ -54,10 +41,5 @@ export { useOrganizations } from './useOrganizations';
 export { useOrganizationMembers } from './useOrganizationMembers';
 export { useConnectionStatus, type ConnectionStatus, type ConnectionState } from './useConnectionStatus';
 
-// Add toasts array for useToast
-export const useToastHook = () => ({
-  toast: ({ title, description, variant }: { title: string; description?: string; variant?: string }) => {
-    console.log(`Toast: ${title} - ${description}`);
-  },
-  toasts: []
-});
+// Re-export toast from the UI components to avoid circular dependency
+export { useToast, toast } from '@/components/ui/use-toast';
