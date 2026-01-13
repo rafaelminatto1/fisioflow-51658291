@@ -450,6 +450,7 @@ CREATE POLICY "Staff can acknowledge insights" ON public.patient_insights
 -- ============================================================================
 
 -- Function to calculate patient risk score
+DROP FUNCTION IF EXISTS public.calculate_patient_risk(UUID);
 CREATE OR REPLACE FUNCTION public.calculate_patient_risk(p_patient_id UUID)
 RETURNS TABLE (
   dropout_risk INTEGER,
@@ -586,6 +587,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Function to create/update patient risk score
+DROP FUNCTION IF EXISTS public.update_patient_risk_score(UUID);
 CREATE OR REPLACE FUNCTION public.update_patient_risk_score(p_patient_id UUID)
 RETURNS public.patient_risk_scores AS $$
 DECLARE
@@ -629,6 +631,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Function to generate patient progress summary
+DROP FUNCTION IF EXISTS public.get_patient_progress_summary(UUID);
 CREATE OR REPLACE FUNCTION public.get_patient_progress_summary(p_patient_id UUID)
 RETURNS TABLE (
   total_sessions INTEGER,

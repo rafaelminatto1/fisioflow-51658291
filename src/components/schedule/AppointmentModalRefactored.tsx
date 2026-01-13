@@ -261,10 +261,10 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       date: appointmentData.appointment_date,
       start_time: appointmentData.appointment_time,
       end_time: endTimeString,
-      status: appointmentData.status as any,
-      payment_status: appointmentData.payment_status as any,
+      status: appointmentData.status as 'agendado' | 'confirmado' | 'em_andamento' | 'concluido' | 'cancelado' | 'avaliacao',
+      payment_status: appointmentData.payment_status as 'pending' | 'paid' | 'partial' | 'overdue',
       notes: appointmentData.notes || '',
-      session_type: (appointmentData.type === 'Fisioterapia' ? 'individual' : 'group') as any,
+      session_type: (appointmentData.type === 'Fisioterapia' ? 'individual' : 'group') as 'individual' | 'group',
     };
 
     try {
@@ -287,11 +287,11 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
           }
         });
       } else {
-        await createAppointmentMutation(formattedData as any, {
+        await createAppointmentMutation(formattedData as unknown as AppointmentFormData, {
           onSuccess: (newAppointment) => {
             toast.success('Agendamento criado com sucesso!');
             if (appointmentData.status === 'avaliacao') {
-              const createdId = (newAppointment as any)?.id;
+              const createdId = (newAppointment as { id?: string })?.id;
               if (createdId) {
                 const navPath = `/patients/${appointmentData.patient_id}/evaluations/new?appointmentId=${createdId}`;
                 navigate(navPath);
@@ -305,7 +305,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
           }
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao salvar:', error);
       toast.error('Ocorreu um erro inesperado.');
     }
@@ -347,8 +347,8 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
           status: appointment.status,
           payment_status: appointment.payment_status || 'pending',
           notes: appointment.notes || '',
-          session_type: (appointment.type === 'Fisioterapia' ? 'individual' : 'group') as any,
-        } as any, {
+          session_type: (appointment.type === 'Fisioterapia' ? 'individual' : 'group') as 'individual' | 'group',
+        } as unknown as AppointmentFormData, {
           onSuccess: () => {
             successCount++;
             if (successCount + errorCount === config.dates.length) {
@@ -395,10 +395,10 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         status: pendingFormData.status,
         payment_status: pendingFormData.payment_status || 'pending',
         notes: pendingFormData.notes || '',
-        session_type: (pendingFormData.type === 'Fisioterapia' ? 'individual' : 'group') as any,
+        session_type: (pendingFormData.type === 'Fisioterapia' ? 'individual' : 'group') as 'individual' | 'group',
       };
 
-      createAppointmentMutation(formattedData as any, {
+      createAppointmentMutation(formattedData as unknown as AppointmentFormData, {
         onSuccess: () => {
           toast.success('Agendamento criado com sucesso!');
           setCapacityDialogOpen(false);
