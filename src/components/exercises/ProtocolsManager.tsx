@@ -117,7 +117,7 @@ export function ProtocolsManager() {
           </Button>
         </div>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'patologia' | 'pos_operatorio')}>
           <TabsList className="mb-4">
             <TabsTrigger value="pos_operatorio">
               <Calendar className="h-4 w-4 mr-2" />
@@ -295,7 +295,7 @@ export function ProtocolsManager() {
                       {getMilestones(viewProtocol).length === 0 ? (
                         <p className="text-muted-foreground text-sm">Nenhum marco definido</p>
                       ) : (
-                        getMilestones(viewProtocol).map((milestone: any, index: number) => (
+                        getMilestones(viewProtocol).map((milestone: { week: number; description: string }, index: number) => (
                           <div key={index} className="flex items-start gap-3 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
                             <div className="flex-shrink-0 h-8 w-8 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-bold">
                               {milestone.week}
@@ -323,7 +323,7 @@ export function ProtocolsManager() {
                       {getRestrictions(viewProtocol).length === 0 ? (
                         <p className="text-muted-foreground text-sm">Nenhuma restrição definida</p>
                       ) : (
-                        getRestrictions(viewProtocol).map((restriction: any, index: number) => (
+                        getRestrictions(viewProtocol).map((restriction: { week_start: number; week_end?: number; description: string }, index: number) => (
                           <div key={index} className="flex items-start gap-3 p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
                             <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
                             <div>

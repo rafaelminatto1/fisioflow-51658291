@@ -28,7 +28,8 @@ import {
     Download,
     CreditCard,
     MoreVertical,
-    File as FileIcon
+    File as FileIcon,
+    Brain,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -48,6 +49,10 @@ import { ProgressAnalysisCard } from '@/components/patients/ProgressAnalysisCard
 import { usePatientEvolutionReport } from '@/hooks/usePatientEvolutionReport';
 import { SessionHistoryPanel } from '@/components/session/SessionHistoryPanel';
 import { useSoapRecords } from '@/hooks/useSoapRecords';
+
+// Analytics & ML Imports
+import { PatientAnalyticsDashboard, PatientLifecycleChart, PatientInsightsPanel } from '@/components/patients/analytics';
+import { usePatientLifecycleSummary } from '@/hooks/usePatientAnalytics';
 
 // Financial & Documents Imports
 import { usePatientDocuments, useUploadDocument, useDeleteDocument, useDownloadDocument } from '@/hooks/usePatientDocuments';
@@ -262,6 +267,129 @@ const FinancialTab = () => (
         <p className="text-muted-foreground">Histórico Financeiro</p>
     </div>
 );
+
+const DocumentsTab = ({ patientId }: { patientId: string }) => {
+    const { data: documents, isLoading } = usePatientDocuments(patientId);
+    const uploadDocument = useUploadDocument();
+    const deleteDocument = useDeleteDocument();
+    const downloadDocument = useDownloadDocument();
+    const [uploading, setUploading] = useState(false);
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploading(true);
+        try {
+            await uploadDocument.mutateAsync({ patientId, file, documentType: 'other' });
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    if (isLoading) {
+        return <div className="p-8 text-center"><Skeleton className="h-40 w-full mx-auto" /></div>;
+    }
+
+    return (
+        <div className="space-y-4">
+            <Card className="border-dashed border-2">
+                <CardContent className="p-8">
+                    <div className="flex flex-col items-center justify-center">
+                        <Files className="h-12 w-12 text-muted-foreground mb-4" />
+                        <p className="text-muted-foreground mb-4">
+                            Arraste arquivos aqui ou clique para selecionar
+                        </p>
+                        <input
+                            type="file"
+                            onChange={handleFileUpload}
+                            disabled={uploading}
+                            className="hidden"
+                            id="file-upload"
+                        />
+                        <Label htmlFor="file-upload">
+                            <Button variant="outline" disabled={uploading} asChild>
+                                <span className="cursor-pointer">
+                                    {uploading ? 'Enviando...' : 'Selecionar Arquivo'}
+                                </span>
+                            </Button>
+                        </Label>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {documents && documents.length > 0 ? (
+                <div className="space-y-2">
+                    {documents.map((doc: any) => (
+                        <Card key={doc.id}>
+                            <CardContent className="p-4 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <FileIcon className="h-8 w-8 text-muted-foreground" />
+                                    <div>
+                                        <p className="font-medium">{doc.name}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {new Date(doc.created_at).toLocaleDateString('pt-BR')}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => downloadDocument.mutateAsync(doc.id)}
+                                    >
+                                        <Download className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => deleteDocument.mutateAsync(doc.id)}
+                                    >
+                                        <Trash className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            ) : (
+                <Card>
+                    <CardContent className="p-8 text-center">
+                        <Files className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+                        <p className="text-muted-foreground">Nenhum arquivo anexado</p>
+                    </CardContent>
+                </Card>
+            )}
+        </div>
+    );
+};
+
+// ============================================================================
+// ANALYTICS TAB WITH ML PREDICTIONS
+// ============================================================================
+
+const AnalyticsTab = ({ patientId, patientName }: { patientId: string; patientName: string }) => {
+    const { data: lifecycleSummary, isLoading: lifecycleLoading } = usePatientLifecycleSummary(patientId);
+
+    return (
+        <div className="space-y-6">
+            {/* Main Analytics Dashboard */}
+            <PatientAnalyticsDashboard patientId={patientId} patientName={patientName} />
+
+            {/* Two-column layout for lifecycle and insights */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Lifecycle Chart */}
+                <PatientLifecycleChart
+                    summary={lifecycleSummary || null}
+                    isLoading={lifecycleLoading}
+                />
+
+                {/* Insights Panel */}
+                <PatientInsightsPanel patientId={patientId} limit={5} showHeader={true} />
+            </div>
+        </div>
+    );
+};
 
 const GamificationTab = ({ patientId }: { patientId: string }) => {
     const {
@@ -491,6 +619,10 @@ export const PatientProfilePage = () => {
                         <TabsTrigger value="overview" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-2">
                             Visão Geral
                         </TabsTrigger>
+                        <TabsTrigger value="analytics" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-2 gap-1.5">
+                            <Brain className="h-4 w-4" />
+                            Analytics & IA
+                        </TabsTrigger>
                         <TabsTrigger value="personal" className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none px-4 py-2">
                             Dados Pessoais
                         </TabsTrigger>
@@ -510,6 +642,10 @@ export const PatientProfilePage = () => {
 
                     <TabsContent value="overview" className="mt-0">
                         <OverviewTab patient={patient} />
+                    </TabsContent>
+
+                    <TabsContent value="analytics" className="mt-0">
+                        <AnalyticsTab patientId={id || ''} patientName={patientName} />
                     </TabsContent>
 
                     <TabsContent value="personal" className="mt-0">

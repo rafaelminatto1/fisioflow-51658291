@@ -123,7 +123,7 @@ export function CreateTemplateFromSelectionModal({
 
                     <div className="space-y-2">
                         <Label htmlFor="category">Categoria</Label>
-                        <Select value={category} onValueChange={(v: any) => setCategory(v)}>
+                        <Select value={category} onValueChange={(v) => setCategory(v as 'patologia' | 'pos_operatorio')}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Selecione..." />
                             </SelectTrigger>
