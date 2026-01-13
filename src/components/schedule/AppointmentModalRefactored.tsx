@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
 import { useActivePatients } from '@/hooks/usePatients';
+import type { Patient } from '@/types';
 import {
   useAppointments,
   useCreateAppointment,
@@ -90,7 +91,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const { mutate: createAppointmentMutation, isPending: isCreating } = useCreateAppointment();
   const { mutate: updateAppointmentMutation, isPending: isUpdating } = useUpdateAppointment();
   const { mutate: deleteAppointmentMutation } = useDeleteAppointment();
-  const { data: activePatients, isLoading: patientsLoading } = useActivePatients();
+  const { data: activePatients, isLoading: patientsLoading } = useActivePatients() as { data: Patient[] | undefined; isLoading: boolean };
   const { data: appointments = [] } = useAppointments();
   const { getCapacityForTime } = useScheduleCapacity();
 
@@ -496,7 +497,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                     currentMode={currentMode}
                     selectedEquipments={selectedEquipments}
                     setSelectedEquipments={setSelectedEquipments}
-                    isRecurringCalendarOpen={isRecurringCalendarOpen}
+                    _isRecurringCalendarOpen={isRecurringCalendarOpen}
                     setIsRecurringCalendarOpen={setIsRecurringCalendarOpen}
                     reminders={reminders}
                     setReminders={setReminders}

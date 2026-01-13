@@ -69,7 +69,7 @@ export const SurgeryTimeline: React.FC<SurgeryTimelineProps> = ({ surgeries }) =
                   <div className="space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <h4 className="font-semibold text-base">{surgery.surgery_name}</h4>
-                      <Badge variant={phase.color as any} className="text-xs">
+                      <Badge variant={phase.color as 'default' | 'secondary' | 'outline' | 'destructive'} className="text-xs">
                         {phase.label}
                       </Badge>
                     </div>

@@ -46,19 +46,14 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [patient, setPatient] = useState<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [, setAppointment] = useState<any>(null);
+  const [patient, setPatient] = useState<Record<string, unknown> | null>(null);
+  const [, setAppointment] = useState<Record<string, unknown> | null>(null);
   const [activeTab, setActiveTab] = useState('evolution');
 
   // Patient data
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [surgeries, setSurgeries] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [pathologies, setPathologies] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [goals, setGoals] = useState<any[]>([]);
+  const [surgeries, setSurgeries] = useState<Record<string, unknown>[]>([]);
+  const [pathologies, setPathologies] = useState<Record<string, unknown>[]>([]);
+  const [goals, setGoals] = useState<Record<string, unknown>[]>([]);
 
   // SOAP Form State
   const [soapData, setSoapData] = useState({
@@ -205,8 +200,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleReplicateConduct = (conduct: any) => {
+  const handleReplicateConduct = (conduct: { plan?: string; subjective?: string; objective?: string; assessment?: string }) => {
     if (conduct.plan) {
       setSoapData(prev => ({
         ...prev,
@@ -384,20 +378,20 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
       } else if (mode === 'page') {
         navigate('/agenda');
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao salvar sessão', error, 'SessionEvolutionContainer');
 
       let errorMessage = 'Não foi possível salvar a evolução.';
 
-      if (error?.code === '42501') {
+      const err = error as { code?: string; message?: string };
+      if (err?.code === '42501') {
         errorMessage = 'Você não tem permissão para salvar evoluções.';
-      } else if (error?.code === '23503') {
+      } else if (err?.code === '23503') {
         errorMessage = 'Erro de referência: verifique se o paciente e agendamento existem.';
-      } else if (error?.code === '23505') {
+      } else if (err?.code === '23505') {
         errorMessage = 'Já existe uma evolução para este agendamento.';
-      } else if (error?.message) {
-        errorMessage = error.message;
+      } else if (err?.message) {
+        errorMessage = err.message || errorMessage;
       }
 
       toast({

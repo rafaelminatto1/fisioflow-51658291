@@ -308,7 +308,7 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
           {showFilters && (
             <div className="flex items-center gap-2 flex-wrap">
               {/* Filtro por tipo */}
-              <Select value={filterType} onValueChange={(v: any) => setFilterType(v)}>
+              <Select value={filterType} onValueChange={(v) => setFilterType(v as TimelineEventType | 'all')}>
                 <SelectTrigger className="w-[140px]">
                   <Filter className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Filtrar" />
@@ -335,7 +335,7 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
               </div>
 
               {/* Toggle view mode */}
-              <Tabs value={viewMode} onValueChange={(v: any) => setViewMode(v)}>
+              <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'timeline' | 'list')}>
                 <TabsList className="h-8">
                   <TabsTrigger value="timeline" className="text-xs">
                     Timeline

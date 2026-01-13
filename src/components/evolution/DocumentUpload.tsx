@@ -149,7 +149,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({ patientId }) => 
 
                 <div>
                   <Label htmlFor="category">Categoria</Label>
-                  <Select value={category} onValueChange={(v) => setCategory(v as any)}>
+                  <Select value={category} onValueChange={(v) => setCategory(v as PatientDocument['category'])}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
