@@ -48,7 +48,7 @@ export function TemplateDetailsModal({
   const [weekStart, setWeekStart] = useState('');
   const [weekEnd, setWeekEnd] = useState('');
 
-  const filteredExercises = exercises.filter(e => 
+  const filteredExercises = exercises.filter(e =>
     !items.some(i => i.exercise_id === e.id) &&
     e.name?.toLowerCase().includes(searchExercise.toLowerCase())
   );
@@ -377,7 +377,7 @@ export function TemplateDetailsModal({
           </TabsContent>
 
           <TabsContent value="references" className="flex-1 overflow-y-auto mt-4">
-            <ReferencesSection references={template.references} />
+            <ReferencesSection references={template.bibliographic_references} />
           </TabsContent>
         </Tabs>
       </DialogContent>

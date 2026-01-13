@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { format, differenceInYears, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
@@ -47,6 +47,7 @@ import {
   UserCog,
   FileText,
   Play,
+  Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -63,39 +64,47 @@ interface AppointmentQuickEditModalProps {
   onDeleted?: () => void;
 }
 
-const statusLabels: Record<AppointmentStatus, string> = {
-  agendado: 'Agendado',
-  confirmado: 'Confirmado',
-  em_andamento: 'Em Andamento',
-  concluido: 'Concluído',
-  cancelado: 'Cancelado',
-  falta: 'Falta',
-  faltou: 'Faltou',
-  aguardando_confirmacao: 'Aguardando Confirmação',
-  atrasado: 'Atrasado',
-  avaliacao: 'Avaliação',
-  em_espera: 'Em Espera',
-  remarcado: 'Remarcado',
-  reagendado: 'Reagendado',
-  atendido: 'Atendido',
+// Status labels e cores - movidos para fora do componente para evitar recriação
+const STATUS_CONFIG: Record<AppointmentStatus, { label: string; color: string }> = {
+  agendado: { label: 'Agendado', color: 'bg-blue-500' },
+  confirmado: { label: 'Confirmado', color: 'bg-emerald-500' },
+  em_andamento: { label: 'Em Andamento', color: 'bg-yellow-500' },
+  concluido: { label: 'Concluído', color: 'bg-slate-500' },
+  cancelado: { label: 'Cancelado', color: 'bg-red-500' },
+  falta: { label: 'Falta', color: 'bg-orange-500' },
+  faltou: { label: 'Faltou', color: 'bg-orange-500' },
+  aguardando_confirmacao: { label: 'Aguardando Confirmação', color: 'bg-amber-500' },
+  atrasado: { label: 'Atrasado', color: 'bg-rose-500' },
+  avaliacao: { label: 'Avaliação', color: 'bg-violet-500' },
+  em_espera: { label: 'Em Espera', color: 'bg-cyan-500' },
+  remarcado: { label: 'Remarcado', color: 'bg-indigo-500' },
+  reagendado: { label: 'Reagendado', color: 'bg-teal-500' },
+  atendido: { label: 'Atendido', color: 'bg-emerald-600' },
 };
 
-const statusColors: Record<AppointmentStatus, string> = {
-  agendado: 'bg-blue-500',
-  confirmado: 'bg-green-500',
-  em_andamento: 'bg-yellow-500',
-  concluido: 'bg-slate-500',
-  cancelado: 'bg-red-500',
-  falta: 'bg-orange-500',
-  faltou: 'bg-orange-500',
-  aguardando_confirmacao: 'bg-amber-500',
-  atrasado: 'bg-rose-500',
-  avaliacao: 'bg-purple-500',
-  em_espera: 'bg-cyan-500',
-  remarcado: 'bg-indigo-500',
-  reagendado: 'bg-teal-500',
-  atendido: 'bg-emerald-500',
-};
+// Status que permitem iniciar atendimento
+const STARTABLE_STATUSES: Set<AppointmentStatus> = new Set([
+  'confirmado',
+  'agendado',
+  'avaliacao',
+]);
+
+// Opções de duração padronizadas
+const DURATION_OPTIONS = [30, 45, 60, 90, 120];
+
+interface PatientDetails {
+  phone?: string;
+  birthDate?: string;
+}
+
+interface FormData {
+  appointment_date: string;
+  appointment_time: string;
+  duration: number;
+  status: AppointmentStatus;
+  notes: string;
+  therapist_id: string;
+}
 
 export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps> = ({
   appointment,
@@ -104,31 +113,31 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
   onDeleted: _onDeleted,
 }) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { cancelAppointment, isCanceling } = useAppointmentActions();
+
+  // States
   const [isEditing, setIsEditing] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [conflictError, setConflictError] = useState<string | null>(null);
-  const [patientDetails, setPatientDetails] = useState<{
-    phone?: string;
-    birthDate?: string;
-  } | null>(null);
-  
-  // Form state
-  const [formData, setFormData] = useState({
+  const [patientDetails, setPatientDetails] = useState<PatientDetails | null>(null);
+  const [therapists, setTherapists] = useState<Array<{ id: string; name: string }>>([]);
+  const [formData, setFormData] = useState<FormData>({
     appointment_date: '',
     appointment_time: '',
     duration: 60,
-    status: 'agendado' as AppointmentStatus,
+    status: 'agendado',
     notes: '',
     therapist_id: '',
   });
 
-  // Simple appointments fetch for conflict checking
+  // Query para buscar agendamentos (verificação de conflitos)
   const { data: appointments = [] } = useQuery<AppointmentBase[]>({
     queryKey: ['appointments-for-conflict'],
     queryFn: async () => {
       const { data, error } = await (supabase
-        .from('appointments')
-        .select('id, patient_id, appointment_date, appointment_time, duration, status') as any)
+        .from('appointments') as any)
+        .select('id, patient_id, appointment_date, appointment_time, duration, status')
         .neq('status', 'cancelado');
 
       if (error) throw error;
@@ -147,10 +156,10 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
       }));
     },
     staleTime: 30000,
+    enabled: open, // Só busca quando o modal está aberto
   });
 
-  const queryClient = useQueryClient();
-
+  // Mutation para atualizar agendamento
   const updateAppointmentMutation = useMutation({
     mutationFn: async ({ appointmentId, updates }: { appointmentId: string; updates: Record<string, unknown> }) => {
       const { data, error } = await (supabase
@@ -166,17 +175,17 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
       queryClient.invalidateQueries({ queryKey: ['appointments-for-conflict'] });
+      toast.success('Agendamento atualizado com sucesso');
+      setIsEditing(false);
+    },
+    onError: (error: Error) => {
+      toast.error('Erro ao atualizar: ' + error.message);
     },
   });
 
-  const { cancelAppointment, isCanceling } = useAppointmentActions();
-
-  // Therapists list (simplified - you can expand this)
-  const [therapists, setTherapists] = useState<Array<{ id: string; name: string }>>([]);
-
-  // Load patient details
+  // Carregar detalhes do paciente
   useEffect(() => {
-    if (appointment?.patientId) {
+    if (appointment?.patientId && open) {
       (supabase
         .from('patients') as any)
         .select('phone, birth_date')
@@ -189,34 +198,43 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
               birthDate: data.birth_date || undefined,
             });
           }
+        })
+        .catch(() => {
+          setPatientDetails(null);
         });
     }
-  }, [appointment?.patientId]);
+  }, [appointment?.patientId, open]);
 
-  // Load therapists - using fetch to avoid type issues
+  // Carregar fisioterapeutas
   useEffect(() => {
-    fetch(`https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?role=eq.fisioterapeuta&select=id,full_name`, {
-      headers: {
-        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljdmJ0amZyY2hjeXZta3Z1b2N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTA5OTQsImV4cCI6MjA3NTE2Njk5NH0.L5maWG2hc3LVHEUMOzfTRTjYwIAJFXx3zan3G-Y1zAA',
-      }
-    })
-      .then(res => res.json())
-      .then((data: Array<{ id: string; full_name: string | null }>) => {
-        setTherapists(data.map(p => ({ id: p.id, name: p.full_name || 'Sem nome' })));
-      })
-      .catch(() => {});
-  }, []);
+    if (therapists.length === 0) {
+      // Usa o client Supabase em vez de fetch direto com API key exposta
+      const fetchTherapists = async () => {
+        try {
+          const { data } = await supabase
+            .from('profiles')
+            .select('id, full_name')
+            .eq('role', 'fisioterapeuta');
+          if (data) {
+            setTherapists(data.map((p: any) => ({ id: p.id, name: p.full_name || 'Sem nome' })));
+          }
+        } catch {
+          // Silencioso, fallback para lista vazia
+        }
+      };
+      fetchTherapists();
+    }
+  }, [therapists.length]);
 
-  // Initialize form data when appointment changes
+  // Inicializar formulário quando o agendamento mudar
   useEffect(() => {
     if (appointment) {
       const dateStr = appointment.date instanceof Date
         ? format(appointment.date, 'yyyy-MM-dd')
         : String(appointment.date);
-      
-      // Check if therapist_id exists on the appointment (it may come from extended data)
+
       const aptWithTherapist = appointment as Appointment & { therapist_id?: string };
-      
+
       setFormData({
         appointment_date: dateStr,
         appointment_time: appointment.time,
@@ -230,7 +248,26 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
     }
   }, [appointment]);
 
-  // Calculate patient age
+  // Verificar conflitos durante edição
+  useEffect(() => {
+    if (isEditing && formData.appointment_date && formData.appointment_time) {
+      const result = checkAppointmentConflict({
+        date: new Date(formData.appointment_date + 'T00:00:00'),
+        time: formData.appointment_time,
+        duration: formData.duration,
+        excludeId: appointment?.id,
+        appointments: appointments,
+      });
+
+      setConflictError(
+        result.hasConflict
+          ? `Conflito com agendamento de ${result.conflictingAppointment?.patientName || 'outro paciente'}`
+          : null
+      );
+    }
+  }, [formData.appointment_date, formData.appointment_time, formData.duration, isEditing, appointment?.id, appointments]);
+
+  // Calculos memoizados
   const patientAge = useMemo(() => {
     if (patientDetails?.birthDate) {
       try {
@@ -242,26 +279,22 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
     return null;
   }, [patientDetails?.birthDate]);
 
-  // Check for conflicts when editing
-  useEffect(() => {
-    if (isEditing && formData.appointment_date && formData.appointment_time) {
-      const result = checkAppointmentConflict({
-        date: new Date(formData.appointment_date + 'T00:00:00'),
-        time: formData.appointment_time,
-        duration: formData.duration,
-        excludeId: appointment?.id,
-        appointments: appointments,
-      });
-      
-      if (result.hasConflict) {
-        setConflictError(`Conflito com agendamento de ${result.conflictingAppointment?.patientName}`);
-      } else {
-        setConflictError(null);
-      }
-    }
-  }, [formData.appointment_date, formData.appointment_time, formData.duration, isEditing, appointment?.id, appointments]);
+  const canStartAttendance = useMemo(
+    () => STARTABLE_STATUSES.has(formData.status),
+    [formData.status]
+  );
 
-  const handleSave = () => {
+  const dateFormatted = useMemo(
+    () => formData.appointment_date
+      ? format(new Date(formData.appointment_date + 'T00:00:00'), "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })
+      : '',
+    [formData.appointment_date]
+  );
+
+  const statusConfig = STATUS_CONFIG[formData.status];
+
+  // Handlers
+  const handleSave = useCallback(() => {
     if (!appointment) return;
 
     if (conflictError) {
@@ -269,72 +302,60 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
       return;
     }
 
-    updateAppointmentMutation.mutate(
-      {
-        appointmentId: appointment.id,
-        updates: {
-          appointment_date: formData.appointment_date,
-          appointment_time: formData.appointment_time,
-          duration: formData.duration,
-          status: formData.status,
-          notes: formData.notes,
-          therapist_id: formData.therapist_id || null,
-        },
+    updateAppointmentMutation.mutate({
+      appointmentId: appointment.id,
+      updates: {
+        appointment_date: formData.appointment_date,
+        appointment_time: formData.appointment_time,
+        duration: formData.duration,
+        status: formData.status,
+        notes: formData.notes,
+        therapist_id: formData.therapist_id || null,
       },
-      {
-        onSuccess: () => {
-          toast.success('Agendamento atualizado com sucesso');
-          setIsEditing(false);
-        },
-        onError: (error: Error) => {
-          toast.error('Erro ao atualizar: ' + error.message);
-        },
-      }
-    );
-  };
+    });
+  }, [appointment, formData, conflictError, updateAppointmentMutation]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     if (!appointment) return;
-    
+
     cancelAppointment(appointment.id, {
       onSuccess: () => {
         toast.success('Agendamento cancelado');
         setShowCancelConfirm(false);
         onOpenChange(false);
+        _onDeleted?.();
       },
       onError: (error: Error) => {
         toast.error('Erro ao cancelar: ' + error.message);
       },
     });
-  };
+  }, [appointment, cancelAppointment, onOpenChange, _onDeleted]);
 
-  const handleWhatsAppConfirm = () => {
+  const handleWhatsAppConfirm = useCallback(() => {
     if (!appointment) return;
-    
-    const phone = patientDetails?.phone?.replace(/\D/g, '') || '';
+
+    const phone = patientDetails?.phone?.replace(/\D/g, '');
     if (!phone) {
       toast.error('Paciente não possui telefone cadastrado');
       return;
     }
 
-    const dateFormatted = formData.appointment_date 
+    const dateShort = formData.appointment_date
       ? format(new Date(formData.appointment_date + 'T00:00:00'), "dd 'de' MMMM", { locale: ptBR })
       : '';
-    
+
     const message = encodeURIComponent(
       `Olá ${appointment.patientName}! 👋\n\n` +
-      `Confirmamos sua consulta para o dia *${dateFormatted}* às *${formData.appointment_time}*.\n\n` +
+      `Confirmamos sua consulta para o dia *${dateShort}* às *${formData.appointment_time}*.\n\n` +
       `Por favor, confirme sua presença respondendo esta mensagem.\n\n` +
       `Activity Fisioterapia 💙`
     );
-    
+
     window.open(`https://wa.me/55${phone}?text=${message}`, '_blank');
     toast.success('WhatsApp aberto para confirmação');
-  };
+  }, [appointment, patientDetails?.phone, formData.appointment_date, formData.appointment_time]);
 
-  const canStartAttendance = formData.status === 'confirmado' || formData.status === 'agendado' || formData.status === 'avaliacao';
-
-  const handleStartAttendance = () => {
+  const handleStartAttendance = useCallback(() => {
     if (!appointment) return;
 
     if (formData.status === 'avaliacao') {
@@ -349,19 +370,41 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
       });
     }
     onOpenChange(false);
-  };
+  }, [appointment, formData.status, navigate, onOpenChange]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsEditing(false);
     setConflictError(null);
     onOpenChange(false);
+  }, [onOpenChange]);
+
+  const handleResetForm = useCallback(() => {
+    if (!appointment) return;
+
+    const dateStr = appointment.date instanceof Date
+      ? format(appointment.date, 'yyyy-MM-dd')
+      : String(appointment.date);
+    const aptWithTherapist = appointment as Appointment & { therapist_id?: string };
+
+    setFormData({
+      appointment_date: dateStr,
+      appointment_time: appointment.time,
+      duration: appointment.duration || 60,
+      status: appointment.status as AppointmentStatus,
+      notes: appointment.notes || '',
+      therapist_id: aptWithTherapist.therapist_id || '',
+    });
+    setConflictError(null);
+    setIsEditing(false);
+  }, [appointment]);
+
+  const updateFormField = <K extends keyof FormData>(field: K, value: FormData[K]) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   if (!appointment) return null;
 
-  const dateFormatted = formData.appointment_date
-    ? format(new Date(formData.appointment_date + 'T00:00:00'), "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })
-    : '';
+  const isSaving = updateAppointmentMutation.isPending;
 
   return (
     <>
@@ -383,8 +426,8 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
                   </DialogDescription>
                 </div>
               </div>
-              <Badge className={cn("text-white text-xs shrink-0", statusColors[formData.status])}>
-                {statusLabels[formData.status]}
+              <Badge className={cn("text-white text-xs shrink-0", statusConfig.color)}>
+                {statusConfig.label}
               </Badge>
             </div>
           </DialogHeader>
@@ -435,8 +478,9 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
                     <Input
                       type="date"
                       value={formData.appointment_date}
-                      onChange={(e) => setFormData({ ...formData, appointment_date: e.target.value })}
+                      onChange={(e) => updateFormField('appointment_date', e.target.value)}
                       className="h-9"
+                      aria-label="Data do agendamento"
                     />
                   ) : (
                     <p className="text-sm font-medium py-2 capitalize">
@@ -444,7 +488,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
                     </p>
                   )}
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
                     <Clock className="h-3.5 w-3.5" />
@@ -454,8 +498,9 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
                     <Input
                       type="time"
                       value={formData.appointment_time}
-                      onChange={(e) => setFormData({ ...formData, appointment_time: e.target.value })}
+                      onChange={(e) => updateFormField('appointment_time', e.target.value)}
                       className="h-9"
+                      aria-label="Horário do agendamento"
                     />
                   ) : (
                     <p className="text-sm font-medium py-2">{formData.appointment_time}</p>
@@ -468,15 +513,21 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground">Duração (min)</Label>
                   {isEditing ? (
-                    <Input
-                      type="number"
-                      value={formData.duration}
-                      onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) || 60 })}
-                      min={15}
-                      max={240}
-                      step={15}
-                      className="h-9"
-                    />
+                    <Select
+                      value={String(formData.duration)}
+                      onValueChange={(value) => updateFormField('duration', parseInt(value))}
+                    >
+                      <SelectTrigger className="h-9" aria-label="Duração do agendamento">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DURATION_OPTIONS.map((duration) => (
+                          <SelectItem key={duration} value={String(duration)}>
+                            {duration} minutos
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   ) : (
                     <p className="text-sm font-medium py-2">{formData.duration} minutos</p>
                   )}
@@ -490,9 +541,9 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
                   {isEditing ? (
                     <Select
                       value={formData.therapist_id}
-                      onValueChange={(value) => setFormData({ ...formData, therapist_id: value })}
+                      onValueChange={(value) => updateFormField('therapist_id', value)}
                     >
-                      <SelectTrigger className="h-9">
+                      <SelectTrigger className="h-9" aria-label="Fisioterapeuta responsável">
                         <SelectValue placeholder="Selecione" />
                       </SelectTrigger>
                       <SelectContent>
@@ -517,17 +568,17 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
                 {isEditing ? (
                   <Select
                     value={formData.status}
-                    onValueChange={(value) => setFormData({ ...formData, status: value as AppointmentStatus })}
+                    onValueChange={(value) => updateFormField('status', value as AppointmentStatus)}
                   >
-                    <SelectTrigger className="h-9">
+                    <SelectTrigger className="h-9" aria-label="Status do agendamento">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(statusLabels).map(([value, label]) => (
+                      {Object.entries(STATUS_CONFIG).map(([value, config]) => (
                         <SelectItem key={value} value={value}>
                           <div className="flex items-center gap-2">
-                            <div className={cn("w-2 h-2 rounded-full", statusColors[value as AppointmentStatus])} />
-                            {label}
+                            <div className={cn("w-2 h-2 rounded-full", config.color)} />
+                            {config.label}
                           </div>
                         </SelectItem>
                       ))}
@@ -535,8 +586,8 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
                   </Select>
                 ) : (
                   <div className="flex items-center gap-2 py-2">
-                    <div className={cn("w-2.5 h-2.5 rounded-full", statusColors[formData.status])} />
-                    <span className="text-sm font-medium">{statusLabels[formData.status]}</span>
+                    <div className={cn("w-2.5 h-2.5 rounded-full", statusConfig.color)} />
+                    <span className="text-sm font-medium">{statusConfig.label}</span>
                   </div>
                 )}
               </div>
@@ -550,9 +601,10 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
                 {isEditing ? (
                   <Textarea
                     value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    onChange={(e) => updateFormField('notes', e.target.value)}
                     placeholder="Observações do agendamento..."
                     className="min-h-[80px] resize-none"
+                    aria-label="Observações do agendamento"
                   />
                 ) : (
                   <p className="text-sm text-muted-foreground py-2">
@@ -571,25 +623,8 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
               <>
                 <Button
                   variant="outline"
-                  onClick={() => {
-                    setIsEditing(false);
-                    // Reset form
-                    if (appointment) {
-                      const dateStr = appointment.date instanceof Date
-                        ? format(appointment.date, 'yyyy-MM-dd')
-                        : String(appointment.date);
-                      const aptWithTherapist = appointment as Appointment & { therapist_id?: string };
-                      setFormData({
-                        appointment_date: dateStr,
-                        appointment_time: appointment.time,
-                        duration: appointment.duration || 60,
-                        status: appointment.status as AppointmentStatus,
-                        notes: appointment.notes || '',
-                        therapist_id: aptWithTherapist.therapist_id || '',
-                      });
-                    }
-                    setConflictError(null);
-                  }}
+                  onClick={handleResetForm}
+                  disabled={isSaving}
                   className="w-full sm:w-auto"
                 >
                   <X className="h-4 w-4 mr-2" />
@@ -597,12 +632,12 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
                 </Button>
                 <Button
                   onClick={handleSave}
-                  disabled={updateAppointmentMutation.isPending || !!conflictError}
+                  disabled={isSaving || !!conflictError}
                   className="w-full sm:w-auto"
                 >
-                  {updateAppointmentMutation.isPending ? (
+                  {isSaving ? (
                     <>
-                      <div className="h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       Salvando...
                     </>
                   ) : (
@@ -619,7 +654,17 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
                   {canStartAttendance && (
                     <Button
                       onClick={handleStartAttendance}
-                      className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white"
+                      className={cn(
+                        "flex-1 sm:flex-none text-white",
+                        formData.status === 'avaliacao'
+                          ? "bg-violet-600 hover:bg-violet-700"
+                          : "bg-emerald-600 hover:bg-emerald-700"
+                      )}
+                      aria-label={
+                        formData.status === 'avaliacao'
+                          ? 'Iniciar avaliação do paciente'
+                          : 'Iniciar atendimento do paciente'
+                      }
                     >
                       {formData.status === 'avaliacao' ? (
                         <>
@@ -639,6 +684,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
                     size="sm"
                     onClick={() => setShowCancelConfirm(true)}
                     className="flex-1 sm:flex-none text-destructive hover:text-destructive"
+                    aria-label="Cancelar agendamento"
                   >
                     <Trash2 className="h-4 w-4 mr-1.5" />
                     Cancelar
@@ -648,6 +694,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
                     size="sm"
                     onClick={handleWhatsAppConfirm}
                     className="flex-1 sm:flex-none text-green-600 hover:text-green-700"
+                    aria-label="Enviar confirmação via WhatsApp"
                   >
                     <MessageCircle className="h-4 w-4 mr-1.5" />
                     WhatsApp
@@ -664,6 +711,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
                   <Button
                     onClick={() => setIsEditing(true)}
                     className="flex-1 sm:flex-none"
+                    aria-label="Editar agendamento"
                   >
                     <Edit className="h-4 w-4 mr-2" />
                     Editar
@@ -699,7 +747,14 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
               disabled={isCanceling}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isCanceling ? 'Cancelando...' : 'Sim, Cancelar'}
+              {isCanceling ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Cancelando...
+                </>
+              ) : (
+                'Sim, Cancelar'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
