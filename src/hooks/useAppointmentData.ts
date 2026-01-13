@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { executeWithRetry } from '@/lib/utils/async';
 
 export const useAppointmentData = (appointmentId: string | undefined) => {
     // Buscar dados do agendamento do Supabase com retry e timeout
@@ -36,21 +35,17 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
             })();
             // #endregion
 
-            // Tentar buscar usando a mesma estrutura que useAppointments (que funciona)
+            // Tentar buscar usando query direta (mesma estrutura que useAppointments que funciona)
             // Primeiro sem relacionamento para evitar problemas de RLS
-            let result = await executeWithRetry(
-                () =>
-                    supabase
-                        .from('appointments')
-                        .select('*')
-                        .eq('id', appointmentId)
-                        .maybeSingle(),
-                { timeoutMs: 8000, maxRetries: 3 }
-            );
+            const result = await supabase
+                .from('appointments')
+                .select('*')
+                .eq('id', appointmentId)
+                .maybeSingle();
 
             // #region agent log
             (()=>{
-              // Capturar informações completas da resposta
+              // Capturar informações completas da resposta - incluindo o objeto completo
               const responseInfo = {
                 appointmentId,
                 appointmentFound: !!result.data,
@@ -65,8 +60,12 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
                 dataIsNull: result.data === null,
                 dataIsUndefined: result.data === undefined,
                 dataKeys: result.data ? Object.keys(result.data) : [],
+                resultKeys: result ? Object.keys(result) : [],
+                resultStringified: JSON.stringify(result).substring(0, 200), // Primeiros 200 chars
                 // Verificar se é um problema de RLS (status 200 mas sem dados)
-                isRLSBlocked: result.status === 200 && !result.data && !result.error
+                isRLSBlocked: result.status === 200 && !result.data && !result.error,
+                // Verificar se maybeSingle está retornando null corretamente
+                maybeSingleReturnsNull: result.data === null && result.status === 200 && !result.error
               };
               const logData={location:'src/hooks/useAppointmentData.ts:18',message:'Appointment fetch without relationship result',data:responseInfo,timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'};
               console.log('[DEBUG]',logData);
@@ -78,15 +77,11 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
             if (result.data && !result.error) {
                 const patientId = result.data.patient_id;
                 if (patientId) {
-                    const patientResult = await executeWithRetry(
-                        () =>
-                            supabase
-                                .from('patients')
-                                .select('*')
-                                .eq('id', patientId)
-                                .maybeSingle(),
-                        { timeoutMs: 8000, maxRetries: 3 }
-                    );
+                    const patientResult = await supabase
+                        .from('patients')
+                        .select('*')
+                        .eq('id', patientId)
+                        .maybeSingle();
                     
                     // Adicionar dados do paciente ao agendamento
                     if (patientResult.data) {
@@ -105,7 +100,8 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
         enabled: !!appointmentId,
         retry: 3,
         retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-        staleTime: 1000 * 60 * 2, // 2 minutos
+        staleTime: 0, // Sempre buscar dados frescos
+        cacheTime: 0, // Não fazer cache
     });
 
     const patientId = appointment?.patient_id;
@@ -120,15 +116,11 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
 
             if (!patientId) throw new Error('ID do paciente não fornecido');
 
-            const result = await executeWithRetry(
-                () =>
-                    supabase
-                        .from('patients')
-                        .select('*')
-                        .eq('id', patientId)
-                        .maybeSingle(),
-                { timeoutMs: 8000, maxRetries: 3 }
-            );
+            const result = await supabase
+                .from('patients')
+                .select('*')
+                .eq('id', patientId)
+                .maybeSingle();
             // Retornar null em vez de undefined para evitar erro do React Query
             const data = result.data ?? null;
             // #region agent log
