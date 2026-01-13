@@ -21,7 +21,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Keyboard, FileText, Save, CheckCircle, Search, Clock, Activity } from 'lucide-react';
+import { Keyboard, FileText, Save, CheckCircle, Search, Clock, Activity, Sparkles, Wand2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ShortcutItemProps {
@@ -92,6 +92,14 @@ const SHORTCUTS = {
       { keys: ['Alt', 'M'], description: 'Ir para Medições', icon: <Activity className="h-3 w-3" /> },
       { keys: ['Alt', 'H'], description: 'Ver Histórico', icon: <Clock className="h-3 w-3" /> },
       { keys: ['Alt', 'T'], description: 'Abrir Templates', icon: <Search className="h-3 w-3" /> },
+    ]
+  },
+  ai: {
+    label: 'IA Assistant',
+    icon: <Sparkles className="h-4 w-4 text-purple-500" />,
+    items: [
+      { keys: ['Alt', 'A'], description: 'Abrir IA Assistant', icon: <Sparkles className="h-3 w-3" /> },
+      { keys: ['Ctrl', 'Shift', 'S'], description: 'Salvar + Analisar com IA', icon: <Wand2 className="h-3 w-3" /> },
     ]
   },
   general: {
@@ -172,9 +180,10 @@ EvolutionKeyboardShortcuts.displayName = 'EvolutionKeyboardShortcuts';
 export const useEvolutionShortcuts = (
   onSave?: () => void,
   onComplete?: () => void,
-  onNavigate?: (section: 'subjective' | 'objective' | 'assessment' | 'plan' | 'measurements' | 'history') => void,
+  onNavigate?: (section: 'subjective' | 'objective' | 'assessment' | 'plan' | 'measurements' | 'history' | 'ai') => void,
   onOpenHelp?: () => void,
-  onOpenTemplates?: () => void
+  onOpenTemplates?: () => void,
+  onSaveAndAnalyze?: () => void
 ) => {
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -184,9 +193,16 @@ export const useEvolutionShortcuts = (
       const isModifierKey = e.ctrlKey || e.metaKey;
 
       // Ctrl/Cmd + S para salvar
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's' && !e.shiftKey) {
         e.preventDefault();
         onSave?.();
+        return;
+      }
+
+      // Ctrl/Cmd + Shift + S para salvar e analisar com IA
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'S') {
+        e.preventDefault();
+        onSaveAndAnalyze?.();
         return;
       }
 
@@ -225,6 +241,12 @@ export const useEvolutionShortcuts = (
         onNavigate?.('history');
       }
 
+      // Alt + A para IA Assistant
+      if (e.altKey && e.key === 'a') {
+        e.preventDefault();
+        onNavigate?.('ai');
+      }
+
       // Alt + T para templates
       if (e.altKey && e.key === 't') {
         e.preventDefault();
@@ -234,7 +256,7 @@ export const useEvolutionShortcuts = (
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [onSave, onComplete, onNavigate, onOpenHelp, onOpenTemplates]);
+  }, [onSave, onComplete, onNavigate, onOpenHelp, onOpenTemplates, onSaveAndAnalyze]);
 
   return null;
 };
