@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Card, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, FolderOpen, Image as ImageIcon, ArrowLeft, RefreshCw } from 'lucide-react';
+import { FolderOpen, Image as ImageIcon, ArrowLeft, RefreshCw } from 'lucide-react';
 import { dicomWebClient, DicomStudy } from '@/services/dicom/dicomWebClient';
 import DicomViewer from './DicomViewer';
 
@@ -11,15 +11,19 @@ interface DicomBrowserProps {
 }
 
 // Helper to safely extract DICOM tag values
-const getTagValue = (obj: any, tag: string) => {
-    return obj?.[tag]?.Value?.[0]?.Alphabetic || obj?.[tag]?.Value?.[0] || '';
+const getTagValue = (obj: Record<string, { Value?: Array<{ Alphabetic?: string } | string> }>, tag: string): string => {
+    const val = obj?.[tag]?.Value?.[0];
+    if (typeof val === 'object' && val !== null) {
+        return val.Alphabetic || '';
+    }
+    return String(val || '');
 };
 
-const DicomBrowser: React.FC<DicomBrowserProps> = ({ onSelectSeries }) => {
+const DicomBrowser: React.FC<DicomBrowserProps> = (_props) => {
     const [view, setView] = useState<'studies' | 'series' | 'viewer'>('studies');
     const [studies, setStudies] = useState<DicomStudy[]>([]);
     const [selectedStudy, setSelectedStudy] = useState<DicomStudy | null>(null);
-    const [series, setSeries] = useState<any[]>([]);
+    const [series, setSeries] = useState<Record<string, unknown>[]>([]);
     const [selectedSeriesUid, setSelectedSeriesUid] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -149,7 +153,7 @@ const DicomBrowser: React.FC<DicomBrowserProps> = ({ onSelectSeries }) => {
                                     <TableCell className="font-medium">{getTagValue(study, '00100010')}</TableCell>
                                     <TableCell>{getTagValue(study, '00080020')}</TableCell>
                                     <TableCell>{getTagValue(study, '00081030')}</TableCell>
-                                    <TableCell>{(getTagValue(study, '00080061') || []).join(', ')}</TableCell>
+                                    <TableCell>{getTagValue(study, '00080061')}</TableCell>
                                     <TableCell className="text-right"><FolderOpen className="w-4 h-4 ml-auto text-blue-500" /></TableCell>
                                 </TableRow>
                             ))}

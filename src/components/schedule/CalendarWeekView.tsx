@@ -141,7 +141,7 @@ const CalendarWeekView = memo(({
 
                 {/* Week days - Grid */}
                 <div className="flex-1 overflow-auto calendar-scroll" role="rowgroup">
-                    <div className="grid grid-cols-7 min-w-full bg-background/30 [&>div]:min-w-[100px] md:[&>div]:min-w-[140px] lg:[&>div]:min-w-[180px] xl:[&>div]:min-w-[220px]" role="row">
+                    <div className="grid grid-cols-7 min-w-full bg-background/30 [&>div]:min-w-[140px] md:[&>div]:min-w-[180px] lg:[&>div]:min-w-[220px]" role="row">
                         {weekDays.map(day => {
                             const dayAppointments = getAppointmentsForDate(day);
                             const isClosed = isDayClosedForDate(day);
