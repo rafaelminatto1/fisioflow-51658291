@@ -158,7 +158,7 @@ export function WaitlistEntryModal({ open, onOpenChange, entry }: WaitlistEntryM
 
           <div>
             <Label className="mb-3 block">Prioridade</Label>
-            <RadioGroup value={priority} onValueChange={(v: any) => setPriority(v)}>
+            <RadioGroup value={priority} onValueChange={(v: 'normal' | 'high' | 'urgent') => setPriority(v)}>
               <div className="flex items-center space-x-2"><RadioGroupItem value="normal" id="normal" /><Label htmlFor="normal">Normal</Label></div>
               <div className="flex items-center space-x-2"><RadioGroupItem value="high" id="high" /><Label htmlFor="high">Alta</Label></div>
               <div className="flex items-center space-x-2"><RadioGroupItem value="urgent" id="urgent" /><Label htmlFor="urgent">Urgente</Label></div>

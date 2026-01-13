@@ -414,10 +414,27 @@ export function useCRMAnalytics() {
 }
 
 // ========== IMPORT LEADS ==========
+interface LeadImportData {
+  nome?: string;
+  name?: string;
+  Nome?: string;
+  telefone?: string;
+  phone?: string;
+  Telefone?: string;
+  email?: string;
+  Email?: string;
+  origem?: string;
+  Origem?: string;
+  interesse?: string;
+  Interesse?: string;
+  observacoes?: string;
+  'Observações'?: string;
+}
+
 export function useImportLeads() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (leads: Array<Partial<any>>) => {
+    mutationFn: async (leads: Array<Partial<LeadImportData>>) => {
       const formattedLeads = leads.map(lead => ({
         nome: lead.nome || lead.name || lead.Nome || '',
         telefone: lead.telefone || lead.phone || lead.Telefone || null,

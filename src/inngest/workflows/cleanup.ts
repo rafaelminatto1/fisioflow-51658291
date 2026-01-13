@@ -23,7 +23,7 @@ export const cleanupWorkflow = inngest.createFunction(
   {
     event: Events.CRON_DAILY_CLEANUP,
   },
-  async ({ event, step }: { event: { data: CleanupPayload }; step: any }) => {
+  async ({ step }: { event: { data: CleanupPayload }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -46,7 +46,7 @@ export const cleanupWorkflow = inngest.createFunction(
         const ninetyDaysAgo = new Date();
         ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
-        const { data, error, count } = await supabase
+        const { error, count } = await supabase
           .from('notification_history')
           .delete()
           .lt('created_at', ninetyDaysAgo.toISOString())
@@ -68,7 +68,7 @@ export const cleanupWorkflow = inngest.createFunction(
         const twentyFourHoursAgo = new Date();
         twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
-        const { data, error, count } = await supabase
+        const { error, count } = await supabase
           .from('password_reset_tokens')
           .delete()
           .lt('created_at', twentyFourHoursAgo.toISOString())
@@ -91,7 +91,7 @@ export const cleanupWorkflow = inngest.createFunction(
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-        const { data, error, count } = await supabase
+        const { error, count } = await supabase
           .from('system_health_logs')
           .delete()
           .lt('created_at', thirtyDaysAgo.toISOString())
@@ -112,7 +112,7 @@ export const cleanupWorkflow = inngest.createFunction(
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-      const { data, error, count } = await supabase
+      const { error, count } = await supabase
         .from('sessions')
         .delete()
         .eq('status', 'in_progress')

@@ -318,7 +318,7 @@ export const useAdvancedAnalytics = () => {
       })));
       
       setError(null);
-    } catch (_err) {
+    } catch {
       setError('Erro ao atualizar métricas');
       console.error('Erro ao atualizar métricas de analytics', _err);
     } finally {
@@ -449,7 +449,7 @@ export const useAdvancedAnalytics = () => {
       
       setInsights(prev => [...newInsights, ...prev]);
       setError(null);
-    } catch (_err) {
+    } catch {
       setError('Erro ao gerar insights');
     } finally {
       setLoading(false);

@@ -21,8 +21,8 @@ export const sendNotificationWorkflow = inngest.createFunction(
   {
     event: Events.NOTIFICATION_SEND,
   },
-  async ({ event, step }: { event: { data: NotificationSendPayload }; step: any }) => {
-    const { userId, organizationId, type, priority, data } = event.data;
+  async ({ event, step }: { event: { data: NotificationSendPayload }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
+    const { userId, organizationId, type, data } = event.data;
 
     // Log notification attempt
     await step.run('log-notification', async () => {
@@ -122,7 +122,7 @@ export const sendNotificationBatchWorkflow = inngest.createFunction(
   {
     event: Events.NOTIFICATION_SEND_BATCH,
   },
-  async ({ event, step }: { event: { data: NotificationBatchPayload }; step: any }) => {
+  async ({ event, step }: { event: { data: NotificationBatchPayload }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
     const { organizationId, notifications } = event.data;
 
     const results = await step.run('process-batch', async () => {

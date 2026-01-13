@@ -7,9 +7,22 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Search, Dumbbell, Filter } from 'lucide-react';
 
+interface Exercise {
+  id: string;
+  title: string;
+  description: string;
+  videoUrl: string;
+  thumbnailUrl: string;
+  duration: string;
+  difficulty: 'iniciante' | 'intermediario' | 'avancado';
+  category: string;
+  targetMuscles: string[];
+  instructions: string[];
+}
+
 const ExerciseLibraryExpanded = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedExercise, setSelectedExercise] = useState<any>(null);
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
 
   const exercises = [
     {

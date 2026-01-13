@@ -24,11 +24,38 @@ import { usePatientInsight } from '@/hooks/usePatientInsight';
 import { useState } from 'react';
 
 interface PatientDashboardProps {
-    patient: any;
-    appointments: any[];
-    activeGoals: any[];
-    activePathologies: any[];
-    surgeries: any[];
+    patient: {
+        name?: string;
+        age?: number;
+        profession?: string;
+        phone?: string;
+        email?: string;
+        address?: { city?: string; state?: string };
+        photoUrl?: string;
+        alerts?: string[];
+        isActive?: boolean;
+        balance?: number;
+    };
+    appointments: Array<{
+        date: Date | string;
+        type?: string;
+        notes?: string;
+    }>;
+    activeGoals: Array<{
+        description: string;
+        targetDate?: string | Date;
+    }>;
+    activePathologies: Array<{
+        name: string;
+        diagnosedAt?: string | Date;
+    }>;
+    surgeries: Array<{
+        name: string;
+        hospital?: string;
+        surgeon?: string;
+        surgeryDate?: string | Date;
+        notes?: string;
+    }>;
     onAction: (action: string) => void;
 }
 
@@ -225,7 +252,7 @@ export const PatientDashboard360 = ({
                     <CardContent>
                         {activeGoals.length > 0 ? (
                             <div className="space-y-4">
-                                {activeGoals.map((goal: any, i: number) => (
+                                {activeGoals.map((goal, i: number) => (
                                     <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/40">
                                         <div>
                                             <p className="font-medium">{goal.description}</p>
@@ -266,7 +293,7 @@ export const PatientDashboard360 = ({
                     <CardContent>
                         {activePathologies.length > 0 ? (
                             <div className="space-y-3">
-                                {activePathologies.map((pathology: any, i: number) => (
+                                {activePathologies.map((pathology, i: number) => (
                                     <div key={i} className="flex items-center justify-between p-3 rounded-lg border border-rose-100 bg-rose-50/50 dark:bg-rose-950/10">
                                         <div>
                                             <p className="font-medium">{pathology.name}</p>
@@ -295,7 +322,7 @@ export const PatientDashboard360 = ({
                 </CardHeader>
                 <CardContent>
                     <div className="relative pl-6 border-l-2 border-muted space-y-6">
-                        {(surgeries || []).map((surgery: any, i: number) => (
+                        {(surgeries || []).map((surgery, i: number) => (
                             <div key={i} className="relative">
                                 <div className="absolute -left-[29px] top-1 h-3 w-3 rounded-full bg-blue-500 ring-4 ring-background" />
                                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">

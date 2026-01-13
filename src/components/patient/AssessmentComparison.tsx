@@ -6,7 +6,27 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 
 interface ComparisonProps {
-    records: any[];
+    records: Array<{
+        id: string;
+        date: string;
+        therapist: string;
+        raw?: {
+            vital_signs?: {
+                bloodPressure?: string;
+                heartRate?: string;
+                temperature?: string;
+                respiratoryRate?: string;
+            };
+            physical_exam?: {
+                inspection?: string;
+                palpation?: string;
+            };
+            diagnosis?: string;
+            treatment_plan?: {
+                plan?: string;
+            };
+        };
+    }>;
     onClose: () => void;
 }
 

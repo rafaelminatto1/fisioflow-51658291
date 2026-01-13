@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,14 +12,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-  FileText, Stethoscope, Plus, Download, Edit, Eye, Search, Calendar,
-  User, Activity, Clock, CheckCircle2, Send, Info, AlertCircle, PenTool,
-  Brain, Bone, Heart, TrendingUp, Save
+  FileText, Stethoscope, Plus, Edit, Eye,
+  Activity, Clock, CheckCircle2, PenTool,
+  Bone, Heart, TrendingUp, Save
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer';
 
@@ -1068,7 +1068,7 @@ export default function RelatorioMedicoPage() {
   const [activeTab, setActiveTab] = useState<'criar' | 'lista' | 'modelos'>('criar');
 
   // Estado para novo relatório
-  const [novoRelatorio, setNovoRelatorio] = useState<RelatorioMedicoData>({
+  const [novoRelatorio] = useState<RelatorioMedicoData>({
     id: '',
     tipo_relatorio: 'inicial',
     paciente: {
@@ -1334,7 +1334,7 @@ export default function RelatorioMedicoPage() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {relatorios.map((relatorio: any) => (
+                    {relatorios.map((relatorio) => (
                       <div key={relatorio.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/5">
                         <div className="flex-1">
                           <div className="flex items-center gap-2">

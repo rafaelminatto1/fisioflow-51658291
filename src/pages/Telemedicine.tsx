@@ -49,7 +49,7 @@ const Telemedicine = () => {
       setIsCreateOpen(false);
       setSelectedPatient('');
       navigate(`/telemedicine-room/${result.id}`);
-    } catch (error) {
+    } catch {
       // Error handled by mutation
     }
   };

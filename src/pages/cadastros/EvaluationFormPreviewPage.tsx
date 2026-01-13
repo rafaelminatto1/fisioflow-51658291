@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Eye, Edit, Download, FileText, Clock, User } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEvaluationFormWithFields } from '@/hooks/useEvaluationForms';
@@ -18,9 +17,14 @@ import { toast } from 'sonner';
 
 // Componentes para renderizar campos
 function FormField({ field, value, onChange, readonly }: {
-  field: any;
-  value?: any;
-  onChange?: (val: any) => void;
+  field: {
+    tipo_campo: string;
+    rotulo: string;
+    opcoes?: string[];
+    obrigatorio?: boolean;
+  };
+  value?: string | number | Date;
+  onChange?: (val: string | number | Date) => void;
   readonly?: boolean;
 }) {
   const renderField = () => {
@@ -207,7 +211,7 @@ export default function EvaluationFormPreviewPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: formData, isLoading } = useEvaluationFormWithFields(id);
-  const [responses, setResponses] = useState<Record<string, any>>({});
+  const [responses, setResponses] = useState<Record<string, string | number | Date | string[]>>({});
   const [isEditing, setIsEditing] = useState(false);
 
   if (isLoading) {
@@ -237,7 +241,7 @@ export default function EvaluationFormPreviewPage() {
   }
 
   // Agrupar campos por seção
-  const groupedFields = formData.fields?.reduce((acc: any, field: any) => {
+  const groupedFields = formData.fields?.reduce((acc: Record<string, Array<Record<string, unknown>>>, field: Record<string, unknown>) => {
     const section = field.secao || 'Geral';
     if (!acc[section]) acc[section] = [];
     acc[section].push(field);
@@ -255,13 +259,13 @@ ${formData.descricao ? `Descrição: ${formData.descricao}` : ''}
 
 ${'='.repeat(50)}
 
-${Object.entries(groupedFields).map(([section, fields]: [string, any]) => `
+${Object.entries(groupedFields).map(([section, fields]: [string, Array<Record<string, unknown>>]) => `
 ${section}
 ${'-'.repeat(30)}
 
-${(fields as any[]).map(f => `
-${f.rotulo || f.pergunta}${f.obrigatorio ? ' *' : ''}
-${responses[f.id] || '[Não respondido]'}
+${fields.map((f: Record<string, unknown>) => `
+${(f.rotulo as string | undefined) || (f.pergunta as string | undefined)}${f.obrigatorio ? ' *' : ''}
+${responses[f.id as string] || '[Não respondido]'}
 `).join('\n')}
 `).join('\n')}
 
@@ -334,12 +338,12 @@ Gerado em: ${new Date().toLocaleString('pt-BR')}
                   )}
 
                   <div className="space-y-6 pl-4">
-                    {(fields as any[]).map((field, fieldIndex) => (
+                    {fields.map((field, fieldIndex) => (
                       <FormField
                         key={field.id || fieldIndex}
-                        field={field}
-                        value={responses[field.id]}
-                        onChange={(val) => setResponses({ ...responses, [field.id]: val })}
+                        field={field as { tipo_campo: string; rotulo: string; opcoes?: string[]; obrigatorio?: boolean; id: string }}
+                        value={responses[field.id as string]}
+                        onChange={(val) => setResponses({ ...responses, [field.id as string]: val })}
                         readonly={!isEditing}
                       />
                     ))}
