@@ -7,7 +7,7 @@ export default async function handler(request: Request) {
         const jsonResponse = await handleUpload({
             body,
             request,
-            onBeforeGenerateToken: async (pathname) => {
+            onBeforeGenerateToken: async () => {
                 // In a real app, you should check authentication here!
                 // For example, verify Supabase session from cookies/headers
 
@@ -18,7 +18,7 @@ export default async function handler(request: Request) {
                     }),
                 };
             },
-            onUploadCompleted: async ({ blob, tokenPayload }) => {
+            onUploadCompleted: async ({ blob }) => {
                 console.log('Blob uploaded:', blob.url);
             },
         });
