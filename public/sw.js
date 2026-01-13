@@ -268,8 +268,8 @@ async function sendExerciseReminder() {
     });
   }
 }
-// Enh
-anced background sync for offline actions
+
+// Enhanced background sync for offline actions
 self.addEventListener('sync', (event) => {
   console.log('Background sync triggered:', event.tag);
   
@@ -499,8 +499,9 @@ async function openNotificationDB() {
       }
     };
   });
-}// Handle
- appointment confirmation directly from service worker
+}
+
+// Handle appointment confirmation directly from service worker
 async function handleAppointmentConfirmation(appointmentId, confirmed) {
   if (!appointmentId) return;
   
