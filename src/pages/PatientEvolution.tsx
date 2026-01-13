@@ -110,6 +110,25 @@ const PatientEvolution = () => {
   const { appointmentId } = useParams<{ appointmentId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Validação inicial do appointmentId
+  if (!appointmentId) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center h-[50vh]">
+          <div className="text-center space-y-4">
+            <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <p className="text-lg font-semibold">ID do agendamento não fornecido</p>
+            <p className="text-muted-foreground">Não foi possível identificar qual atendimento deve ser iniciado.</p>
+            <Button onClick={() => navigate('/schedule')} variant="outline">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Voltar para Agenda
+            </Button>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
   const [currentSoapRecordId, setCurrentSoapRecordId] = useState<string | undefined>();
   const [sessionStartTime] = useState(new Date());
   const [currentWizardStep, setCurrentWizardStep] = useState('subjective');
@@ -209,31 +228,6 @@ const PatientEvolution = () => {
       plan: plan.split(/\s+/).filter(w => w.length > 0).length
     });
   }, [subjective, objective, assessment, plan]);
-
-  // Hook de atalhos de teclado - usa o novo hook personalizado
-  useEvolutionShortcuts(
-    handleSave,
-    handleCompleteSession,
-    (section) => {
-      // Navegação entre seções
-      if (section === 'subjective' || section === 'objective' || section === 'assessment' || section === 'plan') {
-        setActiveTab('soap');
-        setCurrentWizardStep(section);
-        // Scroll para a seção
-        setTimeout(() => {
-          const element = document.getElementById(section);
-          element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          element?.focus();
-        }, 100);
-      } else if (section === 'measurements') {
-        setActiveTab('measurements');
-      } else if (section === 'history') {
-        setActiveTab('history');
-      }
-    },
-    () => setShowKeyboardHelp(true),
-    () => setShowApplyTemplate(true)
-  );
 
   // Mutation para salvar evolução
   const createSoapRecord = useCreateSoapRecord();
@@ -457,6 +451,32 @@ const PatientEvolution = () => {
     }
   };
 
+  // Hook de atalhos de teclado - movido para depois das definições das funções
+  // para evitar referências a funções ainda não definidas
+  useEvolutionShortcuts(
+    handleSave,
+    handleCompleteSession,
+    (section) => {
+      // Navegação entre seções
+      if (section === 'subjective' || section === 'objective' || section === 'assessment' || section === 'plan') {
+        setActiveTab('soap');
+        setCurrentWizardStep(section);
+        // Scroll para a seção
+        setTimeout(() => {
+          const element = document.getElementById(section);
+          element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element?.focus();
+        }, 100);
+      } else if (section === 'measurements') {
+        setActiveTab('measurements');
+      } else if (section === 'history') {
+        setActiveTab('history');
+      }
+    },
+    () => setShowKeyboardHelp(true),
+    () => setShowApplyTemplate(true)
+  );
+
   if (dataLoading) {
     return (
       <MainLayout>
@@ -474,10 +494,44 @@ const PatientEvolution = () => {
     return (
       <MainLayout>
         <div className="flex items-center justify-center h-[50vh]">
-          <div className="text-center space-y-4">
+          <div className="text-center space-y-4 max-w-md">
             <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
             <p className="text-lg font-semibold">Agendamento não encontrado</p>
             <p className="text-muted-foreground">Não foi possível carregar os dados do agendamento.</p>
+            {/* Debug info for developers */}
+            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-left">
+              <p className="text-xs font-semibold text-amber-800 mb-2">INFO DEV (Debug):</p>
+              <div className="text-[10px] font-mono text-amber-900 space-y-1">
+                <div className="flex gap-2">
+                  <span className="text-amber-600">appointmentId:</span>
+                  <span className="font-mono">{appointmentId || 'undefined'}</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-amber-600">appointment:</span>
+                  <span>{appointment ? 'found' : 'NOT found'}</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-amber-600">patient:</span>
+                  <span>{patient ? 'found' : 'NOT found'}</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-amber-600">patientId:</span>
+                  <span className="font-mono">{patientId || 'undefined'}</span>
+                </div>
+                {appointmentError && (
+                  <div className="mt-2 pt-2 border-t border-amber-300">
+                    <span className="text-amber-600">appointmentError:</span>
+                    <p className="text-red-700 truncate">{appointmentError.message}</p>
+                  </div>
+                )}
+                {patientError && (
+                  <div className="mt-2 pt-2 border-t border-amber-300">
+                    <span className="text-amber-600">patientError:</span>
+                    <p className="text-red-700 truncate">{patientError.message}</p>
+                  </div>
+                )}
+              </div>
+            </div>
             <Button onClick={() => navigate('/schedule')} variant="outline">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Voltar para Agenda

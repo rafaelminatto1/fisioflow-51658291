@@ -35,3 +35,33 @@ export {
   useInfiniteScroll,
   useAnimateOnScroll
 } from './useIntersectionObserver';
+
+// Memoização avançada
+export {
+  usePrevious,
+  useTrackedMemo,
+  useMemoWithTTL,
+  useInvalidableCallback,
+  useMultiMemo,
+  usePersistentMemo,
+  useThrottledValue,
+  usePromiseMemo,
+  useDeepMemo,
+  useConditionalMemo,
+} from './useMemoAdvanced';
+
+// React Query otimizado
+export {
+  QueryConfig,
+  useStableQuery,
+  useStaticQuery,
+  useOptimizedQuery,
+  useFrequentQuery,
+  useBatchRefetch,
+  useOptimizedMutation,
+  usePrefetch,
+  useOptimisticCache,
+  useInfiniteScrollOptimized,
+  createQueryKeys,
+  QueryKeys,
+} from './useReactQueryOptimized';
