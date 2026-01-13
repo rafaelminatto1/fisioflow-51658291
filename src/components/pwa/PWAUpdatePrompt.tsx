@@ -8,7 +8,7 @@ export function PWAUpdatePrompt() {
   const [showReload, setShowReload] = useState(false);
   
   const {
-    needRefresh: [needRefresh, _setNeedRefresh],
+    needRefresh: [needRefresh, ],
     updateServiceWorker,
   } = useRegisterSW({
     onRegisteredSW(swUrl, r) {

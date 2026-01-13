@@ -17,7 +17,7 @@ const GoalPanel: React.FC<GoalPanelProps> = ({ compareData, promSnapshot }) => {
     // Default to ACL or first relevant profile
     const [selectedProfileId, setSelectedProfileId] = useState<string>("acl_rts_readiness");
 
-    const availableProfiles = Object.values(goalProfiles).filter(p =>
+    const availableProfiles = Object.values(goalProfiles).filter(_ =>
         // Only show profiles relevant to the test type (if we want to be strict)
         // Or show all. Let's show all for now but allow user to enable.
         true

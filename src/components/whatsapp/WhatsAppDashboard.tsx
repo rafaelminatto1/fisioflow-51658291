@@ -20,8 +20,6 @@ import {
   useUpdateTemplate,
 } from '@/hooks/useWhatsAppMetrics';
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -39,14 +37,12 @@ import {
   Clock,
   Send,
   RefreshCw,
-  Settings,
   FileText,
   Activity,
   AlertCircle,
   Wifi,
   WifiOff,
   TrendingUp,
-  Mail,
   Phone,
   Edit2,
 } from 'lucide-react';

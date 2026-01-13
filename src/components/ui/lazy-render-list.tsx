@@ -13,7 +13,6 @@
  */
 
 import { useState, useRef, useCallback, useEffect, memo } from 'react';
-import { cn } from '@/lib/utils';
 
 interface LazyRenderListProps<T> {
   /** Lista completa de itens */

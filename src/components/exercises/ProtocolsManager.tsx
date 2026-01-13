@@ -1,5 +1,5 @@
 
-import { useState, useMemo, memo, useCallback, useEffect } from 'react';
+import { useState, useMemo, memo, useEffect } from 'react';
 import { useExerciseProtocols, type ExerciseProtocol } from '@/hooks/useExerciseProtocols';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

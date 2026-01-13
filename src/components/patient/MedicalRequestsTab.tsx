@@ -63,11 +63,6 @@ export const MedicalRequestsTab: React.FC<MedicalRequestsTabProps> = ({ patientI
         }
     };
 
-    const _getPublicUrl = (path: string) => {
-        const { data } = supabase.storage.from('medical-requests').getPublicUrl(path);
-        return data.publicUrl;
-    };
-
     if (isLoading) {
         return <div className="p-4 text-center">Carregando pedidos...</div>;
     }

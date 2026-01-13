@@ -14,7 +14,6 @@ import {
 
 export function MFASetupPanel() {
   const {
-    _settings,
     isLoading, 
     isMFAEnabled, 
     enableMFA, 

@@ -111,13 +111,6 @@ const COLORS = {
   critical: '#ef4444',
 } as const;
 
-const _RISK_COLORS: Record<string, string> = {
-  low: COLORS.low,
-  medium: COLORS.medium,
-  high: COLORS.high,
-  critical: COLORS.critical,
-};
-
 // ============================================================================
 // CHART UTILITIES
 // ============================================================================
@@ -143,8 +136,6 @@ const CustomTooltip: React.FC<TooltipProps<number, string> & { active?: boolean;
  * Custom hook for fetching admin analytics data
  */
 function useAdminAnalytics() {
-  const queryClient = useQueryClient();
-
   return useQuery({
     queryKey: ['admin-analytics', 'clinic-metrics'],
     queryFn: async (): Promise<{

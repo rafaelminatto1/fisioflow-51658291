@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
-  Search, Video, Upload, Trash2, Edit, Eye, Play,
-  Filter, X, Clock
+  Search, Video, Upload, Trash2, Play,
+  Filter, X, Clock, Edit, AlertCircle, Check
 } from 'lucide-react';
 import {
   Select,
@@ -24,31 +24,58 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useExerciseVideos, useDeleteExerciseVideo } from '@/hooks/useExerciseVideos';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useExerciseVideos, useDeleteExerciseVideo, useUpdateExerciseVideo } from '@/hooks/useExerciseVideos';
 import { ExerciseVideoPlayer } from './ExerciseVideoPlayerCard';
 import { ExerciseVideoUpload } from './ExerciseVideoUpload';
 import { EmptyState } from '@/components/ui/empty-state';
-import { VIDEO_CATEGORIES, VIDEO_DIFFICULTY, BODY_PARTS, EQUIPMENT_OPTIONS } from '@/services/exerciseVideos';
+import {
+  VIDEO_CATEGORIES,
+  VIDEO_DIFFICULTY,
+  BODY_PARTS,
+  EQUIPMENT_OPTIONS,
+  exerciseVideosService,
+  type ExerciseVideo
+} from '@/services/exerciseVideos';
 import { toast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 interface ExerciseVideoLibraryProps {
   onUploadClick?: () => void;
 }
 
-export function ExerciseVideoLibrary({ onUploadClick }: ExerciseVideoLibraryProps) {
-  const { data: videos, isLoading } = useExerciseVideos();
+export function ExerciseVideoLibrary({ onUploadClick: _onUploadClick }: ExerciseVideoLibraryProps) {
+  const { data: videos, isLoading, error } = useExerciseVideos();
   const deleteVideoMutation = useDeleteExerciseVideo();
+  const updateVideoMutation = useUpdateExerciseVideo();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [difficultyFilter, setDifficultyFilter] = useState<string>('all');
   const [bodyPartFilter, setBodyPartFilter] = useState<string>('all');
   const [equipmentFilter, setEquipmentFilter] = useState<string>('all');
-  const [selectedVideo, setSelectedVideo] = useState<(typeof videos)[0] | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<ExerciseVideo | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showUpload, setShowUpload] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [editingVideo, setEditingVideo] = useState<ExerciseVideo | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // Edit form state
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editCategory, setEditCategory] = useState('');
+  const [editDifficulty, setEditDifficulty] = useState('');
+  const [editBodyParts, setEditBodyParts] = useState<string[]>([]);
+  const [editEquipment, setEditEquipment] = useState<string[]>([]);
 
   const filteredVideos = React.useMemo(() => {
     if (!videos) return [];
@@ -83,30 +110,137 @@ export function ExerciseVideoLibrary({ onUploadClick }: ExerciseVideoLibraryProp
     setSearchTerm('');
   };
 
-  const handleDelete = async () => {
-    if (deleteId) {
-      await deleteVideoMutation.mutateAsync(deleteId);
-      setDeleteId(null);
+  // Open edit modal with video data
+  const handleOpenEdit = useCallback((video: ExerciseVideo) => {
+    setEditingVideo(video);
+    setEditTitle(video.title);
+    setEditDescription(video.description || '');
+    setEditCategory(video.category);
+    setEditDifficulty(video.difficulty);
+    setEditBodyParts(video.body_parts || []);
+    setEditEquipment(video.equipment || []);
+    setShowEdit(true);
+  }, []);
+
+  // Close edit modal
+  const handleCloseEdit = useCallback(() => {
+    setShowEdit(false);
+    setEditingVideo(null);
+    setEditTitle('');
+    setEditDescription('');
+    setEditCategory('');
+    setEditDifficulty('');
+    setEditBodyParts([]);
+    setEditEquipment([]);
+  }, []);
+
+  // Save video edits
+  const handleSaveEdit = useCallback(async () => {
+    if (!editingVideo) return;
+
+    if (editTitle.trim().length < 3) {
       toast({
-        title: 'Vídeo excluído',
-        description: 'O vídeo foi removido da biblioteca.',
+        title: 'Título muito curto',
+        description: 'O título deve ter pelo menos 3 caracteres.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      await updateVideoMutation.mutateAsync({
+        id: editingVideo.id,
+        updates: {
+          title: editTitle.trim(),
+          description: editDescription.trim() || null,
+          category: editCategory as any,
+          difficulty: editDifficulty as any,
+          body_parts: editBodyParts,
+          equipment: editEquipment,
+        },
+      });
+
+      toast({
+        title: 'Vídeo atualizado',
+        description: 'As informações do vídeo foram atualizadas.',
+      });
+
+      handleCloseEdit();
+
+      // Update selected video if it's currently open
+      if (selectedVideo?.id === editingVideo.id) {
+        setSelectedVideo({
+          ...selectedVideo,
+          title: editTitle.trim(),
+          description: editDescription.trim() || null,
+          category: editCategory as any,
+          difficulty: editDifficulty as any,
+          body_parts: editBodyParts,
+          equipment: editEquipment,
+        });
+      }
+    } catch {
+      toast({
+        title: 'Erro ao atualizar',
+        description: 'Não foi possível atualizar o vídeo. Tente novamente.',
+        variant: 'destructive',
       });
     }
-  };
+  }, [editingVideo, editTitle, editDescription, editCategory, editDifficulty, editBodyParts, editEquipment, updateVideoMutation, selectedVideo, handleCloseEdit]);
 
-  const formatDuration = (seconds?: number) => {
-    if (!seconds) return '--:--';
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
+  // Keyboard shortcuts - ESC to close modals
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showEdit) {
+          handleCloseEdit();
+        } else if (selectedVideo) {
+          setSelectedVideo(null);
+        } else if (deleteId) {
+          setDeleteId(null);
+        } else if (showUpload) {
+          setShowUpload(false);
+        }
+      }
+    };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showEdit, selectedVideo, deleteId, showUpload, handleCloseEdit]);
+
+  const toggleEditBodyPart = useCallback((part: string) => {
+    setEditBodyParts((prev) =>
+      prev.includes(part)
+        ? prev.filter((p) => p !== part)
+        : [...prev, part]
+    );
+  }, []);
+
+  const toggleEditEquipment = useCallback((eq: string) => {
+    setEditEquipment((prev) =>
+      prev.includes(eq)
+        ? prev.filter((e) => e !== eq)
+        : [...prev, eq]
+    );
+  }, []);
+
+  const handleDelete = async () => {
+    if (deleteId) {
+      try {
+        await deleteVideoMutation.mutateAsync(deleteId);
+        setDeleteId(null);
+        toast({
+          title: 'Vídeo excluído',
+          description: 'O vídeo foi removido da biblioteca.',
+        });
+      } catch {
+        toast({
+          title: 'Erro ao excluir',
+          description: 'Não foi possível excluir o vídeo. Tente novamente.',
+          variant: 'destructive',
+        });
+      }
+    }
   };
 
   if (isLoading) {
@@ -115,6 +249,21 @@ export function ExerciseVideoLibrary({ onUploadClick }: ExerciseVideoLibraryProp
         {Array.from({ length: 6 }).map((_, i) => (
           <Skeleton key={i} className="h-64 w-full rounded-xl" />
         ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 text-center">
+        <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+        <h3 className="text-lg font-semibold mb-2">Erro ao carregar vídeos</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Não foi possível carregar a biblioteca de vídeos. Tente novamente.
+        </p>
+        <Button onClick={() => window.location.reload()} variant="outline">
+          Recarregar
+        </Button>
       </div>
     );
   }
@@ -249,6 +398,7 @@ export function ExerciseVideoLibrary({ onUploadClick }: ExerciseVideoLibraryProp
               video={video}
               onPlay={() => setSelectedVideo(video)}
               onDelete={() => setDeleteId(video.id)}
+              onEdit={() => handleOpenEdit(video)}
             />
           ))}
         </div>
@@ -260,6 +410,7 @@ export function ExerciseVideoLibrary({ onUploadClick }: ExerciseVideoLibraryProp
               video={video}
               onPlay={() => setSelectedVideo(video)}
               onDelete={() => setDeleteId(video.id)}
+              onEdit={() => handleOpenEdit(video)}
             />
           ))}
         </div>
@@ -286,10 +437,10 @@ export function ExerciseVideoLibrary({ onUploadClick }: ExerciseVideoLibraryProp
                   {selectedVideo.duration && (
                     <span className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
-                      {formatDuration(selectedVideo.duration)}
+                      {exerciseVideosService.formatDuration(selectedVideo.duration)}
                     </span>
                   )}
-                  <span>• {formatFileSize(selectedVideo.file_size)}</span>
+                  <span>• {exerciseVideosService.formatFileSize(selectedVideo.file_size)}</span>
                   <span>•</span>
                   <Badge variant="outline" className="capitalize">
                     {selectedVideo.category}
@@ -343,6 +494,152 @@ export function ExerciseVideoLibrary({ onUploadClick }: ExerciseVideoLibraryProp
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Edit Video Modal */}
+      <Dialog open={showEdit} onOpenChange={handleCloseEdit}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Vídeo</DialogTitle>
+            <DialogDescription>
+              Atualize as informações do vídeo de exercício
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Title */}
+            <div className="space-y-2">
+              <Label>
+                Título do Exercício <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                placeholder="Ex: Rotação de Ombro com Bastão"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                maxLength={100}
+              />
+              <p className="text-xs text-muted-foreground text-right">
+                {editTitle.length}/100 caracteres
+              </p>
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <Label>Descrição</Label>
+              <Textarea
+                placeholder="Descreva o exercício, objetivo e cuidados importantes..."
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                rows={3}
+                maxLength={500}
+              />
+              <p className="text-xs text-muted-foreground text-right">
+                {editDescription.length}/500 caracteres
+              </p>
+            </div>
+
+            {/* Category and Difficulty */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>
+                  Categoria <span className="text-destructive">*</span>
+                </Label>
+                <Select value={editCategory} onValueChange={setEditCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {VIDEO_CATEGORIES.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>
+                  Dificuldade <span className="text-destructive">*</span>
+                </Label>
+                <Select value={editDifficulty} onValueChange={setEditDifficulty}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {VIDEO_DIFFICULTY.map((diff) => (
+                      <SelectItem key={diff} value={diff}>
+                        {diff.charAt(0).toUpperCase() + diff.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Body Parts */}
+            <div className="space-y-2">
+              <Label>Partes do Corpo</Label>
+              <div className="flex flex-wrap gap-2">
+                {BODY_PARTS.map((part) => (
+                  <Badge
+                    key={part}
+                    variant={editBodyParts.includes(part) ? 'default' : 'outline'}
+                    className={cn(
+                      'cursor-pointer transition-colors hover:bg-primary/20',
+                      editBodyParts.includes(part) && 'bg-primary text-primary-foreground hover:bg-primary'
+                    )}
+                    onClick={() => toggleEditBodyPart(part)}
+                  >
+                    {part.charAt(0).toUpperCase() + part.slice(1)}
+                    {editBodyParts.includes(part) && (
+                      <Check className="h-3 w-3 ml-1" />
+                    )}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            {/* Equipment */}
+            <div className="space-y-2">
+              <Label>Equipamentos Necessários</Label>
+              <div className="flex flex-wrap gap-2">
+                {EQUIPMENT_OPTIONS.map((eq) => (
+                  <Badge
+                    key={eq}
+                    variant={editEquipment.includes(eq) ? 'default' : 'outline'}
+                    className={cn(
+                      'cursor-pointer transition-colors hover:bg-primary/20',
+                      editEquipment.includes(eq) && 'bg-primary text-primary-foreground hover:bg-primary'
+                    )}
+                    onClick={() => toggleEditEquipment(eq)}
+                  >
+                    {eq.charAt(0).toUpperCase() + eq.slice(1)}
+                    {editEquipment.includes(eq) && (
+                      <Check className="h-3 w-3 ml-1" />
+                    )}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={handleCloseEdit}
+              disabled={updateVideoMutation.isPending}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSaveEdit}
+              disabled={editTitle.trim().length < 3 || updateVideoMutation.isPending}
+            >
+              {updateVideoMutation.isPending ? 'Salvando...' : 'Salvar Alterações'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Upload Modal */}
       <ExerciseVideoUpload
         open={showUpload}
@@ -359,19 +656,14 @@ export function ExerciseVideoLibrary({ onUploadClick }: ExerciseVideoLibraryProp
 function VideoCard({
   video,
   onPlay,
-  onDelete
+  onDelete,
+  onEdit
 }: {
-  video: (typeof filteredVideos)[0];
+  video: ExerciseVideo;
   onPlay: () => void;
   onDelete: () => void;
+  onEdit: () => void;
 }) {
-  const formatDuration = (seconds?: number) => {
-    if (!seconds) return '';
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   return (
     <div className="group relative overflow-hidden rounded-lg border bg-card hover:shadow-lg transition-all">
       {/* Thumbnail with overlay */}
@@ -391,7 +683,7 @@ function VideoCard({
         {/* Duration badge */}
         {video.duration && (
           <div className="absolute bottom-2 right-2 px-2 py-1 rounded bg-black/70 text-white text-xs font-medium">
-            {formatDuration(video.duration)}
+            {exerciseVideosService.formatDuration(video.duration)}
           </div>
         )}
 
@@ -401,6 +693,7 @@ function VideoCard({
             size="icon"
             onClick={onPlay}
             className="w-14 h-14 rounded-full bg-white/90 hover:bg-white"
+            aria-label={`Reproduzir ${video.title}`}
           >
             <Play className="h-6 w-6 fill-black text-black ml-1" />
           </Button>
@@ -424,14 +717,26 @@ function VideoCard({
           <Badge variant="outline" className="text-xs capitalize">
             {video.difficulty}
           </Badge>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-destructive hover:text-destructive opacity-0 group-hover:opacity-100"
-            onClick={onDelete}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 hover:bg-muted"
+              onClick={onEdit}
+              aria-label={`Editar ${video.title}`}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+              onClick={onDelete}
+              aria-label={`Excluir ${video.title}`}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -442,19 +747,14 @@ function VideoCard({
 function VideoListItem({
   video,
   onPlay,
-  onDelete
+  onDelete,
+  onEdit
 }: {
-  video: (typeof filteredVideos)[0];
+  video: ExerciseVideo;
   onPlay: () => void;
   onDelete: () => void;
+  onEdit: () => void;
 }) {
-  const formatDuration = (seconds?: number) => {
-    if (!seconds) return '--:--';
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   return (
     <div className="group flex items-center gap-4 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
       {/* Thumbnail */}
@@ -467,13 +767,13 @@ function VideoListItem({
           </div>
         )}
         <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button size="icon" onClick={onPlay} className="w-8 h-8 rounded-full bg-white/90">
+          <Button size="icon" onClick={onPlay} className="w-8 h-8 rounded-full bg-white/90" aria-label={`Reproduzir ${video.title}`}>
             <Play className="h-4 w-4 fill-black text-black ml-0.5" />
           </Button>
         </div>
         {video.duration && (
           <div className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/70 text-white text-[10px]">
-            {formatDuration(video.duration)}
+            {exerciseVideosService.formatDuration(video.duration)}
           </div>
         )}
       </div>
@@ -488,7 +788,7 @@ function VideoListItem({
           <Badge variant="outline" className="text-xs capitalize">
             {video.category}
           </Badge>
-          <Badge variant="outline" className="text-xs Capitalize">
+          <Badge variant="outline" className="text-xs capitalize">
             {video.difficulty}
           </Badge>
         </div>
@@ -503,8 +803,18 @@ function VideoListItem({
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 text-destructive hover:text-destructive"
+          className="h-8 w-8 hover:bg-muted"
+          onClick={onEdit}
+          aria-label={`Editar ${video.title}`}
+        >
+          <Edit className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
           onClick={onDelete}
+          aria-label={`Excluir ${video.title}`}
         >
           <Trash2 className="h-4 w-4" />
         </Button>

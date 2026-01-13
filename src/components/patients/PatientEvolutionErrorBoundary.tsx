@@ -2,7 +2,6 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, ArrowLeft, Bug, Copy } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
-import { useNavigate } from 'react-router-dom';
 
 interface Props {
   children: ReactNode;
@@ -115,8 +114,6 @@ ${errorInfo?.componentStack || 'No component stack'}
   };
 
   render() {
-    const navigate = useNavigate();
-
     if (this.state.hasError) {
       const minified = this.getMinifiedErrorInfo();
 
@@ -206,7 +203,7 @@ ${errorInfo?.componentStack || 'No component stack'}
                   Recarregar Página
                 </Button>
                 <Button
-                  onClick={() => navigate('/schedule')}
+                  onClick={() => window.location.href = '/schedule'}
                   variant="outline"
                   className="flex items-center gap-2"
                 >

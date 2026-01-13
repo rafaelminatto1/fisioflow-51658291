@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { useWaitlist, useAddToWaitlist, useUpdatePriority, type WaitlistEntry } from '@/hooks/useWaitlist';
+import { useAddToWaitlist, useUpdatePriority, type WaitlistEntry } from '@/hooks/useWaitlist';
 import { usePatients } from '@/hooks/usePatients';
 import {
   Select,

@@ -1,8 +1,9 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { Play, Pause, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, Keyboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { cn } from '@/lib/utils';
+import { exerciseVideosService, type ExerciseVideo } from '@/services/exerciseVideos';
 
 export interface ExerciseVideoPlayerProps {
   src: string;
@@ -77,7 +78,7 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
     }
   }, [autoPlay]);
 
-  const togglePlay = () => {
+  const togglePlay = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
 
@@ -87,15 +88,103 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
       video.play();
     }
     setIsPlaying(!isPlaying);
-  };
+  }, [isPlaying]);
 
-  const toggleMute = () => {
+  const toggleMute = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
 
     video.muted = !video.muted;
     setIsMuted(video.muted);
-  };
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    if (!isFullscreen) {
+      container.requestFullscreen().catch(console.error);
+    } else {
+      document.exitFullscreen().catch(console.error);
+    }
+  }, [isFullscreen]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLSelectElement
+      ) {
+        return;
+      }
+
+      const video = videoRef.current;
+      if (!video) return;
+
+      switch (e.key) {
+        case ' ':
+        case 'k':
+          e.preventDefault();
+          togglePlay();
+          break;
+        case 'm':
+          e.preventDefault();
+          toggleMute();
+          break;
+        case 'f':
+          e.preventDefault();
+          toggleFullscreen();
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          video.currentTime = Math.max(0, video.currentTime - 5);
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          video.currentTime = Math.min(duration || 0, video.currentTime + 5);
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setVolume((prev) => Math.min(1, prev + 0.1));
+          video.volume = Math.min(1, video.volume + 0.1);
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          setVolume((prev) => Math.max(0, prev - 0.1));
+          video.volume = Math.max(0, video.volume - 0.1);
+          break;
+        case 'Home':
+          e.preventDefault();
+          video.currentTime = 0;
+          break;
+        case 'End':
+          e.preventDefault();
+          video.currentTime = duration || 0;
+          break;
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+          // Jump to percentage (0-90%)
+          e.preventDefault();
+          const percent = parseInt(e.key) * 0.1;
+          video.currentTime = (duration || 0) * percent;
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [duration, togglePlay, toggleMute, toggleFullscreen]);
 
   const handleVolumeChange = (value: number[]) => {
     const video = videoRef.current;
@@ -116,17 +205,6 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
     setCurrentTime(value[0]);
   };
 
-  const toggleFullscreen = () => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    if (!isFullscreen) {
-      container.requestFullscreen().catch(console.error);
-    } else {
-      document.exitFullscreen().catch(console.error);
-    }
-  };
-
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
@@ -139,9 +217,7 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
   }, []);
 
   const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    return exerciseVideosService.formatDuration(time);
   };
 
   const handleControlsVisibility = () => {
@@ -266,6 +342,7 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
             variant="ghost"
             className="h-8 w-8 shrink-0 text-white hover:text-white hover:bg-white/20"
             onClick={toggleFullscreen}
+            title="Tela cheia (f)"
           >
             {isFullscreen ? (
               <Minimize className="w-4 h-4" />
@@ -273,6 +350,18 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
               <Maximize className="w-4 h-4" />
             )}
           </Button>
+
+          {/* Keyboard shortcuts hint */}
+          <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-6 w-6 text-white/50 hover:text-white/80 hover:bg-white/10"
+              title="Atalhos: Espaço/K=play/pause, M=mudo, F=tela cheia, ←/→=seek"
+            >
+              <Keyboard className="w-3 h-3" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -337,16 +426,7 @@ export const CompactVideoPlayer: React.FC<CompactVideoPlayerProps> = ({
  * Video card component for displaying video with thumbnail
  */
 export interface ExerciseVideoCardProps {
-  video: {
-    id: string;
-    title: string;
-    description?: string;
-    video_url: string;
-    thumbnail_url?: string;
-    duration?: number;
-    category: string;
-    difficulty: string;
-  };
+  video: ExerciseVideo;
   onClick?: () => void;
   className?: string;
 }
@@ -356,13 +436,6 @@ export const ExerciseVideoCard: React.FC<ExerciseVideoCardProps> = ({
   onClick,
   className,
 }) => {
-  const formatDuration = (seconds?: number) => {
-    if (!seconds) return '';
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   return (
     <div
       className={cn(
@@ -380,7 +453,7 @@ export const ExerciseVideoCard: React.FC<ExerciseVideoCardProps> = ({
         {/* Duration badge */}
         {video.duration && (
           <div className="absolute bottom-2 right-2 px-2 py-1 rounded bg-black/70 text-white text-xs font-medium">
-            {formatDuration(video.duration)}
+            {exerciseVideosService.formatDuration(video.duration)}
           </div>
         )}
 

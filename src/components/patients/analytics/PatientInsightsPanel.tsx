@@ -261,7 +261,7 @@ const InsightSummary = memo(function InsightSummary({ insights }: InsightSummary
       )}
     </div>
   );
-}
+});
 
 // ============================================================================
 // MAIN COMPONENT
@@ -273,7 +273,7 @@ interface PatientInsightsPanelProps {
   limit?: number;
 }
 
-export function PatientInsightsPanel({
+export const PatientInsightsPanel = memo(function PatientInsightsPanel({
   patientId,
   showHeader = true,
   limit = 10,
@@ -284,12 +284,12 @@ export function PatientInsightsPanel({
   const { data: insights, isLoading, refetch } = usePatientInsights(patientId, false);
   const acknowledgeInsight = useAcknowledgeInsight();
 
-  const handleAcknowledge = async (insightId: string) => {
+  const handleAcknowledge = useCallback(async (insightId: string) => {
     await acknowledgeInsight.mutateAsync({ insightId, patientId });
     refetch();
-  };
+  }, [acknowledgeInsight, patientId, refetch]);
 
-  const toggleExpand = (insightId: string) => {
+  const toggleExpand = useCallback((insightId: string) => {
     setExpandedIds(prev => {
       const next = new Set(prev);
       if (next.has(insightId)) {
@@ -299,15 +299,15 @@ export function PatientInsightsPanel({
       }
       return next;
     });
-  };
+  }, []);
 
-  const acknowledgeAll = async () => {
+  const acknowledgeAll = useCallback(async () => {
     if (!insights) return;
     for (const insight of insights) {
       await acknowledgeInsight.mutateAsync({ insightId: insight.id, patientId });
     }
     refetch();
-  };
+  }, [insights, acknowledgeInsight, patientId, refetch]);
 
   // Memoized filter insights for performance
   const filteredInsights = useMemo(() =>
@@ -437,6 +437,6 @@ export function PatientInsightsPanel({
       </CardContent>
     </Card>
   );
-}
+});
 
 export default PatientInsightsPanel;

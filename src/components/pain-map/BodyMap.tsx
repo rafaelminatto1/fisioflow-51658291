@@ -247,7 +247,7 @@ export function BodyMap({
         {/* Regiões clicáveis */}
         {regions.map(region => {
           const isHovered = hoveredRegion === region.code;
-          const _hasPoint = points.some(p => p.regionCode === region.code);
+          points.some(p => p.regionCode === region.code);
 
           return (
             <rect
