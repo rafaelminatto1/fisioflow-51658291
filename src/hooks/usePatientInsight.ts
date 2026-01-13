@@ -1,0 +1,31 @@
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
+
+interface PatientInsightResponse {
+    insight: string;
+}
+
+export function usePatientInsight() {
+    return useMutation({
+        mutationFn: async (patientData: any) => {
+            const response = await fetch('/api/ai/patient-insight', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ patientData }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to generate insight');
+            }
+
+            return (await response.json()) as PatientInsightResponse;
+        },
+        onError: (error) => {
+            console.error('AI Insight Error:', error);
+            toast.error('Erro ao gerar análise inteligente. Tente novamente.');
+        },
+    });
+}
