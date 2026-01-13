@@ -20,7 +20,7 @@ interface TokenData {
 
 const PreCadastro = () => {
   const { token } = useParams<{ token: string }>();
-  const navigate = useNavigate();
+  const _navigate = useNavigate(); // eslint-disable-line @typescript-eslint/no-unused-vars
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -80,7 +80,7 @@ const PreCadastro = () => {
           campos_obrigatorios: data.campos_obrigatorios as string[] || ['nome', 'email', 'telefone'],
           campos_opcionais: data.campos_opcionais as string[] || []
         });
-      } catch (err) {
+      } catch {
         setError('Erro ao validar link');
       } finally {
         setLoading(false);

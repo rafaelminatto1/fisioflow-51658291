@@ -10,7 +10,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { FileText, Plus, Calendar, Paperclip, X, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { supabase } from '@/integrations/supabase/client';
 import { FileViewer } from '@/components/common/FileViewer';
 
 interface MedicalRequestsTabProps {

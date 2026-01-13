@@ -10,12 +10,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Mail, Plus, Edit, Trash2, Send, Users, Eye, Clock, CheckCircle2,
-  XCircle, AlertCircle, TrendingUp, Target, Filter, FileText, Image
+  XCircle, AlertCircle, TrendingUp, Filter, FileText
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -54,8 +52,7 @@ export default function CRMCampanhasPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'campanhas' | 'templates' | 'relatorio'>('campanhas');
-  const [selectedCampaign, setSelectedCampaign] = useState<EmailCampaign | null>(null);
-  const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
+  const [selectedCampaign] = useState<EmailCampaign | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('todos');
 
@@ -237,7 +234,7 @@ export default function CRMCampanhasPage() {
   });
 
   const getStatusBadge = (status: string) => {
-    const config: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string; icon: any }> = {
+    const config: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string; icon: React.ElementType<{ className?: string }> }> = {
       rascunho: { variant: 'secondary', label: 'Rascunho', icon: FileText },
       agendado: { variant: 'outline', label: 'Agendado', icon: Clock },
       enviando: { variant: 'default', label: 'Enviando...', icon: AlertCircle },

@@ -52,7 +52,8 @@ vi.mock('@/lib/errors/logger', () => ({
 
 // Mock dos componentes filhos
 vi.mock('../SOAPFormPanel', () => ({
-  SOAPFormPanel: ({ onChange }: { onChange: (data: any) => void }) => (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Mock component prop
+  SOAPFormPanel: ({ onChange }: { onChange: (data: Record<string, unknown>) => void }) => (
     <div data-testid="soap-form-panel">
       <button onClick={() => onChange({ subjective: 'test', objective: 'test', assessment: 'test', plan: 'test' })}>
         Preencher SOAP

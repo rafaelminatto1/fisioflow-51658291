@@ -95,12 +95,14 @@ export function LazyChart({ children, height = 300 }: { children: React.ReactNod
 /**
  * Preload dos componentes de chart (útil para prefetch antes de navegar)
  */
+/* eslint-disable-next-line react-refresh/only-export-components */
 export function preloadCharts() {
   // Pré-carregar todos os componentes do Recharts
   void import('recharts');
 }
 
 // Re-exportar tudo do recharts para compatibilidade
+/* eslint-disable react-refresh/only-export-components */
 export {
   LineChart,
   BarChart,
@@ -129,3 +131,4 @@ export type {
   PieChartProps,
   RadarChartProps,
 } from 'recharts';
+/* eslint-enable react-refresh/only-export-components */

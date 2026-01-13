@@ -18,8 +18,8 @@ export const sendEmailWorkflow = inngest.createFunction(
   {
     event: Events.EMAIL_SEND,
   },
-  async ({ event, step }: { event: { data: EmailSendPayload }; step: any }) => {
-    const { to, subject, html, text, from, replyTo, attachments, tags } = event.data;
+  async ({ event, step }: { event: { data: EmailSendPayload }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
+    const { to, subject, html, text, from, replyTo, tags } = event.data;
 
     const result = await step.run('send-email', async () => {
       return await ResendService.sendEmail({
@@ -55,7 +55,7 @@ export const sendAppointmentConfirmationWorkflow = inngest.createFunction(
   {
     event: 'email/appointment.confirmation',
   },
-  async ({ event, step }: { event: { data: any }; step: any }) => {
+  async ({ event, step }: { event: { data: Record<string, unknown> }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
     const { to, patientName, therapistName, date, time, location, onlineMeetingUrl, organizationName } = event.data;
 
     const result = await step.run('send-confirmation', async () => {
@@ -96,7 +96,7 @@ export const sendAppointmentReminderEmailWorkflow = inngest.createFunction(
   {
     event: 'email/appointment.reminder',
   },
-  async ({ event, step }: { event: { data: any }; step: any }) => {
+  async ({ event, step }: { event: { data: Record<string, unknown> }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
     const { to, patientName, therapistName, date, time, location, organizationName } = event.data;
 
     const result = await step.run('send-reminder', async () => {
@@ -136,7 +136,7 @@ export const sendBirthdayGreetingWorkflow = inngest.createFunction(
   {
     event: 'email/birthday.greeting',
   },
-  async ({ event, step }: { event: { data: any }; step: any }) => {
+  async ({ event, step }: { event: { data: Record<string, unknown> }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
     const { to, patientName, organizationName, therapistName } = event.data;
 
     const result = await step.run('send-birthday-greeting', async () => {
@@ -173,7 +173,7 @@ export const sendDailyReportWorkflow = inngest.createFunction(
   {
     event: 'email/daily.report',
   },
-  async ({ event, step }: { event: { data: any }; step: any }) => {
+  async ({ event, step }: { event: { data: Record<string, unknown> }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
     const {
       to,
       therapistName,
@@ -223,7 +223,7 @@ export const sendEmailBatchWorkflow = inngest.createFunction(
   {
     event: Events.EMAIL_SEND_BATCH,
   },
-  async ({ event, step }: { event: { data: { emails: EmailSendPayload[] } }; step: any }) => {
+  async ({ event, step }: { event: { data: { emails: EmailSendPayload[] } }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
     const { emails } = event.data;
 
     const results = await step.run('send-batch', async () => {
@@ -235,7 +235,7 @@ export const sendEmailBatchWorkflow = inngest.createFunction(
         batches.push(emails.slice(i, i + batchSize));
       }
 
-      const allResults: any[] = [];
+      const allResults: unknown[] = [];
 
       for (const batch of batches) {
         // Send individual email events

@@ -33,7 +33,7 @@ export const useIncompletePatients = () => {
 
         setData(mappedPatients);
         setError(null);
-      } catch (err: any) {
+      } catch (err) {
         logger.error('Erro ao buscar pacientes incompletos', err, 'useIncompletePatients');
         setError(err.message);
       } finally {

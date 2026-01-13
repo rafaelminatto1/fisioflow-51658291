@@ -13,7 +13,7 @@ import { logger } from '@/lib/errors/logger';
 // TYPES
 // ============================================================================
 
-export interface OptimizedQueryOptions<_T = unknown> {
+export interface OptimizedQueryOptions {
   table: string;
   columns?: string;
   filter?: { column: string; operator: string; value: unknown };
@@ -24,12 +24,12 @@ export interface OptimizedQueryOptions<_T = unknown> {
   onError?: (error: Error) => void;
 }
 
-export interface PaginatedQueryOptions<T> extends OptimizedQueryOptions<T> {
+export interface PaginatedQueryOptions extends OptimizedQueryOptions {
   pageSize?: number;
   initialPage?: number;
 }
 
-export interface QueryResult<T> {
+export interface QueryResult<T = unknown> {
   data: T[] | null;
   isLoading: boolean;
   error: Error | null;
@@ -37,7 +37,7 @@ export interface QueryResult<T> {
   invalidateCache: () => void;
 }
 
-export interface PaginatedQueryResult<T> extends QueryResult<T> {
+export interface PaginatedQueryResult<T = unknown> extends QueryResult<T> {
   currentPage: number;
   totalPages: number;
   totalCount: number;
@@ -62,7 +62,7 @@ interface CacheEntry<T> {
 const queryCache = new Map<string, CacheEntry<unknown>>();
 
 // Generate cache key from options
-function generateCacheKey<T>(options: OptimizedQueryOptions<T>): string {
+function generateCacheKey(options: OptimizedQueryOptions): string {
   const { table, columns, filter, orderBy, limit } = options;
   return JSON.stringify({
     table,
@@ -162,7 +162,7 @@ export function getCacheHitRate(): number {
 // ============================================================================
 
 export function useOptimizedQuery<T = unknown>(
-  options: OptimizedQueryOptions<T>
+  options: OptimizedQueryOptions
 ): QueryResult<T> {
   const {
     table,
@@ -289,7 +289,7 @@ export function useOptimizedQuery<T = unknown>(
 // ============================================================================
 
 export function usePaginatedQuery<T = unknown>(
-  options: PaginatedQueryOptions<T>
+  options: PaginatedQueryOptions
 ): PaginatedQueryResult<T> {
   const {
     pageSize = 20,
@@ -411,7 +411,7 @@ export function usePaginatedQuery<T = unknown>(
  * Hook for infinite scroll queries
  */
 export function useInfiniteQuery<T = unknown>(
-  options: OptimizedQueryOptions<T> & { batchSize?: number }
+  options: OptimizedQueryOptions & { batchSize?: number }
 ) {
   const { batchSize = 20, ...baseOptions } = options;
   const [data, setData] = useState<T[]>([]);

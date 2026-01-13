@@ -16,7 +16,6 @@ export interface OnlineUser {
  */
 export function useOnlineUsers(channelName: string = 'online-users') {
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
-  const _channel = useState<RealtimeChannel | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
@@ -27,7 +26,7 @@ export function useOnlineUsers(channelName: string = 'online-users') {
       try {
         // Obter dados do usuário atual
         const { data: { user } } = await supabase.auth.getUser();
-        
+
         if (!user || !mounted) return;
 
         // Buscar perfil e role
@@ -106,9 +105,6 @@ export function useOnlineUsers(channelName: string = 'online-users') {
           }
         });
 
-        if (mounted) {
-          setChannel(activeChannel);
-        }
       } catch (error) {
         logger.error('Erro ao configurar Presence', error, 'useOnlineUsers');
       }

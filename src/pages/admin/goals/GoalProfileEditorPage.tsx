@@ -23,7 +23,6 @@ import {
     ArrowUp,
     ArrowDown,
     AlertCircle,
-    CheckCircle2,
     Loader2
 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
@@ -31,7 +30,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { goalsAdminService, ProfileDetail } from '@/services/goals/goalsAdminService';
 import { metricRegistry } from '@/lib/metrics/metricRegistry';
 import { GoalTarget, TargetMode } from '@/lib/goals/goalProfiles.seed';
-import { cn } from '@/lib/utils';
 
 // Pre-compute metric options based on registry
 // Filter out those without keys or labels just in case
@@ -91,7 +89,7 @@ export default function GoalProfileEditorPage() {
             queryClient.invalidateQueries({ queryKey: ['goalProfile', id] });
             toast({ title: "Salvo com sucesso", description: "As alterações foram salvas." });
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
             console.error("Failed to save profile:", error);
             toast({ title: "Erro ao salvar", description: error.message || "Erro desconhecido", variant: "destructive" });
         }
@@ -137,7 +135,7 @@ export default function GoalProfileEditorPage() {
         });
     };
 
-    const updateTarget = (index: number, field: keyof GoalTarget, value: any) => {
+    const updateTarget = (index: number, field: keyof GoalTarget, value: string | number | boolean) => {
         setFormData(prev => {
             const newTargets = [...(prev.targets || [])];
             newTargets[index] = { ...newTargets[index], [field]: value };

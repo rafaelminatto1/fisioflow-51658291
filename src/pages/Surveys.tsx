@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -13,19 +13,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSatisfactionSurveys, useSurveyStats, useDeleteSurvey } from '@/hooks/useSatisfactionSurveys';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Star, TrendingUp, Users, MessageSquare, Download, Trash2, Search, Filter } from 'lucide-react';
+import { Star, TrendingUp, Users, MessageSquare, Trash2, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -42,7 +35,6 @@ export default function Surveys() {
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteSurveyId, setDeleteSurveyId] = useState<string | null>(null);
-  const { toast } = useToast();
 
   const filters = {
     responded: activeTab === 'responded' ? true : activeTab === 'pending' ? false : undefined,

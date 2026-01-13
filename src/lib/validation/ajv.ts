@@ -8,7 +8,7 @@ const ajv = new Ajv({
     strictSchema: false, // loosen schema strictness
 });
 
-// @ts-ignore - ajv-formats might not be installed, handle gracefully
+// @ts-expect-error - ajv-formats might not be installed, handle gracefully
 try { addFormats(ajv); } catch { console.warn("ajv-formats not installed"); }
 
 const validate = ajv.compile(dynamicCompareSchema);

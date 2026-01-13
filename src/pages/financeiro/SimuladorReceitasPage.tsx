@@ -15,10 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import {
-  TrendingUp, Calculator, Plus, Trash2, DollarSign, Users,
-  Calendar, Target, BarChart3, Info, Save
+  TrendingUp, Calculator, Plus, Trash2, DollarSign,
+  Target, BarChart3, Info, Save
 } from 'lucide-react';
 import { toast } from 'sonner';
 

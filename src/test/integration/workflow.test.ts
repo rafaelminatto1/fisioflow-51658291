@@ -148,10 +148,10 @@ describe('Testes de Integração - Fluxos Completos', () => {
     it('deve manter histórico de alterações', () => {
       const createAuditLog = (
         action: string,
-        oldData: any,
-        newData: any
-      ): { action: string; changes: any } => {
-        const changes: any = {};
+        oldData: Record<string, unknown>,
+        newData: Record<string, unknown>
+      ): { action: string; changes: Record<string, { old: unknown; new: unknown }> } => {
+        const changes: Record<string, { old: unknown; new: unknown }> = {};;
         
         Object.keys(newData).forEach(key => {
           if (JSON.stringify(oldData[key]) !== JSON.stringify(newData[key])) {

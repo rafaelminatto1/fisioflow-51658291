@@ -1,6 +1,14 @@
 // Gerador de OpenAPI spec a partir dos schemas Zod
 import { z } from 'zod';
 
+// OpenAPI JSON Schema types (simplified)
+export type JSONSchema =
+  | { type: 'string' | 'number' | 'integer' | 'boolean'; format?: string; enum?: unknown[] }
+  | { type: 'array'; items: JSONSchema }
+  | { type: 'object'; properties?: Record<string, JSONSchema>; required?: string[] }
+  | { oneOf: JSONSchema[]; anyOf: JSONSchema[]; allOf: JSONSchema[] }
+  | { type: string; [key: string]: unknown };
+
 export interface OpenAPISpec {
   openapi: string;
   info: {
@@ -9,17 +17,17 @@ export interface OpenAPISpec {
     description?: string;
   };
   servers: Array<{ url: string; description: string }>;
-  paths: Record<string, any>;
+  paths: Record<string, Record<string, unknown>>;
   components?: {
-    schemas?: Record<string, any>;
-    securitySchemes?: Record<string, any>;
+    schemas?: Record<string, JSONSchema>;
+    securitySchemes?: Record<string, JSONSchema>;
   };
 }
 
 /**
  * Converte um schema Zod para um schema OpenAPI
  */
-export function zodToOpenAPI(schema: z.ZodTypeAny): any {
+export function zodToOpenAPI(schema: z.ZodTypeAny): JSONSchema {
   if (schema instanceof z.ZodString) {
     return { type: 'string' };
   }
@@ -37,7 +45,7 @@ export function zodToOpenAPI(schema: z.ZodTypeAny): any {
   }
   if (schema instanceof z.ZodObject) {
     const shape = schema._def.shape();
-    const properties: Record<string, any> = {};
+    const properties: Record<string, JSONSchema> = {};
     const required: string[] = [];
 
     for (const [key, value] of Object.entries(shape)) {

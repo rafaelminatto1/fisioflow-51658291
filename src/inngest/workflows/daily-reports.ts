@@ -24,7 +24,9 @@ export const dailyReportsWorkflow = inngest.createFunction(
     event: Events.CRON_DAILY_REPORTS,
     cron: '0 8 * * *', // 8:00 AM daily
   },
-  async ({ event, step }: { event: { data: DailyReportPayload }; step: any }) => {
+  async ({ step }: { event: { data: DailyReportPayload }; step: {
+    run: (name: string, fn: () => Promise<unknown>) => Promise<unknown>;
+  } }) => {
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -49,7 +51,7 @@ export const dailyReportsWorkflow = inngest.createFunction(
       'process-organizations',
       async () => {
         return await Promise.all(
-          organizations.map(async (org: any) => {
+          organizations.map(async (org: { id: string; name?: string; settings?: Record<string, unknown> }) => {
             try {
               // Get therapists who should receive daily reports
               const { data: therapists } = await supabase
@@ -89,11 +91,13 @@ export const dailyReportsWorkflow = inngest.createFunction(
                 organization: org.name,
                 date: yesterday.toISOString().split('T')[0],
                 totalSessions: sessions?.length || 0,
-                sessionsByTherapist: sessions?.reduce((acc: any, session: any) => {
+                sessionsByTherapist: sessions?.reduce((acc: Record<string, number>, session: {
+                  patient?: { therapist_id?: string };
+                }) => {
                   const therapistId = session.patient?.therapist_id || 'unassigned';
                   acc[therapistId] = (acc[therapistId] || 0) + 1;
                   return acc;
-                }, {}),
+                }, {} as Record<string, number>),
               };
 
               // Send reports to therapists
@@ -132,11 +136,11 @@ export const dailyReportsWorkflow = inngest.createFunction(
     );
 
     const totalReports = results.reduce(
-      (sum: number, r: any) => sum + (r.reportsGenerated || 0),
+      (sum: number, r: { reportsGenerated?: number }) => sum + (r.reportsGenerated || 0),
       0
     );
     const totalEmails = results.reduce(
-      (sum: number, r: any) => sum + (r.emailsSent || 0),
+      (sum: number, r: { emailsSent?: number }) => sum + (r.emailsSent || 0),
       0
     );
 

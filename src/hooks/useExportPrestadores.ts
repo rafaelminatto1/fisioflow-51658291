@@ -47,7 +47,7 @@ export function useExportPrestadores() {
         description: 'CSV de prestadores baixado com sucesso.',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao exportar',
         description: error.message,

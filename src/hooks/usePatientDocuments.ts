@@ -89,10 +89,11 @@ export const useUploadDocument = () => {
         description: 'O documento foi anexado com sucesso ao prontuário.'
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error | unknown) => {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao enviar documento';
       toast({
         title: 'Erro ao enviar documento',
-        description: error.message,
+        description: errorMessage,
         variant: 'destructive'
       });
     }
@@ -129,10 +130,11 @@ export const useDeleteDocument = () => {
         description: 'O documento foi removido do prontuário.'
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error | unknown) => {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao remover documento';
       toast({
         title: 'Erro ao remover documento',
-        description: error.message,
+        description: errorMessage,
         variant: 'destructive'
       });
     }
@@ -163,10 +165,11 @@ export const useDownloadDocument = () => {
       window.document.body.removeChild(link);
       URL.revokeObjectURL(url);
     },
-    onError: (error: any) => {
+    onError: (error: Error | unknown) => {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao baixar documento';
       toast({
         title: 'Erro ao baixar documento',
-        description: error.message,
+        description: errorMessage,
         variant: 'destructive'
       });
     }

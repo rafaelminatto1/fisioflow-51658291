@@ -25,10 +25,11 @@ export function usePurchaseVoucher() {
         });
       }
     },
-    onError: (error: any) => {
+    onError: (error: Error | unknown) => {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao processar pagamento';
       toast({
         title: 'Erro ao processar pagamento',
-        description: error.message,
+        description: errorMessage,
         variant: 'destructive',
       });
     },
@@ -57,10 +58,11 @@ export function useVerifyVoucherPayment() {
         });
       }
     },
-    onError: (error: any) => {
+    onError: (error: Error | unknown) => {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao verificar pagamento';
       toast({
         title: 'Erro ao verificar pagamento',
-        description: error.message,
+        description: errorMessage,
         variant: 'destructive',
       });
     },

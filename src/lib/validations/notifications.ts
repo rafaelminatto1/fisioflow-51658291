@@ -176,7 +176,8 @@ export const validateVapidKey = (key: string): boolean => {
   return base64UrlRegex.test(key) && key.length >= 87 // Base64url encoded 65 bytes
 }
 
-export const validateNotificationData = (data: any): boolean => {
+// Generic notification data validation - checks if data is JSON serializable
+export const validateNotificationData = (data: unknown): boolean => {
   try {
     // Notification data must be serializable
     JSON.stringify(data)

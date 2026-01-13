@@ -158,6 +158,6 @@ export const PainMapRegistration: React.FC<PainMapRegistrationProps> = ({ patien
 };
 
 // Helper for conditional classes if not already available
-function cn(...classes: any[]) {
+function cn(...classes: (string | boolean | undefined | null | number)[]) {
     return classes.filter(Boolean).join(' ');
 }

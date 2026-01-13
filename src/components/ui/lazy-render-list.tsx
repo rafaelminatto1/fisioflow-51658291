@@ -177,7 +177,7 @@ export function ChunkedList<T>({
   chunkSize?: number;
   className?: string;
 }) {
-  const [visibleChunks, setVisibleChunks] = useState(1);
+  const [visibleChunks] = useState(1);
   const triggerRef = useRef<HTMLDivElement>(null);
 
   const totalChunks = Math.ceil(items.length / chunkSize);

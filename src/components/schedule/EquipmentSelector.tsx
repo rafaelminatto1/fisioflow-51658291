@@ -241,4 +241,5 @@ export const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({
   );
 };
 
+/* eslint-disable-next-line react-refresh/only-export-components */
 export { defaultEquipments };

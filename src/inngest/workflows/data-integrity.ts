@@ -19,7 +19,7 @@ export const dataIntegrityWorkflow = inngest.createFunction(
     event: Events.CRON_DATA_INTEGRITY,
     cron: '0 */6 * * *', // Every 6 hours
   },
-  async ({ event, step }: { event: { data: any }; step: any }) => {
+  async ({ step }: { event: { data: Record<string, unknown> }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!

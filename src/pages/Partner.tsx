@@ -28,7 +28,7 @@ interface Partner {
 
 const Partner = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [editingPartner, setEditingPartner] = useState<any | null>(null);
+  const [editingPartner, setEditingPartner] = useState<Partner | null>(null);
 
   const { data: empresas = [], refetch } = useEmpresasParceiras();
   
@@ -98,10 +98,11 @@ const Partner = () => {
 
       refetch();
       resetForm();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro';
       toast({
         title: 'Erro ao salvar',
-        description: error.message,
+        description: errorMessage,
         variant: 'destructive'
       });
     }
@@ -131,10 +132,11 @@ const Partner = () => {
       if (error) throw error;
       toast({ title: 'Parceiro removido' });
       refetch();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro';
       toast({
         title: 'Erro ao deletar',
-        description: error.message,
+        description: errorMessage,
         variant: 'destructive'
       });
     }

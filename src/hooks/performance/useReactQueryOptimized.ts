@@ -262,15 +262,14 @@ export function useInfiniteScrollOptimized<T>(
     nextPage?: number;
     hasMore: boolean;
   }>,
-  options?: {
+  _options?: {
     /** Número de itens por página */
     pageSize?: number;
     /** Quantidade de páginas para prefetch */
     prefetchPages?: number;
   }
 ) {
-  const _pageSize = options?.pageSize || 20;
-  const _prefetchPages = options?.prefetchPages || 1;
+  // Prefetch pages available in options
 
   return useQuery({
     queryKey,

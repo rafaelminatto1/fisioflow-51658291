@@ -24,8 +24,8 @@ export function NPSSurveyForm({
   const [npsScore, setNpsScore] = useState<number | null>(null);
   const [careQuality, setCareQuality] = useState<number | null>(null);
   const [professionalism, setProfessionalism] = useState<number | null>(null);
-  const [facilityCleanliness, setFacilityCleanliness] = useState<number | null>(null);
-  const [schedulingEase, setSchedulingEase] = useState<number | null>(null);
+  const [facilityCleanliness] = useState<number | null>(null);
+  const [schedulingEase] = useState<number | null>(null);
   const [communication, setCommunication] = useState<number | null>(null);
   const [comments, setComments] = useState('');
   const [suggestions, setSuggestions] = useState('');

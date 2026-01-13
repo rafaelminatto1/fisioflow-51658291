@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -12,10 +12,9 @@ import { DynamicCompareMetrics } from '@/generated/types/dynamic_compare_metrics
 import DeltaCards from '@/components/metrics/DeltaCards';
 import MetricsTrendChart, { TrendSeriesPoint } from '@/components/metrics/MetricsTrendChart';
 import GoalPanel from '@/components/goals/GoalPanel';
-import { PROM_SNAPSHOTS_SEED, getLatestPromByPatient } from '@/lib/goals/promSnapshots.seed';
 
 // Mock Data Loader (Replace with real fetch)
-const fetchCompareData = async (id: string): Promise<any> => {
+const fetchCompareData = async (_id: string): Promise<Record<string, unknown>> => {
     // Simulating API latency
     await new Promise(r => setTimeout(r, 800));
 

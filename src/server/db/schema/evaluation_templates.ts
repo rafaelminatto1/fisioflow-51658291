@@ -5,7 +5,6 @@
  */
 
 import { pgTable, uuid, varchar, text, timestamp, jsonb, boolean } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
 
 export const evaluationTemplates = pgTable('evaluation_templates', {
     id: uuid('id').primaryKey().defaultRandom(),
@@ -28,7 +27,8 @@ export const evaluationTemplates = pgTable('evaluation_templates', {
                 type: 'text' | 'textarea' | 'number' | 'checkbox' | 'select' | 'radio';
                 options?: string[]; // For select/radio
                 required?: boolean;
-                defaultValue?: any;
+                // Drizzle defaultValue can be any JSON-serializable value
+                defaultValue?: string | number | boolean | null;
             }>;
         }>;
         // Mapping to standard medical record fields

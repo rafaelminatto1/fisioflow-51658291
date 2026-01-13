@@ -139,7 +139,7 @@ const COST_PER_1M_TOKENS: Record<AIProvider, { input: number; output: number }> 
 // CLIENTS
 // ============================================================================
 
-let clients: Record<AIProvider, ReturnType<typeof createOpenAI> | ReturnType<typeof createGoogleGenerativeAI> | null> = {
+const clients: Record<AIProvider, ReturnType<typeof createOpenAI> | ReturnType<typeof createGoogleGenerativeAI> | null> = {
   openai: null,
   google: null,
   grok: null,
@@ -174,14 +174,6 @@ function getClient(provider: AIProvider) {
   }
 
   return clients[provider];
-}
-
-/**
- * Get model name with provider prefix for gateway routing
- */
-function getModelName(model: AIModel, provider: AIProvider): string {
-  // Gateway uses provider:model format
-  return `${provider}:${model}`;
 }
 
 // ============================================================================
@@ -227,10 +219,13 @@ export async function generateAIResponse(
       system: systemPrompt,
     });
 
-    const duration = Date.now() - startTime;
+    // Calculate duration (for monitoring, not currently used)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _duration = Date.now() - startTime;
 
-    // Calculate estimated cost
-    const estimatedCost = calculateCost(
+    // Calculate estimated cost (for monitoring, not currently used)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _estimatedCost = _calculateCost(
       primaryProvider,
       result.usage.promptTokens,
       result.usage.completionTokens
@@ -514,7 +509,7 @@ Provide a helpful, accurate response. If unsure, recommend consulting with a phy
 /**
  * Calculate estimated cost in USD
  */
-function calculateCost(
+function _calculateCost(
   provider: AIProvider,
   promptTokens: number,
   completionTokens: number

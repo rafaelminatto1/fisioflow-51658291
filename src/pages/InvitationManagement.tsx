@@ -39,7 +39,7 @@ export default function InvitationManagement() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  const getInvitationStatus = (invitation: any) => {
+  const getInvitationStatus = (invitation: { used_at?: string | Date; expires_at: string | Date }) => {
     if (invitation.used_at) return 'used';
     if (isPast(new Date(invitation.expires_at))) return 'expired';
     return 'pending';

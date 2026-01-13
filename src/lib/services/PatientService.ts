@@ -184,7 +184,7 @@ export class PatientService {
       .insert({
         patient_id: patientId,
         prescribed_exercise_id: prescriptionId,
-        difficulty_rating: difficulty as any,
+        difficulty_rating: difficulty as unknown,
         notes,
       });
 

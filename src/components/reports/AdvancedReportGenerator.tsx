@@ -59,8 +59,17 @@ export function AdvancedReportGenerator() {
     return data;
   };
 
+  // Define interface for appointment data from database
+  interface AppointmentData {
+    appointment_date: string | Date;
+    patients?: { name: string; email?: string; phone?: string } | null;
+    type?: string;
+    status?: string;
+    payment_amount?: number;
+  }
+
   const generatePDF = async (data: unknown[]) => {
-    const formattedData = data as any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
+    const formattedData = data as AppointmentData[];
     const doc = new jsPDF();
 
     // Header
@@ -82,7 +91,7 @@ export function AdvancedReportGenerator() {
       doc.setFontSize(10);
       doc.text(`Total de Agendamentos: ${data.length}`, 14, 48);
       doc.text(
-        `Receita Total: R$ ${(data as any[]).reduce((sum, d) => sum + (d.payment_amount || 0), 0).toFixed(2)}`, // eslint-disable-line @typescript-eslint/no-explicit-any
+        `Receita Total: R$ ${formattedData.reduce((sum, d) => sum + (d.payment_amount || 0), 0).toFixed(2)}`,
         14,
         56
       );
@@ -111,7 +120,7 @@ export function AdvancedReportGenerator() {
   };
 
   const generateCSV = (data: unknown[]) => {
-    const formattedData = data as any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
+    const formattedData = data as AppointmentData[];
     const headers = ['Data', 'Paciente', 'Email', 'Telefone', 'Tipo', 'Status', 'Valor'];
     const rows = formattedData.map(d => [
       format(new Date(d.appointment_date), 'dd/MM/yyyy'),

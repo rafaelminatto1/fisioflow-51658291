@@ -22,12 +22,9 @@ import {
     Trophy,
     Files,
     Award,
-    TrendingUp,
-    Upload,
     Trash,
     Download,
     CreditCard,
-    MoreVertical,
     File as FileIcon,
     Brain,
 } from 'lucide-react';
@@ -56,19 +53,25 @@ import { usePatientLifecycleSummary } from '@/hooks/usePatientAnalytics';
 
 // Financial & Documents Imports
 import { usePatientDocuments, useUploadDocument, useDeleteDocument, useDownloadDocument, type PatientDocument } from '@/hooks/usePatientDocuments';
-import { useFinancial } from '@/hooks/useFinancial';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const PersonalDataTab = ({ patient }: { patient: any }) => (
+const PersonalDataTab = ({ patient }: { patient: {
+    phone?: string;
+    email?: string;
+    emergency_contact?: string;
+    emergency_phone?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zip_code?: string;
+    health_insurance?: string;
+    insurance_number?: string;
+    cpf?: string;
+    observations?: string;
+} }) => (
     <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
@@ -163,7 +166,15 @@ const PersonalDataTab = ({ patient }: { patient: any }) => (
     </div>
 );
 
-const OverviewTab = ({ patient }: { patient: any }) => {
+const OverviewTab = ({ patient }: { patient: {
+    id: string;
+    full_name?: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+    status?: string;
+    created_at?: string;
+} }) => {
     const { data: evolutionData } = usePatientEvolutionReport(patient.id);
 
     // Fetch next appointment
@@ -310,12 +321,12 @@ const FinancialTab = ({ patientId }: { patientId: string }) => {
 
     // Calculate totals
     const totalPaid = transactions
-        .filter((t: any) => t.payment_status === 'paid_single' || t.payment_status === 'paid_package')
-        .reduce((sum: number, t: any) => sum + (Number(t.payment_amount) || 0), 0);
+        .filter((t: { payment_status?: string }) => t.payment_status === 'paid_single' || t.payment_status === 'paid_package')
+        .reduce((sum: number, t: { payment_amount?: string | number }) => sum + (Number(t.payment_amount) || 0), 0);
 
     const totalPending = transactions
-        .filter((t: any) => t.payment_status === 'pending')
-        .reduce((sum: number, t: any) => sum + (Number(t.payment_amount) || 0), 0);
+        .filter((t: { payment_status?: string }) => t.payment_status === 'pending')
+        .reduce((sum: number, t: { payment_amount?: string | number }) => sum + (Number(t.payment_amount) || 0), 0);
 
     if (isLoading) {
         return <div className="p-8 text-center"><Skeleton className="h-40 w-full mx-auto" /></div>;
@@ -381,7 +392,15 @@ const FinancialTab = ({ patientId }: { patientId: string }) => {
                         </div>
                     ) : (
                         <div className="space-y-2">
-                            {transactions.map((tx: any) => (
+                            {transactions.map((tx: {
+                                id: string;
+                                appointment_date: string;
+                                payment_status: string;
+                                payment_method?: string;
+                                type?: string;
+                                installments?: number;
+                                payment_amount?: string | number;
+                            }) => (
                                 <div
                                     key={tx.id}
                                     className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
@@ -674,7 +693,7 @@ const GamificationTab = ({ patientId }: { patientId: string }) => {
 
                 <div className="space-y-6">
                     <StreakCalendar
-                        todayActivity={dailyQuests?.some((q: any) => q.completed) || false}
+                        todayActivity={dailyQuests?.some((q: { completed?: boolean }) => q.completed) || false}
                         activeDates={profile.last_activity_date ? [profile.last_activity_date] : []}
                     />
 
@@ -690,8 +709,8 @@ const GamificationTab = ({ patientId }: { patientId: string }) => {
                             </span>
                         </div>
                         <div className="p-4 grid grid-cols-4 gap-2">
-                            {allAchievements.slice(0, 8).map((achievement: any) => {
-                                const isUnlocked = unlockedAchievements.some((ua: any) => ua.achievement_id === achievement.id);
+                            {allAchievements.slice(0, 8).map((achievement: { id: string; name?: string; icon_url?: string }) => {
+                                const isUnlocked = unlockedAchievements.some((ua: { achievement_id: string }) => ua.achievement_id === achievement.id);
                                 return (
                                     <div key={achievement.id} className="flex flex-col items-center gap-1 group relative">
                                         <div className={`

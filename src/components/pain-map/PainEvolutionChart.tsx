@@ -38,7 +38,7 @@ const getIntensityColor = (intensity: number): string => {
 };
 
 // Componente customizado para tooltip
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: { dateFormatted: string; pointCount: number; intensity: number } }> }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     const intensity = data.intensity;
@@ -68,7 +68,7 @@ const CustomTooltip = ({ active, payload }: any) => {
 };
 
 // Componente customizado para dots no gráfico
-const CustomDot = (props: any) => {
+const CustomDot = (props: { cx?: number; cy?: number; payload: { intensity: number } }) => {
   const { cx, cy, payload } = props;
   const color = getIntensityColor(payload.intensity);
   

@@ -238,7 +238,7 @@ export const useMedicalChatbot = () => {
   const [context, setContext] = useState<ChatContext>({
     preferredLanguage: 'pt-BR'
   });
-  const _isConnected = true;
+  const isConnected = true;
   const [humanHandoffRequested, setHumanHandoffRequested] = useState(false);
 
   // Inicializar sessão de chat
@@ -328,7 +328,7 @@ export const useMedicalChatbot = () => {
         setHumanHandoffRequested(true);
       }
 
-    } catch (_error) {
+    } catch {
       const errorMessage: ChatMessage = {
         id: `msg-${Date.now()}-error`,
         content: 'Desculpe, ocorreu um erro. Tente novamente em alguns instantes.',

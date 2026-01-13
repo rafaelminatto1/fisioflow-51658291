@@ -13,7 +13,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   FileText,
   Plus,
-  Filter,
   User,
   Stethoscope,
   ClipboardList,
@@ -43,13 +42,6 @@ import { EvaluationTemplateManager } from '@/components/admin/EvaluationTemplate
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { PatientHelpers } from '@/types';
 
-// Types
-interface Patient {
-  id: string;
-  name: string;
-  condition: string;
-}
-
 interface VitalSigns {
   bloodPressure: string;
   heartRate: string;
@@ -67,15 +59,15 @@ interface RecordFormData {
   pastHistory: string;
   familyHistory: string;
   physicalActivity: string;
-  lifestyle: any;
-  physicalExam: any; // Changed from string to any (json)
+  lifestyle: Record<string, unknown>;
+  physicalExam: Record<string, unknown>;
   diagnosis: string;
   treatmentPlan: string;
   nextGoals: string;
   vitalSigns: VitalSigns;
-  specialTests: any[];
-  rangeOfMotion: any;
-  muscleStrength: any;
+  specialTests: Array<{ name: string; result?: string; side?: string }>;
+  rangeOfMotion: Record<string, unknown>;
+  muscleStrength: Record<string, unknown>;
 }
 
 interface MedicalRecordItem {
@@ -85,7 +77,7 @@ interface MedicalRecordItem {
   content: string;
   date: Date;
   therapist: string;
-  raw: any;
+  raw: Record<string, unknown>;
 }
 
 const initialFormState: RecordFormData = {
@@ -129,17 +121,23 @@ const MedicalRecord = () => {
   const [searchParams] = useSearchParams();
   const initialPatientId = searchParams.get('patientId');
   const initialAction = searchParams.get('action');
-  const appointmentId = searchParams.get('appointmentId');
+  // appointmentId captured but not used yet - reserved for future use
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _appointmentId = searchParams.get('appointmentId');
   const initialType = searchParams.get('type');
 
   const [selectedPatient, setSelectedPatient] = useState<string | null>(initialPatientId);
   const [patientSearch, setPatientSearch] = useState('');
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isEditing, setIsEditing] = useState(initialAction === 'new');
-  const [viewingRecord, setViewingRecord] = useState<MedicalRecordItem | null>(null);
+  // viewingRecord captured but not used yet - reserved for future use
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_viewingRecord, _setViewingRecord] = useState<MedicalRecordItem | null>(null);
   const [editingRecord, setEditingRecord] = useState<MedicalRecordItem | null>(null);
   const [recordForm, setRecordForm] = useState<RecordFormData>(initialFormState);
-  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+  // showTemplateSelector captured but not used yet - reserved for future use
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_showTemplateSelector, _setShowTemplateSelector] = useState(false);
   const [selectedForComparison, setSelectedForComparison] = useState<string[]>([]);
   const [isComparing, setIsComparing] = useState(false);
   const [showTemplateManager, setShowTemplateManager] = useState(false);
@@ -170,7 +168,7 @@ const MedicalRecord = () => {
   }, [initialPatientId, initialAction, initialType]);
 
   // Load prescriptions for selected patient
-  const { prescriptions, deletePrescription } = usePrescriptions(selectedPatient || undefined);
+  const { prescriptions: _prescriptions, deletePrescription: _deletePrescription } = usePrescriptions(selectedPatient || undefined);
 
   // Load patients from Supabase
   const { data: patients = [], isLoading: patientsLoading } = useQuery({
@@ -247,7 +245,19 @@ const MedicalRecord = () => {
 
       if (error) throw error;
 
-      return (data as any[]).map((record: any) => ({
+      return (data || []).map((record: {
+        id: string;
+        record_type?: string;
+        title?: string;
+        chief_complaint?: string;
+        medical_history?: string;
+        diagnosis?: string;
+        created_at: string;
+        profiles?: { full_name?: string };
+        surgeries?: unknown[];
+        goals?: unknown[];
+        pathologies?: unknown[];
+      }) => ({
         id: record.id,
         type: record.record_type || 'anamnesis',
         title: record.title || 'Registro Sem Título',
@@ -269,11 +279,11 @@ const MedicalRecord = () => {
     // Filter pending goals
     const goals = medicalRecords
       .flatMap(r => r.goals || [])
-      .filter((g: any) => g.status !== 'achieved' && g.status !== 'abandoned');
+      .filter((g: { status?: string }) => g.status !== 'achieved' && g.status !== 'abandoned');
 
     const pathologies = medicalRecords
       .flatMap(r => r.pathologies || [])
-      .filter((p: any) => p.status === 'active');
+      .filter((p: { status?: string }) => p.status === 'active');
 
     return {
       aggregatedSurgeries: surgeries,
@@ -283,7 +293,7 @@ const MedicalRecord = () => {
   }, [medicalRecords]);
 
   // Load evaluation templates
-  const { data: templates = [], isLoading: templatesLoading } = useQuery({
+  const { data: _templates = [], isLoading: _templatesLoading } = useQuery({
     queryKey: ['evaluation-templates'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -297,7 +307,21 @@ const MedicalRecord = () => {
     }
   });
 
-  const handleSelectTemplate = (template: any) => {
+  // handleSelectTemplate captured but not used yet - reserved for future use
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _handleSelectTemplate = (template: {
+    id: string;
+    title: string;
+    content: {
+      physical_exam?: Record<string, unknown>;
+      diagnosis?: string;
+      treatment_plan?: {
+        evolution?: string;
+        plan?: string;
+      };
+      vital_signs?: Record<string, unknown>;
+    };
+  }) => {
     const content = template.content;
     setRecordForm(prev => ({
       ...prev,
@@ -420,7 +444,7 @@ const MedicalRecord = () => {
     });
   };
 
-  const handleViewRecord = (record: any) => {
+  const handleViewRecord = (record: MedicalRecordItem) => {
     setViewingRecord(record);
   };
 
@@ -430,7 +454,7 @@ const MedicalRecord = () => {
     // Add logic for other actions
   };
 
-  const handleEditRecord = (record: any) => {
+  const handleEditRecord = (record: MedicalRecordItem) => {
     setEditingRecord(record);
     setIsEditing(true);
 
@@ -473,7 +497,7 @@ const MedicalRecord = () => {
     setActiveTab('anamnesis');
   }
 
-  const handleExportPDF = (record: any) => {
+  const handleExportPDF = (record: MedicalRecordItem) => {
     import('jspdf').then(({ jsPDF }) => {
       const doc = new jsPDF();
       doc.setFontSize(18);
@@ -796,7 +820,7 @@ const MedicalRecord = () => {
                       <CardContent>
                         {isComparing ? (
                           <AssessmentComparison
-                            records={medicalRecords.filter((r: any) => selectedForComparison.includes(r.id))}
+                            records={medicalRecords.filter((r: MedicalRecordItem) => selectedForComparison.includes(r.id))}
                             onClose={() => {
                               setIsComparing(false);
                               setSelectedForComparison([]);
@@ -812,7 +836,7 @@ const MedicalRecord = () => {
                           </div>
                         ) : (
                           <div className="space-y-4">
-                            {medicalRecords.map((record: any) => (
+                            {medicalRecords.map((record: MedicalRecordItem) => (
                               <div
                                 key={record.id}
                                 className="p-4 border rounded-lg hover:bg-muted/50 transition-colors bg-card"

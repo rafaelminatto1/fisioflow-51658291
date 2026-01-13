@@ -122,7 +122,7 @@ export const usePrescriptions = (patientId?: string) => {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, exercises, ...updates }: Partial<Prescription> & { id: string }) => {
-      const updateData: any = { ...updates };
+      const updateData: Record<string, unknown> = { ...updates };
       if (exercises) {
         updateData.exercises = JSON.parse(JSON.stringify(exercises));
       }

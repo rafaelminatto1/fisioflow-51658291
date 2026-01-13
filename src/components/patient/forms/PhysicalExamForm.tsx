@@ -6,14 +6,29 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2 } from 'lucide-react';
 
+interface SpecialTest {
+    name: string;
+    result: string;
+    notes: string;
+}
+
+interface PhysicalExamFormData {
+    inspection?: string;
+    palpation?: string;
+    posture?: string;
+    specialTests?: SpecialTest[];
+    rangeOfMotion?: string;
+    muscleStrength?: string;
+}
+
 interface PhysicalExamFormProps {
-    data: any;
-    onChange: (data: any) => void;
+    data: PhysicalExamFormData;
+    onChange: (data: PhysicalExamFormData) => void;
     readOnly?: boolean;
 }
 
 export const PhysicalExamForm = ({ data, onChange, readOnly = false }: PhysicalExamFormProps) => {
-    const handleChange = (field: string, value: any) => {
+    const handleChange = (field: keyof PhysicalExamFormData, value: string | SpecialTest[]) => {
         onChange({ ...data, [field]: value });
     };
 
@@ -22,7 +37,7 @@ export const PhysicalExamForm = ({ data, onChange, readOnly = false }: PhysicalE
         handleChange('specialTests', [...currentTests, { name: '', result: 'negative', notes: '' }]);
     };
 
-    const updateSpecialTest = (index: number, field: string, value: any) => {
+    const updateSpecialTest = (index: number, field: keyof SpecialTest, value: string) => {
         const newTests = [...(data.specialTests || [])];
         newTests[index] = { ...newTests[index], [field]: value };
         handleChange('specialTests', newTests);
@@ -88,7 +103,7 @@ export const PhysicalExamForm = ({ data, onChange, readOnly = false }: PhysicalE
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
-                        {(data.specialTests || []).map((test: any, i: number) => (
+                        {(data.specialTests || []).map((test, i) => (
                             <div key={i} className="flex flex-col md:flex-row gap-3 items-start p-3 bg-muted/30 rounded-lg border">
                                 <div className="flex-1 space-y-2 w-full">
                                     <Input

@@ -56,7 +56,17 @@ export function useCreateEvento() {
   return useMutation({
     mutationFn: async (evento: EventoCreate) => {
       // Converter datas para string no formato ISO
-      const eventoData: any = {
+      const eventoData: {
+        nome: string;
+        descricao?: string;
+        categoria: string;
+        local?: string;
+        data_inicio: string;
+        data_fim: string;
+        gratuito: boolean;
+        link_whatsapp?: string;
+        valor_padrao_prestador?: number;
+      } = {
         nome: evento.nome,
         descricao: evento.descricao,
         categoria: evento.categoria,
@@ -84,10 +94,11 @@ export function useCreateEvento() {
         description: 'Evento cadastrado com sucesso.',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const _errorMessage = error instanceof Error ? error.message : 'Erro ao criar evento';
       toast({
         title: 'Erro ao criar evento',
-        description: error.message,
+        description: _errorMessage,
         variant: 'destructive',
       });
     },
@@ -101,7 +112,7 @@ export function useUpdateEvento() {
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: EventoUpdate }) => {
       // Converter datas se existirem
-      const updateData: any = { ...data };
+      const updateData: Record<string, string | Date | boolean | number | undefined> = { ...data };
       if (updateData.data_inicio instanceof Date) {
         updateData.data_inicio = updateData.data_inicio.toISOString().split('T')[0];
       }
@@ -126,10 +137,10 @@ export function useUpdateEvento() {
         description: 'Alterações salvas com sucesso.',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao atualizar evento',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro ao atualizar evento',
         variant: 'destructive',
       });
     },
@@ -156,10 +167,10 @@ export function useDeleteEvento() {
         description: 'Evento removido com sucesso.',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao excluir evento',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro ao excluir evento',
         variant: 'destructive',
       });
     },

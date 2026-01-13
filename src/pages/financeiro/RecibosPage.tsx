@@ -7,11 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Plus, Download, Search, Calendar, User, Building2, Eye, Trash2, Settings } from 'lucide-react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { FileText, Plus, Search, Calendar, Building2, Eye, Settings } from 'lucide-react';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -33,7 +32,6 @@ export default function RecibosPage() {
     usar_dados_clinica: true,
   });
 
-  const queryClient = useQueryClient();
   const { data: recibos = [], isLoading } = useRecibos();
   const createRecibo = useCreateRecibo();
 

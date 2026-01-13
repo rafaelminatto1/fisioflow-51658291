@@ -104,7 +104,7 @@ export const Profile = () => {
         description: 'Suas informações foram salvas com sucesso.',
       });
       setIsEditing(false);
-    } catch (error) {
+    } catch {
       toast({
         title: 'Erro ao atualizar',
         description: 'Ocorreu um erro ao salvar suas informações.',

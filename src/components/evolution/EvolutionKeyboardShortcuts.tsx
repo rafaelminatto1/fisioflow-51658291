@@ -168,6 +168,7 @@ export const EvolutionKeyboardShortcuts = memo(({ open, onOpenChange }: Evolutio
 EvolutionKeyboardShortcuts.displayName = 'EvolutionKeyboardShortcuts';
 
 // Hook para gerenciar atalhos globais
+/* eslint-disable-next-line react-refresh/only-export-components */
 export const useEvolutionShortcuts = (
   onSave?: () => void,
   onComplete?: () => void,
@@ -238,4 +239,6 @@ export const useEvolutionShortcuts = (
   return null;
 };
 
+/* eslint-disable react-refresh/only-export-components */
 export type { EvolutionKeyboardShortcutsProps, ShortcutItemProps };
+/* eslint-enable react-refresh/only-export-components */

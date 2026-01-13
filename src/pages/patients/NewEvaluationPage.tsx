@@ -1,20 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Save, LayoutDashboard, FileText, Activity, Map, Target } from 'lucide-react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { ArrowLeft, Save, LayoutDashboard, FileText, Activity, Map, Plus, BookmarkPlus } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { v4 as uuidv4 } from 'uuid';
 
 // Components
 import { PatientDashboard360 } from '@/components/patient/dashboard/PatientDashboard360';
-import { AnamnesisForm } from '@/components/patient/forms/AnamnesisForm';
 import { PhysicalExamForm } from '@/components/patient/forms/PhysicalExamForm';
 import { PainMapManager } from '@/components/evolution/PainMapManager';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PatientHelpers } from '@/types';
+
+// New Evaluation Components
+import {
+    EvaluationTemplateSelector,
+    DynamicFieldRenderer,
+    AddCustomFieldDialog,
+    SaveAsTemplateDialog,
+} from '@/components/evaluation';
+import type { EvaluationTemplate, TemplateField } from '@/components/evaluation';
 
 export default function NewEvaluationPage() {
     const { patientId } = useParams();
@@ -26,9 +35,18 @@ export default function NewEvaluationPage() {
     const [activeTab, setActiveTab] = useState('dashboard');
     const [isSaving, setIsSaving] = useState(false);
 
-    // Form States
-    const [anamnesisData, setAnamnesisData] = useState({});
+    // Template-based Anamnesis State
+    const [selectedTemplate, setSelectedTemplate] = useState<EvaluationTemplate | null>(null);
+    const [customFields, setCustomFields] = useState<TemplateField[]>([]);
+    const [fieldValues, setFieldValues] = useState<Record<string, unknown>>({});
+    const [showAddFieldDialog, setShowAddFieldDialog] = useState(false);
+    const [showSaveTemplateDialog, setShowSaveTemplateDialog] = useState(false);
+
+    // Physical Exam State (keep existing)
     const [physicalExamData, setPhysicalExamData] = useState({});
+
+    // Combined fields (template + custom)
+    const allFields = [...(selectedTemplate?.fields || []), ...customFields];
 
     // Fetch Patient Data
     const { data: patient, isLoading } = useQuery({
@@ -36,7 +54,6 @@ export default function NewEvaluationPage() {
         queryFn: async () => {
             if (!patientId) return null;
 
-            // Parallel fetch for patient, goals, pathologies, etc.
             const [patientRes, goalsRes, pathologiesRes, surgeriesRes, appointmentsRes] = await Promise.all([
                 supabase.from('patients').select('*').eq('id', patientId).single(),
                 supabase.from('patient_goals').select('*').eq('patient_id', patientId),
@@ -58,44 +75,59 @@ export default function NewEvaluationPage() {
         enabled: !!patientId
     });
 
+    // Handle template selection
+    const handleTemplateSelect = useCallback((template: EvaluationTemplate | null) => {
+        setSelectedTemplate(template);
+        // Optionally reset custom fields when changing template
+        // setCustomFields([]);
+    }, []);
+
+    // Handle field value change
+    const handleFieldValueChange = useCallback((fieldId: string, value: unknown) => {
+        setFieldValues(prev => ({ ...prev, [fieldId]: value }));
+    }, []);
+
+    // Handle adding custom field
+    const handleAddCustomField = useCallback((field: Omit<TemplateField, 'id' | 'ordem'>) => {
+        const newField: TemplateField = {
+            ...field,
+            id: uuidv4(),
+            ordem: allFields.length + 1,
+        };
+        setCustomFields(prev => [...prev, newField]);
+    }, [allFields.length]);
+
     const handleSaveEvaluation = async () => {
         if (!patientId) return;
         setIsSaving(true);
         try {
-            const { data: { user } } = await supabase.auth.getUser();
+            // Save evaluation responses
+            if (selectedTemplate && Object.keys(fieldValues).length > 0) {
+                const { error: responseError } = await supabase
+                    .from('patient_evaluation_responses')
+                    .insert({
+                        patient_id: patientId,
+                        form_id: selectedTemplate.id,
+                        responses: fieldValues,
+                        appointment_id: appointmentId || null,
+                    });
 
-            // Save Anamnesis & Physical Exam as a structured record
-            // Note: You might want to create specific tables for these if they don't exist
-            // For now, we'll store them in `clinical_evaluations` or similar if available, 
-            // or `soap_records` as a fallback, or a flexible `patient_evaluations` table.
-
-            // Assuming a 'clinical_evaluations' table exists or reusing 'patient_evaluation_responses' with a generic/system form ID
-            // For this implementation, let's assume we save to a structured JSON column or separate tables.
-            // WE WILL USE 'patient_evaluations' generic store for now or insert to specific tables.
-
-            // Save Anamnesis
-            if (Object.keys(anamnesisData).length > 0) {
-                // Insert logic here (e.g., specific table upserts)
+                if (responseError) {
+                    console.error('Error saving evaluation responses:', responseError);
+                }
             }
-
-            // Since we don't have the explicit table structure confirmed for structured anamnesis besides JSON forms,
-            // we will mock the save success for now and maybe update `patient` record directly for some static fields 
-            // like 'occupation', 'history', etc., if your patient table supports it.
-
-            // NOTE: Ideally, update the `patients` table with history fields if they exist there
-            // await supabase.from('patients').update({ ...anamnesisData }).eq('id', patientId);
 
             toast({
                 title: "Avaliação Salva",
                 description: "Os dados da avaliação foram registrados com sucesso."
             });
 
-            // If appointment ID exists, we might want to update its status
+            // Update appointment status if applicable
             if (appointmentId) {
                 await supabase.from('appointments').update({ status: 'realizado' }).eq('id', appointmentId);
             }
 
-            navigate('/schedule'); // Or stay?
+            navigate('/schedule');
         } catch (error) {
             console.error(error);
             toast({
@@ -173,7 +205,6 @@ export default function NewEvaluationPage() {
                                 <Map className="h-4 w-4" />
                                 <span className="hidden sm:inline">Mapa de Dor</span>
                             </TabsTrigger>
-                            {/* Additional tabs can go here */}
                         </TabsList>
 
                         <div className="mt-6 animate-in fade-in-50 duration-500">
@@ -182,23 +213,65 @@ export default function NewEvaluationPage() {
                                 <PatientDashboard360
                                     patient={patient}
                                     appointments={patient.appointments}
-                                    activeGoals={patient.goals?.filter((g: any) => g.status === 'em_andamento') || []}
-                                    activePathologies={patient.pathologies?.filter((p: any) => p.status !== 'resolvido') || []}
+                                    activeGoals={patient.goals?.filter((g: { status?: string }) => g.status === 'em_andamento') || []}
+                                    activePathologies={patient.pathologies?.filter((p: { status?: string }) => p.status !== 'resolvido') || []}
                                     surgeries={patient.surgeries || []}
                                     onAction={(action) => setActiveTab(action === 'goals' ? 'dashboard' : action)}
                                 />
                             </TabsContent>
 
                             <TabsContent value="anamnesis" className="m-0">
-                                <div className="max-w-4xl mx-auto">
-                                    <div className="mb-6">
-                                        <h2 className="text-2xl font-bold tracking-tight">Anamnese Detalhada</h2>
-                                        <p className="text-muted-foreground">Colete o histórico clínico completo do paciente.</p>
+                                <div className="max-w-4xl mx-auto space-y-6">
+                                    {/* Header with Template Selector */}
+                                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                                        <div>
+                                            <h2 className="text-2xl font-bold tracking-tight">Anamnese Detalhada</h2>
+                                            <p className="text-muted-foreground">Colete o histórico clínico completo do paciente.</p>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setShowAddFieldDialog(true)}
+                                            >
+                                                <Plus className="mr-2 h-4 w-4" />
+                                                Adicionar Campo
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setShowSaveTemplateDialog(true)}
+                                                disabled={allFields.length === 0}
+                                            >
+                                                <BookmarkPlus className="mr-2 h-4 w-4" />
+                                                Salvar Template
+                                            </Button>
+                                        </div>
                                     </div>
-                                    <AnamnesisForm
-                                        data={anamnesisData}
-                                        onChange={setAnamnesisData}
+
+                                    {/* Template Selector */}
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium">Template de Avaliação</label>
+                                        <EvaluationTemplateSelector
+                                            selectedTemplateId={selectedTemplate?.id}
+                                            onTemplateSelect={handleTemplateSelect}
+                                            autoLoadDefault={true}
+                                        />
+                                    </div>
+
+                                    {/* Dynamic Fields */}
+                                    <DynamicFieldRenderer
+                                        fields={allFields}
+                                        values={fieldValues}
+                                        onChange={handleFieldValueChange}
                                     />
+
+                                    {/* Custom Fields Note */}
+                                    {customFields.length > 0 && (
+                                        <div className="text-sm text-muted-foreground text-center py-2">
+                                            {customFields.length} campo(s) personalizado(s) adicionado(s)
+                                        </div>
+                                    )}
                                 </div>
                             </TabsContent>
 
@@ -224,7 +297,7 @@ export default function NewEvaluationPage() {
                                     <PainMapManager
                                         patientId={patientId || ''}
                                         appointmentId={appointmentId || undefined}
-                                        sessionId={appointmentId || undefined} // Fallback to appointmentID for session if creating new
+                                        sessionId={appointmentId || undefined}
                                     />
                                 </div>
                             </TabsContent>
@@ -234,6 +307,19 @@ export default function NewEvaluationPage() {
 
                 </div>
             </div>
+
+            {/* Dialogs */}
+            <AddCustomFieldDialog
+                open={showAddFieldDialog}
+                onOpenChange={setShowAddFieldDialog}
+                onAddField={handleAddCustomField}
+            />
+
+            <SaveAsTemplateDialog
+                open={showSaveTemplateDialog}
+                onOpenChange={setShowSaveTemplateDialog}
+                fields={allFields}
+            />
         </MainLayout>
     );
 }

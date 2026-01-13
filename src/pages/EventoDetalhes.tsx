@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Calendar, MapPin, DollarSign, Edit } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState, LoadingSkeleton } from '@/components/ui';
 import { PrestadoresTab } from '@/components/eventos/PrestadoresTab';
 import { ChecklistTab } from '@/components/eventos/ChecklistTab';
@@ -15,7 +14,6 @@ import { EventoFinancialReportButton } from '@/components/eventos/EventoFinancia
 import { SaveAsTemplateButton } from '@/components/eventos/SaveAsTemplateButton';
 import { EditEventoModal } from '@/components/eventos/EditEventoModal';
 import { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 
 const statusColors = {
   AGENDADO: 'bg-blue-500',

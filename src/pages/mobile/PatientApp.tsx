@@ -3,16 +3,23 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, MessageSquare, Activity, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 
+// Define interface for appointment data
+interface Appointment {
+  id: string;
+  start_time: string;
+  status: string;
+  therapists?: { name: string } | null;
+}
+
 export default function PatientApp() {
   const { user } = useAuth();
-  const [appointments, setAppointments] = useState<any[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -55,7 +62,7 @@ export default function PatientApp() {
             patient = result.data;
             break;
           }
-        } catch (error) {
+        } catch {
           retries++;
           if (retries < maxRetries) {
             await new Promise(resolve => setTimeout(resolve, 1000 * retries));
@@ -84,7 +91,7 @@ export default function PatientApp() {
               appointmentsData = result.data;
               break;
             }
-          } catch (error) {
+          } catch {
             retries++;
             if (retries < maxRetries) {
               await new Promise(resolve => setTimeout(resolve, 1000 * retries));

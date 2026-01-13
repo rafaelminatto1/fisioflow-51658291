@@ -2,13 +2,10 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
     Dialog,
     DialogContent,
-    DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
 import {
@@ -22,7 +19,6 @@ import {
     FileText,
     Image as ImageIcon,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 const MediaPlaceholder = ({ label }: { label: string }) => (
     <div className="aspect-square rounded-lg bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-center p-4 transition-colors hover:bg-slate-100 hover:border-slate-300">
@@ -42,7 +38,7 @@ interface ClinicalTest {
     positive_sign?: string;
     reference?: string;
     tags?: string[];
-    media_urls?: any;
+    media_urls?: string[];
     description?: string; // Fallback
 }
 
@@ -50,7 +46,6 @@ export default function ClinicalTestsLibrary() {
     const [activeFilter, setActiveFilter] = useState("Todos");
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedTest, setSelectedTest] = useState<ClinicalTest | null>(null);
-    const navigate = useNavigate();
 
     const { data: tests = [], isLoading } = useQuery({
         queryKey: ['clinical-tests-library'],

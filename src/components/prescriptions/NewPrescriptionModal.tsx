@@ -89,7 +89,7 @@ export function NewPrescriptionModal({
     setSelectedExercises(selectedExercises.filter(e => e.id !== id));
   };
 
-  const handleUpdateExercise = (id: string, field: keyof PrescriptionExercise, value: any) => {
+  const handleUpdateExercise = (id: string, field: keyof PrescriptionExercise, value: string | number) => {
     setSelectedExercises(
       selectedExercises.map(e =>
         e.id === id ? { ...e, [field]: value } : e

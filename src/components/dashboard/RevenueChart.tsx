@@ -21,7 +21,7 @@ export function RevenueChart() {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - 7); // Últimos 7 dias
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase typed schema doesn't include payments table
       const { data: payments } = await (supabase as any)
         .from('payments')
         .select('amount, created_at')
@@ -31,8 +31,7 @@ export function RevenueChart() {
 
       if (payments) {
         // Agrupar por dia
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const grouped = (payments as any[]).reduce((acc: Record<string, number>, payment: any) => {
+        const grouped = (payments as Array<{ amount: number; created_at: string }>).reduce((acc: Record<string, number>, payment: { amount: number; created_at: string }) => {
           const date = format(new Date(payment.created_at), 'yyyy-MM-dd');
           acc[date] = (acc[date] || 0) + (payment.amount || 0);
           return acc;

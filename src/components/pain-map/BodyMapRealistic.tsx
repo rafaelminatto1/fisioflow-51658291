@@ -205,7 +205,7 @@ export function BodyMapRealistic({
         });
     };
 
-    const handleRemovePoint = (_region: any) => {
+    const handleRemovePoint = (_region: { code: string; name: string }) => {
         if (!currentSelectedPoint || !onPointRemove) return;
         onPointRemove(currentSelectedPoint.id);
         setSelectedPointId(null);

@@ -51,8 +51,12 @@ export function ReportGeneratorDialog({ patientId, patientName, trigger }: Repor
       const reportDate = new Date().toLocaleDateString('pt-BR');
       
       // Get initial and current assessment data
-      const initialPain = painEvolution.length > 0 ? (painEvolution[painEvolution.length - 1] as any).globalPainLevel || painEvolution[painEvolution.length - 1].averageIntensity : 0;
-      const currentPain = painEvolution.length > 0 ? (painEvolution[0] as any).globalPainLevel || painEvolution[0].averageIntensity : 0;
+      const initialPain = painEvolution.length > 0
+        ? (painEvolution[painEvolution.length - 1] as { globalPainLevel?: number; averageIntensity?: number }).globalPainLevel || painEvolution[painEvolution.length - 1].averageIntensity || 0
+        : 0;
+      const currentPain = painEvolution.length > 0
+        ? (painEvolution[0] as { globalPainLevel?: number; averageIntensity?: number }).globalPainLevel || painEvolution[0].averageIntensity || 0
+        : 0;
 
       if (reportType === 'medical') {
         // Relatório Médico Técnico
@@ -74,7 +78,13 @@ export function ReportGeneratorDialog({ patientId, patientName, trigger }: Repor
             name: p.pathology_name,
             status: p.status === 'em_tratamento' ? 'Em tratamento' : 'Tratada'
           })),
-          painEvolution: painEvolution.slice(0, 10).map((pe: any) => ({
+          painEvolution: painEvolution.slice(0, 10).map((pe: {
+            date: string;
+            globalPainLevel?: number;
+            averageIntensity?: number;
+            regionCount?: number;
+            pointCount?: number;
+          }) => ({
             date: new Date(pe.date).toLocaleDateString('pt-BR'),
             level: pe.globalPainLevel || pe.averageIntensity,
             regions: pe.regionCount || pe.pointCount

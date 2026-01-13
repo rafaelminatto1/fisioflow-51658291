@@ -4,13 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, CheckCircle, Mail, Stethoscope } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { passwordSchema, emailSchema, fullNameSchema } from '@/lib/validations/auth';
-import { Separator } from '@/components/ui/separator';
 import { logger } from '@/lib/errors/logger';
 
 // Demo credentials removed for security - no hardcoded credentials in production

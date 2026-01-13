@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode, useRef } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/lib/errors/logger';
@@ -189,7 +189,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
    * Handler otimizado para mudanças de Realtime
    * Acumula mudanças e processa em batch
    */
-  const handleRealtimeChange = useCallback((payload: any) => {
+  const handleRealtimeChange = useCallback((payload: { eventType?: string; new?: Record<string, unknown>; old?: Record<string, unknown> }) => {
     const updateFn = (prev: Appointment[]) => {
       if (payload.eventType === 'INSERT') {
         // Só adiciona se for futuro ou hoje (reduz tamanho do array)

@@ -5,8 +5,16 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Search, Video, Upload, Trash2, Play,
-  Filter, X, Clock, Edit, AlertCircle, Check
+  X, Clock, Edit, AlertCircle, Check,
+  Download, ListVideo, ChevronRight, ChevronLeft,
+  Square
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Select,
   SelectContent,
@@ -64,10 +72,20 @@ export function ExerciseVideoLibrary({ onUploadClick: _onUploadClick }: Exercise
   const [equipmentFilter, setEquipmentFilter] = useState<string>('all');
   const [selectedVideo, setSelectedVideo] = useState<ExerciseVideo | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteIds, setDeleteIds] = useState<string[]>([]);
   const [showUpload, setShowUpload] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [editingVideo, setEditingVideo] = useState<ExerciseVideo | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // Bulk selection state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBulkMode, setIsBulkMode] = useState(false);
+
+  // Playlist state
+  const [playlist, setPlaylist] = useState<ExerciseVideo[]>([]);
+  const [currentPlaylistIndex, setCurrentPlaylistIndex] = useState(0);
+  const [showPlaylist, setShowPlaylist] = useState(false);
 
   // Edit form state
   const [editTitle, setEditTitle] = useState('');
@@ -196,17 +214,20 @@ export function ExerciseVideoLibrary({ onUploadClick: _onUploadClick }: Exercise
           handleCloseEdit();
         } else if (selectedVideo) {
           setSelectedVideo(null);
+          setShowPlaylist(false);
         } else if (deleteId) {
           setDeleteId(null);
         } else if (showUpload) {
           setShowUpload(false);
+        } else if (isBulkMode) {
+          exitBulkMode();
         }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [showEdit, selectedVideo, deleteId, showUpload, handleCloseEdit]);
+  }, [showEdit, selectedVideo, deleteId, showUpload, handleCloseEdit, isBulkMode, exitBulkMode]);
 
   const toggleEditBodyPart = useCallback((part: string) => {
     setEditBodyParts((prev) =>
@@ -242,6 +263,105 @@ export function ExerciseVideoLibrary({ onUploadClick: _onUploadClick }: Exercise
       }
     }
   };
+
+  // Bulk selection handlers
+  const toggleSelectVideo = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback(() => {
+    if (selectedIds.size === filteredVideos.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredVideos.map(v => v.id)));
+    }
+  }, [selectedIds.size, filteredVideos]);
+
+  const exitBulkMode = useCallback(() => {
+    setIsBulkMode(false);
+    setSelectedIds(new Set());
+  }, []);
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+
+    const idsToDelete = Array.from(selectedIds);
+    setDeleteIds(idsToDelete);
+
+    try {
+      await Promise.all(idsToDelete.map(id => deleteVideoMutation.mutateAsync(id)));
+      toast({
+        title: 'Vídeos excluídos',
+        description: `${idsToDelete.length} vídeo(s) removido(s) da biblioteca.`,
+      });
+      exitBulkMode();
+    } catch {
+      toast({
+        title: 'Erro ao excluir',
+        description: 'Alguns vídeos não puderam ser excluídos. Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleteIds([]);
+    }
+  };
+
+  const handlePlayPlaylist = useCallback((video: ExerciseVideo) => {
+    const currentIndex = filteredVideos.findIndex(v => v.id === video.id);
+    setPlaylist(filteredVideos);
+    setCurrentPlaylistIndex(currentIndex);
+    setShowPlaylist(true);
+    setSelectedVideo(video);
+  }, [filteredVideos]);
+
+  const playNext = useCallback(() => {
+    if (currentPlaylistIndex < playlist.length - 1) {
+      const nextIndex = currentPlaylistIndex + 1;
+      setCurrentPlaylistIndex(nextIndex);
+      setSelectedVideo(playlist[nextIndex]);
+    }
+  }, [currentPlaylistIndex, playlist]);
+
+  const playPrevious = useCallback(() => {
+    if (currentPlaylistIndex > 0) {
+      const prevIndex = currentPlaylistIndex - 1;
+      setCurrentPlaylistIndex(prevIndex);
+      setSelectedVideo(playlist[prevIndex]);
+    }
+  }, [currentPlaylistIndex, playlist]);
+
+  const downloadVideo = useCallback(async (video: ExerciseVideo) => {
+    try {
+      const response = await fetch(video.video_url);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${video.title}.mp4`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast({
+        title: 'Download iniciado',
+        description: 'O vídeo está sendo baixado.',
+      });
+    } catch {
+      toast({
+        title: 'Erro ao baixar',
+        description: 'Não foi possível baixar o vídeo.',
+        variant: 'destructive',
+      });
+    }
+  }, []);
 
   if (isLoading) {
     return (
@@ -280,17 +400,48 @@ export function ExerciseVideoLibrary({ onUploadClick: _onUploadClick }: Exercise
           </p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-          >
-            {viewMode === 'grid' ? <Filter className="h-4 w-4" /> : <Video className="h-4 w-4" />}
-          </Button>
-          <Button onClick={() => setShowUpload(true)} className="gap-2">
-            <Upload className="h-4 w-4" />
-            Upload Vídeo
-          </Button>
+          {isBulkMode ? (
+            <>
+              <Button variant="outline" size="sm" onClick={toggleSelectAll}>
+                {selectedIds.size === filteredVideos.length ? 'Desmarcar Todos' : 'Selecionar Todos'}
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleBulkDelete}
+                disabled={selectedIds.size === 0 || deleteIds.length > 0}
+                className="gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Excluir ({selectedIds.size})
+              </Button>
+              <Button variant="outline" size="sm" onClick={exitBulkMode}>
+                Cancelar
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setIsBulkMode(true)}
+                title="Modo de seleção"
+              >
+                <Square className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+              >
+                {viewMode === 'grid' ? <ListVideo className="h-4 w-4" /> : <Video className="h-4 w-4" />}
+              </Button>
+              <Button onClick={() => setShowUpload(true)} className="gap-2">
+                <Upload className="h-4 w-4" />
+                Upload Vídeo
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -397,8 +548,13 @@ export function ExerciseVideoLibrary({ onUploadClick: _onUploadClick }: Exercise
               key={video.id}
               video={video}
               onPlay={() => setSelectedVideo(video)}
+              onPlayPlaylist={() => handlePlayPlaylist(video)}
               onDelete={() => setDeleteId(video.id)}
               onEdit={() => handleOpenEdit(video)}
+              onDownload={() => downloadVideo(video)}
+              isBulkMode={isBulkMode}
+              isSelected={selectedIds.has(video.id)}
+              onToggleSelect={() => toggleSelectVideo(video.id)}
             />
           ))}
         </div>
@@ -409,18 +565,41 @@ export function ExerciseVideoLibrary({ onUploadClick: _onUploadClick }: Exercise
               key={video.id}
               video={video}
               onPlay={() => setSelectedVideo(video)}
+              onPlayPlaylist={() => handlePlayPlaylist(video)}
               onDelete={() => setDeleteId(video.id)}
               onEdit={() => handleOpenEdit(video)}
+              onDownload={() => downloadVideo(video)}
+              isBulkMode={isBulkMode}
+              isSelected={selectedIds.has(video.id)}
+              onToggleSelect={() => toggleSelectVideo(video.id)}
             />
           ))}
         </div>
       )}
 
       {/* Video Player Modal */}
-      <Dialog open={!!selectedVideo} onOpenChange={() => setSelectedVideo(null)}>
+      <Dialog open={!!selectedVideo} onOpenChange={(open) => {
+        if (!open) {
+          setSelectedVideo(null);
+          setShowPlaylist(false);
+        }
+      }}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle>{selectedVideo?.title}</DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="flex-1 pr-4">{selectedVideo?.title}</DialogTitle>
+              {showPlaylist && playlist.length > 1 && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={playPrevious} disabled={currentPlaylistIndex === 0}>
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span>{currentPlaylistIndex + 1} / {playlist.length}</span>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={playNext} disabled={currentPlaylistIndex === playlist.length - 1}>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
           </DialogHeader>
           {selectedVideo && (
             <div className="space-y-4">
@@ -428,45 +607,76 @@ export function ExerciseVideoLibrary({ onUploadClick: _onUploadClick }: Exercise
                 src={selectedVideo.video_url}
                 thumbnail={selectedVideo.thumbnail_url}
                 title={selectedVideo.title}
+                onEnded={showPlaylist ? playNext : undefined}
               />
-              <div className="space-y-2">
-                {selectedVideo.description && (
-                  <p className="text-sm text-muted-foreground">{selectedVideo.description}</p>
-                )}
-                <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                  {selectedVideo.duration && (
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {exerciseVideosService.formatDuration(selectedVideo.duration)}
-                    </span>
-                  )}
-                  <span>• {exerciseVideosService.formatFileSize(selectedVideo.file_size)}</span>
-                  <span>•</span>
-                  <Badge variant="outline" className="capitalize">
-                    {selectedVideo.category}
-                  </Badge>
-                  <Badge variant="outline" className="capitalize">
-                    {selectedVideo.difficulty}
-                  </Badge>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2 flex-1">
+                    {selectedVideo.description && (
+                      <p className="text-sm text-muted-foreground">{selectedVideo.description}</p>
+                    )}
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                      {selectedVideo.duration && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {exerciseVideosService.formatDuration(selectedVideo.duration)}
+                        </span>
+                      )}
+                      <span>• {exerciseVideosService.formatFileSize(selectedVideo.file_size)}</span>
+                      <span>•</span>
+                      <Badge variant="outline" className="capitalize">
+                        {selectedVideo.category}
+                      </Badge>
+                      <Badge variant="outline" className="capitalize">
+                        {selectedVideo.difficulty}
+                      </Badge>
+                    </div>
+                    {selectedVideo.body_parts && selectedVideo.body_parts.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {selectedVideo.body_parts.map((part) => (
+                          <Badge key={part} variant="secondary" className="text-xs capitalize">
+                            {part}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                    {selectedVideo.equipment && selectedVideo.equipment.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {selectedVideo.equipment.map((eq) => (
+                          <Badge key={eq} variant="outline" className="text-xs capitalize">
+                            {eq}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => downloadVideo(selectedVideo)}>
+                        <Download className="h-4 w-4 mr-2" />
+                        Baixar Vídeo
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => {
+                        handleOpenEdit(selectedVideo);
+                      }}>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Editar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setDeleteId(selectedVideo.id)}
+                        className="text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Excluir
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-                {selectedVideo.body_parts && selectedVideo.body_parts.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {selectedVideo.body_parts.map((part) => (
-                      <Badge key={part} variant="secondary" className="text-xs capitalize">
-                        {part}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-                {selectedVideo.equipment && selectedVideo.equipment.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {selectedVideo.equipment.map((eq) => (
-                      <Badge key={eq} variant="outline" className="text-xs capitalize">
-                        {eq}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -656,16 +866,43 @@ export function ExerciseVideoLibrary({ onUploadClick: _onUploadClick }: Exercise
 function VideoCard({
   video,
   onPlay,
+  onPlayPlaylist,
   onDelete,
-  onEdit
+  onEdit,
+  onDownload,
+  isBulkMode,
+  isSelected,
+  onToggleSelect,
 }: {
   video: ExerciseVideo;
   onPlay: () => void;
+  onPlayPlaylist?: () => void;
   onDelete: () => void;
   onEdit: () => void;
+  onDownload?: () => void;
+  isBulkMode: boolean;
+  isSelected: boolean;
+  onToggleSelect: () => void;
 }) {
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (isBulkMode) {
+      onToggleSelect();
+    } else if ((e.target as HTMLElement).closest('button')) {
+      // Allow button clicks to pass through
+      return;
+    } else {
+      onPlay();
+    }
+  };
+
   return (
-    <div className="group relative overflow-hidden rounded-lg border bg-card hover:shadow-lg transition-all">
+    <div
+      className={cn(
+        'group relative overflow-hidden rounded-lg border bg-card hover:shadow-lg transition-all',
+        isSelected && 'ring-2 ring-primary'
+      )}
+      onClick={handleCardClick}
+    >
       {/* Thumbnail with overlay */}
       <div className="relative aspect-video bg-muted">
         {video.thumbnail_url ? (
@@ -680,6 +917,26 @@ function VideoCard({
           </div>
         )}
 
+        {/* Selection checkbox for bulk mode */}
+        {isBulkMode && (
+          <div className="absolute top-2 left-2 z-10">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleSelect();
+              }}
+              className={cn(
+                'w-6 h-6 rounded border-2 flex items-center justify-center transition-colors',
+                isSelected
+                  ? 'bg-primary border-primary'
+                  : 'bg-white/80 border-white hover:bg-white'
+              )}
+            >
+              {isSelected && <Check className="h-4 w-4 text-primary-foreground" />}
+            </button>
+          </div>
+        )}
+
         {/* Duration badge */}
         {video.duration && (
           <div className="absolute bottom-2 right-2 px-2 py-1 rounded bg-black/70 text-white text-xs font-medium">
@@ -688,19 +945,24 @@ function VideoCard({
         )}
 
         {/* Play button overlay */}
-        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button
-            size="icon"
-            onClick={onPlay}
-            className="w-14 h-14 rounded-full bg-white/90 hover:bg-white"
-            aria-label={`Reproduzir ${video.title}`}
-          >
-            <Play className="h-6 w-6 fill-black text-black ml-1" />
-          </Button>
-        </div>
+        {!isBulkMode && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                onPlay();
+              }}
+              className="w-14 h-14 rounded-full bg-white/90 hover:bg-white"
+              aria-label={`Reproduzir ${video.title}`}
+            >
+              <Play className="h-6 w-6 fill-black text-black ml-1" />
+            </Button>
+          </div>
+        )}
 
         {/* Category badge */}
-        <div className="absolute top-2 left-2">
+        <div className={cn('absolute top-2', isBulkMode ? 'left-10' : 'left-2')}>
           <Badge className="bg-primary/90 text-white text-xs capitalize">
             {video.category}
           </Badge>
@@ -709,7 +971,12 @@ function VideoCard({
 
       {/* Content */}
       <div className="p-3">
-        <h3 className="font-medium text-sm line-clamp-1">{video.title}</h3>
+        <h3 className={cn(
+          'font-medium text-sm line-clamp-1',
+          isBulkMode && 'cursor-pointer'
+        )}>
+          {video.title}
+        </h3>
         {video.description && (
           <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{video.description}</p>
         )}
@@ -717,26 +984,46 @@ function VideoCard({
           <Badge variant="outline" className="text-xs capitalize">
             {video.difficulty}
           </Badge>
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 hover:bg-muted"
-              onClick={onEdit}
-              aria-label={`Editar ${video.title}`}
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-              onClick={onDelete}
-              aria-label={`Excluir ${video.title}`}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
+          {!isBulkMode && (
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 hover:bg-muted"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit();
+                }}
+                aria-label={`Editar ${video.title}`}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 hover:bg-muted"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDownload?.();
+                }}
+                aria-label={`Baixar ${video.title}`}
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+                aria-label={`Excluir ${video.title}`}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -747,18 +1034,48 @@ function VideoCard({
 function VideoListItem({
   video,
   onPlay,
+  onPlayPlaylist,
   onDelete,
-  onEdit
+  onEdit,
+  onDownload,
+  isBulkMode,
+  isSelected,
+  onToggleSelect,
 }: {
   video: ExerciseVideo;
   onPlay: () => void;
+  onPlayPlaylist?: () => void;
   onDelete: () => void;
   onEdit: () => void;
+  onDownload?: () => void;
+  isBulkMode: boolean;
+  isSelected: boolean;
+  onToggleSelect: () => void;
 }) {
   return (
-    <div className="group flex items-center gap-4 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
+    <div
+      className={cn(
+        'group flex items-center gap-4 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors',
+        isSelected && 'ring-2 ring-primary'
+      )}
+    >
+      {/* Selection checkbox */}
+      {isBulkMode && (
+        <button
+          onClick={onToggleSelect}
+          className={cn(
+            'w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors',
+            isSelected
+              ? 'bg-primary border-primary'
+              : 'border-muted-foreground/30 hover:border-primary'
+          )}
+        >
+          {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+        </button>
+      )}
+
       {/* Thumbnail */}
-      <div className="relative w-32 h-20 flex-shrink-0 rounded overflow-hidden bg-muted">
+      <div className="relative w-32 h-20 flex-shrink-0 rounded overflow-hidden bg-muted cursor-pointer" onClick={isBulkMode ? onToggleSelect : onPlay}>
         {video.thumbnail_url ? (
           <img src={video.thumbnail_url} alt={video.title} className="w-full h-full object-cover" />
         ) : (
@@ -766,11 +1083,13 @@ function VideoListItem({
             <Video className="h-8 w-8 text-primary/30" />
           </div>
         )}
-        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button size="icon" onClick={onPlay} className="w-8 h-8 rounded-full bg-white/90" aria-label={`Reproduzir ${video.title}`}>
-            <Play className="h-4 w-4 fill-black text-black ml-0.5" />
-          </Button>
-        </div>
+        {!isBulkMode && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button size="icon" onClick={onPlay} className="w-8 h-8 rounded-full bg-white/90" aria-label={`Reproduzir ${video.title}`}>
+              <Play className="h-4 w-4 fill-black text-black ml-0.5" />
+            </Button>
+          </div>
+        )}
         {video.duration && (
           <div className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/70 text-white text-[10px]">
             {exerciseVideosService.formatDuration(video.duration)}
@@ -779,7 +1098,7 @@ function VideoListItem({
       </div>
 
       {/* Info */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 cursor-pointer" onClick={isBulkMode ? onToggleSelect : undefined}>
         <h4 className="font-medium text-sm truncate">{video.title}</h4>
         {video.description && (
           <p className="text-xs text-muted-foreground line-clamp-1">{video.description}</p>
@@ -795,30 +1114,41 @@ function VideoListItem({
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" onClick={onPlay}>
-          <Play className="h-4 w-4 mr-1" />
-          Assistir
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 hover:bg-muted"
-          onClick={onEdit}
-          aria-label={`Editar ${video.title}`}
-        >
-          <Edit className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-          onClick={onDelete}
-          aria-label={`Excluir ${video.title}`}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
+      {!isBulkMode && (
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={onPlay}>
+            <Play className="h-4 w-4 mr-1" />
+            Assistir
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 hover:bg-muted"
+            onClick={onEdit}
+            aria-label={`Editar ${video.title}`}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 hover:bg-muted"
+            onClick={onDownload}
+            aria-label={`Baixar ${video.title}`}
+          >
+            <Download className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+            onClick={onDelete}
+            aria-label={`Excluir ${video.title}`}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

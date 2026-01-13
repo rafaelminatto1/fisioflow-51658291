@@ -25,13 +25,15 @@ export const useLivePoseAnalysis = () => {
     const [metrics, setMetrics] = useState<BiofeedbackMetrics | null>(null);
 
     // Armazena as dependências do MediaPipe carregadas
+    // MediaPipe types from external library - not fully typed
     const [mediaPipeModules, setMediaPipeModules] = useState<{
-        PoseLandmarker: any;
-        FilesetResolver: any;
-        DrawingUtils: any;
+        PoseLandmarker: { createFromOptions: (vision: unknown, options: Record<string, unknown>) => Promise<unknown>; close: () => void };
+        FilesetResolver: { forVisionTasks: (url: string) => Promise<unknown> };
+        DrawingUtils: new (ctx: CanvasRenderingContext2D) => { drawLandmarks: (landmarks: unknown, options: Record<string, unknown>) => void; drawConnectors: (landmarks: unknown, connections: unknown) => void; lerp: (x: number, min: number, max: number, newMin: number, newMax: number) => number };
     } | null>(null);
 
-    const landmarkerRef = useRef<any>(null);
+    // MediaPipe landmarker instance from external library
+    const landmarkerRef = useRef<{ detectForVideo: (video: HTMLVideoElement, timestamp: number) => { landmarks: unknown[][] }; close?: () => void } | null>(null);
     const requestRef = useRef<number>();
 
     // Carregar MediaPipe sob demanda
@@ -146,12 +148,12 @@ export const useLivePoseAnalysis = () => {
 
                 // Draw
                 drawingUtils.drawLandmarks(landmarks, {
-                    radius: (data: any) => DrawingUtils.lerp(data.from!.z, -0.15, 0.1, 5, 1)
+                    radius: (data: { from?: { z: number } }) => DrawingUtils.lerp(data.from?.z ?? 0, -0.15, 0.1, 5, 1)
                 });
                 drawingUtils.drawConnectors(landmarks, PoseLandmarker.POSE_CONNECTIONS);
 
                 // Calculate Live Metrics
-                const unified = landmarks.map((l: any) => ({ x: l.x, y: l.y, z: l.z, visibility: l.visibility })) as UnifiedLandmark[];
+                const unified = landmarks.map((l: { x: number; y: number; z: number; visibility?: number }) => ({ x: l.x, y: l.y, z: l.z, visibility: l.visibility ?? 0 })) as UnifiedLandmark[];
 
                 const hipL = unified[POSE_LANDMARKS.LEFT_HIP];
                 const hipR = unified[POSE_LANDMARKS.RIGHT_HIP];

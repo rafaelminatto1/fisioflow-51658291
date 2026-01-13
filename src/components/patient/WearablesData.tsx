@@ -15,14 +15,9 @@ interface WearablesDataProps {
     patientId: string;
 }
 
-type Period = '7d' | '30d' | '90d';
-type MetricType = 'heart_rate' | 'steps' | 'sleep' | 'weight' | 'spo2';
-
 export function WearablesData({ patientId }: WearablesDataProps) {
     const { wearableData, addWearableData, isAdding } = useWearables(patientId);
     const [isAddOpen, setIsAddOpen] = useState(false);
-    const [, setPeriod] = useState<Period>('7d');
-    const [, setSelectedMetric] = useState<MetricType>('heart_rate');
     const [newData, setNewData] = useState({
         source: 'manual',
         data_type: 'heart_rate',

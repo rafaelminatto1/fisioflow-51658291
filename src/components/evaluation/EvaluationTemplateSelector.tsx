@@ -1,0 +1,272 @@
+import React, { useState, useMemo, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Check, ChevronsUpDown, FileText, Search, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from '@/components/ui/command';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+
+export interface EvaluationTemplate {
+    id: string;
+    nome: string;
+    descricao?: string | null;
+    tipo: string;
+    category?: string;
+    fields?: TemplateField[];
+}
+
+export interface TemplateField {
+    id: string;
+    label: string;
+    tipo_campo: string;
+    placeholder?: string | null;
+    opcoes?: string[] | null;
+    ordem: number;
+    obrigatorio: boolean;
+    section?: string;
+    defaultValue?: string | number | boolean;
+    min?: number;
+    max?: number;
+    unit?: string;
+}
+
+interface EvaluationTemplateSelectorProps {
+    selectedTemplateId?: string;
+    onTemplateSelect: (template: EvaluationTemplate | null) => void;
+    category?: string;
+    autoLoadDefault?: boolean;
+}
+
+const CATEGORY_LABELS: Record<string, string> = {
+    'esportiva': 'Fisioterapia Esportiva',
+    'ortopedica': 'Fisioterapia Ortopédica',
+    'neurologica': 'Fisioterapia Neurológica',
+    'respiratoria': 'Fisioterapia Respiratória',
+    'padrao': 'Avaliação Padrão',
+    'geral': 'Avaliação Geral',
+};
+
+const CATEGORY_COLORS: Record<string, string> = {
+    'esportiva': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    'ortopedica': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+    'neurologica': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+    'respiratoria': 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+    'padrao': 'bg-primary/10 text-primary',
+    'geral': 'bg-muted text-muted-foreground',
+};
+
+export function EvaluationTemplateSelector({
+    selectedTemplateId,
+    onTemplateSelect,
+    category,
+    autoLoadDefault = true,
+}: EvaluationTemplateSelectorProps) {
+    const [open, setOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // Fetch all active templates with their fields
+    const { data: templates = [], isLoading } = useQuery({
+        queryKey: ['evaluation-templates-with-fields', category],
+        queryFn: async () => {
+            let query = supabase
+                .from('evaluation_forms')
+                .select(`
+          id,
+          nome,
+          descricao,
+          tipo,
+          evaluation_form_fields (
+            id,
+            label,
+            tipo_campo,
+            placeholder,
+            opcoes,
+            ordem,
+            obrigatorio
+          )
+        `)
+                .eq('ativo', true)
+                .order('nome');
+
+            if (category) {
+                query = query.eq('tipo', category);
+            }
+
+            const { data, error } = await query;
+            if (error) throw error;
+
+            return (data || []).map((t) => ({
+                id: t.id,
+                nome: t.nome,
+                descricao: t.descricao,
+                tipo: t.tipo,
+                category: t.tipo,
+                fields: (t.evaluation_form_fields || []).map((f: TemplateField) => ({
+                    ...f,
+                    opcoes: typeof f.opcoes === 'string' ? JSON.parse(f.opcoes) : f.opcoes,
+                })).sort((a: TemplateField, b: TemplateField) => a.ordem - b.ordem),
+            })) as EvaluationTemplate[];
+        },
+    });
+
+    // Auto-load default template on first render
+    React.useEffect(() => {
+        if (autoLoadDefault && templates.length > 0 && !selectedTemplateId) {
+            // Find "Avaliação Padrão" or the first template
+            const defaultTemplate = templates.find(t =>
+                t.nome.toLowerCase().includes('padrão') ||
+                t.tipo === 'padrao'
+            ) || templates[0];
+
+            if (defaultTemplate) {
+                onTemplateSelect(defaultTemplate);
+            }
+        }
+    }, [templates, autoLoadDefault, selectedTemplateId, onTemplateSelect]);
+
+    // Filter templates based on search
+    const filteredTemplates = useMemo(() => {
+        if (!searchQuery.trim()) return templates;
+
+        const query = searchQuery.toLowerCase();
+        return templates.filter(t =>
+            t.nome.toLowerCase().includes(query) ||
+            t.descricao?.toLowerCase().includes(query) ||
+            t.tipo?.toLowerCase().includes(query)
+        );
+    }, [templates, searchQuery]);
+
+    // Group templates by category
+    const groupedTemplates = useMemo(() => {
+        const groups: Record<string, EvaluationTemplate[]> = {};
+
+        filteredTemplates.forEach(t => {
+            const cat = t.tipo || 'geral';
+            if (!groups[cat]) groups[cat] = [];
+            groups[cat].push(t);
+        });
+
+        return groups;
+    }, [filteredTemplates]);
+
+    const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
+
+    const handleSelect = useCallback((templateId: string) => {
+        const template = templates.find(t => t.id === templateId);
+        onTemplateSelect(template || null);
+        setOpen(false);
+    }, [templates, onTemplateSelect]);
+
+    return (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+                <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={open}
+                    className="w-full justify-between h-auto min-h-[42px] py-2"
+                >
+                    <div className="flex items-center gap-2 text-left">
+                        <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        {selectedTemplate ? (
+                            <div className="flex flex-col gap-0.5">
+                                <span className="font-medium">{selectedTemplate.nome}</span>
+                                {selectedTemplate.descricao && (
+                                    <span className="text-xs text-muted-foreground line-clamp-1">
+                                        {selectedTemplate.descricao}
+                                    </span>
+                                )}
+                            </div>
+                        ) : (
+                            <span className="text-muted-foreground">
+                                Selecione um template de avaliação...
+                            </span>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {selectedTemplate && (
+                            <Badge
+                                variant="secondary"
+                                className={cn("text-xs", CATEGORY_COLORS[selectedTemplate.tipo] || '')}
+                            >
+                                {CATEGORY_LABELS[selectedTemplate.tipo] || selectedTemplate.tipo}
+                            </Badge>
+                        )}
+                        <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+                    </div>
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[400px] p-0" align="start">
+                <Command shouldFilter={false}>
+                    <div className="flex items-center border-b px-3">
+                        <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                        <input
+                            placeholder="Buscar template..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                        />
+                    </div>
+                    <CommandList>
+                        {isLoading ? (
+                            <div className="flex items-center justify-center py-6">
+                                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                            </div>
+                        ) : filteredTemplates.length === 0 ? (
+                            <CommandEmpty>Nenhum template encontrado.</CommandEmpty>
+                        ) : (
+                            <ScrollArea className="max-h-[300px]">
+                                {Object.entries(groupedTemplates).map(([cat, catTemplates]) => (
+                                    <CommandGroup key={cat} heading={CATEGORY_LABELS[cat] || cat}>
+                                        {catTemplates.map((template) => (
+                                            <CommandItem
+                                                key={template.id}
+                                                value={template.id}
+                                                onSelect={() => handleSelect(template.id)}
+                                                className="flex items-center gap-2 cursor-pointer"
+                                            >
+                                                <Check
+                                                    className={cn(
+                                                        "h-4 w-4",
+                                                        selectedTemplateId === template.id ? "opacity-100" : "opacity-0"
+                                                    )}
+                                                />
+                                                <div className="flex flex-col flex-1 min-w-0">
+                                                    <span className="font-medium truncate">{template.nome}</span>
+                                                    {template.descricao && (
+                                                        <span className="text-xs text-muted-foreground truncate">
+                                                            {template.descricao}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <Badge variant="secondary" className="text-xs shrink-0">
+                                                    {template.fields?.length || 0} campos
+                                                </Badge>
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                ))}
+                            </ScrollArea>
+                        )}
+                    </CommandList>
+                </Command>
+            </PopoverContent>
+        </Popover>
+    );
+}
+
+export default EvaluationTemplateSelector;

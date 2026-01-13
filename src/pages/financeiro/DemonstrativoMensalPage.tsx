@@ -110,8 +110,8 @@ export default function DemonstrativoMensalPage() {
         entradasPorCategoria,
         saidasPorCategoria,
         entradasPorFormaPagamento,
-        contasReceber: contasReceber?.reduce((acc, c: any) => acc + Number(c.valor), 0) || 0,
-        contasPagar: contasPagar?.reduce((acc, c: any) => acc + Number(c.valor), 0) || 0,
+        contasReceber: contasReceber?.reduce((acc, c: { valor?: string | number }) => acc + Number(c.valor), 0) || 0,
+        contasPagar: contasPagar?.reduce((acc, c: { valor?: string | number }) => acc + Number(c.valor), 0) || 0,
         totalAtendimentos: totalAtendimentos || 0,
         ticketMedio: totalAtendimentos ? totalEntradas / totalAtendimentos : 0,
       };

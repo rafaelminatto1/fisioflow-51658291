@@ -244,8 +244,8 @@ export const useComputerVision = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const animationFrameRef = useRef<number | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const modelRef = useRef<any>(null);
+  // Mock pose detection model - typed as minimal interface
+  const modelRef = useRef<{ detect: (imageData: ImageData) => PoseDetection } | null>(null);
   const recordingRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
 

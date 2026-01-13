@@ -18,7 +18,7 @@ export const appointmentReminderWorkflow = inngest.createFunction(
   {
     event: Events.APPOINTMENT_REMINDER,
   },
-  async ({ event, step }: { event: { data: any }; step: any }) => {
+  async ({ step }: { event: { data: Record<string, unknown> }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -62,12 +62,12 @@ export const appointmentReminderWorkflow = inngest.createFunction(
     // Send reminders
     const results = await step.run('send-reminders', async () => {
       return await Promise.all(
-        appointments.map(async (appointment: any) => {
+        appointments.map(async (appointment: { id: string; patient_id?: string }) => {
           const patient = appointment.patient;
           const preferences = patient.notification_preferences || {};
           const orgSettings = appointment.organization?.settings || {};
 
-          const reminderEvents: any[] = [];
+          const reminderEvents: Array<{ name: string; data: Record<string, unknown> }> = [];
 
           // Email reminder
           if (preferences.email !== false && orgSettings.email_enabled && patient.email) {
@@ -111,7 +111,7 @@ export const appointmentReminderWorkflow = inngest.createFunction(
       );
     });
 
-    const totalQueued = results.reduce((sum: number, r: any) => sum + (r.notificationsQueued || 0), 0);
+    const totalQueued = results.reduce((sum: number, r: { notificationsQueued?: number }) => sum + (r.notificationsQueued || 0), 0);
 
     return {
       success: true,
@@ -135,8 +135,7 @@ export const appointmentCreatedWorkflow = inngest.createFunction(
   {
     event: Events.APPOINTMENT_CREATED,
   },
-  async ({ event, step }: { event: { data: any }; step: any }) => {
-    const { appointmentId, patientId, organizationId } = event.data;
+  async ({ step }: { event: { data: Record<string, unknown> }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
 
     // Invalidate cache for patient
     await step.run('invalidate-cache', async () => {

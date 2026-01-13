@@ -292,7 +292,8 @@ export async function sendEmail(options: SendEmailOptions): Promise<{ success: b
   try {
     const from = options.from || 'FisioFlow <noreply@fisioflow.com>';
 
-    const emailOptions: any = {
+    // Resend email options - structure not fully typed
+    const emailOptions: Record<string, unknown> = {
       from,
       to: options.to,
       subject: options.subject,

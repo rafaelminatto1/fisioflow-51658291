@@ -44,11 +44,11 @@ export async function getExercisesWithCache(organizationId: string) {
   const cacheKey = `exercises:${organizationId}`;
 
   // Tentar cache
-  const cached = await getCache<any[]>(cacheKey);
+  const cached = await getCache<unknown[]>(cacheKey);
 
   if (cached) {
     console.log('✅ Cache HIT - Exercícios');
-    return cached;
+    return cached as typeof cached;
   }
 
   // Buscar do banco
@@ -69,7 +69,7 @@ export async function getExercisesWithCache(organizationId: string) {
 // EXEMPLO 3: Invalidar cache ao atualizar
 // ========================================
 
-export async function updatePatient(patientId: string, updates: any) {
+export async function updatePatient(patientId: string, updates: Record<string, unknown>) {
   // Atualizar no banco
   const { data, error } = await supabase
     .from('patients')
@@ -120,7 +120,7 @@ export async function getPatientAppointments(patientId: string) {
 // EXEMPLO 5: Criar appointment - invalidar cache
 // ========================================
 
-export async function createAppointment(appointment: any) {
+export async function createAppointment(appointment: Record<string, unknown>) {
   const { data, error } = await supabase
     .from('appointments')
     .insert(appointment)
@@ -174,11 +174,11 @@ export async function searchExercisesWithCache(
   const cacheKey = `search:${organizationId}:${query}`;
 
   // Tentar cache
-  const cached = await getCache<any[]>(cacheKey);
+  const cached = await getCache<unknown[]>(cacheKey);
 
   if (cached) {
     console.log('✅ Cache HIT - Busca semântica');
-    return cached;
+    return cached as typeof cached;
   }
 
   // Buscar usando Supabase Vector

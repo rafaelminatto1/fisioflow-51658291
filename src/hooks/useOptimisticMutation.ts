@@ -220,7 +220,7 @@ export function useUpdateMutation<TData, TVariables = void>(
     // Função para atualizar item otimistamente
     getOptimisticUpdate?: (variables: TVariables) => (old: TData) => TData;
     // Função para encontrar item no array
-    findItem?: (data: any[], variables: TVariables) => any;
+    findItem?: (data: TData[], variables: TVariables) => TData;
   }
 ) {
   const queryClient = useQueryClient();
@@ -261,7 +261,7 @@ export function useDeleteMutation<TData, TVariables = void>(
     successMessage?: string;
     errorMessage?: string;
     // Função para identificar item a ser deletado
-    findItem?: (data: any[], variables: TVariables) => any;
+    findItem?: (data: TData[], variables: TVariables) => TData;
   }
 ) {
   const queryClient = useQueryClient();

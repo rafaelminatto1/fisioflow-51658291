@@ -96,6 +96,7 @@ export function OptimizedImage({
  * Hook para preload de imagens
  * Útil para imagens críticas acima do fold
  */
+/* eslint-disable-next-line react-refresh/only-export-components */
 export function useImagePreload(src: string): boolean {
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -112,6 +113,7 @@ export function useImagePreload(src: string): boolean {
 /**
  * Preload de múltiplas imagens
  */
+/* eslint-disable-next-line react-refresh/only-export-components */
 export function useImagesPreload(srcs: string[]): boolean {
   const [loaded, setLoaded] = useState(0);
 

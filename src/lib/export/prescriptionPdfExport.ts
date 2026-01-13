@@ -136,7 +136,7 @@ export const generatePrescriptionPDF = async (prescription: PrescriptionData): P
     margin: { left: 15, right: 15 },
   });
 
-  // @ts-ignore - autoTable adds this property
+  // @ts-expect-error - autoTable adds this property
   yPosition = doc.lastAutoTable.finalY + 10;
 
   // Observações gerais

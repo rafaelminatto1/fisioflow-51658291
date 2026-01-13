@@ -121,8 +121,6 @@ export function useRetentionMetrics() {
     queryKey: RETENTION_KEYS.metrics(),
     queryFn: async (): Promise<RetentionMetrics> => {
       const now = new Date();
-      const _thirtyDaysAgo = subDays(now, 30);
-      const _ninetyDaysAgo = subDays(now, 90);
 
       // Get all patients with their activity
       const { data: patients, error: patientsError } = await supabase

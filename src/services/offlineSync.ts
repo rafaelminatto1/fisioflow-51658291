@@ -17,10 +17,17 @@
 
 import { getDB, type FisioFlowDB } from '@/hooks/useOfflineStorage';
 import { toast } from 'sonner';
+import type { IDBPDatabase } from 'idb';
 
 // ============================================================================
 // TYPES & INTERFACES
 // ============================================================================
+
+// Type for payloads that include an id property
+interface PayloadWithId {
+  id: string | number;
+  [key: string]: unknown;
+}
 
 /**
  * Configuration options for the sync service
@@ -416,7 +423,7 @@ class OfflineSyncService {
         await this.apiPost('/api/patient-session-metrics', payload);
         break;
       case ACTION_TYPES.UPDATE_GOAL:
-        await this.apiPatch(`/api/patient-goals/${(payload as any).id}`, payload);
+        await this.apiPatch(`/api/patient-goals/${String((payload as PayloadWithId).id)}`, payload);
         break;
       case ACTION_TYPES.CREATE_EVOLUTION:
         await this.apiPost('/api/patient-evolution', payload);
@@ -425,16 +432,16 @@ class OfflineSyncService {
         await this.apiPost('/api/patient-risk-scores', payload);
         break;
       case ACTION_TYPES.UPDATE_PATIENT:
-        await this.apiPatch(`/api/patients/${(payload as any).id}`, payload);
+        await this.apiPatch(`/api/patients/${String((payload as PayloadWithId).id)}`, payload);
         break;
       case ACTION_TYPES.CREATE_APPOINTMENT:
         await this.apiPost('/api/appointments', payload);
         break;
       case ACTION_TYPES.UPDATE_APPOINTMENT:
-        await this.apiPatch(`/api/appointments/${(payload as any).id}`, payload);
+        await this.apiPatch(`/api/appointments/${String((payload as PayloadWithId).id)}`, payload);
         break;
       case ACTION_TYPES.DELETE_APPOINTMENT:
-        await this.apiDelete(`/api/appointments/${(payload as any).id}`);
+        await this.apiDelete(`/api/appointments/${String((payload as PayloadWithId).id)}`);
         break;
       default:
         console.warn('[OfflineSyncService] Unknown action type:', actionType);

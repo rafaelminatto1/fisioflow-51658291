@@ -68,13 +68,13 @@ export async function getSlowQueries(
       return [];
     }
 
-    return (data || []).map((row: any) => ({
-      queryId: row.query_id,
-      calls: row.calls,
-      totalTime: row.total_time,
-      meanTime: row.mean_time,
-      maxTime: row.max_time,
-      query: row.query_text
+    return (data || []).map((row: Record<string, unknown>) => ({
+      queryId: row.query_id as string,
+      calls: row.calls as number,
+      totalTime: row.total_time as number,
+      meanTime: row.mean_time as number,
+      maxTime: row.max_time as number,
+      query: row.query_text as string
     }));
   } catch (error) {
     logger.error('Error fetching slow queries', error, 'PerformanceMonitor');
@@ -180,13 +180,13 @@ export async function getTableIndexes(tableName: string): Promise<IndexInfo[]> {
       return [];
     }
 
-    return (indexesData || []).map((row: any) => ({
-      tableName: row.table_name,
-      indexName: row.index_name,
+    return (indexesData || []).map((row: Record<string, unknown>) => ({
+      tableName: row.table_name as string,
+      indexName: row.index_name as string,
       columns: [], // Would need more parsing
       indexType: 'btree', // Default assumption
-      isPartial: row.is_partial,
-      isUnique: row.is_unique
+      isPartial: row.is_partial as boolean,
+      isUnique: row.is_unique as boolean
     }));
   } catch (error) {
     logger.error(`Error fetching indexes for ${tableName}`, error, 'PerformanceMonitor');
@@ -240,7 +240,7 @@ export async function generatePerformanceReport(): Promise<PerformanceReport> {
   });
 
   if (orgIndexCheck && orgIndexCheck.length > 0) {
-    orgIndexCheck.forEach((t: any) => {
+    orgIndexCheck.forEach((t: { table_name: string }) => {
       missingIndexes.push(`Table ${t.tablename} may need organization_id index`);
     });
   }
@@ -271,7 +271,7 @@ export function analyzeRealtimePerformance() {
   return {
     subscribed: true,
     activeChannels: channels.length,
-    channelNames: channels.map((c: any) => c.topic),
+    channelNames: channels.map((c: { topic: string }) => c.topic),
     recommendation: channels.length > 5
       ? 'Consider consolidating Realtime channels'
       : 'Realtime channel count is healthy'
@@ -411,13 +411,13 @@ export async function getQueryStatistics(): Promise<QueryStatistics[]> {
       return [];
     }
 
-    return (data || []).map((row: any) => ({
-      tableName: row.table_name,
-      seqScan: row.seq_scan,
-      idxScan: row.idx_scan,
-      idxScanRatio: row.idx_scan_ratio,
-      tableSize: row.table_size,
-      indexSize: row.index_size
+    return (data || []).map((row: Record<string, unknown>) => ({
+      tableName: row.table_name as string,
+      seqScan: row.seq_scan as number,
+      idxScan: row.idx_scan as number,
+      idxScanRatio: row.idx_scan_ratio as number,
+      tableSize: row.table_size as string,
+      indexSize: row.index_size as string
     }));
   } catch (error) {
     logger.error('Error fetching query statistics', error, 'PerformanceMonitor');

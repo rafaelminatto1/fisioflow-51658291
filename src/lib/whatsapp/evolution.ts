@@ -72,7 +72,10 @@ class EvolutionApiClient {
       // Clean phone number (remove non-digits, add country code if needed)
       const cleanNumber = this.cleanPhoneNumber(number);
 
-      const payload: any = {
+       
+       
+      // External Evolution API payload - structure not fully typed
+      const payload: Record<string, unknown> = {
         number: cleanNumber,
         text,
         options: {
@@ -128,7 +131,10 @@ class EvolutionApiClient {
 
       const cleanNumber = this.cleanPhoneNumber(number);
 
-      const payload: any = {
+       
+       
+      // External Evolution API payload - structure not fully typed
+      const payload: Record<string, unknown> = {
         number: cleanNumber,
         mediaUrl: media.url,
         caption: media.caption || '',
@@ -177,7 +183,8 @@ class EvolutionApiClient {
     number: string,
     templateName: string,
     templateData: Record<string, string> = {},
-    components?: any[]
+    // External API components structure - not fully typed
+    components?: Array<Record<string, unknown>>
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
       if (!this.config.apiUrl || !this.config.apiKey) {
@@ -186,7 +193,10 @@ class EvolutionApiClient {
 
       const cleanNumber = this.cleanPhoneNumber(number);
 
-      const payload: any = {
+       
+       
+      // External Evolution API payload - structure not fully typed
+      const payload: Record<string, unknown> = {
         number: cleanNumber,
         templateName,
         templateData,

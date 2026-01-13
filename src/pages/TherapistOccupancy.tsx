@@ -34,7 +34,7 @@ import {
   ArrowDownRight,
   Download
 } from 'lucide-react';
-import { useTherapistOccupancy, type TherapistOccupancyData } from '@/hooks/useTherapistOccupancy';
+import { useTherapistOccupancy } from '@/hooks/useTherapistOccupancy';
 import { cn } from '@/lib/utils';
 import { exportOccupancyReport } from '@/lib/export/excelExport';
 import { useToast } from '@/hooks/use-toast';
@@ -88,7 +88,7 @@ export default function TherapistOccupancyPage() {
         title: 'Exportação concluída',
         description: 'O arquivo Excel foi gerado com sucesso.'
       });
-    } catch (error) {
+    } catch {
       toast({
         title: 'Erro na exportação',
         description: 'Não foi possível gerar o arquivo.',

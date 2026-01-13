@@ -354,7 +354,7 @@ function calculateWeightedAverage(
  */
 interface CustomTooltipProps extends TooltipProps<number, string> {
   active?: boolean;
-  payload?: any[];
+  payload?: { name: string; value: number; color: string }[];
   label?: string;
 }
 

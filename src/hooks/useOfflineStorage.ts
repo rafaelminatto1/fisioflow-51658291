@@ -249,8 +249,6 @@ function canRetryAction(retryCount: number, maxRetries: number): boolean {
  */
 export function useOfflineStorage(options: OfflineStorageOptions = {}) {
   const {
-    dbName: _dbName = DEFAULT_DB_NAME,
-    dbVersion: _dbVersion = DEFAULT_DB_VERSION,
     cacheExpiryMs = DEFAULT_CACHE_EXPIRY,
     maxRetryAttempts = DEFAULT_MAX_RETRY_ATTEMPTS,
   } = options;

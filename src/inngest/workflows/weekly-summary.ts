@@ -19,7 +19,7 @@ export const weeklySummaryWorkflow = inngest.createFunction(
     event: Events.CRON_WEEKLY_SUMMARY,
     cron: '0 9 * * 1', // 9:00 AM every Monday
   },
-  async ({ event, step }: { event: { data: any }; step: any }) => {
+  async ({ step }: { event: { data: Record<string, unknown> }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -60,7 +60,7 @@ export const weeklySummaryWorkflow = inngest.createFunction(
       }
 
       return await Promise.all(
-        organizations.map(async (org: any) => {
+        organizations.map(async (org: { id: string; name?: string }) => {
           // Get sessions for the week
           const { data: sessions } = await supabase
             .from('sessions')

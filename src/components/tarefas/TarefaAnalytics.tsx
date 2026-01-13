@@ -5,8 +5,6 @@ import { TrendingUp, Clock, CheckCircle2, AlertCircle, Users, Target } from 'luc
 import { Tarefa, TarefaStatus, PRIORIDADE_LABELS, TarefaPrioridade } from '@/hooks/useTarefas';
 import { useMemo } from 'react';
 
-const _COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'];
-
 interface TarefaAnalyticsProps {
   tarefas: Tarefa[];
 }
@@ -229,7 +227,7 @@ export function TarefaAnalytics({ tarefas }: TarefaAnalyticsProps) {
               REVISAO: { name: 'Revisão', color: 'bg-yellow-500' },
               CONCLUIDO: { name: 'Concluído', color: 'bg-green-500' },
             };
-            const { name, color } = labels[status];
+            const { name } = labels[status];
 
             return (
               <div key={status} className="space-y-2">

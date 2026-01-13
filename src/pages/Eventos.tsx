@@ -13,7 +13,6 @@ import { useEventos, useDeleteEvento } from '@/hooks/useEventos';
 import { useRealtimeEventos } from '@/hooks/useRealtimeEventos';
 import { usePermissions } from '@/hooks/usePermissions';
 import { EventosStatsWidget } from '@/components/eventos/EventosStatsWidget';
-import { GlobalSearch } from '@/components/eventos/GlobalSearch';
 import { 
   Calendar, 
   MapPin, 
@@ -54,6 +53,17 @@ import {
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+interface Evento {
+  id: string;
+  nome: string;
+  descricao?: string;
+  status: string;
+  categoria: string;
+  data_inicio: string;
+  local: string;
+  gratuito: boolean;
+}
+
 export default function Eventos() {
   const navigate = useNavigate();
   const [busca, setBusca] = useState('');
@@ -61,7 +71,7 @@ export default function Eventos() {
   const [filtroCategoria, setFiltroCategoria] = useState<string>('todos');
   const [newEventoOpen, setNewEventoOpen] = useState(false);
   const [editEventoOpen, setEditEventoOpen] = useState(false);
-  const [selectedEvento, setSelectedEvento] = useState<any>(null);
+  const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [eventoToDelete, setEventoToDelete] = useState<string | null>(null);
 

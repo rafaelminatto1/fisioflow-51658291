@@ -17,11 +17,8 @@ import {
   DollarSign,
   Activity,
   Filter,
-  Search,
   Plus,
-  BarChart3,
-  PieChart as PieChartIcon,
-  LineChart as LineChartIcon
+  BarChart3
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -40,7 +37,6 @@ import {
 } from 'recharts';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useAppointments } from '@/hooks/useAppointments';
 import { usePatients } from '@/hooks/usePatients';
 import { useFinancial } from '@/hooks/useFinancial';
@@ -50,9 +46,9 @@ const Reports = () => {
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
 
   // Real data hooks
-  const { data = [], isLoading: loadApp } = useAppointments();
-  const { data: patients = [], isLoading: loadPat } = usePatients();
-  const { activeTransactions, stats: finStats, isLoading: loadFin } = useFinancial();
+  const { data = [] } = useAppointments();
+  const { data: patients = [] } = usePatients();
+  const { activeTransactions, stats: finStats } = useFinancial();
 
   // Calculate real reports data
   const reportsData = {

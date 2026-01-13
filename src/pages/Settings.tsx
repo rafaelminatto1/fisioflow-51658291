@@ -7,13 +7,11 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Settings as SettingsIcon, 
-  User, 
-  Bell, 
-  Shield, 
+import {
+  User,
+  Bell,
+  Shield,
   Clock,
-  History,
   UserPlus,
   Users,
   FileText,
@@ -32,7 +30,7 @@ const Settings = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('profile');
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
-  const { isAdmin, isLoading: permissionsLoading } = usePermissions();
+  const { isAdmin } = usePermissions();
   
   const [notifications, setNotifications] = useState({
     email: true,

@@ -31,7 +31,7 @@ export function BusinessHoursManager() {
     }
   }, [businessHours]);
 
-  const updateHour = (dayOfWeek: number, field: keyof BusinessHour, value: any) => {
+  const updateHour = (dayOfWeek: number, field: keyof BusinessHour, value: string | boolean | Date) => {
     setHours(prev => prev.map(h => 
       h.day_of_week === dayOfWeek ? { ...h, [field]: value } : h
     ));

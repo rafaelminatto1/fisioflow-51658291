@@ -24,7 +24,9 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
     event: Events.CRON_BIRTHDAY_MESSAGES,
     cron: '0 9 * * *', // 9:00 AM daily
   },
-  async ({ event, step }: { event: { data: BirthdayMessagePayload }; step: any }) => {
+  async ({ step }: { event: { data: BirthdayMessagePayload }; step: {
+    run: (name: string, fn: () => Promise<unknown>) => Promise<unknown>;
+  } }) => {
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -61,7 +63,7 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
 
     // Step 2: Get organization settings for all patients
     const patientsWithOrg = await step.run('get-organization-settings', async () => {
-      const orgIds = [...new Set(patients.map((p: any) => p.organization_id))];
+      const orgIds = [...new Set(patients.map((p: { organization_id: string }) => p.organization_id))];
 
       const { data: organizations } = await supabase
         .from('organizations')
@@ -69,10 +71,18 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
         .in('id', orgIds);
 
       const orgMap = new Map(
-        (organizations || []).map((org: any) => [org.id, org])
+        (organizations || []).map((org: { id: string; name?: string; settings?: Record<string, unknown> }) => [org.id, org])
       );
 
-      return patients.map((patient: any) => ({
+      return patients.map((patient: {
+        id: string;
+        name: string;
+        email?: string;
+        phone?: string;
+        date_of_birth?: string;
+        organization_id: string;
+        settings?: Record<string, unknown>;
+      }) => ({
         ...patient,
         organization: orgMap.get(patient.organization_id),
       }));
@@ -80,7 +90,7 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
 
     // Step 3: Queue birthday messages via Inngest events
     const results = await step.run('queue-birthday-messages', async () => {
-      const events: any[] = [];
+      const events: Array<{ name: string; data: Record<string, unknown> }> = [];
 
       for (const patient of patientsWithOrg) {
         const org = patient.organization;

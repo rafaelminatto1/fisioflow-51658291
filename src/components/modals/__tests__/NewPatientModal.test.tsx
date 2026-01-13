@@ -68,12 +68,10 @@ const createWrapper = () => {
 
 describe('NewPatientModal', () => {
   const mockOnOpenChange = vi.fn();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let mockInsert: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let mockSelect: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let mockSingle: any;
+  // Vitest mock functions - typed as ReturnType of vi.fn()
+  let mockInsert: ReturnType<typeof vi.fn>;
+  let mockSelect: ReturnType<typeof vi.fn>;
+  let mockSingle: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -85,8 +83,8 @@ describe('NewPatientModal', () => {
     mockInsert = vi.fn().mockReturnValue({ select: mockSelect });
 
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (supabase.from as any).mockReturnValue({ insert: mockInsert });
+    // Mocking supabase.from - cast to unknown first for type assertion
+    (supabase.from as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ insert: mockInsert });
   });
 
   it('deve aplicar máscara de CPF ao digitar', async () => {
@@ -172,11 +170,10 @@ describe('NewPatientModal', () => {
   });
 
   it('deve exibir mensagem de erro quando organização não encontrada', async () => {
-    // Mock useOrganizations para retornar null
+    // Mock useOrganizations para retornar null - using unknown for type safety
     mockUseOrganizations.mockReturnValueOnce({
       currentOrganization: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any);
+    } as { currentOrganization: null });
 
     render(<NewPatientModal open={true} onOpenChange={mockOnOpenChange} />, {
       wrapper: createWrapper(),

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Ticket, Calendar, DollarSign, Edit, Trash2, MoreVertical, Search, Filter } from 'lucide-react';
+import { Plus, Ticket, Calendar, DollarSign, Edit, Trash2, MoreVertical, Search } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,7 +31,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { cn } from '@/lib/utils';
 
 export default function Vouchers() {
   const [isModalOpen, setIsModalOpen] = useState(false);

@@ -144,7 +144,7 @@ class AppointmentsCacheService {
             const isStale = now.getTime() - lastUpdated.getTime() > this.STALE_THRESHOLD_MS;
 
             // Recuperar dados
-            const cachedData = await dbStore.getAll<any>(STORE_NAME);
+            const cachedData = await dbStore.getAll<Record<string, unknown>>(STORE_NAME);
 
             if (!cachedData || cachedData.length === 0) {
                 return emptyResult;

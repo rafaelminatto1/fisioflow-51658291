@@ -28,14 +28,14 @@ export const useGamification = (patientId: string) => {
   const { data: profile, isLoading: isLoadingProfile } = useQuery({
     queryKey: ['gamification-profile', patientId],
     queryFn: async () => {
-      const { data, error: _error } = await supabase
+      const { data, error: gamificationError } = await supabase
         .from('patient_gamification')
         .select('*')
         .eq('patient_id', patientId)
         .maybeSingle();
 
-      if (_error && _error.code !== 'PGRST116') {
-        console.error('Error fetching gamification profile:', _error);
+      if (gamificationError && gamificationError.code !== 'PGRST116') {
+        console.error('Error fetching gamification profile:', gamificationError);
       }
 
       if (!data) {
@@ -58,14 +58,14 @@ export const useGamification = (patientId: string) => {
   const { data: totalSessions = 0 } = useQuery({
     queryKey: ['total-sessions', patientId],
     queryFn: async () => {
-      const { count, error } = await supabase
+      const { count, error: sessionsError } = await supabase
         .from('appointments')
         .select('*', { count: 'exact', head: true })
         .eq('patient_id', patientId)
         .eq('status', 'completed');
 
-      if (error) {
-        console.error("Error fetching total sessions", error);
+      if (sessionsError) {
+        console.error("Error fetching total sessions", sessionsError);
         return 0;
       }
       return count || 0;
@@ -123,7 +123,7 @@ export const useGamification = (patientId: string) => {
     queryKey: ['daily-quests', patientId],
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0];
-      const { data, error: _error } = await supabase
+      const { data } = await supabase
         .from('daily_quests')
         .select('*')
         .eq('patient_id', patientId)

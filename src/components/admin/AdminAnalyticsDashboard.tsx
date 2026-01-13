@@ -115,7 +115,7 @@ const COLORS = {
 // CHART UTILITIES
 // ============================================================================
 
-const CustomTooltip: React.FC<TooltipProps<number, string> & { active?: boolean; payload?: any }> = ({
+const CustomTooltip: React.FC<TooltipProps<number, string> & { active?: boolean; payload?: unknown }> = ({
   active,
   payload,
 }) => {
@@ -194,7 +194,7 @@ function useAdminAnalytics() {
         }
       });
 
-      const riskMap = new Map<string, any>();
+      const riskMap = new Map<string, { dropout_risk_score: number; success_probability: number; calculated_at: string }>();
       riskScores?.forEach(r => {
         // Only keep the most recent risk score per patient
         const existing = riskMap.get(r.patient_id);
@@ -497,7 +497,7 @@ export function AdminAnalyticsDashboard({ className }: AdminAnalyticsDashboardPr
   const filteredPatients = useMemo(() => {
     if (!data?.patients) return [];
 
-    let filtered = data.patients.filter(patient => {
+    const filtered = data.patients.filter(patient => {
       // Search filter
       const matchesSearch =
         patient.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||

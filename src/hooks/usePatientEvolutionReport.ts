@@ -55,7 +55,7 @@ export const usePatientEvolutionReport = (patientId: string) => {
       // Buscar mapas de dor associados às sessões
       const soapIds = soapRecords.map(r => r.id);
 
-      let painMaps: any[] | null = [];
+      let painMaps: Array<{ id: string; pain_points?: unknown }> | null = [];
       if (soapIds.length > 0) {
         const { data } = await supabase
           .from("pain_maps")
@@ -71,7 +71,7 @@ export const usePatientEvolutionReport = (patientId: string) => {
       // Buscar informações dos terapeutas
       const therapistIds = [...new Set(soapRecords.map(r => r.created_by))];
 
-      let profiles: any[] | null = [];
+      let profiles: Array<{ full_name?: string }> | null = [];
       if (therapistIds.length > 0) {
         const { data } = await supabase
           .from("profiles")

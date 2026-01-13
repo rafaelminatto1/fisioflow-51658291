@@ -15,6 +15,18 @@
 import { useState, useEffect } from 'react';
 import type { Metric } from 'web-vitals';
 
+// Extend Window interface for analytics globals
+declare global {
+  interface Window {
+    va?: (event: string, payload: Record<string, unknown>) => void;
+    gtag?: (event: string, action: string, payload: Record<string, unknown>) => void;
+    Sentry?: {
+      addBreadcrumb: (breadcrumb: { category: string; message: string; level: string; data?: Record<string, unknown> }) => void;
+      captureMessage: (message: string, options: { level: string; extra?: Record<string, unknown> }) => void;
+    };
+  }
+}
+
 // Tipos para as métricas
 export interface WebVitalsMetrics {
   fcp?: Metric;
@@ -75,9 +87,9 @@ export function getRatingColor(rating: Rating): string {
 export function sendToAnalytics(metrics: WebVitalsMetrics) {
   try {
     // Enviar para Vercel Analytics
-    if (typeof window !== 'undefined' && (window as any).va) {
+    if (typeof window !== 'undefined' && window.va) {
       try {
-        (window as any).va('event', 'web-vitals', {
+        window.va('event', 'web-vitals', {
           event_category: 'Web Vitals',
           event_label: metrics.lcp?.name || 'LCP',
           value: Math.round(metrics.lcp?.value || 0),
@@ -90,9 +102,9 @@ export function sendToAnalytics(metrics: WebVitalsMetrics) {
     }
 
     // Enviar para Google Analytics 4
-    if (typeof window !== 'undefined' && (window as any).gtag) {
+    if (typeof window !== 'undefined' && window.gtag) {
       try {
-        (window as any).gtag('event', 'web_vitals', {
+        window.gtag('event', 'web_vitals', {
           event_category: 'Web Vitals',
           event_label: metrics.lcp?.name || 'LCP',
           value: Math.round(metrics.lcp?.value || 0),
@@ -132,8 +144,8 @@ export function sendToAnalytics(metrics: WebVitalsMetrics) {
  * Reporta métricas para Sentry
  */
 export function reportWebVitalsToSentry(metrics: WebVitalsMetrics) {
-  if (typeof window !== 'undefined' && (window as any).Sentry) {
-    const Sentry = (window as any).Sentry;
+  if (typeof window !== 'undefined' && window.Sentry) {
+    const Sentry = window.Sentry;
 
     // Criar breadcrumb com as métricas
     Sentry.addBreadcrumb({
@@ -195,7 +207,7 @@ export async function initWebVitalsMonitoring(): Promise<WebVitalsMetrics | null
     // Wrapper safe para cada callback
     const safeCallback = (metricName: string) => (metric: Metric) => {
       try {
-        (metrics as any)[metricName.toLowerCase()] = metric;
+        (metrics as Record<string, Metric>)[metricName.toLowerCase()] = metric;
         sendToAnalytics(metrics);
       } catch (e) {
         console.debug(`[WebVitals] Error in ${metricName} callback:`, e);
