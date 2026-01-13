@@ -19,7 +19,7 @@ export interface ExerciseTemplate {
   precautions?: string;
   progression_notes?: string;
   evidence_level?: 'A' | 'B' | 'C' | 'D';
-  references?: string[];
+  bibliographic_references?: string[];
 }
 
 export interface ExerciseTemplateItem {

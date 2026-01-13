@@ -64,7 +64,7 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
       regionCode: p.region,
       region: p.region,
       intensity: p.intensity,
-      painType: p.painType as any,
+      painType: p.painType as PainPoint['painType'],
       notes: p.description,
       x: p.x,
       y: p.y,
@@ -238,7 +238,7 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
                 onPainPointsChange={setPainPoints}
                 readOnly={readOnly}
                 variant={is3DMode ? '3d' : '2d'}
-                evolutionData={painEvolution as any}
+                evolutionData={painEvolution}
               />
             </div>
 
@@ -308,7 +308,7 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
 
         <TabsContent value="evolution" className="space-y-4 mt-6">
           <div className="flex justify-end">
-            <Select value={chartType} onValueChange={(v: any) => setChartType(v)}>
+            <Select value={chartType} onValueChange={(v: 'line' | 'area' | 'bar') => setChartType(v)}>
               <SelectTrigger className="w-40">
                 <SelectValue />
               </SelectTrigger>
@@ -320,14 +320,14 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
             </Select>
           </div>
           <PainEvolutionChart
-            evolutionData={painEvolution as any}
+            evolutionData={painEvolution}
             showStats={true}
           />
         </TabsContent>
 
         <TabsContent value="history" className="mt-6">
           <PainMapHistory
-            painMaps={painMaps as any}
+            painMaps={painMaps}
             isLoading={isLoading}
           />
         </TabsContent>

@@ -329,13 +329,6 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       let successCount = 0;
       let errorCount = 0;
 
-      // Usando for...of para processar sequencialmente ou Promise.all para paralelo se a API aguentar
-      // Como o useMutation é um hook, aqui estamos chamando a função mutate, que não retorna Promise por padrão no React Query v4/v5 a menos que use mutateAsync
-      // Vamos assumir que createAppointmentMutation é void, então precisamos adaptar se quisermos esperar.
-      // O ideal seria usar mutateAsync se disponível do hook.
-      // Assumindo que o hook useCreateAppointment retorna mutate (sync) e mutateAsync (promise).
-      // Se não retornar mutateAsync, não conseguiremos esperar, então faremos "fire and forget" com um toast genérico ou ajustaremos para erro individual.
-
       // Simples implementação "fire and forget" com loop
       config.dates.forEach(date => {
         const newTime = config.newTime || appointment.time;
@@ -404,6 +397,17 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         session_type: (pendingFormData.type === 'Fisioterapia' ? 'individual' : 'group') as any,
       };
 
+      createAppointmentMutation(formattedData as any, {
+        onSuccess: () => {
+          toast.success('Agendamento criado com sucesso!');
+          setCapacityDialogOpen(false);
+          setPendingFormData(null);
+          onClose();
+        },
+        onError: () => {
+          toast.error('Erro ao criar agendamento');
+        }
+      });
     }
   };
 
@@ -439,11 +443,10 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
             </div>
 
             <div className="flex-1 min-h-0 overflow-y-auto">
-              <form id="appointment-form" onSubmit={handleSubmit((data) => {
-                handleSave(data);
-              }, (errors) => {
-                console.error('Erros de validação:', errors);
-              })} className="px-4 sm:px-6 py-3">
+              <form id="appointment-form" onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmit(handleSave)(e);
+              }} className="px-4 sm:px-6 py-3">
                 <TabsContent value="info" className="mt-0 space-y-2.5 sm:space-y-3">
                   <PatientSelectionSection
                     patients={activePatients || []}
@@ -620,3 +623,5 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     </Dialog >
   );
 };
+
+export default AppointmentModalRefactored;
