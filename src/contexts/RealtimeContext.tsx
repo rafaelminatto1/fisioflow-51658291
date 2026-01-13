@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/lib/errors/logger';
@@ -46,10 +46,41 @@ export const useRealtime = () => {
   return context;
 };
 
+// Debounce otimizado para evitar múltiplos renders
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  const timeoutRef = useRef<NodeJS.Timeout>();
+
+  useEffect(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    timeoutRef.current = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 /**
  * Provider central para gerenciar todas as subscrições realtime em um único lugar
  * Elimina a duplicação de subscriptions em múltiplos componentes
  * Otimizado para evitar memory leaks com cleanup adequado
+ *
+ * OTIMIZAÇÕES IMPLEMENTADAS:
+ * 1. Batch updates para múltiplas mudanças rápidas
+ * 2. Debounce inteligente para evitar recálculos excessivos
+ * 3. Filtragem por data (só appointments futuros/recentes em memória)
+ * 4. Métricas calculadas em memória (sem queries adicionais)
+ * 5. Cleanup adequado de channels
  */
 export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { profile } = useAuth();
@@ -66,123 +97,202 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [lastUpdate, setLastUpdate] = useState(Date.now());
   const [isSubscribed, setIsSubscribed] = useState(false);
 
+  // Ref para tracking de updates em batch
+  const updateTimeoutRef = useRef<NodeJS.Timeout>();
+  const pendingUpdatesRef = useRef<Array<(prev: Appointment[]) => Appointment[]>>([]);
+
   /**
    * Atualizar métricas baseadas nos appointments atuais
-   * Isso elimina a necessidade de múltiplas consultas ao Supabase
-   * Declarado antes dos useEffects para evitar erros de referência
+   * Usa memoização interna para evitar recálculos desnecessários
    */
   const updateMetrics = useCallback(async () => {
-    logger.info('Realtime: Updating metrics', {}, 'RealtimeContext');
+    // Early return se não houver appointments
+    if (appointments.length === 0) {
+      setMetrics({
+        totalAppointments: 0,
+        confirmedAppointments: 0,
+        cancelledAppointments: 0,
+        patientsInSession: 0,
+        todayRevenue: 0,
+        occupancyRate: 0,
+      });
+      return;
+    }
 
     try {
-      // Calcular métricas a partir dos appointments
-      const total = appointments.length;
-      const confirmed = appointments.filter(a => a.status === 'confirmed').length;
-      const cancelled = appointments.filter(a => a.status === 'cancelled').length;
-
-      // Calcular receita de hoje
+      // Calcular métricas em uma única passagem (O(n) em vez de O(n*5))
+      let confirmed = 0;
+      let cancelled = 0;
+      let revenue = 0;
       const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0); // Meia-noite
-      const todayRevenue = appointments
-        .filter(a => {
+      todayStart.setHours(0, 0, 0, 0);
+      const patientSet = new Set<string>();
+
+      for (const a of appointments) {
+        if (a.status === 'confirmed') {
+          confirmed++;
+          patientSet.add(a.patient_name);
+
           const apptDate = new Date(a.start_time);
-          return apptDate >= todayStart && a.status === 'confirmed';
-        })
-        .reduce((sum, a) => sum + (a.type === 'paid' ? 100 : 0), 0); // Simulação: 100 por consulta paga
+          if (apptDate >= todayStart && a.type === 'paid') {
+            revenue += 100;
+          }
+        } else if (a.status === 'cancelled') {
+          cancelled++;
+        }
+      }
 
-      // Calcular taxa de ocupação
+      const total = appointments.length;
       const occupancyRate = total > 0 ? Math.round((confirmed / total) * 100) : 0;
-
-      // Buscar pacientes em sessão (simplificado)
-      const patientsInSession = appointments
-        .filter(a => a.status === 'confirmed')
-        .map(a => a.patient_name)
-        .filter((value, index, self) => self.indexOf(value) === index)
-        .length;
 
       setMetrics({
         totalAppointments: total,
         confirmedAppointments: confirmed,
         cancelledAppointments: cancelled,
-        patientsInSession,
-        todayRevenue,
+        patientsInSession: patientSet.size,
+        todayRevenue: revenue,
         occupancyRate,
       });
-
-      logger.info('Realtime: Metrics updated', { total, confirmed, cancelled, revenue: todayRevenue, occupancyRate }, 'RealtimeContext');
     } catch (error) {
       logger.error('Realtime: Error in updateMetrics', error, 'RealtimeContext');
-
-      // Manter valores padrão em caso de erro
-      setMetrics(prev => ({
-        ...prev,
-        totalAppointments: appointments.length,
-      }));
     }
   }, [appointments]);
 
+  // Debounced appointments para evitar recálculos em mudanças rápidas
+  const debouncedAppointments = useDebounce(appointments, 300);
+
+  // Atualizar métricas quando appointments debounced mudar
+  useEffect(() => {
+    updateMetrics();
+  }, [updateMetrics, debouncedAppointments]);
+
+  /**
+   * Processa updates em batch para múltiplas mudanças rápidas
+   * Reduz número de re-renders significativamente
+   */
+  const flushPendingUpdates = useCallback(() => {
+    if (pendingUpdatesRef.current.length === 0) return;
+
+    setAppointments(prev => {
+      let result = prev;
+      for (const updateFn of pendingUpdatesRef.current) {
+        result = updateFn(result);
+      }
+      return result;
+    });
+
+    pendingUpdatesRef.current = [];
+    setLastUpdate(Date.now());
+  }, []);
+
+  /**
+   * Handler otimizado para mudanças de Realtime
+   * Acumula mudanças e processa em batch
+   */
+  const handleRealtimeChange = useCallback((payload: any) => {
+    const updateFn = (prev: Appointment[]) => {
+      if (payload.eventType === 'INSERT') {
+        // Só adiciona se for futuro ou hoje (reduz tamanho do array)
+        const apptDate = new Date(payload.new.start_time || payload.new.date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (apptDate >= today) {
+          return [...prev, payload.new as Appointment];
+        }
+        return prev;
+      } else if (payload.eventType === 'UPDATE') {
+        return prev.map(a => a.id === payload.new.id ? payload.new as Appointment : a);
+      } else if (payload.eventType === 'DELETE') {
+        return prev.filter(a => a.id !== payload.old.id);
+      }
+      return prev;
+    };
+
+    pendingUpdatesRef.current.push(updateFn);
+
+    // Limpar timeout anterior e agendar novo
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current);
+    }
+
+    updateTimeoutRef.current = setTimeout(flushPendingUpdates, 100);
+  }, [flushPendingUpdates]);
+
   /**
    * Subscrever às mudanças na tabela de appointments via Supabase Realtime
-   * Esta é a única subscrição central para appointments
+   * Otimizado com filtros específicos para reduzir tráfego
    */
   const subscribeToAppointments = useCallback(() => {
-    logger.info('Realtime: Subscribing to appointments via Context', {}, 'RealtimeContext');
+    if (!organizationId) {
+      logger.warn('Realtime: No organization_id, skipping subscription', {}, 'RealtimeContext');
+      return () => {};
+    }
+
+    logger.info('Realtime: Subscribing to appointments via Context', { organizationId }, 'RealtimeContext');
 
     const channel = supabase
-      .channel('appointments-realtime-central')
+      .channel(`appointments-realtime-${organizationId}`, {
+        config: {
+          broadcast: { self: false },
+          presence: { key: '' }
+        }
+      })
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'appointments',
-          filter: organizationId ? `organization_id=eq.${organizationId}` : undefined,
+          filter: `organization_id=eq.${organizationId}`,
         },
-        (payload) => {
-          logger.info('Realtime: Appointment change received', { event: payload.eventType }, 'RealtimeContext');
-
-          if (payload.eventType === 'INSERT') {
-            setAppointments(prev => [...prev, payload.new as Appointment]);
-          } else if (payload.eventType === 'UPDATE') {
-            setAppointments(prev => prev.map(a => a.id === payload.new.id ? payload.new as Appointment : a));
-          } else if (payload.eventType === 'DELETE') {
-            setAppointments(prev => prev.filter(a => a.id !== payload.old.id));
-          }
-
-          setLastUpdate(Date.now());
-        }
+        handleRealtimeChange
       )
-      .subscribe();
-
-    setIsSubscribed(true);
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setIsSubscribed(true);
+          logger.info('Realtime: Successfully subscribed', { organizationId }, 'RealtimeContext');
+        } else if (status === 'CHANNEL_ERROR') {
+          logger.error('Realtime: Channel error', { organizationId }, 'RealtimeContext');
+          setIsSubscribed(false);
+        }
+      });
 
     return () => {
-      logger.info('Realtime: Unsubscribing from appointments channel', {}, 'RealtimeContext');
+      logger.info('Realtime: Unsubscribing from appointments channel', { organizationId }, 'RealtimeContext');
       supabase.removeChannel(channel);
       setIsSubscribed(false);
+
+      // Limpar timeouts pendentes
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current);
+      }
     };
-  }, [organizationId]);
+  }, [organizationId, handleRealtimeChange]);
 
   /**
    * Carregar appointments iniciais ao montar o provider
-   * Isso garante que o estado inicial esteja preenchido
+   * OTIMIZADO: Só carrega appointments futuros e dos últimos 7 dias
    */
   useEffect(() => {
     const loadInitialAppointments = async () => {
+      if (!organizationId) return;
+
       try {
         logger.info('Realtime: Loading initial appointments', {}, 'RealtimeContext');
 
-        let query = supabase
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        sevenDaysAgo.setHours(0, 0, 0, 0);
+
+        const { data, error } = await supabase
           .from('appointments')
           .select('*')
-          .order('start_time', { ascending: false })
-          .limit(50);
-
-        if (organizationId) {
-          query = query.eq('organization_id', organizationId);
-        }
-
-        const { data, error } = await query;
+          .eq('organization_id', organizationId)
+          .gte('date', sevenDaysAgo.toISOString().split('T')[0])
+          .order('date', { ascending: true })
+          .order('start_time', { ascending: true })
+          .limit(100);
 
         if (error) {
           logger.error('Realtime: Error loading initial appointments', error, 'RealtimeContext');
@@ -199,7 +309,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
 
     loadInitialAppointments();
-  }, [organizationId]); // Recarregar se mudar a organização
+  }, [organizationId]);
 
   /**
    * Setup realtime subscription quando o componente monta
@@ -213,18 +323,6 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     };
   }, [subscribeToAppointments]);
-
-  /**
-   * Atualizar métricas automaticamente quando appointments mudar
-   * Usamos um debounce para evitar atualizações muito frequentes
-   */
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      updateMetrics();
-    }, 300); // Debounce de 300ms
-
-    return () => clearTimeout(timer); // Cleanup do debounce
-  }, [appointments, updateMetrics]);
 
   const value: RealtimeContextType = {
     appointments,

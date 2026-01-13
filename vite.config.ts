@@ -4,10 +4,13 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from 'vite-plugin-pwa';
+import { visualizer } from 'rollup-plugin-visualizer';
+import viteCompression from 'vite-plugin-compression';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production';
+  const isAnalyze = process.env.ANALYZE === 'true';
 
   return {
     server: {
@@ -25,9 +28,28 @@ export default defineConfig(({ mode }) => {
       react(),
       mode === 'development' && componentTagger(),
       isProduction && sentryVitePlugin({
-        org: "fisioflow", // Replace with actual org slug if known, or env var
-        project: "fisioflow-web", // Replace with actual project slug
+        org: "fisioflow",
+        project: "fisioflow-web",
         authToken: process.env.SENTRY_AUTH_TOKEN,
+      }),
+      // Bundle analyzer - gera relatório visual dos chunks
+      isAnalyze && visualizer({
+        filename: './dist/stats.html',
+        open: true,
+        gzipSize: true,
+        brotliSize: true,
+      }),
+      // Gzip compression para assets
+      viteCompression({
+        algorithm: 'gzip',
+        ext: '.gz',
+        threshold: 10240, // Apenas arquivos > 10KB
+      }),
+      // Brotli compression (melhor que gzip)
+      viteCompression({
+        algorithm: 'brotliCompress',
+        ext: '.br',
+        threshold: 10240,
       }),
       VitePWA({
         registerType: 'autoUpdate',
@@ -120,7 +142,6 @@ export default defineConfig(({ mode }) => {
         devOptions: {
           enabled: false,
         },
-
       })
     ].filter(Boolean),
     resolve: {
@@ -133,29 +154,94 @@ export default defineConfig(({ mode }) => {
       outDir: 'dist',
       emptyOutDir: true,
       target: 'esnext',
-      minify: true,
+      minify: 'terser',
+      terserOptions: {
+        compress: {
+          drop_console: isProduction,
+          drop_debugger: isProduction,
+          pure_funcs: isProduction ? ['console.log', 'console.info', 'console.debug'] : [],
+        },
+      },
       commonjsOptions: {
         transformMixedEsModules: true,
       },
       rollupOptions: {
         output: {
-          manualChunks: {
-            'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-            'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
-            'form-vendor': ['react-hook-form', '@hookform/resolvers', 'zod'],
-            'query-vendor': ['@tanstack/react-query'],
-            'chart-vendor': ['recharts'],
-            'date-vendor': ['date-fns'],
-            'supabase': ['@supabase/supabase-js'],
-            'cornerstone': ['@cornerstonejs/core', '@cornerstonejs/tools'],
-            'mediapipe': ['@mediapipe/pose', '@mediapipe/drawing_utils', '@mediapipe/tasks-vision'],
-            'konva': ['konva', 'react-konva'],
-            'pdf': ['jspdf', 'jspdf-autotable', 'react-pdf', '@react-pdf/renderer'],
-            'xlsx': ['xlsx'],
+          // Nomes de arquivo mais legíveis para debug
+          chunkFileNames: 'assets/js/[name]-[hash].js',
+          entryFileNames: 'assets/js/[name]-[hash].js',
+          assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
+          // Divisão manual de chunks para melhor cache
+          manualChunks: (id) => {
+            // Vendor chunks
+            if (id.includes('node_modules')) {
+              // React core
+              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+                return 'react-vendor';
+              }
+              // Supabase
+              if (id.includes('@supabase')) {
+                return 'supabase-vendor';
+              }
+              // TanStack Query
+              if (id.includes('@tanstack/react-query')) {
+                return 'query-vendor';
+              }
+              // Radix UI
+              if (id.includes('@radix-ui')) {
+                return 'ui-vendor';
+              }
+              // Charts
+              if (id.includes('recharts')) {
+                return 'chart-vendor';
+              }
+              // Date utilities
+              if (id.includes('date-fns')) {
+                return 'date-vendor';
+              }
+              // Forms
+              if (id.includes('react-hook-form') || id.includes('@hookform') || id.includes('zod')) {
+                return 'form-vendor';
+              }
+              // Framer Motion
+              if (id.includes('framer-motion')) {
+                return 'animation-vendor';
+              }
+              // PDF libraries - lazy loaded
+              if (id.includes('jspdf') || id.includes('@react-pdf')) {
+                return 'pdf-vendor';
+              }
+              // XLSX - lazy loaded
+              if (id.includes('xlsx')) {
+                return 'xlsx-vendor';
+              }
+              // Cornerstone - lazy loaded (medical imaging)
+              if (id.includes('@cornerstonejs')) {
+                return 'cornerstone-vendor';
+              }
+              // MediaPipe - lazy loaded (computer vision)
+              if (id.includes('@mediapipe')) {
+                return 'mediapipe-vendor';
+              }
+              // Konva - lazy loaded (canvas)
+              if (id.includes('konva')) {
+                return 'konva-vendor';
+              }
+              // Outros node_modules
+              return 'vendor';
+            }
           },
+          // Perfis modernos para melhor performance
+          experimentalMinChunkSize: 10000,
         },
+        // Preservar nomes dos módulos para melhor debugging
+        preserveEntrySignatures: 'strict',
       },
-      chunkSizeWarningLimit: 5000,
+      chunkSizeWarningLimit: 1000,
+      // Report de tamanho dos chunks
+      reportCompressedSize: false,
+      // Soucemaps em produção para debugging
+      sourcemap: isProduction ? false : true,
     },
     optimizeDeps: {
       exclude: [
@@ -165,7 +251,6 @@ export default defineConfig(({ mode }) => {
         '@cornerstonejs/codec-charls',
         '@cornerstonejs/codec-libjpeg-turbo-8bit',
         '@cornerstonejs/codec-openjpeg',
-        '@cornerstonejs/codec-openjph',
         '@cornerstonejs/codec-openjph',
       ],
       include: [
@@ -181,6 +266,10 @@ export default defineConfig(({ mode }) => {
     },
     esbuild: {
       drop: isProduction ? ['console', 'debugger'] : [],
+      // Log charset
+      charset: 'utf8',
+      // JSX import source
+      jsxImportSource: undefined,
     },
   };
 });

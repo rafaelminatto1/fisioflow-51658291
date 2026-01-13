@@ -71,6 +71,77 @@ export async function sendEmail(data: {
 }
 
 /**
+ * Send appointment confirmation email
+ */
+export async function sendAppointmentConfirmationEmail(data: {
+  to: string;
+  patientName: string;
+  therapistName: string;
+  date: string;
+  time: string;
+  location?: string;
+  onlineMeetingUrl?: string;
+  organizationName: string;
+}) {
+  return inngest.send({
+    name: 'email/appointment.confirmation',
+    data,
+  });
+}
+
+/**
+ * Send appointment reminder email
+ */
+export async function sendAppointmentReminderEmail(data: {
+  to: string;
+  patientName: string;
+  therapistName: string;
+  date: string;
+  time: string;
+  location?: string;
+  organizationName: string;
+}) {
+  return inngest.send({
+    name: 'email/appointment.reminder',
+    data,
+  });
+}
+
+/**
+ * Send birthday greeting email
+ */
+export async function sendBirthdayGreetingEmail(data: {
+  to: string;
+  patientName: string;
+  organizationName: string;
+  therapistName?: string;
+}) {
+  return inngest.send({
+    name: 'email/birthday.greeting',
+    data,
+  });
+}
+
+/**
+ * Send daily report email
+ */
+export async function sendDailyReportEmail(data: {
+  to: string;
+  therapistName: string;
+  organizationName: string;
+  date: string;
+  totalSessions: number;
+  completedSessions: number;
+  cancelledSessions: number;
+  newPatients: number;
+}) {
+  return inngest.send({
+    name: 'email/daily.report',
+    data,
+  });
+}
+
+/**
  * Send bulk emails
  */
 export async function sendBulkEmails(emails: Array<{
@@ -100,6 +171,57 @@ export async function sendWhatsApp(data: {
 }) {
   return inngest.send({
     name: Events.WHATSAPP_SEND,
+    data,
+  });
+}
+
+/**
+ * Send appointment confirmation WhatsApp message
+ */
+export async function sendAppointmentConfirmationWhatsApp(data: {
+  to: string;
+  patientName: string;
+  therapistName: string;
+  date: string;
+  time: string;
+  location?: string;
+  organizationName: string;
+}) {
+  return inngest.send({
+    name: 'whatsapp/appointment.confirmation',
+    data,
+  });
+}
+
+/**
+ * Send appointment reminder WhatsApp message
+ */
+export async function sendAppointmentReminderWhatsApp(data: {
+  to: string;
+  patientName: string;
+  therapistName: string;
+  date: string;
+  time: string;
+  location?: string;
+  organizationName: string;
+}) {
+  return inngest.send({
+    name: 'whatsapp/appointment.reminder',
+    data,
+  });
+}
+
+/**
+ * Send birthday greeting WhatsApp message
+ */
+export async function sendBirthdayGreetingWhatsApp(data: {
+  to: string;
+  patientName: string;
+  organizationName: string;
+  therapistName?: string;
+}) {
+  return inngest.send({
+    name: 'whatsapp/birthday.greeting',
     data,
   });
 }
@@ -241,9 +363,16 @@ export const InngestHelpers = {
   sendBulkNotifications,
   // Email
   sendEmail,
+  sendAppointmentConfirmationEmail,
+  sendAppointmentReminderEmail,
+  sendBirthdayGreetingEmail,
+  sendDailyReportEmail,
   sendBulkEmails,
   // WhatsApp
   sendWhatsApp,
+  sendAppointmentConfirmationWhatsApp,
+  sendAppointmentReminderWhatsApp,
+  sendBirthdayGreetingWhatsApp,
   sendBulkWhatsApp,
   // Appointments
   triggerAppointmentReminders,
