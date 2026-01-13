@@ -49,7 +49,7 @@ export function NewPrescriptionModal({
     equipment: [] as string[]
   });
 
-  const { exercises: availableExercises, loading: loadingExercises } = useExercises({
+  const { exercises: availableExercises } = useExercises({
     searchTerm: filters.searchTerm,
     category: filters.category === 'all' ? undefined : filters.category,
     pathologies: filters.pathologies.length > 0 ? filters.pathologies : undefined,

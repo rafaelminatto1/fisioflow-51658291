@@ -155,7 +155,7 @@ export async function getMultipleFeatures(
   userId?: string,
   userRole?: string
 ): Promise<Record<string, boolean>> {
-  const flags = await getFeatureFlags();
+  await getFeatureFlags();
   const result: Record<string, boolean> = {};
 
   for (const feature of features) {
@@ -168,7 +168,7 @@ export async function getMultipleFeatures(
 /**
  * React hook for feature flags
  */
-export function useFeatureFlag(feature: keyof FeatureFlags) {
+export function useFeatureFlag(_feature: keyof FeatureFlags) {
   // This would be used in a React component
   // Implementation would use React Query or SWR
   return {
@@ -195,7 +195,7 @@ export async function getUserFeatures(
   const flags = await getFeatureFlags();
   const userFlags: Partial<FeatureFlags> = {};
 
-  for (const [key, value] of Object.entries(flags)) {
+  for (const [key] of Object.entries(flags)) {
     userFlags[key as keyof FeatureFlags] = await isFeatureEnabled(
       key as keyof FeatureFlags,
       userId,

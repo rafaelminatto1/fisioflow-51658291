@@ -1,7 +1,7 @@
 import React, { memo, useMemo } from 'react';
 import { format, isToday, isSameDay, differenceInDays, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Clock, Ban, AlertTriangle, GripVertical, Calendar } from 'lucide-react';
+import { Clock, Ban, AlertTriangle, GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Appointment } from '@/types/appointment';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -25,7 +25,7 @@ interface DayColumnProps {
     handleDragLeave: () => void;
     handleDrop: (e: React.DragEvent, date: Date, time: string) => void;
     checkTimeBlocked: (date: Date, time: string) => { blocked: boolean; reason?: string };
-    getStatusColor: (status: string, isOverCapacity?: boolean) => string;
+    _getStatusColor: (status: string, isOverCapacity?: boolean) => string;
     isOverCapacity: (apt: Appointment) => boolean;
     openPopoverId: string | null;
     setOpenPopoverId: (id: string | null) => void;
@@ -49,7 +49,7 @@ export const DayColumn = memo(({
     handleDragLeave,
     handleDrop,
     checkTimeBlocked,
-    getStatusColor,
+    _getStatusColor,
     isOverCapacity,
     openPopoverId,
     setOpenPopoverId,
@@ -85,7 +85,7 @@ export const DayColumn = memo(({
                     return { appointment: a, diff, date: aDate };
                 })
                 .filter(({ diff }) => diff === 1) // Apenas diferença de exatamente 1 dia
-                .map(({ appointment, date }) => ({
+                .map(({ date }) => ({
                     date: format(date, 'dd/MM')
                 }));
 

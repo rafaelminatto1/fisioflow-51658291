@@ -84,7 +84,7 @@ export function useVirtualizedList<T>({
   /**
    * Handler de scroll com throttle para performance
    */
-  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+  const _handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     setScrollTop(e.currentTarget.scrollTop);
   }, []);
 

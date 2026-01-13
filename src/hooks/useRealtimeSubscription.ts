@@ -3,7 +3,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/lib/errors/logger';
-import { useToast } from '@/hooks/use-toast';
 
 interface UseRealtimeSubscriptionProps {
     table: string;
@@ -28,7 +27,6 @@ export function useRealtimeSubscription({
 }: UseRealtimeSubscriptionProps) {
     const queryClient = useQueryClient();
     const { profile } = useAuth();
-    const { toast } = useToast();
     const organizationId = profile?.organization_id;
 
     useEffect(() => {
