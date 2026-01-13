@@ -102,7 +102,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
     setMeasurements(updated);
   };
 
-  const handleQuickFillRequired = (requiredMeasurement: any, index: number) => {
+  const handleQuickFillRequired = (requiredMeasurement: { pathology_name: string; measurement_name: string; measurement_unit?: string }, index: number) => {
     handleUpdateMeasurement(index, 'measurement_type', requiredMeasurement.pathology_name);
     handleUpdateMeasurement(index, 'measurement_name', requiredMeasurement.measurement_name);
     handleUpdateMeasurement(index, 'unit', requiredMeasurement.measurement_unit || '');

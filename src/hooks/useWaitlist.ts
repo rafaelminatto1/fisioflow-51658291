@@ -100,7 +100,7 @@ export function useWaitlist(filters?: {
       }
 
       // Ordenar por prioridade (urgent > high > normal) e depois por data
-      const sorted = (data || []).sort((a: any, b: any) => {
+      const sorted = (data || []).sort((a: WaitlistEntry & { created_at: string }, b: WaitlistEntry & { created_at: string }) => {
         const priorityDiff = PRIORITY_CONFIG[a.priority as keyof typeof PRIORITY_CONFIG].order -
           PRIORITY_CONFIG[b.priority as keyof typeof PRIORITY_CONFIG].order;
         if (priorityDiff !== 0) return priorityDiff;
@@ -108,7 +108,7 @@ export function useWaitlist(filters?: {
       });
 
       // Map to expected format
-      return sorted.map((item: any) => ({
+      return sorted.map((item: WaitlistEntry & { preferred_time_slots?: string[]; preferred_periods?: string[]; refusal_count?: number; preferred_therapist_ids?: string[] }) => ({
         ...item,
         // Map DB column `preferred_time_slots` to frontend `preferred_periods`
         preferred_periods: item.preferred_time_slots || item.preferred_periods || [],
@@ -199,9 +199,9 @@ export function useAddToWaitlist() {
       queryClient.invalidateQueries({ queryKey: ['waitlist'] });
       toast.success(`${data.patient?.name} adicionado à lista de espera`);
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logger.error('Erro ao adicionar à lista de espera', error, 'useWaitlist');
-      toast.error(error.message || 'Erro ao adicionar à lista de espera');
+      toast.error(error instanceof Error ? error.message : 'Erro ao adicionar à lista de espera');
     },
   });
 }
@@ -223,7 +223,7 @@ export function useRemoveFromWaitlist() {
       queryClient.invalidateQueries({ queryKey: ['waitlist'] });
       toast.success('Removido da lista de espera');
     },
-    onError: (error) => {
+    onError: (error: unknown) => {
       logger.error('Erro ao remover da lista de espera', error, 'useWaitlist');
       toast.error('Erro ao remover da lista de espera');
     },
@@ -265,9 +265,9 @@ export function useOfferSlot() {
 
       if (error) throw error;
 
-      // Registrar oferta (using any to bypass strict typing)
-      await (supabase as any).from('waitlist_offers').insert({
-        patient_id: entry.patient_id,
+      // Registrar oferta
+      await supabase.from('waitlist_offers').insert({
+        patient_id: (entry as Record<string, unknown>).patient_id,
         appointment_id: waitlist_id,
         offered_slot: appointment_slot,
         response: 'pending',
@@ -275,15 +275,15 @@ export function useOfferSlot() {
         expiration_time: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       });
 
-      return { ...data, patient: entry.patient };
+      return { ...data, patient: (entry as Record<string, unknown>).patient };
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data: WaitlistEntry & { patient?: { name?: string } }) => {
       queryClient.invalidateQueries({ queryKey: ['waitlist'] });
       toast.success(`Vaga oferecida para ${data.patient?.name}`);
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logger.error('Erro ao oferecer vaga', error, 'useWaitlist');
-      toast.error(error.message || 'Erro ao oferecer vaga');
+      toast.error(error instanceof Error ? error.message : 'Erro ao oferecer vaga');
     },
   });
 }
@@ -307,7 +307,7 @@ export function useAcceptOffer() {
       if (error) throw error;
 
       // Atualizar histórico de ofertas
-      await (supabase as any)
+      await supabase
         .from('waitlist_offers')
         .update({ response: 'accepted', responded_at: new Date().toISOString() })
         .eq('appointment_id', waitlistId)
@@ -319,7 +319,7 @@ export function useAcceptOffer() {
       queryClient.invalidateQueries({ queryKey: ['waitlist'] });
       toast.success('Oferta aceita! Agendamento confirmado.');
     },
-    onError: (error) => {
+    onError: (error: unknown) => {
       logger.error('Erro ao aceitar oferta', error, 'useWaitlist');
       toast.error('Erro ao aceitar oferta');
     },
@@ -341,7 +341,8 @@ export function useRejectOffer() {
 
       if (fetchError) throw fetchError;
 
-      const newRefusalCount = ((current as any)?.refusal_count ?? 0) + 1;
+      const currentTyped = current as Record<string, unknown> | null;
+      const newRefusalCount = ((currentTyped?.refusal_count as number | undefined) ?? 0) + 1;
       const maxRefusals = 3;
 
       // Se atingiu máximo de recusas, remover da lista
@@ -363,7 +364,7 @@ export function useRejectOffer() {
       if (error) throw error;
 
       // Atualizar histórico de ofertas
-      await (supabase as any)
+      await supabase
         .from('waitlist_offers')
         .update({ response: 'rejected', responded_at: new Date().toISOString() })
         .eq('appointment_id', waitlistId)
@@ -371,7 +372,7 @@ export function useRejectOffer() {
 
       return { ...data, wasRemoved: newStatus === 'removed' };
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data: WaitlistEntry & { wasRemoved?: boolean }) => {
       queryClient.invalidateQueries({ queryKey: ['waitlist'] });
       if (data.wasRemoved) {
         toast.info('Paciente removido da lista após 3 recusas');
@@ -379,7 +380,7 @@ export function useRejectOffer() {
         toast.success('Oferta recusada. Paciente retornou à lista.');
       }
     },
-    onError: (error) => {
+    onError: (error: unknown) => {
       logger.error('Erro ao recusar oferta', error, 'useWaitlist');
       toast.error('Erro ao recusar oferta');
     },
@@ -412,7 +413,7 @@ export function useUpdatePriority() {
       queryClient.invalidateQueries({ queryKey: ['waitlist'] });
       toast.success('Prioridade atualizada');
     },
-    onError: (error) => {
+    onError: (error: unknown) => {
       logger.error('Erro ao atualizar prioridade', error, 'useWaitlist');
       toast.error('Erro ao atualizar prioridade');
     },

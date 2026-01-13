@@ -100,7 +100,7 @@ export function useSatisfactionSurveys(filters?: SurveyFilters) {
       if (error) throw error;
 
       // Map data to expected format
-      return (data || []).map((item: any) => ({
+      return (data || []).map((item: SatisfactionSurvey & { therapist_id?: string }) => ({
         ...item,
         therapist: item.therapist_id ? { id: item.therapist_id, name: 'Terapeuta' } : null,
       })) as SatisfactionSurvey[];
@@ -192,8 +192,8 @@ export function useCreateSurvey() {
       queryClient.invalidateQueries({ queryKey: ['survey-stats'] });
       toast.success('Pesquisa de satisfação registrada');
     },
-    onError: (error: any) => {
-      toast.error('Erro ao registrar pesquisa: ' + error.message);
+    onError: (error: unknown) => {
+      toast.error('Erro ao registrar pesquisa: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
     },
   });
 }
@@ -218,8 +218,8 @@ export function useUpdateSurvey() {
       queryClient.invalidateQueries({ queryKey: ['survey-stats'] });
       toast.success('Pesquisa atualizada');
     },
-    onError: (error: any) => {
-      toast.error('Erro ao atualizar pesquisa: ' + error.message);
+    onError: (error: unknown) => {
+      toast.error('Erro ao atualizar pesquisa: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
     },
   });
 }
@@ -241,8 +241,8 @@ export function useDeleteSurvey() {
       queryClient.invalidateQueries({ queryKey: ['survey-stats'] });
       toast.success('Pesquisa removida');
     },
-    onError: (error: any) => {
-      toast.error('Erro ao remover pesquisa: ' + error.message);
+    onError: (error: unknown) => {
+      toast.error('Erro ao remover pesquisa: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
     },
   });
 }

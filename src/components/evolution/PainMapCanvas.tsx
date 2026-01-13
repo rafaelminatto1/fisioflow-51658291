@@ -3,11 +3,10 @@ import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import type { PainMapPoint, PainIntensity, PainType, BodyRegion, PainEvolutionData } from '@/types/painMap';
 import { PainMapService } from '@/lib/services/painMapService';
 import { BodyMapRealistic } from '@/components/pain-map/BodyMapRealistic';
-import { BodyMap, PainPoint } from '@/components/pain-map/BodyMap';
+import { PainPoint } from '@/components/pain-map/BodyMap';
 
 interface PainMapCanvasProps {
   painPoints: PainMapPoint[];
@@ -132,7 +131,7 @@ export function PainMapCanvas({ painPoints, onPainPointsChange, readOnly = false
     regionCode: p.region,
     region: p.region,
     intensity: p.intensity,
-    painType: p.painType as any,
+    painType: p.painType as PainPoint['painType'],
     notes: p.description,
     x: p.x,
     y: p.y,

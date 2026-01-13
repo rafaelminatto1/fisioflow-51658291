@@ -20,8 +20,6 @@ import {
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 interface CreateFromTemplateButtonProps {
   onEventoCreated?: () => void;

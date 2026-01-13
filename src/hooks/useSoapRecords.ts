@@ -158,10 +158,10 @@ export const useCreateSoapRecord = () => {
         description: 'A evolução do paciente foi registrada com sucesso.'
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao salvar evolução',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive'
       });
     }
@@ -181,7 +181,7 @@ export const useUpdateSoapRecord = () => {
         .eq('id', recordId)
         .select()
         .single();
-      
+
       if (error) throw error;
       return record as SoapRecord;
     },
@@ -193,10 +193,10 @@ export const useUpdateSoapRecord = () => {
         description: 'A evolução foi atualizada com sucesso.'
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao atualizar evolução',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive'
       });
     }
@@ -236,10 +236,10 @@ export const useSignSoapRecord = () => {
         description: 'A evolução foi finalizada e assinada com sucesso.'
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao finalizar evolução',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive'
       });
     }
@@ -367,10 +367,10 @@ export const useUploadSessionAttachment = () => {
         description: 'O arquivo foi anexado com sucesso.'
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao anexar arquivo',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive'
       });
     }
@@ -416,10 +416,10 @@ export const useDeleteSessionAttachment = () => {
         description: 'O arquivo foi removido com sucesso.'
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao remover arquivo',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive'
       });
     }
@@ -475,10 +475,10 @@ export const useCreateSessionTemplate = () => {
         description: 'O template de sessão foi criado com sucesso.'
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao criar template',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive'
       });
     }
@@ -509,10 +509,10 @@ export const useUpdateSessionTemplate = () => {
         description: 'O template foi atualizado com sucesso.'
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao atualizar template',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive'
       });
     }
@@ -541,10 +541,10 @@ export const useDeleteSessionTemplate = () => {
         description: 'O template foi removido com sucesso.'
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao remover template',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive'
       });
     }
@@ -613,7 +613,7 @@ export const useAutoSaveSoapRecord = () => {
       if (error) throw error;
       return { ...record, isNew: true } as SoapRecord & { isNew?: boolean };
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       // Silent error for autosave - don't show toast
       console.error('Autosave error:', error);
     }

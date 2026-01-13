@@ -224,7 +224,7 @@ export default function Exercises() {
 
         {/* Main Content Tabs - Mobile Optimized */}
         <Card className="overflow-hidden">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'library' | 'templates' | 'protocols')}>
             <div className="border-b bg-muted/30">
               <TabsList className="w-full justify-start rounded-none border-0 bg-transparent h-12 sm:h-14 p-0">
                 <TabsTrigger
