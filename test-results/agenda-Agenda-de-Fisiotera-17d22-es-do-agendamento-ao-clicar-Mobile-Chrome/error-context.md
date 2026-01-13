@@ -1,0 +1,49 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - region "Notifications (F8)":
+    - list
+  - region "Notifications alt+T"
+  - generic [ref=e4]:
+    - generic [ref=e6]:
+      - img [ref=e7]
+      - generic [ref=e11]: FisioFlow
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - heading "Bem-vindo de volta" [level=1] [ref=e14]
+        - paragraph [ref=e15]: Entre com suas credenciais para acessar sua conta.
+      - generic [ref=e16]:
+        - tablist [ref=e17]:
+          - tab "Login" [selected] [ref=e18] [cursor=pointer]
+          - tab "Cadastro" [ref=e19] [cursor=pointer]
+        - tabpanel "Login" [ref=e20]:
+          - generic [ref=e21]:
+            - generic [ref=e22]:
+              - generic [ref=e23]:
+                - text: Email
+                - generic [ref=e24]:
+                  - img [ref=e25]
+                  - textbox "Email" [ref=e28]:
+                    - /placeholder: nome@exemplo.com
+              - generic [ref=e29]:
+                - generic [ref=e30]:
+                  - generic [ref=e31]: Senha
+                  - link "Esqueceu a senha?" [ref=e32] [cursor=pointer]:
+                    - /url: "#"
+                - textbox "Senha" [ref=e33]:
+                  - /placeholder: ••••••••
+            - button "Entrar na Plataforma" [ref=e34] [cursor=pointer]
+      - generic [ref=e39]: Ou continue com
+      - button "Google" [ref=e40] [cursor=pointer]:
+        - img [ref=e41]
+        - text: Google
+      - paragraph [ref=e46]:
+        - text: Ao continuar, você concorda com nossos
+        - link "Termos de Serviço" [ref=e47] [cursor=pointer]:
+          - /url: "#"
+        - text: e
+        - link "Política de Privacidade" [ref=e48] [cursor=pointer]:
+          - /url: "#"
+        - text: .
+```
