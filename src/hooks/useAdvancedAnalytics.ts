@@ -14,17 +14,6 @@ interface MetricData {
   trend: number[]; // Últimos 30 dias
 }
 
-interface ChartConfig {
-  id: string;
-  type: 'line' | 'bar' | 'pie' | 'area' | 'scatter' | 'heatmap';
-  title: string;
-  dataKey: string;
-  color: string;
-  showGrid: boolean;
-  showLegend: boolean;
-  height: number;
-}
-
 interface DashboardWidget {
   id: string;
   type: 'metric' | 'chart' | 'table' | 'progress' | 'gauge';
@@ -329,10 +318,9 @@ export const useAdvancedAnalytics = () => {
       })));
       
       setError(null);
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error(String(err));
+    } catch (_err) {
       setError('Erro ao atualizar métricas');
-      console.error('Erro ao atualizar métricas de analytics', error);
+      console.error('Erro ao atualizar métricas de analytics', _err);
     } finally {
       setLoading(false);
     }

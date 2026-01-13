@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { Play, Edit, Trash2, Clock, User, Phone, CreditCard, X, Bell, Users, UserPlus, FileText } from 'lucide-react';
+import { Play, Edit, Trash2, Clock, X, Bell, Users, UserPlus, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   Popover,
   PopoverContent,
@@ -73,7 +70,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
 }) => {
   const navigate = useNavigate();
   const { updateStatus, isUpdatingStatus } = useAppointmentActions();
-  const { getInterestCount, hasInterest } = useWaitlistMatch();
+  const { getInterestCount } = useWaitlistMatch();
   const [showWaitlistNotification, setShowWaitlistNotification] = useState(false);
   const [showWaitlistQuickAdd, setShowWaitlistQuickAdd] = useState(false);
 

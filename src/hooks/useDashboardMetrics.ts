@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { format, startOfMonth, subMonths, subDays, startOfWeek, endOfWeek } from 'date-fns';
+import { startOfMonth, subMonths, subDays, startOfWeek, endOfWeek } from 'date-fns';
 import { formatDateToLocalISO } from '@/utils/dateUtils';
 
 export interface TherapistPerformance {
@@ -180,7 +180,7 @@ export const useDashboardMetrics = () => {
 
       const fisioStats = new Map<string, TherapistPerformance>();
       receitaPorFisio?.forEach((apt) => {
-        const profile = apt.profiles as any;
+        const profile = apt.profiles as { id: string; full_name?: string } | null;
         if (!profile?.id) return;
 
         const existing = fisioStats.get(profile.id) || {

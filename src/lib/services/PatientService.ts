@@ -17,9 +17,9 @@ export class PatientService {
       phone: p.phone || undefined,
       cpf: p.cpf || undefined,
       birthDate: p.birth_date || new Date().toISOString(),
-      gender: 'outro' as any,
+      gender: 'outro',
       mainCondition: p.observations || '',
-      status: (p.status === 'active' ? 'Em Tratamento' : 'Inicial') as any,
+      status: (p.status === 'active' ? 'Em Tratamento' : 'Inicial'),
       progress: 0,
       incomplete_registration: p.incomplete_registration || false,
       createdAt: p.created_at || new Date().toISOString(),
@@ -46,9 +46,9 @@ export class PatientService {
       phone: data.phone || undefined,
       cpf: data.cpf || undefined,
       birthDate: data.birth_date || new Date().toISOString(),
-      gender: 'outro' as any,
+      gender: 'outro',
       mainCondition: data.observations || '',
-      status: (data.status === 'active' ? 'Em Tratamento' : 'Inicial') as any,
+      status: (data.status === 'active' ? 'Em Tratamento' : 'Inicial'),
       progress: 0,
       incomplete_registration: data.incomplete_registration || false,
       createdAt: data.created_at || new Date().toISOString(),
@@ -81,9 +81,9 @@ export class PatientService {
       phone: data.phone || undefined,
       cpf: data.cpf || undefined,
       birthDate: data.birth_date || new Date().toISOString(),
-      gender: 'outro' as any,
+      gender: 'outro',
       mainCondition: data.observations || '',
-      status: (data.status === 'active' ? 'Em Tratamento' : 'Inicial') as any,
+      status: (data.status === 'active' ? 'Em Tratamento' : 'Inicial'),
       progress: 0,
       incomplete_registration: data.incomplete_registration || false,
       createdAt: data.created_at || new Date().toISOString(),
@@ -92,7 +92,7 @@ export class PatientService {
   }
 
   static async updatePatient(id: string, updates: Partial<Patient>): Promise<Patient> {
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
 
     if (updates.name) updateData.full_name = updates.name;
     if (updates.email !== undefined) updateData.email = updates.email;
@@ -121,9 +121,9 @@ export class PatientService {
       phone: data.phone || undefined,
       cpf: data.cpf || undefined,
       birthDate: data.birth_date || new Date().toISOString(),
-      gender: 'outro' as any,
+      gender: 'outro',
       mainCondition: data.observations || '',
-      status: (data.status === 'active' ? 'Em Tratamento' : 'Inicial') as any,
+      status: (data.status === 'active' ? 'Em Tratamento' : 'Inicial'),
       progress: 0,
       incomplete_registration: data.incomplete_registration || false,
       createdAt: data.created_at || new Date().toISOString(),
@@ -157,9 +157,9 @@ export class PatientService {
       phone: data.phone || undefined,
       cpf: data.cpf || undefined,
       birthDate: data.birth_date || new Date().toISOString(),
-      gender: 'outro' as any,
+      gender: 'outro',
       mainCondition: data.observations || '',
-      status: (data.status === 'active' ? 'Em Tratamento' : 'Inicial') as any,
+      status: (data.status === 'active' ? 'Em Tratamento' : 'Inicial'),
       progress: 0,
       incomplete_registration: data.incomplete_registration || false,
       createdAt: data.created_at || new Date().toISOString(),

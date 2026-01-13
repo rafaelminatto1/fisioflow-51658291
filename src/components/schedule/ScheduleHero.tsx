@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Calendar, CalendarDays } from 'lucide-react';
-import { format, isToday, startOfDay, endOfDay } from 'date-fns';
+import { format, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { ScheduleStatsCards } from './ScheduleStatsCards';

@@ -6,7 +6,34 @@ import { cn } from '@/lib/utils';
 import { Appointment } from '@/types/appointment';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AppointmentQuickView } from './AppointmentQuickView';
-import { Badge } from '@/components/ui/badge';
+
+// Função para obter a classe CSS baseada no status
+const getStatusClass = (status: string, therapistId?: string | null): string => {
+    const normalizedStatus = status?.toLowerCase().replace(/[^a-zà-ú0-9]/g, '') || '';
+
+    // Se tiver fisioterapeuta específico, usa a classe roxa
+    if (therapistId) {
+        return 'calendar-card-fisioterapeuta';
+    }
+
+    // Mapeamento de status para classes CSS
+    const statusMap: Record<string, string> = {
+        'agendado': 'calendar-card-agendado',
+        'confirmado': 'calendar-card-confirmado',
+        'realizado': 'calendar-card-realizado',
+        'concluido': 'calendar-card-concluido',
+        'atendido': 'calendar-card-atendido',
+        'completado': 'calendar-card-completado',
+        'cancelado': 'calendar-card-cancelado',
+        'avaliacao': 'calendar-card-avaliacao',
+        'avaliação': 'calendar-card-avaliação',
+        'emandamento': 'calendar-card-em_andamento',
+        'em_andamento': 'calendar-card-em_andamento',
+        'pendente': 'calendar-card-pendente',
+    };
+
+    return statusMap[normalizedStatus] || 'calendar-card-agendado';
+};
 
 interface CalendarDayViewProps {
     currentDate: Date;
@@ -63,7 +90,7 @@ const CalendarDayView = memo(({
     handleDragOver,
     handleDragLeave,
     handleDrop,
-    checkTimeBlocked,
+    _checkTimeBlocked,
     isTimeBlocked,
     getBlockReason,
     getStatusColor,
@@ -126,12 +153,12 @@ const CalendarDayView = memo(({
                                     <TooltipTrigger asChild>
                                         <div
                                             className={cn(
-                                                "h-14 md:h-16 border-b border-border cursor-pointer transition-colors group relative",
+                                                "calendar-time-slot",
                                                 blocked
-                                                    ? "bg-destructive/10 cursor-not-allowed"
-                                                    : "hover:bg-primary/5",
+                                                    ? "blocked"
+                                                    : "",
                                                 isCurrentHour && !blocked && "bg-primary/5",
-                                                isDropTarget && !blocked && "bg-primary/20 ring-2 ring-primary ring-inset"
+                                                isDropTarget && !blocked && "is-drop-target"
                                             )}
                                             onClick={() => !blocked && onTimeSlotClick(currentDate, time)}
                                             onDragOver={(e) => !blocked && handleDragOver(e, currentDate, time)}
@@ -250,21 +277,18 @@ const CalendarDayView = memo(({
                                         onEdit={onEditAppointment ? () => onEditAppointment(apt) : undefined}
                                         onDelete={onDeleteAppointment ? () => onDeleteAppointment(apt) : undefined}
                                     >
-                                        <div className="calendar-appointment-card">
-                                            {/* Status indicator - border esquerda colorida */}
-                                            <div
-                                                className="calendar-appointment-card-status-bg"
-                                                style={{ background: getStatusColor(apt.status, isOverCapacity(apt)) }}
-                                                aria-hidden="true"
-                                            />
-
+                                        <div className={cn(
+                                            "calendar-appointment-card",
+                                            getStatusClass(apt.status, apt.therapistId),
+                                            isOverCapacity(apt) && "over-capacity"
+                                        )}>
                                             {/* Content */}
                                             <div className="calendar-appointment-card-content">
                                                 <div className="min-w-0">
-                                                    {/* Patient Name - ALTO CONTRASTE */}
+                                                    {/* Patient Name */}
                                                     <div className="calendar-patient-name" title={apt.patientName}>
                                                         {isOverCapacity(apt) && (
-                                                            <AlertTriangle className="h-3 w-3 inline mr-1 text-amber-500 flex-shrink-0" aria-label="Excedente" />
+                                                            <AlertTriangle className="h-3 w-3 inline mr-1 flex-shrink-0" aria-label="Excedente" />
                                                         )}
                                                         <span className="truncate">{apt.patientName}</span>
                                                     </div>

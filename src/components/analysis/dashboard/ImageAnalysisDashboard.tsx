@@ -13,7 +13,7 @@ const PoseAnalyzer = lazy(() => import('../posture/PoseAnalyzer'));
 const AssetViewer = lazy(() => import('../viewer/AssetViewer'));
 const ClinicalPostureAnalysis = lazy(() => import('../posture/ClinicalPostureAnalysis'));
 const DynamicAnalysisViewer = lazy(() => import('../dynamic/DynamicAnalysisViewer'));
-const DicomBrowser = lazy(() => import('../dicom/DicomBrowser'));
+// const DicomBrowser = lazy(() => import('../dicom/DicomBrowser'));
 const DynamicComparisonPage = lazy(() => import('../dynamic/DynamicComparisonPage'));
 
 // Loading fallback component

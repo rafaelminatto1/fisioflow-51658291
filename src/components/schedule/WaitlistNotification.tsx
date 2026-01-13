@@ -11,12 +11,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  Clock, 
-  Calendar, 
-  User, 
-  Phone, 
-  MessageCircle, 
+import {
+  Clock,
+  Calendar,
+  Phone,
+  MessageCircle,
   CheckCircle2,
   AlertCircle,
   Send

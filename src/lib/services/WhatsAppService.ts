@@ -53,7 +53,7 @@ export class WhatsAppService {
    */
   static async testConnection(): Promise<{ connected: boolean; error?: string }> {
     try {
-      const { data, error } = await supabase.functions.invoke('send-whatsapp', {
+      const { error } = await supabase.functions.invoke('send-whatsapp', {
         body: { test: true }
       });
 

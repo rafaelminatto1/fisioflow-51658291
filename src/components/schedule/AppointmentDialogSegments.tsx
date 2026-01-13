@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFormContext, type FieldErrors } from 'react-hook-form';
+import { useFormContext } from 'react-hook-form';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PatientCombobox } from '@/components/ui/patient-combobox';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Textarea } from '@/components/ui/textarea';
 import {
     CalendarIcon,
     User,
@@ -388,7 +387,7 @@ export const OptionsTab = ({
     currentMode,
     selectedEquipments,
     setSelectedEquipments,
-    isRecurringCalendarOpen,
+    _isRecurringCalendarOpen,
     setIsRecurringCalendarOpen,
     reminders,
     setReminders,
@@ -398,7 +397,7 @@ export const OptionsTab = ({
     currentMode: string,
     selectedEquipments: SelectedEquipment[],
     setSelectedEquipments: (equipments: SelectedEquipment[]) => void,
-    isRecurringCalendarOpen: boolean,
+    _isRecurringCalendarOpen: boolean,
     setIsRecurringCalendarOpen: (open: boolean) => void,
     reminders: AppointmentReminderData[],
     setReminders: (reminders: AppointmentReminderData[]) => void,

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { format, formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   Dialog,
@@ -15,10 +15,8 @@ import { Input } from '@/components/ui/input';
 import {
   Clock,
   Calendar,
-  User,
   Phone,
   Search,
-  Plus,
   ExternalLink,
   Sun,
   Sunset,
