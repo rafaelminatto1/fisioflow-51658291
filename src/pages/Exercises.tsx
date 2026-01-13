@@ -7,12 +7,14 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import {
   Plus, BookOpen, Target, FileText,
-  Dumbbell, VideoOff,
-  Activity, ArrowRight
+  Dumbbell, VideoOff, Video,
+  Activity
 } from 'lucide-react';
 import { ExerciseLibrary } from '@/components/exercises/ExerciseLibrary';
 import { TemplateManager } from '@/components/exercises/TemplateManager';
 import { ProtocolsManager } from '@/components/exercises/ProtocolsManager';
+import { ExerciseVideoLibrary } from '@/components/exercises/ExerciseVideoLibrary';
+import { ExerciseVideoUpload } from '@/components/exercises/ExerciseVideoUpload';
 import { NewExerciseModal } from '@/components/modals/NewExerciseModal';
 import { useExercises, type Exercise } from '@/hooks/useExercises';
 import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';
@@ -23,13 +25,14 @@ import { cn } from '@/lib/utils';
 
 export default function Exercises() {
   const { exercises, loading: loadingExercises, createExercise, updateExercise, isCreating, isUpdating } = useExercises();
-  const { favorites } = useExerciseFavorites();
+  const { favorites: _favorites } = useExerciseFavorites();
   const { protocols, loading: loadingProtocols } = useExerciseProtocols();
   const { templates, loading: loadingTemplates } = useExerciseTemplates();
 
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
-  const [activeTab, setActiveTab] = useState<'library' | 'templates' | 'protocols'>('library');
+  const [activeTab, setActiveTab] = useState<'library' | 'videos' | 'templates' | 'protocols'>('library');
   const [showNewModal, setShowNewModal] = useState(false);
+  const [showVideoUpload, setShowVideoUpload] = useState(false);
 
   const exercisesWithoutVideo = exercises.filter(ex => !ex.video_url);
   const exercisesWithVideo = exercises.filter(ex => ex.video_url);
@@ -102,15 +105,26 @@ export default function Exercises() {
               </div>
             )}
 
-            {/* Action Button - Full width on mobile */}
-            <Button
-              onClick={handleNewExercise}
-              size="default"
-              className="w-full sm:w-auto shadow-lg shadow-primary/20 gap-2 group touch-target"
-            >
-              <Plus className="h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:rotate-90" />
-              <span>Novo Exercício</span>
-            </Button>
+            {/* Action Buttons - Full width on mobile */}
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button
+                onClick={handleNewExercise}
+                size="default"
+                className="flex-1 sm:flex-auto shadow-lg shadow-primary/20 gap-2 group touch-target"
+              >
+                <Plus className="h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:rotate-90" />
+                <span>Novo Exercício</span>
+              </Button>
+              <Button
+                onClick={() => setShowVideoUpload(true)}
+                variant="outline"
+                size="default"
+                className="flex-1 sm:flex-auto gap-2 touch-target"
+              >
+                <Video className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span>Upload Vídeo</span>
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -224,7 +238,7 @@ export default function Exercises() {
 
         {/* Main Content Tabs - Mobile Optimized */}
         <Card className="overflow-hidden">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'library' | 'templates' | 'protocols')}>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'library' | 'videos' | 'templates' | 'protocols')}>
             <div className="border-b bg-muted/30">
               <TabsList className="w-full justify-start rounded-none border-0 bg-transparent h-12 sm:h-14 p-0">
                 <TabsTrigger
@@ -236,6 +250,13 @@ export default function Exercises() {
                   <Badge variant="secondary" className="ml-0.5 sm:ml-1 h-4 sm:h-5 text-[10px] sm:text-xs">
                     {exercises.length}
                   </Badge>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="videos"
+                  className="gap-1.5 sm:gap-2 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-3 sm:px-4 md:px-6 text-xs sm:text-sm"
+                >
+                  <Video className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Vídeos</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="templates"
@@ -264,6 +285,10 @@ export default function Exercises() {
               <ExerciseLibrary onEditExercise={handleEditExercise} />
             </TabsContent>
 
+            <TabsContent value="videos" className="m-0 p-3 sm:p-4 md:p-6">
+              <ExerciseVideoLibrary onUploadClick={() => setShowVideoUpload(true)} />
+            </TabsContent>
+
             <TabsContent value="templates" className="m-0 p-3 sm:p-4 md:p-6">
               <TemplateManager />
             </TabsContent>
@@ -284,6 +309,14 @@ export default function Exercises() {
         onSubmit={handleSubmit}
         exercise={editingExercise || undefined}
         isLoading={isCreating || isUpdating}
+      />
+
+      <ExerciseVideoUpload
+        open={showVideoUpload}
+        onOpenChange={setShowVideoUpload}
+        onSuccess={() => {
+          // Invalidate queries to refresh video list
+        }}
       />
     </MainLayout>
   );

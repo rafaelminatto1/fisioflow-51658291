@@ -1,10 +1,10 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { PainPoint } from './BodyMap';
 import { PainDetailsForm } from './PainDetailsForm';
 import { PainIntensity, PainType, PainEvolutionData } from '@/types/painMap';
 import { PainMapService } from '@/lib/services/painMapService';
-import { ZoomIn, ZoomOut, Maximize2, Move, AlertCircle, RotateCcw, ImageOff } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize2, Move, RotateCcw, ImageOff } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -205,7 +205,7 @@ export function BodyMapRealistic({
         });
     };
 
-    const handleRemovePoint = (region: any) => {
+    const handleRemovePoint = (_region: any) => {
         if (!currentSelectedPoint || !onPointRemove) return;
         onPointRemove(currentSelectedPoint.id);
         setSelectedPointId(null);

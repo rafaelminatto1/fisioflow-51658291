@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Check, Clock, FileSignature, AlertCircle } from 'lucide-react';
+import { Check, Clock, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SignedDocumentBadgeProps {

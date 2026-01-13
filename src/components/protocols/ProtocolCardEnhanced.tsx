@@ -13,7 +13,7 @@ import {
 import {
     Clock, AlertTriangle, CheckCircle2,
     ArrowRight, Eye, Star, StarOff,
-    Copy, Trash2, MoreVertical, Milestone
+    Copy, Trash2, MoreVertical
 } from 'lucide-react';
 import { ExerciseProtocol } from '@/hooks/useExerciseProtocols';
 import { cn } from '@/lib/utils';

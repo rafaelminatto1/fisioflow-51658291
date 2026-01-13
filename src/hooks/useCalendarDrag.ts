@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { isSameDay, startOfDay } from 'date-fns';
 import { Appointment } from '@/types/appointment';
+import { logger } from '@/lib/errors/logger';
 
 interface DragState {
     appointment: Appointment | null;
@@ -94,15 +95,12 @@ export const useCalendarDrag = ({ onAppointmentReschedule }: UseCalendarDragProp
         e.preventDefault();
         e.stopPropagation();
 
-        console.log('!!! CALENDAR DRAG HANDLE DROP TRIGGERED !!!');
-        console.log('[SAFE_DATE_LOG] targetDate:', targetDate);
-        console.log('[DEBUG handleDrop] targetDate.toString():', targetDate.toString());
-        console.log('[DEBUG handleDrop] targetDate components:', {
-            year: targetDate.getFullYear(),
-            month: targetDate.getMonth(),
-            date: targetDate.getDate(),
-            hours: targetDate.getHours()
-        });
+        // Validar que existe appointment para fazer drag
+        if (!dragState.appointment?.date) {
+            logger.warn('[useCalendarDrag] Tentativa de drop sem appointment válido', {}, 'useCalendarDrag');
+            handleDragEnd();
+            return;
+        }
 
         // Normalizar a data antiga do appointment para comparação
         const oldDate = normalizeDate(dragState.appointment.date);
@@ -114,16 +112,6 @@ export const useCalendarDrag = ({ onAppointmentReschedule }: UseCalendarDragProp
             targetDate.getMonth(),
             targetDate.getDate()
         );
-
-        // DEBUG: Log the created newDate
-        console.log('[DEBUG handleDrop] createLocalDate result:', newDate);
-        console.log('[DEBUG handleDrop] newDate.toString():', newDate.toString());
-        console.log('[DEBUG handleDrop] newDate components:', {
-            year: newDate.getFullYear(),
-            month: newDate.getMonth(),
-            date: newDate.getDate(),
-            hours: newDate.getHours()
-        });
 
         // Verificar se é o mesmo horário (sem mudança real)
         if (isSameDay(oldDate, newDate) && dragState.appointment.time === time) {
@@ -139,7 +127,7 @@ export const useCalendarDrag = ({ onAppointmentReschedule }: UseCalendarDragProp
         });
         setShowConfirmDialog(true);
         handleDragEnd();
-    }, [dragState.appointment, onAppointmentReschedule, handleDragEnd]);
+    }, [dragState.appointment, handleDragEnd]);
 
     const handleConfirmReschedule = useCallback(async () => {
         if (!pendingReschedule || !onAppointmentReschedule) return;
@@ -153,7 +141,7 @@ export const useCalendarDrag = ({ onAppointmentReschedule }: UseCalendarDragProp
             setShowConfirmDialog(false);
             setPendingReschedule(null);
         } catch (error) {
-            console.error('Erro ao reagendar:', error);
+            logger.error('Erro ao reagendar', { error }, 'useCalendarDrag');
             // Manter o dialog aberto para que o usuário veja o erro
         }
     }, [pendingReschedule, onAppointmentReschedule]);

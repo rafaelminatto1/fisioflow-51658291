@@ -118,7 +118,7 @@ export function useCreatePainMap() {
 
   return useMutation({
     mutationFn: async (input: CreatePainMapInput) => {
-      const { sessionId, view, points } = input;
+      const { sessionId, view: _view, points } = input;
 
       // Buscar patient_id da sessão
       const { data: session, error: sessionError } = await supabase
@@ -172,7 +172,7 @@ export function useCreatePainMap() {
 
       return { ...painMap, points: createdPoints };
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['pain-maps', 'session', variables.sessionId] });
       queryClient.invalidateQueries({ queryKey: ['pain-maps', 'patient'] });
       toast.success('Mapa de dor salvo com sucesso!');

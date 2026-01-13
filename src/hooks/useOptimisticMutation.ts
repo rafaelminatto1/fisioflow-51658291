@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient, UseMutationResult } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { QueryKeys } from './queryKeys';
 
 /**
  * Tipo genérico para variáveis de mutação

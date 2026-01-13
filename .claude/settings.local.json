@@ -72,7 +72,15 @@
       "Bash(VITE_SUPABASE_URL=\"https://ycvbtjfrchcyvmkvuocu.supabase.co\" VITE_SUPABASE_ANON_KEY=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljdmJ0amZyY2hjeXZta3Z1b2N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTA5OTQsImV4cCI6MjA3NTE2Njk5NH0.L5maWG2hc3LVHEUMOzfTRTjYwIAJFXx3zan3G-Y1zAA\" npx tsx:*)",
       "Bash(pnpm typecheck:*)",
       "Bash(pnpm run build:*)",
-      "Bash(git -C /home/rafael/cursor/fisiolovable/fisioflow-51658291 add .)"
+      "Bash(git -C /home/rafael/cursor/fisiolovable/fisioflow-51658291 add .)",
+      "Bash(git -C /home/rafael/cursor/fisiolovable/fisioflow-51658291 commit -m \"$\\(cat <<''EOF''\nfeat: add Inngest integration with email and WhatsApp workflows\n\n- Add Inngest SDK for reliable background job processing\n- Create 11 workflows: cleanup, birthdays, reports, notifications, AI insights\n- Integrate Resend for transactional emails with templates\n- Integrate Evolution API for WhatsApp messaging\n- Add 20+ helper functions for sending events\n- Configure cron schedules for daily/weekly tasks\n- Add retry logic with exponential backoff\n- Support batch sending for emails and WhatsApp\n- Add comprehensive documentation\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C /home/rafael/cursor/fisiolovable/fisioflow-51658291 push origin main)",
+      "Bash(pnpm build:prod:*)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=6144\" pnpm run build:*)",
+      "Bash(python3:*)",
+      "Bash(VITE_SUPABASE_URL=\"https://fisioflow-raspy-band-09685986.aws.neon.tech\" VITE_SUPABASE_ANON_KEY=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2Zpc2lvZmxvdy1yYXNweS1iYW5kLTA5Njg1OTg2LmF3cy5uZW9uLnRlY2giLCJicmFuZHMiOlsiYnJhbmRsZXNzIiwicGVvcGxlIl0sInJvbGVzIjpbImJyYW5kbGVzcyJdLCJleHAiOjE3NjAwNDQ3OTksImlhdCI6MTc1OTU5MzM5OSwiaXNzIjpbImh0dHBzOi8vZmlzaW9mbG93LXJhcHB5LWJhbmQtMDk2ODU5ODYuYXdzLm5lb24udGVjaCJd.nH-lMw9s5h3VvQX3y3KQ8s1Jn8c8WgK2W4s1YpM0K8k\" npx tsx:*)",
+      "Bash(docker run:*)",
+      "Bash(NODE_OPTIONS='--max-old-space-size=4096' pnpm run build:prod:*)"
     ],
     "deny": [],
     "ask": []

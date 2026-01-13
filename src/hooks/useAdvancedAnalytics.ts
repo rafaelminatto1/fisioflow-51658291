@@ -449,7 +449,7 @@ export const useAdvancedAnalytics = () => {
       
       setInsights(prev => [...newInsights, ...prev]);
       setError(null);
-    } catch (err) {
+    } catch (_err) {
       setError('Erro ao gerar insights');
     } finally {
       setLoading(false);

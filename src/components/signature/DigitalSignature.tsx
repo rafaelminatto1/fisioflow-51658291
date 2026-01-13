@@ -1,21 +1,17 @@
 import { useRef, useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { 
-  Pen, 
-  Eraser, 
-  Download, 
-  Check, 
-  Undo2, 
-  RotateCcw,
+import {
+  Pen,
+  Eraser,
+  Download,
+  Check,
   FileSignature,
   Shield,
   Clock
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface DigitalSignatureProps {
   onSign?: (signatureData: SignatureData) => void;
