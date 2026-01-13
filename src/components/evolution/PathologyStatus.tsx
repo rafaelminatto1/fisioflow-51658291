@@ -90,7 +90,7 @@ export const PathologyStatus: React.FC<PathologyStatusProps> = ({ pathologies })
                   )}
                 </div>
               </div>
-              <Badge variant={getStatusColor(pathology.status) as any} className="text-xs">
+              <Badge variant={getStatusColor(pathology.status) as 'default' | 'secondary' | 'outline'} className="text-xs">
                 {statusLabels[pathology.status]}
               </Badge>
             </div>

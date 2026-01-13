@@ -14,7 +14,7 @@ SET
   precautions = 'Progressão baseada em critérios funcionais, não apenas tempo. Monitorar dor anterior ao joelho que indica sobrecarga patelar. Evitar apoio excessivo em membros inferiores durante exercícios de cadeia cinética fechada.',
   progression_notes = 'Critérios para progredir: extensão completa, sem edema, controle motor adequado de quadríceps, marcha sem auxílio. Progressão para Fase 2 geralmente entre semanas 4-6.',
   evidence_level = 'A',
-  references = ARRAY[
+  bibliographic_references = ARRAY[
     'AAOS Clinical Practice Guideline for ACL Injury Management (2022)',
     'APTA Clinical Practice Guidelines for ACL Rehabilitation (2022)',
     'Verhagen et al. Exercise-based rehabilitation for ACL injuries systematic review (2025)',
@@ -30,7 +30,7 @@ SET
   precautions = 'Monitorar alinhamento do joelho durante agachamentos (valgo dinâmico). Progressão gradual de carga. Atentar para assimetrias de força entre membros.',
   progression_notes = 'Critérios: 80% de força simétrica (Limb Symmetry Index), agachamento unilateral sem compensações, equilíbrio estável. Geralmente prograda para Fase 3 entre semanas 10-14.',
   evidence_level = 'A',
-  references = ARRAY[
+  bibliographic_references = ARRAY[
     'Aspetar Clinical Guidelines for ACL Reconstruction Rehabilitation',
     'MGH Rehabilitation Protocol for ACL (2023)',
     'Mass General Hospital ACL Rehabilitation Protocol'
@@ -45,7 +45,7 @@ SET
   precautions = 'Retorno gradual e progressivo. Iniciar com drills não competitivos antes de contato completo. Reavaliar constantemente após retorno.',
   progression_notes = 'Critérios de retorno ao esporte: LSIs >90% em força e potência, testes funcionais within 10% (hop tests, agility), confiança psicológica, sem edema ou dor. Tempo mínimo 9 meses para reduzir risco de re-lesão.',
   evidence_level = 'A',
-  references = ARRAY[
+  bibliographic_references = ARRAY[
     'Aspetar Return to Sport Criteria after ACLR',
     'Grindem et al. ACL-RSI score for return to sport readiness',
     'Arundale et al. JOSPT Exercise-Based Knee and ACL Prevention (2023)'
@@ -60,7 +60,7 @@ SET
   precautions = 'Usar tipóia conforme orientação cirúrgica. Não forçar amplitude se houver dor resistente. Evitar extensão combinada com rotação interna (posição de risco).',
   progression_notes = 'Critérios para progredir: amplitude passiva satisfatória (flexão >120°, rotação externa 40°), sem dor importante. Geralmente prograda entre semanas 6-8.',
   evidence_level = 'A',
-  references = ARRAY[
+  bibliographic_references = ARRAY[
     'MOON Shoulder Group Post-Operative Rotator Cuff Repair Protocol',
     'Mass General Hospital Rehabilitation Protocol for Rotator Cuff Repair',
     'van der Meijden et al. Healing phases after rotator cuff repair'
@@ -75,7 +75,7 @@ SET
   precautions = 'Progressão lenta de carga. Priorizar controle motor antes de aumentar peso. Evitar compensações com elevação de escápula (shrug).',
   progression_notes = 'Critérios: força adequada sem dor, amplitude completa, padrão de movimento normal. Pode progredir para exercícios funcionais e retornar gradualmente a atividades.',
   evidence_level = 'B',
-  references = ARRAY[
+  bibliographic_references = ARRAY[
     'Escamilla et al. Optimal Management of Shoulder Impingement Syndrome (2014)',
     'Physio-pedia Evidence Based Interventions for Shoulder Pain',
     'HSS Non-Operative Shoulder Impingement Rehab Guidelines'
@@ -90,7 +90,7 @@ SET
   precautions = 'Evitar compensações respiratórias (prender respiração). Atentar para aumento de dor irradiada para MMII. Progressão gradual de complexidade.',
   progression_notes = 'Critérios de progressão: redução de dor >50%, capacidade de manter contração de core durante atividades funcionais. Geralmente 4-8 semanas para melhora significativa.',
   evidence_level = 'A',
-  references = ARRAY[
+  bibliographic_references = ARRAY[
     'NCBI/NIH McKenzie Back Exercises StatPearls (2023)',
     'Slater et al. McKenzie Method effectiveness in low back pain (2018)',
     'Core stabilization exercises effectiveness review (2024)',
@@ -106,7 +106,7 @@ SET
   precautions = 'Evitar protrusão de cabeça durante exercícios. Atentar para tontura ou sintomas autonômicos. Não forçar amplitude se houver resistência dolorosa.',
   progression_notes = 'Critérios: redução de dor, melhor mobilidade cervical, capacidade de manter postura neutra por períodos prolongados. Geralmente 4-6 semanas.',
   evidence_level = 'B',
-  references = ARRAY[
+  bibliographic_references = ARRAY[
     'JOSPT Neck Pain Revision 2017 Clinical Practice Guidelines',
     'Exercises for Mechanical Neck Disorders systematic review (2015)',
     'MDPI Best Evidence Rehabilitation for Chronic Neck Pain (2019)'
@@ -121,7 +121,7 @@ SET
   precautions = 'Monitorar resposta à extensão (centralização vs peripheralização). Parar se dor irradiada aumenta. Progressão baseada em sintomas, não tempo.',
   progression_notes = 'Critérios: dor centralizada, amplitude lombar melhorada, força de MMII normal. Fase aguda: 1-2 semanas. Fase subaguda: 2-6 semanas.',
   evidence_level = 'A',
-  references = ARRAY[
+  bibliographic_references = ARRAY[
     'NCBI StatPearls McKenzie Back Exercises (2023)',
     'Biomechanical Analysis of McKenzie Method (2025)',
     'McKenzie Extension Exercises effectiveness trial (2025)'
@@ -136,7 +136,7 @@ SET
   precautions = 'Progressão baseada em dor e edema. Não forçar amplitude se dor significativa. Monitorar sinais de lesão mais grave (fratura, lesão ligamentar grave).',
   progression_notes = 'Critérios para progredir: redução de edema, tolerância à carga, amplitude de movimento ≥80%. Geralmente 3-7 dias.',
   evidence_level = 'A',
-  references = ARRAY[
+  bibliographic_references = ARRAY[
     'Mass General Hospital Physical Therapy Guidelines for Lateral Ankle Sprain',
     'Proprioceptive Training for Prevention of Ankle Sprains (PMC, 2017)',
     'Evidence-based treatment for ankle injuries (PMC, 2012)'
@@ -151,7 +151,7 @@ SET
   precautions = 'Atentar para valgo de tornozelo durante exercícios. Progressão gradual de dificuldade proprioceptiva. Usar suporte se necessário nas fases iniciais.',
   progression_notes = 'Critérios: força simétrica, equilíbrio unipodal >30s com olhos fechados, agility test within 10%. Retorno ao esporte em 2-6 semanas conforme gravidade.',
   evidence_level = 'A',
-  references = ARRAY[
+  bibliographic_references = ARRAY[
     'PMC5737043 Proprioceptive Training for Ankle Sprain Prevention (2017)',
     'Sanford Health Ankle Sprain Rehabilitation Guideline',
     'JOSPT Physical Therapy After Ankle Sprain (2021)'
@@ -166,7 +166,7 @@ SET
   precautions = 'Alongar preferencialmente pela manhã e após períodos sentado. Dor leve pós-exercício é aceitável, dor intensa não. Calçado adequado é essencial.',
   progression_notes = 'Melhora esperada em 4-8 semanas com alongamento consistente. Critérios: redução de dor matinal, tolerância à marcha prolongada.',
   evidence_level = 'A',
-  references = ARRAY[
+  bibliographic_references = ARRAY[
     'PMC Comprehensive Physiotherapy Rehabilitation Protocol (2024)',
     'Heel Pain Plantar Fasciitis Revision 2023 (65 citations)',
     'RACGP Stretching for Plantar Fasciitis Guidelines (2021)'
@@ -181,7 +181,7 @@ SET
   precautions = 'Dor leve durante exercício é aceitável e necessária para adaptação. Monitorar resposta 24h após. Não pular fases de progressão.',
   progression_notes = 'Protocolo mínimo 6-12 semanas. Critérios: dor ≤2/10 durante atividade, capacidade para decline squats com carga normal.',
   evidence_level = 'A',
-  references = ARRAY[
+  bibliographic_references = ARRAY[
     'Physio-pedia Effective Quadriceps Training in Patellofemoral Pain',
     'JOSPT Physical Therapist-Guided Quadriceps Strengthening (2014)',
     'BJSM Quadriceps or hip exercises for PFPS (2023, 27 citations)'
@@ -196,7 +196,7 @@ SET
   precautions = 'Progressão isométrica → isotônica → funcional. Atentar para compensação com tensor da fáscia lata em vez de glúteo médio.',
   progression_notes = 'Melhora em 6-8 semanas com exercícios consistentes. Critérios: dor ≤2/10, força de abdução adequada, marcha sem dor.',
   evidence_level = 'B',
-  references = ARRAY[
+  bibliographic_references = ARRAY[
     'E3 Rehab Hip Bursitis Exercise Progressions',
     'Dr Jeffrey Peng Best Exercises for Trochanteric Bursitis',
     'MyHealth Alberta Trochanteric Bursitis Exercises'
@@ -211,7 +211,7 @@ SET
   precautions = 'Atentar para ombro doloroso/subluxado em hemiplegia. Usar suporte adequado. Monitorar fadiga que pode piorar qualidade de movimento.',
   progression_notes = 'Recuperação mais significativa nos primeiros 3-6 meses. Critérios: preensão funcional, alcance útil sem compensações.',
   evidence_level = 'B',
-  references = ARRAY[
+  bibliographic_references = ARRAY[
     'Physio-pedia Stroke Rehabilitation Evidence',
     'Cochrane Review Constraint-Induced Movement Therapy',
     'Neuroplasticity principles in stroke recovery'
@@ -226,7 +226,7 @@ SET
   precautions = 'Supervisão constante durante treino de marcha. Usar barras paralelas ou assistência conforme necessário. Atentar para espasticidade que interfere na marcha.',
   progression_notes = 'Progressão: barra paralela → andador → bengala → independente. Tempo variável conforme severidade (semanas a meses).',
   evidence_level = 'B',
-  references = ARRAY[
+  bibliographic_references = ARRAY[
     'Physio-pedia Stroke Gait Rehabilitation',
     'Task-specific training for gait after stroke',
     'Bodyweight-supported treadmill training evidence'
@@ -241,7 +241,7 @@ SET
   precautions = 'Atentar para hipotensão ortostática. Monitorar medicação ON/OFF para otimizar exercícios. Supervisão para exercícios de equilíbrio.',
   progression_notes = 'Exercícios diários são ideais. Melhora mantida enquanto programa continua. Foco em qualidade de movimento.',
   evidence_level = 'B',
-  references = ARRAY[
+  bibliographic_references = ARRAY[
     'Physio-pedia Parkinson Disease Rehabilitation',
     'Exercise intensity recommendations for Parkinson',
     'Dance and boxing programs for PD (Parkinson specific)'
@@ -256,7 +256,7 @@ SET
   precautions = 'Supervisão para exercícios de equilíbrio desafiadores. Adaptar conforme comorbidades e limitações. Progressão conservadora.',
   progression_notes = 'Programa mínimo 12 semanas com 2-3x/semana. Redução de 30-40% em quedas com programas consistentes.',
   evidence_level = 'A',
-  references = ARRAY[
+  bibliographic_references = ARRAY[
     'Cochrane Review Exercise for preventing falls in older people',
     'Otago Exercise Programme evidence',
     'CDC STEADI fall prevention program'
@@ -271,7 +271,7 @@ SET
   precautions = 'Progressão muito gradual de impacto. Atentar para dor vertebral que pode indicar microfratura. Ensinar higiene postural.',
   progression_notes = 'Programa mínimo 6-12 meses para impacto em densidade óssea. Manter exercícios vitalícios.',
   evidence_level = 'A',
-  references = ARRAY[
+  bibliographic_references = ARRAY[
     'Physio-pedia Osteoporosis Exercise Guidelines',
     'ACSM Exercise Guidelines for Osteoporosis',
     'Bone loading exercise recommendations'
@@ -286,7 +286,7 @@ SET
   precautions = 'Respeitar limites de dor. Arco de movimento doloroso deve ser evitado. Progressão lenta de carga.',
   progression_notes = 'Programa 6-12 semanas para melhora significativa. Manter exercícios vitalícios para manutenção.',
   evidence_level = 'A',
-  references = ARRAY[
+  bibliographic_references = ARRAY[
     'AAOS Treatment of Knee Osteoarthritis Guidelines',
     'Quadriceps strengthening for knee OA systematic review',
     'Exercise therapy for knee OA (Cochrane Review)'
@@ -301,7 +301,7 @@ SET
   precautions = 'Progressão conservadora essencial. Monitorar dor 24h pós-exercício. Pacientes devem aprender a autogerenciar intensidade.',
   progression_notes = 'Objetivo: 150 min/semana de atividade moderada em 3-6 meses. Melhora de dor e fadiga com consistência.',
   evidence_level = 'B',
-  references = ARRAY[
+  bibliographic_references = ARRAY[
     'EULAR recommendations for fibromyalgia management',
     'Exercise therapy for fibromyalgia systematic review',
     'Graded exercise activity for chronic pain'
@@ -313,7 +313,7 @@ WHERE name = 'Fibromialgia - Aeróbico Leve';
 -- ============================================================
 
 -- Novo Protocolo: PÓS-OP ARTROPLASTIA TOTAL DE JOELHO (ATJ)
-INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, references)
+INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, bibliographic_references)
 VALUES (
   'Pós-Op ATJ - Fase Inicial (0-2 semanas)',
   'Reabilitação inicial pós-artroplastia total de joelho focada em ADM e controle de edema',
@@ -334,7 +334,7 @@ VALUES (
 );
 
 -- Novo Protocolo: PÓS-OP ATJ - FASE INTERMEDIÁRIA
-INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, references)
+INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, bibliographic_references)
 VALUES (
   'Pós-Op ATJ - Fase Intermediária (2-6 semanas)',
   'Reabilitação intermediária pós-artroplastia total de joelho focada em fortalecimento',
@@ -354,7 +354,7 @@ VALUES (
 );
 
 -- Novo Protocolo: PÓS-OP ATJ - FASE AVANÇADA
-INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, references)
+INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, bibliographic_references)
 VALUES (
   'Pós-Op ATJ - Fase Avançada (6+ semanas)',
   'Reabilitação avançada pós-artroplastia total de joelho focada em função',
@@ -374,7 +374,7 @@ VALUES (
 );
 
 -- Novo Protocolo: PÓS-OP ARTROPLASTIA TOTAL DE QUADRIL (ATQ)
-INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, references)
+INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, bibliographic_references)
 VALUES (
   'Pós-Op ATQ - Protocolo Completo',
   'Reabilitação completa pós-artroplastia total de quadril com precauções de luxação',
@@ -395,7 +395,7 @@ VALUES (
 );
 
 -- Novo Protocolo: CAPSULITE ADESIVA (OMBRO CONGELADO)
-INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, references)
+INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, bibliographic_references)
 VALUES (
   'Capsulite Adesiva - Protocolo Completo',
   'Reabilitação completa para capsulite adesiva (ombro congelado) baseada em evidências',
@@ -416,7 +416,7 @@ VALUES (
 );
 
 -- Novo Protocolo: SÍNDROME DO IMPACTO DO OMBRO
-INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, references)
+INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, bibliographic_references)
 VALUES (
   'Síndrome do Impacto - Protocolo Não-Cirúrgico',
   'Reabilitação conservadora para síndrome do impacto subacromial',
@@ -436,7 +436,7 @@ VALUES (
 );
 
 -- Novo Protocolo: DOR LOMBAR MECÂNICA - MÉTODO MCKENZIE
-INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, references)
+INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, bibliographic_references)
 VALUES (
   'Lombalgia - Método McKenzie Completo',
   'Protocolo completo de exercícios de McKenzie para lombalgia mecânica',
@@ -457,7 +457,7 @@ VALUES (
 );
 
 -- Novo Protocolo: LESÃO DO MENISCO
-INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, references)
+INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, bibliographic_references)
 VALUES (
   'Lesão Meniscal - Tratamento Conservador',
   'Protocolo conservador para lesões meniscais baseado em evidências',
@@ -478,7 +478,7 @@ VALUES (
 );
 
 -- Novo Protocolo: HALLUX VALGUS (BUNION) - PÓS-OP
-INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, references)
+INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, bibliographic_references)
 VALUES (
   'Pós-Op Hallux Valgus - Protocolo Completo',
   'Reabilitação pós-cirúrgica de Hallux Valgus (joanete)',
@@ -499,7 +499,7 @@ VALUES (
 );
 
 -- Novo Protocolo: TENDINOPATIA DE AQUILES
-INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, references)
+INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, bibliographic_references)
 VALUES (
   'Tendinopatia de Aquiles - Protocolo Alfredson',
   'Programa excêntrico evidenciado para tendinopatia de Aquiles',
@@ -519,7 +519,7 @@ VALUES (
 );
 
 -- Novo Protocolo: CERVICALGIA - ESTABILIZAÇÃO
-INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, references)
+INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, bibliographic_references)
 VALUES (
   'Cervicalgia - Fortalecimento Deep Neck Flexors',
   'Protocolo de fortalecimento de flexores profundos do pescoço para cervicalgia',
@@ -539,7 +539,7 @@ VALUES (
 );
 
 -- Novo Protocolo: INSTABILIDADE PATELOFEMORAL
-INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, references)
+INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, bibliographic_references)
 VALUES (
   'Instabilidade Patelo-femoral - Protocolo Completo',
   'Reabilitação para dor/instabilidade patelo-femoral baseada em evidências',
@@ -560,7 +560,7 @@ VALUES (
 );
 
 -- Novo Protocolo: OMBRO DOLOROSO (NÃO ESPECÍFICO)
-INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, references)
+INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, bibliographic_references)
 VALUES (
   'Ombro Doloroso - Protocolo Escapuloumeral',
   'Protocolo de reabilitação para dor de ombro não específica focado em padrão escapuloumeral',
@@ -580,7 +580,7 @@ VALUES (
 );
 
 -- Novo Protocolo: DOR FEMOROPATELAR (CONDILOMALELA)
-INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, references)
+INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, bibliographic_references)
 VALUES (
   'Dor Femoropatelar - Protocolo Conservador',
   'Protocolo conservador para condromalácia patelar baseado em evidências',
@@ -600,7 +600,7 @@ VALUES (
 );
 
 -- Novo Protocolo: EPICONDILITE LATERAL (COTOVELO DE TENISTA)
-INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, references)
+INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, bibliographic_references)
 VALUES (
   'Epicondilite Lateral - Protocolo Tyler Twist',
   'Programa excêntrico evidenciado para epicondilite lateral',
@@ -620,7 +620,7 @@ VALUES (
 );
 
 -- Novo Protocolo: SÍNDROME DO TÚNEL DO CARPO
-INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, references)
+INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, bibliographic_references)
 VALUES (
   'Síndrome do Túnel do Carpo - Protocolo Conservador',
   'Reabilitação conservadora para síndrome do túnel do carpo leve a moderada',
@@ -640,7 +640,7 @@ VALUES (
 );
 
 -- Novo Protocolo: ESCOLIOSE - EXERCÍCIOS ESSENCIAIS
-INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, references)
+INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, bibliographic_references)
 VALUES (
   'Escoliose - Schroth Method (Básico)',
   'Exercícios baseados no método Schroth para escoliose idiopática',
@@ -652,7 +652,7 @@ VALUES (
   'Deve ser supervisionado por fisioterapeuta treinado em Schroth. Progressão lenta e consistente.',
   'Programa mínimo 6-12 meses. Melhora mantida com exercícios de manutenção vitalícios.',
   'C',
-  references => ARRAY[
+  ARRAY[
     'Schroth Method for Scoliosis Research',
     'Physio-pedia Scoliosis Rehabilitation',
     'SEAS (Scientific Exercise Approach to Scoliosis) evidence'
@@ -660,7 +660,7 @@ VALUES (
 );
 
 -- Novo Protocolo: REABILITAÇÃO CARDÍACA - FASE I
-INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, references)
+INSERT INTO public.exercise_templates (name, description, category, condition_name, template_variant, clinical_notes, contraindications, precautions, progression_notes, evidence_level, bibliographic_references)
 VALUES (
   'Reabilitação Cardíaca - Fase I Hospitalar',
   'Programa de exercícios iniciais para reabilitação cardíaca em ambiente hospitalar',
@@ -672,7 +672,7 @@ VALUES (
   'Monitorização contínua essencial. Interromper se: dor torácica, dispneia desproporcional, tontura, PA anormal. Progressão muito conservadora.',
   'Duração: durante internação (3-7 dias). Critérios para alta: deambulação independente, entender limites.',
   'A',
-  references => ARRAY[
+  ARRAY[
     'AACVPR Guidelines for Cardiac Rehabilitation',
     'WHO Cardiac Rehabilitation Recommendations',
     'AHA/ACC Cardiac Rehabilitation Guidelines'
