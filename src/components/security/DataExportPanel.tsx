@@ -15,7 +15,6 @@ export function DataExportPanel() {
     isRequesting,
     hasPendingExport,
     hasPendingDeletion,
-    _completedRequests,
   } = useDataExport();
 
   const getStatusIcon = (status: string) => {
