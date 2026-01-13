@@ -14,11 +14,16 @@ import {
     Clock,
     Target,
     FileText,
-    DollarSign
+    DollarSign,
+    Sparkles,
+    Loader2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import ReactMarkdown from 'react-markdown';
 import { PatientHelpers } from '@/types';
+import { usePatientInsight } from '@/hooks/usePatientInsight';
+import { useState } from 'react';
 
 interface PatientDashboardProps {
     patient: any;
@@ -41,6 +46,30 @@ export const PatientDashboard360 = ({
 
     const alerts = patient?.alerts || [];
     const nextAppointment = appointments?.find(a => new Date(a.date) > new Date());
+
+    const [insightResult, setInsightResult] = useState<string | null>(null);
+    const { mutate: generateInsight, isPending: isGeneratingInsight } = usePatientInsight();
+
+    const handleGenerateInsight = () => {
+        const patientData = {
+            name: patient.name,
+            age: patient.age,
+            mainCondition: patient.mainCondition,
+            goals: activeGoals.map(g => g.description),
+            pathologies: activePathologies.map(p => p.name),
+            recentAppointments: appointments?.slice(0, 5).map(a => ({
+                date: a.date,
+                type: a.type,
+                notes: a.notes
+            }))
+        };
+
+        generateInsight(patientData, {
+            onSuccess: (data) => {
+                setInsightResult(data.insight);
+            }
+        });
+    };
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
@@ -142,6 +171,46 @@ export const PatientDashboard360 = ({
                         </CardContent>
                     </Card>
                 </div>
+
+                {/* AI Insight Section */}
+                <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 border-indigo-100 dark:border-indigo-900/50">
+                    <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-semibold flex items-center gap-2 text-indigo-700 dark:text-indigo-400">
+                                <Sparkles className="w-5 h-5" />
+                                Inteligência Artificial
+                            </h3>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleGenerateInsight()}
+                                disabled={isGeneratingInsight}
+                                className="bg-white/50 hover:bg-white/80 dark:bg-black/20"
+                            >
+                                {isGeneratingInsight ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        Analisando...
+                                    </>
+                                ) : (
+                                    'Gerar Resumo Clínico'
+                                )}
+                            </Button>
+                        </div>
+
+                        {insightResult ? (
+                            <div className="text-sm text-foreground/80 bg-white/60 dark:bg-black/20 p-4 rounded-lg border border-indigo-100 dark:border-indigo-900/30">
+                                <ReactMarkdown className="prose prose-sm dark:prose-invert max-w-none">
+                                    {insightResult}
+                                </ReactMarkdown>
+                            </div>
+                        ) : (
+                            <p className="text-sm text-muted-foreground">
+                                Utilize a IA para analisar o histórico completo do paciente e identificar tendências, melhorias e alertas de forma automática.
+                            </p>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
 
             {/* Middle Section: Goals & Pathologies */}

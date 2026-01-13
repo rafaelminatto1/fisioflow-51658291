@@ -56,9 +56,20 @@ export const DayColumn = memo(({
     const isTodayDate = isToday(day);
     const isDraggable = !!onAppointmentReschedule;
 
+    // Keyboard navigation handler for time slots
+    const handleSlotKeyDown = (e: React.KeyboardEvent, date: Date, time: string, blocked: boolean) => {
+        if (blocked) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onTimeSlotClick(date, time);
+        }
+    };
+
     return (
         <div
             className="w-full sm:w-auto border-r border-border/50 last:border-r-0 relative group flex-shrink-0"
+            role="column"
+            aria-label={`Coluna do dia ${format(day, 'dd/MM/yyyy')}`}
         >
             <div className={cn(
                 "h-14 sm:h-16 border-b border-border/50 sticky top-0 z-10 p-2 sm:p-3 text-center text-xs sm:text-sm backdrop-blur-md transition-all duration-300 shadow-sm",
@@ -66,30 +77,37 @@ export const DayColumn = memo(({
                     ? "bg-gradient-to-br from-primary via-primary/95 to-primary/85 text-primary-foreground shadow-xl shadow-primary/30 ring-2 ring-primary/40"
                     : "bg-gradient-to-br from-muted/60 to-muted/40 hover:from-muted/80 hover:to-muted/60"
             )}>
-                <div className="font-extrabold uppercase tracking-wider text-[10px] sm:text-xs">
+                <div className="font-extrabold uppercase tracking-wider text-[10px] sm:text-xs opacity-90">
                     {format(day, 'EEE', { locale: ptBR })}
                 </div>
                 <div className={cn(
-                    "text-lg sm:text-2xl font-black mt-0.5 sm:mt-1",
+                    "text-lg sm:text-2xl font-black mt-0.5 sm:mt-1 relative inline-flex items-center justify-center",
                     isTodayDate && "drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]"
                 )}>
                     {format(day, 'd')}
+                    {isTodayDate && (
+                        <>
+                            <span className="sr-only"> (Hoje)</span>
+                            <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-white rounded-full animate-pulse" aria-hidden="true" />
+                        </>
+                    )}
                 </div>
             </div>
 
             {/* Time slots interativos */}
-            <div className="relative">
+            <div className="relative" role="grid" aria-label={`Slots de horário para ${format(day, 'dd/MM')}`}>
                 {isDayClosed ? (
-                    <div className="h-full flex items-center justify-center text-muted-foreground text-xs p-4 min-h-[500px]">
+                    <div className="h-full flex items-center justify-center text-muted-foreground text-xs p-4 min-h-[500px]" role="status" aria-label="Dia fechado">
                         <div className="flex flex-col items-center gap-2">
-                            <Ban className="h-4 w-4" />
+                            <Ban className="h-4 w-4" aria-hidden="true" />
                             <span>Fechado</span>
                         </div>
                     </div>
                 ) : (
-                    timeSlots.map(time => {
+                    timeSlots.map((time, index) => {
                         const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === time;
                         const { blocked, reason } = checkTimeBlocked(day, time);
+                        const dayString = format(day, 'dd/MM/yyyy');
 
                         return (
                             <TooltipProvider key={time}>
@@ -97,26 +115,34 @@ export const DayColumn = memo(({
                                     <TooltipTrigger asChild>
                                         <div
                                             className={cn(
-                                                "h-12 sm:h-16 border-b border-border/20 cursor-pointer transition-all duration-200 group/slot relative",
+                                                "time-slot h-12 sm:h-16 border-b border-border/20 cursor-pointer transition-all duration-200 group/slot relative",
                                                 blocked
                                                     ? "bg-destructive/10 cursor-not-allowed"
                                                     : "hover:bg-gradient-to-r hover:from-primary/15 hover:to-primary/5 active:bg-primary/20",
-                                                isDropTarget && !blocked && "bg-primary/25 ring-2 ring-primary ring-inset"
+                                                isDropTarget && !blocked && "bg-primary/25 ring-2 ring-primary ring-inset drop-zone-active"
                                             )}
                                             onClick={() => !blocked && onTimeSlotClick(day, time)}
+                                            onKeyDown={(e) => handleSlotKeyDown(e, day, time, blocked)}
                                             onDragOver={(e) => !blocked && handleDragOver(e, day, time)}
                                             onDragLeave={handleDragLeave}
                                             onDrop={(e) => !blocked && handleDrop(e, day, time)}
+                                            role="button"
+                                            tabIndex={blocked ? -1 : 0}
+                                            aria-label={
+                                                blocked
+                                                    ? `Horário ${time} bloqueado${reason ? ': ' + reason : ''}`
+                                                    : `Criar agendamento para ${dayString} às ${time}`
+                                            }
                                         >
                                             {blocked ? (
-                                                <span className="absolute inset-0 flex items-center justify-center text-[10px] text-destructive/60">
+                                                <span className="absolute inset-0 flex items-center justify-center text-[10px] text-destructive/60" aria-hidden="true">
                                                     <Ban className="h-2 w-2" />
                                                 </span>
                                             ) : (
                                                 <span className={cn(
                                                     "absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs font-bold text-primary-foreground opacity-0 group-hover/slot:opacity-100 transition-all duration-200 scale-95 group-hover/slot:scale-100 pointer-events-none",
                                                     isDropTarget && "opacity-100"
-                                                )}>
+                                                )} aria-hidden="true">
                                                     <span className="bg-gradient-primary px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg shadow-lg">
                                                         {isDropTarget ? '↓ Soltar' : '+ Novo'}
                                                     </span>
@@ -193,9 +219,9 @@ export const DayColumn = memo(({
                                 onDragStart={(e) => handleDragStart(e, apt)}
                                 onDragEnd={handleDragEnd}
                                 className={cn(
-                                    "absolute transition-all duration-200 group/card z-10",
-                                    dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50 scale-95",
-                                    "hover:z-20" // Garantir que o hover fique por cima
+                                    "appointment-card absolute transition-all duration-200 group/card z-10",
+                                    dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50 scale-95 dragging-ghost",
+                                    "hover:z-20 card-hover" // Garantir que o hover fique por cima
                                 )}
                                 style={{
                                     top: `${topMobile}px`,
@@ -209,6 +235,9 @@ export const DayColumn = memo(({
                                     zIndex: stackCount > 1 ? 10 + stackIndex : undefined,
                                 } as React.CSSProperties}
                                 onPointerDownCapture={(e) => e.stopPropagation()}
+                                role="button"
+                                tabIndex={0}
+                                aria-label={`${apt.patientName} às ${apt.time} - ${apt.type || 'Agendamento'}`}
                             >
                                 <style dangerouslySetInnerHTML={{
                                     __html: `
@@ -228,51 +257,52 @@ export const DayColumn = memo(({
                                 >
                                     <div
                                         className={cn(
-                                            "w-full h-full p-2 rounded-lg text-white cursor-pointer shadow-md border-l-[4px] backdrop-blur-sm animate-fade-in overflow-hidden flex flex-col justify-between",
-                                            getStatusColor(apt.status, isOverCapacity(apt)),
-                                            "hover:shadow-lg ring-1 ring-white/10",
+                                            "w-full h-full p-2 rounded-xl text-white cursor-pointer shadow-md backdrop-blur-sm animate-fade-in overflow-hidden flex flex-col justify-between border-2 border-white/20",
+                                            "hover:shadow-lg hover:scale-[1.02] hover:border-white/40 hover:z-20",
                                             isDraggable && "cursor-grab active:cursor-grabbing",
-                                            isOverCapacity(apt) && "animate-pulse"
+                                            isOverCapacity(apt) && "animate-pulse ring-2 ring-amber-400/70"
                                         )}
+                                        style={{
+                                            background: getStatusColor(apt.status, isOverCapacity(apt))
+                                        }}
                                     >
-                                        <div className="flex flex-col gap-0.5 min-w-0">
-                                            {/* Therapist Name - Like the "Dr. Ana" in mockup */}
-                                            <div className={cn(
-                                                "text-[10px] font-bold uppercase tracking-wide opacity-90 truncate",
-                                                apt.therapistId?.includes('Ana') ? "text-yellow-200" :
-                                                    apt.therapistId?.includes('Paulo') ? "text-cyan-200" :
-                                                        apt.therapistId?.includes('Carla') ? "text-purple-200" : "text-white/90"
-                                            )}>
-                                                {apt.therapistId || 'Sem Terapeuta'}
-                                            </div>
+                                        {/* Status border indicator */}
+                                        <div
+                                            className={cn(
+                                                "status-border rounded-l-xl",
+                                                isOverCapacity(apt) ? "bg-amber-300" : "bg-white/40"
+                                            )}
+                                            aria-hidden="true"
+                                        />
 
+                                        <div className="flex flex-col gap-0.5 min-w-0 pl-1">
                                             {/* Patient Name */}
-                                            <div className="font-bold text-[11px] sm:text-xs leading-tight line-clamp-2 text-white shadow-sm">
-                                                {isOverCapacity(apt) && <AlertTriangle className="h-3 w-3 inline mr-1 text-amber-300" />}
+                                            <div className="font-bold text-[11px] sm:text-xs leading-tight line-clamp-2 text-white drop-shadow-sm">
+                                                {isOverCapacity(apt) && <AlertTriangle className="h-3 w-3 inline mr-1 text-amber-300" aria-label="Excedente" />}
                                                 {apt.patientName}
                                             </div>
 
                                             {/* Service Type */}
-                                            <div className="text-[9px] sm:text-[10px] opacity-80 truncate hidden sm:block">
-                                                {apt.type}
+                                            <div className="text-[9px] sm:text-[10px] opacity-90 truncate font-medium">
+                                                {apt.type || 'Consulta'}
                                             </div>
                                         </div>
 
                                         {/* Bottom Info: Time & Room */}
-                                        <div className="flex items-center justify-between text-[9px] sm:text-[10px] bg-black/10 -mx-2 -mb-2 px-2 py-1 mt-1 font-medium">
+                                        <div className="flex items-center justify-between text-[9px] sm:text-[10px] bg-black/20 -mx-2 -mb-2 px-2 py-1 mt-auto font-medium rounded-b-lg">
                                             <div className="flex items-center gap-1">
-                                                <Clock className="h-2.5 w-2.5 opacity-70" />
-                                                {apt.time}
+                                                <Clock className="h-2.5 w-2.5 opacity-90" aria-hidden="true" />
+                                                <span>{apt.time}</span>
                                             </div>
                                             {apt.room && (
-                                                <div className="flex items-center gap-1 opacity-80">
+                                                <div className="flex items-center gap-1 opacity-90">
                                                     <span>{apt.room}</span>
                                                 </div>
                                             )}
                                         </div>
 
                                         {isDraggable && (
-                                            <div className="absolute top-1 right-1 opacity-0 group-hover/card:opacity-50 transition-opacity">
+                                            <div className="absolute top-1 right-1 opacity-0 group-hover/card:opacity-50 transition-opacity" aria-hidden="true">
                                                 <GripVertical className="h-3 w-3 hidden sm:block" />
                                             </div>
                                         )}

@@ -86,17 +86,19 @@ const CalendarDayView = memo(({
     }
 
     return (
-        <div className="flex bg-gradient-to-br from-background to-muted/20 min-h-[800px]">
+        <div className="flex bg-gradient-to-br from-background to-muted/20 h-[calc(100vh-240px)] md:h-full overflow-hidden">
             {/* Time column com design melhorado */}
-            <div className="w-20 md:w-24 border-r bg-muted/30 backdrop-blur-sm flex-shrink-0">
-                <div className="h-14 md:h-16 border-b flex items-center justify-center sticky top-0 bg-muted/30 z-10 backdrop-blur-sm shadow-sm">
+            <div className="w-20 md:w-24 border-r bg-muted/30 backdrop-blur-sm flex-shrink-0" role="columnheader" aria-label="Horários">
+                <div className="h-14 md:h-16 border-b flex items-center justify-center sticky top-0 bg-muted/30 z-10 backdrop-blur-sm shadow-sm" aria-hidden="true">
                     <Clock className="h-3.5 md:h-4 w-3.5 md:w-4 text-muted-foreground" />
                 </div>
-                {timeSlots.map(time => (
-                    <div key={time} className="h-14 md:h-16 border-b border-border/50 p-2 md:p-3 text-sm font-medium text-muted-foreground flex items-center">
-                        {time}
-                    </div>
-                ))}
+                <div className="flex-1 overflow-hidden">
+                    {timeSlots.map(time => (
+                        <div key={time} className="h-14 md:h-16 border-b border-border/50 p-2 md:p-3 text-sm font-medium text-muted-foreground flex items-center" role="listitem">
+                            {time}
+                        </div>
+                    ))}
+                </div>
             </div>
 
             {/* Day column com hover states */}

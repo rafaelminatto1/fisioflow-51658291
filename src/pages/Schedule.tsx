@@ -7,10 +7,12 @@ import { AppointmentListView } from '@/components/schedule/AppointmentListView';
 import { AppointmentSearch } from '@/components/schedule/AppointmentSearch';
 import { WaitlistQuickAdd } from '@/components/schedule/WaitlistQuickAdd';
 import { WaitlistQuickViewModal } from '@/components/schedule/WaitlistQuickViewModal';
+import { ScheduleHero } from '@/components/schedule/ScheduleHero';
+import { KeyboardShortcuts } from '@/components/schedule/KeyboardShortcuts';
 import { useAppointments, useCreateAppointment, useRescheduleAppointment } from '@/hooks/useAppointments';
 import { useWaitlistMatch } from '@/hooks/useWaitlistMatch';
 import { logger } from '@/lib/errors/logger';
-import { AlertTriangle, Calendar, Users, Plus, Settings as SettingsIcon, RefreshCw } from 'lucide-react';
+import { AlertTriangle, Users, Plus, Settings as SettingsIcon, RefreshCw, Keyboard } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { EmptyState } from '@/components/ui';
@@ -19,7 +21,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
-import { format, isAfter, parseISO } from 'date-fns';
+import { format, isAfter, parseISO, startOfDay, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { formatDateToLocalISO, formatDateToBrazilian } from '@/utils/dateUtils';
@@ -48,6 +50,9 @@ const Schedule = () => {
   const [waitlistQuickAdd, setWaitlistQuickAdd] = useState<{ date: Date; time: string } | null>(null);
   const [showWaitlistModal, setShowWaitlistModal] = useState(false);
   const [scheduleFromWaitlist, setScheduleFromWaitlist] = useState<{ patientId: string; patientName: string } | null>(null);
+
+  // Keyboard shortcuts modal
+  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
 
   const { data: appointments = [], isLoading: loading, error, refetch, isFromCache, cacheTimestamp } = useAppointments();
   const createAppointmentMutation = useCreateAppointment();
@@ -86,6 +91,92 @@ const Schedule = () => {
       loading
     }, 'Schedule');
   }, [appointments.length, loading]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement ||
+        e.target instanceof HTMLSelectElement
+      ) {
+        return;
+      }
+
+      // Don't trigger if modal is open (except for Escape)
+      if ((isModalOpen || showKeyboardShortcuts || showWaitlistModal || quickEditAppointment) && e.key !== 'Escape') {
+        return;
+      }
+
+      switch (e.key.toLowerCase()) {
+        case 'n':
+          e.preventDefault();
+          handleCreateAppointment();
+          break;
+        case 'f':
+          e.preventDefault();
+          // Focus search input
+          const searchInput = document.querySelector('input[aria-label="Buscar agendamentos por nome do paciente"]') as HTMLInputElement;
+          searchInput?.focus();
+          break;
+        case 'd':
+          e.preventDefault();
+          setViewType('day');
+          break;
+        case 'w':
+          e.preventDefault();
+          setViewType('week');
+          break;
+        case 'm':
+          e.preventDefault();
+          setViewType('month');
+          break;
+        case 't':
+          e.preventDefault();
+          setCurrentDate(new Date());
+          break;
+        case 'arrowleft':
+          if (e.metaKey || e.ctrlKey) {
+            e.preventDefault();
+            const newDate = new Date(currentDate);
+            newDate.setDate(newDate.getDate() - 1);
+            setCurrentDate(newDate);
+          }
+          break;
+        case 'arrowright':
+          if (e.metaKey || e.ctrlKey) {
+            e.preventDefault();
+            const newDate = new Date(currentDate);
+            newDate.setDate(newDate.getDate() + 1);
+            setCurrentDate(newDate);
+          }
+          break;
+        case '/':
+        case '?':
+          e.preventDefault();
+          setShowKeyboardShortcuts(true);
+          break;
+        case 'escape':
+          if (showKeyboardShortcuts) {
+            setShowKeyboardShortcuts(false);
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [
+    currentDate,
+    isModalOpen,
+    showKeyboardShortcuts,
+    showWaitlistModal,
+    quickEditAppointment,
+    handleCreateAppointment,
+    setViewType,
+    setCurrentDate
+  ]);
 
   // Filter appointments by search term
   const filteredAppointments = useMemo(() => {
@@ -195,7 +286,7 @@ const Schedule = () => {
 
   return (
     <MainLayout fullWidth showBreadcrumbs={false}>
-      <div className="flex flex-col gap-4 animate-fade-in relative min-h-[calc(100vh-80px)]">
+      <div className="flex flex-col gap-3 xs:gap-4 animate-fade-in relative min-h-[calc(100vh-80px)]">
 
         {/* Offline/Cache Warning Banner for Appointments */}
         <OfflineIndicator
@@ -207,11 +298,12 @@ const Schedule = () => {
           itemCount={appointments.length}
           itemLabel="agendamentos"
           onRefresh={handleRefresh}
+          className="shrink-0"
         />
 
         {/* Offline Warning for Waitlist (only if different from main) */}
-        <div className={cn("transition-all duration-300 overflow-hidden",
-          isWaitlistFromCache && !isFromCache ? "max-h-20 opacity-100 mb-4" : "max-h-0 opacity-0"
+        <div className={cn("transition-all duration-300 overflow-hidden shrink-0",
+          isWaitlistFromCache && !isFromCache ? "max-h-20 opacity-100" : "max-h-0 opacity-0"
         )}>
           <OfflineIndicator
             isFromCache={true}
@@ -224,46 +316,78 @@ const Schedule = () => {
           />
         </div>
 
-        {/* Header - Mobile Optimized */}
-        <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2 xs:gap-3 shrink-0">
-          <div className="flex items-center gap-2 xs:gap-3 min-w-0 flex-1">
-            <div className="p-1.5 xs:p-2 bg-gradient-primary rounded-lg shadow-sm flex-shrink-0">
-              <Calendar className="h-4 w-4 xs:h-5 xs:w-5 text-primary-foreground" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h1 className="text-lg xs:text-xl sm:text-2xl font-bold tracking-tight truncate">Agenda</h1>
-              <p className="text-[10px] xs:text-xs text-muted-foreground">
-                {format(currentDate, "MMMM 'de' yyyy", { locale: ptBR })}
-              </p>
-            </div>
-          </div>
+        {/* Hero Section with Stats */}
+        <ScheduleHero
+          currentDate={currentDate}
+          appointments={filteredAppointments}
+          className="shrink-0"
+        />
 
-          <div className="flex items-center gap-1.5 xs:gap-2 overflow-x-auto scrollbar-hide flex-shrink-0">
-            <AppointmentSearch value={searchTerm} onChange={setSearchTerm} onClear={() => setSearchTerm('')} />
+        {/* Action Bar */}
+        <div className="flex items-center gap-2 xs:gap-3 overflow-x-auto pb-1 scrollbar-hide shrink-0">
+          <AppointmentSearch
+            value={searchTerm}
+            onChange={setSearchTerm}
+            onClear={() => setSearchTerm('')}
+            className="flex-1 min-w-[180px] xs:min-w-[220px] sm:min-w-[300px]"
+          />
+
+          <div className="flex items-center gap-1.5 xs:gap-2 flex-shrink-0">
+            <Button
+              onClick={() => setShowKeyboardShortcuts(true)}
+              variant="outline"
+              size="sm"
+              className="h-9 w-9 xs:h-10 xs:w-10 p-0 touch-target bg-white/80 backdrop-blur-sm border-white/20 hidden xs:flex"
+              aria-label="Atalhos de teclado"
+              title="Pressione / para abrir"
+            >
+              <Keyboard className="h-4 w-4" />
+            </Button>
 
             <Link to="/schedule/settings">
-              <Button variant="ghost" size="sm" className="h-11 w-11 xs:h-11 xs:w-11 p-0 touch-target flex-shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 w-9 xs:h-10 xs:w-10 p-0 touch-target bg-white/80 backdrop-blur-sm border-white/20"
+                aria-label="Configurações da agenda"
+              >
                 <SettingsIcon className="h-4 w-4" />
               </Button>
             </Link>
 
-            <Button onClick={() => setShowWaitlistModal(true)} variant="outline" size="sm" className="h-11 xs:h-11 gap-2 touch-target flex-shrink-0 min-w-[44px]">
-              {totalInWaitlist > 0 && <span className="bg-primary text-primary-foreground text-[10px] px-1.5 rounded-full">{totalInWaitlist}</span>}
+            <Button
+              onClick={() => setShowWaitlistModal(true)}
+              variant="outline"
+              size="sm"
+              className="h-9 xs:h-10 gap-1.5 xs:gap-2 touch-target flex-shrink-0 min-w-[44px] bg-white/80 backdrop-blur-sm border-white/20"
+              aria-label={`Lista de espera - ${totalInWaitlist} pacientes`}
+            >
+              {totalInWaitlist > 0 && (
+                <span className="bg-primary text-primary-foreground text-[10px] px-1.5 rounded-full font-medium">
+                  {totalInWaitlist}
+                </span>
+              )}
               <Users className="h-4 w-4" />
-              <span className="hidden xs:inline text-xs">Lista</span>
+              <span className="hidden sm:inline text-xs">Lista</span>
             </Button>
 
             <Button
               onClick={handleRefresh}
               variant="outline"
               size="sm"
-              className="h-11 xs:h-11 w-11 xs:w-auto gap-2 touch-target flex-shrink-0 min-w-[44px] text-muted-foreground hover:text-foreground"
+              className="h-9 w-9 xs:h-10 xs:w-10 p-0 touch-target flex-shrink-0 bg-white/80 backdrop-blur-sm border-white/20"
+              aria-label="Atualizar agendamentos"
               title="Forçar atualização"
             >
               <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
             </Button>
 
-            <Button onClick={handleCreateAppointment} size="sm" className="h-11 xs:h-11 shadow-sm bg-primary hover:bg-primary/90 text-white touch-target flex-shrink-0 min-w-[44px]">
+            <Button
+              onClick={handleCreateAppointment}
+              size="sm"
+              className="h-9 xs:h-10 shadow-lg bg-white text-primary hover:bg-white/90 touch-target flex-shrink-0 min-w-[44px] font-semibold"
+              aria-label="Novo agendamento"
+            >
               <Plus className="h-4 w-4" />
               <span className="hidden xs:inline text-xs ml-1">Novo</span>
             </Button>
@@ -343,6 +467,12 @@ const Schedule = () => {
             setModalDefaultDate(currentDate);
             setIsModalOpen(true);
           }}
+        />
+
+        {/* Keyboard Shortcuts Modal */}
+        <KeyboardShortcuts
+          open={showKeyboardShortcuts}
+          onOpenChange={setShowKeyboardShortcuts}
         />
       </div>
     </MainLayout>

@@ -270,18 +270,19 @@ export const CalendarView = memo(({
 
   return (
     <>
-      <Card className="flex flex-col border-0 shadow-xl min-h-[500px] sm:min-h-[600px]">
+      <Card className="flex flex-col border-0 shadow-xl min-h-[500px] sm:min-h-[600px]" role="region" aria-label="Calendário de agendamentos">
         <CardContent className="p-2 md:p-3 lg:p-4 flex flex-col h-full">
           {/* Header - Mobile Optimized */}
-          <div className="p-2 sm:p-3 border-b bg-gradient-to-r from-muted/30 to-muted/10">
+          <div className="p-2 sm:p-3 border-b bg-gradient-to-r from-muted/30 to-muted/10" role="toolbar" aria-label="Navegação do calendário">
             {/* Mobile Header Layout */}
             <div className="flex items-center justify-between sm:hidden gap-2">
-              <div className="flex items-center gap-1 bg-background rounded-lg p-1 shadow-sm">
+              <div className="flex items-center gap-1 bg-background rounded-lg p-1 shadow-sm" role="group" aria-label="Navegação por data">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => navigateCalendar('prev')}
-                  className="h-8 w-8 p-0"
+                  className="h-8 w-8 p-0 touch-target"
+                  aria-label={`Navegar para ${viewType === 'day' ? 'ontem' : viewType === 'week' ? 'semana anterior' : 'mês anterior'}`}
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -289,7 +290,8 @@ export const CalendarView = memo(({
                   variant="ghost"
                   size="sm"
                   onClick={goToToday}
-                  className="h-8 px-2 text-xs font-medium"
+                  className="h-8 px-2 text-xs font-medium touch-target"
+                  aria-label="Ir para hoje"
                 >
                   Hoje
                 </Button>
@@ -297,24 +299,27 @@ export const CalendarView = memo(({
                   variant="ghost"
                   size="sm"
                   onClick={() => navigateCalendar('next')}
-                  className="h-8 w-8 p-0"
+                  className="h-8 w-8 p-0 touch-target"
+                  aria-label={`Navegar para ${viewType === 'day' ? 'amanhã' : viewType === 'week' ? 'próxima semana' : 'próximo mês'}`}
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
 
-              <div className="text-xs font-semibold text-foreground/70 truncate max-w-[120px]">
+              <div className="text-xs font-semibold text-foreground/70 truncate max-w-[120px]" aria-live="polite" aria-atomic="true">
                 {getHeaderTitle()}
               </div>
 
-              <div className="flex items-center gap-1 bg-background rounded-lg p-1 shadow-sm">
+              <div className="flex items-center gap-1 bg-background rounded-lg p-1 shadow-sm" role="group" aria-label="Seleção de visualização">
                 {(['day', 'week'] as CalendarViewType[]).map(type => (
                   <Button
                     key={type}
                     variant={viewType === type ? "default" : "ghost"}
                     size="sm"
                     onClick={() => onViewTypeChange(type)}
-                    className="capitalize text-[10px] px-1.5 py-1 h-7 min-w-[28px]"
+                    className="capitalize text-[10px] px-1.5 py-1 h-7 min-w-[28px] touch-target"
+                    aria-pressed={viewType === type}
+                    aria-label={`Visualizar por ${type === 'day' ? 'dia' : 'semana'}`}
                   >
                     {type === 'day' ? 'Dia' : 'Sem'}
                   </Button>
@@ -325,12 +330,13 @@ export const CalendarView = memo(({
             {/* Desktop Header Layout */}
             <div className="hidden sm:flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 bg-background rounded-lg p-1 shadow-sm">
+                <div className="flex items-center gap-2 bg-background rounded-lg p-1 shadow-sm" role="group" aria-label="Navegação por data">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => navigateCalendar('prev')}
-                    className="h-9 w-9 p-0 hover-scale"
+                    className="h-9 w-9 p-0 hover-scale touch-target"
+                    aria-label={`Navegar para ${viewType === 'day' ? 'ontem' : viewType === 'week' ? 'semana anterior' : 'mês anterior'}`}
                   >
                     <ChevronLeft className="h-5 w-5" />
                   </Button>
@@ -338,7 +344,8 @@ export const CalendarView = memo(({
                     variant="ghost"
                     size="sm"
                     onClick={() => navigateCalendar('next')}
-                    className="h-9 w-9 p-0 hover-scale"
+                    className="h-9 w-9 p-0 hover-scale touch-target"
+                    aria-label={`Navegar para ${viewType === 'day' ? 'amanhã' : viewType === 'week' ? 'próxima semana' : 'próximo mês'}`}
                   >
                     <ChevronRight className="h-5 w-5" />
                   </Button>
@@ -348,24 +355,28 @@ export const CalendarView = memo(({
                   variant="outline"
                   size="sm"
                   onClick={goToToday}
-                  className="hover-scale font-medium"
+                  className="hover-scale font-medium touch-target"
+                  aria-label="Ir para hoje"
                 >
                   Hoje
                 </Button>
 
-                <h2 className="text-lg font-semibold">
+                <h2 className="text-lg font-semibold" aria-live="polite" aria-atomic="true">
                   {getHeaderTitle()}
                 </h2>
               </div>
 
-              <div className="flex items-center gap-1 bg-background rounded-lg p-1 shadow-sm">
+              <div className="flex items-center gap-1 bg-background rounded-lg p-1 shadow-sm" role="group" aria-label="Seleção de visualização" role="radiogroup">
                 {(['day', 'week', 'month'] as CalendarViewType[]).map(type => (
                   <Button
                     key={type}
                     variant={viewType === type ? "default" : "ghost"}
                     size="sm"
                     onClick={() => onViewTypeChange(type)}
-                    className="capitalize text-xs sm:text-sm px-2 sm:px-3"
+                    className="capitalize text-xs sm:text-sm px-2 sm:px-3 touch-target"
+                    role="radio"
+                    aria-checked={viewType === type}
+                    aria-label={`Visualizar por ${type === 'day' ? 'dia' : type === 'week' ? 'semana' : 'mês'}`}
                   >
                     {type === 'day' ? 'Dia' : type === 'week' ? 'Semana' : 'Mês'}
                   </Button>
@@ -374,7 +385,7 @@ export const CalendarView = memo(({
             </div>
           </div>
 
-          <div className="flex-1 relative">
+          <div className="flex-1 relative" id="calendar-grid" role="tabpanel" aria-label={`Visualização ${viewType === 'day' ? 'diária' : viewType === 'week' ? 'semanal' : 'mensal'} do calendário`}>
             {viewType === 'day' && (
               <CalendarDayView
                 currentDate={currentDate}

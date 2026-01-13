@@ -1,3 +1,4 @@
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -20,6 +21,11 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       mode === 'development' && componentTagger(),
+      isProduction && sentryVitePlugin({
+        org: "fisioflow", // Replace with actual org slug if known, or env var
+        project: "fisioflow-web", // Replace with actual project slug
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+      }),
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['icons/*.svg', 'icons/*.png', 'favicon.ico'],

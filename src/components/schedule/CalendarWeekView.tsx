@@ -86,20 +86,21 @@ const CalendarWeekView = memo(({
     };
 
     return (
-        <div className="flex bg-background h-full overflow-hidden flex-col">
+        <div className="flex bg-background h-full overflow-hidden flex-col" role="region" aria-label="Visualização semanal do calendário">
             {/* Mobile Day Selector - Only visible on mobile */}
-            <div className="md:hidden flex items-center justify-between p-2 bg-gradient-to-r from-primary/10 to-primary/5 border-b border-border/50">
+            <div className="md:hidden flex items-center justify-between p-2 bg-gradient-to-r from-primary/10 to-primary/5 border-b border-border/50" role="toolbar" aria-label="Navegação por dia">
                 <Button
                     variant="ghost"
                     size="sm"
                     onClick={handlePrevDay}
                     disabled={mobileDayIndex === 0}
                     className="h-9 w-9 p-0 touch-target"
+                    aria-label="Dia anterior"
                 >
                     <ChevronLeft className="h-4 w-4" />
                 </Button>
 
-                <div className="flex flex-col items-center">
+                <div className="flex flex-col items-center" aria-live="polite">
                     <span className={`text-lg font-bold ${isToday(currentMobileDay) ? 'text-primary' : ''}`}>
                         {format(currentMobileDay, 'd')}
                     </span>
@@ -114,22 +115,23 @@ const CalendarWeekView = memo(({
                     onClick={handleNextDay}
                     disabled={mobileDayIndex === weekDays.length - 1}
                     className="h-9 w-9 p-0 touch-target"
+                    aria-label="Próximo dia"
                 >
                     <ChevronRight className="h-4 w-4" />
                 </Button>
             </div>
 
             {/* Week Grid - Desktop */}
-            <div className="hidden md:flex flex-1 overflow-hidden">
+            <div className="hidden md:flex flex-1 overflow-hidden" role="row" aria-label="Dias da semana">
                 {/* Time column - Sticky e otimizado */}
-                <div className="w-16 lg:w-20 border-r border-border/50 bg-gradient-to-b from-card via-muted/30 to-muted/50 flex-shrink-0 flex flex-col">
-                    <div className="h-14 lg:h-16 border-b border-border/50 flex items-center justify-center bg-gradient-primary backdrop-blur-sm z-20 shadow-md shrink-0">
+                <div className="w-16 lg:w-20 border-r border-border/50 bg-gradient-to-b from-card via-muted/30 to-muted/50 flex-shrink-0 flex flex-col" role="columnheader" aria-label="Horários">
+                    <div className="h-14 lg:h-16 border-b border-border/50 flex items-center justify-center bg-gradient-primary backdrop-blur-sm z-20 shadow-md shrink-0" aria-hidden="true">
                         <Clock className="h-3.5 lg:h-4 w-3.5 lg:w-4 text-primary-foreground" />
                     </div>
                     <div className="flex-1 overflow-hidden">
-                        <div className="flex flex-col">
+                        <div className="flex flex-col" role="list">
                             {timeSlots.map(time => (
-                                <div key={time} className="h-14 lg:h-16 border-b border-border/30 p-1 lg:p-2 text-xs text-foreground/70 font-bold flex items-center justify-center hover:bg-accent/50 transition-colors shrink-0">
+                                <div key={time} className="h-14 lg:h-16 border-b border-border/30 p-1 lg:p-2 text-xs text-foreground/70 font-bold flex items-center justify-center hover:bg-accent/50 transition-colors shrink-100" role="listitem">
                                     {time}
                                 </div>
                             ))}
@@ -138,8 +140,8 @@ const CalendarWeekView = memo(({
                 </div>
 
                 {/* Week days - Grid */}
-                <div className="flex-1 overflow-auto">
-                    <div className="grid grid-cols-7 min-w-full bg-background/30 [&>div]:min-w-[100px] md:[&>div]:min-w-[140px] lg:[&>div]:min-w-[180px] xl:[&>div]:min-w-[220px]">
+                <div className="flex-1 overflow-auto calendar-scroll" role="rowgroup">
+                    <div className="grid grid-cols-7 min-w-full bg-background/30 [&>div]:min-w-[100px] md:[&>div]:min-w-[140px] lg:[&>div]:min-w-[180px] xl:[&>div]:min-w-[220px]" role="row">
                         {weekDays.map(day => {
                             const dayAppointments = getAppointmentsForDate(day);
                             const isClosed = isDayClosedForDate(day);
@@ -175,16 +177,16 @@ const CalendarWeekView = memo(({
             </div>
 
             {/* Mobile Single Day View */}
-            <div className="md:hidden flex-1 flex overflow-hidden">
+            <div className="md:hidden flex-1 flex overflow-hidden" role="region" aria-label={`Dia ${format(currentMobileDay, 'dd/MM')}`}>
                 {/* Time column - Mobile */}
-                <div className="w-14 border-r border-border/50 bg-gradient-to-b from-card via-muted/30 to-muted/50 flex-shrink-0 flex flex-col">
-                    <div className="h-14 border-b border-border/50 flex items-center justify-center bg-gradient-primary backdrop-blur-sm z-20 shadow-md shrink-0">
+                <div className="w-14 border-r border-border/50 bg-gradient-to-b from-card via-muted/30 to-muted/50 flex-shrink-0 flex flex-col" role="columnheader" aria-label="Horários">
+                    <div className="h-14 border-b border-border/50 flex items-center justify-center bg-gradient-primary backdrop-blur-sm z-20 shadow-md shrink-0" aria-hidden="true">
                         <Clock className="h-3 w-3 text-primary-foreground" />
                     </div>
                     <div className="flex-1 overflow-hidden">
-                        <div className="flex flex-col">
+                        <div className="flex flex-col" role="list">
                             {timeSlots.map(time => (
-                                <div key={time} className="h-12 border-b border-border/30 p-1 text-[10px] text-foreground/70 font-bold flex items-center justify-center hover:bg-accent/50 transition-colors shrink-0">
+                                <div key={time} className="h-12 border-b border-border/30 p-1 text-[10px] text-foreground/70 font-bold flex items-center justify-center hover:bg-accent/50 transition-colors shrink-0" role="listitem">
                                     {time}
                                 </div>
                             ))}
@@ -193,7 +195,7 @@ const CalendarWeekView = memo(({
                 </div>
 
                 {/* Single Day Column - Mobile */}
-                <div className="flex-1 overflow-auto">
+                <div className="flex-1 overflow-auto calendar-scroll">
                     <div className="min-w-full bg-background/30">
                         <DayColumn
                             key={currentMobileDay.toISOString()}

@@ -76,6 +76,18 @@ import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { SmartTextarea } from '@/components/ui/SmartTextarea';
 import { PatientHelpers } from '@/types';
 import { executeWithRetry } from '@/lib/utils/async';
+// Novos componentes
+import PainScaleInput from '@/components/evolution/PainScaleInput';
+import { SessionImageUpload } from '@/components/evolution/SessionImageUpload';
+import { EvolutionTimeline } from '@/components/evolution/EvolutionTimeline';
+import {
+  EvolutionKeyboardShortcuts,
+  useEvolutionShortcuts
+} from '@/components/evolution/EvolutionKeyboardShortcuts';
+import {
+  useAutoSaveSoapRecord,
+  type PainScaleData
+} from '@/hooks/useSoapRecords';
 
 // Lazy loading para componentes pesados
 const LazyMeasurementCharts = lazy(() =>
@@ -105,6 +117,7 @@ const PatientEvolution = () => {
   const [showApplyTemplate, setShowApplyTemplate] = useState(false);
   const [showInsights, setShowInsights] = useState(true);
   const [showComparison, setShowComparison] = useState(false);
+  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
   const [wordCount, setWordCount] = useState({ subjective: 0, objective: 0, assessment: 0, plan: 0 });
 
   // Estados do formulário SOAP
@@ -112,6 +125,12 @@ const PatientEvolution = () => {
   const [objective, setObjective] = useState('');
   const [assessment, setAssessment] = useState('');
   const [plan, setPlan] = useState('');
+
+  // Estado para escala de dor (EVA)
+  const [painScale, setPainScale] = useState<PainScaleData>({ level: 0 });
+
+  // Estado para controle da aba ativa (para navegação por teclado)
+  const [activeTab, setActiveTab] = useState('soap');
 
   // Exercises state
   const [sessionExercises, setSessionExercises] = useState<SessionExercise[]>([]);
@@ -191,24 +210,30 @@ const PatientEvolution = () => {
     });
   }, [subjective, objective, assessment, plan]);
 
-  // Atalhos de teclado
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      // Ctrl/Cmd + S para salvar
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        handleSave();
+  // Hook de atalhos de teclado - usa o novo hook personalizado
+  useEvolutionShortcuts(
+    handleSave,
+    handleCompleteSession,
+    (section) => {
+      // Navegação entre seções
+      if (section === 'subjective' || section === 'objective' || section === 'assessment' || section === 'plan') {
+        setActiveTab('soap');
+        setCurrentWizardStep(section);
+        // Scroll para a seção
+        setTimeout(() => {
+          const element = document.getElementById(section);
+          element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element?.focus();
+        }, 100);
+      } else if (section === 'measurements') {
+        setActiveTab('measurements');
+      } else if (section === 'history') {
+        setActiveTab('history');
       }
-      // Ctrl/Cmd + Enter para concluir
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-        e.preventDefault();
-        handleCompleteSession();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [subjective, objective, assessment, plan]);
+    },
+    () => setShowKeyboardHelp(true),
+    () => setShowApplyTemplate(true)
+  );
 
   // Mutation para salvar evolução
   const createSoapRecord = useCreateSoapRecord();
@@ -281,6 +306,14 @@ const PatientEvolution = () => {
     setObjective(evolution.objective || '');
     setAssessment(evolution.assessment || '');
     setPlan(evolution.plan || '');
+    // Também copiar escala de dor se existir
+    if (evolution.pain_level !== undefined) {
+      setPainScale({
+        level: evolution.pain_level,
+        location: evolution.pain_location,
+        character: evolution.pain_character
+      });
+    }
     toast({
       title: 'Evolução copiada',
       description: 'Os dados da evolução anterior foram copiados.'
@@ -322,7 +355,10 @@ const PatientEvolution = () => {
       subjective,
       objective,
       assessment,
-      plan
+      plan,
+      pain_level: painScale.level,
+      pain_location: painScale.location,
+      pain_character: painScale.character
     });
 
     setCurrentSoapRecordId(record.id);
@@ -535,6 +571,15 @@ const PatientEvolution = () => {
                   <Save className={`h-4 w-4 ${autoSaveEnabled ? 'text-green-500' : 'text-muted-foreground'}`} />
                 </Button>
                 <Button
+                  onClick={() => setShowKeyboardHelp(true)}
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 w-8 px-2 hover:bg-primary/10 touch-target flex-shrink-0"
+                  title="Atalhos de teclado (?)"
+                >
+                  <Keyboard className="h-4 w-4" />
+                </Button>
+                <Button
                   onClick={handleSave}
                   size="sm"
                   variant="outline"
@@ -664,6 +709,18 @@ const PatientEvolution = () => {
                           placeholder="Queixa principal do paciente, relato de dor, desconforto, nível de estresse, sono..."
                           className="min-h-[100px] sm:min-h-[120px] text-sm sm:text-base"
                         />
+
+                        {/* Escala EVA de Dor - integrada no Subjetivo */}
+                        <div className="mt-4 pt-4 border-t border-border/50">
+                          <PainScaleInput
+                            value={painScale}
+                            onChange={setPainScale}
+                            history={previousEvolutions
+                              .filter(e => e.pain_level !== null && e.pain_level !== undefined)
+                              .map(e => ({ date: e.created_at, level: e.pain_level || 0 }))
+                            }
+                          />
+                        </div>
                       </div>
 
                       {/* Objective Section */}
@@ -810,6 +867,24 @@ const PatientEvolution = () => {
           </TabsContent>
 
           <TabsContent value="history" className="mt-6">
+            {/* Nova linha do tempo de evolução */}
+            {patientId && (
+              <div className="mb-6">
+                <EvolutionTimeline patientId={patientId} showFilters />
+              </div>
+            )}
+
+            {/* Upload de imagens da sessão */}
+            {patientId && (
+              <div className="mb-6">
+                <SessionImageUpload
+                  patientId={patientId}
+                  soapRecordId={currentSoapRecordId}
+                  maxFiles={5}
+                />
+              </div>
+            )}
+
             {/* Coluna Lateral antiga, agora em aba separada ou abaixo */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Sugestões de Relatório */}
@@ -947,6 +1022,12 @@ const PatientEvolution = () => {
           patientName={PatientHelpers.getName(patient)}
         />
       )}
+
+      {/* Modal de atalhos de teclado */}
+      <EvolutionKeyboardShortcuts
+        open={showKeyboardHelp}
+        onOpenChange={setShowKeyboardHelp}
+      />
     </MainLayout>
   );
 };
