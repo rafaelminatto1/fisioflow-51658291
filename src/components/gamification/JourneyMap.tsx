@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Map, Flag, Star, Trophy, CheckCircle2 } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 interface JourneyMapProps {
     totalSessions: number;
@@ -18,7 +17,7 @@ interface Milestone {
     position: 'left' | 'right' | 'center';
 }
 
-export function JourneyMap({ totalSessions, currentLevel }: JourneyMapProps) {
+export function JourneyMap({ totalSessions, _currentLevel }: JourneyMapProps) {
     // Define milestones (could be fetched from DB later)
     const milestones: Milestone[] = useMemo(() => [
         { id: 1, sessionsRequired: 0, title: "O Início", description: "Sua jornada começa aqui", icon: Map, position: 'center' },

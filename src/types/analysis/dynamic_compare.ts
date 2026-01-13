@@ -24,7 +24,7 @@ export interface TrialRef {
         notes?: string;
     };
     metrics_schema_ref?: string;
-    metrics_payload?: any; // Snapshot of raw metrics
+    metrics_payload?: unknown; // Snapshot of raw metrics
 }
 
 export interface KeyMomentPair {

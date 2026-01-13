@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Lead } from '@/hooks/useLeads';
-import { TrendingUp, TrendingDown, Users, Target, CheckCircle2, XCircle } from 'lucide-react';
+import { TrendingUp, Users, Target, CheckCircle2, XCircle } from 'lucide-react';
 
 interface LeadFunnelProps {
   leads: Lead[];

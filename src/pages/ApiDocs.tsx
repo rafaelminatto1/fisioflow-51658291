@@ -5,9 +5,8 @@ import { Loader2 } from 'lucide-react';
 import { generateOpenAPISpec } from '@/lib/openapi/generator';
 
 export default function ApiDocs() {
-  const [openApiSpec, setOpenApiSpec] = useState<any>(null);
+  const [openApiSpec, setOpenApiSpec] = useState<unknown>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Tentar carregar o arquivo OpenAPI YAML
@@ -20,11 +19,11 @@ export default function ApiDocs() {
           // Tentar usar js-yaml se disponível
           try {
             const yaml = await import('js-yaml');
-            const spec = yaml.load(yamlText) as any;
+            const spec = yaml.load(yamlText);
             setOpenApiSpec(spec);
             setLoading(false);
             return;
-          } catch (yamlErr) {
+          } catch {
             // Se js-yaml não estiver disponível, usar spec gerada
             console.warn('js-yaml não disponível, usando spec gerada');
           }

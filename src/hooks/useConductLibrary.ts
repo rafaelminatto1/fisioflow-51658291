@@ -70,10 +70,10 @@ export const useCreateConduct = () => {
         description: 'A conduta foi adicionada à biblioteca.'
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao salvar conduta',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive'
       });
     }
@@ -100,10 +100,10 @@ export const useDeleteConduct = () => {
         description: 'A conduta foi removida da biblioteca.'
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao remover conduta',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive'
       });
     }

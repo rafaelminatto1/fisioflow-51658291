@@ -78,8 +78,8 @@ export class SyncManager {
           await this.processSyncItem(item);
           await dbStore.updateSyncQueueItem(item.id, { status: 'completed', completed_at: new Date().toISOString() });
           result.synced++;
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
+        } catch (err) {
+          const errorMessage = err instanceof Error ? err.message : String(err);
           result.errors.push(errorMessage);
           result.failed++;
 

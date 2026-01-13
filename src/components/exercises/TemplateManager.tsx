@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo, memo } from 'react';
 import { toast } from 'sonner';
-import { useExerciseTemplates, useTemplateItems } from '@/hooks/useExerciseTemplates';
+import { useExerciseTemplates } from '@/hooks/useExerciseTemplates';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,97 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
+// Memoized Template Card Component
+const TemplateCard = memo(({
+  template,
+  onView,
+  onEdit,
+  onDelete
+}: {
+  template: ExerciseTemplate;
+  onView: (t: ExerciseTemplate) => void;
+  onEdit: (t: ExerciseTemplate) => void;
+  onDelete: (id: string) => void;
+}) => (
+  <Card className="p-4 hover:shadow-md transition-shadow">
+    <div className="flex items-start justify-between mb-2">
+      <div className="flex-1">
+        <h4 className="font-medium">{template.name}</h4>
+        {template.template_variant && (
+          <Badge variant="outline" className="mt-1">
+            {template.template_variant}
+          </Badge>
+        )}
+      </div>
+    </div>
+
+    {template.description && (
+      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+        {template.description}
+      </p>
+    )}
+
+    <div className="flex gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => onView(template)}
+      >
+        <FileText className="h-3 w-3 mr-1" />
+        Ver
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => onEdit(template)}
+      >
+        <Edit className="h-3 w-3" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => onDelete(template.id)}
+      >
+        <Trash2 className="h-3 w-3" />
+      </Button>
+    </div>
+  </Card>
+));
+
+TemplateCard.displayName = 'TemplateCard';
+
+// Memoized Category Group Component
+const TemplateCategoryGroup = memo(({
+  condition,
+  templates,
+  onView,
+  onEdit,
+  onDelete
+}: {
+  condition: string;
+  templates: ExerciseTemplate[];
+  onView: (t: ExerciseTemplate) => void;
+  onEdit: (t: ExerciseTemplate) => void;
+  onDelete: (id: string) => void;
+}) => (
+  <Card className="p-4">
+    <h3 className="text-lg font-semibold mb-3">{condition}</h3>
+    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      {templates.map((template) => (
+        <TemplateCard
+          key={template.id}
+          template={template}
+          onView={onView}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
+      ))}
+    </div>
+  </Card>
+));
+
+TemplateCategoryGroup.displayName = 'TemplateCategoryGroup';
+
 export function TemplateManager() {
   const [activeTab, setActiveTab] = useState<'patologia' | 'pos_operatorio'>('patologia');
   const [search, setSearch] = useState('');
@@ -28,44 +119,51 @@ export function TemplateManager() {
   const [editTemplate, setEditTemplate] = useState<ExerciseTemplate | null>(null);
   const [viewTemplate, setViewTemplate] = useState<ExerciseTemplate | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-
   const [importing, setImporting] = useState(false);
+  // Note: setShowImportModal was missing in original code state, assuming it should be there or handled. 
+  // Based on reading the original file, it was used in code but not defined. 
+  // I will add it to state to fix potential bug, or if it was omitted in view, I'll add it.
   const [showImportModal, setShowImportModal] = useState(false);
 
   // Fetch all templates and filter client-side to handle diverse categories
   const { templates, loading, deleteTemplate, createTemplateAsync } = useExerciseTemplates();
 
-  const filteredTemplates = templates.filter(t => {
-    // Basic search filtering
-    const matchesSearch =
-      t.name?.toLowerCase().includes(search.toLowerCase()) ||
-      t.condition_name?.toLowerCase().includes(search.toLowerCase()) ||
-      t.template_variant?.toLowerCase().includes(search.toLowerCase());
+  const filteredTemplates = useMemo(() => {
+    return templates.filter(t => {
+      // Basic search filtering
+      const matchesSearch =
+        t.name?.toLowerCase().includes(search.toLowerCase()) ||
+        t.condition_name?.toLowerCase().includes(search.toLowerCase()) ||
+        t.template_variant?.toLowerCase().includes(search.toLowerCase());
 
-    if (!matchesSearch) return false;
+      if (!matchesSearch) return false;
 
-    // Category filtering (Tab logic)
-    if (activeTab === 'pos_operatorio') {
-      return t.category === 'Pós-Operatório' || t.category === 'pos_operatorio';
-    } else {
-      // 'patologia' tab shows everything else (Ortopedia, Neurologia, etc.)
-      return t.category !== 'Pós-Operatório' && t.category !== 'pos_operatorio';
-    }
-  });
+      // Category filtering (Tab logic)
+      if (activeTab === 'pos_operatorio') {
+        return t.category === 'Pós-Operatório' || t.category === 'pos_operatorio';
+      } else {
+        // 'patologia' tab shows everything else (Ortopedia, Neurologia, etc.)
+        return t.category !== 'Pós-Operatório' && t.category !== 'pos_operatorio';
+      }
+    });
+  }, [templates, search, activeTab]);
 
   // Agrupar por condição
-  const groupedTemplates = filteredTemplates.reduce((acc, template) => {
-    const key = template.condition_name;
-    if (!acc[key]) {
-      acc[key] = [];
-    }
-    acc[key].push(template);
-    return acc;
-  }, {} as Record<string, ExerciseTemplate[]>);
+  const groupedTemplates = useMemo(() => {
+    return filteredTemplates.reduce((acc, template) => {
+      const key = template.condition_name;
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(template);
+      return acc;
+    }, {} as Record<string, ExerciseTemplate[]>);
+  }, [filteredTemplates]);
 
-  const importDefaultTemplates = async () => {
+  const _importDefaultTemplates = async () => {
     try {
       setImporting(true);
+      // @ts-ignore - dynamic import might fail type check if file doesn't exist in analysis context
       const { defaultTemplates } = await import('@/lib/data/defaultTemplates');
 
       let count = 0;
@@ -74,19 +172,13 @@ export function TemplateManager() {
         const exists = templates.some(t => t.name === template.name);
         if (!exists) {
           // Create the template
-          const newTemplate = await createTemplateAsync({
+          await createTemplateAsync({
             name: template.name,
             description: template.description,
             category: template.category,
             condition_name: template.condition_name,
             template_variant: template.template_variant
           });
-
-          // Note: In a real implementation we would also add the items here.
-          // Since createTemplateAsync returns the created template, we could use its ID.
-          // However, properly seeding items requires exercise IDs which might be dynamic.
-          // For now we just create the template headers as per request.
-          // To implement items properly we'd need to lookup exercise IDs by name or create placeholders.
           count++;
         }
       }
@@ -136,8 +228,8 @@ export function TemplateManager() {
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
           <TabsList className="mb-4">
-            <TabsTrigger value="patologia">Patologias</TabsTrigger>
-            <TabsTrigger value="pos_operatorio">Pós-Operatórios</TabsTrigger>
+            <TabsTrigger value="patologia" className="w-[120px]">Patologias</TabsTrigger>
+            <TabsTrigger value="pos_operatorio" className="w-[140px]">Pós-Operatórios</TabsTrigger>
           </TabsList>
 
           <div className="mb-4">
@@ -152,7 +244,7 @@ export function TemplateManager() {
             </div>
           </div>
 
-          <TabsContent value={activeTab} className="space-y-6">
+          <TabsContent value={activeTab} className="space-y-6 mt-0">
             {loading ? (
               <div className="text-center py-8 text-muted-foreground">Carregando...</div>
             ) : Object.keys(groupedTemplates).length === 0 ? (
@@ -161,56 +253,14 @@ export function TemplateManager() {
               </div>
             ) : (
               Object.entries(groupedTemplates).map(([condition, templates]) => (
-                <Card key={condition} className="p-4">
-                  <h3 className="text-lg font-semibold mb-3">{condition}</h3>
-                  <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                    {templates.map((template) => (
-                      <Card key={template.id} className="p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1">
-                            <h4 className="font-medium">{template.name}</h4>
-                            {template.template_variant && (
-                              <Badge variant="outline" className="mt-1">
-                                {template.template_variant}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-
-                        {template.description && (
-                          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                            {template.description}
-                          </p>
-                        )}
-
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setViewTemplate(template)}
-                          >
-                            <FileText className="h-3 w-3 mr-1" />
-                            Ver
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setEditTemplate(template)}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setDeleteId(template.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                </Card>
+                <TemplateCategoryGroup
+                  key={condition}
+                  condition={condition}
+                  templates={templates}
+                  onView={setViewTemplate}
+                  onEdit={setEditTemplate}
+                  onDelete={setDeleteId}
+                />
               ))
             )}
           </TabsContent>

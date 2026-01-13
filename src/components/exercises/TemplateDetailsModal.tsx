@@ -32,7 +32,7 @@ export function TemplateDetailsModal({
   onOpenChange,
   template,
 }: TemplateDetailsModalProps) {
-  const { items, loading, addItem, removeItem, updateItem } = useTemplateItems(template.id);
+  const { items, loading, addItem, removeItem, updateItem: _updateItem } = useTemplateItems(template.id);
   const { exercises } = useExercises();
   const [showAddExercise, setShowAddExercise] = useState(false);
   const [searchExercise, setSearchExercise] = useState('');

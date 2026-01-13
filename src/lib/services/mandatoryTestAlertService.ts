@@ -23,8 +23,8 @@ export class MandatoryTestAlertService {
   ): Promise<AlertCheckResult> {
     try {
       // 1. Buscar patologias ativas do paciente
-      const pathologies = await PathologyService.getActivePathologies(patientId);
-      
+      await PathologyService.getActivePathologies(patientId);
+
       // 2. Buscar testes obrigatórios baseados nas patologias
       const mandatoryTests = await TestEvolutionService.getMandatoryTests(patientId, sessionNumber);
       

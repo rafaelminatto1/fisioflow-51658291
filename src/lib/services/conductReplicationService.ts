@@ -56,7 +56,7 @@ export class ConductReplicationService {
     return template;
   }
 
-  static async replicateConduct(conductId: string): Promise<any> {
+  static async replicateConduct(conductId: string): Promise<{ plan: string | null; assessment: string | null; techniques: unknown[]; exercises: unknown[] }> {
     const { data, error } = await supabase
       .from('soap_records')
       .select('*')

@@ -8,7 +8,7 @@ export interface EvolutionTemplate {
   tipo: string;
   descricao: string | null;
   conteudo: string;
-  campos_padrao: any[];
+  campos_padrao: unknown[];
   ativo: boolean;
   organization_id: string | null;
   created_by: string | null;

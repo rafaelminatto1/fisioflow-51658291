@@ -8,9 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { 
-  Plus, Mail, MessageSquare, Smartphone, Send, Pause, 
-  Play, Trash2, Eye, Users, BarChart3 
+import {
+  Plus, Mail, MessageSquare, Smartphone, Send, Pause,
+  Play, Trash2, Users, BarChart3
 } from 'lucide-react';
 import { useCRMCampanhas, useCreateCampanha, useUpdateCampanha, useDeleteCampanha, CRMCampanha } from '@/hooks/useCRM';
 import { useLeads } from '@/hooks/useLeads';
@@ -54,7 +54,6 @@ interface FormDataCampanha {
 
 export function CRMCampanhas() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedCampanha, setSelectedCampanha] = useState<CRMCampanha | null>(null);
   const [formData, setFormData] = useState<FormDataCampanha>({
     nome: '',
     descricao: '',
@@ -64,7 +63,7 @@ export function CRMCampanhas() {
     filtro_estagios: [],
   });
 
-  const { data: campanhas = [], isLoading } = useCRMCampanhas();
+  const { data: campanhas = [] } = useCRMCampanhas();
   const { data: leads = [] } = useLeads();
   const createMutation = useCreateCampanha();
   const updateMutation = useUpdateCampanha();
