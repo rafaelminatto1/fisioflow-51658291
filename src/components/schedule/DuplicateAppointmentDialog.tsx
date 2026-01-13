@@ -2,14 +2,11 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Copy, CalendarIcon, Clock, Check } from 'lucide-react';
-import { format, addDays, addWeeks } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
+import { Copy, CalendarIcon, Check } from 'lucide-react';
+import { format, addWeeks } from 'date-fns';
 import { AppointmentBase } from '@/types/appointment';
 
 interface DuplicateAppointmentDialogProps {

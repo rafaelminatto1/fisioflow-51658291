@@ -1,8 +1,8 @@
-import React, { useRef } from 'react';
-import { Document, Page, Text, View, Image, Font, StyleSheet, PDFDownloadLink, pdf } from '@react-pdf/renderer';
+import React from 'react';
+import { Document, Page, Text, View, Image, Font, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Download, Printer } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { valorPorExtenso } from '@/hooks/useRecibos';
 

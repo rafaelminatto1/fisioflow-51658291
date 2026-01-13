@@ -13,7 +13,11 @@ interface AIPredictionsPanelProps {
 
 export function AIPredictionsPanel({ patientId }: AIPredictionsPanelProps) {
   const [loading, setLoading] = useState(false);
-  const [predictions, setPredictions] = useState<any>(null);
+  const [predictions, setPredictions] = useState<{
+    adherenceRisk: string;
+    riskScore: number;
+    factors: string;
+  } | null>(null);
 
   const runPredictions = async () => {
     try {
@@ -41,10 +45,10 @@ export function AIPredictionsPanel({ patientId }: AIPredictionsPanelProps) {
         title: '🔮 Predições geradas',
         description: 'Análise preditiva concluída',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Erro ao gerar predições',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
     } finally {

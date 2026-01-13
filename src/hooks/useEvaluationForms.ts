@@ -140,17 +140,13 @@ export function useAddFormField() {
 
   return useMutation({
     mutationFn: async ({ formId, field }: { formId: string; field: EvaluationFormFieldFormData }) => {
-      // We need to cast the field type to string for Supabase insertion if types mismatch strictness
-      // But typically it's fine.
       const { data, error } = await supabase
         .from('evaluation_form_fields')
         .insert({
           ...field,
           form_id: formId,
-          // Ensure options is treated correctly (array vs jsonb)
-          // Supabase typescript helper might expect Json, our type has string[]
           opcoes: field.opcoes ? JSON.stringify(field.opcoes) : null
-        } as any) // Type casting to bypass potential strictness issues with generated types for now
+        })
         .select()
         .single();
 
@@ -171,8 +167,8 @@ export function useUpdateFormField() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, formId, ...field }: Partial<EvaluationFormField> & { id: string; formId: string }) => {
-      const updateData: any = { ...field };
+    mutationFn: async ({ id, _formId, ...field }: Partial<EvaluationFormField> & { id: string; formId: string }) => {
+      const updateData: Record<string, unknown> = { ...field };
       if (updateData.opcoes) {
         updateData.opcoes = JSON.stringify(updateData.opcoes);
       }
@@ -201,7 +197,7 @@ export function useDeleteFormField() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, formId }: { id: string; formId: string }) => {
+    mutationFn: async ({ id, _formId }: { id: string; formId: string }) => {
       const { error } = await supabase
         .from('evaluation_form_fields')
         .delete()

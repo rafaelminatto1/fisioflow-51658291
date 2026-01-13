@@ -20,6 +20,9 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { getProtocolCategory, PROTOCOL_CATEGORIES, PROTOCOL_DETAILS } from '@/data/protocols';
 
+import { generateProtocolPdf } from '@/utils/generateProtocolPdf';
+import { useOrganizations } from '@/hooks/useOrganizations';
+
 interface ProtocolDetailViewProps {
     protocol: ExerciseProtocol;
     onBack: () => void;
@@ -31,6 +34,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
     const details = PROTOCOL_DETAILS[protocol.condition_name];
     const [expandedPhases, setExpandedPhases] = useState<string[]>(['Fase 1']);
     const [showApplyModal, setShowApplyModal] = useState(false);
+    const { currentOrganization } = useOrganizations();
 
     const getMilestones = () => {
         if (!protocol.milestones) return [];
@@ -56,7 +60,13 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
     const categoryInfo = PROTOCOL_CATEGORIES.find(c => c.id === category) || PROTOCOL_CATEGORIES[0];
 
     const handleExportPDF = () => {
-        toast.success('PDF do protocolo gerado com sucesso!');
+        try {
+            generateProtocolPdf(protocol, currentOrganization);
+            toast.success('PDF do protocolo gerado com sucesso!');
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            toast.error('Erro ao gerar PDF do protocolo');
+        }
     };
 
     const handleShare = () => {

@@ -211,9 +211,9 @@ export async function getUserFeatures(
  */
 export function withFeatureFlag(
   feature: keyof FeatureFlags,
-  handler: (req: Request, ctx?: any) => Promise<Response>
+  handler: (req: Request, ctx?: unknown) => Promise<Response>
 ) {
-  return async (req: Request, ctx?: any): Promise<Response> => {
+  return async (req: Request, ctx?: unknown): Promise<Response> => {
     const enabled = await isFeatureEnabled(feature);
 
     if (!enabled) {

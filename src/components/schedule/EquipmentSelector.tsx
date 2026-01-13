@@ -1,5 +1,4 @@
 import React from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -124,11 +123,8 @@ export const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({
   onSelectionChange,
   disabled = false
 }) => {
-  const isSelected = (equipmentId: string) => 
+  const isSelected = (equipmentId: string) =>
     selectedEquipments.some(e => e.equipmentId === equipmentId);
-
-  const getSelectedEquipment = (equipmentId: string) => 
-    selectedEquipments.find(e => e.equipmentId === equipmentId);
 
   const toggleEquipment = (equipment: Equipment) => {
     if (disabled) return;

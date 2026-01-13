@@ -6,7 +6,6 @@
  */
 
 import { kv } from '@vercel/kv';
-import { supabase } from '../supabase/client';
 
 export interface CacheOptions {
   /**
@@ -183,13 +182,13 @@ export class PatientCache {
   private static readonly defaultTTL = 3600; // 1 hour
 
   static async get(patientId: string) {
-    return getCache<any>(`${this.prefix}:${patientId}`, {
+    return getCache<unknown>(`${this.prefix}:${patientId}`, {
       prefix: 'fisioflow',
       ttl: this.defaultTTL,
     });
   }
 
-  static async set(patientId: string, data: any) {
+  static async set(patientId: string, data: unknown) {
     return setCache(`${this.prefix}:${patientId}`, data, {
       prefix: 'fisioflow',
       ttl: this.defaultTTL,
@@ -212,13 +211,13 @@ export class AppointmentCache {
   private static readonly defaultTTL = 1800; // 30 minutes
 
   static async get(appointmentId: string) {
-    return getCache<any>(`${this.prefix}:${appointmentId}`, {
+    return getCache<unknown>(`${this.prefix}:${appointmentId}`, {
       prefix: 'fisioflow',
       ttl: this.defaultTTL,
     });
   }
 
-  static async set(appointmentId: string, data: any) {
+  static async set(appointmentId: string, data: unknown) {
     return setCache(`${this.prefix}:${appointmentId}`, data, {
       prefix: 'fisioflow',
       ttl: this.defaultTTL,
@@ -226,13 +225,13 @@ export class AppointmentCache {
   }
 
   static async getByPatient(patientId: string) {
-    return getCache<any[]>(`${this.prefix}:patient:${patientId}`, {
+    return getCache<unknown[]>(`${this.prefix}:patient:${patientId}`, {
       prefix: 'fisioflow',
       ttl: this.defaultTTL,
     });
   }
 
-  static async setByPatient(patientId: string, data: any[]) {
+  static async setByPatient(patientId: string, data: unknown[]) {
     return setCache(`${this.prefix}:patient:${patientId}`, data, {
       prefix: 'fisioflow',
       ttl: this.defaultTTL,
@@ -261,13 +260,13 @@ export class ExerciseCache {
   private static readonly defaultTTL = 7200; // 2 hours
 
   static async get(exerciseId: string) {
-    return getCache<any>(`${this.prefix}:${exerciseId}`, {
+    return getCache<unknown>(`${this.prefix}:${exerciseId}`, {
       prefix: 'fisioflow',
       ttl: this.defaultTTL,
     });
   }
 
-  static async set(exerciseId: string, data: any) {
+  static async set(exerciseId: string, data: unknown) {
     return setCache(`${this.prefix}:${exerciseId}`, data, {
       prefix: 'fisioflow',
       ttl: this.defaultTTL,
@@ -275,13 +274,13 @@ export class ExerciseCache {
   }
 
   static async getAll() {
-    return getCache<any[]>(`${this.prefix}:all`, {
+    return getCache<unknown[]>(`${this.prefix}:all`, {
       prefix: 'fisioflow',
       ttl: this.defaultTTL,
     });
   }
 
-  static async setAll(data: any[]) {
+  static async setAll(data: unknown[]) {
     return setCache(`${this.prefix}:all`, data, {
       prefix: 'fisioflow',
       ttl: this.defaultTTL,
@@ -305,13 +304,13 @@ export class ProtocolCache {
   private static readonly defaultTTL = 7200; // 2 hours
 
   static async get(protocolId: string) {
-    return getCache<any>(`${this.prefix}:${protocolId}`, {
+    return getCache<unknown>(`${this.prefix}:${protocolId}`, {
       prefix: 'fisioflow',
       ttl: this.defaultTTL,
     });
   }
 
-  static async set(protocolId: string, data: any) {
+  static async set(protocolId: string, data: unknown) {
     return setCache(`${this.prefix}:${protocolId}`, data, {
       prefix: 'fisioflow',
       ttl: this.defaultTTL,
@@ -319,13 +318,13 @@ export class ProtocolCache {
   }
 
   static async getAll() {
-    return getCache<any[]>(`${this.prefix}:all`, {
+    return getCache<unknown[]>(`${this.prefix}:all`, {
       prefix: 'fisioflow',
       ttl: this.defaultTTL,
     });
   }
 
-  static async setAll(data: any[]) {
+  static async setAll(data: unknown[]) {
     return setCache(`${this.prefix}:all`, data, {
       prefix: 'fisioflow',
       ttl: this.defaultTTL,
@@ -415,13 +414,13 @@ export class SessionCache {
   private static readonly defaultTTL = 86400; // 24 hours
 
   static async get(sessionId: string) {
-    return getCache<any>(`${this.prefix}:${sessionId}`, {
+    return getCache<unknown>(`${this.prefix}:${sessionId}`, {
       prefix: 'fisioflow',
       ttl: this.defaultTTL,
     });
   }
 
-  static async set(sessionId: string, data: any) {
+  static async set(sessionId: string, data: unknown) {
     return setCache(`${this.prefix}:${sessionId}`, data, {
       prefix: 'fisioflow',
       ttl: this.defaultTTL,

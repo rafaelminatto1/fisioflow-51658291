@@ -18,7 +18,7 @@ export interface DashboardWidget {
   position: number;
   size: 'small' | 'medium' | 'large';
   visible: boolean;
-  config?: Record<string, any>;
+  config?: Record<string, unknown>;
 }
 
 const defaultWidgets: DashboardWidget[] = [

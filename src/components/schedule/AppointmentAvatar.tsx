@@ -1,8 +1,6 @@
-```javascript
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { getOptimizedImageUrl } from '@/lib/media/image';
 
 interface AppointmentAvatarProps {
   patientName: string;
@@ -26,7 +24,7 @@ const getColorFromName = (name: string): string => {
     'bg-gradient-to-br from-teal-400 to-teal-600',
     'bg-gradient-to-br from-orange-400 to-orange-600',
   ];
-  
+
   const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   return colors[hash % colors.length];
 };

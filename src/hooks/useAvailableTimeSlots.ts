@@ -12,12 +12,6 @@ interface TimeSlotInfo {
   isOutsideBusinessHours: boolean;
 }
 
-// Default business hours fallback
-const DEFAULT_BUSINESS_HOURS = {
-  weekdays: { start: '07:00', end: '21:00' },
-  saturday: { start: '07:00', end: '13:00' },
-};
-
 export function useAvailableTimeSlots(date: Date | null) {
   const { user } = useAuth();
 
@@ -72,8 +66,7 @@ export function useAvailableTimeSlots(date: Date | null) {
     if (!date) return [];
 
     const dayOfWeek = date.getDay();
-    const dateStr = date.toISOString().split('T')[0];
-    
+
     // Get business hours for this day
     const dayConfig = businessHours?.find(h => h.day_of_week === dayOfWeek);
     
@@ -241,7 +234,7 @@ export function useAvailableTimeSlots(date: Date | null) {
 export function generateTimeSlotsForDate(
   date: Date,
   businessHours?: BusinessHour[],
-  blockedTimes?: BlockedTime[]
+  _blockedTimes?: BlockedTime[]
 ): string[] {
   const dayOfWeek = date.getDay();
   const dayConfig = businessHours?.find(h => h.day_of_week === dayOfWeek);

@@ -1,26 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  MessageCircle, 
-  Send, 
-  Mic, 
-  MicOff, 
-  Paperclip, 
-  X, 
-  Minimize2, 
+import {
+  MessageCircle,
+  Send,
+  Mic,
+  MicOff,
+  Paperclip,
+  X,
+  Minimize2,
   Maximize2,
   Phone,
   Star,
   Download,
   RefreshCw,
   AlertTriangle,
-  Clock,
   User,
   Bot,
-  Heart,
   Activity,
-  Calendar,
   FileText,
-  Settings,
   HelpCircle
 } from 'lucide-react';
 import { useMedicalChatbot, formatChatTime, getSatisfactionEmoji, getMessageTypeIcon } from '../../hooks/useMedicalChatbot';
@@ -272,14 +268,14 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   onStopRecording, 
   onVoiceMessage 
 }) => {
-  const [transcript, setTranscript] = useState('');
+  // const [transcript, setTranscript] = useState('');
   
   // Simular reconhecimento de voz (em produção, usar Web Speech API)
   useEffect(() => {
     if (isRecording) {
       const timer = setTimeout(() => {
         const mockTranscript = 'Mensagem de voz simulada';
-        setTranscript(mockTranscript);
+        // setTranscript(mockTranscript);
         onVoiceMessage(mockTranscript);
         onStopRecording();
       }, 3000);
@@ -317,14 +313,14 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
     messages,
     isTyping,
     quickReplies,
-    context,
+    // context,
     isConnected,
     humanHandoffRequested,
     startChatSession,
     processUserMessage,
     requestHumanHandoff,
-    endChatSession,
-    clearChat,
+    // endChatSession,
+    // clearChat,
     rateSatisfaction,
     exportChat,
     getFrequentQuestions
@@ -334,7 +330,7 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
   const [isMinimized, setIsMinimized] = useState(false);
   const [showSatisfactionRating, setShowSatisfactionRating] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [showFrequentQuestions, setShowFrequentQuestions] = useState(false);
+  // const [showFrequentQuestions, setShowFrequentQuestions] = useState(false);
   const [attachments, setAttachments] = useState<File[]>([]);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);

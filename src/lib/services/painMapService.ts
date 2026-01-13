@@ -10,52 +10,52 @@ import type {
 export class PainMapService {
   static async getPainMapsByPatientId(patientId: string): Promise<PainMapRecord[]> {
     const { data, error } = await supabase
-      .from('pain_maps' as any)
+      .from('pain_maps')
       .select('*')
       .eq('patient_id', patientId)
       .order('recorded_at', { ascending: false });
 
     if (error) throw error;
-    return (data as any) || [];
+    return (data as unknown) as PainMapRecord[] || [];
   }
 
   static async getPainMapById(id: string): Promise<PainMapRecord> {
     const { data, error } = await supabase
-      .from('pain_maps' as any)
+      .from('pain_maps')
       .select('*')
       .eq('id', id)
       .single();
 
     if (error) throw error;
-    return data as any;
+    return data as unknown as PainMapRecord;
   }
 
   static async createPainMap(painMap: PainMapFormData): Promise<PainMapRecord> {
     const { data, error } = await supabase
-      .from('pain_maps' as any)
-      .insert(painMap as any)
+      .from('pain_maps')
+      .insert(painMap)
       .select()
       .single();
 
     if (error) throw error;
-    return data as any;
+    return data as unknown as PainMapRecord;
   }
 
   static async updatePainMap(id: string, painMap: Partial<PainMapFormData>): Promise<PainMapRecord> {
     const { data, error } = await supabase
-      .from('pain_maps' as any)
-      .update(painMap as any)
+      .from('pain_maps')
+      .update(painMap)
       .eq('id', id)
       .select()
       .single();
 
     if (error) throw error;
-    return data as any;
+    return data as unknown as PainMapRecord;
   }
 
   static async deletePainMap(id: string): Promise<void> {
     const { error } = await supabase
-      .from('pain_maps' as any)
+      .from('pain_maps')
       .delete()
       .eq('id', id);
 
@@ -64,7 +64,7 @@ export class PainMapService {
 
   static async getPainEvolution(patientId: string, startDate?: string, endDate?: string): Promise<PainEvolutionData[]> {
     let query = supabase
-      .from('pain_maps' as any)
+      .from('pain_maps')
       .select('*')
       .eq('patient_id', patientId)
       .order('recorded_at', { ascending: true });
@@ -75,7 +75,7 @@ export class PainMapService {
     const { data, error } = await query;
     if (error) throw error;
 
-    return ((data as any) || []).map((record: any) => ({
+    return ((data as unknown) || []).map((record: unknown) => ({
       date: record.recorded_at,
       globalPainLevel: record.global_pain_level,
       regionCount: record.pain_points.length,
@@ -135,7 +135,7 @@ export class PainMapService {
     };
   }
 
-  private static getMostAffectedRegion(painPoints: any[]): BodyRegion | undefined {
+  private static getMostAffectedRegion(painPoints: { region: BodyRegion; intensity: number }[]): BodyRegion | undefined {
     if (painPoints.length === 0) return undefined;
     
     const sorted = [...painPoints].sort((a, b) => b.intensity - a.intensity);

@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { VerifiedAppointmentSchema } from '@/schemas/appointment';
-import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { AppointmentBase, AppointmentFormData, AppointmentStatus, AppointmentType } from '@/types/appointment';
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
@@ -10,14 +9,13 @@ import { useEffect } from 'react';
 import { useRealtimeSubscription } from './useRealtimeSubscription';
 import { AppointmentNotificationService } from '@/lib/services/AppointmentNotificationService';
 import { requireUserOrganizationId, getUserOrganizationId } from '@/utils/userHelpers';
-import { dateSchema, timeSchema } from '@/lib/validations/agenda';
 
 // Função auxiliar para criar timeout em promises (suporta PromiseLike do Supabase)
 function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> {
   return Promise.race([
     Promise.resolve(promise),
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`Timeout após ${timeoutMs}ms`)), timeoutMs)
+    new Promise<T>((_reject) =>
+      setTimeout(() => _reject(new Error(`Timeout após ${timeoutMs}ms`)), timeoutMs)
     ),
   ]);
 }

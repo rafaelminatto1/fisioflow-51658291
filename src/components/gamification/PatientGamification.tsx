@@ -1,7 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import {
   Trophy,
@@ -11,14 +10,12 @@ import {
   Award,
   TrendingUp,
   Zap,
-  Heart,
   Plus,
   Loader2,
   Lock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useGamification } from '@/hooks/useGamification';
-import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -47,12 +44,11 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
     totalSessions
   } = useGamification(patientId);
 
-  const { toast } = useToast();
   const [isGivingXp, setIsGivingXp] = useState(false);
 
   // Helper to dynamically get icon component
-  const getIcon = (iconName: string, defaultIcon: any) => {
-    // @ts-ignore
+  const getIcon = (iconName: string, defaultIcon: React.ComponentType) => {
+    // @ts-expect-error - dynamic icon access from Icons
     const IconComponent = Icons[iconName] || defaultIcon;
     return IconComponent;
   };
@@ -65,7 +61,7 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
         reason: 'manual_award',
         description: 'Recompensa manual do terapeuta'
       });
-    } catch (error) {
+    } catch {
       // Toast handled in hook
     } finally {
       setIsGivingXp(false);
