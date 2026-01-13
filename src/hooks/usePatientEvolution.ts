@@ -1,6 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAppointmentData } from '@/hooks/useAppointmentData';
+import { useCreateSoapRecord, useSoapRecords } from '@/hooks/useSoapRecords';
+import { useAppointmentActions } from '@/hooks/useAppointmentActions';
+import { useGamification } from '@/hooks/useGamification';
 
 // Types
 export interface PatientSurgery {
@@ -72,7 +78,7 @@ export const usePatientSurgeries = (patientId: string) => {
         .select('*')
         .eq('patient_id', patientId)
         .order('surgery_date', { ascending: false });
-      
+
       if (error) throw error;
       return data as PatientSurgery[];
     },
@@ -90,7 +96,7 @@ export const usePatientGoals = (patientId: string) => {
         .select('*')
         .eq('patient_id', patientId)
         .order('created_at', { ascending: false });
-      
+
       if (error) throw error;
       return data as PatientGoal[];
     },
@@ -108,7 +114,7 @@ export const usePatientPathologies = (patientId: string) => {
         .select('*')
         .eq('patient_id', patientId)
         .order('created_at', { ascending: false });
-      
+
       if (error) throw error;
       return data as PatientPathology[];
     },
@@ -309,3 +315,177 @@ export const useUpdateGoalStatus = () => {
     }
   });
 };
+
+// Consolidated hook for patient evolution page
+// This hook combines all the logic needed for the PatientEvolution page
+export interface PatientEvolutionData {
+  appointment: any;
+  patient: any;
+  patientId: string | null;
+  surgeries: PatientSurgery[];
+  goals: PatientGoal[];
+  pathologies: PatientPathology[];
+  measurements: EvolutionMeasurement[];
+  previousEvolutions: any[];
+  evolutionStats: {
+    totalEvolutions: number;
+    completedGoals: number;
+    totalGoals: number;
+    activePathologiesCount: number;
+    totalMeasurements: number;
+    avgGoalProgress: number;
+    completionRate: number;
+  };
+}
+
+export function usePatientEvolutionData() {
+  const { appointmentId } = useParams<{ appointmentId: string }>();
+  const navigate = useNavigate();
+
+  // Data fetching
+  const {
+    appointment,
+    patient,
+    patientId,
+    isLoading: dataLoading,
+    appointmentError,
+    patientError
+  } = useAppointmentData(appointmentId);
+
+  const { data: surgeries = [] } = usePatientSurgeries(patientId || '');
+  const { data: goals = [] } = usePatientGoals(patientId || '');
+  const { data: pathologies = [] } = usePatientPathologies(patientId || '');
+  const { data: measurements = [] } = useEvolutionMeasurements(patientId || '');
+  const { data: previousEvolutions = [] } = useSoapRecords(patientId || '', 10);
+
+  const { completeAppointment, isCompleting } = useAppointmentActions();
+  const { awardXp } = useGamification(patientId || '');
+  const createSoapRecord = useCreateSoapRecord();
+
+  // Calculate evolution stats
+  const evolutionStats = useMemo(() => {
+    const totalEvolutions = previousEvolutions.length;
+    const completedGoals = goals.filter(g => g.status === 'concluido').length;
+    const totalGoals = goals.length;
+    const activePathologiesCount = pathologies.filter(p => p.status === 'em_tratamento').length;
+    const totalMeasurements = measurements.length;
+
+    const avgGoalProgress = goals.length > 0
+      ? goals
+        .filter(g => g.status === 'em_andamento')
+        .reduce((sum) => sum + 50, 0) / Math.max(1, goals.filter(g => g.status === 'em_andamento').length)
+      : 0;
+
+    return {
+      totalEvolutions,
+      completedGoals,
+      totalGoals,
+      activePathologiesCount,
+      totalMeasurements,
+      avgGoalProgress: Math.round(avgGoalProgress),
+      completionRate: totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0
+    };
+  }, [previousEvolutions, goals, pathologies, measurements]);
+
+  // Handlers
+  const handleSave = useCallback(async (soapData: any) => {
+    if (!patientId) return;
+    if (!soapData.subjective && !soapData.objective && !soapData.assessment && !soapData.plan) {
+      return { error: 'Campos vazios' };
+    }
+
+    try {
+      const record = await createSoapRecord.mutateAsync({
+        patient_id: patientId,
+        appointment_id: appointmentId,
+        ...soapData
+      });
+
+      // Save to treatment_sessions
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && appointmentId) {
+        const { data: existingSession } = await supabase
+          .from('treatment_sessions')
+          .select('id')
+          .eq('appointment_id', appointmentId)
+          .maybeSingle();
+
+        const sessionData = {
+          patient_id: patientId,
+          therapist_id: user.id,
+          appointment_id: appointmentId,
+          session_date: new Date().toISOString(),
+          session_type: 'treatment',
+          pain_level_before: 0,
+          pain_level_after: 0,
+          functional_score_before: 0,
+          functional_score_after: 0,
+          exercises_performed: [],
+          observations: soapData.assessment || '',
+          status: 'completed',
+          created_by: user.id
+        };
+
+        if (existingSession) {
+          await supabase.from('treatment_sessions').update(sessionData).eq('id', existingSession.id);
+        } else {
+          await supabase.from('treatment_sessions').insert(sessionData);
+        }
+      }
+
+      return { data: record, error: null };
+    } catch (error) {
+      return { data: null, error };
+    }
+  }, [patientId, appointmentId, createSoapRecord]);
+
+  const handleCompleteSession = useCallback(async (soapData: any) => {
+    if (!soapData.subjective && !soapData.objective && !soapData.assessment && !soapData.plan) {
+      return { error: 'Campos vazios' };
+    }
+
+    const saveResult = await handleSave(soapData);
+    if (saveResult.error) return saveResult;
+
+    if (appointmentId) {
+      completeAppointment(appointmentId, {
+        onSuccess: async () => {
+          if (patientId) {
+            try {
+              await awardXp.mutateAsync({
+                amount: 100,
+                reason: 'session_completed',
+                description: 'Sessão de fisioterapia concluída'
+              });
+            } catch (e) {
+              console.error("Failed to award XP", e);
+            }
+          }
+          setTimeout(() => navigate('/schedule'), 1500);
+        }
+      });
+    }
+
+    return saveResult;
+  }, [appointmentId, patientId, handleSave, completeAppointment, awardXp, navigate]);
+
+  return {
+    data: {
+      appointment,
+      patient,
+      patientId,
+      surgeries,
+      goals,
+      pathologies,
+      measurements,
+      previousEvolutions,
+      evolutionStats
+    } as PatientEvolutionData,
+    loading: dataLoading,
+    error: appointmentError || patientError,
+    isSaving: createSoapRecord.isPending,
+    isCompleting,
+    handleSave,
+    handleCompleteSession
+  };
+}

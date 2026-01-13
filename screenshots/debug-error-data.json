@@ -1,0 +1,2372 @@
+{
+  "error": "page.waitForURL: Timeout 15000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation to \"**/dashboard\" until \"load\"\n  navigated to \"http://localhost:8082/\"\n  navigated to \"http://localhost:8082/\"\n============================================================",
+  "stack": "page.waitForURL: Timeout 15000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation to \"**/dashboard\" until \"load\"\n  navigated to \"http://localhost:8082/\"\n  navigated to \"http://localhost:8082/\"\n============================================================\n    at /home/rafael/cursor/fisiolovable/fisioflow-51658291/test-debug-attendance.mjs:85:16",
+  "logs": [
+    {
+      "type": "debug",
+      "message": "[vite] connecting...",
+      "timestamp": 1768346311746
+    },
+    {
+      "type": "debug",
+      "message": "[vite] connected.",
+      "timestamp": 1768346311750
+    },
+    {
+      "type": "info",
+      "message": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
+      "timestamp": 1768346311814
+    },
+    {
+      "type": "log",
+      "message": "%c[WARN] 2026-01-13T23:18:31.856Z [Sentry] Sentry DSN não configurado. Monitoramento de erros desabilitado. color: #ffaa00; font-weight: bold; {}",
+      "timestamp": 1768346311857
+    },
+    {
+      "type": "error",
+      "message": "Failed to initialize Statsig: TypeError: Statsig.initializeStatsigSingleton is not a function\n    at Object.initStatsig [as init] (http://localhost:8082/src/lib/featureFlags/statsig.ts:33:23)\n    at http://localhost:8082/src/lib/featureFlags/hooks.tsx:57:24\n    at commitHookEffectListMount (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:16456:34)\n    at commitPassiveMountOnFiber (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17697:19)\n    at commitPassiveMountEffects_complete (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17670:17)\n    at commitPassiveMountEffects_begin (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17660:15)\n    at commitPassiveMountEffects (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17650:11)\n    at flushPassiveEffectsImpl (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:19031:11)\n    at flushPassiveEffects (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:18988:22)\n    at performSyncWorkOnRoot (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:18409:11)",
+      "timestamp": 1768346311900
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:31.900Z [App] Aplicação iniciada color: #0088ff; font-weight: bold; {timestamp: 2026-01-13T23:18:31.900Z}",
+      "timestamp": 1768346311901
+    },
+    {
+      "type": "error",
+      "message": "Failed to initialize Statsig: TypeError: Statsig.initializeStatsigSingleton is not a function\n    at Object.initStatsig [as init] (http://localhost:8082/src/lib/featureFlags/statsig.ts:33:23)\n    at http://localhost:8082/src/lib/featureFlags/hooks.tsx:57:24\n    at commitHookEffectListMount (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:16456:34)\n    at invokePassiveEffectMountInDEV (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17865:19)\n    at invokeEffectsInDev (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:19242:19)\n    at commitDoubleInvokeEffectsInDEV (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:19227:15)\n    at flushPassiveEffectsImpl (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:19044:13)\n    at flushPassiveEffects (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:18988:22)\n    at performSyncWorkOnRoot (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:18409:11)\n    at flushSyncCallbacks (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:8660:30)",
+      "timestamp": 1768346311904
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:31.903Z [App] Aplicação iniciada color: #0088ff; font-weight: bold; {timestamp: 2026-01-13T23:18:31.903Z}",
+      "timestamp": 1768346311904
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:31.906Z [App] Sistema de notificações inicializado color: #0088ff; font-weight: bold; {}",
+      "timestamp": 1768346311907
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:31.907Z [App] Sistema de notificações inicializado color: #0088ff; font-weight: bold; {}",
+      "timestamp": 1768346311908
+    },
+    {
+      "type": "log",
+      "message": "%c[WARN] 2026-01-13T23:18:31.908Z  Long Task Detected color: #ffaa00; font-weight: bold; {duration: 66, startTime: 463.8999999994412}",
+      "timestamp": 1768346311911
+    },
+    {
+      "type": "log",
+      "message": "%c[PERFORMANCE] 2026-01-13T23:18:31.910Z  Page Load color: #00aa00; font-weight: bold; {loadTime: 0.05500000063329935, domContentLoaded: 0.0400000000372529, totalTime: 531.7200000006706}",
+      "timestamp": 1768346311912
+    },
+    {
+      "type": "table",
+      "message": "{FCP: undefined, LCP: undefined, FID: undefined, INP: undefined, CLS: undefined, TTFB: 4.919999999925494}",
+      "timestamp": 1768346311931
+    },
+    {
+      "type": "table",
+      "message": "{FCP: undefined, LCP: undefined, FID: undefined, INP: undefined, CLS: undefined, TTFB: 4.919999999925494}",
+      "timestamp": 1768346311931
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:31.932Z [App] Cache persistente restaurado com sucesso color: #0088ff; font-weight: bold; {}",
+      "timestamp": 1768346311933
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:31.976Z [VersionManager] Nova versão detectada: 2026-01-13T23:16:57.736Z (anterior: null) color: #0088ff; font-weight: bold; {}",
+      "timestamp": 1768346311977
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:31.978Z [VersionManager] Nova versão detectada: 2026-01-13T23:16:57.736Z (anterior: null) color: #0088ff; font-weight: bold; {}",
+      "timestamp": 1768346311979
+    },
+    {
+      "type": "table",
+      "message": "{FCP: 632.2050000000745, LCP: undefined, FID: undefined, INP: undefined, CLS: undefined, TTFB: 4.919999999925494}",
+      "timestamp": 1768346312023
+    },
+    {
+      "type": "table",
+      "message": "{FCP: 632.2050000000745, LCP: undefined, FID: undefined, INP: undefined, CLS: undefined, TTFB: 4.919999999925494}",
+      "timestamp": 1768346312023
+    },
+    {
+      "type": "table",
+      "message": "{FCP: 632.2050000000745, LCP: undefined, FID: undefined, INP: undefined, CLS: undefined, TTFB: undefined}",
+      "timestamp": 1768346312023
+    },
+    {
+      "type": "table",
+      "message": "{FCP: 632.2050000000745, LCP: undefined, FID: undefined, INP: undefined, CLS: undefined, TTFB: undefined}",
+      "timestamp": 1768346312024
+    },
+    {
+      "type": "table",
+      "message": "{FCP: 632.2050000000745, LCP: undefined, FID: undefined, INP: undefined, CLS: undefined, TTFB: 4.919999999925494}",
+      "timestamp": 1768346312024
+    },
+    {
+      "type": "table",
+      "message": "{FCP: 632.2050000000745, LCP: undefined, FID: undefined, INP: undefined, CLS: undefined, TTFB: 4.919999999925494}",
+      "timestamp": 1768346312024
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:32.026Z [AppointmentsCacheService] AppointmentsCacheService inicializado color: #888888; {}",
+      "timestamp": 1768346312026
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:32.026Z [AppointmentsCacheService] AppointmentsCacheService inicializado color: #888888; {}",
+      "timestamp": 1768346312027
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:32.026Z [AppointmentsCacheService] Cache limpo color: #0088ff; font-weight: bold; {}",
+      "timestamp": 1768346312027
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:32.027Z [AppointmentsCacheService] Cache limpo color: #0088ff; font-weight: bold; {}",
+      "timestamp": 1768346312027
+    },
+    {
+      "type": "verbose",
+      "message": "[DOM] Input elements should have autocomplete attributes (suggested: \"current-password\"): (More info: https://goo.gl/9p2vKq) %o",
+      "timestamp": 1768346312074
+    },
+    {
+      "type": "log",
+      "message": "%c[Vercel Speed Insights]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit",
+      "timestamp": 1768346312124
+    },
+    {
+      "type": "log",
+      "message": "%c[Vercel Web Analytics]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit",
+      "timestamp": 1768346312127
+    },
+    {
+      "type": "log",
+      "message": "%c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit event web-vitals",
+      "timestamp": 1768346312128
+    },
+    {
+      "type": "log",
+      "message": "%c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit event web-vitals",
+      "timestamp": 1768346312129
+    },
+    {
+      "type": "log",
+      "message": "%c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit event web-vitals",
+      "timestamp": 1768346312129
+    },
+    {
+      "type": "log",
+      "message": "%c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit event web-vitals",
+      "timestamp": 1768346312129
+    },
+    {
+      "type": "log",
+      "message": "%c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit event web-vitals",
+      "timestamp": 1768346312129
+    },
+    {
+      "type": "log",
+      "message": "%c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit event web-vitals",
+      "timestamp": 1768346312131
+    },
+    {
+      "type": "log",
+      "message": "%c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit event web-vitals",
+      "timestamp": 1768346312131
+    },
+    {
+      "type": "log",
+      "message": "%c[Vercel Web Analytics]%c Running queued event color: rgb(120, 120, 120) color: inherit event web-vitals",
+      "timestamp": 1768346312131
+    },
+    {
+      "type": "log",
+      "message": "%c[Vercel Web Analytics]%c [pageview] http://localhost:8082/auth/login color: rgb(120, 120, 120) color: inherit {o: http://localhost:8082/auth/login, sv: 0.1.3, sdkn: @vercel/analytics/react, sdkv: 1.6.1, ts: 1768346312128}",
+      "timestamp": 1768346312131
+    },
+    {
+      "type": "pageerror",
+      "message": "Cannot read properties of undefined (reading 'length')",
+      "stack": "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'length')\n    at p (https://va.vercel-scripts.com/v1/script.debug.js:0:1817)\n    at window.va (https://va.vercel-scripts.com/v1/script.debug.js:0:2463)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2678)\n    at y (https://va.vercel-scripts.com/v1/script.debug.js:0:2601)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2725)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2931)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2934)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:201)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2938)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2942)",
+      "timestamp": 1768346312132
+    },
+    {
+      "type": "pageerror",
+      "message": "Cannot read properties of undefined (reading 'length')",
+      "stack": "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'length')\n    at p (https://va.vercel-scripts.com/v1/script.debug.js:0:1817)\n    at window.va (https://va.vercel-scripts.com/v1/script.debug.js:0:2463)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2678)\n    at y (https://va.vercel-scripts.com/v1/script.debug.js:0:2601)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2725)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2931)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2934)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:201)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2938)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2942)",
+      "timestamp": 1768346312133
+    },
+    {
+      "type": "pageerror",
+      "message": "Cannot read properties of undefined (reading 'length')",
+      "stack": "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'length')\n    at p (https://va.vercel-scripts.com/v1/script.debug.js:0:1817)\n    at window.va (https://va.vercel-scripts.com/v1/script.debug.js:0:2463)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2678)\n    at y (https://va.vercel-scripts.com/v1/script.debug.js:0:2601)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2725)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2931)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2934)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:201)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2938)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2942)",
+      "timestamp": 1768346312133
+    },
+    {
+      "type": "pageerror",
+      "message": "Cannot read properties of undefined (reading 'length')",
+      "stack": "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'length')\n    at p (https://va.vercel-scripts.com/v1/script.debug.js:0:1817)\n    at window.va (https://va.vercel-scripts.com/v1/script.debug.js:0:2463)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2678)\n    at y (https://va.vercel-scripts.com/v1/script.debug.js:0:2601)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2725)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2931)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2934)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:201)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2938)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2942)",
+      "timestamp": 1768346312133
+    },
+    {
+      "type": "pageerror",
+      "message": "Cannot read properties of undefined (reading 'length')",
+      "stack": "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'length')\n    at p (https://va.vercel-scripts.com/v1/script.debug.js:0:1817)\n    at window.va (https://va.vercel-scripts.com/v1/script.debug.js:0:2463)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2678)\n    at y (https://va.vercel-scripts.com/v1/script.debug.js:0:2601)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2725)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2931)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2934)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:201)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2938)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2942)",
+      "timestamp": 1768346312133
+    },
+    {
+      "type": "pageerror",
+      "message": "Cannot read properties of undefined (reading 'length')",
+      "stack": "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'length')\n    at p (https://va.vercel-scripts.com/v1/script.debug.js:0:1817)\n    at window.va (https://va.vercel-scripts.com/v1/script.debug.js:0:2463)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2678)\n    at y (https://va.vercel-scripts.com/v1/script.debug.js:0:2601)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2725)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2931)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2934)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:201)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2938)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2942)",
+      "timestamp": 1768346312133
+    },
+    {
+      "type": "pageerror",
+      "message": "Cannot read properties of undefined (reading 'length')",
+      "stack": "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'length')\n    at p (https://va.vercel-scripts.com/v1/script.debug.js:0:1817)\n    at window.va (https://va.vercel-scripts.com/v1/script.debug.js:0:2463)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2678)\n    at y (https://va.vercel-scripts.com/v1/script.debug.js:0:2601)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2725)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2931)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2934)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:201)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2938)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2942)",
+      "timestamp": 1768346312133
+    },
+    {
+      "type": "pageerror",
+      "message": "Cannot read properties of undefined (reading 'length')",
+      "stack": "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'length')\n    at p (https://va.vercel-scripts.com/v1/script.debug.js:0:1817)\n    at window.va (https://va.vercel-scripts.com/v1/script.debug.js:0:2463)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2678)\n    at y (https://va.vercel-scripts.com/v1/script.debug.js:0:2601)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2725)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2931)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2934)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:201)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2938)\n    at <anonymous> (https://va.vercel-scripts.com/v1/script.debug.js:0:2942)",
+      "timestamp": 1768346312133
+    },
+    {
+      "type": "error",
+      "message": "Failed to load resource: the server responded with a status of 404 ()",
+      "timestamp": 1768346312483
+    },
+    {
+      "type": "log",
+      "message": "%c[WARN] 2026-01-13T23:18:32.483Z [PerformanceMonitor] Could not fetch slow queries (migration may not be applied) color: #ffaa00; font-weight: bold; {code: 42P01, details: null, hint: null, message: relation \"pg_stat_statements\" does not exist}",
+      "timestamp": 1768346312484
+    },
+    {
+      "type": "error",
+      "message": "Failed to load resource: the server responded with a status of 404 ()",
+      "timestamp": 1768346312552
+    },
+    {
+      "type": "log",
+      "message": "%c[WARN] 2026-01-13T23:18:32.552Z [PerformanceMonitor] Could not fetch slow queries (migration may not be applied) color: #ffaa00; font-weight: bold; {code: 42P01, details: null, hint: null, message: relation \"pg_stat_statements\" does not exist}",
+      "timestamp": 1768346312553
+    },
+    {
+      "type": "error",
+      "message": "Failed to initialize Statsig: TypeError: Statsig.initializeStatsigSingleton is not a function\n    at Object.initStatsig [as init] (http://localhost:8082/src/lib/featureFlags/statsig.ts:33:23)\n    at http://localhost:8082/src/lib/featureFlags/hooks.tsx:57:24\n    at commitHookEffectListMount (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:16456:34)\n    at commitPassiveMountOnFiber (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17697:19)\n    at commitPassiveMountEffects_complete (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17670:17)\n    at commitPassiveMountEffects_begin (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17660:15)\n    at commitPassiveMountEffects (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17650:11)\n    at flushPassiveEffectsImpl (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:19031:11)\n    at flushPassiveEffects (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:18988:22)\n    at http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:18869:17",
+      "timestamp": 1768346316038
+    },
+    {
+      "type": "log",
+      "message": "%c[Vercel Speed Insights]%c [vitals] color: rgb(120, 120, 120) color: inherit {speed: 4g, metrics: Array(3), scriptVersion: 0.1.3, sdkName: @vercel/speed-insights/react, sdkVersion: 1.3.1}",
+      "timestamp": 1768346316242
+    },
+    {
+      "type": "log",
+      "message": "%c[Vercel Web Analytics]%c [pageview] http://localhost:8082/ color: rgb(120, 120, 120) color: inherit {o: http://localhost:8082/, sv: 0.1.3, sdkn: @vercel/analytics/react, sdkv: 1.6.1, ts: 1768346316240}",
+      "timestamp": 1768346316242
+    },
+    {
+      "type": "error",
+      "message": "Failed to initialize Statsig: TypeError: Statsig.initializeStatsigSingleton is not a function\n    at Object.initStatsig [as init] (http://localhost:8082/src/lib/featureFlags/statsig.ts:33:23)\n    at http://localhost:8082/src/lib/featureFlags/hooks.tsx:57:24\n    at commitHookEffectListMount (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:16456:34)\n    at commitPassiveMountOnFiber (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17697:19)\n    at commitPassiveMountEffects_complete (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17670:17)\n    at commitPassiveMountEffects_begin (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17660:15)\n    at commitPassiveMountEffects (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17650:11)\n    at flushPassiveEffectsImpl (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:19031:11)\n    at flushPassiveEffects (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:18988:22)\n    at performSyncWorkOnRoot (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:18409:11)",
+      "timestamp": 1768346316251
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:36.692Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346316693
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:36.692Z [useAppointments] Carregando agendamentos do Supabase color: #0088ff; font-weight: bold; {}",
+      "timestamp": 1768346316693
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:36.694Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346316695
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:36.695Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346316695
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:36.697Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346316697
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:36.711Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346316712
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:36.711Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346316712
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:36.712Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346316712
+    },
+    {
+      "type": "error",
+      "message": "Failed to load resource: the server responded with a status of 404 ()",
+      "timestamp": 1768346317161
+    },
+    {
+      "type": "log",
+      "message": "%c[WARN] 2026-01-13T23:18:37.161Z [PerformanceMonitor] Could not fetch slow queries (migration may not be applied) color: #ffaa00; font-weight: bold; {code: 42P01, details: null, hint: null, message: relation \"pg_stat_statements\" does not exist}",
+      "timestamp": 1768346317162
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:37.198Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346317199
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:37.198Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346317199
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:37.198Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346317199
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:37.508Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346317509
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:37.508Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346317509
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:37.508Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346317509
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:37.525Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346317526
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:37.525Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346317526
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:37.525Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346317526
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:37.774Z [useRealtimeSubscription] Realtime conectado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346317775
+    },
+    {
+      "type": "log",
+      "message": "%c[PERFORMANCE] 2026-01-13T23:18:37.978Z  Timer: fetchAppointments color: #00aa00; font-weight: bold; {duration: 1286.03ms}",
+      "timestamp": 1768346317979
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:37.985Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346317986
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:37.986Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346317986
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:37.986Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346317986
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:38.000Z [AppointmentsCacheService] Cache atualizado color: #0088ff; font-weight: bold; {count: 207, organizationId: ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, expiresAt: 2026-01-14T23:18:37.979Z}",
+      "timestamp": 1768346318001
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:38.019Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346318021
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:38.019Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346318021
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:38.019Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346318022
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:38.020Z [useOnlineUsers] Configurando Presence color: #0088ff; font-weight: bold; {userId: a1b65811-77b6-42a7-a16d-306ce16a4804, userName: Rafael, role: paciente}",
+      "timestamp": 1768346318022
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:38.043Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346318044
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:38.043Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346318044
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:38.054Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346318054
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:38.199Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346318200
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:38.199Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346318201
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:38.200Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346318201
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:38.206Z [useOnlineUsers] Conectado ao Presence channel color: #0088ff; font-weight: bold; {channelName: fisioflow-online}",
+      "timestamp": 1768346318207
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:38.207Z [useOnlineUsers] Usuário entrou color: #0088ff; font-weight: bold; {key: c86f8a02-f0d5-11f0-9a67-0a58a9feac02, newPresences: Array(1)}",
+      "timestamp": 1768346318208
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:38.207Z [useOnlineUsers] Usuários online atualizados color: #0088ff; font-weight: bold; {count: 1}",
+      "timestamp": 1768346318208
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:38.316Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346318317
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:38.316Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346318317
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:38.316Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346318317
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:38.389Z [useOnlineUsers] Presença rastreada color: #0088ff; font-weight: bold; {trackStatus: ok}",
+      "timestamp": 1768346318390
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:38.389Z [useOnlineUsers] Usuário entrou color: #0088ff; font-weight: bold; {key: 30d2aaf2-f0d6-11f0-9af2-0a58a9feac02, newPresences: Array(1)}",
+      "timestamp": 1768346318390
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:38.389Z [useOnlineUsers] Usuários online atualizados color: #0088ff; font-weight: bold; {count: 2}",
+      "timestamp": 1768346318390
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:38.423Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346318424
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:38.423Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346318424
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:38.423Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346318424
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:38.432Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346318433
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:38.433Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346318433
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:38.433Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346318434
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:38.465Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346318466
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:38.465Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346318466
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:38.466Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346318466
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:38.477Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346318478
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:38.478Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346318479
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:38.478Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346318479
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:38.606Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346318606
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:38.606Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346318607
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:38.606Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346318607
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:38.709Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346318709
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:38.709Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346318710
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:38.709Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346318710
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:38.811Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346318812
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:38.811Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346318812
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:38.811Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346318812
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:39.002Z [useRealtimeSubscription] Realtime conectado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346319002
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:41.292Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346321293
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:41.292Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346321293
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:41.293Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346321293
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:41.300Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346321301
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:41.300Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346321301
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:41.301Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346321302
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:41.563Z [useRealtimeSubscription] Realtime conectado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346321564
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:41.573Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346321574
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:41.573Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346321574
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:41.576Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346321577
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:41.766Z [useRealtimeSubscription] Realtime conectado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346321767
+    },
+    {
+      "type": "error",
+      "message": "Failed to load resource: the server responded with a status of 404 ()",
+      "timestamp": 1768346322179
+    },
+    {
+      "type": "log",
+      "message": "%c[WARN] 2026-01-13T23:18:42.181Z [PerformanceMonitor] Could not fetch slow queries (migration may not be applied) color: #ffaa00; font-weight: bold; {code: 42P01, details: null, hint: null, message: relation \"pg_stat_statements\" does not exist}",
+      "timestamp": 1768346322182
+    },
+    {
+      "type": "log",
+      "message": "%c[Vercel Speed Insights]%c [vitals] color: rgb(120, 120, 120) color: inherit {speed: 4g, metrics: Array(1), scriptVersion: 0.1.3, sdkName: @vercel/speed-insights/react, sdkVersion: 1.3.1}",
+      "timestamp": 1768346324241
+    },
+    {
+      "type": "table",
+      "message": "{FCP: 632.2050000000745, LCP: undefined, FID: undefined, INP: 296, CLS: undefined, TTFB: 4.919999999925494}",
+      "timestamp": 1768346324241
+    },
+    {
+      "type": "table",
+      "message": "{FCP: 632.2050000000745, LCP: undefined, FID: undefined, INP: 296, CLS: undefined, TTFB: 4.919999999925494}",
+      "timestamp": 1768346324241
+    },
+    {
+      "type": "table",
+      "message": "{FCP: 632.2050000000745, LCP: undefined, FID: undefined, INP: 296, CLS: undefined, TTFB: 4.919999999925494}",
+      "timestamp": 1768346324242
+    },
+    {
+      "type": "table",
+      "message": "{FCP: 632.2050000000745, LCP: undefined, FID: undefined, INP: 296, CLS: undefined, TTFB: 4.919999999925494}",
+      "timestamp": 1768346324242
+    },
+    {
+      "type": "table",
+      "message": "{FCP: 632.2050000000745, LCP: undefined, FID: undefined, INP: 296, CLS: 0.16267922492139994, TTFB: 4.919999999925494}",
+      "timestamp": 1768346324242
+    },
+    {
+      "type": "table",
+      "message": "{FCP: 632.2050000000745, LCP: undefined, FID: undefined, INP: 296, CLS: 0.16267922492139994, TTFB: 4.919999999925494}",
+      "timestamp": 1768346324242
+    },
+    {
+      "type": "table",
+      "message": "{FCP: 632.2050000000745, LCP: undefined, FID: undefined, INP: 296, CLS: 0.16267922492139994, TTFB: 4.919999999925494}",
+      "timestamp": 1768346324242
+    },
+    {
+      "type": "table",
+      "message": "{FCP: 632.2050000000745, LCP: undefined, FID: undefined, INP: 296, CLS: 0.16267922492139994, TTFB: 4.919999999925494}",
+      "timestamp": 1768346324242
+    },
+    {
+      "type": "log",
+      "message": "%c[Vercel Speed Insights]%c [vitals] color: rgb(120, 120, 120) color: inherit {speed: 4g, metrics: Array(1), scriptVersion: 0.1.3, sdkName: @vercel/speed-insights/react, sdkVersion: 1.3.1}",
+      "timestamp": 1768346324244
+    },
+    {
+      "type": "debug",
+      "message": "[vite] connecting...",
+      "timestamp": 1768346324509
+    },
+    {
+      "type": "debug",
+      "message": "[vite] connected.",
+      "timestamp": 1768346324542
+    },
+    {
+      "type": "info",
+      "message": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold",
+      "timestamp": 1768346324705
+    },
+    {
+      "type": "log",
+      "message": "%c[WARN] 2026-01-13T23:18:44.726Z [Sentry] Sentry DSN não configurado. Monitoramento de erros desabilitado. color: #ffaa00; font-weight: bold; {}",
+      "timestamp": 1768346324727
+    },
+    {
+      "type": "error",
+      "message": "Failed to initialize Statsig: TypeError: Statsig.initializeStatsigSingleton is not a function\n    at Object.initStatsig [as init] (http://localhost:8082/src/lib/featureFlags/statsig.ts:33:23)\n    at http://localhost:8082/src/lib/featureFlags/hooks.tsx:57:24\n    at commitHookEffectListMount (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:16456:34)\n    at commitPassiveMountOnFiber (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17697:19)\n    at commitPassiveMountEffects_complete (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17670:17)\n    at commitPassiveMountEffects_begin (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17660:15)\n    at commitPassiveMountEffects (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17650:11)\n    at flushPassiveEffectsImpl (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:19031:11)\n    at flushPassiveEffects (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:18988:22)\n    at performSyncWorkOnRoot (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:18409:11)",
+      "timestamp": 1768346324760
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:44.757Z [App] Aplicação iniciada color: #0088ff; font-weight: bold; {timestamp: 2026-01-13T23:18:44.757Z}",
+      "timestamp": 1768346324760
+    },
+    {
+      "type": "error",
+      "message": "Failed to initialize Statsig: TypeError: Statsig.initializeStatsigSingleton is not a function\n    at Object.initStatsig [as init] (http://localhost:8082/src/lib/featureFlags/statsig.ts:33:23)\n    at http://localhost:8082/src/lib/featureFlags/hooks.tsx:57:24\n    at commitHookEffectListMount (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:16456:34)\n    at invokePassiveEffectMountInDEV (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17865:19)\n    at invokeEffectsInDev (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:19242:19)\n    at commitDoubleInvokeEffectsInDEV (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:19227:15)\n    at flushPassiveEffectsImpl (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:19044:13)\n    at flushPassiveEffects (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:18988:22)\n    at performSyncWorkOnRoot (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:18409:11)\n    at flushSyncCallbacks (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:8660:30)",
+      "timestamp": 1768346324760
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:44.759Z [App] Aplicação iniciada color: #0088ff; font-weight: bold; {timestamp: 2026-01-13T23:18:44.759Z}",
+      "timestamp": 1768346324760
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:44.763Z [App] Sistema de notificações inicializado color: #0088ff; font-weight: bold; {}",
+      "timestamp": 1768346324763
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:44.763Z [App] Sistema de notificações inicializado color: #0088ff; font-weight: bold; {}",
+      "timestamp": 1768346324764
+    },
+    {
+      "type": "log",
+      "message": "%c[PERFORMANCE] 2026-01-13T23:18:44.799Z  Page Load color: #00aa00; font-weight: bold; {loadTime: 0.03500000014901161, domContentLoaded: 0.06000000052154064, totalTime: 498.9850000003353}",
+      "timestamp": 1768346324800
+    },
+    {
+      "type": "log",
+      "message": "%c[Vercel Web Analytics]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit",
+      "timestamp": 1768346324804
+    },
+    {
+      "type": "log",
+      "message": "%c[Vercel Web Analytics]%c [pageview] http://localhost:8082/ color: rgb(120, 120, 120) color: inherit {o: http://localhost:8082/, sv: 0.1.3, sdkn: @vercel/analytics/react, sdkv: 1.6.1, ts: 1768346324803}",
+      "timestamp": 1768346324805
+    },
+    {
+      "type": "log",
+      "message": "%c[Vercel Speed Insights]%c Debug mode is enabled by default in development. No requests will be sent to the server. color: rgb(120, 120, 120) color: inherit",
+      "timestamp": 1768346324805
+    },
+    {
+      "type": "error",
+      "message": "Failed to initialize Statsig: TypeError: Statsig.initializeStatsigSingleton is not a function\n    at Object.initStatsig [as init] (http://localhost:8082/src/lib/featureFlags/statsig.ts:33:23)\n    at http://localhost:8082/src/lib/featureFlags/hooks.tsx:57:24\n    at commitHookEffectListMount (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:16456:34)\n    at commitPassiveMountOnFiber (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17697:19)\n    at commitPassiveMountEffects_complete (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17670:17)\n    at commitPassiveMountEffects_begin (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17660:15)\n    at commitPassiveMountEffects (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17650:11)\n    at flushPassiveEffectsImpl (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:19031:11)\n    at flushPassiveEffects (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:18988:22)\n    at performSyncWorkOnRoot (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:18409:11)",
+      "timestamp": 1768346324811
+    },
+    {
+      "type": "table",
+      "message": "{FCP: undefined, LCP: undefined, FID: undefined, INP: undefined, CLS: undefined, TTFB: 6.544999999925494}",
+      "timestamp": 1768346324821
+    },
+    {
+      "type": "table",
+      "message": "{FCP: undefined, LCP: undefined, FID: undefined, INP: undefined, CLS: undefined, TTFB: 6.544999999925494}",
+      "timestamp": 1768346324821
+    },
+    {
+      "type": "table",
+      "message": "{FCP: undefined, LCP: undefined, FID: undefined, INP: undefined, CLS: undefined, TTFB: 6.544999999925494}",
+      "timestamp": 1768346324821
+    },
+    {
+      "type": "table",
+      "message": "{FCP: undefined, LCP: undefined, FID: undefined, INP: undefined, CLS: undefined, TTFB: 6.544999999925494}",
+      "timestamp": 1768346324821
+    },
+    {
+      "type": "pageerror",
+      "message": "Cannot read properties of undefined (reading 'length')",
+      "stack": "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'length')\n    at p (https://va.vercel-scripts.com/v1/script.debug.js:0:1817)\n    at window.va (https://va.vercel-scripts.com/v1/script.debug.js:0:2463)\n    at sendToAnalytics (http://localhost:8082/src/lib/monitoring/web-vitals.tsx:64:15)\n    at <anonymous> (http://localhost:8082/src/lib/monitoring/web-vitals.tsx:149:8)\n    at <anonymous> (http://localhost:8082/node_modules/.vite/deps/web-vitals.js?v=42d7103d:14:224)\n    at <anonymous> (http://localhost:8082/node_modules/.vite/deps/web-vitals.js?v=42d7103d:238:78)",
+      "timestamp": 1768346324822
+    },
+    {
+      "type": "pageerror",
+      "message": "Cannot read properties of undefined (reading 'length')",
+      "stack": "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'length')\n    at p (https://va.vercel-scripts.com/v1/script.debug.js:0:1817)\n    at window.va (https://va.vercel-scripts.com/v1/script.debug.js:0:2463)\n    at sendToAnalytics (http://localhost:8082/src/lib/monitoring/web-vitals.tsx:64:15)\n    at <anonymous> (http://localhost:8082/src/lib/monitoring/web-vitals.tsx:149:8)\n    at <anonymous> (http://localhost:8082/node_modules/.vite/deps/web-vitals.js?v=42d7103d:14:224)\n    at <anonymous> (http://localhost:8082/node_modules/.vite/deps/web-vitals.js?v=42d7103d:238:78)",
+      "timestamp": 1768346324822
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:44.823Z [App] Cache persistente restaurado com sucesso color: #0088ff; font-weight: bold; {}",
+      "timestamp": 1768346324823
+    },
+    {
+      "type": "pageerror",
+      "message": "Cannot read properties of undefined (reading 'length')",
+      "stack": "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'length')\n    at p (https://va.vercel-scripts.com/v1/script.debug.js:0:1817)\n    at window.va (https://va.vercel-scripts.com/v1/script.debug.js:0:2463)\n    at sendToAnalytics (http://localhost:8082/src/lib/monitoring/web-vitals.tsx:64:15)\n    at <anonymous> (http://localhost:8082/src/lib/monitoring/web-vitals.tsx:149:8)\n    at <anonymous> (http://localhost:8082/node_modules/.vite/deps/web-vitals.js?v=42d7103d:14:224)\n    at <anonymous> (http://localhost:8082/node_modules/.vite/deps/web-vitals.js?v=42d7103d:238:78)",
+      "timestamp": 1768346324823
+    },
+    {
+      "type": "pageerror",
+      "message": "Cannot read properties of undefined (reading 'length')",
+      "stack": "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'length')\n    at p (https://va.vercel-scripts.com/v1/script.debug.js:0:1817)\n    at window.va (https://va.vercel-scripts.com/v1/script.debug.js:0:2463)\n    at sendToAnalytics (http://localhost:8082/src/lib/monitoring/web-vitals.tsx:64:15)\n    at <anonymous> (http://localhost:8082/src/lib/monitoring/web-vitals.tsx:149:8)\n    at <anonymous> (http://localhost:8082/node_modules/.vite/deps/web-vitals.js?v=42d7103d:14:224)\n    at <anonymous> (http://localhost:8082/node_modules/.vite/deps/web-vitals.js?v=42d7103d:238:78)",
+      "timestamp": 1768346324824
+    },
+    {
+      "type": "table",
+      "message": "{FCP: 599.894999999553, LCP: undefined, FID: undefined, INP: undefined, CLS: undefined, TTFB: 6.544999999925494}",
+      "timestamp": 1768346324839
+    },
+    {
+      "type": "table",
+      "message": "{FCP: 599.894999999553, LCP: undefined, FID: undefined, INP: undefined, CLS: undefined, TTFB: 6.544999999925494}",
+      "timestamp": 1768346324839
+    },
+    {
+      "type": "table",
+      "message": "{FCP: 599.894999999553, LCP: undefined, FID: undefined, INP: undefined, CLS: undefined, TTFB: 6.544999999925494}",
+      "timestamp": 1768346324839
+    },
+    {
+      "type": "table",
+      "message": "{FCP: 599.894999999553, LCP: undefined, FID: undefined, INP: undefined, CLS: undefined, TTFB: 6.544999999925494}",
+      "timestamp": 1768346324839
+    },
+    {
+      "type": "pageerror",
+      "message": "Cannot read properties of undefined (reading 'length')",
+      "stack": "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'length')\n    at p (https://va.vercel-scripts.com/v1/script.debug.js:0:1817)\n    at window.va (https://va.vercel-scripts.com/v1/script.debug.js:0:2463)\n    at sendToAnalytics (http://localhost:8082/src/lib/monitoring/web-vitals.tsx:64:15)\n    at <anonymous> (http://localhost:8082/src/lib/monitoring/web-vitals.tsx:149:8)\n    at <anonymous> (http://localhost:8082/node_modules/.vite/deps/web-vitals.js?v=42d7103d:14:224)\n    at <anonymous> (http://localhost:8082/node_modules/.vite/deps/web-vitals.js?v=42d7103d:104:188)\n    at <anonymous> (http://localhost:8082/node_modules/.vite/deps/web-vitals.js?v=42d7103d:56:10)",
+      "timestamp": 1768346324840
+    },
+    {
+      "type": "pageerror",
+      "message": "Cannot read properties of undefined (reading 'length')",
+      "stack": "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'length')\n    at p (https://va.vercel-scripts.com/v1/script.debug.js:0:1817)\n    at window.va (https://va.vercel-scripts.com/v1/script.debug.js:0:2463)\n    at sendToAnalytics (http://localhost:8082/src/lib/monitoring/web-vitals.tsx:64:15)\n    at <anonymous> (http://localhost:8082/src/lib/monitoring/web-vitals.tsx:149:8)\n    at <anonymous> (http://localhost:8082/node_modules/.vite/deps/web-vitals.js?v=42d7103d:14:224)\n    at <anonymous> (http://localhost:8082/node_modules/.vite/deps/web-vitals.js?v=42d7103d:104:188)\n    at <anonymous> (http://localhost:8082/node_modules/.vite/deps/web-vitals.js?v=42d7103d:56:10)",
+      "timestamp": 1768346324840
+    },
+    {
+      "type": "pageerror",
+      "message": "Cannot read properties of undefined (reading 'length')",
+      "stack": "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'length')\n    at p (https://va.vercel-scripts.com/v1/script.debug.js:0:1817)\n    at window.va (https://va.vercel-scripts.com/v1/script.debug.js:0:2463)\n    at sendToAnalytics (http://localhost:8082/src/lib/monitoring/web-vitals.tsx:64:15)\n    at <anonymous> (http://localhost:8082/src/lib/monitoring/web-vitals.tsx:149:8)\n    at <anonymous> (http://localhost:8082/node_modules/.vite/deps/web-vitals.js?v=42d7103d:14:224)\n    at <anonymous> (http://localhost:8082/node_modules/.vite/deps/web-vitals.js?v=42d7103d:104:188)\n    at <anonymous> (http://localhost:8082/node_modules/.vite/deps/web-vitals.js?v=42d7103d:56:10)",
+      "timestamp": 1768346324840
+    },
+    {
+      "type": "pageerror",
+      "message": "Cannot read properties of undefined (reading 'length')",
+      "stack": "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'length')\n    at p (https://va.vercel-scripts.com/v1/script.debug.js:0:1817)\n    at window.va (https://va.vercel-scripts.com/v1/script.debug.js:0:2463)\n    at sendToAnalytics (http://localhost:8082/src/lib/monitoring/web-vitals.tsx:64:15)\n    at <anonymous> (http://localhost:8082/src/lib/monitoring/web-vitals.tsx:149:8)\n    at <anonymous> (http://localhost:8082/node_modules/.vite/deps/web-vitals.js?v=42d7103d:14:224)\n    at <anonymous> (http://localhost:8082/node_modules/.vite/deps/web-vitals.js?v=42d7103d:104:188)\n    at <anonymous> (http://localhost:8082/node_modules/.vite/deps/web-vitals.js?v=42d7103d:56:10)",
+      "timestamp": 1768346324840
+    },
+    {
+      "type": "error",
+      "message": "Failed to initialize Statsig: TypeError: Statsig.initializeStatsigSingleton is not a function\n    at Object.initStatsig [as init] (http://localhost:8082/src/lib/featureFlags/statsig.ts:33:23)\n    at http://localhost:8082/src/lib/featureFlags/hooks.tsx:57:24\n    at commitHookEffectListMount (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:16456:34)\n    at commitPassiveMountOnFiber (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17697:19)\n    at commitPassiveMountEffects_complete (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17670:17)\n    at commitPassiveMountEffects_begin (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17660:15)\n    at commitPassiveMountEffects (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17650:11)\n    at flushPassiveEffectsImpl (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:19031:11)\n    at flushPassiveEffects (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:18988:22)\n    at performSyncWorkOnRoot (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:18409:11)",
+      "timestamp": 1768346328041
+    },
+    {
+      "type": "error",
+      "message": "Failed to load resource: the server responded with a status of 404 ()",
+      "timestamp": 1768346328058
+    },
+    {
+      "type": "error",
+      "message": "Failed to load resource: the server responded with a status of 404 ()",
+      "timestamp": 1768346328058
+    },
+    {
+      "type": "warning",
+      "message": "WebSocket connection to 'wss://ycvbtjfrchcyvmkvuocu.supabase.co/realtime/v1/websocket?apikey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljdmJ0amZyY2hjeXZta3Z1b2N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTA5OTQsImV4cCI6MjA3NTE2Njk5NH0.L5maWG2hc3LVHEUMOzfTRTjYwIAJFXx3zan3G-Y1zAA&vsn=1.0.0' failed: WebSocket is closed before the connection is established.",
+      "timestamp": 1768346328065
+    },
+    {
+      "type": "log",
+      "message": "%c[WARN] 2026-01-13T23:18:48.064Z  Long Task Detected color: #ffaa00; font-weight: bold; {duration: 73, startTime: 3744.6200000001118}",
+      "timestamp": 1768346328065
+    },
+    {
+      "type": "log",
+      "message": "%c[WARN] 2026-01-13T23:18:48.079Z [PerformanceMonitor] Could not fetch slow queries (migration may not be applied) color: #ffaa00; font-weight: bold; {code: 42P01, details: null, hint: null, message: relation \"pg_stat_statements\" does not exist}",
+      "timestamp": 1768346328079
+    },
+    {
+      "type": "log",
+      "message": "%c[WARN] 2026-01-13T23:18:48.079Z [PerformanceMonitor] Could not fetch slow queries (migration may not be applied) color: #ffaa00; font-weight: bold; {code: 42P01, details: null, hint: null, message: relation \"pg_stat_statements\" does not exist}",
+      "timestamp": 1768346328080
+    },
+    {
+      "type": "error",
+      "message": "Failed to initialize Statsig: TypeError: Statsig.initializeStatsigSingleton is not a function\n    at Object.initStatsig [as init] (http://localhost:8082/src/lib/featureFlags/statsig.ts:33:23)\n    at http://localhost:8082/src/lib/featureFlags/hooks.tsx:57:24\n    at commitHookEffectListMount (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:16456:34)\n    at commitPassiveMountOnFiber (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17697:19)\n    at commitPassiveMountEffects_complete (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17670:17)\n    at commitPassiveMountEffects_begin (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17660:15)\n    at commitPassiveMountEffects (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17650:11)\n    at flushPassiveEffectsImpl (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:19031:11)\n    at flushPassiveEffects (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:18988:22)\n    at performSyncWorkOnRoot (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:18409:11)",
+      "timestamp": 1768346328362
+    },
+    {
+      "type": "error",
+      "message": "Failed to initialize Statsig: TypeError: Statsig.initializeStatsigSingleton is not a function\n    at Object.initStatsig [as init] (http://localhost:8082/src/lib/featureFlags/statsig.ts:33:23)\n    at http://localhost:8082/src/lib/featureFlags/hooks.tsx:57:24\n    at commitHookEffectListMount (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:16456:34)\n    at commitPassiveMountOnFiber (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17697:19)\n    at commitPassiveMountEffects_complete (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17670:17)\n    at commitPassiveMountEffects_begin (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17660:15)\n    at commitPassiveMountEffects (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17650:11)\n    at flushPassiveEffectsImpl (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:19031:11)\n    at flushPassiveEffects (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:18988:22)\n    at performSyncWorkOnRoot (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:18409:11)",
+      "timestamp": 1768346328394
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:48.917Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346328918
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:48.918Z [useAppointments] Carregando agendamentos do Supabase color: #0088ff; font-weight: bold; {}",
+      "timestamp": 1768346328919
+    },
+    {
+      "type": "error",
+      "message": "Failed to initialize Statsig: TypeError: Statsig.initializeStatsigSingleton is not a function\n    at Object.initStatsig [as init] (http://localhost:8082/src/lib/featureFlags/statsig.ts:33:23)\n    at http://localhost:8082/src/lib/featureFlags/hooks.tsx:57:24\n    at commitHookEffectListMount (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:16456:34)\n    at commitPassiveMountOnFiber (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17697:19)\n    at commitPassiveMountEffects_complete (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17670:17)\n    at commitPassiveMountEffects_begin (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17660:15)\n    at commitPassiveMountEffects (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17650:11)\n    at flushPassiveEffectsImpl (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:19031:11)\n    at flushPassiveEffects (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:18988:22)\n    at http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:18869:17",
+      "timestamp": 1768346328922
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:48.921Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346328922
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:48.921Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346328923
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:48.921Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346328923
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:48.934Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346328936
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:48.935Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346328936
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:48.935Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346328937
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.035Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329035
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.035Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329036
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:49.035Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346329036
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.050Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329051
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.051Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329051
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:49.051Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346329052
+    },
+    {
+      "type": "log",
+      "message": "%c[PERFORMANCE] 2026-01-13T23:18:49.112Z  Timer: fetchAppointments color: #00aa00; font-weight: bold; {duration: 193.88ms}",
+      "timestamp": 1768346329113
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.115Z [AppointmentsCacheService] AppointmentsCacheService inicializado color: #888888; {}",
+      "timestamp": 1768346329118
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.119Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329120
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.120Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329120
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:49.120Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346329120
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:49.136Z [AppointmentsCacheService] Cache atualizado color: #0088ff; font-weight: bold; {count: 207, organizationId: ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, expiresAt: 2026-01-14T23:18:49.115Z}",
+      "timestamp": 1768346329137
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.171Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329171
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.171Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329172
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:49.171Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346329172
+    },
+    {
+      "type": "error",
+      "message": "Failed to initialize Statsig: TypeError: Statsig.initializeStatsigSingleton is not a function\n    at Object.initStatsig [as init] (http://localhost:8082/src/lib/featureFlags/statsig.ts:33:23)\n    at http://localhost:8082/src/lib/featureFlags/hooks.tsx:57:24\n    at commitHookEffectListMount (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:16456:34)\n    at commitPassiveMountOnFiber (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17697:19)\n    at commitPassiveMountEffects_complete (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17670:17)\n    at commitPassiveMountEffects_begin (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17660:15)\n    at commitPassiveMountEffects (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:17650:11)\n    at flushPassiveEffectsImpl (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:19031:11)\n    at flushPassiveEffects (http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:18988:22)\n    at http://localhost:8082/node_modules/.vite/deps/chunk-FVPIDKKO.js?v=42d7103d:18869:17",
+      "timestamp": 1768346329172
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.183Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329184
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.183Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329184
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:49.187Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346329188
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.249Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329250
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.250Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329251
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:49.250Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346329251
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:49.256Z [useOnlineUsers] Configurando Presence color: #0088ff; font-weight: bold; {userId: a1b65811-77b6-42a7-a16d-306ce16a4804, userName: Rafael, role: paciente}",
+      "timestamp": 1768346329257
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.348Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329349
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.348Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329349
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:49.349Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346329349
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:49.398Z [useOnlineUsers] Conectado ao Presence channel color: #0088ff; font-weight: bold; {channelName: fisioflow-online}",
+      "timestamp": 1768346329398
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:49.402Z [useOnlineUsers] Usuário entrou color: #0088ff; font-weight: bold; {key: c86f8a02-f0d5-11f0-9a67-0a58a9feac02, newPresences: Array(1)}",
+      "timestamp": 1768346329403
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:49.402Z [useOnlineUsers] Usuários online atualizados color: #0088ff; font-weight: bold; {count: 1}",
+      "timestamp": 1768346329403
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.442Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329443
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.442Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329443
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:49.442Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346329443
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.511Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329513
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.512Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329513
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:49.512Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346329513
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:49.542Z [useOnlineUsers] Presença rastreada color: #0088ff; font-weight: bold; {trackStatus: ok}",
+      "timestamp": 1768346329544
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:49.548Z [useOnlineUsers] Usuário entrou color: #0088ff; font-weight: bold; {key: 37834ec4-f0d6-11f0-9d7e-0a58a9feac02, newPresences: Array(1)}",
+      "timestamp": 1768346329549
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:49.548Z [useOnlineUsers] Usuários online atualizados color: #0088ff; font-weight: bold; {count: 2}",
+      "timestamp": 1768346329549
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.657Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329658
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.657Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329658
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:49.658Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346329659
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.666Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329667
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.666Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329667
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:49.667Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346329667
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.806Z [useRealtimeSubscription] Realtime conectado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329807
+    },
+    {
+      "type": "error",
+      "message": "Failed to load resource: the server responded with a status of 404 ()",
+      "timestamp": 1768346329844
+    },
+    {
+      "type": "log",
+      "message": "%c[WARN] 2026-01-13T23:18:49.844Z [PerformanceMonitor] Could not fetch slow queries (migration may not be applied) color: #ffaa00; font-weight: bold; {code: 42P01, details: null, hint: null, message: relation \"pg_stat_statements\" does not exist}",
+      "timestamp": 1768346329845
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.871Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329872
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.871Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329872
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:49.874Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346329874
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.919Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329919
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.919Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329920
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:49.919Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346329920
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.924Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329925
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.924Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329925
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:49.925Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346329925
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.957Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329958
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:49.957Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346329958
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:49.958Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346329959
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:50.063Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346330064
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:50.064Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346330064
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:50.064Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346330065
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:50.166Z [useOnlineUsers] Usuário entrou color: #0088ff; font-weight: bold; {key: 37b0ae82-f0d6-11f0-b889-0a58a9feac02, newPresences: Array(1)}",
+      "timestamp": 1768346330167
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:50.166Z [useOnlineUsers] Usuários online atualizados color: #0088ff; font-weight: bold; {count: 3}",
+      "timestamp": 1768346330167
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:50.188Z [useRealtimeSubscription] Removendo subscription appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346330189
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:50.188Z [useRealtimeSubscription] Canal Realtime fechado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346330189
+    },
+    {
+      "type": "log",
+      "message": "%c[INFO] 2026-01-13T23:18:50.188Z [useRealtimeSubscription] Configurando Realtime para appointments color: #0088ff; font-weight: bold; {channelName: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02, filter: organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02}",
+      "timestamp": 1768346330189
+    },
+    {
+      "type": "log",
+      "message": "%c[DEBUG] 2026-01-13T23:18:50.331Z [useRealtimeSubscription] Realtime conectado: appointments-changes-ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02 color: #888888; {}",
+      "timestamp": 1768346330332
+    }
+  ],
+  "networkLogs": [
+    {
+      "url": "http://localhost:8082/src/integrations/supabase/client.ts",
+      "method": "GET",
+      "timestamp": 1768346311438,
+      "status": 200,
+      "body": "import.meta.env = {\"BASE_URL\": \"/\", \"DEV\": true, \"MODE\": \"development\", \"PROD\": false, \"SSR\": false, \"VITE_ANALYTICS_ENABLED\": \"false\", \"VITE_API_BASE_URL\": \"http://localhost:5173/api\", \"VITE_APP_ENV\": \"development\", \"VITE_APP_VERSION\": \"1.0.0\", \"VITE_ENABLE_ANALYTICS\": \"false\", \"VITE_ENABLE_ERROR_TRACKING\": \"true\", \"VITE_ENABLE_LAZY_LOADING\": \"true\", \"VITE_ENABLE_MONITORING\": \"true\", \"VITE_FEATURE_ADVANCED_ANALYTICS\": \"true\", \"VITE_FEATURE_AI_CHATBOT\": \"true\", \"VITE_FEATURE_AI_EXERCISE_SUGGESTI"
+    },
+    {
+      "url": "http://localhost:8082/node_modules/.vite/deps/@supabase_supabase-js.js?v=42d7103d",
+      "method": "GET",
+      "timestamp": 1768346311633,
+      "status": 200,
+      "body": "import {\n  __awaiter,\n  __rest\n} from \"/node_modules/.vite/deps/chunk-RMZNHKEI.js?v=42d7103d\";\nimport \"/node_modules/.vite/deps/chunk-SNAQBZPT.js?v=42d7103d\";\n\n// node_modules/.pnpm/@supabase+functions-js@2.89.0/node_modules/@supabase/functions-js/dist/module/helper.js\nvar resolveFetch = (customFetch) => {\n  if (customFetch) {\n    return (...args) => customFetch(...args);\n  }\n  return (...args) => fetch(...args);\n};\n\n// node_modules/.pnpm/@supabase+functions-js@2.89.0/node_modules/@supabase/func"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/rpc/get_slow_queries",
+      "method": "POST",
+      "timestamp": 1768346312025,
+      "status": 404,
+      "body": "{\"code\":\"42P01\",\"details\":null,\"hint\":null,\"message\":\"relation \\\"pg_stat_statements\\\" does not exist\"}"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/rpc/get_slow_queries",
+      "method": "POST",
+      "timestamp": 1768346312025,
+      "status": 404,
+      "body": "{\"code\":\"42P01\",\"details\":null,\"hint\":null,\"message\":\"relation \\\"pg_stat_statements\\\" does not exist\"}"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/auth/v1/token?grant_type=password",
+      "method": "POST",
+      "timestamp": 1768346315466,
+      "status": 200,
+      "body": "{\"access_token\":\"eyJhbGciOiJIUzI1NiIsImtpZCI6InpuWTQ5ek15aGlpdkpPeG4iLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3ljdmJ0amZyY2hjeXZta3Z1b2N1LnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiJhMWI2NTgxMS03N2I2LTQyYTctYTE2ZC0zMDZjZTE2YTQ4MDQiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzY4MzQ5OTE1LCJpYXQiOjE3NjgzNDYzMTUsImVtYWlsIjoicmFmYWVsLm1pbmF0dG9AeWFob28uY29tLmJyIiwicGhvbmUiOiIiLCJhcHBfbWV0YWRhdGEiOnsicHJvdmlkZXIiOiJlbWFpbCIsInByb3ZpZGVycyI6WyJlbWFpbCJdfSwidXNlcl9tZXRhZGF0YSI6eyJlbWFpbCI6InJhZmFlbC5taW5hdHRvQHlh"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?select=*&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346316039,
+      "status": 200,
+      "body": "{\"id\":\"dc645142-737e-4926-a2b6-ad0f80f70708\",\"user_id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"full_name\":\"Rafael\",\"email\":\"rafael.minatto@yahoo.com.br\",\"phone\":null,\"avatar_url\":null,\"onboarding_completed\":false,\"created_at\":\"2025-10-07T03:16:15.718674+00:00\",\"updated_at\":\"2026-01-13T23:18:35.777994+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"cpf\":null,\"specialties\":null,\"is_active\":true,\"license_expiry\":null,\"address\":null,\"birth_date\":null,\"emergency_contact\":null,\"bio\":n"
+    },
+    {
+      "url": "http://localhost:8082/src/schemas/appointment.ts",
+      "method": "GET",
+      "timestamp": 1768346316427,
+      "status": 200,
+      "body": "/**\n * @file Schema de validação e transformação de agendamentos\n *\n * IMPORTANTE - Problema de Fuso Horário:\n * Quando usamos new Date(\"2026-01-13\"), o JavaScript interpreta como UTC meia-noite.\n * Para Brasil (UTC-3 ou UTC-2 no horário de verão), isso se torna 2026-01-12 21:00 ou 22:00.\n * Isso causa agendamentos a aparecerem no dia anterior na interface.\n *\n * Solução: parsear manualmente a string YYYY-MM-DD e criar o Date usando componentes locais.\n */ import { z } from \"/node_modules/.vite/"
+    },
+    {
+      "url": "http://localhost:8082/src/utils/appointmentValidation.ts",
+      "method": "GET",
+      "timestamp": 1768346316427,
+      "status": 200,
+      "body": "import { parseISO } from \"/node_modules/.vite/deps/date-fns.js?v=42d7103d\";\nexport function checkAppointmentConflict({ date, time, duration, excludeId, appointments }) {\n    // Convert time to minutes for easier comparison\n    const timeToMinutes = (timeStr)=>{\n        if (!timeStr) {\n            return 0;\n        }\n        const [hours, minutes] = timeStr.split(':').map(Number);\n        return hours * 60 + minutes;\n    };\n    const newStartTime = timeToMinutes(time);\n    const newEndTime = newS"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/auth/v1/user",
+      "method": "GET",
+      "timestamp": 1768346316714,
+      "status": 200,
+      "body": "{\"id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"aud\":\"authenticated\",\"role\":\"authenticated\",\"email\":\"rafael.minatto@yahoo.com.br\",\"email_confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"phone\":\"\",\"confirmation_sent_at\":\"2025-10-07T03:16:15.788552Z\",\"confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"last_sign_in_at\":\"2026-01-13T23:18:35.794832Z\",\"app_metadata\":{\"provider\":\"email\",\"providers\":[\"email\"]},\"user_metadata\":{\"email\":\"rafael.minatto@yahoo.com.br\",\"email_verified\":true,\"full_name\":\"Rafael\",\"phone_v"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/auth/v1/user",
+      "method": "GET",
+      "timestamp": 1768346316854,
+      "status": 200,
+      "body": "{\"id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"aud\":\"authenticated\",\"role\":\"authenticated\",\"email\":\"rafael.minatto@yahoo.com.br\",\"email_confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"phone\":\"\",\"confirmation_sent_at\":\"2025-10-07T03:16:15.788552Z\",\"confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"last_sign_in_at\":\"2026-01-13T23:18:35.794832Z\",\"app_metadata\":{\"provider\":\"email\",\"providers\":[\"email\"]},\"user_metadata\":{\"email\":\"rafael.minatto@yahoo.com.br\",\"email_verified\":true,\"full_name\":\"Rafael\",\"phone_v"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/auth/v1/user",
+      "method": "GET",
+      "timestamp": 1768346316956,
+      "status": 200,
+      "body": "{\"id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"aud\":\"authenticated\",\"role\":\"authenticated\",\"email\":\"rafael.minatto@yahoo.com.br\",\"email_confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"phone\":\"\",\"confirmation_sent_at\":\"2025-10-07T03:16:15.788552Z\",\"confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"last_sign_in_at\":\"2026-01-13T23:18:35.794832Z\",\"app_metadata\":{\"provider\":\"email\",\"providers\":[\"email\"]},\"user_metadata\":{\"email\":\"rafael.minatto@yahoo.com.br\",\"email_verified\":true,\"full_name\":\"Rafael\",\"phone_v"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/rpc/get_slow_queries",
+      "method": "POST",
+      "timestamp": 1768346317059,
+      "status": 404,
+      "body": "{\"code\":\"42P01\",\"details\":null,\"hint\":null,\"message\":\"relation \\\"pg_stat_statements\\\" does not exist\"}"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/auth/v1/user",
+      "method": "GET",
+      "timestamp": 1768346317059,
+      "status": 200,
+      "body": "{\"id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"aud\":\"authenticated\",\"role\":\"authenticated\",\"email\":\"rafael.minatto@yahoo.com.br\",\"email_confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"phone\":\"\",\"confirmation_sent_at\":\"2025-10-07T03:16:15.788552Z\",\"confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"last_sign_in_at\":\"2026-01-13T23:18:35.794832Z\",\"app_metadata\":{\"provider\":\"email\",\"providers\":[\"email\"]},\"user_metadata\":{\"email\":\"rafael.minatto@yahoo.com.br\",\"email_verified\":true,\"full_name\":\"Rafael\",\"phone_v"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/auth/v1/user",
+      "method": "GET",
+      "timestamp": 1768346317201,
+      "status": 200,
+      "body": "{\"id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"aud\":\"authenticated\",\"role\":\"authenticated\",\"email\":\"rafael.minatto@yahoo.com.br\",\"email_confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"phone\":\"\",\"confirmation_sent_at\":\"2025-10-07T03:16:15.788552Z\",\"confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"last_sign_in_at\":\"2026-01-13T23:18:35.794832Z\",\"app_metadata\":{\"provider\":\"email\",\"providers\":[\"email\"]},\"user_metadata\":{\"email\":\"rafael.minatto@yahoo.com.br\",\"email_verified\":true,\"full_name\":\"Rafael\",\"phone_v"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/auth/v1/user",
+      "method": "GET",
+      "timestamp": 1768346317366,
+      "status": 200,
+      "body": "{\"id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"aud\":\"authenticated\",\"role\":\"authenticated\",\"email\":\"rafael.minatto@yahoo.com.br\",\"email_confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"phone\":\"\",\"confirmation_sent_at\":\"2025-10-07T03:16:15.788552Z\",\"confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"last_sign_in_at\":\"2026-01-13T23:18:35.794832Z\",\"app_metadata\":{\"provider\":\"email\",\"providers\":[\"email\"]},\"user_metadata\":{\"email\":\"rafael.minatto@yahoo.com.br\",\"email_verified\":true,\"full_name\":\"Rafael\",\"phone_v"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id%2Cname%3Afull_name&incomplete_registration=eq.true&limit=5",
+      "method": "GET",
+      "timestamp": 1768346317527,
+      "status": 200,
+      "body": "[{\"id\":\"5b51bdf7-ee13-4c91-827a-4f50bdbd3e10\",\"name\":\"rafael minatto de martino\"}, \n {\"id\":\"1defb520-0dfc-4cc0-b14d-889e28df9afa\",\"name\":\"Amanda Hitomi Notoya Minatto\"}, \n {\"id\":\"db8b6371-2570-48ce-800d-720230d97d04\",\"name\":\"jonas teste\"}, \n {\"id\":\"e2b6c6c4-c025-4d77-a96b-de68bc0f24c4\",\"name\":\"Rafael Minatto teste\"}, \n {\"id\":\"7429cc0a-3d89-44d7-b366-c8be553a256b\",\"name\":\"Teste Jetski\"}]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/appointments?select=*&appointment_date=gte.2026-01-01&appointment_date=lte.2026-01-31",
+      "method": "HEAD",
+      "timestamp": 1768346317529,
+      "status": 200
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/appointments?select=*&appointment_date=gte.2025-12-01&appointment_date=lte.2025-12-31",
+      "method": "HEAD",
+      "timestamp": 1768346317529,
+      "status": 200
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/appointments?select=patient_id&appointment_date=gte.2025-12-13&appointment_date=lte.2026-01-13",
+      "method": "GET",
+      "timestamp": 1768346317529,
+      "status": 200,
+      "body": "[{\"patient_id\":\"c899f0af-7cc0-4ddd-b02f-4c52af9b5363\"}, \n {\"patient_id\":\"1468917d-421d-4aa7-9389-7e5a5e3e309d\"}, \n {\"patient_id\":\"a0f4d9c8-42fa-4a85-9066-f3a1158d0eb5\"}, \n {\"patient_id\":\"5b51bdf7-ee13-4c91-827a-4f50bdbd3e10\"}, \n {\"patient_id\":\"1defb520-0dfc-4cc0-b14d-889e28df9afa\"}, \n {\"patient_id\":\"4162969c-bb45-45f8-9ce0-02131ac54816\"}, \n {\"patient_id\":\"6aa3cf8b-70df-4639-91b2-2040a94fe865\"}, \n {\"patient_id\":\"e18ef59c-da2e-4ff8-a084-e177fad503b8\"}, \n {\"patient_id\":\"5b51bdf7-ee13-4c91-827a-4f50"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/appointments?select=patient_id&appointment_date=gte.2025-11-13&appointment_date=lte.2025-12-31",
+      "method": "GET",
+      "timestamp": 1768346317530,
+      "status": 200,
+      "body": "[{\"patient_id\":\"5b51bdf7-ee13-4c91-827a-4f50bdbd3e10\"}, \n {\"patient_id\":\"cbfc6c35-6b42-4872-9725-51405879309f\"}, \n {\"patient_id\":\"5b51bdf7-ee13-4c91-827a-4f50bdbd3e10\"}, \n {\"patient_id\":\"5b51bdf7-ee13-4c91-827a-4f50bdbd3e10\"}, \n {\"patient_id\":\"e18ef59c-da2e-4ff8-a084-e177fad503b8\"}, \n {\"patient_id\":\"c899f0af-7cc0-4ddd-b02f-4c52af9b5363\"}, \n {\"patient_id\":\"1468917d-421d-4aa7-9389-7e5a5e3e309d\"}, \n {\"patient_id\":\"a0f4d9c8-42fa-4a85-9066-f3a1158d0eb5\"}, \n {\"patient_id\":\"5b51bdf7-ee13-4c91-827a-4f50"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/appointments?select=payment_amount&appointment_date=gte.2026-01-01&appointment_date=lte.2026-01-31&payment_status=eq.pago",
+      "method": "GET",
+      "timestamp": 1768346317530,
+      "status": 200,
+      "body": "[]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/appointments?select=payment_amount&appointment_date=gte.2025-12-01&appointment_date=lte.2025-12-31&payment_status=eq.pago",
+      "method": "GET",
+      "timestamp": 1768346317531,
+      "status": 200,
+      "body": "[]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/appointments?select=*%2Cpatients%21inner%28id%2Cfull_name%2Cphone%2Cemail%29%2Cprofiles%3Atherapist_id%28full_name%29&organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02&order=appointment_date.asc%2Cappointment_time.asc",
+      "method": "GET",
+      "timestamp": 1768346317531,
+      "status": 200,
+      "body": "[{\"id\":\"aabc18bf-c579-40ef-9d34-066d9ca66614\",\"patient_id\":\"0a0f5aa5-6700-4d62-ae13-92a0df0fb58b\",\"therapist_id\":null,\"appointment_date\":\"2025-09-23\",\"appointment_time\":\"09:00:00\",\"duration\":60,\"type\":\"fisioterapia\",\"status\":\"agendado\",\"room\":null,\"notes\":\"Avaliação inicial realizada\",\"created_at\":\"2025-10-07T02:56:26.922731+00:00\",\"updated_at\":\"2026-01-08T04:48:24.938737+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"confirmation_status\":\"pending\",\"reminder_sent_24h\":null,\"rem"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id%2Cname%3Afull_name%2Cstatus%2Cphone%2Cemail%2Ccreated_at&limit=5&order=created_at.desc",
+      "method": "GET",
+      "timestamp": 1768346317532,
+      "status": 200,
+      "body": "[{\"id\":\"7429cc0a-3d89-44d7-b366-c8be553a256b\",\"name\":\"Teste Jetski\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-13T21:57:37.422224+00:00\"}, \n {\"id\":\"e2b6c6c4-c025-4d77-a96b-de68bc0f24c4\",\"name\":\"Rafael Minatto teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T14:04:53.852556+00:00\"}, \n {\"id\":\"db8b6371-2570-48ce-800d-720230d97d04\",\"name\":\"jonas teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T13:30:28.421917+00:00\"}, \n {\"i"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/appointments?select=*&order=created_at.desc&limit=5",
+      "method": "GET",
+      "timestamp": 1768346317532,
+      "status": 200,
+      "body": "[{\"id\":\"db380ce9-1be8-4b47-a57f-2db68d5cabbe\",\"patient_id\":\"4162969c-bb45-45f8-9ce0-02131ac54816\",\"therapist_id\":null,\"appointment_date\":\"2026-01-17\",\"appointment_time\":\"12:00:00\",\"duration\":60,\"type\":\"fisioterapia\",\"status\":\"agendado\",\"room\":null,\"notes\":null,\"created_at\":\"2026-01-13T23:06:56.0068+00:00\",\"updated_at\":\"2026-01-13T23:06:56.0068+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"confirmation_status\":\"pending\",\"reminder_sent_24h\":null,\"reminder_sent_2h\":null,\"confirme"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id%2Cname%3Afull_name&incomplete_registration=eq.true&limit=5",
+      "method": "GET",
+      "timestamp": 1768346317533,
+      "status": 200,
+      "body": "[{\"id\":\"5b51bdf7-ee13-4c91-827a-4f50bdbd3e10\",\"name\":\"rafael minatto de martino\"}, \n {\"id\":\"1defb520-0dfc-4cc0-b14d-889e28df9afa\",\"name\":\"Amanda Hitomi Notoya Minatto\"}, \n {\"id\":\"db8b6371-2570-48ce-800d-720230d97d04\",\"name\":\"jonas teste\"}, \n {\"id\":\"e2b6c6c4-c025-4d77-a96b-de68bc0f24c4\",\"name\":\"Rafael Minatto teste\"}, \n {\"id\":\"7429cc0a-3d89-44d7-b366-c8be553a256b\",\"name\":\"Teste Jetski\"}]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id%2Cname%3Afull_name%2Cstatus%2Cphone%2Cemail%2Ccreated_at&limit=5&order=created_at.desc",
+      "method": "GET",
+      "timestamp": 1768346317533,
+      "status": 200,
+      "body": "[{\"id\":\"7429cc0a-3d89-44d7-b366-c8be553a256b\",\"name\":\"Teste Jetski\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-13T21:57:37.422224+00:00\"}, \n {\"id\":\"e2b6c6c4-c025-4d77-a96b-de68bc0f24c4\",\"name\":\"Rafael Minatto teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T14:04:53.852556+00:00\"}, \n {\"id\":\"db8b6371-2570-48ce-800d-720230d97d04\",\"name\":\"jonas teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T13:30:28.421917+00:00\"}, \n {\"i"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/appointments?select=*&order=created_at.desc&limit=5",
+      "method": "GET",
+      "timestamp": 1768346317534,
+      "status": 200,
+      "body": "[{\"id\":\"db380ce9-1be8-4b47-a57f-2db68d5cabbe\",\"patient_id\":\"4162969c-bb45-45f8-9ce0-02131ac54816\",\"therapist_id\":null,\"appointment_date\":\"2026-01-17\",\"appointment_time\":\"12:00:00\",\"duration\":60,\"type\":\"fisioterapia\",\"status\":\"agendado\",\"room\":null,\"notes\":null,\"created_at\":\"2026-01-13T23:06:56.0068+00:00\",\"updated_at\":\"2026-01-13T23:06:56.0068+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"confirmation_status\":\"pending\",\"reminder_sent_24h\":null,\"reminder_sent_2h\":null,\"confirme"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/onboarding_progress?select=*&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346317534,
+      "status": 200,
+      "body": "{\"id\":\"34c50284-8c89-4504-a8ce-61958bbd5960\",\"user_id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"organization_id\":null,\"completed_steps\":[],\"current_step\":\"welcome\",\"skipped_at\":\"2026-01-04T04:59:09.396+00:00\",\"completed_at\":null,\"tour_shown\":true,\"first_patient_added\":false,\"first_appointment_created\":false,\"profile_completed\":false,\"created_at\":\"2026-01-04T04:59:05.120912+00:00\",\"updated_at\":\"2026-01-04T04:59:07.805949+00:00\"}"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/notifications?select=*&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804&order=created_at.desc&limit=10",
+      "method": "GET",
+      "timestamp": 1768346317535,
+      "status": 200,
+      "body": "[]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?select=*&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346317535,
+      "status": 200,
+      "body": "{\"id\":\"dc645142-737e-4926-a2b6-ad0f80f70708\",\"user_id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"full_name\":\"Rafael\",\"email\":\"rafael.minatto@yahoo.com.br\",\"phone\":null,\"avatar_url\":null,\"onboarding_completed\":false,\"created_at\":\"2025-10-07T03:16:15.718674+00:00\",\"updated_at\":\"2026-01-13T23:18:35.777994+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"cpf\":null,\"specialties\":null,\"is_active\":true,\"license_expiry\":null,\"address\":null,\"birth_date\":null,\"emergency_contact\":null,\"bio\":n"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?select=*&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346317536,
+      "status": 200,
+      "body": "{\"id\":\"dc645142-737e-4926-a2b6-ad0f80f70708\",\"user_id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"full_name\":\"Rafael\",\"email\":\"rafael.minatto@yahoo.com.br\",\"phone\":null,\"avatar_url\":null,\"onboarding_completed\":false,\"created_at\":\"2025-10-07T03:16:15.718674+00:00\",\"updated_at\":\"2026-01-13T23:18:35.777994+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"cpf\":null,\"specialties\":null,\"is_active\":true,\"license_expiry\":null,\"address\":null,\"birth_date\":null,\"emergency_contact\":null,\"bio\":n"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id%2Cname%3Afull_name%2Cstatus%2Cphone%2Cemail%2Ccreated_at&limit=5&order=created_at.desc",
+      "method": "GET",
+      "timestamp": 1768346317536,
+      "status": 200,
+      "body": "[{\"id\":\"7429cc0a-3d89-44d7-b366-c8be553a256b\",\"name\":\"Teste Jetski\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-13T21:57:37.422224+00:00\"}, \n {\"id\":\"e2b6c6c4-c025-4d77-a96b-de68bc0f24c4\",\"name\":\"Rafael Minatto teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T14:04:53.852556+00:00\"}, \n {\"id\":\"db8b6371-2570-48ce-800d-720230d97d04\",\"name\":\"jonas teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T13:30:28.421917+00:00\"}, \n {\"i"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?select=full_name&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346317537,
+      "status": 200,
+      "body": "{\"full_name\":\"Rafael\"}"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?select=*&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346317537,
+      "status": 200,
+      "body": "{\"id\":\"dc645142-737e-4926-a2b6-ad0f80f70708\",\"user_id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"full_name\":\"Rafael\",\"email\":\"rafael.minatto@yahoo.com.br\",\"phone\":null,\"avatar_url\":null,\"onboarding_completed\":false,\"created_at\":\"2025-10-07T03:16:15.718674+00:00\",\"updated_at\":\"2026-01-13T23:18:35.777994+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"cpf\":null,\"specialties\":null,\"is_active\":true,\"license_expiry\":null,\"address\":null,\"birth_date\":null,\"emergency_contact\":null,\"bio\":n"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?select=*&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346317538,
+      "status": 200,
+      "body": "{\"id\":\"dc645142-737e-4926-a2b6-ad0f80f70708\",\"user_id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"full_name\":\"Rafael\",\"email\":\"rafael.minatto@yahoo.com.br\",\"phone\":null,\"avatar_url\":null,\"onboarding_completed\":false,\"created_at\":\"2025-10-07T03:16:15.718674+00:00\",\"updated_at\":\"2026-01-13T23:18:35.777994+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"cpf\":null,\"specialties\":null,\"is_active\":true,\"license_expiry\":null,\"address\":null,\"birth_date\":null,\"emergency_contact\":null,\"bio\":n"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?select=*&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346317538,
+      "status": 200,
+      "body": "{\"id\":\"dc645142-737e-4926-a2b6-ad0f80f70708\",\"user_id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"full_name\":\"Rafael\",\"email\":\"rafael.minatto@yahoo.com.br\",\"phone\":null,\"avatar_url\":null,\"onboarding_completed\":false,\"created_at\":\"2025-10-07T03:16:15.718674+00:00\",\"updated_at\":\"2026-01-13T23:18:35.777994+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"cpf\":null,\"specialties\":null,\"is_active\":true,\"license_expiry\":null,\"address\":null,\"birth_date\":null,\"emergency_contact\":null,\"bio\":n"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id%2Cname%3Afull_name%2Cstatus%2Cphone%2Cemail%2Ccreated_at&limit=5&order=created_at.desc",
+      "method": "GET",
+      "timestamp": 1768346317538,
+      "status": 200,
+      "body": "[{\"id\":\"7429cc0a-3d89-44d7-b366-c8be553a256b\",\"name\":\"Teste Jetski\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-13T21:57:37.422224+00:00\"}, \n {\"id\":\"e2b6c6c4-c025-4d77-a96b-de68bc0f24c4\",\"name\":\"Rafael Minatto teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T14:04:53.852556+00:00\"}, \n {\"id\":\"db8b6371-2570-48ce-800d-720230d97d04\",\"name\":\"jonas teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T13:30:28.421917+00:00\"}, \n {\"i"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?select=*&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346317539,
+      "status": 200,
+      "body": "{\"id\":\"dc645142-737e-4926-a2b6-ad0f80f70708\",\"user_id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"full_name\":\"Rafael\",\"email\":\"rafael.minatto@yahoo.com.br\",\"phone\":null,\"avatar_url\":null,\"onboarding_completed\":false,\"created_at\":\"2025-10-07T03:16:15.718674+00:00\",\"updated_at\":\"2026-01-13T23:18:35.777994+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"cpf\":null,\"specialties\":null,\"is_active\":true,\"license_expiry\":null,\"address\":null,\"birth_date\":null,\"emergency_contact\":null,\"bio\":n"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id%2Cname%3Afull_name%2Cstatus%2Cphone%2Cemail%2Ccreated_at&limit=5&order=created_at.desc",
+      "method": "GET",
+      "timestamp": 1768346317539,
+      "status": 200,
+      "body": "[{\"id\":\"7429cc0a-3d89-44d7-b366-c8be553a256b\",\"name\":\"Teste Jetski\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-13T21:57:37.422224+00:00\"}, \n {\"id\":\"e2b6c6c4-c025-4d77-a96b-de68bc0f24c4\",\"name\":\"Rafael Minatto teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T14:04:53.852556+00:00\"}, \n {\"id\":\"db8b6371-2570-48ce-800d-720230d97d04\",\"name\":\"jonas teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T13:30:28.421917+00:00\"}, \n {\"i"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/user_roles?select=role&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804&limit=1",
+      "method": "GET",
+      "timestamp": 1768346317641,
+      "status": 200,
+      "body": "{\"role\":\"admin\"}"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/user_roles?select=role&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804&limit=1",
+      "method": "GET",
+      "timestamp": 1768346317913,
+      "status": 200,
+      "body": "{\"role\":\"admin\"}"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/treatment_sessions?select=*&created_by=eq.dc645142-737e-4926-a2b6-ad0f80f70708",
+      "method": "GET",
+      "timestamp": 1768346317918,
+      "status": 200,
+      "body": "[]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/user_roles?select=role&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346317920,
+      "status": 200,
+      "body": "[{\"role\":\"paciente\"}, \n {\"role\":\"admin\"}]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/treatment_sessions?select=*&created_by=eq.dc645142-737e-4926-a2b6-ad0f80f70708",
+      "method": "GET",
+      "timestamp": 1768346317992,
+      "status": 200,
+      "body": "[]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/user_roles?select=role&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804&limit=1",
+      "method": "GET",
+      "timestamp": 1768346318001,
+      "status": 200,
+      "body": "{\"role\":\"admin\"}"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id%2Cname%3Afull_name&id=in.%284162969c-bb45-45f8-9ce0-02131ac54816%2Ce18ef59c-da2e-4ff8-a084-e177fad503b8%2C7429cc0a-3d89-44d7-b366-c8be553a256b%2Ce2b6c6c4-c025-4d77-a96b-de68bc0f24c4%29",
+      "method": "GET",
+      "timestamp": 1768346318019,
+      "status": 200,
+      "body": "[{\"id\":\"4162969c-bb45-45f8-9ce0-02131ac54816\",\"name\":\"Elena Costa\"}, \n {\"id\":\"7429cc0a-3d89-44d7-b366-c8be553a256b\",\"name\":\"Teste Jetski\"}, \n {\"id\":\"e18ef59c-da2e-4ff8-a084-e177fad503b8\",\"name\":\"Ana Silva\"}, \n {\"id\":\"e2b6c6c4-c025-4d77-a96b-de68bc0f24c4\",\"name\":\"Rafael Minatto teste\"}]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id%2Cname%3Afull_name%2Cstatus%2Cphone%2Cemail%2Ccreated_at&limit=5&order=created_at.desc",
+      "method": "GET",
+      "timestamp": 1768346318022,
+      "status": 200,
+      "body": "[{\"id\":\"7429cc0a-3d89-44d7-b366-c8be553a256b\",\"name\":\"Teste Jetski\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-13T21:57:37.422224+00:00\"}, \n {\"id\":\"e2b6c6c4-c025-4d77-a96b-de68bc0f24c4\",\"name\":\"Rafael Minatto teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T14:04:53.852556+00:00\"}, \n {\"id\":\"db8b6371-2570-48ce-800d-720230d97d04\",\"name\":\"jonas teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T13:30:28.421917+00:00\"}, \n {\"i"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/treatment_sessions?select=*&created_by=eq.dc645142-737e-4926-a2b6-ad0f80f70708",
+      "method": "GET",
+      "timestamp": 1768346318026,
+      "status": 200,
+      "body": "[]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/user_roles?select=role&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804&limit=1",
+      "method": "GET",
+      "timestamp": 1768346318109,
+      "status": 200,
+      "body": "{\"role\":\"admin\"}"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/treatment_sessions?select=*&created_by=eq.dc645142-737e-4926-a2b6-ad0f80f70708",
+      "method": "GET",
+      "timestamp": 1768346318207,
+      "status": 200,
+      "body": "[]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/user_roles?select=role&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804&limit=1",
+      "method": "GET",
+      "timestamp": 1768346318214,
+      "status": 200,
+      "body": "{\"role\":\"admin\"}"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/user_roles?select=role&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804&limit=1",
+      "method": "GET",
+      "timestamp": 1768346318322,
+      "status": 200,
+      "body": "{\"role\":\"admin\"}"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/treatment_sessions?select=*&created_by=eq.dc645142-737e-4926-a2b6-ad0f80f70708",
+      "method": "GET",
+      "timestamp": 1768346318322,
+      "status": 200,
+      "body": "[]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/treatment_sessions?select=*&created_by=eq.dc645142-737e-4926-a2b6-ad0f80f70708",
+      "method": "GET",
+      "timestamp": 1768346318434,
+      "status": 200,
+      "body": "[]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id%2Cname%3Afull_name%2Cstatus%2Cphone%2Cemail%2Ccreated_at&limit=5&order=created_at.desc",
+      "method": "GET",
+      "timestamp": 1768346318438,
+      "status": 200,
+      "body": "[{\"id\":\"7429cc0a-3d89-44d7-b366-c8be553a256b\",\"name\":\"Teste Jetski\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-13T21:57:37.422224+00:00\"}, \n {\"id\":\"e2b6c6c4-c025-4d77-a96b-de68bc0f24c4\",\"name\":\"Rafael Minatto teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T14:04:53.852556+00:00\"}, \n {\"id\":\"db8b6371-2570-48ce-800d-720230d97d04\",\"name\":\"jonas teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T13:30:28.421917+00:00\"}, \n {\"i"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id%2Cname%3Afull_name%2Cstatus%2Cphone%2Cemail%2Ccreated_at&limit=5&order=created_at.desc",
+      "method": "GET",
+      "timestamp": 1768346318467,
+      "status": 200,
+      "body": "[{\"id\":\"7429cc0a-3d89-44d7-b366-c8be553a256b\",\"name\":\"Teste Jetski\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-13T21:57:37.422224+00:00\"}, \n {\"id\":\"e2b6c6c4-c025-4d77-a96b-de68bc0f24c4\",\"name\":\"Rafael Minatto teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T14:04:53.852556+00:00\"}, \n {\"id\":\"db8b6371-2570-48ce-800d-720230d97d04\",\"name\":\"jonas teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T13:30:28.421917+00:00\"}, \n {\"i"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/treatment_sessions?select=*&created_by=eq.dc645142-737e-4926-a2b6-ad0f80f70708",
+      "method": "GET",
+      "timestamp": 1768346318506,
+      "status": 200,
+      "body": "[]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/treatment_sessions?select=*&created_by=eq.dc645142-737e-4926-a2b6-ad0f80f70708",
+      "method": "GET",
+      "timestamp": 1768346318612,
+      "status": 200,
+      "body": "[]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id%2Cname%3Afull_name%2Cstatus%2Cphone%2Cemail%2Ccreated_at&limit=5&order=created_at.desc",
+      "method": "GET",
+      "timestamp": 1768346321304,
+      "status": 200,
+      "body": "[{\"id\":\"7429cc0a-3d89-44d7-b366-c8be553a256b\",\"name\":\"Teste Jetski\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-13T21:57:37.422224+00:00\"}, \n {\"id\":\"e2b6c6c4-c025-4d77-a96b-de68bc0f24c4\",\"name\":\"Rafael Minatto teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T14:04:53.852556+00:00\"}, \n {\"id\":\"db8b6371-2570-48ce-800d-720230d97d04\",\"name\":\"jonas teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T13:30:28.421917+00:00\"}, \n {\"i"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/treatment_sessions?select=*&created_by=eq.dc645142-737e-4926-a2b6-ad0f80f70708",
+      "method": "GET",
+      "timestamp": 1768346321463,
+      "status": 200,
+      "body": "[]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/rpc/get_slow_queries",
+      "method": "POST",
+      "timestamp": 1768346321984,
+      "status": 404,
+      "body": "{\"code\":\"42P01\",\"details\":null,\"hint\":null,\"message\":\"relation \\\"pg_stat_statements\\\" does not exist\"}"
+    },
+    {
+      "url": "http://localhost:8082/src/integrations/supabase/client.ts",
+      "method": "GET",
+      "timestamp": 1768346324537,
+      "status": 200,
+      "body": "import.meta.env = {\"BASE_URL\": \"/\", \"DEV\": true, \"MODE\": \"development\", \"PROD\": false, \"SSR\": false, \"VITE_ANALYTICS_ENABLED\": \"false\", \"VITE_API_BASE_URL\": \"http://localhost:5173/api\", \"VITE_APP_ENV\": \"development\", \"VITE_APP_VERSION\": \"1.0.0\", \"VITE_ENABLE_ANALYTICS\": \"false\", \"VITE_ENABLE_ERROR_TRACKING\": \"true\", \"VITE_ENABLE_LAZY_LOADING\": \"true\", \"VITE_ENABLE_MONITORING\": \"true\", \"VITE_FEATURE_ADVANCED_ANALYTICS\": \"true\", \"VITE_FEATURE_AI_CHATBOT\": \"true\", \"VITE_FEATURE_AI_EXERCISE_SUGGESTI"
+    },
+    {
+      "url": "http://localhost:8082/node_modules/.vite/deps/@supabase_supabase-js.js?v=42d7103d",
+      "method": "GET",
+      "timestamp": 1768346324567,
+      "status": 200,
+      "body": "import {\n  __awaiter,\n  __rest\n} from \"/node_modules/.vite/deps/chunk-RMZNHKEI.js?v=42d7103d\";\nimport \"/node_modules/.vite/deps/chunk-SNAQBZPT.js?v=42d7103d\";\n\n// node_modules/.pnpm/@supabase+functions-js@2.89.0/node_modules/@supabase/functions-js/dist/module/helper.js\nvar resolveFetch = (customFetch) => {\n  if (customFetch) {\n    return (...args) => customFetch(...args);\n  }\n  return (...args) => fetch(...args);\n};\n\n// node_modules/.pnpm/@supabase+functions-js@2.89.0/node_modules/@supabase/func"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/rpc/get_slow_queries",
+      "method": "POST",
+      "timestamp": 1768346327815,
+      "status": 404,
+      "body": "{\"code\":\"42P01\",\"details\":null,\"hint\":null,\"message\":\"relation \\\"pg_stat_statements\\\" does not exist\"}"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/rpc/get_slow_queries",
+      "method": "POST",
+      "timestamp": 1768346327815,
+      "status": 404,
+      "body": "{\"code\":\"42P01\",\"details\":null,\"hint\":null,\"message\":\"relation \\\"pg_stat_statements\\\" does not exist\"}"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?select=*&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346327815,
+      "status": 200,
+      "body": "{\"id\":\"dc645142-737e-4926-a2b6-ad0f80f70708\",\"user_id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"full_name\":\"Rafael\",\"email\":\"rafael.minatto@yahoo.com.br\",\"phone\":null,\"avatar_url\":null,\"onboarding_completed\":false,\"created_at\":\"2025-10-07T03:16:15.718674+00:00\",\"updated_at\":\"2026-01-13T23:18:42.368173+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"cpf\":null,\"specialties\":null,\"is_active\":true,\"license_expiry\":null,\"address\":null,\"birth_date\":null,\"emergency_contact\":null,\"bio\":n"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?select=*&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346327816,
+      "status": 200,
+      "body": "{\"id\":\"dc645142-737e-4926-a2b6-ad0f80f70708\",\"user_id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"full_name\":\"Rafael\",\"email\":\"rafael.minatto@yahoo.com.br\",\"phone\":null,\"avatar_url\":null,\"onboarding_completed\":false,\"created_at\":\"2025-10-07T03:16:15.718674+00:00\",\"updated_at\":\"2026-01-13T23:18:42.368173+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"cpf\":null,\"specialties\":null,\"is_active\":true,\"license_expiry\":null,\"address\":null,\"birth_date\":null,\"emergency_contact\":null,\"bio\":n"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?select=*&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346327816,
+      "status": 200,
+      "body": "{\"id\":\"dc645142-737e-4926-a2b6-ad0f80f70708\",\"user_id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"full_name\":\"Rafael\",\"email\":\"rafael.minatto@yahoo.com.br\",\"phone\":null,\"avatar_url\":null,\"onboarding_completed\":false,\"created_at\":\"2025-10-07T03:16:15.718674+00:00\",\"updated_at\":\"2026-01-13T23:18:42.368173+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"cpf\":null,\"specialties\":null,\"is_active\":true,\"license_expiry\":null,\"address\":null,\"birth_date\":null,\"emergency_contact\":null,\"bio\":n"
+    },
+    {
+      "url": "http://localhost:8082/src/schemas/appointment.ts",
+      "method": "GET",
+      "timestamp": 1768346327892,
+      "status": 200,
+      "body": "/**\n * @file Schema de validação e transformação de agendamentos\n *\n * IMPORTANTE - Problema de Fuso Horário:\n * Quando usamos new Date(\"2026-01-13\"), o JavaScript interpreta como UTC meia-noite.\n * Para Brasil (UTC-3 ou UTC-2 no horário de verão), isso se torna 2026-01-12 21:00 ou 22:00.\n * Isso causa agendamentos a aparecerem no dia anterior na interface.\n *\n * Solução: parsear manualmente a string YYYY-MM-DD e criar o Date usando componentes locais.\n */ import { z } from \"/node_modules/.vite/"
+    },
+    {
+      "url": "http://localhost:8082/src/utils/appointmentValidation.ts",
+      "method": "GET",
+      "timestamp": 1768346327893,
+      "status": 200,
+      "body": "import { parseISO } from \"/node_modules/.vite/deps/date-fns.js?v=42d7103d\";\nexport function checkAppointmentConflict({ date, time, duration, excludeId, appointments }) {\n    // Convert time to minutes for easier comparison\n    const timeToMinutes = (timeStr)=>{\n        if (!timeStr) {\n            return 0;\n        }\n        const [hours, minutes] = timeStr.split(':').map(Number);\n        return hours * 60 + minutes;\n    };\n    const newStartTime = timeToMinutes(time);\n    const newEndTime = newS"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/auth/v1/user",
+      "method": "GET",
+      "timestamp": 1768346328075,
+      "status": 200,
+      "body": "{\"id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"aud\":\"authenticated\",\"role\":\"authenticated\",\"email\":\"rafael.minatto@yahoo.com.br\",\"email_confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"phone\":\"\",\"confirmation_sent_at\":\"2025-10-07T03:16:15.788552Z\",\"confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"last_sign_in_at\":\"2026-01-13T23:18:42.381857Z\",\"app_metadata\":{\"provider\":\"email\",\"providers\":[\"email\"]},\"user_metadata\":{\"email\":\"rafael.minatto@yahoo.com.br\",\"email_verified\":true,\"full_name\":\"Rafael\",\"phone_v"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/auth/v1/user",
+      "method": "GET",
+      "timestamp": 1768346328225,
+      "status": 200,
+      "body": "{\"id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"aud\":\"authenticated\",\"role\":\"authenticated\",\"email\":\"rafael.minatto@yahoo.com.br\",\"email_confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"phone\":\"\",\"confirmation_sent_at\":\"2025-10-07T03:16:15.788552Z\",\"confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"last_sign_in_at\":\"2026-01-13T23:18:42.381857Z\",\"app_metadata\":{\"provider\":\"email\",\"providers\":[\"email\"]},\"user_metadata\":{\"email\":\"rafael.minatto@yahoo.com.br\",\"email_verified\":true,\"full_name\":\"Rafael\",\"phone_v"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/auth/v1/user",
+      "method": "GET",
+      "timestamp": 1768346328399,
+      "status": 200,
+      "body": "{\"id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"aud\":\"authenticated\",\"role\":\"authenticated\",\"email\":\"rafael.minatto@yahoo.com.br\",\"email_confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"phone\":\"\",\"confirmation_sent_at\":\"2025-10-07T03:16:15.788552Z\",\"confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"last_sign_in_at\":\"2026-01-13T23:18:42.381857Z\",\"app_metadata\":{\"provider\":\"email\",\"providers\":[\"email\"]},\"user_metadata\":{\"email\":\"rafael.minatto@yahoo.com.br\",\"email_verified\":true,\"full_name\":\"Rafael\",\"phone_v"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/auth/v1/user",
+      "method": "GET",
+      "timestamp": 1768346328532,
+      "status": 200,
+      "body": "{\"id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"aud\":\"authenticated\",\"role\":\"authenticated\",\"email\":\"rafael.minatto@yahoo.com.br\",\"email_confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"phone\":\"\",\"confirmation_sent_at\":\"2025-10-07T03:16:15.788552Z\",\"confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"last_sign_in_at\":\"2026-01-13T23:18:42.381857Z\",\"app_metadata\":{\"provider\":\"email\",\"providers\":[\"email\"]},\"user_metadata\":{\"email\":\"rafael.minatto@yahoo.com.br\",\"email_verified\":true,\"full_name\":\"Rafael\",\"phone_v"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id%2Cname%3Afull_name&incomplete_registration=eq.true&limit=5",
+      "method": "GET",
+      "timestamp": 1768346328621,
+      "status": 200,
+      "body": "[{\"id\":\"5b51bdf7-ee13-4c91-827a-4f50bdbd3e10\",\"name\":\"rafael minatto de martino\"}, \n {\"id\":\"1defb520-0dfc-4cc0-b14d-889e28df9afa\",\"name\":\"Amanda Hitomi Notoya Minatto\"}, \n {\"id\":\"db8b6371-2570-48ce-800d-720230d97d04\",\"name\":\"jonas teste\"}, \n {\"id\":\"e2b6c6c4-c025-4d77-a96b-de68bc0f24c4\",\"name\":\"Rafael Minatto teste\"}, \n {\"id\":\"7429cc0a-3d89-44d7-b366-c8be553a256b\",\"name\":\"Teste Jetski\"}]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/eventos?select=id%2Cstatus",
+      "method": "GET",
+      "timestamp": 1768346328621,
+      "status": 200,
+      "body": "[]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=*",
+      "method": "HEAD",
+      "timestamp": 1768346328621,
+      "status": 200
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/appointments?select=id%2Cappointment_time%2Cappointment_date%2Cstatus%2Ctype%2Cpatients%21inner%28full_name%29&appointment_date=gte.2026-01-13&order=appointment_date.asc%2Cappointment_time.asc&limit=4",
+      "method": "GET",
+      "timestamp": 1768346328622,
+      "status": 200,
+      "body": "[{\"id\":\"0c4b9b0c-923e-4143-8458-feddfd94328c\",\"appointment_time\":\"08:00:00\",\"appointment_date\":\"2026-01-13\",\"status\":\"agendado\",\"type\":\"fisioterapia\",\"patients\":{\"full_name\": \"Ana Silva\"}}, \n {\"id\":\"2b2cce12-d9b4-4531-a2d8-187b61a3bebd\",\"appointment_time\":\"10:00:00\",\"appointment_date\":\"2026-01-13\",\"status\":\"avaliacao\",\"type\":\"fisioterapia\",\"patients\":{\"full_name\": \"Rafael Minatto teste\"}}, \n {\"id\":\"3cd24bf3-fa3d-4485-b5d8-8b427009f5cc\",\"appointment_time\":\"16:30:00\",\"appointment_date\":\"2026-01-13"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/appointments?select=*&order=created_at.desc&limit=5",
+      "method": "GET",
+      "timestamp": 1768346328622,
+      "status": 200,
+      "body": "[{\"id\":\"db380ce9-1be8-4b47-a57f-2db68d5cabbe\",\"patient_id\":\"4162969c-bb45-45f8-9ce0-02131ac54816\",\"therapist_id\":null,\"appointment_date\":\"2026-01-17\",\"appointment_time\":\"12:00:00\",\"duration\":60,\"type\":\"fisioterapia\",\"status\":\"agendado\",\"room\":null,\"notes\":null,\"created_at\":\"2026-01-13T23:06:56.0068+00:00\",\"updated_at\":\"2026-01-13T23:06:56.0068+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"confirmation_status\":\"pending\",\"reminder_sent_24h\":null,\"reminder_sent_2h\":null,\"confirme"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id%2Cname%3Afull_name&incomplete_registration=eq.true&limit=5",
+      "method": "GET",
+      "timestamp": 1768346328622,
+      "status": 200,
+      "body": "[{\"id\":\"5b51bdf7-ee13-4c91-827a-4f50bdbd3e10\",\"name\":\"rafael minatto de martino\"}, \n {\"id\":\"1defb520-0dfc-4cc0-b14d-889e28df9afa\",\"name\":\"Amanda Hitomi Notoya Minatto\"}, \n {\"id\":\"db8b6371-2570-48ce-800d-720230d97d04\",\"name\":\"jonas teste\"}, \n {\"id\":\"e2b6c6c4-c025-4d77-a96b-de68bc0f24c4\",\"name\":\"Rafael Minatto teste\"}, \n {\"id\":\"7429cc0a-3d89-44d7-b366-c8be553a256b\",\"name\":\"Teste Jetski\"}]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/appointments?select=*&order=created_at.desc&limit=5",
+      "method": "GET",
+      "timestamp": 1768346328623,
+      "status": 200,
+      "body": "[{\"id\":\"db380ce9-1be8-4b47-a57f-2db68d5cabbe\",\"patient_id\":\"4162969c-bb45-45f8-9ce0-02131ac54816\",\"therapist_id\":null,\"appointment_date\":\"2026-01-17\",\"appointment_time\":\"12:00:00\",\"duration\":60,\"type\":\"fisioterapia\",\"status\":\"agendado\",\"room\":null,\"notes\":null,\"created_at\":\"2026-01-13T23:06:56.0068+00:00\",\"updated_at\":\"2026-01-13T23:06:56.0068+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"confirmation_status\":\"pending\",\"reminder_sent_24h\":null,\"reminder_sent_2h\":null,\"confirme"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?select=*&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346328623,
+      "status": 200,
+      "body": "{\"id\":\"dc645142-737e-4926-a2b6-ad0f80f70708\",\"user_id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"full_name\":\"Rafael\",\"email\":\"rafael.minatto@yahoo.com.br\",\"phone\":null,\"avatar_url\":null,\"onboarding_completed\":false,\"created_at\":\"2025-10-07T03:16:15.718674+00:00\",\"updated_at\":\"2026-01-13T23:18:42.368173+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"cpf\":null,\"specialties\":null,\"is_active\":true,\"license_expiry\":null,\"address\":null,\"birth_date\":null,\"emergency_contact\":null,\"bio\":n"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?select=*&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346328624,
+      "status": 200,
+      "body": "{\"id\":\"dc645142-737e-4926-a2b6-ad0f80f70708\",\"user_id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"full_name\":\"Rafael\",\"email\":\"rafael.minatto@yahoo.com.br\",\"phone\":null,\"avatar_url\":null,\"onboarding_completed\":false,\"created_at\":\"2025-10-07T03:16:15.718674+00:00\",\"updated_at\":\"2026-01-13T23:18:42.368173+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"cpf\":null,\"specialties\":null,\"is_active\":true,\"license_expiry\":null,\"address\":null,\"birth_date\":null,\"emergency_contact\":null,\"bio\":n"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?select=*&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346328624,
+      "status": 200,
+      "body": "{\"id\":\"dc645142-737e-4926-a2b6-ad0f80f70708\",\"user_id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"full_name\":\"Rafael\",\"email\":\"rafael.minatto@yahoo.com.br\",\"phone\":null,\"avatar_url\":null,\"onboarding_completed\":false,\"created_at\":\"2025-10-07T03:16:15.718674+00:00\",\"updated_at\":\"2026-01-13T23:18:42.368173+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"cpf\":null,\"specialties\":null,\"is_active\":true,\"license_expiry\":null,\"address\":null,\"birth_date\":null,\"emergency_contact\":null,\"bio\":n"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/auth/v1/user",
+      "method": "GET",
+      "timestamp": 1768346328624,
+      "status": 200,
+      "body": "{\"id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"aud\":\"authenticated\",\"role\":\"authenticated\",\"email\":\"rafael.minatto@yahoo.com.br\",\"email_confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"phone\":\"\",\"confirmation_sent_at\":\"2025-10-07T03:16:15.788552Z\",\"confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"last_sign_in_at\":\"2026-01-13T23:18:42.381857Z\",\"app_metadata\":{\"provider\":\"email\",\"providers\":[\"email\"]},\"user_metadata\":{\"email\":\"rafael.minatto@yahoo.com.br\",\"email_verified\":true,\"full_name\":\"Rafael\",\"phone_v"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/auth/v1/user",
+      "method": "GET",
+      "timestamp": 1768346328748,
+      "status": 200,
+      "body": "{\"id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"aud\":\"authenticated\",\"role\":\"authenticated\",\"email\":\"rafael.minatto@yahoo.com.br\",\"email_confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"phone\":\"\",\"confirmation_sent_at\":\"2025-10-07T03:16:15.788552Z\",\"confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"last_sign_in_at\":\"2026-01-13T23:18:42.381857Z\",\"app_metadata\":{\"provider\":\"email\",\"providers\":[\"email\"]},\"user_metadata\":{\"email\":\"rafael.minatto@yahoo.com.br\",\"email_verified\":true,\"full_name\":\"Rafael\",\"phone_v"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/auth/v1/user",
+      "method": "GET",
+      "timestamp": 1768346328848,
+      "status": 200,
+      "body": "{\"id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"aud\":\"authenticated\",\"role\":\"authenticated\",\"email\":\"rafael.minatto@yahoo.com.br\",\"email_confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"phone\":\"\",\"confirmation_sent_at\":\"2025-10-07T03:16:15.788552Z\",\"confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"last_sign_in_at\":\"2026-01-13T23:18:42.381857Z\",\"app_metadata\":{\"provider\":\"email\",\"providers\":[\"email\"]},\"user_metadata\":{\"email\":\"rafael.minatto@yahoo.com.br\",\"email_verified\":true,\"full_name\":\"Rafael\",\"phone_v"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/appointments?select=patient_id&appointment_date=gte.2025-12-13&status=neq.cancelado",
+      "method": "GET",
+      "timestamp": 1768346328938,
+      "status": 200,
+      "body": "[{\"patient_id\":\"c899f0af-7cc0-4ddd-b02f-4c52af9b5363\"}, \n {\"patient_id\":\"1468917d-421d-4aa7-9389-7e5a5e3e309d\"}, \n {\"patient_id\":\"a0f4d9c8-42fa-4a85-9066-f3a1158d0eb5\"}, \n {\"patient_id\":\"5b51bdf7-ee13-4c91-827a-4f50bdbd3e10\"}, \n {\"patient_id\":\"1defb520-0dfc-4cc0-b14d-889e28df9afa\"}, \n {\"patient_id\":\"6aa3cf8b-70df-4639-91b2-2040a94fe865\"}, \n {\"patient_id\":\"e18ef59c-da2e-4ff8-a084-e177fad503b8\"}, \n {\"patient_id\":\"5b51bdf7-ee13-4c91-827a-4f50bdbd3e10\"}, \n {\"patient_id\":\"c899f0af-7cc0-4ddd-b02f-4c52"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/appointments?select=*%2Cpatients%21inner%28id%2Cfull_name%2Cphone%2Cemail%29%2Cprofiles%3Atherapist_id%28full_name%29&organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02&order=appointment_date.asc%2Cappointment_time.asc",
+      "method": "GET",
+      "timestamp": 1768346328938,
+      "status": 200,
+      "body": "[{\"id\":\"aabc18bf-c579-40ef-9d34-066d9ca66614\",\"patient_id\":\"0a0f5aa5-6700-4d62-ae13-92a0df0fb58b\",\"therapist_id\":null,\"appointment_date\":\"2025-09-23\",\"appointment_time\":\"09:00:00\",\"duration\":60,\"type\":\"fisioterapia\",\"status\":\"agendado\",\"room\":null,\"notes\":\"Avaliação inicial realizada\",\"created_at\":\"2025-10-07T02:56:26.922731+00:00\",\"updated_at\":\"2026-01-08T04:48:24.938737+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"confirmation_status\":\"pending\",\"reminder_sent_24h\":null,\"rem"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id%2Cname%3Afull_name%2Cstatus%2Cphone%2Cemail%2Ccreated_at&limit=5&order=created_at.desc",
+      "method": "GET",
+      "timestamp": 1768346328939,
+      "status": 200,
+      "body": "[{\"id\":\"7429cc0a-3d89-44d7-b366-c8be553a256b\",\"name\":\"Teste Jetski\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-13T21:57:37.422224+00:00\"}, \n {\"id\":\"e2b6c6c4-c025-4d77-a96b-de68bc0f24c4\",\"name\":\"Rafael Minatto teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T14:04:53.852556+00:00\"}, \n {\"id\":\"db8b6371-2570-48ce-800d-720230d97d04\",\"name\":\"jonas teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T13:30:28.421917+00:00\"}, \n {\"i"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id%2Cname%3Afull_name%2Cstatus%2Cphone%2Cemail%2Ccreated_at&limit=5&order=created_at.desc",
+      "method": "GET",
+      "timestamp": 1768346328939,
+      "status": 200,
+      "body": "[{\"id\":\"7429cc0a-3d89-44d7-b366-c8be553a256b\",\"name\":\"Teste Jetski\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-13T21:57:37.422224+00:00\"}, \n {\"id\":\"e2b6c6c4-c025-4d77-a96b-de68bc0f24c4\",\"name\":\"Rafael Minatto teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T14:04:53.852556+00:00\"}, \n {\"id\":\"db8b6371-2570-48ce-800d-720230d97d04\",\"name\":\"jonas teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T13:30:28.421917+00:00\"}, \n {\"i"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/pagamentos?select=valor%2Ctipo",
+      "method": "GET",
+      "timestamp": 1768346328939,
+      "status": 200,
+      "body": "[{\"valor\":500.00,\"tipo\":\"prestador\"}, \n {\"valor\":100.00,\"tipo\":\"insumo\"}, \n {\"valor\":600.00,\"tipo\":\"prestador\"}, \n {\"valor\":800.00,\"tipo\":\"prestador\"}, \n {\"valor\":500.00,\"tipo\":\"prestador\"}, \n {\"valor\":100.00,\"tipo\":\"insumo\"}, \n {\"valor\":600.00,\"tipo\":\"prestador\"}, \n {\"valor\":800.00,\"tipo\":\"prestador\"}]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/auth/v1/user",
+      "method": "GET",
+      "timestamp": 1768346328940,
+      "status": 200,
+      "body": "{\"id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"aud\":\"authenticated\",\"role\":\"authenticated\",\"email\":\"rafael.minatto@yahoo.com.br\",\"email_confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"phone\":\"\",\"confirmation_sent_at\":\"2025-10-07T03:16:15.788552Z\",\"confirmed_at\":\"2025-10-07T03:16:29.246484Z\",\"last_sign_in_at\":\"2026-01-13T23:18:42.381857Z\",\"app_metadata\":{\"provider\":\"email\",\"providers\":[\"email\"]},\"user_metadata\":{\"email\":\"rafael.minatto@yahoo.com.br\",\"email_verified\":true,\"full_name\":\"Rafael\",\"phone_v"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id%2Cname%3Afull_name&incomplete_registration=eq.true&limit=5",
+      "method": "GET",
+      "timestamp": 1768346329053,
+      "status": 200,
+      "body": "[{\"id\":\"5b51bdf7-ee13-4c91-827a-4f50bdbd3e10\",\"name\":\"rafael minatto de martino\"}, \n {\"id\":\"1defb520-0dfc-4cc0-b14d-889e28df9afa\",\"name\":\"Amanda Hitomi Notoya Minatto\"}, \n {\"id\":\"db8b6371-2570-48ce-800d-720230d97d04\",\"name\":\"jonas teste\"}, \n {\"id\":\"e2b6c6c4-c025-4d77-a96b-de68bc0f24c4\",\"name\":\"Rafael Minatto teste\"}, \n {\"id\":\"7429cc0a-3d89-44d7-b366-c8be553a256b\",\"name\":\"Teste Jetski\"}]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/appointments?select=*&order=created_at.desc&limit=5",
+      "method": "GET",
+      "timestamp": 1768346329053,
+      "status": 200,
+      "body": "[{\"id\":\"db380ce9-1be8-4b47-a57f-2db68d5cabbe\",\"patient_id\":\"4162969c-bb45-45f8-9ce0-02131ac54816\",\"therapist_id\":null,\"appointment_date\":\"2026-01-17\",\"appointment_time\":\"12:00:00\",\"duration\":60,\"type\":\"fisioterapia\",\"status\":\"agendado\",\"room\":null,\"notes\":null,\"created_at\":\"2026-01-13T23:06:56.0068+00:00\",\"updated_at\":\"2026-01-13T23:06:56.0068+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"confirmation_status\":\"pending\",\"reminder_sent_24h\":null,\"reminder_sent_2h\":null,\"confirme"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id%2Cname%3Afull_name&incomplete_registration=eq.true&limit=5",
+      "method": "GET",
+      "timestamp": 1768346329053,
+      "status": 200,
+      "body": "[{\"id\":\"5b51bdf7-ee13-4c91-827a-4f50bdbd3e10\",\"name\":\"rafael minatto de martino\"}, \n {\"id\":\"1defb520-0dfc-4cc0-b14d-889e28df9afa\",\"name\":\"Amanda Hitomi Notoya Minatto\"}, \n {\"id\":\"db8b6371-2570-48ce-800d-720230d97d04\",\"name\":\"jonas teste\"}, \n {\"id\":\"e2b6c6c4-c025-4d77-a96b-de68bc0f24c4\",\"name\":\"Rafael Minatto teste\"}, \n {\"id\":\"7429cc0a-3d89-44d7-b366-c8be553a256b\",\"name\":\"Teste Jetski\"}]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/appointments?select=*&order=created_at.desc&limit=5",
+      "method": "GET",
+      "timestamp": 1768346329053,
+      "status": 200,
+      "body": "[{\"id\":\"db380ce9-1be8-4b47-a57f-2db68d5cabbe\",\"patient_id\":\"4162969c-bb45-45f8-9ce0-02131ac54816\",\"therapist_id\":null,\"appointment_date\":\"2026-01-17\",\"appointment_time\":\"12:00:00\",\"duration\":60,\"type\":\"fisioterapia\",\"status\":\"agendado\",\"room\":null,\"notes\":null,\"created_at\":\"2026-01-13T23:06:56.0068+00:00\",\"updated_at\":\"2026-01-13T23:06:56.0068+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"confirmation_status\":\"pending\",\"reminder_sent_24h\":null,\"reminder_sent_2h\":null,\"confirme"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?select=*&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346329054,
+      "status": 200,
+      "body": "{\"id\":\"dc645142-737e-4926-a2b6-ad0f80f70708\",\"user_id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"full_name\":\"Rafael\",\"email\":\"rafael.minatto@yahoo.com.br\",\"phone\":null,\"avatar_url\":null,\"onboarding_completed\":false,\"created_at\":\"2025-10-07T03:16:15.718674+00:00\",\"updated_at\":\"2026-01-13T23:18:42.368173+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"cpf\":null,\"specialties\":null,\"is_active\":true,\"license_expiry\":null,\"address\":null,\"birth_date\":null,\"emergency_contact\":null,\"bio\":n"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?select=*&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346329055,
+      "status": 200,
+      "body": "{\"id\":\"dc645142-737e-4926-a2b6-ad0f80f70708\",\"user_id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"full_name\":\"Rafael\",\"email\":\"rafael.minatto@yahoo.com.br\",\"phone\":null,\"avatar_url\":null,\"onboarding_completed\":false,\"created_at\":\"2025-10-07T03:16:15.718674+00:00\",\"updated_at\":\"2026-01-13T23:18:42.368173+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"cpf\":null,\"specialties\":null,\"is_active\":true,\"license_expiry\":null,\"address\":null,\"birth_date\":null,\"emergency_contact\":null,\"bio\":n"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?select=*&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346329055,
+      "status": 200,
+      "body": "{\"id\":\"dc645142-737e-4926-a2b6-ad0f80f70708\",\"user_id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"full_name\":\"Rafael\",\"email\":\"rafael.minatto@yahoo.com.br\",\"phone\":null,\"avatar_url\":null,\"onboarding_completed\":false,\"created_at\":\"2025-10-07T03:16:15.718674+00:00\",\"updated_at\":\"2026-01-13T23:18:42.368173+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"cpf\":null,\"specialties\":null,\"is_active\":true,\"license_expiry\":null,\"address\":null,\"birth_date\":null,\"emergency_contact\":null,\"bio\":n"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/user_roles?select=role&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804&limit=1",
+      "method": "GET",
+      "timestamp": 1768346329055,
+      "status": 200,
+      "body": "{\"role\":\"admin\"}"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?select=*&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346329055,
+      "status": 200,
+      "body": "{\"id\":\"dc645142-737e-4926-a2b6-ad0f80f70708\",\"user_id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"full_name\":\"Rafael\",\"email\":\"rafael.minatto@yahoo.com.br\",\"phone\":null,\"avatar_url\":null,\"onboarding_completed\":false,\"created_at\":\"2025-10-07T03:16:15.718674+00:00\",\"updated_at\":\"2026-01-13T23:18:42.368173+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"cpf\":null,\"specialties\":null,\"is_active\":true,\"license_expiry\":null,\"address\":null,\"birth_date\":null,\"emergency_contact\":null,\"bio\":n"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?select=*&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346329055,
+      "status": 200,
+      "body": "{\"id\":\"dc645142-737e-4926-a2b6-ad0f80f70708\",\"user_id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"full_name\":\"Rafael\",\"email\":\"rafael.minatto@yahoo.com.br\",\"phone\":null,\"avatar_url\":null,\"onboarding_completed\":false,\"created_at\":\"2025-10-07T03:16:15.718674+00:00\",\"updated_at\":\"2026-01-13T23:18:42.368173+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"cpf\":null,\"specialties\":null,\"is_active\":true,\"license_expiry\":null,\"address\":null,\"birth_date\":null,\"emergency_contact\":null,\"bio\":n"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/user_roles?select=role&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804&limit=1",
+      "method": "GET",
+      "timestamp": 1768346329056,
+      "status": 200,
+      "body": "{\"role\":\"admin\"}"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?select=full_name&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346329056,
+      "status": 200,
+      "body": "{\"full_name\":\"Rafael\"}"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?select=*&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346329056,
+      "status": 200,
+      "body": "{\"id\":\"dc645142-737e-4926-a2b6-ad0f80f70708\",\"user_id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"full_name\":\"Rafael\",\"email\":\"rafael.minatto@yahoo.com.br\",\"phone\":null,\"avatar_url\":null,\"onboarding_completed\":false,\"created_at\":\"2025-10-07T03:16:15.718674+00:00\",\"updated_at\":\"2026-01-13T23:18:42.368173+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"cpf\":null,\"specialties\":null,\"is_active\":true,\"license_expiry\":null,\"address\":null,\"birth_date\":null,\"emergency_contact\":null,\"bio\":n"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?select=*&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346329057,
+      "status": 200,
+      "body": "{\"id\":\"dc645142-737e-4926-a2b6-ad0f80f70708\",\"user_id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"full_name\":\"Rafael\",\"email\":\"rafael.minatto@yahoo.com.br\",\"phone\":null,\"avatar_url\":null,\"onboarding_completed\":false,\"created_at\":\"2025-10-07T03:16:15.718674+00:00\",\"updated_at\":\"2026-01-13T23:18:42.368173+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"cpf\":null,\"specialties\":null,\"is_active\":true,\"license_expiry\":null,\"address\":null,\"birth_date\":null,\"emergency_contact\":null,\"bio\":n"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/treatment_sessions?select=*&created_by=eq.dc645142-737e-4926-a2b6-ad0f80f70708",
+      "method": "GET",
+      "timestamp": 1768346329057,
+      "status": 200,
+      "body": "[]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?select=*&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346329057,
+      "status": 200,
+      "body": "{\"id\":\"dc645142-737e-4926-a2b6-ad0f80f70708\",\"user_id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"full_name\":\"Rafael\",\"email\":\"rafael.minatto@yahoo.com.br\",\"phone\":null,\"avatar_url\":null,\"onboarding_completed\":false,\"created_at\":\"2025-10-07T03:16:15.718674+00:00\",\"updated_at\":\"2026-01-13T23:18:42.368173+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"cpf\":null,\"specialties\":null,\"is_active\":true,\"license_expiry\":null,\"address\":null,\"birth_date\":null,\"emergency_contact\":null,\"bio\":n"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id%2Cname%3Afull_name%2Cstatus%2Cphone%2Cemail%2Ccreated_at&limit=5&order=created_at.desc",
+      "method": "GET",
+      "timestamp": 1768346329058,
+      "status": 200,
+      "body": "[{\"id\":\"7429cc0a-3d89-44d7-b366-c8be553a256b\",\"name\":\"Teste Jetski\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-13T21:57:37.422224+00:00\"}, \n {\"id\":\"e2b6c6c4-c025-4d77-a96b-de68bc0f24c4\",\"name\":\"Rafael Minatto teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T14:04:53.852556+00:00\"}, \n {\"id\":\"db8b6371-2570-48ce-800d-720230d97d04\",\"name\":\"jonas teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T13:30:28.421917+00:00\"}, \n {\"i"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?select=*&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346329058,
+      "status": 200,
+      "body": "{\"id\":\"dc645142-737e-4926-a2b6-ad0f80f70708\",\"user_id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"full_name\":\"Rafael\",\"email\":\"rafael.minatto@yahoo.com.br\",\"phone\":null,\"avatar_url\":null,\"onboarding_completed\":false,\"created_at\":\"2025-10-07T03:16:15.718674+00:00\",\"updated_at\":\"2026-01-13T23:18:42.368173+00:00\",\"organization_id\":\"ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02\",\"cpf\":null,\"specialties\":null,\"is_active\":true,\"license_expiry\":null,\"address\":null,\"birth_date\":null,\"emergency_contact\":null,\"bio\":n"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id%2Cname%3Afull_name%2Cstatus%2Cphone%2Cemail%2Ccreated_at&limit=5&order=created_at.desc",
+      "method": "GET",
+      "timestamp": 1768346329058,
+      "status": 200,
+      "body": "[{\"id\":\"7429cc0a-3d89-44d7-b366-c8be553a256b\",\"name\":\"Teste Jetski\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-13T21:57:37.422224+00:00\"}, \n {\"id\":\"e2b6c6c4-c025-4d77-a96b-de68bc0f24c4\",\"name\":\"Rafael Minatto teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T14:04:53.852556+00:00\"}, \n {\"id\":\"db8b6371-2570-48ce-800d-720230d97d04\",\"name\":\"jonas teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T13:30:28.421917+00:00\"}, \n {\"i"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=*&created_at=gte.2026-01-01",
+      "method": "HEAD",
+      "timestamp": 1768346329072,
+      "status": 200
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/participantes?select=*",
+      "method": "HEAD",
+      "timestamp": 1768346329072,
+      "status": 200
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/treatment_sessions?select=*&created_by=eq.dc645142-737e-4926-a2b6-ad0f80f70708",
+      "method": "GET",
+      "timestamp": 1768346329081,
+      "status": 200,
+      "body": "[]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/user_roles?select=role&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804",
+      "method": "GET",
+      "timestamp": 1768346329134,
+      "status": 200,
+      "body": "[{\"role\":\"paciente\"}, \n {\"role\":\"admin\"}]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id%2Cname%3Afull_name%2Cstatus%2Cphone%2Cemail%2Ccreated_at&limit=5&order=created_at.desc",
+      "method": "GET",
+      "timestamp": 1768346329175,
+      "status": 200,
+      "body": "[{\"id\":\"7429cc0a-3d89-44d7-b366-c8be553a256b\",\"name\":\"Teste Jetski\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-13T21:57:37.422224+00:00\"}, \n {\"id\":\"e2b6c6c4-c025-4d77-a96b-de68bc0f24c4\",\"name\":\"Rafael Minatto teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T14:04:53.852556+00:00\"}, \n {\"id\":\"db8b6371-2570-48ce-800d-720230d97d04\",\"name\":\"jonas teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T13:30:28.421917+00:00\"}, \n {\"i"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/appointments?select=*&appointment_date=eq.2026-01-13",
+      "method": "HEAD",
+      "timestamp": 1768346329227,
+      "status": 200
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/treatment_sessions?select=*&created_by=eq.dc645142-737e-4926-a2b6-ad0f80f70708",
+      "method": "GET",
+      "timestamp": 1768346329228,
+      "status": 200,
+      "body": "[]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/user_roles?select=role&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804&limit=1",
+      "method": "GET",
+      "timestamp": 1768346329231,
+      "status": 200,
+      "body": "{\"role\":\"admin\"}"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id%2Cname%3Afull_name&id=in.%284162969c-bb45-45f8-9ce0-02131ac54816%2Ce18ef59c-da2e-4ff8-a084-e177fad503b8%2C7429cc0a-3d89-44d7-b366-c8be553a256b%2Ce2b6c6c4-c025-4d77-a96b-de68bc0f24c4%29",
+      "method": "GET",
+      "timestamp": 1768346329265,
+      "status": 200,
+      "body": "[{\"id\":\"4162969c-bb45-45f8-9ce0-02131ac54816\",\"name\":\"Elena Costa\"}, \n {\"id\":\"7429cc0a-3d89-44d7-b366-c8be553a256b\",\"name\":\"Teste Jetski\"}, \n {\"id\":\"e18ef59c-da2e-4ff8-a084-e177fad503b8\",\"name\":\"Ana Silva\"}, \n {\"id\":\"e2b6c6c4-c025-4d77-a96b-de68bc0f24c4\",\"name\":\"Rafael Minatto teste\"}]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/user_roles?select=role&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804&limit=1",
+      "method": "GET",
+      "timestamp": 1768346329298,
+      "status": 200,
+      "body": "{\"role\":\"admin\"}"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/treatment_sessions?select=*&created_by=eq.dc645142-737e-4926-a2b6-ad0f80f70708",
+      "method": "GET",
+      "timestamp": 1768346329318,
+      "status": 200,
+      "body": "[]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/appointments?select=*&appointment_date=eq.2026-01-13&status=eq.concluido",
+      "method": "HEAD",
+      "timestamp": 1768346329356,
+      "status": 200
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/treatment_sessions?select=*&created_by=eq.dc645142-737e-4926-a2b6-ad0f80f70708",
+      "method": "GET",
+      "timestamp": 1768346329422,
+      "status": 200,
+      "body": "[]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/user_roles?select=role&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804&limit=1",
+      "method": "GET",
+      "timestamp": 1768346329452,
+      "status": 200,
+      "body": "{\"role\":\"admin\"}"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/appointments?select=*&appointment_date=gte.2025-12-13&appointment_date=lte.2026-01-13",
+      "method": "HEAD",
+      "timestamp": 1768346329553,
+      "status": 200
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/user_roles?select=role&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804&limit=1",
+      "method": "GET",
+      "timestamp": 1768346329554,
+      "status": 200,
+      "body": "{\"role\":\"admin\"}"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id%2Cname%3Afull_name%2Cstatus%2Cphone%2Cemail%2Ccreated_at&limit=5&order=created_at.desc",
+      "method": "GET",
+      "timestamp": 1768346329672,
+      "status": 200,
+      "body": "[{\"id\":\"7429cc0a-3d89-44d7-b366-c8be553a256b\",\"name\":\"Teste Jetski\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-13T21:57:37.422224+00:00\"}, \n {\"id\":\"e2b6c6c4-c025-4d77-a96b-de68bc0f24c4\",\"name\":\"Rafael Minatto teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T14:04:53.852556+00:00\"}, \n {\"id\":\"db8b6371-2570-48ce-800d-720230d97d04\",\"name\":\"jonas teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T13:30:28.421917+00:00\"}, \n {\"i"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/user_roles?select=role&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804&limit=1",
+      "method": "GET",
+      "timestamp": 1768346329673,
+      "status": 200,
+      "body": "{\"role\":\"admin\"}"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/user_roles?select=role&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804&limit=1",
+      "method": "GET",
+      "timestamp": 1768346329692,
+      "status": 200,
+      "body": "{\"role\":\"admin\"}"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/appointments?select=*&appointment_date=gte.2025-12-13&appointment_date=lte.2026-01-13&status=eq.falta",
+      "method": "HEAD",
+      "timestamp": 1768346329748,
+      "status": 200
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/rpc/get_slow_queries",
+      "method": "POST",
+      "timestamp": 1768346329779,
+      "status": 404,
+      "body": "{\"code\":\"42P01\",\"details\":null,\"hint\":null,\"message\":\"relation \\\"pg_stat_statements\\\" does not exist\"}"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/treatment_sessions?select=*&created_by=eq.dc645142-737e-4926-a2b6-ad0f80f70708",
+      "method": "GET",
+      "timestamp": 1768346329781,
+      "status": 200,
+      "body": "[]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/user_roles?select=role&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804&limit=1",
+      "method": "GET",
+      "timestamp": 1768346329781,
+      "status": 200,
+      "body": "{\"role\":\"admin\"}"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/user_roles?select=user_id%2Crole&role=in.%28admin%2Cfisioterapeuta%29",
+      "method": "GET",
+      "timestamp": 1768346329861,
+      "status": 200,
+      "body": "[{\"user_id\":\"a1b65811-77b6-42a7-a16d-306ce16a4804\",\"role\":\"admin\"}, \n {\"user_id\":\"73de6456-af19-43e6-9cce-bec0e69f8796\",\"role\":\"admin\"}, \n {\"user_id\":\"b0de2bda-1c74-4953-b0a7-7073648c15df\",\"role\":\"fisioterapeuta\"}]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/user_roles?select=role&user_id=eq.a1b65811-77b6-42a7-a16d-306ce16a4804&limit=1",
+      "method": "GET",
+      "timestamp": 1768346329865,
+      "status": 200,
+      "body": "{\"role\":\"admin\"}"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id%2Cname%3Afull_name%2Cstatus%2Cphone%2Cemail%2Ccreated_at&limit=5&order=created_at.desc",
+      "method": "GET",
+      "timestamp": 1768346329927,
+      "status": 200,
+      "body": "[{\"id\":\"7429cc0a-3d89-44d7-b366-c8be553a256b\",\"name\":\"Teste Jetski\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-13T21:57:37.422224+00:00\"}, \n {\"id\":\"e2b6c6c4-c025-4d77-a96b-de68bc0f24c4\",\"name\":\"Rafael Minatto teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T14:04:53.852556+00:00\"}, \n {\"id\":\"db8b6371-2570-48ce-800d-720230d97d04\",\"name\":\"jonas teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T13:30:28.421917+00:00\"}, \n {\"i"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id%2Cname%3Afull_name%2Cstatus%2Cphone%2Cemail%2Ccreated_at&limit=5&order=created_at.desc",
+      "method": "GET",
+      "timestamp": 1768346329959,
+      "status": 200,
+      "body": "[{\"id\":\"7429cc0a-3d89-44d7-b366-c8be553a256b\",\"name\":\"Teste Jetski\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-13T21:57:37.422224+00:00\"}, \n {\"id\":\"e2b6c6c4-c025-4d77-a96b-de68bc0f24c4\",\"name\":\"Rafael Minatto teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T14:04:53.852556+00:00\"}, \n {\"id\":\"db8b6371-2570-48ce-800d-720230d97d04\",\"name\":\"jonas teste\",\"status\":\"active\",\"phone\":null,\"email\":null,\"created_at\":\"2026-01-08T13:30:28.421917+00:00\"}, \n {\"i"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/profiles?select=*&user_id=in.%28a1b65811-77b6-42a7-a16d-306ce16a4804%2C73de6456-af19-43e6-9cce-bec0e69f8796%2Cb0de2bda-1c74-4953-b0a7-7073648c15df%29",
+      "method": "HEAD",
+      "timestamp": 1768346329968,
+      "status": 200
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/treatment_sessions?select=*&created_by=eq.dc645142-737e-4926-a2b6-ad0f80f70708",
+      "method": "GET",
+      "timestamp": 1768346329986,
+      "status": 200,
+      "body": "[]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/contas_financeiras?select=valor&tipo=eq.receita&status=eq.pago&data_pagamento=gte.2026-01-01",
+      "method": "GET",
+      "timestamp": 1768346330083,
+      "status": 200,
+      "body": "[]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/treatment_sessions?select=*&created_by=eq.dc645142-737e-4926-a2b6-ad0f80f70708",
+      "method": "GET",
+      "timestamp": 1768346330084,
+      "status": 200,
+      "body": "[]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/contas_financeiras?select=valor&tipo=eq.receita&status=eq.pago&data_pagamento=gte.2025-12-01&data_pagamento=lt.2026-01-01",
+      "method": "GET",
+      "timestamp": 1768346330207,
+      "status": 200,
+      "body": "[]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/appointments?select=*&appointment_date=gte.2025-12-13&status=eq.concluido",
+      "method": "HEAD",
+      "timestamp": 1768346330308,
+      "status": 200
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/appointments?select=therapist_id%2Cpayment_amount%2Cstatus%2Cprofiles%21appointments_therapist_id_fkey%28id%2Cfull_name%29&appointment_date=gte.2026-01-01&status=eq.concluido",
+      "method": "GET",
+      "timestamp": 1768346330475,
+      "status": 200,
+      "body": "[]"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/appointments?select=appointment_date%2Cstatus&appointment_date=gte.2026-01-12&appointment_date=lte.2026-01-18",
+      "method": "GET",
+      "timestamp": 1768346330680,
+      "status": 200,
+      "body": "[{\"appointment_date\":\"2026-01-12\",\"status\":\"agendado\"}, \n {\"appointment_date\":\"2026-01-12\",\"status\":\"agendado\"}, \n {\"appointment_date\":\"2026-01-12\",\"status\":\"agendado\"}, \n {\"appointment_date\":\"2026-01-13\",\"status\":\"agendado\"}, \n {\"appointment_date\":\"2026-01-13\",\"status\":\"avaliacao\"}, \n {\"appointment_date\":\"2026-01-13\",\"status\":\"avaliacao\"}, \n {\"appointment_date\":\"2026-01-14\",\"status\":\"avaliacao\"}, \n {\"appointment_date\":\"2026-01-15\",\"status\":\"avaliacao\"}, \n {\"appointment_date\":\"2026-01-16\",\"statu"
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/appointments?select=*&appointment_date=gte.2026-01-12&appointment_date=lte.2026-01-18",
+      "method": "HEAD",
+      "timestamp": 1768346330883,
+      "status": 200
+    },
+    {
+      "url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/appointments?select=*&appointment_date=gte.2026-01-12&appointment_date=lte.2026-01-18&status=eq.cancelado",
+      "method": "HEAD",
+      "timestamp": 1768346331088,
+      "status": 200
+    }
+  ],
+  "url": "http://localhost:8082/"
+}

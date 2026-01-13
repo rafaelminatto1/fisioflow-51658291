@@ -53,6 +53,7 @@ export default defineConfig(({ mode }) => {
       }),
       VitePWA({
         registerType: 'autoUpdate',
+        // Versão dinâmica baseada no commit SHA ou timestamp para forçar atualização
         includeAssets: ['icons/*.svg', 'icons/*.png', 'favicon.ico'],
         manifest: {
           name: 'FisioFlow - Sistema de Gestão',
@@ -79,6 +80,8 @@ export default defineConfig(({ mode }) => {
             }
           ],
           categories: ['health', 'medical', 'productivity'],
+          // Versão dinâmica do manifest - força atualização do PWA
+          version: process.env.VERCEL_GIT_COMMIT_SHA || Date.now().toString(),
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff2}'],
@@ -90,6 +93,8 @@ export default defineConfig(({ mode }) => {
           skipWaiting: true,
           clientsClaim: true,
           cleanupOutdatedCaches: true,
+          // Cache ID dinâmico para forçar invalidação
+          cacheId: `fisioflow-v${process.env.VERCEL_GIT_COMMIT_SHA || Date.now()}`,
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,

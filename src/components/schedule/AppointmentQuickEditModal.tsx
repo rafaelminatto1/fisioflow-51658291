@@ -440,10 +440,6 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
   const handleStartAttendance = useCallback(() => {
     if (!appointment) return;
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/components/schedule/AppointmentQuickEditModal.tsx:440',message:'handleStartAttendance called',data:{appointmentId:appointment.id,patientId:appointment.patientId,patientName:appointment.patientName,status:formData.status,targetUrl:formData.status==='avaliacao'?`/patients/${appointment.patientId}/evaluations/new?appointmentId=${appointment.id}`:`/patient-evolution/${appointment.id}`},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H5'})}).catch(()=>{});
-    // #endregion
-
     if (formData.status === 'avaliacao') {
       navigate(`/patients/${appointment.patientId}/evaluations/new?appointmentId=${appointment.id}`);
       toast.success('Iniciando avaliação', {
