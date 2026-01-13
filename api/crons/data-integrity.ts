@@ -1,9 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 
-export const config = {
-    runtime: 'edge',
-};
-
 // Use service role key for admin access relative to cron
 const supabase = createClient(
     process.env.VITE_SUPABASE_URL!,

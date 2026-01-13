@@ -1,9 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-export const config = {
-    runtime: 'edge',
-};
-
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
 
 export default async function handler(request: Request) {
