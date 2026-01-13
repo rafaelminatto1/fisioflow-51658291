@@ -2,12 +2,7 @@ import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, CheckSquare, Send, Zap, BarChart3, Upload } from 'lucide-react';
-import LeadsPage from './LeadsPage';
-import { CRMTarefas } from '@/components/crm/CRMTarefas';
-import { CRMCampanhas } from '@/components/crm/CRMCampanhas';
-import { CRMAutomacoes } from '@/components/crm/CRMAutomacoes';
-import { CRMAnalytics } from '@/components/crm/CRMAnalytics';
-import { LeadImport } from '@/components/crm/LeadImport';
+import { LeadsContent } from './LeadsPage';
 
 export default function CRMDashboard() {
   const [activeTab, setActiveTab] = useState('leads');
@@ -51,7 +46,7 @@ export default function CRMDashboard() {
           </TabsList>
 
           <TabsContent value="leads" className="mt-6">
-            <LeadsPageContent />
+            <LeadsContent />
           </TabsContent>
 
           <TabsContent value="tarefas" className="mt-6">
@@ -76,22 +71,5 @@ export default function CRMDashboard() {
         </Tabs>
       </div>
     </MainLayout>
-  );
-}
-
-// Componente interno para evitar double MainLayout
-function LeadsPageContent() {
-  // Import content from LeadsPage but without MainLayout wrapper
-  return (
-    <div className="space-y-6">
-      {/* Renderizado diretamente do LeadsPage sem MainLayout */}
-      <iframe 
-        src="/crm/leads-content" 
-        className="w-full h-[800px] border-0"
-        style={{ display: 'none' }}
-      />
-      {/* Fallback: renderiza LeadsPage diretamente */}
-      <LeadsPage />
-    </div>
   );
 }
