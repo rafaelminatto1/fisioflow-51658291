@@ -1,9 +1,2 @@
-// Individual hook files
-export { useToast, toast } from './index';
-export { useAuth } from './index';
-export { useData } from './index';
-export { useAppointments } from './index';
-export { useIntelligentPreload } from './index';
-export { useFileUpload } from './index';
-export { useFormField } from './index';
-export { useSidebar } from './index';
+// Re-export useToast from the UI components
+export { useToast, toast } from '@/components/ui/use-toast';
