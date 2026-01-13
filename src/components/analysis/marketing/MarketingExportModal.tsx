@@ -32,8 +32,6 @@ const MarketingExportModal: React.FC<MarketingExportModalProps> = ({
     const [selectedMetrics, setSelectedMetrics] = useState<string[]>([]);
     const [captionType, setCaptionType] = useState<'technical' | 'motivational' | 'educational'>('technical');
     const [generatedCaption, setGeneratedCaption] = useState('');
-    const [isExporting, setIsExporting] = useState(false);
-    const [exportBlob, setExportBlob] = useState<Blob | null>(null);
     const [exportUrl, setExportUrl] = useState<string | null>(null);
 
     // 1. Check Consent on Open
@@ -63,8 +61,6 @@ const MarketingExportModal: React.FC<MarketingExportModalProps> = ({
 
 
     const handleVideoGenerated = async (blob: Blob) => {
-        setExportBlob(blob);
-        setIsExporting(true);
         try {
             // Create Record in DB
             const res = await createMarketingExportRecord({
@@ -80,10 +76,8 @@ const MarketingExportModal: React.FC<MarketingExportModalProps> = ({
                 setExportUrl(res.url);
                 toast({ title: "Vídeo Pronto!", description: "Download disponível." });
             }
-        } catch (e) {
+        } catch {
             toast({ variant: "destructive", title: "Erro ao salvar", description: "Não foi possível registrar o export." });
-        } finally {
-            setIsExporting(false);
         }
     };
 

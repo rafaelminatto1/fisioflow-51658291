@@ -263,6 +263,6 @@ export const metricRegistry: Record<string, MetricDefinition> = {
 try {
     MetricRegistrySchema.parse(metricRegistry);
     // console.log("Metric Registry Validated ✅");
-} catch (e) {
+} catch {
     console.error("Metric Registry Validation Failed ❌", e);
 }

@@ -443,7 +443,7 @@ const PatientEvolution = () => {
                 description: 'Sessão de fisioterapia concluída'
               });
             }
-          } catch (e) {
+          } catch {
             console.error("Failed to award XP", e);
           }
 
