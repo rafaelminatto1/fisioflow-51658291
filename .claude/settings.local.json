@@ -43,7 +43,8 @@
       "Bash(fold:*)",
       "Bash(npm install:*)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npm run build:*)",
-      "Bash(pnpm install:*)"
+      "Bash(pnpm install:*)",
+      "Bash(pnpm build:*)"
     ],
     "deny": [],
     "ask": []
