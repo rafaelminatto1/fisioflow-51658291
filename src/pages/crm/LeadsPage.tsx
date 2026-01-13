@@ -136,31 +136,31 @@ export function LeadsContent() {
         </Card>
         <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
           <CardContent className="pt-4">
-            <div className="text-2xl font-bold text-blue-600">{metrics?.porEstagio.em_contato || 0}</div>
+            <div className="text-2xl font-bold text-blue-600">{metrics?.porEstagio?.em_contato || 0}</div>
             <p className="text-sm text-muted-foreground">Em Contato</p>
           </CardContent>
         </Card>
         <Card className="bg-gradient-to-br from-amber-500/10 to-amber-500/5 border-amber-500/20">
           <CardContent className="pt-4">
-            <div className="text-2xl font-bold text-amber-600">{metrics?.porEstagio.avaliacao_agendada || 0}</div>
+            <div className="text-2xl font-bold text-amber-600">{metrics?.porEstagio?.avaliacao_agendada || 0}</div>
             <p className="text-sm text-muted-foreground">Avaliações</p>
           </CardContent>
         </Card>
         <Card className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20">
           <CardContent className="pt-4">
-            <div className="text-2xl font-bold text-purple-600">{metrics?.porEstagio.avaliacao_realizada || 0}</div>
+            <div className="text-2xl font-bold text-purple-600">{metrics?.porEstagio?.avaliacao_realizada || 0}</div>
             <p className="text-sm text-muted-foreground">Realizadas</p>
           </CardContent>
         </Card>
         <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border-emerald-500/20">
           <CardContent className="pt-4">
-            <div className="text-2xl font-bold text-emerald-600">{metrics?.porEstagio.efetivado || 0}</div>
+            <div className="text-2xl font-bold text-emerald-600">{metrics?.porEstagio?.efetivado || 0}</div>
             <p className="text-sm text-muted-foreground">Efetivados</p>
           </CardContent>
         </Card>
         <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
           <CardContent className="pt-4">
-            <div className="text-2xl font-bold text-primary">{metrics?.taxaConversao}%</div>
+            <div className="text-2xl font-bold text-primary">{metrics?.taxaConversao || 0}%</div>
             <p className="text-sm text-muted-foreground">Conversão</p>
           </CardContent>
         </Card>
