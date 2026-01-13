@@ -1,5 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Database } from "@/integrations/supabase/types";
 
 // Types matching the DB schema manually for now (until types.ts is regenerated)
 export type GoalProfileStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';

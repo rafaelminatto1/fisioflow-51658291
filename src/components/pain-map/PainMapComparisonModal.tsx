@@ -13,7 +13,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowDown, ArrowUp, Minus, TrendingDown, TrendingUp } from 'lucide-react';
 import type { PainMapRecord, PainMapPoint, BodyRegion } from '@/types/painMap';
 import { comparePainMaps } from '@/hooks/usePainMapHistory';
-import { PainMapService } from '@/lib/services/painMapService';
 
 interface PainMapComparisonModalProps {
   open: boolean;

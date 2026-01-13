@@ -4,7 +4,6 @@ import { logger } from '@/lib/errors/logger';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect } from 'react';
 import { PatientSchema, type Patient } from '@/schemas/patient';
-import { appointmentsCacheService } from '@/lib/offline/AppointmentsCacheService'; // Reusing store, ideally rename service later
 
 // Helper for timeout
 function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> {

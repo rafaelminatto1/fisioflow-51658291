@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
-import { FileText, Plus, Calendar, Paperclip, X, Trash2, Eye, Download } from 'lucide-react';
+import { FileText, Plus, Calendar, Paperclip, X, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
@@ -63,7 +63,7 @@ export const MedicalRequestsTab: React.FC<MedicalRequestsTabProps> = ({ patientI
         }
     };
 
-    const getPublicUrl = (path: string) => {
+    const _getPublicUrl = (path: string) => {
         const { data } = supabase.storage.from('medical-requests').getPublicUrl(path);
         return data.publicUrl;
     };

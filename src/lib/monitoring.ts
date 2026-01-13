@@ -73,7 +73,7 @@ export const trackMetric = (metric: string, data: number | MetricData) => {
 export const trackPageLoad = () => {
   if (typeof window === 'undefined') return;
 
-  window.addEventListener('load', () => {
+  const loadHandler = () => {
     // Performance metrics
     const perfData = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
 
@@ -87,7 +87,14 @@ export const trackPageLoad = () => {
         },
       });
     }
-  });
+  };
+
+  window.addEventListener('load', loadHandler);
+
+  // Retorna função de cleanup para remover o listener
+  return () => {
+    window.removeEventListener('load', loadHandler);
+  };
 };
 
 /**
@@ -153,41 +160,59 @@ export const trackOfflineUsage = (action: string) => {
 };
 
 /**
- * Initialize monitoring
+ * Initialize monitoring com cleanup adequado
+ * @returns Função de cleanup para remover todos os event listeners
  */
 export const initMonitoring = () => {
   // Track page load
-  trackPageLoad();
+  const cleanupPageLoad = trackPageLoad();
 
   // Track unhandled errors
-  window.addEventListener('error', (event) => {
+  const errorHandler = (event: ErrorEvent) => {
     trackError(new Error(event.message), {
       filename: event.filename,
       lineno: event.lineno,
       colno: event.colno,
     });
-  });
+  };
 
   // Track unhandled promise rejections
-  window.addEventListener('unhandledrejection', (event) => {
-    trackError(new Error(event.reason), {
+  const rejectionHandler = (event: PromiseRejectionEvent) => {
+    trackError(new Error(String(event.reason)), {
       type: 'unhandledRejection',
     });
-  });
+  };
 
   // Track PWA install
-  window.addEventListener('appinstalled', () => {
+  const appInstalledHandler = () => {
     trackPWAInstall();
-  });
+  };
 
   // Track online/offline
-  window.addEventListener('online', () => {
+  const onlineHandler = () => {
     trackEvent('connection_restored');
-  });
+  };
 
-  window.addEventListener('offline', () => {
+  const offlineHandler = () => {
     trackEvent('connection_lost');
-  });
+  };
+
+  // Adicionar todos os listeners
+  window.addEventListener('error', errorHandler);
+  window.addEventListener('unhandledrejection', rejectionHandler);
+  window.addEventListener('appinstalled', appInstalledHandler);
+  window.addEventListener('online', onlineHandler);
+  window.addEventListener('offline', offlineHandler);
+
+  // Retornar função de cleanup
+  return () => {
+    cleanupPageLoad?.();
+    window.removeEventListener('error', errorHandler);
+    window.removeEventListener('unhandledrejection', rejectionHandler);
+    window.removeEventListener('appinstalled', appInstalledHandler);
+    window.removeEventListener('online', onlineHandler);
+    window.removeEventListener('offline', offlineHandler);
+  };
 };
 
 // TypeScript declaration for window.va

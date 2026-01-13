@@ -166,6 +166,26 @@ const PersonalDataTab = ({ patient }: { patient: any }) => (
 const OverviewTab = ({ patient }: { patient: any }) => {
     const { data: evolutionData } = usePatientEvolutionReport(patient.id);
 
+    // Fetch next appointment
+    const { data: nextAppointment } = useQuery({
+        queryKey: ['next-appointment', patient.id],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('appointments')
+                .select('id, appointment_date, appointment_time, type, status')
+                .eq('patient_id', patient.id)
+                .in('status', ['Confirmado', 'Pendente', 'agendado', 'confirmado'])
+                .gte('appointment_date', new Date().toISOString().split('T')[0])
+                .order('appointment_date', { ascending: true })
+                .order('appointment_time', { ascending: true })
+                .limit(1)
+                .single();
+            if (error) throw error;
+            return data;
+        },
+        enabled: !!patient.id,
+    });
+
     if (!evolutionData || evolutionData.sessions.length === 0) {
         return (
             <div className="space-y-4">
@@ -201,7 +221,18 @@ const OverviewTab = ({ patient }: { patient: any }) => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-4 border rounded-lg bg-card shadow-sm">
                     <h3 className="font-semibold text-sm text-muted-foreground mb-2">Próxima Consulta</h3>
-                    <p className="font-medium">--</p> {/* TODO: Fetch real next appointment */}
+                    {nextAppointment ? (
+                        <>
+                            <p className="font-medium">
+                                {format(new Date(nextAppointment.appointment_date), 'dd/MM/yyyy', { locale: ptBR })}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                                às {nextAppointment.appointment_time} • {nextAppointment.type}
+                            </p>
+                        </>
+                    ) : (
+                        <p className="font-medium text-muted-foreground">Nenhuma consulta agendada</p>
+                    )}
                     <Button variant="link" className="p-0 h-auto text-primary">Ver Agenda</Button>
                 </div>
                 <div className="p-4 border rounded-lg bg-card shadow-sm">
@@ -407,6 +438,7 @@ const DocumentsTab = ({ patientId }: { patientId: string }) => {
     const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<PatientDocument['category']>('outro');
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [description, setDescription] = useState('');
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -422,13 +454,15 @@ const DocumentsTab = ({ patientId }: { patientId: string }) => {
         setUploading(true);
         try {
             await uploadDocument.mutateAsync({
-                patientId,
+                patient_id: patientId,
                 file: selectedFile,
                 category: selectedCategory,
+                description: description || undefined,
             });
             setUploadDialogOpen(false);
             setSelectedFile(null);
             setSelectedCategory('outro');
+            setDescription('');
         } finally {
             setUploading(false);
         }
@@ -552,6 +586,15 @@ const DocumentsTab = ({ patientId }: { patientId: string }) => {
                                     <SelectItem value="outro">Outro</SelectItem>
                                 </SelectContent>
                             </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="description">Descrição (opcional)</Label>
+                            <Input
+                                id="description"
+                                placeholder="Adicione uma descrição para o documento..."
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                            />
                         </div>
                     </div>
                     <div className="flex justify-end gap-2">

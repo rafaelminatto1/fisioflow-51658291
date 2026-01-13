@@ -121,8 +121,8 @@ export function useRetentionMetrics() {
     queryKey: RETENTION_KEYS.metrics(),
     queryFn: async (): Promise<RetentionMetrics> => {
       const now = new Date();
-      const thirtyDaysAgo = subDays(now, 30);
-      const ninetyDaysAgo = subDays(now, 90);
+      const _thirtyDaysAgo = subDays(now, 30);
+      const _ninetyDaysAgo = subDays(now, 90);
 
       // Get all patients with their activity
       const { data: patients, error: patientsError } = await supabase
@@ -158,8 +158,8 @@ export function useRetentionMetrics() {
       let totalLTV = 0;
       let projectedLoss = 0;
 
-      patients?.forEach(patient => {
-        const patientAppointments = appointmentsByPatient.get(patient.id) || [];
+      patients?.forEach(_patient => {
+        const patientAppointments = appointmentsByPatient.get(_patient.id) || [];
         const completedAppointments = patientAppointments.filter(a => a.status === 'concluido');
         const lastAppointment = completedAppointments[0];
 
@@ -519,7 +519,7 @@ export function useSendReactivationCampaign() {
 
       // Here you would integrate with actual messaging service
       // For now, we'll just log the campaign envios
-      const envios = patients?.map(patient => ({
+      const envios = patients?.map(() => ({
         campanha_id: campaign.id,
         lead_id: null,
         status: 'enviado',

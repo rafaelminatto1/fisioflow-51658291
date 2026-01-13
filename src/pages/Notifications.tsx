@@ -14,7 +14,6 @@ import {
   MessageCircle,
   Users,
   Loader2,
-  Filter,
 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';

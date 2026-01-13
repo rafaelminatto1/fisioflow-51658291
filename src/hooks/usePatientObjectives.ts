@@ -173,7 +173,7 @@ export function useRemoveObjectiveAssignment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, patientId }: { id: string; patientId: string }) => {
+    mutationFn: async ({ id, patientId: _patientId }: { id: string; patientId: string }) => {
       const { error } = await supabase
         .from('patient_objective_assignments')
         .delete()

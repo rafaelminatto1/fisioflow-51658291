@@ -9,10 +9,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { 
+import {
   Package, Plus, Search, AlertTriangle, ArrowUpCircle, ArrowDownCircle,
-  Edit, Trash2, History, Filter
+  Edit, Trash2, History
 } from 'lucide-react';
 import { useInventory, useCreateInventoryItem, useUpdateInventoryItem, useInventoryMovements, useCreateMovement, InventoryItem, InventoryMovement } from '@/hooks/useInnovations';
 import { format } from 'date-fns';

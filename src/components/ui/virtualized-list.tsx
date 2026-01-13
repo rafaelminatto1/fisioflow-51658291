@@ -15,6 +15,60 @@
 import { useMemo, useRef, useEffect, useCallback, useState } from 'react';
 import { cn } from '@/lib/utils';
 
+/**
+ * Throttle otimizado para scroll usando requestAnimationFrame
+ * Mais eficiente que setTimeout para eventos de scroll
+ */
+function useScrollThrottle(callback: (scrollTop: number) => void, delay: number = 16) {
+  const rafRef = useRef<number>();
+  const lastRunRef = useRef<number>(Date.now());
+  const pendingValueRef = useRef<number>();
+
+  return useCallback((value: number) => {
+    pendingValueRef.current = value;
+
+    const now = Date.now();
+    const timeSinceLastRun = now - lastRunRef.current;
+
+    if (timeSinceLastRun >= delay) {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+      callback(value);
+      lastRunRef.current = now;
+      pendingValueRef.current = undefined;
+    } else if (!rafRef.current) {
+      rafRef.current = requestAnimationFrame(() => {
+        if (pendingValueRef.current !== undefined) {
+          callback(pendingValueRef.current);
+          lastRunRef.current = Date.now();
+          pendingValueRef.current = undefined;
+        }
+        rafRef.current = undefined;
+      });
+    }
+  }, [callback, delay]);
+}
+
+/**
+ * Debounce para onEndReached evitar chamadas múltiplas
+ */
+function useDebounce<T extends (...args: unknown[]) => unknown>(
+  callback: T,
+  delay: number
+): (...args: Parameters<T>) => void {
+  const timeoutRef = useRef<NodeJS.Timeout>();
+
+  return useCallback((...args: Parameters<T>) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      callback(...args);
+    }, delay);
+  }, [callback, delay]);
+}
+
 interface VirtualizedListProps<T> {
   /** Lista completa de itens */
   items: T[];
@@ -65,34 +119,34 @@ export function VirtualizedList<T>({
   const containerRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
 
-  // Memoizar altura total e item heights
-  const { totalHeight, itemHeights, getItemOffset } = useMemo(() => {
+  // Memoizar altura total e item heights com prefix sums O(1)
+  const { totalHeight, itemHeights, getItemOffset, prefixSumOffsets } = useMemo(() => {
     const heights: number[] = [];
+    const offsets: number[] = [0]; // Prefix sum array - offset[i] = soma de heights[0..i-1]
     let currentOffset = 0;
 
-    const heightsArray = items.map((item, index) => {
+    // Calcular alturas e prefix sums em uma única passagem O(n)
+    for (let i = 0; i < items.length; i++) {
       const height = typeof itemHeight === 'function'
-        ? (itemHeight as (item: T, index: number) => number)(item, index)
+        ? (itemHeight as (item: T, index: number) => number)(items[i], i)
         : itemHeight;
       heights.push(height);
       currentOffset += height;
-      return currentOffset;
-    });
+      offsets.push(currentOffset);
+    }
 
-    // Função para obter offset de um item
+    // Função O(1) para obter offset de um item usando prefix sums
     const getOffset = (index: number) => {
-      if (index === 0) return 0;
-      let offset = 0;
-      for (let i = 0; i < index; i++) {
-        offset += heights[i];
-      }
-      return offset;
+      if (index < 0) return 0;
+      if (index >= offsets.length) return offsets[offsets.length - 1];
+      return offsets[index];
     };
 
     return {
       totalHeight: currentOffset,
       itemHeights: heights,
       getItemOffset: getOffset,
+      prefixSumOffsets: offsets,
     };
   }, [items, itemHeight]);
 
@@ -142,20 +196,32 @@ export function VirtualizedList<T>({
     };
   }, [items, itemHeights, scrollTop, containerHeight, overscan, getItemOffset]);
 
-  // Handler de scroll com throttle
+  // Handler de scroll otimizado com RAF-based throttle
+  const throttledSetScrollTop = useScrollThrottle(setScrollTop, 16); // ~60fps
+
+  // Debounce para onEndReached evitar chamadas múltiplas
+  const debouncedOnEndReached = useMemo(
+    () => onEndReached
+      ? useDebounce(onEndReached, 300)
+      : undefined,
+    [onEndReached]
+  );
+
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const currentScrollTop = e.currentTarget.scrollTop;
-    setScrollTop(currentScrollTop);
 
-    // Verificar se chegou ao final para onEndReached
+    // Atualizar scrollTop com throttle
+    throttledSetScrollTop(currentScrollTop);
+
+    // Verificar se chegou ao final para onEndReached (sem debounce para resposta rápida)
     if (onEndReached && !isLoading) {
       const scrollHeight = e.currentTarget.scrollHeight;
       const clientHeight = e.currentTarget.clientHeight;
       if (scrollHeight - currentScrollTop - clientHeight < onEndReachedThreshold) {
-        onEndReached();
+        debouncedOnEndReached?.();
       }
     }
-  }, [onEndReached, onEndReachedThreshold, isLoading]);
+  }, [throttledSetScrollTop, onEndReached, isLoading, onEndReachedThreshold, debouncedOnEndReached]);
 
   // Estado vazio
   if (items.length === 0 && !isLoading) {

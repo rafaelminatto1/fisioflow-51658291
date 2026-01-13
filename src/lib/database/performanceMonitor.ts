@@ -152,8 +152,9 @@ export async function getTableSizes(): Promise<TableSize[]> {
  */
 export async function getTableIndexes(tableName: string): Promise<IndexInfo[]> {
   try {
-    const { data, error } = await supabase
-      .from('information_schema.statistics') // Note: this won't work directly, needs a different approach
+    // This query won't work directly, needs a different approach
+    await supabase
+      .from('information_schema.statistics')
       .select('*')
       .eq('table_name', tableName);
 
@@ -370,7 +371,7 @@ export function optimizedSelect(table: string, columns: string[]) {
 /**
  * Build paginated query to avoid large result sets
  */
-export function paginatedQuery<T>(
+export function paginatedQuery(
   table: string,
   page: number = 1,
   pageSize: number = 50

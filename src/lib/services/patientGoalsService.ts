@@ -1,7 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { PatientGoal, PatientGoalFormData } from '@/types/evolution';
-import { differenceInDays, format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { differenceInDays } from 'date-fns';
 
 export class PatientGoalsService {
   static async getGoalsByPatientId(patientId: string): Promise<PatientGoal[]> {

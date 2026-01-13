@@ -1,5 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
 
 export interface AIAnalysisResult {
     summary: string;
@@ -35,7 +34,7 @@ export const generateClinicalReport = async (metrics: Record<string, unknown>, h
         }
 
         return data;
-    } catch {
+    } catch (e) {
         console.error("AI Service Exception:", e);
         return mockClinicalReport(metrics);
     }
@@ -63,13 +62,13 @@ export const generateFormSuggestions = async (formData: Record<string, unknown>,
         }
 
         return data.suggestions || mockFormSuggestions(context);
-    } catch {
+    } catch (e) {
         console.error("AI Service Exception:", e);
         return mockFormSuggestions("");
     }
 };
 
-const mockFormSuggestions = (context: string): string => {
+const mockFormSuggestions = (_context: string): string => {
     return `**Sugestões Baseadas na Avaliação:**\n\n` +
         `1. **Controle de Dor:** Iniciar com eletroanalgesia (TENS) devido à queixa de dor > 5/10.\n` +
         `2. **Ganho de ADM:** Mobilização articular suave grau II/III para melhorar a flexão relatada.\n` +
@@ -78,7 +77,7 @@ const mockFormSuggestions = (context: string): string => {
         `*Nota: Sugestão gerada automaticamente. Valide clinicamente.*`;
 };
 
-const mockClinicalReport = (metrics: any): AIAnalysisResult => {
+const mockClinicalReport = (_metrics: unknown): AIAnalysisResult => {
     return {
         summary: "Melhora significativa na estabilidade do joelho e cadência. Requer atenção ao controle de tronco.",
         technical_analysis: "Observa-se redução de 5º no valgo dinâmico de joelho esquerdo em fase de Mid-Stance, indicando melhor controle excêntrico de glúteo médio. A cadência aumentou, sugerindo maior eficiência de marcha. O tronco ainda apresenta oscilação lateral excessiva na fase de apoio.",

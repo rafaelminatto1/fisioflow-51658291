@@ -53,7 +53,7 @@ const Schedule = () => {
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
 
   const { data: appointments = [], isLoading: loading, error, refetch, isFromCache, cacheTimestamp } = useAppointments();
-  const { mutateAsync: rescheduleAppointment, isPending: isRescheduling } = useRescheduleAppointment();
+  const { mutateAsync: rescheduleAppointment } = useRescheduleAppointment();
   const { totalInWaitlist, isWaitlistFromCache, waitlistCacheTimestamp } = useWaitlistMatch();
 
   // Connection status for offline handling
@@ -173,7 +173,7 @@ const Schedule = () => {
       if (error) throw error;
       toast({ title: '✅ Agendamento excluído', description: `Agendamento de ${appointment.patientName} foi excluído.` });
       refetch();
-    } catch (error) {
+    } catch {
       toast({ title: '❌ Erro ao excluir', description: 'Não foi possível excluir o agendamento.', variant: 'destructive' });
     }
   }, [refetch]);
@@ -204,12 +204,13 @@ const Schedule = () => {
           e.preventDefault();
           handleCreateAppointment();
           break;
-        case 'f':
+        case 'f': {
           e.preventDefault();
           // Focus search input
           const searchInput = document.querySelector('input[aria-label="Buscar agendamentos por nome do paciente"]') as HTMLInputElement;
           searchInput?.focus();
           break;
+        }
         case 'd':
           e.preventDefault();
           setViewType('day');
@@ -270,12 +271,13 @@ const Schedule = () => {
 
   if (error) {
     logger.error('Erro na página Schedule', { error }, 'Schedule');
+    const errorMessage = error instanceof Error ? error.message : 'Não foi possível carregar os agendamentos';
     return (
       <MainLayout>
         <EmptyState
           icon={AlertTriangle}
           title="Erro ao carregar agendamentos"
-          description={error.message || 'Não foi possível carregar os agendamentos'}
+          description={errorMessage}
         />
       </MainLayout>
     );

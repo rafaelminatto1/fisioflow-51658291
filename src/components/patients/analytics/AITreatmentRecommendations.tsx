@@ -16,18 +16,15 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Sparkles,
-  Send,
   RefreshCw,
   FileText,
   Clock,
   Target,
   Activity,
-  Home,
   GraduationCap,
   Stethoscope,
   Download,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { useAITreatmentRecommendations } from '@/hooks/useAIInsights';
 import ReactMarkdown from 'react-markdown';
 import { format } from 'date-fns';
@@ -51,8 +48,8 @@ interface AITreatmentRecommendationsProps {
 // ============================================================================
 
 export function AITreatmentRecommendations({
-  patientId,
-  patientName,
+  patientId: _patientId,
+  patientName: _patientName,
   diagnosis,
   primaryComplaint,
   sessionCount,
@@ -358,7 +355,7 @@ interface AITreatmentMiniProps {
   onOpen: () => void;
 }
 
-export function AITreatmentMini({ patientId, patientName, onOpen }: AITreatmentMiniProps) {
+export function AITreatmentMini({ patientId: _patientId, patientName: _patientName, onOpen }: AITreatmentMiniProps) {
   return (
     <Card className="cursor-pointer hover:border-primary/50 transition-colors" onClick={onOpen}>
       <CardContent className="p-4">

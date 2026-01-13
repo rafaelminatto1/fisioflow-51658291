@@ -6,7 +6,7 @@
  * 1. Supabase is unreachable/slow
  * 2. User switches devices (local IndexedDB is empty)
  */
-import { put, list, del } from '@vercel/blob';
+import { put, list } from '@vercel/blob';
 import type { AppointmentBase } from '@/types/appointment';
 import { logger } from '@/lib/errors/logger';
 

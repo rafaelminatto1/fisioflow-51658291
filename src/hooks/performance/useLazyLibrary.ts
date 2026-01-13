@@ -52,10 +52,16 @@ export function useLazyLibrary<T>({
 
   /**
    * Carrega a biblioteca com timeout
+   * Usa ref para isLoaded para evitar stale closure
    */
+  const isLoadedRef = useRef(isLoaded);
+  useEffect(() => {
+    isLoadedRef.current = isLoaded;
+  }, [isLoaded]);
+
   const load = useCallback(async (): Promise<T | null> => {
-    // Retornar módulo em cache se já carregado
-    if (module) {
+    // Retornar módulo em cache se já carregado (usando ref para stale fix)
+    if (isLoadedRef.current && module) {
       return module;
     }
 

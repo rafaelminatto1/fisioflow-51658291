@@ -9,7 +9,6 @@ import {
   Phone,
   Send,
   Search,
-  Clock,
   CheckCircle,
   AlertCircle,
   RefreshCw,
@@ -25,9 +24,7 @@ import {
   useResendCommunication,
   getStatusLabel,
   getTypeLabel,
-  type Communication 
 } from '@/hooks/useCommunications';
-import { cn } from '@/lib/utils';
 import {
   Command,
   CommandEmpty,

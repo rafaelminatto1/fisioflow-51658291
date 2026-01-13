@@ -88,6 +88,8 @@ import {
   useAutoSaveSoapRecord,
   type PainScaleData
 } from '@/hooks/useSoapRecords';
+import { PatientEvolutionErrorBoundary } from '@/components/patients/PatientEvolutionErrorBoundary';
+import { useRenderTracking } from '@/hooks/useRenderTracking';
 
 // Lazy loading para componentes pesados
 const LazyMeasurementCharts = lazy(() =>
@@ -110,6 +112,9 @@ const PatientEvolution = () => {
   const { appointmentId } = useParams<{ appointmentId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Tracking para debug de erros de renderização
+  useRenderTracking('PatientEvolution', { appointmentId });
 
   // Validação inicial do appointmentId
   if (!appointmentId) {
@@ -543,8 +548,9 @@ const PatientEvolution = () => {
   }
 
   return (
-    <MainLayout maxWidth="2xl">
-      <div className="space-y-4 animate-fade-in pb-8">
+    <PatientEvolutionErrorBoundary appointmentId={appointmentId} patientId={patientId || undefined}>
+      <MainLayout maxWidth="2xl">
+        <div className="space-y-4 animate-fade-in pb-8">
         {/* Compact Modern Header - Otimizado para mobile/tablet */}
         <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-border/50 backdrop-blur-sm">
           <div className="relative z-10 p-3 sm:p-4 lg:p-6">
@@ -1083,6 +1089,7 @@ const PatientEvolution = () => {
         onOpenChange={setShowKeyboardHelp}
       />
     </MainLayout>
+      </PatientEvolutionErrorBoundary>
   );
 };
 

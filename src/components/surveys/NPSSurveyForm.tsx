@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Star, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useCreateSurvey, type CreateSurveyData } from '@/hooks/useSatisfactionSurveys';
 import { cn } from '@/lib/utils';
 
@@ -24,8 +24,8 @@ export function NPSSurveyForm({
   const [npsScore, setNpsScore] = useState<number | null>(null);
   const [careQuality, setCareQuality] = useState<number | null>(null);
   const [professionalism, setProfessionalism] = useState<number | null>(null);
-  const [facilityCleanliness, setFacilityCleanliness] = useState<number | null>(null);
-  const [schedulingEase, setSchedulingEase] = useState<number | null>(null);
+  const [facilityCleanliness, _setFacilityCleanliness] = useState<number | null>(null);
+  const [schedulingEase, _setSchedulingEase] = useState<number | null>(null);
   const [communication, setCommunication] = useState<number | null>(null);
   const [comments, setComments] = useState('');
   const [suggestions, setSuggestions] = useState('');

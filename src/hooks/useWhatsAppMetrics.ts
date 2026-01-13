@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { WhatsAppService, TEMPLATE_KEYS } from '@/lib/services/WhatsAppService';
+import { WhatsAppService } from '@/lib/services/WhatsAppService';
 import { toast } from 'sonner';
 
 export interface WhatsAppMetric {

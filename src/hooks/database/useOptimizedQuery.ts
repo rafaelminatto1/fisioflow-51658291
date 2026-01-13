@@ -13,7 +13,7 @@ import { logger } from '@/lib/errors/logger';
 // TYPES
 // ============================================================================
 
-export interface OptimizedQueryOptions<T> {
+export interface OptimizedQueryOptions<_T = unknown> {
   table: string;
   columns?: string;
   filter?: { column: string; operator: string; value: unknown };

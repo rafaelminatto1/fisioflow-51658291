@@ -16,7 +16,7 @@ export interface OnlineUser {
  */
 export function useOnlineUsers(channelName: string = 'online-users') {
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
-  const [channel, setChannel] = useState<RealtimeChannel | null>(null);
+  const _channel = useState<RealtimeChannel | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {

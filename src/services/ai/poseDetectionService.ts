@@ -1,4 +1,4 @@
-import { Pose, PoseConfig, Results } from '@mediapipe/pose';
+import { Pose, Results } from '@mediapipe/pose';
 import { UnifiedLandmark } from '@/utils/geometry';
 
 // We use the legacy solution for simplicity as it shares assets with the realtime one

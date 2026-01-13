@@ -48,7 +48,7 @@ export interface SemanticSearchResult<T = any> {
  */
 export async function generateEmbeddingsBatch(
   texts: string[],
-  model: string = 'text-embedding-004'
+  _model: string = 'text-embedding-004'
 ): Promise<number[][]> {
   try {
     const embeddings: number[][] = [];
@@ -68,7 +68,7 @@ export async function generateEmbeddingsBatch(
  */
 export async function generateEmbedding(
   text: string,
-  model: string = 'text-embedding-004'
+  _model: string = 'text-embedding-004'
 ): Promise<number[]> {
   try {
     const result = await embeddingModel.embedContent(text);

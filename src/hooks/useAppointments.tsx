@@ -246,7 +246,6 @@ async function getFromCacheWithMetadata(organizationId?: string): Promise<Appoin
 
 // Main hook to fetch appointments with Realtime support
 export function useAppointments() {
-  const queryClient = useQueryClient();
   const { toast } = useToast();
   const { profile, user } = useAuth();
   const organizationId = profile?.organization_id;
@@ -346,7 +345,7 @@ export function useCreateAppointment() {
 
       // Check for conflicts with current data
       const currentAppointments = queryClient.getQueryData<AppointmentBase[]>(['appointments']) || [];
-      const conflict = checkAppointmentConflict({
+      checkAppointmentConflict({
         date: new Date(data.appointment_date),
         time: data.appointment_time,
         duration: data.duration,
@@ -506,7 +505,7 @@ export function useUpdateAppointment() {
         const existing = currentAppointments.find(apt => apt.id === appointmentId);
 
         if (existing) {
-          const conflict = checkAppointmentConflict({
+          checkAppointmentConflict({
             date: updates.appointment_date ? new Date(updates.appointment_date) : existing.date,
             time: updates.appointment_time || existing.time,
             duration: updates.duration || existing.duration,

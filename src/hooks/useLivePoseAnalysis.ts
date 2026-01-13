@@ -40,11 +40,12 @@ export const useLivePoseAnalysis = () => {
     // Initialize Landmarker com lazy loading
     useEffect(() => {
         const initLandmarker = async () => {
-            if (!mediaPipeLoaded && mediaPipeModules) {
+            // Só inicializa quando mediaPipeLoaded=true E os módulos foram carregados
+            if (mediaPipeLoaded && mediaPipeModules && !landmarkerRef.current) {
                 try {
                     const { PoseLandmarker, FilesetResolver } = mediaPipeModules;
                     const vision = await FilesetResolver.forVisionTasks(
-                        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
+                        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm"
                     );
                     const landmarker = await PoseLandmarker.createFromOptions(vision, {
                         baseOptions: {
@@ -70,12 +71,15 @@ export const useLivePoseAnalysis = () => {
             import('@mediapipe/tasks-vision').then((module) => {
                 const { PoseLandmarker: PL, FilesetResolver: FR, DrawingUtils: DU } = module;
                 setMediaPipeModules({ PoseLandmarker: PL, FilesetResolver: FR, DrawingUtils: DU });
-                initLandmarker();
             });
+        } else if (mediaPipeLoaded && mediaPipeModules) {
+            // Módulos já carregados, inicializar o landmarker
+            initLandmarker();
         }
 
         return () => {
             landmarkerRef.current?.close();
+            landmarkerRef.current = null;
         };
     }, [mediaPipeLoaded, mediaPipeModules]);
 

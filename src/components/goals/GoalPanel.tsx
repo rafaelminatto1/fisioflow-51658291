@@ -1,14 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { CheckCircle2, AlertCircle, XCircle, MinusCircle, Info } from 'lucide-react';
+import { CheckCircle2, XCircle, MinusCircle, Info } from 'lucide-react';
 
 import { DynamicCompareMetrics } from '@/generated/types/dynamic_compare_metrics';
 import { goalProfiles } from '@/lib/goals/goalProfiles';
 import { evaluateGoals } from '@/lib/goals/goalEngine';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface GoalPanelProps {
     compareData: DynamicCompareMetrics;
@@ -102,8 +100,8 @@ const GoalPanel: React.FC<GoalPanelProps> = ({ compareData, promSnapshot }) => {
                         <div className="mt-4 pt-4 border-t text-xs text-muted-foreground">
                             <p className="font-semibold mb-1">Evidências Relacionadas:</p>
                             <ul className="list-disc pl-4 space-y-1">
-                                {profile.evidence.map((e, i) => (
-                                    <li key={i}>
+                                {profile.evidence.map((e) => (
+                                    <li key={e.label}>
                                         <span className="font-medium">{e.label}:</span> {e.source}
                                     </li>
                                 ))}

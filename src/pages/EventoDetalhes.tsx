@@ -35,7 +35,6 @@ export default function EventoDetalhes() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: evento, isLoading } = useEvento(id!);
-  const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
 
   if (isLoading) {

@@ -113,7 +113,7 @@ export function BodyMap({
   points,
   onPointAdd,
   onPointRemove,
-  onPointUpdate,
+  onPointUpdate: _onPointUpdate,
   readOnly = false,
   selectedIntensity = 5,
   selectedPainType = 'aguda',
@@ -247,7 +247,7 @@ export function BodyMap({
         {/* Regiões clicáveis */}
         {regions.map(region => {
           const isHovered = hoveredRegion === region.code;
-          const hasPoint = points.some(p => p.regionCode === region.code);
+          const _hasPoint = points.some(p => p.regionCode === region.code);
 
           return (
             <rect

@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
 import { Trash2, X } from 'lucide-react';
@@ -64,7 +63,7 @@ export function PainPointDetailPanel({
       ];
     }
     
-    return evolutionData.map((item, index) => ({
+    return evolutionData.map((item, _index) => ({
       month: new Date(item.date).toLocaleDateString('pt-BR', { month: 'short' }),
       intensity: item.intensity,
     }));

@@ -4,7 +4,7 @@
  * Este arquivo mostra como integrar o cache distribuído nas suas chamadas de API
  */
 
-import { PatientCache, AppointmentCache, ExerciseCache, getCache, setCache } from './KVCacheService';
+import { PatientCache, AppointmentCache, getCache, setCache } from './KVCacheService';
 import { supabase } from '../supabase/client';
 
 // ========================================
@@ -198,7 +198,7 @@ export async function searchExercisesWithCache(
 }
 
 // Helper function para gerar embedding
-async function generateEmbedding(text: string): Promise<number[]> {
+async function generateEmbedding(_text: string): Promise<number[]> {
   // Implementação da função de embedding
   // Pode usar OpenAI ou outro serviço
   return [];

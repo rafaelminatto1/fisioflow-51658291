@@ -6,9 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useWearables } from '@/hooks/useWearables';
-import { Activity, Heart, Moon, Footprints, Plus, Watch, Calendar as CalendarIcon, ArrowUp, ArrowDown, Minus } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { format, subDays, isAfter, parseISO } from 'date-fns';
+import { Heart, Moon, Footprints, Plus, Watch } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 interface WearablesDataProps {
@@ -19,10 +19,10 @@ type Period = '7d' | '30d' | '90d';
 type MetricType = 'heart_rate' | 'steps' | 'sleep' | 'weight' | 'spo2';
 
 export function WearablesData({ patientId }: WearablesDataProps) {
-    const { wearableData, isLoading, addWearableData, isAdding } = useWearables(patientId);
+    const { wearableData, addWearableData, isAdding } = useWearables(patientId);
     const [isAddOpen, setIsAddOpen] = useState(false);
-    const [period, setPeriod] = useState<Period>('7d');
-    const [selectedMetric, setSelectedMetric] = useState<MetricType>('heart_rate');
+    const [_period, setPeriod] = useState<Period>('7d');
+    const [_selectedMetric, setSelectedMetric] = useState<MetricType>('heart_rate');
     const [newData, setNewData] = useState({
         source: 'manual',
         data_type: 'heart_rate',

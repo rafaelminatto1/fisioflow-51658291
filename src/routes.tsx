@@ -56,6 +56,8 @@ const NewEvaluationPage = lazy(() => import("./pages/patients/NewEvaluationPage"
 const PainMapHistoryPage = lazy(() => import("./pages/patients/PainMapHistoryPage"));
 const SessionEvolutionPage = lazy(() => import("./pages/SessionEvolutionPage"));
 const ApiDocs = lazy(() => import("./pages/ApiDocs"));
+const Admin = lazy(() => import("./pages/Admin"));
+const CohortAnalysis = lazy(() => import("./pages/CohortAnalysis"));
 
 // Fase 2: Cadastros Gerais
 const ServicosPage = lazy(() => import("./pages/cadastros/ServicosPage"));
@@ -221,6 +223,8 @@ export function AppRoutes() {
             <Route path="/admin/goals/:id" element={<ProtectedRoute allowedRoles={['admin', 'fisioterapeuta']}><GoalProfileEditorPage /></ProtectedRoute>} />
 
             <Route path="/clinical-tests" element={<ProtectedRoute><ClinicalTestsLibrary /></ProtectedRoute>} />
+            <Route path="/admin/analytics" element={<ProtectedRoute allowedRoles={['admin', 'fisioterapeuta']}><Admin /></ProtectedRoute>} />
+            <Route path="/admin/cohorts" element={<ProtectedRoute allowedRoles={['admin', 'fisioterapeuta']}><CohortAnalysis /></ProtectedRoute>} />
 
 
             {/* Catch-all route */}

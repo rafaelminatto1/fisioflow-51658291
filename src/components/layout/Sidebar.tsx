@@ -37,7 +37,6 @@ import {
   Package,
   Trophy,
   Video,
-  UserPlus,
   LinkIcon,
   ScanFace,
   Footprints,
@@ -541,7 +540,6 @@ export function Sidebar() {
             </CollapsibleTrigger>
             <CollapsibleContent className="pl-8 space-y-1 mt-1">
               {configuracoesSubmenu.map((item) => {
-                const Icon = item.icon;
                 const isSubActive = location.pathname === item.href;
                 return (
                   <Link

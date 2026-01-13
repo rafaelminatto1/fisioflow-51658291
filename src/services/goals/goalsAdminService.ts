@@ -14,8 +14,8 @@ export interface ProfileListItem {
 
 export interface ProfileDetail extends ProfileListItem {
     applicable_tests: string[];
-    quality_gate: any;
-    evidence: any[];
+    quality_gate: unknown;
+    evidence: unknown[];
     tags: string[];
     targets: GoalTarget[];
 }

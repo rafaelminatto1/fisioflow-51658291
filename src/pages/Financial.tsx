@@ -21,7 +21,6 @@ import {
   Download,
   Filter,
   Edit,
-  Trash2,
   Check,
   Package
 } from 'lucide-react';

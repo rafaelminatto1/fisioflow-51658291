@@ -269,8 +269,8 @@ export function useInfiniteScrollOptimized<T>(
     prefetchPages?: number;
   }
 ) {
-  const pageSize = options?.pageSize || 20;
-  const prefetchPages = options?.prefetchPages || 1;
+  const _pageSize = options?.pageSize || 20;
+  const _prefetchPages = options?.prefetchPages || 1;
 
   return useQuery({
     queryKey,

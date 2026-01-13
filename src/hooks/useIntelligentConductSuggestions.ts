@@ -46,11 +46,6 @@ export const useIntelligentConductSuggestions = (patientId: string) => {
 
       // Buscar condutas da biblioteca baseadas em patologias
       const pathologyNames = pathologies?.map(p => p.pathology_name.toLowerCase()) || [];
-      const allKeywords = [
-        ...pathologyNames,
-        ...recentKeywords,
-        medicalRecord?.chief_complaint?.toLowerCase() || ''
-      ].filter(Boolean);
 
       const { data: conducts, error: conductError } = await supabase
         .from('conduct_library')

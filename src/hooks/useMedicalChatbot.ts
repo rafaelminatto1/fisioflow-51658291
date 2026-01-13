@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 
 // Interfaces para o Chatbot
 interface ChatMessage {
@@ -238,7 +238,7 @@ export const useMedicalChatbot = () => {
   const [context, setContext] = useState<ChatContext>({
     preferredLanguage: 'pt-BR'
   });
-  const [isConnected, setIsConnected] = useState(true);
+  const _isConnected = true;
   const [humanHandoffRequested, setHumanHandoffRequested] = useState(false);
 
   // Inicializar sessão de chat
@@ -328,7 +328,7 @@ export const useMedicalChatbot = () => {
         setHumanHandoffRequested(true);
       }
 
-    } catch (error) {
+    } catch (_error) {
       const errorMessage: ChatMessage = {
         id: `msg-${Date.now()}-error`,
         content: 'Desculpe, ocorreu um erro. Tente novamente em alguns instantes.',
@@ -348,7 +348,7 @@ export const useMedicalChatbot = () => {
   }, [currentSession, context]);
 
   // Gerar resposta do bot
-  const generateBotResponse = async (userInput: string, chatContext: ChatContext): Promise<BotResponse> => {
+  const generateBotResponse = async (userInput: string, _chatContext: ChatContext): Promise<BotResponse> => {
     const input = userInput.toLowerCase().trim();
     
     // Detectar emergência
@@ -545,7 +545,7 @@ export const useMedicalChatbot = () => {
   }, [currentSession]);
 
   // Buscar histórico de conversas
-  const getChatHistory = useCallback((userId: string, limit: number = 10) => {
+  const getChatHistory = useCallback((_userId: string, _limit: number = 10) => {
     // Mock - em produção, buscar do backend
     return [];
   }, []);

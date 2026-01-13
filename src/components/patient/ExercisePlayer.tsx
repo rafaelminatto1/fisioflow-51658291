@@ -5,7 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import {
     Play, Pause, SkipForward, SkipBack, Volume2, VolumeX,
-    Maximize2, RotateCcw, CheckCircle2, AlertCircle
+    Maximize2, AlertCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';

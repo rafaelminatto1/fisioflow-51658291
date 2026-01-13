@@ -1,0 +1,408 @@
+import React, { useRef, useState, useEffect } from 'react';
+import { Play, Pause, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
+import { cn } from '@/lib/utils';
+
+export interface ExerciseVideoPlayerProps {
+  src: string;
+  thumbnail?: string;
+  title?: string;
+  autoPlay?: boolean;
+  loop?: boolean;
+  muted?: boolean;
+  className?: string;
+  onEnded?: () => void;
+  onProgress?: (progress: number) => void;
+}
+
+export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
+  src,
+  thumbnail,
+  title,
+  autoPlay = false,
+  loop = false,
+  muted = false,
+  className,
+  onEnded,
+  onProgress,
+}) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(muted);
+  const [volume, setVolume] = useState(1);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showControls, setShowControls] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleTimeUpdate = () => {
+      setCurrentTime(video.currentTime);
+      onProgress?.(video.currentTime);
+    };
+
+    const handleLoadedMetadata = () => {
+      setDuration(video.duration);
+      setIsLoading(false);
+    };
+
+    const handleEnded = () => {
+      setIsPlaying(false);
+      onEnded?.();
+    };
+
+    video.addEventListener('timeupdate', handleTimeUpdate);
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    video.addEventListener('ended', handleEnded);
+
+    return () => {
+      video.removeEventListener('timeupdate', handleTimeUpdate);
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      video.removeEventListener('ended', handleEnded);
+    };
+  }, [onProgress, onEnded]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (autoPlay) {
+      video.play().then(() => setIsPlaying(true)).catch(console.error);
+    }
+  }, [autoPlay]);
+
+  const togglePlay = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (isPlaying) {
+      video.pause();
+    } else {
+      video.play();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const toggleMute = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.muted = !video.muted;
+    setIsMuted(video.muted);
+  };
+
+  const handleVolumeChange = (value: number[]) => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.volume = value[0];
+    setVolume(value[0]);
+    if (value[0] > 0) {
+      setIsMuted(false);
+    }
+  };
+
+  const handleSeek = (value: number[]) => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.currentTime = value[0];
+    setCurrentTime(value[0]);
+  };
+
+  const toggleFullscreen = () => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    if (!isFullscreen) {
+      container.requestFullscreen().catch(console.error);
+    } else {
+      document.exitFullscreen().catch(console.error);
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const handleControlsVisibility = () => {
+    setShowControls(true);
+    setTimeout(() => {
+      if (isPlaying) {
+        setShowControls(false);
+      }
+    }, 3000);
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      className={cn(
+        'relative group bg-black rounded-lg overflow-hidden',
+        className
+      )}
+      onMouseMove={handleControlsVisibility}
+      onMouseLeave={() => isPlaying && setShowControls(false)}
+    >
+      <video
+        ref={videoRef}
+        src={src}
+        poster={thumbnail}
+        className="w-full h-full object-contain"
+        loop={loop}
+        playsInline
+        onClick={togglePlay}
+      />
+
+      {/* Loading spinner */}
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+          <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
+
+      {/* Play/Pause overlay button */}
+      {!isLoading && !isPlaying && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="w-16 h-16 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm"
+            onClick={togglePlay}
+          >
+            <Play className="w-8 h-8 fill-white text-white" />
+          </Button>
+        </div>
+      )}
+
+      {/* Controls */}
+      <div
+        className={cn(
+          'absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 transition-opacity',
+          !showControls && 'opacity-0'
+        )}
+      >
+        {/* Title */}
+        {title && (
+          <h3 className="text-white text-sm font-medium mb-2 truncate">{title}</h3>
+        )}
+
+        {/* Progress bar */}
+        <div className="flex items-center gap-3">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 shrink-0 text-white hover:text-white hover:bg-white/20"
+            onClick={togglePlay}
+          >
+            {isPlaying ? (
+              <Pause className="w-5 h-5" />
+            ) : (
+              <Play className="w-5 h-5" />
+            )}
+          </Button>
+
+          <div className="flex-1 flex items-center gap-2">
+            <span className="text-white text-xs w-10 text-right shrink-0">
+              {formatTime(currentTime)}
+            </span>
+            <Slider
+              value={[currentTime]}
+              max={duration || 100}
+              step={0.1}
+              onValueChange={handleSeek}
+              className="flex-1"
+            />
+            <span className="text-white text-xs w-10 shrink-0">
+              {formatTime(duration)}
+            </span>
+          </div>
+
+          {/* Volume */}
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 text-white hover:text-white hover:bg-white/20"
+              onClick={toggleMute}
+            >
+              {isMuted ? (
+                <VolumeX className="w-4 h-4" />
+              ) : (
+                <Volume2 className="w-4 h-4" />
+              )}
+            </Button>
+            <Slider
+              value={[isMuted ? 0 : volume]}
+              max={1}
+              step={0.01}
+              onValueChange={handleVolumeChange}
+              className="w-20"
+            />
+          </div>
+
+          {/* Fullscreen */}
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 shrink-0 text-white hover:text-white hover:bg-white/20"
+            onClick={toggleFullscreen}
+          >
+            {isFullscreen ? (
+              <Minimize className="w-4 h-4" />
+            ) : (
+              <Maximize className="w-4 h-4" />
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Compact video player component for use in lists
+ */
+export interface CompactVideoPlayerProps {
+  src: string;
+  thumbnail?: string;
+  className?: string;
+}
+
+export const CompactVideoPlayer: React.FC<CompactVideoPlayerProps> = ({
+  src,
+  thumbnail,
+  className,
+}) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const togglePlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (isPlaying) {
+      video.pause();
+    } else {
+      video.play();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  return (
+    <div
+      className={cn('relative aspect-video bg-black rounded-lg overflow-hidden', className)}
+      onClick={togglePlay}
+    >
+      <video
+        ref={videoRef}
+        src={src}
+        poster={thumbnail}
+        className="w-full h-full object-cover"
+        playsInline
+      />
+
+      {!isPlaying && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+          <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
+            <Play className="w-6 h-6 fill-black text-black ml-1" />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/**
+ * Video card component for displaying video with thumbnail
+ */
+export interface ExerciseVideoCardProps {
+  video: {
+    id: string;
+    title: string;
+    description?: string;
+    video_url: string;
+    thumbnail_url?: string;
+    duration?: number;
+    category: string;
+    difficulty: string;
+  };
+  onClick?: () => void;
+  className?: string;
+}
+
+export const ExerciseVideoCard: React.FC<ExerciseVideoCardProps> = ({
+  video,
+  onClick,
+  className,
+}) => {
+  const formatDuration = (seconds?: number) => {
+    if (!seconds) return '';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div
+      className={cn(
+        'group cursor-pointer overflow-hidden rounded-lg border bg-card transition-all hover:shadow-md',
+        className
+      )}
+      onClick={onClick}
+    >
+      <div className="relative aspect-video bg-muted">
+        <CompactVideoPlayer
+          src={video.video_url}
+          thumbnail={video.thumbnail_url}
+        />
+
+        {/* Duration badge */}
+        {video.duration && (
+          <div className="absolute bottom-2 right-2 px-2 py-1 rounded bg-black/70 text-white text-xs font-medium">
+            {formatDuration(video.duration)}
+          </div>
+        )}
+
+        {/* Category badge */}
+        <div className="absolute top-2 left-2 px-2 py-1 rounded bg-primary/80 text-white text-xs font-medium capitalize">
+          {video.category}
+        </div>
+      </div>
+
+      <div className="p-3">
+        <h4 className="font-medium text-sm line-clamp-1">{video.title}</h4>
+        {video.description && (
+          <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+            {video.description}
+          </p>
+        )}
+        <div className="flex items-center gap-2 mt-2">
+          <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground capitalize">
+            {video.difficulty}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};

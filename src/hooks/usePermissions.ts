@@ -49,7 +49,7 @@ export function usePermissions(): PermissionsResult {
     return false;
   };
 
-  const canDelete = (resource: string): boolean => {
+  const canDelete = (_resource: string): boolean => {
     return isAdmin;
   };
 
