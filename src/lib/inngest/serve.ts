@@ -16,10 +16,29 @@ import { weeklySummaryWorkflow } from '@/inngest/workflows/weekly-summary';
 import { expiringVouchersWorkflow } from '@/inngest/workflows/expiring-vouchers';
 import { dataIntegrityWorkflow } from '@/inngest/workflows/data-integrity';
 import { sendNotificationWorkflow } from '@/inngest/workflows/notifications';
-import { sendEmailWorkflow } from '@/inngest/workflows/email';
-import { sendWhatsAppWorkflow } from '@/inngest/workflows/whatsapp';
-import { appointmentReminderWorkflow } from '@/inngest/workflows/appointments';
-import { aiPatientInsightsWorkflow } from '@/inngest/workflows/ai-insights';
+import {
+  sendEmailWorkflow,
+  sendAppointmentConfirmationWorkflow,
+  sendAppointmentReminderEmailWorkflow,
+  sendBirthdayGreetingWorkflow,
+  sendDailyReportWorkflow,
+  sendEmailBatchWorkflow,
+} from '@/inngest/workflows/email';
+import {
+  sendWhatsAppWorkflow,
+  sendAppointmentConfirmationWhatsAppWorkflow,
+  sendAppointmentReminderWhatsAppWorkflow,
+  sendBirthdayGreetingWhatsAppWorkflow,
+  sendWhatsAppBatchWorkflow,
+} from '@/inngest/workflows/whatsapp';
+import {
+  appointmentReminderWorkflow,
+  appointmentCreatedWorkflow,
+} from '@/inngest/workflows/appointments';
+import {
+  aiPatientInsightsWorkflow,
+  aiBatchInsightsWorkflow,
+} from '@/inngest/workflows/ai-insights';
 
 // Export the Inngest handler for Vercel
 export const { GET, POST, OPTIONS } = serve({
@@ -35,14 +54,29 @@ export const { GET, POST, OPTIONS } = serve({
 
     // Notification workflows
     sendNotificationWorkflow,
+
+    // Email workflows
     sendEmailWorkflow,
+    sendAppointmentConfirmationWorkflow,
+    sendAppointmentReminderEmailWorkflow,
+    sendBirthdayGreetingWorkflow,
+    sendDailyReportWorkflow,
+    sendEmailBatchWorkflow,
+
+    // WhatsApp workflows
     sendWhatsAppWorkflow,
+    sendAppointmentConfirmationWhatsAppWorkflow,
+    sendAppointmentReminderWhatsAppWorkflow,
+    sendBirthdayGreetingWhatsAppWorkflow,
+    sendWhatsAppBatchWorkflow,
 
     // Appointment workflows
     appointmentReminderWorkflow,
+    appointmentCreatedWorkflow,
 
     // AI workflows
     aiPatientInsightsWorkflow,
+    aiBatchInsightsWorkflow,
   ],
 });
 

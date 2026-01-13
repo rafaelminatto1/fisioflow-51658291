@@ -63,7 +63,16 @@
       "Bash(pnpm exec eslint:*)",
       "Bash(cut:*)",
       "Bash(tee:*)",
-      "Bash(npx --silent tsc:*)"
+      "Bash(npx --silent tsc:*)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" pnpm build:*)",
+      "Bash(psql:*)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" pnpm run build:analyze:*)",
+      "Bash(npx tsx:*)",
+      "Bash(source:*)",
+      "Bash(VITE_SUPABASE_URL=\"https://ycvbtjfrchcyvmkvuocu.supabase.co\" VITE_SUPABASE_ANON_KEY=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljdmJ0amZyY2hjeXZta3Z1b2N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTA5OTQsImV4cCI6MjA3NTE2Njk5NH0.L5maWG2hc3LVHEUMOzfTRTjYwIAJFXx3zan3G-Y1zAA\" npx tsx:*)",
+      "Bash(pnpm typecheck:*)",
+      "Bash(pnpm run build:*)",
+      "Bash(git -C /home/rafael/cursor/fisiolovable/fisioflow-51658291 add .)"
     ],
     "deny": [],
     "ask": []
