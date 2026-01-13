@@ -154,8 +154,8 @@ export function Sidebar() {
 
   return (
     <div className={cn(
-      "hidden md:flex bg-card border-r border-border/50 transition-all duration-300 ease-in-out flex-col h-screen sticky top-0 shadow-sm",
-      collapsed ? "w-16" : "w-64"
+      "hidden md:flex bg-white/80 dark:bg-card/80 backdrop-blur-xl border-r border-gray-200/50 dark:border-gray-800/50 transition-all duration-300 ease-in-out flex-col h-screen sticky top-0 shadow-sm z-50",
+      collapsed ? "w-20" : "w-72"
     )}>
       {/* Header */}
       <div className="p-4 border-b border-border">

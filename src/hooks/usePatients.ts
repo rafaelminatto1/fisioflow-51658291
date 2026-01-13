@@ -1,9 +1,41 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Patient } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/errors/logger';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect } from 'react';
+import { PatientSchema, type Patient } from '@/schemas/patient';
+import { appointmentsCacheService } from '@/lib/offline/AppointmentsCacheService'; // Reusing store, ideally rename service later
+
+// Helper for timeout
+function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> {
+  return Promise.race([
+    Promise.resolve(promise),
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Timeout após ${timeoutMs}ms`)), timeoutMs)
+    ),
+  ]);
+}
+
+// Helper for retry
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  initialDelay: number = 1000
+): Promise<T> {
+  let lastError: Error | unknown;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (attempt < maxRetries - 1) {
+        const delay = initialDelay * Math.pow(2, attempt);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  throw lastError;
+}
 
 export const useActivePatients = () => {
   const { profile } = useAuth();
@@ -25,6 +57,7 @@ export const useActivePatients = () => {
           filter: `organization_id=eq.${organizationId}`
         },
         () => {
+          logger.info('Realtime: Pacientes atualizados', {}, 'usePatients');
           queryClient.invalidateQueries({ queryKey: ['patients', organizationId] });
         }
       )
@@ -38,6 +71,13 @@ export const useActivePatients = () => {
   return useQuery({
     queryKey: ['patients', organizationId],
     queryFn: async () => {
+      // Offline check
+      if (!navigator.onLine) {
+        logger.warn('Offline: Carregando pacientes do cache (vazio por enquanto para pacientes)', {}, 'usePatients');
+        // TODO: Extend CacheService to support Patients or just generic IDB
+        return [];
+      }
+
       try {
         let query = supabase
           .from('patients')
@@ -48,45 +88,66 @@ export const useActivePatients = () => {
           query = query.eq('organization_id', organizationId);
         }
 
-        const { data: supabasePatients, error: supabaseError } = await query
-          .order('created_at', { ascending: false });
+        const { data: supabasePatients, error } = await retryWithBackoff(() =>
+          withTimeout(
+            query.order('created_at', { ascending: false }),
+            10000
+          )
+        );
 
-        if (supabaseError) throw supabaseError;
+        if (error) throw error;
+
+        // Validation & Transformation
+        const validPatients: Patient[] = [];
 
         if (supabasePatients && supabasePatients.length > 0) {
-          return supabasePatients.map(p => ({
-            id: p.id,
-            name: p.full_name || p.name || (p.phone ? `Paciente (${p.phone})` : 'Paciente sem nome'),
-            email: p.email || undefined,
-            phone: p.phone || undefined,
-            cpf: p.cpf || undefined,
-            birthDate: p.birth_date || new Date().toISOString(),
-            gender: 'outro',
-            mainCondition: p.observations || '',
-            status: (p.status === 'active' ? 'Em Tratamento' : 'Inicial') as any,
-            progress: 0,
-            incomplete_registration: p.incomplete_registration || false,
-            createdAt: p.created_at || new Date().toISOString(),
-            updatedAt: p.updated_at || new Date().toISOString(),
-          })) as Patient[];
+          supabasePatients.forEach(p => {
+            // Map to schema expected format
+            const mapped = {
+              id: p.id,
+              name: p.full_name || p.name || (p.phone ? `Paciente (${p.phone})` : 'Paciente sem nome'),
+              email: p.email,
+              phone: p.phone,
+              cpf: p.cpf,
+              birthDate: p.birth_date,
+              gender: 'outro', // Default fallback
+              mainCondition: p.observations,
+              status: (p.status === 'active' ? 'Em Tratamento' : 'Inicial'),
+              progress: 0,
+              incomplete_registration: p.incomplete_registration,
+              createdAt: p.created_at,
+              updatedAt: p.updated_at,
+              organization_id: p.organization_id
+            };
+
+            const result = PatientSchema.safeParse(mapped);
+            if (result.success) {
+              validPatients.push(result.data);
+            } else {
+              logger.warn(`Paciente inválido ignorado: ${p.id}`, { error: result.error }, 'usePatients');
+            }
+          });
         }
 
-        // Fallback to mock data if no patients found
-        const { mockPatients } = await import('@/lib/mockData');
-        return mockPatients.filter(p => p.status === 'Em Tratamento' || p.status === 'Inicial');
-      } catch (err) {
+        // Ideally save to cache here
+        return validPatients;
+
+      } catch (err: any) {
         logger.error('Erro ao carregar pacientes', err, 'usePatients');
-        // Fallback to mock data on error
-        try {
-          const { mockPatients } = await import('@/lib/mockData');
-          return mockPatients.filter(p => p.status === 'Em Tratamento' || p.status === 'Inicial');
-        } catch {
-          throw err;
+
+        // Mock fallback only if critical env var or specific mode set, otherwise empty
+        // Keeping original behavior logic slightly adapted
+        if (err.message && (err.message.includes('fetch') || err.message.includes('network'))) {
+          // Try cache?
+          // return getFromCache();
         }
+
+        throw err;
       }
     },
     enabled: !!organizationId,
     staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 2
   });
 };
 

@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { VerifiedAppointmentSchema } from '@/schemas/appointment';
+import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { AppointmentBase, AppointmentFormData, AppointmentStatus, AppointmentType } from '@/types/appointment';
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
@@ -79,7 +81,7 @@ async function fetchAppointments(organizationIdOverride?: string | null): Promis
       }
     }
 
-    // Construir query
+    // Construir query - Buscando relacionamentos essenciais
     let query = supabase
       .from('appointments')
       .select(`
@@ -89,6 +91,9 @@ async function fetchAppointments(organizationIdOverride?: string | null): Promis
           full_name,
           phone,
           email
+        ),
+        profiles:therapist_id(
+          full_name
         )
       `);
 
@@ -97,16 +102,16 @@ async function fetchAppointments(organizationIdOverride?: string | null): Promis
       query = query.eq('organization_id', organizationId);
     }
 
-    // Usar retry com timeout
+    // Usar retry com timeout forçado
     const result = await retryWithBackoff(() =>
       withTimeout(
         query
           .order('appointment_date', { ascending: true })
           .order('appointment_time', { ascending: true }),
-        10000 // 10 segundos de timeout para agendamentos (pode ter muitos dados)
+        15000 // 15 segundos de timeout para garantir em conexões lentas
       ),
       3, // 3 tentativas
-      1000 // delay inicial de 1 segundo
+      1000 // delay inicial
     );
 
     const { data, error } = result;
@@ -114,162 +119,103 @@ async function fetchAppointments(organizationIdOverride?: string | null): Promis
     if (error) {
       logger.error('Erro ao buscar agendamentos', error, 'useAppointments');
 
-      // Verificar se é erro de conexão - usar cache como fallback
+      // Verificar erros de rede/conexão
       if (isNetworkError(error)) {
-        logger.warn('Erro de rede, tentando usar cache', { error: error.message }, 'useAppointments');
+        logger.warn('Erro de rede identificado, fallback para cache', { error: error.message }, 'useAppointments');
         timer();
         return getFromCacheWithMetadata();
       }
 
-      // Tratar erros específicos
-      if (error.message) {
-        // Erro de schema/RLS
-        if (error.message.includes('user_id') && error.message.includes('does not exist')) {
-          logger.error('Erro de schema: coluna user_id não existe. Verifique as políticas RLS.', error, 'useAppointments');
-          timer();
-          return { data: [], isFromCache: false, cacheTimestamp: null };
-        }
-
-        // Erro de permissão
-        if (error.message.includes('permission denied') || error.message.includes('new row violates row-level security')) {
-          logger.error('Erro de permissão: usuário não tem acesso aos agendamentos.', error, 'useAppointments');
-          timer();
-          return { data: [], isFromCache: false, cacheTimestamp: null };
-        }
+      // Tratar erros específicos de permissão/schema
+      if (error.code === 'PGRST116' || error.message?.includes('permission')) {
+        logger.error('Erro de permissão ou dados não encontrados.', error, 'useAppointments');
+        return { data: [], isFromCache: false, cacheTimestamp: null };
       }
 
-      // Retornar array vazio em vez de lançar erro
-      logger.warn('Retornando array vazio devido a erro', { error: error.message, code: error.code }, 'useAppointments');
-      timer();
-      return { data: [], isFromCache: false, cacheTimestamp: null };
+      throw error;
     }
 
-    // Validar e transformar dados
-    let filteredCount = 0;
-    let noTimeCount = 0;
-    let invalidDateCount = 0;
+    // Validar e transformar dados usando Zod
+    const transformedAppointments: AppointmentBase[] = [];
+    const validationErrors: any[] = [];
 
-    const transformedAppointments = (data || [])
-      .map((apt, index) => {
-        // Filtrar registros sem ID - erro de dados
-        if (!apt?.id) {
-          filteredCount++;
-          logger.warn(`Agendamento ${index} sem ID, ignorando`, { apt }, 'useAppointments');
-          return null;
-        }
+    (data || []).forEach((item) => {
+      // Mapear estrutura do banco para estrutura esperada pelo Zod Schema se necessário
+      // O Schema espera 'patient' mas o retorno do supabase é 'patients' (plural) ou mapeado
+      const itemToValidate = {
+        ...item,
+        patient: item.patients, // flat map para validação
+        professional: item.profiles // flat map
+      };
 
-        // Extrair e validar time - campo crítico para renderização
-        const time = apt.start_time || apt.appointment_time;
-        if (!time) {
-          noTimeCount++;
-          logger.warn(`Agendamento ${apt.id} sem horário (start_time e appointment_time são nulos)`, {
-            id: apt.id,
-            patient_id: apt.patient_id,
-            has_start_time: !!apt.start_time,
-            has_appointment_time: !!apt.appointment_time
-          }, 'useAppointments');
-          // Retornar com time padrão para não perder o agendamento completamente
-        }
+      const validation = VerifiedAppointmentSchema.safeParse(itemToValidate);
 
-        // Extrair e validar data - campo crítico para renderização
-        let date: Date;
-        try {
-          const dateStr = apt.date || apt.appointment_date;
-          if (!dateStr) {
-            invalidDateCount++;
-            logger.warn(`Agendamento ${apt.id} sem data, usando data atual`, { id: apt.id }, 'useAppointments');
-            date = new Date();
-          } else {
-            const [y, m, d] = dateStr.split('-').map(Number);
-            date = new Date(y, m - 1, d, 12, 0, 0);
-            // Validar se a data é válida
-            if (isNaN(date.getTime())) {
-              invalidDateCount++;
-              logger.warn(`Agendamento ${apt.id} com data inválida: ${dateStr}`, { id: apt.id, dateStr }, 'useAppointments');
-              date = new Date();
-            }
-          }
-        } catch (dateError) {
-          invalidDateCount++;
-          logger.warn(`Agendamento ${apt.id} erro ao processar data`, { id: apt.id, error: dateError }, 'useAppointments');
-          date = new Date();
-        }
+      if (validation.success) {
+        const validData = validation.data;
 
-        try {
-          return {
-            id: apt.id,
-            patientId: apt.patient_id,
-            patientName: apt.patients?.full_name || apt.patients?.name || 'Paciente não identificado',
-            phone: apt.patients?.phone || '',
-            date,
-            time: time || '00:00', // Fallback seguro para não quebrar renderização
-            duration: apt.duration || 60,
-            type: (apt.type || 'Fisioterapia') as AppointmentType,
-            status: (apt.status || 'agendado') as AppointmentStatus,
-            notes: apt.notes || '',
-            createdAt: apt.created_at ? new Date(apt.created_at) : new Date(),
-            updatedAt: apt.updated_at ? new Date(apt.updated_at) : new Date(),
-            therapistId: apt.therapist_id,
-            room: apt.room,
-          } as AppointmentBase;
-        } catch (transformError) {
-          filteredCount++;
-          logger.warn('Erro ao transformar agendamento', { appointmentId: apt.id, error: transformError }, 'useAppointments');
-          return null;
-        }
-      })
-      .filter((apt): apt is AppointmentBase => apt !== null); // Remover nulls
+        // Converter para AppointmentBase (Interface legada da UI)
+        transformedAppointments.push({
+          id: validData.id,
+          patientId: validData.patient_id || '',
+          patientName: validData.patientName, // Campo computado pelo Zod
+          phone: item.patients?.phone || '',
+          date: validData.date,
+          time: validData.start_time || validData.appointment_time || '00:00',
+          duration: validData.duration || 60,
+          type: (validData.type || 'Fisioterapia') as AppointmentType,
+          status: (validData.status || 'agendado') as AppointmentStatus,
+          notes: validData.notes || '',
+          createdAt: validData.created_at ? new Date(validData.created_at) : new Date(),
+          updatedAt: validData.updated_at ? new Date(validData.updated_at) : new Date(),
+          therapistId: validData.therapist_id,
+          room: validData.room,
+        });
+      } else {
+        validationErrors.push({ id: item.id, error: validation.error });
+        logger.warn(`Agendamento ${item.id} inválido`, { error: validation.error }, 'useAppointments');
 
-    // Log detalhado de estatísticas de transformação
-    logger.info(`Agendamentos carregados: ${transformedAppointments.length} registros`, {
-      count: transformedAppointments.length,
-      filteredCount,
-      noTimeCount,
-      invalidDateCount,
-      originalCount: data?.length || 0
-    }, 'useAppointments');
+        // Opcional: tentar recuperar parcialmente ou ignorar
+        // Por segurança, ignoramos dados inválidos para não quebrar a UI
+      }
+    });
 
-    // Se muitos agendamentos foram filtrados, logar como warning
-    if (filteredCount > 0 || noTimeCount > 0 || invalidDateCount > 0) {
-      logger.warn(`Alguns agendamentos tiveram problemas de validação`, {
-        filteredCount,
-        noTimeCount,
-        invalidDateCount
-      }, 'useAppointments');
+    if (validationErrors.length > 0) {
+      logger.warn(`Ignorados ${validationErrors.length} agendamentos inválidos`, {}, 'useAppointments');
     }
 
-    // Salvar no cache para uso offline
+    // Salvar no cache atualizado
     appointmentsCacheService.saveToCache(transformedAppointments, organizationId || undefined);
 
     timer();
-
     return { data: transformedAppointments, isFromCache: false, cacheTimestamp: null };
+
   } catch (error: any) {
-    logger.error('Erro crítico ao buscar agendamentos', error, 'useAppointments');
+    logger.error('Erro crítico no fetchAppointments', error, 'useAppointments');
 
-    // Se for erro de rede, tentar cache
-    if (isNetworkError(error)) {
-      timer();
-      return getFromCacheWithMetadata();
-    }
-
+    // Último recurso: tentar cache se algo crítico falhou
     timer();
-    // Retornar array vazio em vez de lançar erro para não quebrar a UI
-    return { data: [], isFromCache: false, cacheTimestamp: null };
+    return getFromCacheWithMetadata();
   }
 }
 
 // Função auxiliar para detectar erros de rede
 function isNetworkError(error: any): boolean {
   if (!error) return false;
-  const message = error.message?.toLowerCase() || '';
+  // Log message para debug
+  // console.log('Checking network error:', error); 
+
+  const message = (error.message || '').toLowerCase();
+
+  // Lista extensiva de erros de rede
   return (
     message.includes('network') ||
     message.includes('timeout') ||
     message.includes('fetch') ||
     message.includes('failed to fetch') ||
-    message.includes('net::err') ||
-    error.name === 'TypeError' ||
+    message.includes('connection') ||
+    message.includes('offline') ||
+    message.includes('load failed') ||
+    error.name === 'TypeError' && message === 'failed to fetch' ||
     !navigator.onLine
   );
 }
@@ -281,11 +227,10 @@ async function getFromCacheWithMetadata(organizationId?: string): Promise<Appoin
 
     if (cacheResult.data.length > 0) {
       const ageMinutes = appointmentsCacheService.getCacheAgeMinutes();
-      logger.info('Usando dados do cache', {
+      logger.info('Usando dados do cache (Fallback)', {
         count: cacheResult.data.length,
-        isStale: cacheResult.isStale,
-        isExpired: cacheResult.isExpired,
-        ageMinutes
+        ageMinutes,
+        isStale: cacheResult.isStale
       }, 'useAppointments');
 
       return {
@@ -295,7 +240,7 @@ async function getFromCacheWithMetadata(organizationId?: string): Promise<Appoin
       };
     }
   } catch (cacheError) {
-    logger.error('Erro ao acessar cache', cacheError, 'useAppointments');
+    logger.error('Falha ao ler cache', cacheError, 'useAppointments');
   }
   return { data: [], isFromCache: false, cacheTimestamp: null };
 }
