@@ -11,14 +11,16 @@ import {
   Info
 } from 'lucide-react';
 import { useCreateStandardForm, useStandardFormExists, STANDARD_FORMS } from '@/hooks/useStandardForms';
-import { useEvaluationForms } from '@/hooks/useEvaluationForms';
+import { useEvaluationForms, useImportEvaluationForm, EvaluationFormFieldFormData } from '@/hooks/useEvaluationForms';
+import { toast } from 'sonner';
 
 interface StandardFormCardProps {
   type: keyof typeof STANDARD_FORMS;
   onCreate: (type: keyof typeof STANDARD_FORMS) => void;
+  onDuplicate: (type: keyof typeof STANDARD_FORMS) => void;
 }
 
-function StandardFormCard({ type, onCreate }: StandardFormCardProps) {
+function StandardFormCard({ type, onCreate, onDuplicate }: StandardFormCardProps) {
   const { data: exists } = useStandardFormExists(type);
   const config = STANDARD_FORMS[type];
 
@@ -101,21 +103,35 @@ function StandardFormCard({ type, onCreate }: StandardFormCardProps) {
           </Badge>
         </div>
 
-        <Button
-          className="w-full"
-          variant={exists ? "outline" : "default"}
-          onClick={() => onCreate(type)}
-          disabled={!!exists}
-        >
-          {exists ? (
-            <>Ficha já criada</>
-          ) : (
-            <>
-              <Plus className="h-4 w-4 mr-2" />
-              Criar Ficha
-            </>
-          )}
-        </Button>
+        <div className="flex flex-col gap-2">
+          <Button
+            className="w-full"
+            variant={exists ? "outline" : "default"}
+            onClick={() => onCreate(type)}
+            disabled={!!exists}
+          >
+            {exists ? (
+              <>
+                <Check className="h-4 w-4 mr-2" />
+                Instalada como Padrão
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4 mr-2" />
+                Instalar como Padrão
+              </>
+            )}
+          </Button>
+
+          <Button
+            className="w-full"
+            variant="secondary"
+            onClick={() => onDuplicate(type)}
+          >
+            <ClipboardList className="h-4 w-4 mr-2" />
+            Criar Cópia Editável
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
@@ -123,10 +139,37 @@ function StandardFormCard({ type, onCreate }: StandardFormCardProps) {
 
 export function StandardFormsManager() {
   const createMutation = useCreateStandardForm();
+  const importMutation = useImportEvaluationForm();
   const { data: existingForms = [] } = useEvaluationForms();
 
   const handleCreateForm = async (type: keyof typeof STANDARD_FORMS) => {
     await createMutation.mutateAsync(type);
+  };
+
+  const handleDuplicateForm = async (type: keyof typeof STANDARD_FORMS) => {
+    const config = STANDARD_FORMS[type];
+
+    // Map standard fields to form fields
+    const fields: EvaluationFormFieldFormData[] = config.campos.map(c => ({
+      tipo_campo: c.tipo_campo,
+      label: c.rotulo,
+      placeholder: c.pergunta,
+      opcoes: c.opcoes ? c.opcoes : undefined, // Check type compatibility
+      ordem: c.ordem,
+      obrigatorio: c.obrigatorio,
+      grupo: c.secao,
+      descricao: c.descricao,
+      minimo: c.minimo,
+      maximo: c.maximo,
+    }));
+
+    await importMutation.mutateAsync({
+      nome: `${config.nome} (Personalizada)`,
+      descricao: config.descricao,
+      tipo: config.tipo, // Retains original category type for filtering
+      fields: fields,
+      referencias: null
+    });
   };
 
   // Verificar quais fichas já existem
@@ -168,6 +211,7 @@ export function StandardFormsManager() {
             key={type}
             type={type as keyof typeof STANDARD_FORMS}
             onCreate={handleCreateForm}
+            onDuplicate={handleDuplicateForm}
           />
         ))}
       </div>

@@ -92,7 +92,7 @@ export async function initStatsig(
     return true;
   }
 
-  const key = sdkKey || process.env.NEXT_PUBLIC_STATSIG_CLIENT_KEY;
+  const key = sdkKey || import.meta.env.VITE_STATSIG_CLIENT_KEY || import.meta.env.NEXT_PUBLIC_STATSIG_CLIENT_KEY;
 
   if (!key) {
     console.warn('Statsig SDK key not found. Feature flags disabled.');
@@ -446,8 +446,8 @@ function getDefaultConfigValue<T>(configName: DynamicConfigName): T | null {
  */
 export function createFeatureFlagHook(flagName: FeatureFlagName) {
   return function useFeatureFlag(
-  user?: Statsig.StatsigUser,
-  options?: Statsig.StatsigOptions
+    user?: Statsig.StatsigUser,
+    options?: Statsig.StatsigOptions
   ): { enabled: boolean; isLoading: boolean; error: Error | null } {
     const [enabled, setEnabled] = React.useState(() => isFeatureEnabled(flagName, user, options));
     const [isLoading, setIsLoading] = React.useState(!isInitialized);

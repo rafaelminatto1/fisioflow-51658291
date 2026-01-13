@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Check, ChevronsUpDown, FileText, Search, Loader2 } from 'lucide-react';
+import { Check, ChevronsUpDown, FileText, Search, Loader2, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,6 +25,7 @@ export interface EvaluationTemplate {
     nome: string;
     descricao?: string | null;
     tipo: string;
+    referencias?: string | null;
     category?: string;
     fields?: TemplateField[];
 }
@@ -42,6 +43,7 @@ export interface TemplateField {
     min?: number;
     max?: number;
     unit?: string;
+    description?: string | null;
 }
 
 interface EvaluationTemplateSelectorProps {
@@ -89,6 +91,7 @@ export function EvaluationTemplateSelector({
           nome,
           descricao,
           tipo,
+          referencias,
           evaluation_form_fields (
             id,
             label,
@@ -96,7 +99,12 @@ export function EvaluationTemplateSelector({
             placeholder,
             opcoes,
             ordem,
-            obrigatorio
+            ordem,
+            obrigatorio,
+            grupo,
+            minimo,
+            maximo,
+            descricao
           )
         `)
                 .eq('ativo', true)
@@ -114,9 +122,14 @@ export function EvaluationTemplateSelector({
                 nome: t.nome,
                 descricao: t.descricao,
                 tipo: t.tipo,
+                referencias: t.referencias,
                 category: t.tipo,
-                fields: (t.evaluation_form_fields || []).map((f: TemplateField) => ({
+                fields: (t.evaluation_form_fields || []).map((f: any) => ({
                     ...f,
+                    section: f.grupo,
+                    min: f.minimo,
+                    max: f.maximo,
+                    description: f.descricao,
                     opcoes: typeof f.opcoes === 'string' ? JSON.parse(f.opcoes) : f.opcoes,
                 })).sort((a: TemplateField, b: TemplateField) => a.ordem - b.ordem),
             })) as EvaluationTemplate[];
@@ -185,10 +198,15 @@ export function EvaluationTemplateSelector({
                         {selectedTemplate ? (
                             <div className="flex flex-col gap-0.5">
                                 <span className="font-medium">{selectedTemplate.nome}</span>
-                                {selectedTemplate.descricao && (
-                                    <span className="text-xs text-muted-foreground line-clamp-1">
-                                        {selectedTemplate.descricao}
-                                    </span>
+                                <span className="text-xs text-muted-foreground line-clamp-1">
+                                    {selectedTemplate.descricao}
+                                </span>
+
+                                {selectedTemplate.referencias && (
+                                    <div className="flex items-center gap-1 mt-1 text-[10px] text-primary/70 bg-primary/5 px-1.5 py-0.5 rounded-sm w-fit" title={selectedTemplate.referencias}>
+                                        <BookOpen className="h-3 w-3" />
+                                        <span className="font-medium">Referência Científica</span>
+                                    </div>
                                 )}
                             </div>
                         ) : (
