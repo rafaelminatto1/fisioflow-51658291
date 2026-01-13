@@ -18,6 +18,7 @@ export interface EvaluationForm {
     created_by?: string | null;
     nome: string; // title
     descricao?: string | null; // description
+    referencias?: string | null; // scientific references
     tipo: string; // e.g., 'anamnese'
     ativo: boolean;
     created_at: string;
@@ -34,6 +35,10 @@ export interface EvaluationFormField {
     opcoes?: string[] | null; // stored as jsonb
     ordem: number;
     obrigatorio: boolean; // required
+    grupo?: string | null; // section
+    descricao?: string | null; // help text or description
+    minimo?: number | null;
+    maximo?: number | null;
     created_at?: string;
 }
 

@@ -29,9 +29,6 @@ const getEnv = (key: string) => {
     // @ts-expect-error - import.meta.env is not fully typed
     return import.meta.env[key];
   }
-  if (typeof process !== 'undefined' && process.env) {
-    return process.env[key];
-  }
   return undefined;
 };
 

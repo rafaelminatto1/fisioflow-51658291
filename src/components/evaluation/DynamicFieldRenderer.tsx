@@ -346,6 +346,9 @@ export function DynamicFieldRenderer({
                                         <span className="text-xs text-destructive">*</span>
                                     )}
                                 </div>
+                                {field.description && (
+                                    <p className="text-xs text-muted-foreground pb-1">{field.description}</p>
+                                )}
                                 {renderField(
                                     field,
                                     values[field.id],

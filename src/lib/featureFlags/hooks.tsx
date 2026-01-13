@@ -52,7 +52,7 @@ export function FeatureFlagProvider({
 }: {
   children: React.ReactNode;
   sdkKey?: string;
-  user?: { userID?: string; email?: string; [key: string]: unknown };
+  user?: { userID?: string; email?: string;[key: string]: unknown };
 }) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [userId] = useState(user?.userID || null);
@@ -80,7 +80,7 @@ export function FeatureFlagProvider({
 
   return (
     <FeatureFlagContext.Provider value={{ isInitialized, userId }}>
-      <Statsig.StatsigProvider sdkKey={sdkKey || process.env.NEXT_PUBLIC_STATSIG_CLIENT_KEY!} user={user}>
+      <Statsig.StatsigProvider sdkKey={sdkKey || import.meta.env.VITE_STATSIG_CLIENT_KEY || import.meta.env.NEXT_PUBLIC_STATSIG_CLIENT_KEY || ''} user={user}>
         {children}
       </Statsig.StatsigProvider>
     </FeatureFlagContext.Provider>
@@ -564,7 +564,6 @@ export function FeatureFlag({
 // ============================================================================
 
 export {
-  FeatureFlagProvider,
   FeatureFlagContext,
 };
 

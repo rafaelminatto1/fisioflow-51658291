@@ -73,9 +73,13 @@ import {
   EvolutionKeyboardShortcuts,
   useEvolutionShortcuts
 } from '@/components/evolution/EvolutionKeyboardShortcuts';
-import { type PainScaleData } from '@/hooks/useSoapRecords';
+// Tipo para escala de dor
+export interface PainScaleData {
+  level: number;
+  location?: string;
+  character?: string;
+}
 import { PatientEvolutionErrorBoundary } from '@/components/patients/PatientEvolutionErrorBoundary';
-import { useRenderTracking } from '@/hooks/useRenderTracking';
 
 // Lazy loading para componentes pesados
 const LazyMeasurementCharts = lazy(() =>
@@ -95,9 +99,6 @@ const PatientEvolution = () => {
   const { appointmentId } = useParams<{ appointmentId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  // Tracking para debug de erros de renderização
-  useRenderTracking('PatientEvolution', { appointmentId });
 
   // Validação inicial do appointmentId
   if (!appointmentId) {
@@ -314,15 +315,15 @@ const PatientEvolution = () => {
     // Check for mandatory tests
     const pendingCriticalTests = requiredMeasurements.filter(req => {
       // Check if this measurement exists in current session measurements
-      const hasMeasurement = measurements.some(m => m.measurement_name === req.name); // Simplified check
+      const hasMeasurement = measurements.some(m => m.measurement_name === req.measurement_name); // Simplified check
       // In a real app, you'd check if it was measured *today* or within valid window
-      return req.critical && !hasMeasurement;
+      return req.alert_level === 'high' && !hasMeasurement;
     });
 
     if (pendingCriticalTests.length > 0) {
       toast({
         title: 'Testes Obrigatórios Pendentes',
-        description: `É necessário realizar: ${pendingCriticalTests.map(t => t.name).join(', ')}`,
+        description: `É necessário realizar: ${pendingCriticalTests.map(t => t.measurement_name).join(', ')}`,
         variant: 'destructive'
       });
       return;
@@ -687,13 +688,13 @@ const PatientEvolution = () => {
           {/* Mandatory Tests Alert */}
           <MandatoryTestAlert
             tests={requiredMeasurements.map(req => ({
-              id: req.id || req.name, // Fallback ID
-              name: req.name,
-              critical: true, // Assuming all returned by hook are critical or mapping needed
-              completed: measurements.some(m => m.measurement_name === req.name)
+              id: req.id || req.measurement_name, // Fallback ID
+              name: req.measurement_name,
+              critical: req.alert_level === 'high',
+              completed: measurements.some(m => m.measurement_name === req.measurement_name)
             }))}
             onResolve={(testId) => {
-              const test = requiredMeasurements.find(t => t.id === testId || t.name === testId);
+              const test = requiredMeasurements.find(t => t.id === testId || t.measurement_name === testId);
               // navigate to measurement tab or open modal
               document.querySelector('[value="measurements"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
             }}
@@ -1038,10 +1039,7 @@ const PatientEvolution = () => {
             </TabsContent>
 
             <TabsContent value="measurements" className="mt-6">
-              <MeasurementCharts
-                measurements={measurements}
-                activePathologies={activePathologies}
-              />
+              <MeasurementCharts measurementsByType={measurementsByType} />
             </TabsContent>
 
             <TabsContent value="ai" className="mt-6">

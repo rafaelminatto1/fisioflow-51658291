@@ -1,4 +1,4 @@
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useMemo } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,6 +6,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { DataProvider } from "@/contexts/DataContext";
 import { AuthContextProvider } from "@/contexts/AuthContextProvider";
+import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { logger } from '@/lib/errors/logger';
 import { notificationManager } from '@/lib/services/NotificationManager';
@@ -19,6 +20,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import { VersionManager } from "@/components/system/VersionManager";
 import { initWebVitalsMonitoring, WebVitalsIndicator } from "@/lib/monitoring/web-vitals";
 import { PerformanceDashboard } from "@/components/system";
+import { FeatureFlagProvider } from "@/lib/featureFlags/hooks";
 
 // Create a client with performance optimizations
 const queryClient = new QueryClient({
@@ -71,6 +73,30 @@ const PageLoadingFallback = () => (
   </div>
 );
 
+// Wrapper to sync auth user with Statsig
+const StatsigProviderWrapper = ({ children }: { children: React.ReactNode }) => {
+  const { user, profile } = useAuth();
+
+  const statsigUser = useMemo(() => {
+    if (!user) return { userID: 'anonymous' };
+
+    return {
+      userID: user.id,
+      email: user.email,
+      custom: {
+        role: profile?.role,
+        name: profile?.full_name,
+      }
+    };
+  }, [user, profile]);
+
+  return (
+    <FeatureFlagProvider user={statsigUser}>
+      {children}
+    </FeatureFlagProvider>
+  );
+};
+
 const App = () => {
   useEffect(() => {
     logger.info('Aplicação iniciada', { timestamp: new Date().toISOString() }, 'App');
@@ -94,6 +120,9 @@ const App = () => {
     };
 
     initNotifications();
+
+    // Clear chunk load error flag on successful load
+    sessionStorage.removeItem('chunk_load_error_reload');
   }, []);
 
   return (
@@ -109,28 +138,30 @@ const App = () => {
       >
         <TooltipProvider>
           <AuthContextProvider>
-            <DataProvider>
-              <Toaster />
-              <Sonner />
-              {/* <PWAInstallPrompt /> */}
-              {/* <PWAUpdatePrompt /> */}
-              <BrowserRouter
-                future={{
-                  v7_startTransition: true,
-                  v7_relativeSplatPath: true,
-                }}
-              >
-                <Suspense fallback={<PageLoadingFallback />}>
-                  <AppRoutes />
-                  <VersionManager />
-                  <Analytics />
-                  <SpeedInsights />
-                  <WebVitalsIndicator />
-                  {/* Performance Dashboard - Dev Only */}
-                  {import.meta.env.DEV && <PerformanceDashboard />}
-                </Suspense>
-              </BrowserRouter>
-            </DataProvider>
+            <StatsigProviderWrapper>
+              <DataProvider>
+                <Toaster />
+                <Sonner />
+                {/* <PWAInstallPrompt /> */}
+                {/* <PWAUpdatePrompt /> */}
+                <BrowserRouter
+                  future={{
+                    v7_startTransition: true,
+                    v7_relativeSplatPath: true,
+                  }}
+                >
+                  <Suspense fallback={<PageLoadingFallback />}>
+                    <AppRoutes />
+                    <VersionManager />
+                    <Analytics />
+                    <SpeedInsights />
+                    <WebVitalsIndicator />
+                    {/* Performance Dashboard - Dev Only */}
+                    {import.meta.env.DEV && <PerformanceDashboard />}
+                  </Suspense>
+                </BrowserRouter>
+              </DataProvider>
+            </StatsigProviderWrapper>
           </AuthContextProvider>
         </TooltipProvider>
       </PersistQueryClientProvider>

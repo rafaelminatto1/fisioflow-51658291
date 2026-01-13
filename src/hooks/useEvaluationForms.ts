@@ -6,6 +6,7 @@ import { EvaluationForm, EvaluationFormWithFields, EvaluationFormField } from '@
 export type EvaluationFormFormData = {
   nome: string;
   descricao?: string | null;
+  referencias?: string | null;
   tipo: string;
   ativo?: boolean;
 };
@@ -134,6 +135,81 @@ export function useDeleteEvaluationForm() {
   });
 }
 
+export function useDuplicateEvaluationForm() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      // 1. Get original form
+      const { data: originalForm, error: formError } = await supabase
+        .from('evaluation_forms')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (formError) throw formError;
+
+      // 2. Create new form
+      const { data: newForm, error: createError } = await supabase
+        .from('evaluation_forms')
+        .insert({
+          nome: `${originalForm.nome} (Cópia)`,
+          descricao: originalForm.descricao,
+          referencias: originalForm.referencias,
+          tipo: originalForm.tipo,
+          ativo: true,
+          organization_id: originalForm.organization_id, // Preserve org if applicable
+          created_by: originalForm.created_by // Preserve creator or let DB handle defaults
+        })
+        .select()
+        .single();
+
+      if (createError) throw createError;
+
+      // 3. Get original fields
+      const { data: fields, error: fieldsError } = await supabase
+        .from('evaluation_form_fields')
+        .select('*')
+        .eq('form_id', id);
+
+      if (fieldsError) throw fieldsError;
+
+      // 4. Insert new fields
+      if (fields && fields.length > 0) {
+        const newFields = fields.map(f => ({
+          form_id: newForm.id,
+          tipo_campo: f.tipo_campo,
+          label: f.label,
+          placeholder: f.placeholder,
+          opcoes: f.opcoes,
+          ordem: f.ordem,
+          obrigatorio: f.obrigatorio,
+          grupo: f.grupo,
+          descricao: f.descricao,
+          minimo: f.minimo,
+          maximo: f.maximo,
+        }));
+
+        const { error: insertFieldsError } = await supabase
+          .from('evaluation_form_fields')
+          .insert(newFields);
+
+        if (insertFieldsError) throw insertFieldsError;
+      }
+
+      return newForm;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['evaluation-forms'] });
+      toast.success('Ficha duplicada com sucesso.');
+    },
+    onError: (error) => {
+      console.error(error);
+      toast.error('Erro ao duplicar ficha.');
+    },
+  });
+}
+
 // Field mutations
 export function useAddFormField() {
   const queryClient = useQueryClient();
@@ -211,6 +287,70 @@ export function useDeleteFormField() {
     },
     onError: () => {
       toast.error('Erro ao excluir campo.');
+    },
+  });
+}
+
+export type EvaluationFormImportData = {
+  nome: string;
+  descricao?: string | null;
+  referencias?: string | null;
+  tipo: string;
+  fields: EvaluationFormFieldFormData[];
+};
+
+export function useImportEvaluationForm() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: EvaluationFormImportData) => {
+      // 1. Create form
+      const { data: form, error: formError } = await supabase
+        .from('evaluation_forms')
+        .insert({
+          nome: data.nome,
+          descricao: data.descricao,
+          referencias: data.referencias,
+          tipo: data.tipo,
+          ativo: true,
+        })
+        .select()
+        .single();
+
+      if (formError) throw formError;
+
+      // 2. Insert fields
+      if (data.fields && data.fields.length > 0) {
+        const fieldsToInsert = data.fields.map(f => ({
+          form_id: form.id,
+          tipo_campo: f.tipo_campo,
+          label: f.label,
+          placeholder: f.placeholder,
+          opcoes: typeof f.opcoes === 'object' && f.opcoes !== null ? JSON.stringify(f.opcoes) : f.opcoes,
+          ordem: f.ordem,
+          obrigatorio: f.obrigatorio,
+          grupo: f.grupo,
+          descricao: f.descricao,
+          minimo: f.minimo,
+          maximo: f.maximo,
+        }));
+
+        const { error: fieldsError } = await supabase
+          .from('evaluation_form_fields')
+          .insert(fieldsToInsert);
+
+        if (fieldsError) throw fieldsError;
+      }
+
+      return form;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['evaluation-forms'] });
+      toast.success('Ficha importada com sucesso.');
+    },
+    onError: (error) => {
+      console.error(error);
+      toast.error('Erro ao importar ficha.');
     },
   });
 }
