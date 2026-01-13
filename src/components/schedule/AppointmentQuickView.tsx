@@ -144,24 +144,33 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
           {children}
         </PopoverTrigger>
         <PopoverContent
-          className="w-80 p-0 bg-card border border-border shadow-xl z-50"
+          className="w-80 p-0 bg-card border border-border shadow-xl z-50 animate-fade-in"
           align="start"
           side="right"
-          sideOffset={5}
+          sideOffset={8}
+          role="dialog"
+          aria-modal="false"
+          aria-label={`Detalhes do agendamento de ${appointment.patientName}`}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="font-semibold text-sm">
-                Horário: {appointment.time} - {endTime}
-              </span>
+          <div className="flex items-center justify-between p-3.5 border-b border-border bg-gradient-to-r from-muted/50 to-muted/30">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 bg-primary/10 rounded-lg">
+                <Clock className="h-4 w-4 text-primary" aria-hidden="true" />
+              </div>
+              <div>
+                <span className="font-semibold text-sm">
+                  {appointment.time} - {endTime}
+                </span>
+                <p className="text-xs text-muted-foreground">({appointment.duration || 60} min)</p>
+              </div>
             </div>
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6"
+              className="h-7 w-7 touch-target hover:bg-muted"
               onClick={() => onOpenChange?.(false)}
+              aria-label="Fechar detalhes"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -170,56 +179,60 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
           {/* Waitlist Interest Alert */}
           {hasWaitlistInterest && (
             <div
-              className="flex items-center gap-2 px-3 py-2 bg-amber-500/10 border-b border-amber-500/20 cursor-pointer hover:bg-amber-500/20 transition-colors"
+              className="flex items-center gap-2 px-3.5 py-2.5 bg-amber-500/10 border-b border-amber-500/20 cursor-pointer hover:bg-amber-500/20 transition-colors"
               onClick={() => setShowWaitlistNotification(true)}
+              role="button"
+              tabIndex={0}
+              aria-label={`${interestCount} paciente${interestCount !== 1 ? 's' : ''} interessado${interestCount !== 1 ? 's' : ''} neste horário. Clique para ver detalhes.`}
             >
-              <Users className="h-4 w-4 text-amber-600" />
-              <span className="text-xs text-amber-700 dark:text-amber-400">
-                {interestCount} paciente{interestCount !== 1 ? 's' : ''} interessado{interestCount !== 1 ? 's' : ''} neste horário
+              <Users className="h-4 w-4 text-amber-600" aria-hidden="true" />
+              <span className="text-xs text-amber-700 dark:text-amber-400 font-medium">
+                {interestCount} paciente{interestCount !== 1 ? 's' : ''} interessado{interestCount !== 1 ? 's' : ''}
               </span>
-              <Bell className="h-3 w-3 text-amber-600 ml-auto" />
+              <Bell className="h-3 w-3 text-amber-600 ml-auto" aria-hidden="true" />
             </div>
           )}
 
           {/* Content */}
-          <div className="p-3 space-y-3">
+          <div className="p-4 space-y-3">
             {/* Fisioterapeuta - placeholder */}
-            <div className="flex items-start gap-2">
-              <span className="text-sm text-muted-foreground min-w-[90px]">Fisioterapeuta:</span>
-              <span className="text-sm font-medium text-primary">Activity Fisioterapia</span>
+            <div className="flex items-start gap-3">
+              <span className="text-sm text-muted-foreground min-w-[100px]">Fisioterapeuta:</span>
+              <span className="text-sm font-medium text-foreground">Activity Fisioterapia</span>
             </div>
 
             {/* Paciente */}
-            <div className="flex items-start gap-2">
-              <span className="text-sm text-muted-foreground min-w-[90px]">Paciente:</span>
-              <span className="text-sm font-medium text-primary">{appointment.patientName}</span>
+            <div className="flex items-start gap-3">
+              <span className="text-sm text-muted-foreground min-w-[100px]">Paciente:</span>
+              <span className="text-sm font-semibold text-primary">{appointment.patientName}</span>
             </div>
 
             {/* Celular */}
-            <div className="flex items-start gap-2">
-              <span className="text-sm text-muted-foreground min-w-[90px]">Celular:</span>
-              <span className="text-sm">{appointment.phone || 'Não informado'}</span>
+            <div className="flex items-start gap-3">
+              <span className="text-sm text-muted-foreground min-w-[100px]">Celular:</span>
+              <span className="text-sm text-foreground">{appointment.phone || 'Não informado'}</span>
             </div>
 
             {/* Convênio */}
-            <div className="flex items-start gap-2">
-              <span className="text-sm text-muted-foreground min-w-[90px]">Convênio:</span>
-              <span className="text-sm">{appointment.type || 'Particular'}</span>
+            <div className="flex items-start gap-3">
+              <span className="text-sm text-muted-foreground min-w-[100px]">Convênio:</span>
+              <span className="text-sm text-foreground">{appointment.type || 'Particular'}</span>
             </div>
 
             {/* Status */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground min-w-[90px]">Status:</span>
+            <div className="flex items-center gap-3 pt-1">
+              <span className="text-sm text-muted-foreground min-w-[100px]">Status:</span>
               <Select
                 value={appointment.status}
                 onValueChange={handleStatusChange}
                 disabled={isUpdatingStatus}
+                aria-label="Mudar status do agendamento"
               >
-                <SelectTrigger className="h-8 w-[140px]">
+                <SelectTrigger className="h-9 w-[155px]" aria-label={`Status atual: ${statusLabels[appointment.status]}`}>
                   <SelectValue>
                     <div className="flex items-center gap-2">
-                      <div className={cn("w-2 h-2 rounded-full", statusColors[appointment.status])} />
-                      <span>{statusLabels[appointment.status]}</span>
+                      <div className={cn("w-2.5 h-2.5 rounded-full", statusColors[appointment.status])} aria-hidden="true" />
+                      <span className="text-xs">{statusLabels[appointment.status]}</span>
                     </div>
                   </SelectValue>
                 </SelectTrigger>
@@ -227,7 +240,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
                   {Object.entries(statusLabels).map(([value, label]) => (
                     <SelectItem key={value} value={value}>
                       <div className="flex items-center gap-2">
-                        <div className={cn("w-2 h-2 rounded-full", statusColors[value as AppointmentStatus])} />
+                        <div className={cn("w-2 h-2 rounded-full", statusColors[value as AppointmentStatus])} aria-hidden="true" />
                         <span>{label}</span>
                       </div>
                     </SelectItem>
@@ -240,13 +253,14 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
           <Separator />
 
           {/* Actions */}
-          <div className="p-3 space-y-2">
+          <div className="p-3.5 space-y-2.5 bg-muted/20">
             <div className="flex items-center gap-2">
               {canStartAttendance && (
                 <Button
                   onClick={handleStartAttendance}
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
                   size="sm"
+                  aria-label={appointment.status === 'avaliacao' ? 'Iniciar avaliação' : 'Iniciar atendimento'}
                 >
                   <span className="flex items-center gap-1.5">
                     {appointment.status === 'avaliacao' ? (
@@ -263,8 +277,9 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-9 w-9 touch-target bg-background"
                   onClick={handleEdit}
+                  aria-label="Editar agendamento"
                 >
                   <Edit className="h-4 w-4" />
                 </Button>
@@ -274,8 +289,9 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-8 w-8 text-destructive hover:text-destructive"
+                  className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10 touch-target bg-background"
                   onClick={handleDelete}
+                  aria-label="Excluir agendamento"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -286,13 +302,14 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
             <Button
               variant="ghost"
               size="sm"
-              className="w-full h-7 text-xs text-muted-foreground hover:text-foreground"
+              className="w-full h-8 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 touch-target"
               onClick={() => {
                 setShowWaitlistQuickAdd(true);
                 onOpenChange?.(false);
               }}
+              aria-label="Adicionar outro paciente à lista de espera para este horário"
             >
-              <UserPlus className="h-3.5 w-3.5 mr-1.5" />
+              <UserPlus className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
               Outro paciente quer este horário?
             </Button>
           </div>

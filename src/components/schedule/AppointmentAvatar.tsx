@@ -1,10 +1,12 @@
+```javascript
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import { getOptimizedImageUrl } from '@/lib/media/image';
 
 interface AppointmentAvatarProps {
   patientName: string;
-  imageUrl?: string;
+  imageUrl?: string | null;
   status?: string;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
@@ -52,7 +54,7 @@ export const AppointmentAvatar: React.FC<AppointmentAvatarProps> = ({
 }) => {
   const initials = getInitials(patientName);
   const colorClass = getColorFromName(patientName);
-  
+
   return (
     <div className="relative">
       <Avatar className={cn(sizeClasses[size], 'shadow-md ring-2 ring-background', className)}>
@@ -63,18 +65,18 @@ export const AppointmentAvatar: React.FC<AppointmentAvatarProps> = ({
           {initials}
         </AvatarFallback>
       </Avatar>
-      
+
       {/* Status indicator dot */}
       {status && (
         <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background shadow-sm animate-pulse"
           style={{
-            backgroundColor: 
+            backgroundColor:
               status === 'confirmado' ? '#10b981' :
-              status === 'agendado' ? '#3b82f6' :
-              status === 'em_andamento' ? '#06b6d4' :
-              status === 'concluido' ? '#a855f7' :
-              status === 'atrasado' ? '#eab308' :
-              '#94a3b8'
+                status === 'agendado' ? '#3b82f6' :
+                  status === 'em_andamento' ? '#06b6d4' :
+                    status === 'concluido' ? '#a855f7' :
+                      status === 'atrasado' ? '#eab308' :
+                        '#94a3b8'
           }}
         />
       )}
