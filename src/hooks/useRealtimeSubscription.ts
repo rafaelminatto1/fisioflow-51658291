@@ -70,7 +70,20 @@ export function useRealtimeSubscription({
                     // Futuramente pode aceitar um callback 'onEvent' para customização
                 }
             )
-            .subscribe();
+            .subscribe((status, error) => {
+                if (status === 'SUBSCRIBED') {
+                    logger.debug(`Realtime conectado: ${channelName}`, {}, 'useRealtimeSubscription');
+                }
+                if (status === 'CHANNEL_ERROR') {
+                    logger.error(`Erro no canal Realtime: ${channelName}`, error, 'useRealtimeSubscription');
+                }
+                if (status === 'TIMED_OUT') {
+                    logger.warn(`Timeout no canal Realtime: ${channelName}`, {}, 'useRealtimeSubscription');
+                }
+                if (status === 'CLOSED') {
+                    logger.debug(`Canal Realtime fechado: ${channelName}`, {}, 'useRealtimeSubscription');
+                }
+            });
 
         return () => {
             logger.debug(`Removendo subscription ${channelName}`, {}, 'useRealtimeSubscription');
