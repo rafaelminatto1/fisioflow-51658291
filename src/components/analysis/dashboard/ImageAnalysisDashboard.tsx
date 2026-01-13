@@ -72,6 +72,7 @@ const ImageAnalysisDashboard = () => {
         if (urlMode && urlMode !== mode) {
             setMode(urlMode);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams]);
 
     const handleModeChange = (newMode: ViewerMode) => {
