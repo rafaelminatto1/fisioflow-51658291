@@ -4,11 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Package, 
-  Calendar, 
-  AlertTriangle, 
-  CheckCircle2, 
+import {
+  Package,
+  AlertTriangle,
+  CheckCircle2,
   XCircle,
   Clock,
   Ticket

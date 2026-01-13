@@ -3,7 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Shield, Lock, Key, Copy, Check, Mail, Send } from "lucide-react";
 import { useMFASettings } from "@/hooks/useMFASettings";
 import { toast } from "sonner";
@@ -14,8 +13,8 @@ import {
 } from "@/components/ui/input-otp";
 
 export function MFASetupPanel() {
-  const { 
-    settings, 
+  const {
+    _settings,
     isLoading, 
     isMFAEnabled, 
     enableMFA, 

@@ -13,7 +13,7 @@ interface PackageManagerProps {
 
 export function PackageManager({ patientId }: PackageManagerProps) {
   const { data: packages = [], isLoading } = useSessionPackages(patientId);
-  const [showNewModal, setShowNewModal] = useState(false);
+  const [_showNewModal, setShowNewModal] = useState(false);
 
   const getStatusBadge = (status: string) => {
     const variants = {

@@ -7,9 +7,9 @@
  * - FCP (First Contentful Paint): Tempo até o primeiro conteúdo ser pintado
  * - LCP (Largest Contentful Paint): Tempo até o maior conteúdo ser pintado
  * - FID (First Input Delay): Atraso na primeira interação do usuário
+ * - INP (Interaction to Next Paint): Substituto moderno do FID
  * - CLS (Cumulative Layout Shift): Mudança de layout cumulativa
  * - TTFB (Time to First Byte): Tempo até o primeiro byte do servidor
- * - FMP (First Meaningful Paint): Primeira pintura significativa
  */
 
 import { useState, useEffect } from 'react';
@@ -20,9 +20,9 @@ export interface WebVitalsMetrics {
   fcp?: Metric;
   lcp?: Metric;
   fid?: Metric;
+  inp?: Metric; // INP substitui FID em navegadores modernos
   cls?: Metric;
   ttfb?: Metric;
-  fmp?: number;
   url: string;
   userAgent: string;
 }
@@ -30,11 +30,12 @@ export interface WebVitalsMetrics {
 // Tipos para ratings
 export type Rating = 'good' | 'needs-improvement' | 'poor';
 
-// Thresholds para cada métrica
+// Thresholds para cada métrica (baseados no Google Core Web Vitals)
 const THRESHOLDS = {
   fcp: { good: 1800, poor: 3000 }, // ms
   lcp: { good: 2500, poor: 4000 }, // ms
-  fid: { good: 100, poor: 300 }, // ms
+  fid: { good: 100, poor: 300 }, // ms (legado)
+  inp: { good: 200, poor: 500 }, // ms (substitui FID)
   cls: { good: 0.1, poor: 0.25 }, // score
   ttfb: { good: 800, poor: 1800 }, // ms
 } as const;
@@ -68,38 +69,62 @@ export function getRatingColor(rating: Rating): string {
 }
 
 /**
- * Envia métricas para analytics
+ * Envia métricas para analytics com error handling
+ * Silenciosamente falha se analytics não estiver disponível
  */
 export function sendToAnalytics(metrics: WebVitalsMetrics) {
-  // Enviar para Vercel Analytics
-  if (typeof window !== 'undefined' && (window as any).va) {
-    (window as any).va('event', 'web-vitals', {
-      event_category: 'Web Vitals',
-      event_label: metrics.lcp?.name || 'LCP',
-      value: Math.round(metrics.lcp?.value || 0),
-      non_interaction: true,
-    });
-  }
+  try {
+    // Enviar para Vercel Analytics
+    if (typeof window !== 'undefined' && (window as any).va) {
+      try {
+        (window as any).va('event', 'web-vitals', {
+          event_category: 'Web Vitals',
+          event_label: metrics.lcp?.name || 'LCP',
+          value: Math.round(metrics.lcp?.value || 0),
+          non_interaction: true,
+        });
+      } catch (e) {
+        // Silenciosamente ignorar erros do Vercel Analytics
+        console.debug('[WebVitals] Vercel Analytics error:', e);
+      }
+    }
 
-  // Enviar para Google Analytics 4
-  if (typeof window !== 'undefined' && (window as any).gtag) {
-    (window as any).gtag('event', 'web_vitals', {
-      event_category: 'Web Vitals',
-      event_label: metrics.lcp?.name || 'LCP',
-      value: Math.round(metrics.lcp?.value || 0),
-      non_interaction: true,
-    });
-  }
+    // Enviar para Google Analytics 4
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      try {
+        (window as any).gtag('event', 'web_vitals', {
+          event_category: 'Web Vitals',
+          event_label: metrics.lcp?.name || 'LCP',
+          value: Math.round(metrics.lcp?.value || 0),
+          non_interaction: true,
+          custom_map: {
+            fcp: metrics.fcp?.value,
+            lcp: metrics.lcp?.value,
+            fid: metrics.fid?.value,
+            inp: metrics.inp?.value,
+            cls: metrics.cls?.value,
+            ttfb: metrics.ttfb?.value,
+          },
+        });
+      } catch (e) {
+        console.debug('[WebVitals] GA4 error:', e);
+      }
+    }
 
-  // Enviar para console em development
-  if (process.env.NODE_ENV === 'development') {
-    console.table({
-      'FCP': metrics.fcp?.value,
-      'LCP': metrics.lcp?.value,
-      'FID': metrics.fid?.value,
-      'CLS': metrics.cls?.value,
-      'TTFB': metrics.ttfb?.value,
-    });
+    // Enviar para console em development
+    if (process.env.NODE_ENV === 'development') {
+      console.table({
+        'FCP': metrics.fcp?.value,
+        'LCP': metrics.lcp?.value,
+        'FID': metrics.fid?.value,
+        'INP': metrics.inp?.value,
+        'CLS': metrics.cls?.value,
+        'TTFB': metrics.ttfb?.value,
+      });
+    }
+  } catch (error) {
+    // Nunca lançar erro de analytics para não quebrar a aplicação
+    console.debug('[WebVitals] Analytics send failed:', error);
   }
 }
 
@@ -148,51 +173,101 @@ export async function loadWebVitals(): Promise<typeof import('web-vitals')> {
 }
 
 /**
- * Inicializa o monitoramento de Web Vitals
+ * Inicializa o monitoramento de Web Vitals com error handling robusto
+ * Retorna Promise<WebVitalsMetrics | null> para indicar sucesso/falha
  */
-export async function initWebVitalsMonitoring() {
+export async function initWebVitalsMonitoring(): Promise<WebVitalsMetrics | null> {
   try {
-    const { onCLS, onFID, onFCP, onLCP, onTTFB } = await loadWebVitals();
+    const vitalsModule = await loadWebVitals();
+
+    // Verificar se temos as funções necessárias
+    if (!vitalsModule) {
+      throw new Error('Web vitals module not loaded');
+    }
+
+    const { onCLS, onFID, onFCP, onLCP, onTTFB, onINP } = vitalsModule;
 
     const metrics: WebVitalsMetrics = {
-      url: window.location.href,
-      userAgent: navigator.userAgent,
+      url: typeof window !== 'undefined' ? window.location.href : 'unknown',
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
     };
 
-    // CLS - Cumulative Layout Shift
-    onCLS((metric) => {
-      metrics.cls = metric;
-      sendToAnalytics(metrics);
-    });
+    // Wrapper safe para cada callback
+    const safeCallback = (metricName: string) => (metric: Metric) => {
+      try {
+        (metrics as any)[metricName.toLowerCase()] = metric;
+        sendToAnalytics(metrics);
+      } catch (e) {
+        console.debug(`[WebVitals] Error in ${metricName} callback:`, e);
+      }
+    };
 
-    // FID - First Input Delay
-    onFID((metric) => {
-      metrics.fid = metric;
-      sendToAnalytics(metrics);
-    });
+    // CLS - Cumulative Layout Shift (sempre disponível)
+    if (onCLS) {
+      try {
+        onCLS(safeCallback('CLS'));
+      } catch (e) {
+        console.debug('[WebVitals] Error setting up CLS:', e);
+      }
+    }
 
-    // FCP - First Contentful Paint
-    onFCP((metric) => {
-      metrics.fcp = metric;
-      sendToAnalytics(metrics);
-    });
+    // FID - First Input Delay (não disponível em todos os browsers)
+    if (onFID) {
+      try {
+        onFID(safeCallback('FID'));
+      } catch (e) {
+        console.debug('[WebVitals] Error setting up FID:', e);
+      }
+    }
 
-    // LCP - Largest Contentful Paint
-    onLCP((metric) => {
-      metrics.lcp = metric;
-      sendToAnalytics(metrics);
-      reportWebVitalsToSentry(metrics);
-    });
+    // INP - Interaction to Next Paint (substitui FID em browsers modernos)
+    if (onINP) {
+      try {
+        onINP(safeCallback('INP'));
+      } catch (e) {
+        console.debug('[WebVitals] Error setting up INP:', e);
+      }
+    }
 
-    // TTFB - Time to First Byte
-    onTTFB((metric) => {
-      metrics.ttfb = metric;
-      sendToAnalytics(metrics);
-    });
+    // FCP - First Contentful Paint (sempre disponível)
+    if (onFCP) {
+      try {
+        onFCP(safeCallback('FCP'));
+      } catch (e) {
+        console.debug('[WebVitals] Error setting up FCP:', e);
+      }
+    }
+
+    // LCP - Largest Contentful Paint (sempre disponível)
+    if (onLCP) {
+      try {
+        onLCP((metric: Metric) => {
+          try {
+            metrics.lcp = metric;
+            sendToAnalytics(metrics);
+            reportWebVitalsToSentry(metrics);
+          } catch (e) {
+            console.debug('[WebVitals] Error in LCP callback:', e);
+          }
+        });
+      } catch (e) {
+        console.debug('[WebVitals] Error setting up LCP:', e);
+      }
+    }
+
+    // TTFB - Time to First Byte (sempre disponível)
+    if (onTTFB) {
+      try {
+        onTTFB(safeCallback('TTFB'));
+      } catch (e) {
+        console.debug('[WebVitals] Error setting up TTFB:', e);
+      }
+    }
 
     return metrics;
   } catch (error) {
-    console.error('Failed to initialize web vitals monitoring:', error);
+    console.error('[WebVitals] Failed to initialize monitoring:', error);
+    return null;
   }
 }
 
@@ -244,11 +319,12 @@ export function WebVitalsIndicator() {
 
   const vitals = [
     { name: 'LCP', value: metrics.lcp, threshold: THRESHOLDS.lcp },
-    { name: 'FID', value: metrics.fid, threshold: THRESHOLDS.fid },
+    { name: 'INP', value: metrics.inp, threshold: THRESHOLDS.inp }, // INP tem prioridade sobre FID
+    { name: 'FID', value: !metrics.inp ? metrics.fid : undefined, threshold: THRESHOLDS.fid }, // Só mostra FID se não tiver INP
     { name: 'CLS', value: metrics.cls, threshold: THRESHOLDS.cls, format: 'decimal' },
     { name: 'FCP', value: metrics.fcp, threshold: THRESHOLDS.fcp },
     { name: 'TTFB', value: metrics.ttfb, threshold: THRESHOLDS.ttfb },
-  ];
+  ].filter(v => v.value !== undefined); // Filtra métricas não disponíveis
 
   return (
     <div className="fixed bottom-4 left-4 bg-background border rounded-lg p-3 shadow-lg z-50">

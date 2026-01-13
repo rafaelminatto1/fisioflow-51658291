@@ -45,7 +45,6 @@ export const processVideo = async (
 
     const duration = videoElement.duration;
     const fps = 30; // Processing FPS target
-    const interval = 1000 / fps;
 
     let currentTime = 0;
 

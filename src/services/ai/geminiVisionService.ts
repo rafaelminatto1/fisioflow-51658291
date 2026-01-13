@@ -3,7 +3,7 @@ export interface VisionAnalysisResult {
     timestamp: string;
 }
 
-export const analyzeWithGeminiVision = async (base64Image: string): Promise<VisionAnalysisResult> => {
+export const analyzeWithGeminiVision = async (_base64Image: string): Promise<VisionAnalysisResult> => {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 2000));
 

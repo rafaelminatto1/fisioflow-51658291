@@ -60,7 +60,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         description: 'Você foi desconectado com sucesso.',
       });
       navigate('/auth');
-    } catch (error) {
+    } catch {
       toast({
         title: 'Erro ao sair',
         description: 'Não foi possível encerrar a sessão.',

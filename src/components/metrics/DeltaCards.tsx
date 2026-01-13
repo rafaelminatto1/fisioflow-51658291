@@ -3,7 +3,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DynamicCompareMetrics } from '@/generated/types/dynamic_compare_metrics';
 import { formatMetricValue } from './helpers';
-import { metricRegistry } from '@/lib/metrics/metricRegistry';
 import { ArrowDown, ArrowUp, Minus } from 'lucide-react';
 
 interface DeltaCardsProps {

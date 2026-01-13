@@ -3,12 +3,11 @@ import { BodyMap, PainPoint } from './BodyMap';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Save, RotateCcw, Trash2, List } from 'lucide-react';
+import { Save, Trash2, List } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { PainGauge } from './PainGauge';
 import { EvaScaleBar } from './EvaScaleBar';
@@ -34,7 +33,7 @@ const PAIN_TYPES = [
 ] as const;
 
 export function PainMapEditor({
-  sessionId,
+  sessionId: _sessionId,
   patientName,
   initialFrontPoints = [],
   initialBackPoints = [],
@@ -52,7 +51,7 @@ export function PainMapEditor({
   const [modalOpen, setModalOpen] = useState(false);
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
 
-  const currentPoints = activeView === 'front' ? frontPoints : backPoints;
+  const _currentPoints = activeView === 'front' ? frontPoints : backPoints;
   const setCurrentPoints = activeView === 'front' ? setFrontPoints : setBackPoints;
 
   // Adicionar ponto
@@ -333,14 +332,6 @@ export function PainMapEditor({
 }
 
 // Helpers
-function getIntensityColor(intensity: number): string {
-  if (intensity <= 2) return '#22c55e';
-  if (intensity <= 4) return '#eab308';
-  if (intensity <= 6) return '#f97316';
-  if (intensity <= 8) return '#ef4444';
-  return '#7f1d1d';
-}
-
 function getIntensityLabel(intensity: number): string {
   if (intensity === 0) return 'Sem dor';
   if (intensity <= 2) return 'Dor leve - desconforto mínimo';
