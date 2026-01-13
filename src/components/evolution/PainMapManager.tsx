@@ -14,8 +14,7 @@ import { usePainMaps, usePainEvolution, usePainStatistics, useCreatePainMap, use
 import { useAuth } from '@/contexts/AuthContext';
 import type { PainMapPoint, PainIntensity } from '@/types/painMap';
 import type { PainPoint } from '@/components/pain-map/BodyMap';
-import { TrendingDown, TrendingUp, Minus, CheckCircle2, Loader2, List, ToggleLeft, ToggleRight } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { TrendingDown, TrendingUp, Minus, CheckCircle2, Loader2, List } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 
@@ -26,11 +25,10 @@ interface PainMapManagerProps {
   readOnly?: boolean;
 }
 
-export function PainMapManager({ patientId, sessionId, appointmentId, readOnly = false }: PainMapManagerProps) {
+export function PainMapManager({ patientId, sessionId, _appointmentId, readOnly = false }: PainMapManagerProps) {
   const [painPoints, setPainPoints] = useState<PainMapPoint[]>([]);
   const [chartType, setChartType] = useState<'line' | 'area' | 'bar'>('line');
   const [is3DMode, setIs3DMode] = useState(false);
-  const [notes, setNotes] = useState('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const { user } = useAuth();
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
@@ -40,7 +38,8 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
   const { data: painEvolution = [] } = usePainEvolution(patientId);
   const { data: stats } = usePainStatistics(patientId);
   const createPainMap = useCreatePainMap();
-  const updatePainMap = useUpdatePainMap();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _updatePainMap = useUpdatePainMap();
 
   const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [selectedPointForDetail, setSelectedPointForDetail] = useState<PainPoint | null>(null);
@@ -175,7 +174,7 @@ export function PainMapManager({ patientId, sessionId, appointmentId, readOnly =
   }, [selectedPointForDetail]);
 
   const handlePointRemove = useCallback((pointId: string) => {
-    setPainPoints(prev => prev.filter((p, index) => `point-${p.x}-${p.y}` !== pointId));
+    setPainPoints(prev => prev.filter((p, _index) => `point-${p.x}-${p.y}` !== pointId));
     if (selectedPointForDetail?.id === pointId) {
       setSelectedPointForDetail(null);
     }

@@ -12,13 +12,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -26,7 +19,6 @@ import {
   Plus,
   Calendar,
   CheckCircle2,
-  XCircle,
   Clock,
   Trophy,
   Loader2

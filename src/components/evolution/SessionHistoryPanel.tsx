@@ -34,7 +34,7 @@ interface SessionHistoryPanelProps {
 export const SessionHistoryPanel: React.FC<SessionHistoryPanelProps> = ({
   patientId,
   onReplicateConduct,
-  onSelectSession,
+  onSelectSession: _onSelectSession,
   maxItems = 10,
 }) => {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -50,13 +50,6 @@ export const SessionHistoryPanel: React.FC<SessionHistoryPanelProps> = ({
       }
       return next;
     });
-  };
-
-  const getPainBadgeColor = (painLevel?: number) => {
-    if (painLevel === undefined || painLevel === null) return 'bg-muted text-muted-foreground';
-    if (painLevel <= 3) return 'bg-green-500/10 text-green-600';
-    if (painLevel <= 6) return 'bg-amber-500/10 text-amber-600';
-    return 'bg-red-500/10 text-red-600';
   };
 
   const truncateText = (text: string, maxLength: number = 100) => {

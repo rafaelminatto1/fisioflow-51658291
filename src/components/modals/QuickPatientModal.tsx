@@ -59,7 +59,7 @@ const cleanPhoneNumber = (phone: string | undefined): string | null => {
 };
 
 // ===== Mensagens de erro amigáveis =====
-const getErrorMessage = (error: any): string => {
+const getErrorMessage = (error: { code?: string; message?: string } | null | undefined): string => {
   const code = error?.code;
   const message = error?.message || '';
 
@@ -139,7 +139,7 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
         .eq('user_id', user.id);
 
       const allowedRoles = ['admin', 'fisioterapeuta', 'estagiario'];
-      const hasPermission = (roles || []).some((r: any) => allowedRoles.includes(String(r.role)));
+      const hasPermission = (roles || []).some((r: { role: string | number }) => allowedRoles.includes(String(r.role)));
 
       if (!hasPermission) {
         throw new Error('Você não tem permissão para criar pacientes.');
@@ -184,7 +184,7 @@ export const QuickPatientModal: React.FC<QuickPatientModalProps> = ({
       onOpenChange(false);
       onPatientCreated(newPatient.id, newPatient.full_name);
     },
-    onError: (error: any) => {
+    onError: (error: { code?: string; message?: string } | null | undefined) => {
       logger.error('Erro ao criar paciente rápido', error, 'QuickPatientModal');
 
       toast({

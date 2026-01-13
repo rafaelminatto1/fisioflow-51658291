@@ -41,7 +41,7 @@ import GamificationHeader from '@/components/gamification/GamificationHeader';
 import StreakCalendar from '@/components/gamification/StreakCalendar';
 import LevelJourneyMap from '@/components/gamification/LevelJourneyMap';
 import { useGamification } from '@/hooks/useGamification';
-import { Card } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 // Overview & Clinical History Imports
 import { PatientEvolutionDashboard } from '@/components/patients/PatientEvolutionDashboard';
@@ -55,7 +55,7 @@ import { PatientAnalyticsDashboard, PatientLifecycleChart, PatientInsightsPanel 
 import { usePatientLifecycleSummary } from '@/hooks/usePatientAnalytics';
 
 // Financial & Documents Imports
-import { usePatientDocuments, useUploadDocument, useDeleteDocument, useDownloadDocument } from '@/hooks/usePatientDocuments';
+import { usePatientDocuments, useUploadDocument, useDeleteDocument, useDownloadDocument, type PatientDocument } from '@/hooks/usePatientDocuments';
 import { useFinancial } from '@/hooks/useFinancial';
 import {
     DropdownMenu,
@@ -261,12 +261,142 @@ const ClinicalHistoryTab = ({ patientId }: { patientId: string }) => {
     );
 };
 
-const FinancialTab = () => (
-    <div className="flex flex-col items-center justify-center h-64 border rounded-lg bg-muted/10 border-dashed">
-        <DollarSign className="h-10 w-10 text-muted-foreground mb-2" />
-        <p className="text-muted-foreground">Histórico Financeiro</p>
-    </div>
-);
+const FinancialTab = ({ patientId }: { patientId: string }) => {
+    const { data: transactions = [], isLoading } = useQuery({
+        queryKey: ['patient-transactions', patientId],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('appointments')
+                .select('id, appointment_date, payment_amount, payment_status, payment_method, installments, type')
+                .eq('patient_id', patientId)
+                .order('appointment_date', { ascending: false });
+
+            if (error) throw error;
+            return data;
+        },
+        enabled: !!patientId
+    });
+
+    // Calculate totals
+    const totalPaid = transactions
+        .filter((t: any) => t.payment_status === 'paid_single' || t.payment_status === 'paid_package')
+        .reduce((sum: number, t: any) => sum + (Number(t.payment_amount) || 0), 0);
+
+    const totalPending = transactions
+        .filter((t: any) => t.payment_status === 'pending')
+        .reduce((sum: number, t: any) => sum + (Number(t.payment_amount) || 0), 0);
+
+    if (isLoading) {
+        return <div className="p-8 text-center"><Skeleton className="h-40 w-full mx-auto" /></div>;
+    }
+
+    return (
+        <div className="space-y-6">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="bg-gradient-to-br from-green-50 to-white border-green-200">
+                    <CardContent className="p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className="p-2 bg-green-500 rounded-lg">
+                                <DollarSign className="h-4 w-4 text-white" />
+                            </div>
+                            <span className="text-sm font-medium text-green-700">Total Pago</span>
+                        </div>
+                        <p className="text-2xl font-bold text-green-700">
+                            R$ {totalPaid.toFixed(2)}
+                        </p>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-amber-50 to-white border-amber-200">
+                    <CardContent className="p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className="p-2 bg-amber-500 rounded-lg">
+                                <CreditCard className="h-4 w-4 text-white" />
+                            </div>
+                            <span className="text-sm font-medium text-amber-700">Pendente</span>
+                        </div>
+                        <p className="text-2xl font-bold text-amber-700">
+                            R$ {totalPending.toFixed(2)}
+                        </p>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-blue-50 to-white border-blue-200">
+                    <CardContent className="p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className="p-2 bg-blue-500 rounded-lg">
+                                <CalendarIcon className="h-4 w-4 text-white" />
+                            </div>
+                            <span className="text-sm font-medium text-blue-700">Total Sessões</span>
+                        </div>
+                        <p className="text-2xl font-bold text-blue-700">
+                            {transactions.length}
+                        </p>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Transaction History */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-lg">Histórico de Pagamentos</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    {transactions.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                            <CreditCard className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                            <p>Nenhuma transação registrada</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-2">
+                            {transactions.map((tx: any) => (
+                                <div
+                                    key={tx.id}
+                                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`
+                                            p-2 rounded-lg ${
+                                                tx.payment_status === 'paid_single' || tx.payment_status === 'paid_package'
+                                                    ? 'bg-green-100 text-green-600'
+                                                    : 'bg-amber-100 text-amber-600'
+                                            }
+                                        `}>
+                                            <CreditCard className="h-4 w-4" />
+                                        </div>
+                                        <div>
+                                            <p className="font-medium">
+                                                {format(new Date(tx.appointment_date), 'dd/MM/yyyy', { locale: ptBR })}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {tx.type} • {tx.payment_method || 'Pendente'}
+                                                {tx.installments > 1 && ` • ${tx.installments}x`}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="font-semibold">
+                                            R$ {Number(tx.payment_amount || 0).toFixed(2)}
+                                        </p>
+                                        <Badge
+                                            variant={tx.payment_status === 'pending' ? 'secondary' : 'default'}
+                                            className="text-xs"
+                                        >
+                                            {tx.payment_status === 'paid_single' || tx.payment_status === 'paid_package'
+                                                ? 'Pago'
+                                                : 'Pendente'}
+                                        </Badge>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+    );
+};
 
 const DocumentsTab = ({ patientId }: { patientId: string }) => {
     const { data: documents, isLoading } = usePatientDocuments(patientId);
@@ -274,14 +404,31 @@ const DocumentsTab = ({ patientId }: { patientId: string }) => {
     const deleteDocument = useDeleteDocument();
     const downloadDocument = useDownloadDocument();
     const [uploading, setUploading] = useState(false);
+    const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState<PatientDocument['category']>('outro');
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (!file) return;
+        if (file) {
+            setSelectedFile(file);
+            setUploadDialogOpen(true);
+        }
+    };
+
+    const handleUploadConfirm = async () => {
+        if (!selectedFile) return;
 
         setUploading(true);
         try {
-            await uploadDocument.mutateAsync({ patientId, file, documentType: 'other' });
+            await uploadDocument.mutateAsync({
+                patientId,
+                file: selectedFile,
+                category: selectedCategory,
+            });
+            setUploadDialogOpen(false);
+            setSelectedFile(null);
+            setSelectedCategory('outro');
         } finally {
             setUploading(false);
         }
@@ -290,6 +437,20 @@ const DocumentsTab = ({ patientId }: { patientId: string }) => {
     if (isLoading) {
         return <div className="p-8 text-center"><Skeleton className="h-40 w-full mx-auto" /></div>;
     }
+
+    const formatFileSize = (bytes: number) => {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    };
+
+    const categoryLabels: Record<PatientDocument['category'], string> = {
+        laudo: 'Laudo',
+        exame: 'Exame',
+        receita: 'Receita',
+        termo: 'Termo',
+        outro: 'Outro'
+    };
 
     return (
         <div className="space-y-4">
@@ -302,7 +463,7 @@ const DocumentsTab = ({ patientId }: { patientId: string }) => {
                         </p>
                         <input
                             type="file"
-                            onChange={handleFileUpload}
+                            onChange={handleFileSelect}
                             disabled={uploading}
                             className="hidden"
                             id="file-upload"
@@ -320,30 +481,35 @@ const DocumentsTab = ({ patientId }: { patientId: string }) => {
 
             {documents && documents.length > 0 ? (
                 <div className="space-y-2">
-                    {documents.map((doc: any) => (
+                    {documents.map((doc: PatientDocument) => (
                         <Card key={doc.id}>
                             <CardContent className="p-4 flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <FileIcon className="h-8 w-8 text-muted-foreground" />
+                                    <div className="p-2 bg-primary/10 rounded-lg">
+                                        <FileIcon className="h-6 w-6 text-primary" />
+                                    </div>
                                     <div>
-                                        <p className="font-medium">{doc.name}</p>
+                                        <p className="font-medium">{doc.file_name}</p>
                                         <p className="text-xs text-muted-foreground">
-                                            {new Date(doc.created_at).toLocaleDateString('pt-BR')}
+                                            {formatFileSize(doc.file_size)} • {categoryLabels[doc.category]} • {new Date(doc.created_at).toLocaleDateString('pt-BR')}
                                         </p>
+                                        {doc.description && (
+                                            <p className="text-xs text-muted-foreground mt-1">{doc.description}</p>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="flex gap-2">
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        onClick={() => downloadDocument.mutateAsync(doc.id)}
+                                        onClick={() => downloadDocument.mutate(doc)}
                                     >
                                         <Download className="h-4 w-4" />
                                     </Button>
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        onClick={() => deleteDocument.mutateAsync(doc.id)}
+                                        onClick={() => deleteDocument.mutate(doc)}
                                     >
                                         <Trash className="h-4 w-4 text-destructive" />
                                     </Button>
@@ -360,6 +526,42 @@ const DocumentsTab = ({ patientId }: { patientId: string }) => {
                     </CardContent>
                 </Card>
             )}
+
+            {/* Upload Category Dialog */}
+            <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Categorizar Documento</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label>Arquivo selecionado</Label>
+                            <p className="text-sm text-muted-foreground">{selectedFile?.name}</p>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Categoria</Label>
+                            <Select value={selectedCategory} onValueChange={(v) => setSelectedCategory(v as PatientDocument['category'])}>
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="laudo">Laudo</SelectItem>
+                                    <SelectItem value="exame">Exame</SelectItem>
+                                    <SelectItem value="receita">Receita</SelectItem>
+                                    <SelectItem value="termo">Termo</SelectItem>
+                                    <SelectItem value="outro">Outro</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => setUploadDialogOpen(false)}>Cancelar</Button>
+                        <Button onClick={handleUploadConfirm} disabled={uploading}>
+                            {uploading ? 'Enviando...' : 'Enviar'}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

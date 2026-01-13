@@ -1,12 +1,12 @@
 
 import React, { useState } from 'react';
-import { useExercises, type Exercise } from '@/hooks/useExercises';
+import { useExercises } from '@/hooks/useExercises';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, Dumbbell, GripVertical, Search } from 'lucide-react';
+import { Trash2, Dumbbell, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { v4 as uuidv4 } from 'uuid';
@@ -31,7 +31,7 @@ export const SessionExercisesPanel: React.FC<SessionExercisesPanelProps> = ({
     exercises,
     onChange
 }) => {
-    const { exercises: availableExercises, loading } = useExercises();
+    const { exercises: availableExercises } = useExercises();
     const [selectedExerciseId, setSelectedExerciseId] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
 

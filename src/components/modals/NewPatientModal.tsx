@@ -208,18 +208,18 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
       queryClient.invalidateQueries({ queryKey: ['patients'] });
       reset();
       onOpenChange(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Erro ao cadastrar paciente', error, 'NewPatientModal');
       
       let errorMessage = 'Não foi possível cadastrar o paciente.';
-      
-      if (error?.code === '23505') {
+
+      if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
         errorMessage = 'Já existe um paciente com este CPF ou email cadastrado.';
-      } else if (error?.code === '42501') {
+      } else if (error && typeof error === 'object' && 'code' in error && error.code === '42501') {
         errorMessage = 'Você não tem permissão para cadastrar pacientes.';
-      } else if (error?.code === '23503') {
+      } else if (error && typeof error === 'object' && 'code' in error && error.code === '23503') {
         errorMessage = 'Erro de referência: verifique os dados informados.';
-      } else if (error?.message) {
+      } else if (error instanceof Error && error.message) {
         errorMessage = error.message;
       }
 
@@ -354,7 +354,7 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
                 <Label htmlFor="gender">Gênero *</Label>
                 <Select
                   value={watch('gender')}
-                  onValueChange={(value) => setValue('gender', value as any)}
+                  onValueChange={(value) => setValue('gender', value as 'masculino' | 'feminino' | 'outro')}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o gênero" />

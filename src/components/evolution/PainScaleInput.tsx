@@ -22,8 +22,7 @@ import {
   Frown,
   Meh,
   Smile,
-  AlertCircle,
-  HelpCircle
+  AlertCircle
 } from 'lucide-react';
 
 export interface PainScaleData {

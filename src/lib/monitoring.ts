@@ -108,7 +108,7 @@ export const trackApiCall = (endpoint: string, startTime: number) => {
 /**
  * Track errors
  */
-export const trackError = (error: Error, context?: Record<string, any>) => {
+export const trackError = (error: Error, context?: Record<string, unknown>) => {
   trackMetric(METRICS.ERROR_RATE, {
     value: 1,
     metadata: {
@@ -125,7 +125,7 @@ export const trackError = (error: Error, context?: Record<string, any>) => {
 /**
  * Track user engagement events
  */
-export const trackEvent = (eventName: string, properties?: Record<string, any>) => {
+export const trackEvent = (eventName: string, properties?: Record<string, unknown>) => {
   trackMetric(METRICS.USER_ENGAGEMENT, {
     value: 1,
     metadata: {
@@ -193,6 +193,6 @@ export const initMonitoring = () => {
 // TypeScript declaration for window.va
 declare global {
   interface Window {
-    va?: (event: string, name: string, data: Record<string, any>) => void;
+    va?: (event: string, name: string, data: Record<string, unknown>) => void;
   }
 }
