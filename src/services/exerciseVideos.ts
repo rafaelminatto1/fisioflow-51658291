@@ -225,7 +225,7 @@ export const exerciseVideosService = {
 
     // Check file extension
     const ext = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
-    if (!ALLOWED_VIDEO_EXTENSIONS.includes(ext as any)) {
+    if (!ALLOWED_VIDEO_EXTENSIONS.includes(ext as typeof ALLOWED_VIDEO_EXTENSIONS[number])) {
       return {
         valid: false,
         error: `Formato não suportado. Use: ${ALLOWED_VIDEO_EXTENSIONS.join(', ')}`,
@@ -456,7 +456,7 @@ export const exerciseVideosService = {
       }
 
       return videoRecord as ExerciseVideo;
-    } catch (error: any) {
+    } catch (error) {
       console.error('[exerciseVideosService] uploadVideo error:', error);
       throw error;
     }

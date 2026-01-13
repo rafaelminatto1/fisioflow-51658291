@@ -28,7 +28,7 @@ export interface PatientLifecycleEvent {
   patient_id: string;
   event_type: LifecycleEventType;
   event_date: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   created_by?: string;
   created_at: string;
   notes?: string;
@@ -152,7 +152,7 @@ export interface PatientPrediction {
   prediction_date: string;
 
   // Input features
-  features: Record<string, any>;
+  features: Record<string, unknown>;
 
   // Prediction outputs
   predicted_value?: number;
@@ -212,8 +212,8 @@ export interface PatientRiskScore {
   risk_level: RiskLevel;
 
   // Factors
-  risk_factors: Record<string, any>;
-  protective_factors: Record<string, any>;
+  risk_factors: Record<string, unknown>;
+  protective_factors: Record<string, unknown>;
 
   // Recommendations
   recommended_actions?: string[];

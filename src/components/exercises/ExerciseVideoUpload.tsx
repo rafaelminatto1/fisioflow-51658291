@@ -117,7 +117,7 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
     }
   };
 
-  const handleVideoDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
+  const handleVideoDrop = useCallback((acceptedFiles: File[], rejectedFiles: Array<{ file: File; errors: Array<{ code: string; message?: string }> }>) => {
     setUploadError(null);
 
     // Handle rejections
@@ -253,7 +253,7 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
             onSuccess?.();
             setTimeout(() => onOpenChange?.(false), 500);
           },
-          onError: (error: any) => {
+          onError: (error: { message?: string }) => {
             clearInterval(progressInterval);
             const errorMsg = error?.message || 'Tente novamente mais tarde';
             setUploadError(`Erro ao enviar vídeo: ${errorMsg}`);
@@ -262,8 +262,9 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
           },
         }
       );
-    } catch (error: any) {
-      setUploadError(`Erro ao enviar vídeo: ${error?.message || 'Tente novamente'}`);
+    } catch (error: unknown) {
+      const errorMsg = error instanceof Error ? error.message : 'Tente novamente';
+      setUploadError(`Erro ao enviar vídeo: ${errorMsg}`);
       setIsUploading(false);
       setUploadProgress(0);
     }

@@ -19,7 +19,7 @@ export const expiringVouchersWorkflow = inngest.createFunction(
     event: Events.CRON_EXPIRING_VOUCHERS,
     cron: '0 10 * * *', // 10:00 AM daily
   },
-  async ({ event, step }: { event: { data: any }; step: any }) => {
+  async ({ step }: { event: { data: Record<string, unknown> }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -60,7 +60,7 @@ export const expiringVouchersWorkflow = inngest.createFunction(
     // Send reminders
     const results = await step.run('send-reminders', async () => {
       return await Promise.all(
-        vouchers.map(async (voucher: any) => {
+        vouchers.map(async (voucher: { id: string; expires_at?: string }) => {
           try {
             // Send email reminder
             if (voucher.patient?.email) {
@@ -91,7 +91,7 @@ export const expiringVouchersWorkflow = inngest.createFunction(
       );
     });
 
-    const sentCount = results.filter((r: any) => r.sent).length;
+    const sentCount = results.filter((r: { sent?: boolean }) => r.sent).length;
 
     return {
       success: true,

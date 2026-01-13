@@ -1,8 +1,7 @@
 
 import { sql } from "drizzle-orm";
-import { pgTable, uuid, text, integer, boolean, timestamp, jsonb, date, unique } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, integer, timestamp, jsonb, date, unique } from "drizzle-orm/pg-core";
 import { patients } from "./patients";
-import { users } from "./index"; // Assuming auth.users is mapped or we reference generic uuid
 
 // Patient Gamification Table
 export const patientGamification = pgTable("patient_gamification", {

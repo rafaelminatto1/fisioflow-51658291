@@ -142,7 +142,14 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
 
       if (error) throw error;
 
-      return (data || []).map((apt: any) => ({
+      return (data || []).map((apt: {
+        id: string;
+        patient_id: string;
+        appointment_date: string;
+        appointment_time: string;
+        duration?: number;
+        status: string;
+      }) => ({
         id: apt.id,
         patientId: apt.patient_id,
         patientName: '',
@@ -264,7 +271,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
         .select('phone, birth_date')
         .eq('id', appointment.patientId)
         .single()
-        .then(({ data }: any) => {
+        .then(({ data }: { data: { phone?: string; birth_date?: string } | null }) => {
           if (data) {
             setPatientDetails({
               phone: data.phone || undefined,
@@ -290,7 +297,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
           .select('id, full_name')
           .eq('role', 'fisioterapeuta');
         if (data) {
-          setTherapists(data.map((p: any) => ({ id: p.id, name: p.full_name || 'Sem nome' })));
+          setTherapists(data.map((p: { id: string; full_name?: string }) => ({ id: p.id, name: p.full_name || 'Sem nome' })));
         }
         therapistsLoadedRef.current = true;
       } catch {

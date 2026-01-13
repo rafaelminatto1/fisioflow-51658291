@@ -13,7 +13,7 @@ interface Milestone {
     sessionsRequired: number;
     title: string;
     description: string;
-    icon: any;
+    icon: React.ElementType<{ className?: string }>;
     position: 'left' | 'right' | 'center';
 }
 

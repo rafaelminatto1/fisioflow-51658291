@@ -6,8 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { useGamification } from '@/hooks/useGamification';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  Trophy, TrendingUp, Search,
-  Flame, Star, Crown, Medal, Award, CheckCircle2
+  TrendingUp,
+  Star, Crown, Medal, Award, CheckCircle2
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,7 +18,6 @@ import { motion } from 'framer-motion';
 import GamificationHeader from '@/components/gamification/GamificationHeader';
 import StreakCalendar from '@/components/gamification/StreakCalendar';
 import LevelJourneyMap from '@/components/gamification/LevelJourneyMap';
-import { Input } from '@/components/ui/input';
 
 interface LeaderboardEntry {
   patient_id: string;
@@ -58,7 +57,7 @@ export default function PatientGamificationPage() {
     allAchievements
   } = useGamification(user?.id || '');
 
-  const [search, setSearch] = useState('');
+  const [search] = useState('');
 
   // Fetch Leaderboard (optimized)
   const { data: leaderboard = [], isLoading: isLoadingLeaderboard } = useQuery({

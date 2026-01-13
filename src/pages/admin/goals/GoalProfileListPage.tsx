@@ -31,7 +31,7 @@ import {
     SelectValue
 } from "@/components/ui/select";
 import { Plus, Edit, Send, Loader2, Search, Filter } from 'lucide-react';
-import { goalsAdminService, ProfileListItem } from '@/services/goals/goalsAdminService';
+import { goalsAdminService } from '@/services/goals/goalsAdminService';
 import { useToast } from "@/hooks/use-toast";
 import { format } from 'date-fns';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -67,7 +67,7 @@ export default function GoalProfileListPage() {
             setNewProfile({ id: '', name: '', description: '' });
             navigate(`/admin/goals/${data.id}`);
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
             toast({
                 title: "Erro ao criar perfil",
                 description: error.message,
@@ -86,7 +86,7 @@ export default function GoalProfileListPage() {
                 description: "O perfil agora está disponível para uso clínico.",
             });
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
             toast({
                 title: "Erro ao publicar",
                 description: error.message,

@@ -628,6 +628,7 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
 export default MedicalChatbot;
 
 // Componente de botão flutuante para abrir o chatbot
+/* eslint-disable-next-line react-refresh/only-export-components */
 export const ChatbotFloatingButton: React.FC<{
   onClick: () => void;
   hasUnreadMessages?: boolean;
@@ -648,6 +649,7 @@ export const ChatbotFloatingButton: React.FC<{
 };
 
 // Hook para controlar o estado do chatbot
+/* eslint-disable-next-line react-refresh/only-export-components */
 export const useChatbotState = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);

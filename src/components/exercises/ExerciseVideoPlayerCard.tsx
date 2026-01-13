@@ -1,7 +1,13 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, Keyboard } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, Keyboard, RotateCcw, RotateCw, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { exerciseVideosService, type ExerciseVideo } from '@/services/exerciseVideos';
 
@@ -17,6 +23,8 @@ export interface ExerciseVideoPlayerProps {
   onProgress?: (progress: number) => void;
 }
 
+const SPEED_OPTIONS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+
 export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
   src,
   thumbnail,
@@ -30,6 +38,17 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Use refs for callbacks to avoid re-attaching event listeners
+  const onProgressRef = useRef(onProgress);
+  const onEndedRef = useRef(onEnded);
+
+  // Keep refs in sync with props
+  useEffect(() => {
+    onProgressRef.current = onProgress;
+    onEndedRef.current = onEnded;
+  }, [onProgress, onEnded]);
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(muted);
   const [volume, setVolume] = useState(1);
@@ -38,6 +57,8 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -45,7 +66,7 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
 
     const handleTimeUpdate = () => {
       setCurrentTime(video.currentTime);
-      onProgress?.(video.currentTime);
+      onProgressRef.current?.(video.currentTime);
     };
 
     const handleLoadedMetadata = () => {
@@ -55,19 +76,26 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
 
     const handleEnded = () => {
       setIsPlaying(false);
-      onEnded?.();
+      onEndedRef.current?.();
     };
+
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
 
     video.addEventListener('timeupdate', handleTimeUpdate);
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
     video.addEventListener('ended', handleEnded);
+    video.addEventListener('play', handlePlay);
+    video.addEventListener('pause', handlePause);
 
     return () => {
       video.removeEventListener('timeupdate', handleTimeUpdate);
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
       video.removeEventListener('ended', handleEnded);
+      video.removeEventListener('play', handlePlay);
+      video.removeEventListener('pause', handlePause);
     };
-  }, [onProgress, onEnded]);
+  }, []); // Empty deps - event listeners only attached once
 
   useEffect(() => {
     const video = videoRef.current;
@@ -109,6 +137,43 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
     }
   }, [isFullscreen]);
 
+  const togglePip = useCallback(async () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    // Check if PiP is supported
+    if (!document.pictureInPictureEnabled || !(video as any).requestPictureInPicture) {
+      console.warn('Picture-in-Picture is not supported in this browser');
+      return;
+    }
+
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+      } else {
+        await video.requestPictureInPicture();
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.warn('PiP failed:', error.message);
+      }
+    }
+  }, []);
+
+  const handleSpeedChange = useCallback((speed: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.playbackRate = speed;
+    setPlaybackRate(speed);
+    setShowSpeedMenu(false);
+  }, []);
+
+  const skipBackward = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.currentTime = Math.max(0, video.currentTime - 10);
+  }, []);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -138,6 +203,10 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
           e.preventDefault();
           toggleFullscreen();
           break;
+        case 'p':
+          e.preventDefault();
+          togglePip();
+          break;
         case 'ArrowLeft':
           e.preventDefault();
           video.currentTime = Math.max(0, video.currentTime - 5);
@@ -155,6 +224,20 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
           e.preventDefault();
           setVolume((prev) => Math.max(0, prev - 0.1));
           video.volume = Math.max(0, video.volume - 0.1);
+          break;
+        case '<':
+        case ',':
+          // Slow down
+          e.preventDefault();
+          const newSlowerRate = SPEED_OPTIONS[Math.max(0, SPEED_OPTIONS.indexOf(playbackRate) - 1)] || playbackRate / 2;
+          handleSpeedChange(newSlowerRate);
+          break;
+        case '>':
+        case '.':
+          // Speed up
+          e.preventDefault();
+          const newFasterRate = SPEED_OPTIONS[Math.min(SPEED_OPTIONS.length - 1, SPEED_OPTIONS.indexOf(playbackRate) + 1)] || playbackRate * 2;
+          handleSpeedChange(newFasterRate);
           break;
         case 'Home':
           e.preventDefault();
@@ -184,7 +267,7 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [duration, togglePlay, toggleMute, toggleFullscreen]);
+  }, [duration, togglePlay, toggleMute, toggleFullscreen, togglePip, playbackRate, handleSpeedChange]);
 
   const handleVolumeChange = (value: number[]) => {
     const video = videoRef.current;
@@ -297,6 +380,28 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
             )}
           </Button>
 
+          {/* Skip backward */}
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 shrink-0 text-white/70 hover:text-white hover:bg-white/10"
+            onClick={skipBackward}
+            title="Retroceder 10s (-)"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </Button>
+
+          {/* Skip forward */}
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 shrink-0 text-white/70 hover:text-white hover:bg-white/10"
+            onClick={skipForward}
+            title="Avançar 10s (+)"
+          >
+            <RotateCw className="w-4 h-4" />
+          </Button>
+
           <div className="flex-1 flex items-center gap-2">
             <span className="text-white text-xs w-10 text-right shrink-0">
               {formatTime(currentTime)}
@@ -336,6 +441,43 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
             />
           </div>
 
+          {/* Speed control */}
+          <DropdownMenu open={showSpeedMenu} onOpenChange={setShowSpeedMenu}>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="h-8 px-2 text-white hover:text-white hover:bg-white/10 text-xs font-mono"
+              >
+                {playbackRate}x
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center">
+              {SPEED_OPTIONS.map((speed) => (
+                <DropdownMenuItem
+                  key={speed}
+                  onClick={() => handleSpeedChange(speed)}
+                  className={cn(
+                    'justify-center font-mono',
+                    playbackRate === speed && 'bg-accent'
+                  )}
+                >
+                  {speed}x
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* PiP */}
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 shrink-0 text-white hover:text-white hover:bg-white/20"
+            onClick={togglePip}
+            title="Picture-in-Picture (p)"
+          >
+            <Copy className="w-4 h-4" />
+          </Button>
+
           {/* Fullscreen */}
           <Button
             size="icon"
@@ -352,12 +494,12 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
           </Button>
 
           {/* Keyboard shortcuts hint */}
-          <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute -top-10 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
             <Button
               size="icon"
               variant="ghost"
               className="h-6 w-6 text-white/50 hover:text-white/80 hover:bg-white/10"
-              title="Atalhos: Espaço/K=play/pause, M=mudo, F=tela cheia, ←/→=seek"
+              title="Atalhos: Espaço/K=play, M=mudo, F=tela cheia, P=PiP, +/- velocidade, ←/→=seek, -/+ skip 10s"
             >
               <Keyboard className="w-3 h-3" />
             </Button>
