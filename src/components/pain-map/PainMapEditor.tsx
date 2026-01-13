@@ -51,7 +51,6 @@ export function PainMapEditor({
   const [modalOpen, setModalOpen] = useState(false);
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
 
-  const _currentPoints = activeView === 'front' ? frontPoints : backPoints;
   const setCurrentPoints = activeView === 'front' ? setFrontPoints : setBackPoints;
 
   // Adicionar ponto

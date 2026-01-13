@@ -22,7 +22,7 @@ interface WhatsAppIntegrationProps {
   patientPhone?: string;
 }
 
-export function WhatsAppIntegration({ patientId, patientPhone }: WhatsAppIntegrationProps) {
+export function WhatsAppIntegration({ patientId: _patientId, patientPhone }: WhatsAppIntegrationProps) {
   const [message, setMessage] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
   const [autoReminders, setAutoReminders] = useState(true);
@@ -80,7 +80,7 @@ export function WhatsAppIntegration({ patientId, patientPhone }: WhatsAppIntegra
       });
       
       setMessage('');
-    } catch (error) {
+    } catch {
       toast({
         title: 'Erro ao abrir WhatsApp',
         description: 'Tente novamente',
