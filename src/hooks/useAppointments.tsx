@@ -46,6 +46,7 @@ async function retryWithBackoff<T>(
 // Fetch all appointments with improved error handling and validation
 import { useAuth } from '@/contexts/AuthContext';
 import { appointmentsCacheService } from '@/lib/offline/AppointmentsCacheService';
+import { dateSchema, timeSchema } from '@/lib/validations/agenda';
 
 // Flag para indicar se dados vieram do cache
 export interface AppointmentsQueryResult {

@@ -4,11 +4,15 @@
  * Reduz significativamente o tamanho inicial do bundle
  */
 
-import React, { useEffect, useRef, useState, Suspense, lazy } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Ruler, MousePointer2, ZoomIn, Move, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { ComponentErrorBoundary, ComputerVisionFallback } from '@/components/error/ComponentErrorBoundary';
+
+/* eslint-disable react-refresh/only-export-components */
+// Re-export the hook for convenience - this is a valid pattern for organizing related code
+export { usePreloadDicomViewer } from './hooks/usePreloadDicomViewer';
+/* eslint-enable react-refresh/only-export-components */
 
 interface DicomViewerProps {
   file?: File; // Local mode
@@ -60,27 +64,5 @@ export const DicomViewer: React.FC<DicomViewerProps> = (props) => {
     </ComponentErrorBoundary>
   );
 };
-
-/**
- * Hook para pré-carregar o DicomViewer
- * Use quando o usuário provavelmente vai abrir o visualizador
- *
- * @example
- * const preloadDicomViewer = usePreloadDicomViewer();
- * <button onMouseEnter={preloadDicomViewer}>Ver DICOM</button>
- */
-export function usePreloadDicomViewer() {
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  const preload = () => {
-    if (!isLoaded) {
-      setIsLoaded(true);
-      // Inicia o lazy loading
-      import('./DicomViewerInner');
-    }
-  };
-
-  return { preload, isLoaded };
-}
 
 export default DicomViewer;

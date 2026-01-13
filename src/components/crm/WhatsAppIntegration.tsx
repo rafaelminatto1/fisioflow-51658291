@@ -15,11 +15,12 @@ import {
   MessageCircle, Send, Plus, CheckCircle2, Clock, Users,
   Settings, FileText, Zap, Check, X
 } from 'lucide-react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useWhatsAppIntegration } from './hooks/useWhatsAppIntegration';
 
 interface WhatsAppMessage {
   id: string;
@@ -41,55 +42,7 @@ interface WhatsAppConfig {
   enabled: boolean;
 }
 
-export function useWhatsAppIntegration() {
-  const sendMessage = useMutation({
-    mutationFn: async (data: { recipient: string; message: string; templateId?: string }) => {
-      const { data: config } = await supabase
-        .from('whatsapp_config')
-        .select('*')
-        .single();
-
-      if (!config || !config.enabled) {
-        throw new Error('WhatsApp não está configurado');
-      }
-
-      // Salvar mensagem no banco
-      const { data: message } = await supabase
-        .from('whatsapp_messages')
-        .insert([{
-          recipient: data.recipient,
-          message: data.message,
-          template_id: data.templateId,
-          status: 'pending',
-        }])
-        .select()
-        .single();
-
-      // Enviar via API (simulado)
-      // Em produção, chamaria a API do WhatsApp Business
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Atualizar status
-      await supabase
-        .from('whatsapp_messages')
-        .update({ status: 'sent', sent_at: new Date().toISOString() })
-        .eq('id', message?.id);
-
-      return message;
-    },
-    onSuccess: () => {
-      toast.success('Mensagem enviada com sucesso!');
-    },
-    onError: (error) => {
-      toast.error('Erro ao enviar mensagem: ' + error.message);
-    },
-  });
-
-  return { sendMessage };
-}
-
 export default function WhatsAppIntegration() {
-  const _queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'mensagens' | 'templates' | 'config'>('mensagens');

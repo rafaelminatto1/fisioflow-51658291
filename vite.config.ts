@@ -237,7 +237,7 @@ export default defineConfig(({ mode }) => {
         // Preservar nomes dos módulos para melhor debugging
         preserveEntrySignatures: 'strict',
       },
-      chunkSizeWarningLimit: 1000,
+      chunkSizeWarningLimit: 2000,
       // Report de tamanho dos chunks
       reportCompressedSize: false,
       // Soucemaps em produção para debugging

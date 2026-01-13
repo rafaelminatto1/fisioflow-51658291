@@ -60,9 +60,9 @@ export function PatientDashboard({ _lastUpdate, profile }: PatientDashboardProps
       setUpcomingAppointments(sortedAppointments);
       setTodayExercises(todayExercisesData);
       setProgressData(progressChartData);
-      
+
       // Mensagens de notificação
-      if (metrics.totalAppointments > 0 && upcomingAppointments.length > 0) {
+      if (metrics.totalAppointments > 0 && sortedAppointments.length > 0) {
         setMessages([
           {
             type: 'success',
@@ -79,7 +79,7 @@ export function PatientDashboard({ _lastUpdate, profile }: PatientDashboardProps
         description: 'Não foi possível carregar os dados do paciente'
       });
     }
-  }, [appointments, metrics, profile]);
+  }, [appointments, metrics, profile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const stats = useMemo(() => ({
     nextAppointments: Math.min(upcomingAppointments, 5),

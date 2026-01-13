@@ -32,13 +32,19 @@ const CANAIS = [
 type TipoAutomacao = 'aniversario' | 'reengajamento' | 'pos_avaliacao' | 'boas_vindas' | 'follow_up_automatico';
 type CanalAutomacao = 'whatsapp' | 'email' | 'sms';
 
+interface GatilhoConfig {
+  dias_inativo?: number;
+  horas_apos?: number;
+  intervalo_dias?: number;
+}
+
 interface FormDataAutomacao {
   nome: string;
   descricao: string;
   tipo: TipoAutomacao;
   canal: CanalAutomacao;
   template_mensagem: string;
-  gatilho_config: Record<string, any>;
+  gatilho_config: GatilhoConfig;
 }
 
 export function CRMAutomacoes() {
@@ -81,7 +87,7 @@ export function CRMAutomacoes() {
   const getTipoInfo = (tipo: string) => TIPOS_AUTOMACAO.find(t => t.value === tipo) || TIPOS_AUTOMACAO[0];
   const getCanalInfo = (canal: string) => CANAIS.find(c => c.value === canal) || CANAIS[0];
 
-  const getGatilhoDescription = (tipo: string, config: Record<string, unknown>) => {
+  const getGatilhoDescription = (tipo: string, config: GatilhoConfig) => {
     switch (tipo) {
       case 'aniversario': return 'Dispara no aniversário do lead';
       case 'reengajamento': return `Dispara após ${config.dias_inativo || 7} dias sem contato`;
