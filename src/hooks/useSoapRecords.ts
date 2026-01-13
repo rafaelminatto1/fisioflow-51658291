@@ -327,14 +327,14 @@ export const useUploadSessionAttachment = () => {
 
       // Upload to storage
       const fileName = `${patientId}/${Date.now()}_${file.name}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('session-attachments')
         .upload(fileName, file);
 
       if (uploadError) throw uploadError;
 
       // Get public URL
-      const { data: urlData } = supabase.storage
+      const urlData = supabase.storage
         .from('session-attachments')
         .getPublicUrl(fileName);
 
@@ -383,7 +383,7 @@ export const useDeleteSessionAttachment = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ attachmentId, patientId }: { attachmentId: string; patientId: string }) => {
+    mutationFn: async ({ attachmentId, patientId: _patientId }: { attachmentId: string; patientId: string }) => {
       // Get attachment to delete from storage
       const { data: attachment } = await supabase
         .from('session_attachments')
@@ -409,7 +409,7 @@ export const useDeleteSessionAttachment = () => {
       if (dbError) throw dbError;
       return attachmentId;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (_data, _variables) => {
       queryClient.invalidateQueries({ queryKey: ['session-attachments'] });
       toast({
         title: 'Arquivo removido',
@@ -555,8 +555,6 @@ export const useDeleteSessionTemplate = () => {
 
 // Hook para autosave com upsert (atualiza se existe, cria se não existe)
 export const useAutoSaveSoapRecord = () => {
-  const { toast } = useToast();
-
   return useMutation({
     mutationFn: async (data: CreateSoapRecordData & { recordId?: string }) => {
       const { data: userData } = await supabase.auth.getUser();

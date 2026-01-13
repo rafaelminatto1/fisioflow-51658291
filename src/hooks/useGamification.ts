@@ -28,14 +28,14 @@ export const useGamification = (patientId: string) => {
   const { data: profile, isLoading: isLoadingProfile } = useQuery({
     queryKey: ['gamification-profile', patientId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error: _error } = await supabase
         .from('patient_gamification')
         .select('*')
         .eq('patient_id', patientId)
         .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching gamification profile:', error);
+      if (_error && _error.code !== 'PGRST116') {
+        console.error('Error fetching gamification profile:', _error);
       }
 
       if (!data) {
@@ -123,7 +123,7 @@ export const useGamification = (patientId: string) => {
     queryKey: ['daily-quests', patientId],
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0];
-      const { data, error } = await supabase
+      const { data, error: _error } = await supabase
         .from('daily_quests')
         .select('*')
         .eq('patient_id', patientId)

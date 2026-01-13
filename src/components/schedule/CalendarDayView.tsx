@@ -65,7 +65,7 @@ interface CalendarDayViewProps {
     checkTimeBlocked: (date: Date, time: string) => { blocked: boolean; reason?: string };
     isTimeBlocked: (time: string) => boolean;
     getBlockReason: (time: string) => string | undefined;
-    getStatusColor: (status: string, isOverCapacity?: boolean) => string;
+    _getStatusColor: (status: string, isOverCapacity?: boolean) => string;
     isOverCapacity: (apt: Appointment) => boolean;
     openPopoverId: string | null;
     setOpenPopoverId: (id: string | null) => void;
@@ -90,10 +90,10 @@ const CalendarDayView = memo(({
     handleDragOver,
     handleDragLeave,
     handleDrop,
-    _checkTimeBlocked,
+    checkTimeBlocked,
     isTimeBlocked,
     getBlockReason,
-    getStatusColor,
+    _getStatusColor,
     isOverCapacity,
     openPopoverId,
     setOpenPopoverId

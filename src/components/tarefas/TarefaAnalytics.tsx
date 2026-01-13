@@ -1,13 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { TrendingUp, Clock, CheckCircle2, AlertCircle, Users, Target } from 'lucide-react';
 import { Tarefa, TarefaStatus, PRIORIDADE_LABELS, TarefaPrioridade } from '@/hooks/useTarefas';
 import { useMemo } from 'react';
 
-const COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'];
+const _COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444'];
 
 interface TarefaAnalyticsProps {
   tarefas: Tarefa[];

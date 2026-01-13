@@ -13,7 +13,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   FileText,
   Plus,
-  Search,
   Filter,
   User,
   Stethoscope,
