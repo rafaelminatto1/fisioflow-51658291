@@ -3,6 +3,11 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, CheckSquare, Send, Zap, BarChart3, Upload } from 'lucide-react';
 import { LeadsContent } from './LeadsPage';
+import { CRMTarefas } from '@/components/crm/CRMTarefas';
+import { CRMCampanhas } from '@/components/crm/CRMCampanhas';
+import { CRMAutomacoes } from '@/components/crm/CRMAutomacoes';
+import { CRMAnalytics } from '@/components/crm/CRMAnalytics';
+import { LeadImport } from '@/components/crm/LeadImport';
 
 export default function CRMDashboard() {
   const [activeTab, setActiveTab] = useState('leads');
