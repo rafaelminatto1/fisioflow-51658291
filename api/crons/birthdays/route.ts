@@ -61,13 +61,6 @@ export default async function handler(req: Request): Promise<Response> {
       // TODO: Implement WhatsApp sending via Evolution API
       console.log(`Sending birthday message to ${patient.name}`);
 
-      // Get organization settings
-      const { data: org } = await supabase
-        .from('organizations')
-        .select('name, settings')
-        .eq('id', patient.organization_id)
-        .single();
-
       messagesSent++;
     }
 

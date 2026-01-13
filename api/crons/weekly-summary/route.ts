@@ -57,7 +57,7 @@ export default async function handler(req: Request): Promise<Response> {
 
     for (const therapist of therapists || []) {
       // Get sessions from last week
-      const { data: sessions } = await supabase
+      await supabase
         .from('sessions')
         .select('*')
         .eq('therapist_id', therapist.id)
@@ -65,23 +65,12 @@ export default async function handler(req: Request): Promise<Response> {
         .lte('created_at', today.toISOString());
 
       // Get new patients from last week
-      const { data: newPatients } = await supabase
+      await supabase
         .from('patients')
         .select('*')
         .eq('therapist_id', therapist.id)
         .gte('created_at', lastWeek.toISOString())
         .lte('created_at', today.toISOString());
-
-      // Generate weekly summary
-      const summary = {
-        totalSessions: sessions?.length || 0,
-        newPatients: newPatients?.length || 0,
-        therapist: therapist.name,
-        period: {
-          from: lastWeek.toISOString(),
-          to: today.toISOString(),
-        },
-      };
 
       // Send email
       // TODO: Implement email sending via Resend
