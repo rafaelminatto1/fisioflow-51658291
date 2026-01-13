@@ -51,7 +51,7 @@ import { SessionHistoryPanel } from '@/components/session/SessionHistoryPanel';
 import { useSoapRecords } from '@/hooks/useSoapRecords';
 
 // Analytics & ML Imports
-import { PatientAnalyticsDashboard, PatientLifecycleChart, PatientInsightsPanel } from '@/components/patients/analytics';
+import { PatientAnalyticsDashboard, PatientLifecycleChart, PatientInsightsPanel, AIAssistantPanel } from '@/components/patients/analytics';
 import { usePatientLifecycleSummary } from '@/hooks/usePatientAnalytics';
 
 // Financial & Documents Imports
@@ -577,6 +577,9 @@ const AnalyticsTab = ({ patientId, patientName }: { patientId: string; patientNa
         <div className="space-y-6">
             {/* Main Analytics Dashboard */}
             <PatientAnalyticsDashboard patientId={patientId} patientName={patientName} />
+
+            {/* AI Assistant Panel - Full Width */}
+            <AIAssistantPanel patientId={patientId} patientName={patientName} />
 
             {/* Two-column layout for lifecycle and insights */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
