@@ -5,7 +5,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, Brain, AlertTriangle } from 'lucide-react';
 import { analyzeWithGeminiVision, VisionAnalysisResult } from '@/services/ai/geminiVisionService';
-import ReactMarkdown from 'react-markdown'; // Ensure this is available or use simple display
 
 interface GeneralImageAnalyzerProps {
     file: File;
