@@ -57,7 +57,7 @@ export const SessionExercisesPanel: React.FC<SessionExercisesPanelProps> = ({
         setSelectedExerciseId('');
     };
 
-    const handleUpdateExercise = (id: string, field: keyof SessionExercise, value: any) => {
+    const handleUpdateExercise = (id: string, field: keyof SessionExercise, value: string | number | boolean) => {
         onChange(exercises.map(e =>
             e.id === id ? { ...e, [field]: value } : e
         ));
