@@ -127,3 +127,6 @@ lint_output.txt
 eslint_results.txt
 .env*.local
 .playwright-mcp/
+test-results/
+playwright-report/
+blob-report/
