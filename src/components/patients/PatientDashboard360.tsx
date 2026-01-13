@@ -25,8 +25,23 @@ import { useSoapRecords } from '@/hooks/useSoapRecords';
 import { PatientHelpers } from '@/types';
 
 interface PatientDashboard360Props {
-  patient: any;
-  upcomingAppointments?: any[];
+  patient: {
+    id: string;
+    full_name: string;
+    email?: string;
+    phone?: string;
+    birth_date?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+  };
+  upcomingAppointments?: Array<{
+    id: string;
+    date: Date | string;
+    time: string;
+    type: string;
+    status: string;
+  }>;
 }
 
 export const PatientDashboard360: React.FC<PatientDashboard360Props> = ({

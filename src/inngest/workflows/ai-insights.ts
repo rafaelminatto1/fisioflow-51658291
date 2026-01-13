@@ -30,7 +30,7 @@ export const aiPatientInsightsWorkflow = inngest.createFunction(
   {
     event: Events.AI_PATIENT_INSIGHTS,
   },
-  async ({ event, step }: { event: { data: any }; step: any }) => {
+  async ({ event, step }: { event: { data: Record<string, unknown> }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
     const { patientId, organizationId } = event.data;
 
     const supabase = createClient(
@@ -97,7 +97,7 @@ Age: ${patient.date_of_birth}
 Main Complaint: ${patient.main_complaint || 'Not specified'}
 
 Recent Sessions (${recentSessions.length}):
-${recentSessions.map((s: any, i: number) => `
+${recentSessions.map((s: { id?: string; pain_level_after?: number; created_at?: string; patient_id?: string }, i: number) => `
 Session ${i + 1} (${s.created_at}):
 - Subjective: ${s.subjective || 'N/A'}
 - Objective: ${s.objective || 'N/A'}
@@ -171,7 +171,7 @@ export const aiBatchInsightsWorkflow = inngest.createFunction(
   {
     event: 'ai/batch.insights',
   },
-  async ({ event, step }: { event: { data: any }; step: any }) => {
+  async ({ event, step }: { event: { data: Record<string, unknown> }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
     const { organizationId, patientIds } = event.data;
 
     const results = await step.run('process-batch', async () => {

@@ -7,7 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Search, Calendar, SortAsc, Grid3X3, List, Filter,
-  Target, PlusCircle, Bookmark, Download, Printer, Plus, Shield
 } from 'lucide-react';
 import { useExerciseProtocols, type ExerciseProtocol } from '@/hooks/useExerciseProtocols';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -100,7 +99,7 @@ export default function Protocols() {
   };
 
   const handleDuplicate = (protocol: ExerciseProtocol) => {
-    const { id, created_at, updated_at, ...data } = protocol;
+    const { id: _id, created_at: _created_at, updated_at: _updated_at, ...data } = protocol;
     createProtocol({
       ...data,
       name: `${data.name} (Cópia)`,

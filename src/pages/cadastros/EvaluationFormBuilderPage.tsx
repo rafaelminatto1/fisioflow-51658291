@@ -16,8 +16,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { AssessmentTemplate, AssessmentSection, AssessmentQuestion, QuestionType } from '@/types/assessment';
-import { useNavigate, useParams } from 'react-router-dom';
+import { AssessmentSection, AssessmentQuestion, QuestionType } from '@/types/assessment';
+import { useParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
 // Mock data types for the builder state
@@ -33,15 +33,14 @@ interface BuilderQuestion extends Omit<AssessmentQuestion, 'id' | 'section_id'> 
 const QUESTION_TYPES: { type: QuestionType; label: string; icon: React.ReactNode; description: string }[] = [
     { type: 'text', label: 'Resposta Curta', icon: <Type className="w-4 h-4" />, description: 'Apenas uma linha de texto' },
     { type: 'long_text', label: 'Resposta Longa', icon: <AlignLeft className="w-4 h-4" />, description: 'Permite escrever quanto for necessário' },
-    { type: 'scale', label: 'Escala', icon: <List className="w-4 h-4" />, description: 'Uma escala numérica ou visual' }, // Adapting to "Lista" or "Scale"
-    { type: 'single_choice', label: 'Opção Única', icon: <CheckSquare className="w-4 h-4" />, description: 'Apenas uma opção pode ser selecionada' },
-    { type: 'multiple_choice', label: 'Seleção Múltipla', icon: <CheckSquare className="w-4 h-4" />, description: 'Várias opções podem ser selecionadas' },
-    { type: 'body_map', label: 'Mapa Corporal', icon: <User className="w-4 h-4" />, description: 'Identificação de dor em imagem' },
+    { type: 'scale', label: 'Escala', icon: <List className="w-4 h-4" />, description: 'Uma escala numrica ou visual' },
+    { type: 'single_choice', label: 'Opo nica', icon: <CheckSquare className="w-4 h-4" />, description: 'Apenas uma opo pode ser selecionada' },
+    { type: 'multiple_choice', label: 'Seleo Mltipla', icon: <CheckSquare className="w-4 h-4" />, description: 'Vrias opes podem ser selecionadas' },
+    { type: 'body_map', label: 'Mapa Corporal', icon: <User className="w-4 h-4" />, description: 'Identificao de dor em imagem' },
 ];
 
 export default function EvaluationFormBuilderPage() {
-    const navigate = useNavigate();
-    const { id } = useParams();
+    const { id: _id } = useParams();
     const { toast } = useToast();
     const [templateName, setTemplateName] = useState('');
     const [templateType, setTemplateType] = useState('anamnesis');

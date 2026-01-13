@@ -112,15 +112,15 @@ export class SyncManager {
    */
   private async processSyncItem(item: SyncQueueItem): Promise<void> {
     const { type, action, data } = item;
-    const typedData = data as any;
+    const typedData = data as Record<string, unknown>;
     const recordId = typedData?.id as string;
 
     switch (type) {
       case 'patient':
         if (action === 'create') {
-          await supabase.from('patients').insert(typedData as any);
+          await supabase.from('patients').insert(typedData);
         } else if (action === 'update') {
-          await supabase.from('patients').update(typedData as any).eq('id', recordId);
+          await supabase.from('patients').update(typedData).eq('id', recordId);
         } else if (action === 'delete') {
           await supabase.from('patients').delete().eq('id', recordId);
         }
@@ -128,9 +128,9 @@ export class SyncManager {
 
       case 'appointment':
         if (action === 'create') {
-          await supabase.from('appointments').insert(typedData as any);
+          await supabase.from('appointments').insert(typedData);
         } else if (action === 'update') {
-          await supabase.from('appointments').update(typedData as any).eq('id', recordId);
+          await supabase.from('appointments').update(typedData).eq('id', recordId);
         } else if (action === 'delete') {
           await supabase.from('appointments').delete().eq('id', recordId);
         }
@@ -138,9 +138,9 @@ export class SyncManager {
 
       case 'session':
         if (action === 'create') {
-          await supabase.from('sessions').insert(typedData as any);
+          await supabase.from('sessions').insert(typedData);
         } else if (action === 'update') {
-          await supabase.from('sessions').update(typedData as any).eq('id', recordId);
+          await supabase.from('sessions').update(typedData).eq('id', recordId);
         }
         break;
 

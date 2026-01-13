@@ -94,7 +94,7 @@ export default function TeamPerformance() {
         title: 'Exportação concluída',
         description: 'O arquivo Excel foi gerado com sucesso.'
       });
-    } catch (error) {
+    } catch {
       toast({
         title: 'Erro na exportação',
         description: 'Não foi possível gerar o arquivo.',

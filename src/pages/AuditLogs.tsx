@@ -61,11 +61,15 @@ const TABLE_LABELS: Record<string, string> = {
   vouchers: 'Vouchers',
 };
 
-function DiffViewer({ oldData, newData, changes }: { oldData: any; newData: any; changes: any }) {
+function DiffViewer({ oldData, newData, changes }: {
+  oldData: Record<string, unknown>;
+  newData: Record<string, unknown>;
+  changes: Record<string, { old: unknown; new: unknown }> | null;
+}) {
   if (changes && Object.keys(changes).length > 0) {
     return (
       <div className="space-y-2">
-        {Object.entries(changes).map(([key, value]: [string, any]) => (
+        {Object.entries(changes).map(([key, value]: [string, { old: unknown; new: unknown }]) => (
           <div key={key} className="text-sm border-b pb-2">
             <span className="font-medium text-muted-foreground">{key}:</span>
             <div className="flex gap-4 mt-1">

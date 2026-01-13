@@ -118,7 +118,7 @@ export function useCreatePainMap() {
 
   return useMutation({
     mutationFn: async (input: CreatePainMapInput) => {
-      const { sessionId, view: _view, points } = input;
+      const { sessionId, points } = input;
 
       // Buscar patient_id da sessão
       const { data: session, error: sessionError } = await supabase

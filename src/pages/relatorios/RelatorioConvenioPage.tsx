@@ -987,7 +987,7 @@ export default function RelatorioConvenioPage() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {relatorios.map((relatorio: any) => (
+                    {relatorios.map((relatorio) => (
                       <div key={relatorio.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/5">
                         <div className="flex-1">
                           <p className="font-semibold">{relatorio.paciente?.nome}</p>
