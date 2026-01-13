@@ -124,7 +124,7 @@ export function TemplateModal({
     if (template) {
       updateTemplate({ id: template.id, ...payload });
     } else {
-      createTemplate(payload as any);
+      createTemplate(payload as TemplateFormData);
     }
     onOpenChange(false);
   };
