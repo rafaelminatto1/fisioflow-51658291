@@ -55,7 +55,8 @@
       "Bash(ls:*)",
       "Bash(CI=true BASE_URL=http://localhost:8080 npx playwright test:*)",
       "Bash(curl:*)",
-      "mcp__web-search-prime__webSearchPrime"
+      "mcp__web-search-prime__webSearchPrime",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" npm run type-check:*)"
     ],
     "deny": [],
     "ask": []

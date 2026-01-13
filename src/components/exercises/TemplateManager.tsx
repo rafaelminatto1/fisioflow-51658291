@@ -226,7 +226,7 @@ export function TemplateManager() {
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'patologia' | 'pos_operatorio')}>
           <TabsList className="mb-4">
             <TabsTrigger value="patologia" className="w-[120px]">Patologias</TabsTrigger>
             <TabsTrigger value="pos_operatorio" className="w-[140px]">Pós-Operatórios</TabsTrigger>
