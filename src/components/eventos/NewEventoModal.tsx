@@ -53,7 +53,7 @@ export function NewEventoModal({ open, onOpenChange }: NewEventoModalProps) {
     if (template) {
       setValue('nome', template.nome);
       setValue('descricao', template.descricao || '');
-      setValue('categoria', template.categoria as any);
+      setValue('categoria', template.categoria as 'corrida' | 'corporativo' | 'ativacao' | 'workshop' | 'outro');
       setValue('gratuito', template.gratuito);
       setValue('valor_padrao_prestador', template.valor_padrao_prestador || 0);
       setShowTemplates(false);
@@ -161,7 +161,7 @@ export function NewEventoModal({ open, onOpenChange }: NewEventoModalProps) {
                   <Label htmlFor="categoria">Categoria *</Label>
                   <Select
                     value={watch('categoria')}
-                    onValueChange={(value) => setValue('categoria', value as any)}
+                    onValueChange={(value) => setValue('categoria', value as 'corrida' | 'corporativo' | 'ativacao' | 'workshop' | 'outro')}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione" />

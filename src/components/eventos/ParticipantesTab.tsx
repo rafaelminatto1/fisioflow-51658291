@@ -27,9 +27,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { participanteCreateSchema, ParticipanteCreate } from '@/lib/validations/participante';
+import { participanteCreateSchema, type ParticipanteCreate } from '@/lib/validations/participante';
 
 interface ParticipantesTabProps {
   eventoId: string;
@@ -48,7 +48,8 @@ export function ParticipantesTab({ eventoId }: ParticipantesTabProps) {
   const {
     register,
     handleSubmit,
-    control,
+    setValue,
+    watch,
     reset,
     formState: { errors },
   } = useForm<ParticipanteCreate>({
@@ -153,16 +154,10 @@ export function ParticipantesTab({ eventoId }: ParticipantesTabProps) {
                 </div>
 
                 <div className="flex items-center space-x-2">
-                  <Controller
-                    name="segue_perfil"
-                    control={control}
-                    render={({ field }) => (
-                      <Checkbox
-                        id="segue_perfil"
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    )}
+                  <Checkbox
+                    id="segue_perfil"
+                    checked={watch('segue_perfil')}
+                    onCheckedChange={(checked) => setValue('segue_perfil', checked as boolean)}
                   />
                   <Label htmlFor="segue_perfil" className="cursor-pointer">
                     Segue o perfil

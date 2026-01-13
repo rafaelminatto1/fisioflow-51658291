@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { checklistItemCreateSchema, ChecklistItemCreate } from '@/lib/validations/checklist';
 
@@ -50,7 +50,7 @@ export function ChecklistTab({ eventoId }: ChecklistTabProps) {
   const {
     register,
     handleSubmit,
-    control,
+    setValue,
     reset,
     formState: { errors },
   } = useForm<ChecklistItemCreate>({
@@ -127,22 +127,19 @@ export function ChecklistTab({ eventoId }: ChecklistTabProps) {
 
               <div>
                 <Label htmlFor="tipo">Tipo *</Label>
-                <Controller
-                  name="tipo"
-                  control={control}
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o tipo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="levar">Levar</SelectItem>
-                        <SelectItem value="alugar">Alugar</SelectItem>
-                        <SelectItem value="comprar">Comprar</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
+                <Select
+                  onValueChange={(value) => setValue('tipo', value as 'levar' | 'alugar' | 'comprar')}
+                  defaultValue="levar"
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="levar">Levar</SelectItem>
+                    <SelectItem value="alugar">Alugar</SelectItem>
+                    <SelectItem value="comprar">Comprar</SelectItem>
+                  </SelectContent>
+                </Select>
                 {errors.tipo && (
                   <p className="text-sm text-red-500 mt-1">{errors.tipo.message}</p>
                 )}

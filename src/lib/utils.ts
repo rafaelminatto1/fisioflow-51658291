@@ -28,7 +28,7 @@ export const calculateAge = (birthDate?: string | null): number => {
   }
 };
 
-export const exportToCSV = (data: any[], filename: string, headers: string[]) => {
+export const exportToCSV = (data: Record<string, unknown>[], filename: string, headers: string[]) => {
   try {
     const csvContent = [
       headers.join(','),

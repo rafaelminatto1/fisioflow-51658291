@@ -2,15 +2,14 @@
 // Refatorado para eliminar duplicação de subscriptions
 // Agora usa o contexto central para obter dados de appointments
 
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useRealtime } from '@/contexts/RealtimeContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Activity, Users, DollarSign, Calendar } from 'lucide-react';
-import { logger } from '@/lib/errors/logger';
 
 export function RealtimeMetrics() {
   // Usar o contexto central para obter dados de appointments
-  const { appointments, metrics, isSubscribed } = useRealtime();
+  const { metrics } = useRealtime();
 
   // Métricas formatadas para exibição
   const formattedRevenue = useMemo(() =>

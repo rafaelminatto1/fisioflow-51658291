@@ -12,10 +12,10 @@ import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import {
-  MessageCircle, Send, Plus, Trash2, CheckCircle2, Clock, Users,
-  Settings, Template, Image, FileText, Zap, Check, X
+  MessageCircle, Send, Plus, CheckCircle2, Clock, Users,
+  Settings, FileText, Zap, Check, X
 } from 'lucide-react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -31,15 +31,6 @@ interface WhatsAppMessage {
   scheduled_at?: string;
   sent_at?: string;
   created_at: string;
-}
-
-interface WhatsAppTemplate {
-  id: string;
-  name: string;
-  category: 'marketing' | 'utility' | 'authentication';
-  content: string;
-  variables: string[];
-  status: 'approved' | 'pending' | 'rejected';
 }
 
 interface WhatsAppConfig {
@@ -98,7 +89,7 @@ export function useWhatsAppIntegration() {
 }
 
 export default function WhatsAppIntegration() {
-  const queryClient = useQueryClient();
+  const _queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'mensagens' | 'templates' | 'config'>('mensagens');
@@ -135,17 +126,17 @@ export default function WhatsAppIntegration() {
     },
   });
 
-  // Buscar templates
-  const { data: templates = [] } = useQuery({
-    queryKey: ['whatsapp-templates'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('whatsapp_templates')
-        .select('*');
-      if (error) throw error;
-      return data as WhatsAppTemplate[];
-    },
-  });
+  // Buscar templates (unused but kept for future use)
+  // const { data: templates = [] } = useQuery({
+  //   queryKey: ['whatsapp-templates'],
+  //   queryFn: async () => {
+  //     const { data, error } = await supabase
+  //       .from('whatsapp_templates')
+  //       .select('*');
+  //     if (error) throw error;
+  //     return data as WhatsAppTemplate[];
+  //   },
+  // });
 
   // Buscar configuração
   const { data: config } = useQuery({
@@ -187,7 +178,7 @@ export default function WhatsAppIntegration() {
   };
 
   const getStatusBadge = (status: string) => {
-    const config: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string; icon: any }> = {
+    const config: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string; icon: React.ElementType }> = {
       pending: { variant: 'secondary', label: 'Pendente', icon: Clock },
       sent: { variant: 'outline', label: 'Enviado', icon: Send },
       delivered: { variant: 'default', label: 'Entregue', icon: Check },
@@ -313,7 +304,7 @@ export default function WhatsAppIntegration() {
         </Card>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'mensagens' | 'templates' | 'config')}>
         <TabsList>
           <TabsTrigger value="mensagens">Mensagens</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
