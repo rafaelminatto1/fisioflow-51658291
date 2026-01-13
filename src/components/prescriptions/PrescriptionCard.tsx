@@ -64,7 +64,7 @@ export function PrescriptionCard({ prescription, onDelete, onView }: Prescriptio
         notes: prescription.notes,
       });
       toast.success('PDF gerado com sucesso');
-    } catch (error) {
+    } catch {
       toast.error('Erro ao gerar PDF');
       console.error(error);
     } finally {
@@ -103,7 +103,7 @@ _Enviado via FisioFlow_`;
       window.open(whatsappUrl, '_blank');
       
       toast.success('WhatsApp aberto com a mensagem');
-    } catch (error) {
+    } catch {
       toast.error('Erro ao enviar via WhatsApp');
     } finally {
       setIsSendingWhatsApp(false);

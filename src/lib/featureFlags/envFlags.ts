@@ -115,7 +115,6 @@ export function useFeatureFlag(feature: keyof FeatureFlags) {
 export function getMultipleFeaturesFromEnv(
   features: (keyof FeatureFlags)[]
 ): Record<string, boolean> {
-  const flags = getFeatureFlagsFromEnv();
   const result: Record<string, boolean> = {};
 
   for (const feature of features) {

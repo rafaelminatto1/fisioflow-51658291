@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useWaitlist, type WaitlistEntry } from './useWaitlist';
-import { format, getDay } from 'date-fns';
+import { getDay } from 'date-fns';
 
 const DAY_MAP: Record<number, string> = {
   0: 'sunday',

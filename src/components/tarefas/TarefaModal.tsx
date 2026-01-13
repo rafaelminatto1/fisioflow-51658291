@@ -136,7 +136,7 @@ export function TarefaModal({ open, onOpenChange, tarefa, defaultStatus = 'A_FAZ
         });
       }
       onOpenChange(false);
-    } catch (error) {
+    } catch {
       // Error handled in hooks
     }
   };

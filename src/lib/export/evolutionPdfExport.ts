@@ -1,8 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { PatientHelpers } from '@/types';
 
 interface PatientData {
   name: string;
@@ -37,8 +35,7 @@ export const generateEvolutionPDF = (
 
   // Configurações de estilo
   const primaryColor: [number, number, number] = [91, 79, 232]; // #5B4FE8
-  const textColor: [number, number, number] = [30, 30, 30];
-  
+
   // Header com logo e título
   doc.setFillColor(...primaryColor);
   doc.rect(0, 0, 210, 35, 'F');
