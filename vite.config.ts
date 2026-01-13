@@ -59,7 +59,6 @@ export default defineConfig(({ mode }) => {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff2}'],
           globIgnores: [
             '**/node_modules/**/*',
-            '**/cornerstone*',
             '**/*dicom-image-loader*',
             '**/computeWorker*'
           ],
