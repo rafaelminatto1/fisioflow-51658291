@@ -47,7 +47,7 @@ export const MeasurementCharts: React.FC<MeasurementChartsProps> = ({ measuremen
 
   const currentData = measurementsByType[selectedMeasurement] || [];
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: { date: string; value: number }; value: number }> }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-popover border rounded-lg shadow-lg p-3">
@@ -86,7 +86,7 @@ export const MeasurementCharts: React.FC<MeasurementChartsProps> = ({ measuremen
         </div>
       </CardHeader>
       <CardContent className="pt-6">
-        <Tabs value={chartType} onValueChange={(v) => setChartType(v as any)}>
+        <Tabs value={chartType} onValueChange={(v) => setChartType(v as 'line' | 'bar' | 'area')}>
           <TabsList className="mb-4">
             <TabsTrigger value="line" className="flex items-center gap-2">
               <LineChartIcon className="h-4 w-4" />
