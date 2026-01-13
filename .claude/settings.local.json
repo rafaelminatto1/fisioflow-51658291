@@ -42,7 +42,8 @@
       "Bash(python3 -c \" import sys import re import xml.etree.ElementTree as ET # Read the XML content = sys.stdin.read\\(\\) # Remove namespaces for easier parsing content = re.sub\\(r''xmlns[^>]*'', '''', content\\) # Parse XML root = ET.fromstring\\(''<root>'' + content + ''</root>''\\) # Extract all text elements def extract_text\\(element\\): text = element.text or '''' for child in element: text += extract_text\\(child\\) text += child.tail or '''' return text # Get all text text = extract_text\\(root\\) # Clean up text = re.sub\\(r''\\\\s+'', '' '', text\\) print\\(text\\) \")",
       "Bash(fold:*)",
       "Bash(npm install:*)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npm run build:*)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npm run build:*)",
+      "Bash(pnpm install:*)"
     ],
     "deny": [],
     "ask": []
