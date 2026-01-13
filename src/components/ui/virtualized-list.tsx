@@ -12,7 +12,7 @@
  * />
  */
 
-import { useMemo, useRef, useEffect, useCallback, useState } from 'react';
+import { useMemo, useRef, useCallback, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 /**
@@ -120,7 +120,7 @@ export function VirtualizedList<T>({
   const [scrollTop, setScrollTop] = useState(0);
 
   // Memoizar altura total e item heights com prefix sums O(1)
-  const { totalHeight, itemHeights, getItemOffset, prefixSumOffsets } = useMemo(() => {
+  const { totalHeight, itemHeights, getItemOffset } = useMemo(() => {
     const heights: number[] = [];
     const offsets: number[] = [0]; // Prefix sum array - offset[i] = soma de heights[0..i-1]
     let currentOffset = 0;
@@ -146,12 +146,11 @@ export function VirtualizedList<T>({
       totalHeight: currentOffset,
       itemHeights: heights,
       getItemOffset: getOffset,
-      prefixSumOffsets: offsets,
     };
   }, [items, itemHeight]);
 
   // Calcular itens visíveis
-  const { visibleItems, startIndex, endIndex } = useMemo(() => {
+  const { visibleItems, _startIndex, _endIndex } = useMemo(() => {
     const getItemHeightLocal = (index: number) => itemHeights[index] || 50;
 
     let startNode = 0;
@@ -191,8 +190,8 @@ export function VirtualizedList<T>({
 
     return {
       visibleItems: visible,
-      startIndex: startNode,
-      endIndex: endNode,
+      startIndex: _startIndex,
+      endIndex: _endIndex,
     };
   }, [items, itemHeights, scrollTop, containerHeight, overscan, getItemOffset]);
 
@@ -272,7 +271,7 @@ export function VirtualizedList<T>({
  */
 export function useVirtualizedList<T>(
   items: T[],
-  options: {
+  _options: {
     itemHeight: number | ((item: T, index: number) => number);
     containerHeight: number;
     overscan?: number;

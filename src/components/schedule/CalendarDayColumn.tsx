@@ -139,7 +139,7 @@ export const DayColumn = memo(({
 
     return (
         <div
-            className="w-full sm:w-auto calendar-column-divider last:border-r-0 relative group flex-shrink-0"
+            className="w-full h-full calendar-column-divider last:border-r-0 relative group flex-shrink-0"
             role="column"
             aria-label={`Coluna do dia ${format(day, 'dd/MM/yyyy')}`}
         >
@@ -167,7 +167,7 @@ export const DayColumn = memo(({
             </div>
 
             {/* Time slots interativos */}
-            <div className="relative" role="grid" aria-label={`Slots de horário para ${format(day, 'dd/MM')}`}>
+            <div className="relative w-full" role="grid" aria-label={`Slots de horário para ${format(day, 'dd/MM')}`}>
                 {isDayClosed ? (
                     <div className="h-full flex items-center justify-center text-muted-foreground text-xs p-4 min-h-[500px]" role="status" aria-label="Dia fechado">
                         <div className="flex flex-col items-center gap-2">
@@ -299,9 +299,9 @@ export const DayColumn = memo(({
                                     top: `${topMobile}px`,
                                     height: `${heightMobile}px`,
                                     // Posicionamento dinâmico para appointments empilhados
-                                    left: stackCount > 1 ? `${leftPercent}%` : '1px',
-                                    right: stackCount > 1 ? 'auto' : '1px',
-                                    width: stackCount > 1 ? `${widthPercent}%` : 'calc(100% - 2px)',
+                                    left: stackCount > 1 ? `${leftPercent}%` : '2px',
+                                    right: stackCount > 1 ? 'auto' : '2px',
+                                    width: stackCount > 1 ? `${widthPercent}%` : 'calc(100% - 4px)',
                                     ['--top-desktop' as string]: `${topDesktop}px`,
                                     ['--height-desktop' as string]: `${heightDesktop}px`,
                                     zIndex: stackCount > 1 ? 10 + stackIndex : undefined,
