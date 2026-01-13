@@ -49,8 +49,8 @@ export function MFASettings({ userId }: MFASettingsProps) {
       setSecret(result.secret);
       setFactorId(result.factorId);
       setShowEnroll(true);
-    } catch (err: any) {
-      setError(err.message || 'Erro ao configurar MFA');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao configurar MFA');
     } finally {
       setLoading(false);
     }
@@ -83,8 +83,8 @@ export function MFASettings({ userId }: MFASettingsProps) {
       } else {
         setError('Código inválido. Tente novamente.');
       }
-    } catch (err: any) {
-      setError(err.message || 'Erro ao verificar código');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao verificar código');
     } finally {
       setLoading(false);
     }
@@ -117,8 +117,8 @@ export function MFASettings({ userId }: MFASettingsProps) {
       if (updateError) {
         console.error('Error updating MFA status:', updateError);
       }
-    } catch (err: any) {
-      setError(err.message || 'Erro ao desabilitar MFA');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao desabilitar MFA');
     } finally {
       setLoading(false);
     }
@@ -276,8 +276,8 @@ export function MFALogin({ factorId, onVerified, onCancel }: MFALoginProps) {
       } else {
         setError('Código inválido');
       }
-    } catch (err: any) {
-      setError(err.message || 'Erro ao verificar código');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao verificar código');
     } finally {
       setLoading(false);
     }

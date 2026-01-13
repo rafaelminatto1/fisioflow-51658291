@@ -54,7 +54,8 @@
       "Bash(BASE_URL=http://localhost:8080 npx playwright test:*)",
       "Bash(ls:*)",
       "Bash(CI=true BASE_URL=http://localhost:8080 npx playwright test:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "mcp__web-search-prime__webSearchPrime"
     ],
     "deny": [],
     "ask": []

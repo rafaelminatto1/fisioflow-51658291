@@ -11,7 +11,7 @@ export interface Transacao {
   status: string;
   stripe_payment_intent_id?: string;
   stripe_refund_id?: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }

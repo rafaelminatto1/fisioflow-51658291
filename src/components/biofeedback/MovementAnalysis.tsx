@@ -88,7 +88,7 @@ export const MovementAnalysis = () => {
         rangeOfMotion: Math.floor(Math.random() * 40) + 60,
         speed: Math.floor(Math.random() * 40) + 60,
         stability: Math.floor(Math.random() * 40) + 60,
-        posture: ['excelente', 'boa', 'atenção'][Math.floor(Math.random() * 3)] as any
+        posture: ['excelente', 'boa', 'atenção'][Math.floor(Math.random() * 3)] as MovementMetrics['posture']
       };
 
       setMetrics(newMetrics);

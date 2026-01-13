@@ -81,9 +81,9 @@ export interface SessionTemplate {
   name: string;
   description?: string;
   subjective?: string;
-  objective?: any;
+  objective?: Record<string, unknown>;
   assessment?: string;
-  plan?: any;
+  plan?: Record<string, unknown>;
   is_global: boolean;
   created_at: string;
   updated_at: string;

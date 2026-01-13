@@ -81,7 +81,7 @@ export function CRMAutomacoes() {
   const getTipoInfo = (tipo: string) => TIPOS_AUTOMACAO.find(t => t.value === tipo) || TIPOS_AUTOMACAO[0];
   const getCanalInfo = (canal: string) => CANAIS.find(c => c.value === canal) || CANAIS[0];
 
-  const getGatilhoDescription = (tipo: string, config: Record<string, any>) => {
+  const getGatilhoDescription = (tipo: string, config: Record<string, unknown>) => {
     switch (tipo) {
       case 'aniversario': return 'Dispara no aniversário do lead';
       case 'reengajamento': return `Dispara após ${config.dias_inativo || 7} dias sem contato`;

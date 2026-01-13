@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { format, differenceInYears, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -45,6 +46,7 @@ import {
   AlertTriangle,
   UserCog,
   FileText,
+  Play,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -67,12 +69,15 @@ const statusLabels: Record<AppointmentStatus, string> = {
   em_andamento: 'Em Andamento',
   concluido: 'Concluído',
   cancelado: 'Cancelado',
-  falta: 'Faltou',
+  falta: 'Falta',
+  faltou: 'Faltou',
   aguardando_confirmacao: 'Aguardando Confirmação',
   atrasado: 'Atrasado',
   avaliacao: 'Avaliação',
   em_espera: 'Em Espera',
   remarcado: 'Remarcado',
+  reagendado: 'Reagendado',
+  atendido: 'Atendido',
 };
 
 const statusColors: Record<AppointmentStatus, string> = {
@@ -82,19 +87,23 @@ const statusColors: Record<AppointmentStatus, string> = {
   concluido: 'bg-slate-500',
   cancelado: 'bg-red-500',
   falta: 'bg-orange-500',
+  faltou: 'bg-orange-500',
   aguardando_confirmacao: 'bg-amber-500',
   atrasado: 'bg-rose-500',
   avaliacao: 'bg-purple-500',
   em_espera: 'bg-cyan-500',
   remarcado: 'bg-indigo-500',
+  reagendado: 'bg-teal-500',
+  atendido: 'bg-emerald-500',
 };
 
 export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps> = ({
   appointment,
   open,
   onOpenChange,
-  _onDeleted,
+  onDeleted: _onDeleted,
 }) => {
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [conflictError, setConflictError] = useState<string | null>(null);
@@ -114,17 +123,17 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
   });
 
   // Simple appointments fetch for conflict checking
-  const { data: appointments = [] } = useQuery({
+  const { data: appointments = [] } = useQuery<AppointmentBase[]>({
     queryKey: ['appointments-for-conflict'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase
         .from('appointments')
-        .select('id, patient_id, appointment_date, appointment_time, duration, status')
+        .select('id, patient_id, appointment_date, appointment_time, duration, status') as any)
         .neq('status', 'cancelado');
-      
+
       if (error) throw error;
-      
-      return (data || []).map(apt => ({
+
+      return (data || []).map((apt: any) => ({
         id: apt.id,
         patientId: apt.patient_id,
         patientName: '',
@@ -135,22 +144,22 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
         status: apt.status as AppointmentStatus,
         createdAt: new Date(),
         updatedAt: new Date(),
-      })) as AppointmentBase[];
+      }));
     },
     staleTime: 30000,
   });
 
   const queryClient = useQueryClient();
-  
+
   const updateAppointmentMutation = useMutation({
     mutationFn: async ({ appointmentId, updates }: { appointmentId: string; updates: Record<string, unknown> }) => {
-      const { data, error } = await supabase
-        .from('appointments')
+      const { data, error } = await (supabase
+        .from('appointments') as any)
         .update(updates)
         .eq('id', appointmentId)
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -168,12 +177,12 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
   // Load patient details
   useEffect(() => {
     if (appointment?.patientId) {
-      supabase
-        .from('patients')
+      (supabase
+        .from('patients') as any)
         .select('phone, birth_date')
         .eq('id', appointment.patientId)
         .single()
-        .then(({ data }) => {
+        .then(({ data }: any) => {
           if (data) {
             setPatientDetails({
               phone: data.phone || undefined,
@@ -321,6 +330,25 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
     
     window.open(`https://wa.me/55${phone}?text=${message}`, '_blank');
     toast.success('WhatsApp aberto para confirmação');
+  };
+
+  const canStartAttendance = formData.status === 'confirmado' || formData.status === 'agendado' || formData.status === 'avaliacao';
+
+  const handleStartAttendance = () => {
+    if (!appointment) return;
+
+    if (formData.status === 'avaliacao') {
+      navigate(`/patients/${appointment.patientId}/evaluations/new?appointmentId=${appointment.id}`);
+      toast.success('Iniciando avaliação', {
+        description: `Avaliação de ${appointment.patientName}`,
+      });
+    } else {
+      navigate(`/patient-evolution/${appointment.id}`);
+      toast.success('Iniciando atendimento', {
+        description: `Atendimento de ${appointment.patientName}`,
+      });
+    }
+    onOpenChange(false);
   };
 
   const handleClose = () => {
@@ -588,6 +616,24 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
             ) : (
               <>
                 <div className="flex gap-2 w-full sm:w-auto">
+                  {canStartAttendance && (
+                    <Button
+                      onClick={handleStartAttendance}
+                      className="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white"
+                    >
+                      {formData.status === 'avaliacao' ? (
+                        <>
+                          <FileText className="h-4 w-4 mr-1.5" />
+                          Iniciar Avaliação
+                        </>
+                      ) : (
+                        <>
+                          <Play className="h-4 w-4 mr-1.5" />
+                          Iniciar Atendimento
+                        </>
+                      )}
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
