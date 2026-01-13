@@ -63,10 +63,10 @@ export function useCreateMedicalRecord() {
         description: 'Prontuário adicionado com sucesso.',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao criar prontuário',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
     },
@@ -97,10 +97,10 @@ export function useUpdateMedicalRecord() {
         description: 'Alterações salvas com sucesso.',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao atualizar prontuário',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
     },
@@ -129,10 +129,10 @@ export function useDeleteMedicalRecord() {
         description: 'Prontuário excluído com sucesso.',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao remover prontuário',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
     },

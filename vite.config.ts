@@ -18,6 +18,9 @@ export default defineConfig(({ mode }) => {
         "Cross-Origin-Opener-Policy": "same-origin",
       },
     },
+    define: {
+      __APP_VERSION__: JSON.stringify(process.env.VERCEL_GIT_COMMIT_SHA || new Date().toISOString()),
+    },
     plugins: [
       react(),
       mode === 'development' && componentTagger(),

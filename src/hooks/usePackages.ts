@@ -57,16 +57,16 @@ export function useSessionPackages() {
 
       if (error) throw error;
       // Mapear para a interface esperada
-      return (data || []).map((pkg: any) => ({
-        id: pkg.id,
-        name: pkg.package_name,
-        description: pkg.notes,
-        sessions_count: pkg.total_sessions,
-        price: pkg.final_value,
-        validity_days: pkg.validity_months ? pkg.validity_months * 30 : 365,
-        is_active: pkg.status === 'ativo',
-        organization_id: pkg.organization_id,
-        created_at: pkg.created_at,
+      return (data || []).map((pkg: SessionPackage | Record<string, unknown>) => ({
+        id: String(pkg.id),
+        name: String((pkg as Record<string, unknown>).package_name || pkg.name),
+        description: (pkg as Record<string, unknown>).notes as string | undefined,
+        sessions_count: Number((pkg as Record<string, unknown>).total_sessions || pkg.sessions_count),
+        price: Number((pkg as Record<string, unknown>).final_value || pkg.price),
+        validity_days: (pkg as Record<string, unknown>).validity_months ? Number((pkg as Record<string, unknown>).validity_months) * 30 : 365,
+        is_active: ((pkg as Record<string, unknown>).status as string) === 'ativo',
+        organization_id: String(pkg.organization_id),
+        created_at: String(pkg.created_at),
       })) as SessionPackage[];
     },
   });
@@ -91,26 +91,27 @@ export function usePatientPackages(patientId: string | undefined) {
       if (error) throw error;
 
       // Calcular campos adicionais e mapear
-      const enrichedData = (data || []).map(pp => {
-        const remaining = pp.sessions_purchased - pp.sessions_used;
-        const isExpired = pp.expires_at && new Date(pp.expires_at) < new Date();
-        const pkg = pp.package as any;
-        
+      const enrichedData = (data || []).map((pp: PatientPackage | Record<string, unknown>) => {
+        const ppTyped = pp as PatientPackage & { package?: Record<string, unknown> };
+        const remaining = ppTyped.sessions_purchased - ppTyped.sessions_used;
+        const isExpired = ppTyped.expires_at && new Date(ppTyped.expires_at) < new Date();
+        const pkg = ppTyped.package as Record<string, unknown> | undefined;
+
         return {
-          id: pp.id,
-          patient_id: pp.patient_id,
-          package_id: pp.package_id,
-          sessions_purchased: pp.sessions_purchased,
-          sessions_used: pp.sessions_used,
-          price_paid: pp.price_paid,
-          purchased_at: pp.purchased_at,
-          expires_at: pp.expires_at,
-          last_used_at: pp.last_used_at,
+          id: String(ppTyped.id),
+          patient_id: String(ppTyped.patient_id),
+          package_id: String(ppTyped.package_id),
+          sessions_purchased: Number(ppTyped.sessions_purchased),
+          sessions_used: Number(ppTyped.sessions_used),
+          price_paid: Number(ppTyped.price_paid),
+          purchased_at: String(ppTyped.purchased_at),
+          expires_at: String(ppTyped.expires_at),
+          last_used_at: ppTyped.last_used_at ? String(ppTyped.last_used_at) : undefined,
           package: pkg ? {
-            id: pkg.id,
-            name: pkg.package_name,
-            sessions_count: pkg.total_sessions,
-            price: pkg.final_value,
+            id: String(pkg.id),
+            name: String(pkg.package_name || pkg.name || ''),
+            sessions_count: Number(pkg.total_sessions || pkg.sessions_count || 0),
+            price: Number(pkg.final_value || pkg.price || 0),
           } : undefined,
           sessions_remaining: remaining,
           is_expired: isExpired,
@@ -163,7 +164,7 @@ export function useCreatePackage() {
           final_value: input.price,
           validity_months: Math.ceil(input.validity_days / 30),
           status: 'active',
-        } as any)
+        })
         .select()
         .single();
 
@@ -200,7 +201,7 @@ export function usePurchasePackage() {
       if (!packageTemplate) throw new Error('Pacote não disponível');
 
       // Calcular data de expiração (usar validity_months ou padrão de 12 meses)
-      const validityDays = ((packageTemplate as any).validity_months || 12) * 30;
+      const validityDays = ((packageTemplate as Record<string, unknown>).validity_months as number | undefined) || 12 * 30;
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + validityDays);
 
@@ -215,7 +216,7 @@ export function usePurchasePackage() {
           price_paid: packageTemplate.final_value,
           purchased_at: new Date().toISOString(),
           expires_at: expiresAt.toISOString(),
-        } as any)
+        })
         .select(`
           *,
           package:session_packages(id, package_name, total_sessions)
@@ -223,16 +224,16 @@ export function usePurchasePackage() {
         .single();
 
       if (error) throw error;
-      const pkg = (data as any).package;
-      return { ...data, package: pkg ? { name: pkg.package_name } : null };
+      const pkg = (data as Record<string, unknown>).package as Record<string, unknown> | undefined;
+      return { ...data, package: pkg ? { name: String(pkg.package_name) } : null };
     },
-    onSuccess: (data: any, variables) => {
+    onSuccess: (_data: unknown, variables) => {
       queryClient.invalidateQueries({ queryKey: ['patient-packages', variables.patient_id] });
-      toast.success(`Pacote "${data.package?.name || 'Novo'}" adquirido com sucesso!`);
+      toast.success(`Pacote adquirido com sucesso!`);
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logger.error('Erro ao comprar pacote', error, 'usePackages');
-      toast.error(error.message || 'Erro ao adquirir pacote');
+      toast.error(error instanceof Error ? error.message : 'Erro ao adquirir pacote');
     },
   });
 }
@@ -299,9 +300,9 @@ export function useUsePackageSession() {
       queryClient.invalidateQueries({ queryKey: ['patient-packages'] });
       toast.success(`Sessão utilizada. Restam ${data.sessions_remaining} sessões.`);
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       logger.error('Erro ao usar sessão do pacote', error, 'usePackages');
-      toast.error(error.message || 'Erro ao usar sessão do pacote');
+      toast.error(error instanceof Error ? error.message : 'Erro ao usar sessão do pacote');
     },
   });
 }
@@ -320,7 +321,7 @@ export function useUpdatePackage() {
       validity_days,
       is_active,
     }: Partial<SessionPackage> & { id: string }) => {
-      const updateData: Record<string, any> = {};
+      const updateData: Record<string, unknown> = {};
       if (name !== undefined) updateData.package_name = name;
       if (description !== undefined) updateData.notes = description;
       if (sessions_count !== undefined) updateData.total_sessions = sessions_count;
@@ -357,7 +358,7 @@ export function useDeactivatePackage() {
     mutationFn: async (packageId: string) => {
       const { error } = await supabase
         .from('session_packages')
-        .update({ status: 'cancelado' } as any)
+        .update({ status: 'cancelado' })
         .eq('id', packageId);
 
       if (error) throw error;

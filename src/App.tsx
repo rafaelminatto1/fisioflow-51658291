@@ -16,6 +16,7 @@ import { get, set, del } from 'idb-keyval';
 import { AppRoutes } from "./routes";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { VersionManager } from "@/components/system/VersionManager";
 
 // Create a client with performance optimizations
 const queryClient = new QueryClient({
@@ -92,7 +93,11 @@ const App = () => {
     <ErrorBoundary>
       <PersistQueryClientProvider
         client={queryClient}
-        persistOptions={{ persister, maxAge: 1000 * 60 * 60 * 24 }} // 24 hours
+        persistOptions={{
+          persister,
+          maxAge: 1000 * 60 * 60 * 24, // 24 hours
+          buster: __APP_VERSION__,
+        }}
         onSuccess={() => logger.info('Cache persistente restaurado com sucesso', {}, 'App')}
       >
         <TooltipProvider>
@@ -110,6 +115,7 @@ const App = () => {
               >
                 <Suspense fallback={<PageLoadingFallback />}>
                   <AppRoutes />
+                  <VersionManager />
                   <Analytics />
                   <SpeedInsights />
                 </Suspense>

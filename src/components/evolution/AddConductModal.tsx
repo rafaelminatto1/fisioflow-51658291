@@ -83,7 +83,7 @@ export function AddConductModal({ open, onOpenChange, conduct }: AddConductModal
   }, [conduct, form]);
 
   const onSubmit = (data: FormData) => {
-    createMutation.mutate(data as any, {
+    createMutation.mutate(data as unknown as ConductFormData, {
       onSuccess: () => {
         form.reset();
         onOpenChange(false);

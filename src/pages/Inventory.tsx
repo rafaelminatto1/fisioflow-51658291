@@ -511,7 +511,7 @@ export default function Inventory() {
                   <Label>Tipo</Label>
                   <Select 
                     value={movementForm.movement_type} 
-                    onValueChange={(v) => setMovementForm(prev => ({ ...prev, movement_type: v as any }))}
+                    onValueChange={(v) => setMovementForm(prev => ({ ...prev, movement_type: v as 'entrada' | 'saida' | 'ajuste' | 'perda' }))}
                   >
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>

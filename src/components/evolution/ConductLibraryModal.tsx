@@ -36,7 +36,7 @@ export function ConductLibraryModal({
   const [conductToEdit, setConductToEdit] = useState<ConductTemplate | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
 
-  const { data: conducts = [], isLoading } = useConductLibrary();
+  const { data: conducts = [] } = useConductLibrary();
   const deleteMutation = useDeleteConduct();
 
   const categories = [

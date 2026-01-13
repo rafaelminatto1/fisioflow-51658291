@@ -23,8 +23,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   FileText,
   Activity,
@@ -63,7 +62,7 @@ interface TimelineEvent {
   date: Date;
   title: string;
   description?: string;
-  data?: any;
+  data?: Record<string, unknown>;
   expanded?: boolean;
 }
 

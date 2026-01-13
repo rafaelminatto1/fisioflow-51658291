@@ -159,9 +159,19 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
     enabled: open, // Só busca quando o modal está aberto
   });
 
-  // Mutation para atualizar agendamento
+  // Mutation para atualizar agendamento com atualização otimista completa
   const updateAppointmentMutation = useMutation({
-    mutationFn: async ({ appointmentId, updates }: { appointmentId: string; updates: Record<string, unknown> }) => {
+    mutationFn: async ({ appointmentId, updates }: {
+      appointmentId: string;
+      updates: {
+        appointment_date: string;
+        appointment_time: string;
+        duration: number;
+        status: AppointmentStatus;
+        notes: string;
+        therapist_id: string | null;
+      };
+    }) => {
       const { data, error } = await (supabase
         .from('appointments') as any)
         .update(updates)
@@ -172,14 +182,77 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
       if (error) throw error;
       return data;
     },
+    onMutate: async ({ appointmentId, updates }) => {
+      // Cancela qualquer refetch em andamento para evitar sobrescrever nossa atualização otimista
+      await queryClient.cancelQueries({
+        predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === 'appointments'
+      });
+
+      // Snapshot dos valores anteriores - coletar todas as queries de appointments
+      const previousQueries = queryClient.getQueriesData({
+        predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === 'appointments'
+      });
+
+      // Atualização otimista: atualiza localmente todos os campos modificados
+      queryClient.setQueriesData(
+        { predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === 'appointments' },
+        (old: unknown) => {
+          if (!old || typeof old !== 'object') return old;
+
+          const oldData = old as { data?: AppointmentBase[]; isFromCache?: boolean; cacheTimestamp?: string | null };
+
+          if (!oldData.data || !Array.isArray(oldData.data)) return old;
+
+          return {
+            ...oldData,
+            data: oldData.data.map((apt) =>
+              apt.id === appointmentId
+                ? {
+                    ...apt,
+                    // Atualiza todos os campos que podem mudar visualmente
+                    ...(updates.appointment_date && {
+                      date: new Date(updates.appointment_date + 'T12:00:00')
+                    }),
+                    ...(updates.appointment_time && { time: updates.appointment_time }),
+                    ...(updates.duration && { duration: updates.duration }),
+                    ...(updates.status && { status: updates.status }),
+                    ...(updates.notes !== undefined && { notes: updates.notes }),
+                    updatedAt: new Date(),
+                  }
+                : apt
+            )
+          };
+        }
+      );
+
+      return { previousQueries, appointmentId };
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      // Invalida queries para garantir sincronia com o servidor
+      queryClient.invalidateQueries({
+        predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === 'appointments'
+      });
       queryClient.invalidateQueries({ queryKey: ['appointments-for-conflict'] });
+
       toast.success('Agendamento atualizado com sucesso');
       setIsEditing(false);
     },
-    onError: (error: Error) => {
-      toast.error('Erro ao atualizar: ' + error.message);
+    onError: (error: Error, _variables, context) => {
+      // Reverte para o estado anterior em caso de erro
+      if (context?.previousQueries) {
+        context.previousQueries.forEach(([key, data]) => {
+          queryClient.setQueryData(key, data);
+        });
+      }
+
+      // Mensagem de erro mais descritiva
+      const errorMessage = error.message.includes('duplicate')
+        ? 'Já existe um agendamento neste horário.'
+        : error.message.includes('permission')
+        ? 'Você não tem permissão para alterar este agendamento.'
+        : 'Erro ao atualizar agendamento. Tente novamente.';
+
+      toast.error(errorMessage);
     },
   });
 
@@ -205,26 +278,28 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
     }
   }, [appointment?.patientId, open]);
 
-  // Carregar fisioterapeutas
+  // Carregar fisioterapeutas (apenas uma vez, usando ref para controle)
+  const therapistsLoadedRef = React.useRef(false);
   useEffect(() => {
-    if (therapists.length === 0) {
-      // Usa o client Supabase em vez de fetch direto com API key exposta
-      const fetchTherapists = async () => {
-        try {
-          const { data } = await supabase
-            .from('profiles')
-            .select('id, full_name')
-            .eq('role', 'fisioterapeuta');
-          if (data) {
-            setTherapists(data.map((p: any) => ({ id: p.id, name: p.full_name || 'Sem nome' })));
-          }
-        } catch {
-          // Silencioso, fallback para lista vazia
+    if (therapistsLoadedRef.current) return;
+
+    const fetchTherapists = async () => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .eq('role', 'fisioterapeuta');
+        if (data) {
+          setTherapists(data.map((p: any) => ({ id: p.id, name: p.full_name || 'Sem nome' })));
         }
-      };
-      fetchTherapists();
-    }
-  }, [therapists.length]);
+        therapistsLoadedRef.current = true;
+      } catch {
+        // Silencioso, fallback para lista vazia
+        therapistsLoadedRef.current = true;
+      }
+    };
+    fetchTherapists();
+  }, []); // Sem dependências - executa apenas uma vez
 
   // Inicializar formulário quando o agendamento mudar
   useEffect(() => {

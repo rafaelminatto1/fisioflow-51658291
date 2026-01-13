@@ -1,6 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { trackError } from '../../lib/analytics';
-import { AlertTriangle, RefreshCw, Home, ArrowLeft, ChevronDown, ChevronRight } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Home, ArrowLeft, ChevronDown, ChevronRight, Copy, Terminal } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 
@@ -15,19 +15,21 @@ interface State {
   error?: Error;
   errorInfo?: ErrorInfo;
   showDetails: boolean;
+  copied: boolean;
 }
 
 class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, showDetails: false };
+    this.state = { hasError: false, showDetails: false, copied: false };
   }
 
   static getDerivedStateFromError(error: Error): State {
     return {
       hasError: true,
       error,
-      showDetails: false
+      showDetails: false,
+      copied: false
     };
   }
 
@@ -64,6 +66,61 @@ class ErrorBoundary extends Component<Props, State> {
 
   toggleDetails = () => {
     this.setState(prev => ({ showDetails: !prev.showDetails }));
+  };
+
+  copyErrorDetails = () => {
+    const details = this.getFormattedErrorDetails();
+    navigator.clipboard.writeText(details).then(() => {
+      this.setState({ copied: true });
+      setTimeout(() => this.setState({ copied: false }), 2000);
+    });
+  };
+
+  getFormattedErrorDetails = () => {
+    const { error, errorInfo } = this.state;
+    const timestamp = new Date().toISOString();
+    const url = window.location.href;
+    const userAgent = navigator.userAgent;
+
+    return `
+═══════════════════════════════════════════════════════════════
+ERRO - FisioFlow
+═══════════════════════════════════════════════════════════════
+📅 Timestamp: ${timestamp}
+🔗 URL: ${url}
+💻 User Agent: ${userAgent}
+───────────────────────────────────────────────────────────────
+❌ Error: ${error?.name || 'Unknown'}
+📝 Message: ${error?.message || 'No message'}
+📍 Stack Trace:
+${error?.stack || 'No stack trace'}
+───────────────────────────────────────────────────────────────
+🏗️ Component Stack:
+${errorInfo?.componentStack || 'No component stack'}
+═══════════════════════════════════════════════════════════════
+    `.trim();
+  };
+
+  getMinifiedErrorInfo = () => {
+    const { error } = this.state;
+    const url = window.location.href;
+
+    // Extrai apenas as partes importantes do stack trace
+    const stackLines = error?.stack?.split('\n') || [];
+    const relevantStack = stackLines
+      .filter(line => line.includes('src/') || line.includes('webpack'))
+      .slice(0, 3)
+      .map(line => {
+        const match = line.match(/(?:src\/|webpack:\/\/[^\/]+\/)([^\s]+)/);
+        return match ? match[1] : line.trim();
+      });
+
+    return {
+      message: error?.message || 'Erro desconhecido',
+      url: url.split('/').pop() || url,
+      stack: relevantStack,
+      timestamp: new Date().toLocaleTimeString('pt-BR')
+    };
   };
 
   render() {
@@ -116,18 +173,55 @@ class ErrorBoundary extends Component<Props, State> {
                 </div>
               </div>
 
-              {process.env.NODE_ENV === 'development' && this.state.error && (
+              {this.state.error && (
                 <div className="pt-4 border-t border-gray-100">
+                  {/* Versão minimizada - sempre visível para devs */}
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Terminal className="h-4 w-4 text-amber-600" />
+                      <span className="text-xs font-semibold text-amber-800">INFO DEV</span>
+                    </div>
+                    <div className="space-y-1 text-[10px] font-mono text-amber-900">
+                      <div className="flex items-center gap-2">
+                        <span className="text-amber-600">msg:</span>
+                        <span className="truncate">{this.getMinifiedErrorInfo().message}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-amber-600">url:</span>
+                        <span className="text-amber-700">{this.getMinifiedErrorInfo().url}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-amber-600">time:</span>
+                        <span>{this.getMinifiedErrorInfo().timestamp}</span>
+                      </div>
+                      {this.getMinifiedErrorInfo().stack.length > 0 && (
+                        <div className="flex flex-col gap-1 mt-1 pt-1 border-t border-amber-200">
+                          <span className="text-amber-600">stack:</span>
+                          {this.getMinifiedErrorInfo().stack.map((line, i) => (
+                            <div key={i} className="pl-2 text-amber-800 truncate">└─ {line}</div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   <button
                     onClick={this.toggleDetails}
                     className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors w-full justify-center mb-2"
                   >
                     {this.state.showDetails ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                    Detalhes do erro (Modo Desenvolvedor)
+                    {this.state.showDetails ? 'Ocultar' : 'Ver'} detalhes completos
                   </button>
 
                   {this.state.showDetails && (
-                    <div className="bg-slate-950 text-slate-50 rounded-lg p-4 font-mono text-xs overflow-auto max-h-64 border border-slate-800 text-left">
+                    <div className="bg-slate-950 text-slate-50 rounded-lg p-4 font-mono text-xs overflow-auto max-h-64 border border-slate-800 text-left relative">
+                      <button
+                        onClick={this.copyErrorDetails}
+                        className="absolute top-2 right-2 flex items-center gap-1 text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded transition-colors"
+                      >
+                        <Copy className="h-3 w-3" />
+                        {this.state.copied ? 'Copiado!' : 'Copiar'}
+                      </button>
                       <p className="font-bold text-red-400 mb-2 truncate">{this.state.error.name}: {this.state.error.message}</p>
                       {this.state.errorInfo && (
                         <pre className="text-slate-500 whitespace-pre-wrap opacity-80">
@@ -138,10 +232,6 @@ class ErrorBoundary extends Component<Props, State> {
                   )}
                 </div>
               )}
-
-              <p className="text-[10px] text-muted-foreground text-center">
-                Sessão: {new Date().toLocaleTimeString()}
-              </p>
             </CardContent>
           </Card>
         </div>

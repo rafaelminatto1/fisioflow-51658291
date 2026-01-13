@@ -11,7 +11,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from 'recharts';
 import type { TestEvolutionData } from '@/types/evolution';
 import { format } from 'date-fns';
@@ -25,7 +24,7 @@ interface EvolutionChartProps {
 export const EvolutionChart: React.FC<EvolutionChartProps> = ({
   data,
   chartType,
-  testName,
+  testName: _testName,
 }) => {
   const chartData = data.map((d) => ({
     date: format(new Date(d.date), 'dd/MM'),

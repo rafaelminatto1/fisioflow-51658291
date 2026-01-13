@@ -1,14 +1,7 @@
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode, useMemo } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/lib/errors/logger';
-import { useAppointments } from '@/hooks/useAppointments';
-import { AppointmentType, AppointmentStatus } from '@/types/appointment';
-
-// Tipos para as subscrições realtime
-interface RealtimeSubscription {
-  unsubscribe: () => void;
-}
 
 export interface DashboardMetrics {
   totalAppointments: number;
@@ -33,6 +26,7 @@ interface RealtimeContextType {
   appointments: Appointment[];
   metrics: DashboardMetrics;
   lastUpdate: number;
+  isSubscribed: boolean;
   subscribeToAppointments: () => void;
   updateMetrics: () => Promise<void>;
 }
@@ -55,6 +49,7 @@ export const useRealtime = () => {
 /**
  * Provider central para gerenciar todas as subscrições realtime em um único lugar
  * Elimina a duplicação de subscriptions em múltiplos componentes
+ * Otimizado para evitar memory leaks com cleanup adequado
  */
 export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { profile } = useAuth();
@@ -70,6 +65,61 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   });
   const [lastUpdate, setLastUpdate] = useState(Date.now());
   const [isSubscribed, setIsSubscribed] = useState(false);
+
+  /**
+   * Atualizar métricas baseadas nos appointments atuais
+   * Isso elimina a necessidade de múltiplas consultas ao Supabase
+   * Declarado antes dos useEffects para evitar erros de referência
+   */
+  const updateMetrics = useCallback(async () => {
+    logger.info('Realtime: Updating metrics', {}, 'RealtimeContext');
+
+    try {
+      // Calcular métricas a partir dos appointments
+      const total = appointments.length;
+      const confirmed = appointments.filter(a => a.status === 'confirmed').length;
+      const cancelled = appointments.filter(a => a.status === 'cancelled').length;
+
+      // Calcular receita de hoje
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0); // Meia-noite
+      const todayRevenue = appointments
+        .filter(a => {
+          const apptDate = new Date(a.start_time);
+          return apptDate >= todayStart && a.status === 'confirmed';
+        })
+        .reduce((sum, a) => sum + (a.type === 'paid' ? 100 : 0), 0); // Simulação: 100 por consulta paga
+
+      // Calcular taxa de ocupação
+      const occupancyRate = total > 0 ? Math.round((confirmed / total) * 100) : 0;
+
+      // Buscar pacientes em sessão (simplificado)
+      const patientsInSession = appointments
+        .filter(a => a.status === 'confirmed')
+        .map(a => a.patient_name)
+        .filter((value, index, self) => self.indexOf(value) === index)
+        .length;
+
+      setMetrics({
+        totalAppointments: total,
+        confirmedAppointments: confirmed,
+        cancelledAppointments: cancelled,
+        patientsInSession,
+        todayRevenue,
+        occupancyRate,
+      });
+
+      logger.info('Realtime: Metrics updated', { total, confirmed, cancelled, revenue: todayRevenue, occupancyRate }, 'RealtimeContext');
+    } catch (error) {
+      logger.error('Realtime: Error in updateMetrics', error, 'RealtimeContext');
+
+      // Manter valores padrão em caso de erro
+      setMetrics(prev => ({
+        ...prev,
+        totalAppointments: appointments.length,
+      }));
+    }
+  }, [appointments]);
 
   /**
    * Subscrever às mudanças na tabela de appointments via Supabase Realtime
@@ -152,66 +202,37 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [organizationId]); // Recarregar se mudar a organização
 
   /**
-   * Atualizar métricas baseadas nos appointments atuais
-   * Isso elimina a necessidade de múltiplas consultas ao Supabase
+   * Setup realtime subscription quando o componente monta
+   * Cleanup automático quando desmonta para evitar memory leaks
    */
-  const updateMetrics = useCallback(async () => {
-    logger.info('Realtime: Updating metrics', {}, 'RealtimeContext');
+  useEffect(() => {
+    const unsubscribe = subscribeToAppointments();
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [subscribeToAppointments]);
 
-    try {
-      // Calcular métricas a partir dos appointments
-      const total = appointments.length;
-      const confirmed = appointments.filter(a => a.status === 'confirmed').length;
-      const cancelled = appointments.filter(a => a.status === 'cancelled').length;
+  /**
+   * Atualizar métricas automaticamente quando appointments mudar
+   * Usamos um debounce para evitar atualizações muito frequentes
+   */
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateMetrics();
+    }, 300); // Debounce de 300ms
 
-      // Calcular receita de hoje
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0); // Meia-noite
-      const todayRevenue = appointments
-        .filter(a => {
-          const apptDate = new Date(a.start_time);
-          return apptDate >= todayStart && a.status === 'confirmed';
-        })
-        .reduce((sum, a) => sum + (a.type === 'paid' ? 100 : 0), 0); // Simulação: 100 por consulta paga
-
-      // Calcular taxa de ocupação
-      const occupancyRate = total > 0 ? Math.round((confirmed / total) * 100) : 0;
-
-      // Buscar pacientes em sessão (simplificado)
-      const patientsInSession = appointments
-        .filter(a => a.status === 'confirmed')
-        .map(a => a.patient_name)
-        .filter((value, index, self) => self.indexOf(value) === index)
-        .length;
-
-      setMetrics({
-        totalAppointments: total,
-        confirmedAppointments: confirmed,
-        cancelledAppointments: cancelled,
-        patientsInSession,
-        todayRevenue,
-        occupancyRate,
-      });
-
-      logger.info('Realtime: Metrics updated', { total, confirmed, cancelled, revenue, occupancyRate }, 'RealtimeContext');
-    } catch (error) {
-      logger.error('Realtime: Error in updateMetrics', error, 'RealtimeContext');
-
-      // Manter valores padrão em caso de erro
-      setMetrics(prev => ({
-        ...prev,
-        totalAppointments: appointments.length,
-      }));
-    }
-  }, [appointments]);
+    return () => clearTimeout(timer); // Cleanup do debounce
+  }, [appointments, updateMetrics]);
 
   const value: RealtimeContextType = {
     appointments,
     metrics,
     lastUpdate,
+    isSubscribed,
     subscribeToAppointments,
     updateMetrics,
-    isSubscribed,
   };
 
   return (

@@ -12,7 +12,7 @@ export interface PatientLevel {
   current_streak: number;
   longest_streak: number;
   last_activity_date: string | null;
-  badges: any[];
+  badges: Record<string, unknown>[];
   title: string;
   created_at: string;
   updated_at: string;
@@ -162,13 +162,13 @@ export function useInventory() {
 
 export function useCreateInventoryItem() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async (item: Partial<InventoryItem>) => {
       const { error } = await supabase
         .from('clinic_inventory')
-        .insert(item as any);
-      
+        .insert(item);
+
       if (error) throw error;
     },
     onSuccess: () => {
@@ -185,7 +185,7 @@ export function useUpdateInventoryItem() {
     mutationFn: async ({ id, ...updates }: Partial<InventoryItem> & { id: string }) => {
       const { error } = await supabase
         .from('clinic_inventory')
-        .update(updates as any)
+        .update(updates)
         .eq('id', id);
       
       if (error) throw error;
@@ -225,7 +225,7 @@ export function useCreateMovement() {
     mutationFn: async (movement: Partial<InventoryMovement>) => {
       const { error: movementError } = await supabase
         .from('inventory_movements')
-        .insert(movement as any);
+        .insert(movement);
       
       if (movementError) throw movementError;
     },
@@ -317,7 +317,7 @@ export interface RevenueForecast {
   actual_appointments: number | null;
   confidence_interval_low: number;
   confidence_interval_high: number;
-  factors: Record<string, any>;
+  factors: Record<string, unknown>;
   model_version: string;
   created_at: string;
 }
@@ -345,7 +345,7 @@ export interface WhatsAppExerciseQueue {
   patient_id: string;
   exercise_plan_id: string | null;
   phone_number: string;
-  exercises: any[];
+  exercises: Record<string, unknown>[];
   scheduled_for: string | null;
   sent_at: string | null;
   delivered_at: string | null;
@@ -378,7 +378,7 @@ export function useCreateWhatsAppExercise() {
     mutationFn: async (data: Partial<WhatsAppExerciseQueue>) => {
       const { error } = await supabase
         .from('whatsapp_exercise_queue')
-        .insert(data as any);
+        .insert(data);
       
       if (error) throw error;
     },
