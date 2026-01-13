@@ -5,7 +5,7 @@
  * for individual patients based on their data patterns.
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, memo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -103,7 +103,7 @@ interface InsightItemProps {
   onToggleExpand?: () => void;
 }
 
-function InsightItem({ insight, onAcknowledge, isExpanded, onToggleExpand }: InsightItemProps) {
+const InsightItem = memo(function InsightItem({ insight, onAcknowledge, isExpanded, onToggleExpand }: InsightItemProps) {
   const config = INSIGHT_CONFIGS[insight.insight_type] || INSIGHT_CONFIGS.progress_summary;
   const Icon = config.icon;
 
@@ -212,13 +212,13 @@ function InsightItem({ insight, onAcknowledge, isExpanded, onToggleExpand }: Ins
       </div>
     </div>
   );
-}
+});
 
 interface InsightSummaryProps {
   insights: Array<{ insight_type: InsightType }>;
 }
 
-function InsightSummary({ insights }: InsightSummaryProps) {
+const InsightSummary = memo(function InsightSummary({ insights }: InsightSummaryProps) {
   const counts = insights.reduce((acc, insight) => {
     acc[insight.insight_type] = (acc[insight.insight_type] || 0) + 1;
     return acc;
