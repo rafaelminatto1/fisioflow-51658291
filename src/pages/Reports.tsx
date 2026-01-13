@@ -57,21 +57,21 @@ const Reports = () => {
   // Calculate real reports data
   const reportsData = {
     patients: {
-      total: patients.length,
-      newThisMonth: patients.filter(p => new Date(p.created_at).getMonth() === new Date().getMonth()).length,
-      active: patients.filter(p => p.status === 'Em Tratamento').length,
-      completed: patients.filter(p => p.status === 'Alta').length
+      total: patients?.length || 0,
+      newThisMonth: patients?.filter(p => new Date(p.created_at).getMonth() === new Date().getMonth()).length || 0,
+      active: patients?.filter(p => p.status === 'Em Tratamento').length || 0,
+      completed: patients?.filter(p => p.status === 'Alta').length || 0
     },
     appointments: {
-      total: data.length,
-      completed: data.filter(a => a.status === 'concluido').length,
-      cancelled: data.filter(a => a.status === 'cancelado').length,
-      noShow: data.filter(a => a.status === 'falta').length
+      total: data?.length || 0,
+      completed: data?.filter(a => a.status === 'concluido').length || 0,
+      cancelled: data?.filter(a => a.status === 'cancelado').length || 0,
+      noShow: data?.filter(a => a.status === 'falta').length || 0
     },
     financial: {
-      revenue: finStats.totalRevenue,
-      pending: finStats.pendingPayments,
-      growth: finStats.monthlyGrowth
+      revenue: finStats?.totalRevenue || 0,
+      pending: finStats?.pendingPayments || 0,
+      growth: finStats?.monthlyGrowth || 0
     }
   };
 
@@ -493,13 +493,13 @@ const Reports = () => {
                 <CardContent className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={activeTransactions
-                      .filter(t => t.tipo === 'receita')
+                      ?.filter(t => t.tipo === 'receita')
                       .slice(0, 10)
                       .map(t => ({
                         date: format(new Date(t.data_create), 'dd/MM'),
                         amount: Number(t.valor)
                       }))
-                      .reverse()
+                      .reverse() || []
                     }>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="date" fontSize={12} />
