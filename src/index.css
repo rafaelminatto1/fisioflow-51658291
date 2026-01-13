@@ -184,6 +184,7 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', sans-serif;
     font-feature-settings: 'rlig' 1, 'calt' 1;
   }
   

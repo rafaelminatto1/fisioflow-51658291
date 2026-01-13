@@ -11,8 +11,11 @@ import { logger } from '@/lib/errors/logger';
 import { notificationManager } from '@/lib/services/NotificationManager';
 import { initMonitoring } from '@/lib/monitoring';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
-import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
+import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
+import { get, set, del } from 'idb-keyval';
 import { AppRoutes } from "./routes";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 // Create a client with performance optimizations
 const queryClient = new QueryClient({
@@ -38,9 +41,21 @@ const queryClient = new QueryClient({
   },
 });
 
-const persister = createSyncStoragePersister({
-  storage: window.localStorage,
-  throttleTime: 3000, // Throttle saves to every 3 seconds
+// Async persister using IndexedDB (idb-keyval)
+const persister = createAsyncStoragePersister({
+  storage: {
+    getItem: async (key) => {
+      const val = await get(key);
+      return val === undefined ? null : val;
+    },
+    setItem: async (key, value) => {
+      await set(key, value);
+    },
+    removeItem: async (key) => {
+      await del(key);
+    },
+  },
+  throttleTime: 3000,
 });
 
 // Loading fallback component
@@ -95,6 +110,8 @@ const App = () => {
               >
                 <Suspense fallback={<PageLoadingFallback />}>
                   <AppRoutes />
+                  <Analytics />
+                  <SpeedInsights />
                 </Suspense>
               </BrowserRouter>
             </DataProvider>
