@@ -18,6 +18,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { VersionManager } from "@/components/system/VersionManager";
 import { initWebVitalsMonitoring, WebVitalsIndicator } from "@/lib/monitoring/web-vitals";
+import { PerformanceDashboard } from "@/components/system";
 
 // Create a client with performance optimizations
 const queryClient = new QueryClient({
@@ -125,6 +126,8 @@ const App = () => {
                   <Analytics />
                   <SpeedInsights />
                   <WebVitalsIndicator />
+                  {/* Performance Dashboard - Dev Only */}
+                  {import.meta.env.DEV && <PerformanceDashboard />}
                 </Suspense>
               </BrowserRouter>
             </DataProvider>
