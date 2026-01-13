@@ -95,8 +95,8 @@ export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { 
       const therapistIds = therapists.map(t => t.id);
 
       // Se não há therapists, retornar arrays vazios
-      let appointments: any[] = [];
-      let todayAppointments: any[] = [];
+      let appointments: Array<{ id?: string; patient_id?: string; appointment_date?: string }> = [];
+      let todayAppointments: Array<{ id?: string }> = [];
 
       if (therapistIds.length > 0) {
         const { data: appointmentsData, error: aptsError } = await supabase

@@ -1,10 +1,9 @@
-import React, { useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
+import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -16,7 +15,6 @@ import {
   Clock,
   Copy,
   Save,
-  User,
   Calendar,
   Phone,
   Stethoscope,
@@ -24,14 +22,10 @@ import {
   CheckCircle2,
   Activity,
   TrendingUp,
-  TrendingDown,
   Zap,
   Sparkles,
   BarChart3,
-  Lightbulb,
   Keyboard,
-  Download,
-  Share2,
   Eye,
   EyeOff,
   Target
@@ -47,19 +41,15 @@ import {
 } from '@/hooks/usePatientEvolution';
 import { useAppointmentData } from '@/hooks/useAppointmentData';
 import { useCreateSoapRecord, useSoapRecords } from '@/hooks/useSoapRecords';
-import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { logger } from '@/lib/errors/logger';
 import { MeasurementForm } from '@/components/evolution/MeasurementForm';
 import { SurgeryTimeline } from '@/components/evolution/SurgeryTimeline';
 import { GoalsTracker } from '@/components/evolution/GoalsTracker';
 import { PathologyStatus } from '@/components/evolution/PathologyStatus';
 import { MeasurementCharts } from '@/components/evolution/MeasurementCharts';
 import { PainMapManager } from '@/components/evolution/PainMapManager';
-import { ReportGeneratorDialog } from '@/components/reports/ReportGeneratorDialog';
 import { TreatmentAssistant } from '@/components/ai/TreatmentAssistant';
-import { SessionHistoryPanel } from '@/components/session/SessionHistoryPanel';
 import { MandatoryTestAlert, type RequiredTest } from '@/components/session/MandatoryTestAlert';
 import { MedicalReportSuggestions } from '@/components/evolution/MedicalReportSuggestions';
 import { SessionExercisesPanel, type SessionExercise } from '@/components/evolution/SessionExercisesPanel';
@@ -75,7 +65,6 @@ import { ApplyTemplateModal } from '@/components/exercises/ApplyTemplateModal';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { SmartTextarea } from '@/components/ui/SmartTextarea';
 import { PatientHelpers } from '@/types';
-import { executeWithRetry } from '@/lib/utils/async';
 // Novos componentes
 import PainScaleInput from '@/components/evolution/PainScaleInput';
 import { SessionImageUpload } from '@/components/evolution/SessionImageUpload';
@@ -84,19 +73,13 @@ import {
   EvolutionKeyboardShortcuts,
   useEvolutionShortcuts
 } from '@/components/evolution/EvolutionKeyboardShortcuts';
-import {
-  useAutoSaveSoapRecord,
-  type PainScaleData
-} from '@/hooks/useSoapRecords';
+import { type PainScaleData } from '@/hooks/useSoapRecords';
 import { PatientEvolutionErrorBoundary } from '@/components/patients/PatientEvolutionErrorBoundary';
 import { useRenderTracking } from '@/hooks/useRenderTracking';
 
 // Lazy loading para componentes pesados
 const LazyMeasurementCharts = lazy(() =>
   Promise.resolve({ default: MeasurementCharts })
-);
-const LazyPainMapManager = lazy(() =>
-  Promise.resolve({ default: PainMapManager })
 );
 const LazyTreatmentAssistant = lazy(() =>
   Promise.resolve({ default: TreatmentAssistant })
@@ -286,7 +269,7 @@ const PatientEvolution = () => {
 
   // Agrupar medições por tipo para gráficos
   const measurementsByType = useMemo(() => {
-    const grouped: Record<string, any[]> = {};
+    const grouped: Record<string, Array<{ date: string; value: number; fullDate: string }>> = {};
     measurements.forEach(m => {
       if (!grouped[m.measurement_name]) {
         grouped[m.measurement_name] = [];
@@ -300,7 +283,15 @@ const PatientEvolution = () => {
     return grouped;
   }, [measurements]);
 
-  const handleCopyPreviousEvolution = (evolution: any) => {
+  const handleCopyPreviousEvolution = (evolution: {
+    subjective?: string;
+    objective?: string;
+    assessment?: string;
+    plan?: string;
+    pain_level?: number;
+    pain_location?: string;
+    pain_character?: string;
+  }) => {
     setSubjective(evolution.subjective || '');
     setObjective(evolution.objective || '');
     setAssessment(evolution.assessment || '');

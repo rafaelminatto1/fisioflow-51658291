@@ -1,4 +1,4 @@
-import { AppointmentType, AppointmentStatus } from '@/types/appointment';
+import { AppointmentType } from '@/types/appointment';
 
 export const APPOINTMENT_TYPES: AppointmentType[] = [
     'Consulta Inicial',

@@ -10,8 +10,7 @@ import { Play, Pause, Camera, Upload } from 'lucide-react';
 
 interface PoseAnalyzerProps {
     videoSrc?: string; // URL object or null for webcam
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onAnalysisUpdate?: (data: any) => void;
+    onAnalysisUpdate?: (data: { torsoAngle: number; isBadPosture: boolean }) => void;
 }
 
 const PoseAnalyzer: React.FC<PoseAnalyzerProps> = ({ videoSrc, onAnalysisUpdate: _onAnalysisUpdate }) => {
@@ -23,8 +22,7 @@ const PoseAnalyzer: React.FC<PoseAnalyzerProps> = ({ videoSrc, onAnalysisUpdate:
     const [cameraActive, setCameraActive] = useState(false);
     const { toast } = useToast();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const analyzePosture = React.useCallback((worldLandmarks: any[], ctx: CanvasRenderingContext2D, width: number, height: number, normalizedLandmarks: any[]) => {
+    const analyzePosture = React.useCallback((worldLandmarks: { x: number; y: number; z: number }[], ctx: CanvasRenderingContext2D, width: number, height: number, normalizedLandmarks: { x: number; y: number }[]) => {
         // 1. Tech Neck: Ear - Shoulder alignment
         // const leftEar = worldLandmarks[POSE_LANDMARKS.LEFT_EAR];
         const leftShoulder = worldLandmarks[POSE_LANDMARKS.LEFT_SHOULDER];

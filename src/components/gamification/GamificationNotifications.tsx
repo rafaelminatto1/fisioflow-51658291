@@ -38,6 +38,7 @@ const NOTIFICATION_COLORS = {
   quest_complete: 'from-blue-500 to-cyan-500',
 };
 
+/* eslint-disable-next-line react-refresh/only-export-components */
 export function useGamificationNotifications() {
   const [notifications, setNotifications] = useState<Map<string, NotificationData>>(new Map());
 

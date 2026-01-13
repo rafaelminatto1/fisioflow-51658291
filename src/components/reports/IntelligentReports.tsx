@@ -47,10 +47,11 @@ export default function IntelligentReports({ patientId, patientName }: Intellige
         title: '📄 Relatório gerado com sucesso',
         description: 'Análise completa com IA concluída',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Ocorreu um erro ao gerar o relatório';
       toast({
         title: 'Erro ao gerar relatório',
-        description: error.message,
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {

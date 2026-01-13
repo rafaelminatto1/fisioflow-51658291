@@ -6,16 +6,15 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { 
-  CheckCircle2, 
-  Clock, 
-  Dumbbell, 
-  User, 
-  Calendar, 
-  Play, 
+import {
+  CheckCircle2,
+  Clock,
+  Dumbbell,
+  User,
+  Calendar,
+  Play,
   AlertCircle,
-  Loader2,
-  RefreshCw
+  Loader2
 } from 'lucide-react';
 import { format, isAfter, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -139,7 +138,7 @@ export default function PublicPrescriptionPage() {
             Exercícios ({exercises.length})
           </h2>
 
-          {exercises.map((exercise: any, index: number) => {
+          {exercises.map((exercise, index: number) => {
             const isCompleted = completedExercises.includes(exercise.id);
             
             return (
