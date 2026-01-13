@@ -85,22 +85,26 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         <Sidebar />
       </div>
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out pl-0 md:pl-0 lg:pl-0"> {/* Adjusted for sidebar if needed, but sidebar is likely fixed or unrelated to this flex container's padding if handled by Sidebar component internally */}
         {/* Header Desktop */}
-        <header className="hidden md:flex h-14 bg-white/95 dark:bg-background-dark/95 border-b border-border items-center justify-between px-4 shadow-sm backdrop-blur-md">
+        <header className="hidden md:flex h-16 bg-white/80 dark:bg-background-dark/80 border-b border-gray-200/50 dark:border-gray-800/50 items-center justify-between px-6 shadow-sm backdrop-blur-xl sticky top-0 z-40 transition-all duration-300">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-primary rounded-xl flex items-center justify-center shadow-medical">
-                <Stethoscope className="w-5 h-5 text-primary-foreground" />
+              <div className="w-9 h-9 bg-gradient-to-br from-primary to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 transform transition-transform hover:scale-105 active:scale-95 duration-200">
+                <Stethoscope className="w-5 h-5 text-white" />
               </div>
-              <h2 className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 tracking-tight">
                 FisioFlow
               </h2>
             </div>
+
+            {/* Breadcrumbs can go here or be below */}
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-5">
             <GlobalSearch />
+
+            <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 mx-2" />
 
             {/* Indicador de usuários online */}
             <OnlineUsersIndicator />
@@ -109,48 +113,57 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2 h-9 hover:bg-accent/80 transition-colors">
+                <Button variant="ghost" className="flex items-center gap-3 h-10 px-3 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all rounded-full border border-transparent hover:border-gray-200 dark:hover:border-gray-700">
                   {loading ? (
                     <>
-                      <Skeleton className="w-8 h-8 rounded-full" />
-                      <Skeleton className="hidden lg:block h-4 w-24" />
+                      <Skeleton className="w-9 h-9 rounded-full" />
+                      <div className="flex flex-col items-start gap-1">
+                        <Skeleton className="hidden lg:block h-3 w-20" />
+                        <Skeleton className="hidden lg:block h-2 w-12" />
+                      </div>
                     </>
                   ) : (
                     <>
-                      <Avatar className="w-8 h-8 ring-2 ring-primary/20">
-                        <AvatarImage src={profile?.avatar_url || ''} />
-                        <AvatarFallback className="bg-gradient-primary text-primary-foreground font-medium">
-                          {initials}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="hidden lg:block font-medium">{displayName}</span>
+                      <div className="relative">
+                        <Avatar className="w-9 h-9 ring-2 ring-white dark:ring-gray-800 shadow-sm">
+                          <AvatarImage src={profile?.avatar_url || ''} />
+                          <AvatarFallback className="bg-gradient-to-br from-primary to-blue-600 text-white font-medium">
+                            {initials}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white dark:border-gray-900 rounded-full"></span>
+                      </div>
+                      <div className="hidden lg:flex flex-col items-start text-sm">
+                        <span className="font-semibold text-gray-700 dark:text-gray-200 leading-none">{displayName}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">{profile?.role || 'Fisioterapeuta'}</span>
+                      </div>
                     </>
                   )}
-                  <ChevronDown className="w-4 h-4" />
+                  <ChevronDown className="w-4 h-4 text-gray-400" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-card/95 backdrop-blur-sm border-border/50">
-                <DropdownMenuLabel className="text-foreground">Minha Conta</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild className="hover:bg-accent/80 cursor-pointer">
+              <DropdownMenuContent align="end" className="w-56 p-2 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-gray-200/50 dark:border-gray-800/50 shadow-xl rounded-2xl animate-scale-in">
+                <DropdownMenuLabel className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Minha Conta</DropdownMenuLabel>
+                <DropdownMenuSeparator className="my-1 bg-gray-100 dark:bg-gray-800" />
+                <DropdownMenuItem asChild className="rounded-xl px-3 py-2.5 hover:bg-primary/5 hover:text-primary cursor-pointer transition-colors focus:bg-primary/5 focus:text-primary">
                   <Link to="/profile">
-                    <User className="w-4 h-4 mr-2 text-primary" />
-                    Perfil
+                    <User className="w-4 h-4 mr-3" />
+                    <span className="font-medium">Perfil</span>
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild className="hover:bg-accent/80 cursor-pointer">
+                <DropdownMenuItem asChild className="rounded-xl px-3 py-2.5 hover:bg-primary/5 hover:text-primary cursor-pointer transition-colors focus:bg-primary/5 focus:text-primary">
                   <Link to="/settings">
-                    <Settings className="w-4 h-4 mr-2 text-primary" />
-                    Configurações
+                    <Settings className="w-4 h-4 mr-3" />
+                    <span className="font-medium">Configurações</span>
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
+                <DropdownMenuSeparator className="my-1 bg-gray-100 dark:bg-gray-800" />
                 <DropdownMenuItem
                   onClick={handleLogout}
-                  className="hover:bg-destructive/10 text-destructive cursor-pointer"
+                  className="rounded-xl px-3 py-2.5 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/10 cursor-pointer transition-colors focus:bg-red-50 focus:text-red-600"
                 >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sair
+                  <LogOut className="w-4 h-4 mr-3" />
+                  <span className="font-medium">Sair</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -158,13 +171,23 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         </header>
 
         {/* Main Content - Com padding para mobile header e bottom navigation - Otimizado para iPhone/iPad */}
-        <main className="flex-1 p-2 xs:p-3 sm:p-4 md:p-6 pt-[60px] md:pt-6 pb-20 md:pb-6 overflow-visible bg-gradient-to-b from-transparent to-accent/5">
+        <main className="flex-1 p-3 xs:p-4 sm:p-6 md:p-8 pt-[60px] md:pt-8 pb-24 md:pb-8 overflow-x-hidden bg-gray-50/50 dark:bg-background/50">
           <div className={cn(
-            "mx-auto",
-            fullWidth ? "w-full px-1 xs:px-0" : maxWidth ? `max-w-${maxWidth} mx-auto px-1 xs:px-0` : "max-w-7xl mx-auto px-1 xs:px-0"
+            "mx-auto transition-all duration-300",
+            fullWidth
+              ? "w-full px-0"
+              : maxWidth
+                ? `max-w-${maxWidth} mx-auto w-full`
+                : "max-w-7xl mx-auto w-full"
           )}>
-            {showBreadcrumbs && <PageBreadcrumbs customLabels={customBreadcrumbLabels} />}
-            {children}
+            {showBreadcrumbs && (
+              <div className="mb-6 animate-fade-in">
+                <PageBreadcrumbs customLabels={customBreadcrumbLabels} />
+              </div>
+            )}
+            <div className="animate-slide-up-fade">
+              {children}
+            </div>
           </div>
         </main>
       </div>

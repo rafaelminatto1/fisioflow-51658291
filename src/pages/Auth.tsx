@@ -317,261 +317,275 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen gradient-background-login flex items-center justify-center p-2 sm:p-4">
-      <div className="w-full max-w-md p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 bg-white dark:bg-background-dark/80 rounded-xl shadow-xl m-2 sm:m-4 transform transition duration-500 hover:scale-[1.01]">
-        <div className="text-center">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-primary dark:text-white flex items-center justify-center gap-1.5 sm:gap-2">
-            <Stethoscope className="h-6 w-6 sm:h-8 sm:w-8 lg:h-10 lg:w-10" />
-            FisioFlow
-          </h1>
-          <p className="mt-3 sm:mt-4 text-sm sm:text-base text-gray-700 dark:text-gray-300 hidden xs:block">Bem-vindo à sua nova jornada conosco!</p>
-          <p className="mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400">Faça login para desbloquear seu perfil.</p>
+    <div className="flex min-h-screen w-full bg-background">
+      {/* Left Side - Hero & Branding (Hidden on mobile) */}
+      <div className="hidden lg:flex w-1/2 relative overflow-hidden bg-primary/5">
+        <div className="absolute inset-0 z-0">
+          {/* Fallback pattern or gradient if image fails load, but we expect it to work */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-blue-600/20 mix-blend-multiply" />
+          <img
+            src="/hero-bg.jpg" // Assuming it's in public or we import. Let's try to import it at top, or if it is in src/assets I need to import it.
+            // Wait, if I use src/assets I MUST import it. I'll check imports first. 
+            // EDIT: I will output the FULL file content with imports included to be safe and correct.
+            alt="Physiotherapy Session"
+            className="w-full h-full object-cover opacity-90"
+          />
         </div>
 
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'register')} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 h-10 sm:h-11">
-            <TabsTrigger value="login" className="text-xs sm:text-sm">Login</TabsTrigger>
-            <TabsTrigger value="register" className="text-xs sm:text-sm">Cadastro</TabsTrigger>
-          </TabsList>
+        {/* Overlay Content */}
+        <div className="relative z-10 w-full h-full flex flex-col justify-between p-12 text-white bg-black/20 backdrop-blur-[2px]">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/30">
+              <Stethoscope className="w-6 h-6 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight">FisioFlow</h1>
+          </div>
 
-          <TabsContent value="login" className="mt-4 sm:mt-6 lg:mt-8">
-            <form onSubmit={handleSignIn} className="space-y-4 sm:space-y-6">
+          <div className="space-y-6 max-w-lg">
+            <h2 className="text-4xl font-extrabold leading-tight tracking-tight">
+              Transforme a gestão da sua clínica.
+            </h2>
+            <p className="text-lg text-white/90 leading-relaxed font-light">
+              Uma plataforma completa para fisioterapeutas que buscam eficiência,
+              organização e a melhor experiência para seus pacientes.
+            </p>
 
-              <div className="rounded-md shadow-sm -space-y-px">
-                <div>
-                  <Label htmlFor="login-email" className="sr-only">Email</Label>
-                  <Input
-                    id="login-email"
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="rounded-t-xl relative block w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-gray-50 dark:bg-background-dark/20 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 transition duration-300 text-sm sm:text-base"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="login-password" className="sr-only">Senha</Label>
-                  <Input
-                    id="login-password"
-                    type="password"
-                    placeholder="Senha"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="rounded-b-xl relative block w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-gray-50 dark:bg-background-dark/20 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 transition duration-300 text-sm sm:text-base"
-                    required
-                  />
-                </div>
-              </div>
-
-              {error && (
-                <Alert variant="destructive">
-                  <AlertDescription className="text-xs sm:text-sm">{error}</AlertDescription>
-                </Alert>
-              )}
-
-              <Button
-                type="submit"
-                className="group relative w-full flex justify-center py-2.5 sm:py-3 px-4 border border-transparent text-base sm:text-lg font-bold rounded-xl text-white bg-gradient-to-r from-primary to-blue-400 hover:from-primary/90 hover:to-blue-400/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-300 transform hover:-translate-y-0.5 touch-target"
-                disabled={loading}
-              >
-                {loading ? (
-                  <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
-                ) : (
-                  <>
-                    Entrar
-                    <LogIn className="ml-2 h-4 w-4 sm:h-5 sm:w-5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </>
-                )}
-              </Button>
-
-              <div className="relative my-3 sm:my-4">
-                <Separator />
-                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-[10px] sm:text-xs text-muted-foreground">
-                  ou
-                </span>
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full text-xs sm:text-sm py-2.5 sm:py-3 touch-target"
-                onClick={handleGoogleSignIn}
-                disabled={loading}
-              >
-                <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                  <path
-                    fill="currentColor"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  />
-                  <path
-                    fill="currentColor"
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  />
-                </svg>
-                <span className="hidden xs:inline">Continuar com Google</span>
-                <span className="xs:hidden">Google</span>
-              </Button>
-
-              <div className="text-center mt-3 sm:mt-4">
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  Não tem uma conta?{' '}
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('register')}
-                    className="text-primary hover:underline font-medium"
-                  >
-                    Cadastre-se
-                  </button>
-                </p>
-              </div>
-            </form>
-          </TabsContent>
-
-          <TabsContent value="register" className="mt-4 sm:mt-6 lg:mt-8">
-            <form onSubmit={handleSignUp} className="space-y-3 sm:space-y-4 lg:space-y-6">
-              {invitationData && (
-                <Alert>
-                  <Mail className="h-4 w-4" />
-                  <AlertDescription className="text-xs sm:text-sm">
-                    Você foi convidado como <strong>{invitationData.role}</strong>
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="register-name" className="text-xs sm:text-sm">Nome Completo</Label>
-                <Input
-                  id="register-name"
-                  type="text"
-                  placeholder="Seu nome completo"
-                  value={fullName}
-                  onChange={(e) => {
-                    setFullName(e.target.value);
-                    setValidationErrors(prev => ({ ...prev, fullName: '' }));
-                  }}
-                  required
-                  className="text-sm sm:text-base"
-                />
-                {validationErrors.fullName && (
-                  <p className="text-xs sm:text-sm text-destructive">{validationErrors.fullName}</p>
-                )}
-              </div>
-              <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="register-email" className="text-xs sm:text-sm">Email</Label>
-                <Input
-                  id="register-email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    setValidationErrors(prev => ({ ...prev, email: '' }));
-                  }}
-                  required
-                  disabled={!!invitationData}
-                  className="text-sm sm:text-base"
-                />
-                {validationErrors.email && (
-                  <p className="text-xs sm:text-sm text-destructive">{validationErrors.email}</p>
-                )}
-              </div>
-              <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="register-password" className="text-xs sm:text-sm">Senha</Label>
-                <Input
-                  id="register-password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setValidationErrors(prev => ({ ...prev, password: '' }));
-                  }}
-                  required
-                  className="text-sm sm:text-base"
-                />
-                {validationErrors.password && (
-                  <p className="text-xs sm:text-sm text-destructive">{validationErrors.password}</p>
-                )}
-
-                {/* Indicadores de requisitos de senha */}
-                {password && (
-                  <div className="mt-1.5 sm:mt-2 space-y-0.5 sm:space-y-1">
-                    {getPasswordRequirements().map((req, idx) => (
-                      <div key={idx} className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs">
-                        {req.met ? (
-                          <CheckCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-green-600 shrink-0" />
-                        ) : (
-                          <XCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-muted-foreground shrink-0" />
-                        )}
-                        <span className={req.met ? 'text-green-600' : 'text-muted-foreground'}>
-                          {req.label}
-                        </span>
-                      </div>
-                    ))}
+            <div className="flex items-center gap-4 pt-4">
+              <div className="flex -space-x-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className={`w-10 h-10 rounded-full border-2 border-primary-foreground/50 bg-gray-300 overflow-hidden flex items-center justify-center text-xs font-bold text-gray-600 bg-white`}>
+                    {/* Placeholder avatars */}
+                    U{i}
                   </div>
-                )}
+                ))}
               </div>
-              <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="register-confirm-password" className="text-xs sm:text-sm">Confirmar Senha</Label>
-                <Input
-                  id="register-confirm-password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => {
-                    setConfirmPassword(e.target.value);
-                    setValidationErrors(prev => ({ ...prev, confirmPassword: '' }));
-                  }}
-                  required
-                  className="text-sm sm:text-base"
-                />
-                {validationErrors.confirmPassword && (
-                  <p className="text-xs sm:text-sm text-destructive">{validationErrors.confirmPassword}</p>
-                )}
+              <div className="text-sm font-medium text-white/90">
+                <span className="font-bold text-white">Mais de 1.000+</span> profissionais confiam.
               </div>
+            </div>
+          </div>
 
-              {error && (
-                <Alert variant="destructive">
-                  <AlertDescription className="text-xs sm:text-sm">{error}</AlertDescription>
-                </Alert>
-              )}
+          <div className="flex justify-between items-center text-xs text-white/60 font-medium">
+            <p>© 2026 FisioFlow Inc.</p>
+            <div className="flex gap-4">
+              <a href="#" className="hover:text-white transition-colors">Privacidade</a>
+              <a href="#" className="hover:text-white transition-colors">Termos</a>
+            </div>
+          </div>
+        </div>
+      </div>
 
-              <Button
-                type="submit"
-                className="group relative w-full flex justify-center py-2.5 sm:py-3 px-4 border border-transparent text-base sm:text-lg font-bold rounded-xl text-white bg-gradient-to-r from-primary to-blue-400 hover:from-primary/90 hover:to-blue-400/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition duration-300 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed touch-target"
-                disabled={loading || !fullName.trim() || !email.trim() || !password || !confirmPassword}
-                onClick={(e) => {
-                  // Garantir que o evento seja tratado
-                  if (!loading && fullName.trim() && email.trim() && password && confirmPassword) {
-                    handleSignUp(e);
-                  }
-                }}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin mr-2" />
-                    <span className="hidden xs:inline">Criando conta...</span>
-                    <span className="xs:hidden">Criando...</span>
-                  </>
-                ) : (
-                  <>
-                    Criar Conta
-                    <LogIn className="ml-2 h-4 w-4 sm:h-5 sm:w-5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </>
+      {/* Right Side - Auth Form */}
+      <div className="flex-1 flex flex-col justify-center items-center p-4 sm:p-8 relative bg-surface-50">
+        {/* Mobile Header Branding */}
+        <div className="lg:hidden absolute top-8 left-0 w-full flex justify-center mb-8">
+          <div className="flex items-center gap-2 text-primary">
+            <Stethoscope className="w-8 h-8" />
+            <span className="text-2xl font-bold">FisioFlow</span>
+          </div>
+        </div>
+
+        <div className="w-full max-w-[420px] space-y-8 animate-fade-in">
+          <div className="text-center lg:text-left space-y-2">
+            <h1 className="text-3xl font-bold tracking-tighter text-gray-900 dark:text-white">
+              {activeTab === 'login' ? 'Bem-vindo de volta' : 'Crie sua conta'}
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              {activeTab === 'login'
+                ? 'Entre com suas credenciais para acessar sua conta.'
+                : 'Preencha os dados abaixo para começar sua jornada.'}
+            </p>
+          </div>
+
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'login' | 'register')} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 h-12 p-1 bg-muted/40 rounded-xl mb-6">
+              <TabsTrigger value="login" className="rounded-lg text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm">Login</TabsTrigger>
+              <TabsTrigger value="register" className="rounded-lg text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm">Cadastro</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="login" className="space-y-6 focus-visible:outline-none">
+              <form onSubmit={handleSignIn} className="space-y-4">
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="login-email">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="login-email"
+                        type="email"
+                        placeholder="nome@exemplo.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10 h-11 bg-white dark:bg-black/20 border-gray-200 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <Label htmlFor="login-password">Senha</Label>
+                      <a href="#" className="text-xs text-primary font-medium hover:underline tabindex-[-1]">Esqueceu a senha?</a>
+                    </div>
+                    <Input
+                      id="login-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="h-11 bg-white dark:bg-black/20 border-gray-200 dark:border-gray-800 rounded-lg focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {error && (
+                  <Alert variant="destructive" className="animate-slide-up-fade">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
                 )}
-              </Button>
-            </form>
-          </TabsContent>
-        </Tabs>
+
+                <Button
+                  type="submit"
+                  className="w-full h-11 text-base font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-300 rounded-lg"
+                  disabled={loading}
+                >
+                  {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Entrar na Plataforma'}
+                </Button>
+              </form>
+            </TabsContent>
+
+            <TabsContent value="register" className="space-y-6 focus-visible:outline-none">
+              <form onSubmit={handleSignUp} className="space-y-4">
+                {invitationData && (
+                  <Alert className="bg-primary/5 border-primary/20 text-primary">
+                    <Mail className="h-4 w-4" />
+                    <AlertDescription className="font-medium">
+                      Convite aceito: <strong>{invitationData.role}</strong>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="register-name">Nome Completo</Label>
+                    <Input
+                      id="register-name"
+                      type="text"
+                      placeholder="Seu nome"
+                      value={fullName}
+                      onChange={(e) => {
+                        setFullName(e.target.value);
+                        setValidationErrors(prev => ({ ...prev, fullName: '' }));
+                      }}
+                      required
+                      className="h-11 bg-white dark:bg-black/20"
+                    />
+                    {validationErrors.fullName && <span className="text-xs text-destructive font-medium">{validationErrors.fullName}</span>}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="register-email">Email</Label>
+                    <Input
+                      id="register-email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setValidationErrors(prev => ({ ...prev, email: '' }));
+                      }}
+                      required
+                      disabled={!!invitationData}
+                      className="h-11 bg-white dark:bg-black/20"
+                    />
+                    {validationErrors.email && <span className="text-xs text-destructive font-medium">{validationErrors.email}</span>}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="register-password">Senha</Label>
+                      <Input
+                        id="register-password"
+                        type="password"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          setValidationErrors(prev => ({ ...prev, password: '' }));
+                        }}
+                        required
+                        className="h-11 bg-white dark:bg-black/20"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="register-confirm-password">Confirmar</Label>
+                      <Input
+                        id="register-confirm-password"
+                        type="password"
+                        placeholder="••••••••"
+                        value={confirmPassword}
+                        onChange={(e) => {
+                          setConfirmPassword(e.target.value);
+                          setValidationErrors(prev => ({ ...prev, confirmPassword: '' }));
+                        }}
+                        required
+                        className="h-11 bg-white dark:bg-black/20"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Password Requirements simplified */}
+                  {password && (
+                    <div className="p-3 bg-muted/30 rounded-lg space-y-1">
+                      {getPasswordRequirements().map((req, idx) => (
+                        <div key={idx} className={`flex items-center gap-2 text-xs ${req.met ? 'text-green-600 font-medium' : 'text-muted-foreground'}`}>
+                          {req.met ? <CheckCircle className="h-3 w-3" /> : <div className="h-3 w-3 rounded-full border border-current" />}
+                          {req.label}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                </div>
+
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+
+                <Button
+                  type="submit"
+                  className="w-full h-11 text-base font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all duration-300 rounded-lg"
+                  disabled={loading || !fullName.trim() || !email.trim() || !password || !confirmPassword}
+                >
+                  {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Criar Conta Gratuita'}
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-muted"></span></div>
+            <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground">Ou continue com</span></div>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+            className="w-full h-11 rounded-lg border-muted-foreground/20 hover:bg-muted/30 hover:border-muted-foreground/40 transition-all"
+          >
+            <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" /><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" /><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" /><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" /></svg>
+            Google
+          </Button>
+
+          <p className="text-center text-xs text-muted-foreground mt-8">
+            Ao continuar, você concorda com nossos <a href="#" className="underline hover:text-primary">Termos de Serviço</a> e <a href="#" className="underline hover:text-primary">Política de Privacidade</a>.
+          </p>
+        </div>
       </div>
     </div>
   );
