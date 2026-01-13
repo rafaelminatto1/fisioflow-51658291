@@ -386,6 +386,84 @@ export function paginatedQuery(
 }
 
 // ============================================================================
+// QUERY STATISTICS
+// ============================================================================
+
+export interface QueryStatistics {
+  tableName: string;
+  seqScan: number;
+  idxScan: number;
+  idxScanRatio: number;
+  tableSize: string;
+  indexSize: string;
+}
+
+/**
+ * Get query statistics showing sequential vs index scans
+ * Uses the get_query_statistics function created in migration
+ */
+export async function getQueryStatistics(): Promise<QueryStatistics[]> {
+  try {
+    const { data, error } = await supabase.rpc('get_query_statistics');
+
+    if (error) {
+      logger.warn('Could not fetch query statistics', error, 'PerformanceMonitor');
+      return [];
+    }
+
+    return (data || []).map((row: any) => ({
+      tableName: row.table_name,
+      seqScan: row.seq_scan,
+      idxScan: row.idx_scan,
+      idxScanRatio: row.idx_scan_ratio,
+      tableSize: row.table_size,
+      indexSize: row.index_size
+    }));
+  } catch (error) {
+    logger.error('Error fetching query statistics', error, 'PerformanceMonitor');
+    return [];
+  }
+}
+
+/**
+ * Trigger analyze performance tables to update statistics
+ */
+export async function analyzeTables(): Promise<boolean> {
+  try {
+    const { error } = await supabase.rpc('analyze_performance_tables');
+
+    if (error) {
+      logger.warn('Could not analyze tables', error, 'PerformanceMonitor');
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    logger.error('Error analyzing tables', error, 'PerformanceMonitor');
+    return false;
+  }
+}
+
+/**
+ * Refresh the daily metrics materialized view
+ */
+export async function refreshDailyMetrics(): Promise<boolean> {
+  try {
+    const { error } = await supabase.rpc('refresh_daily_metrics');
+
+    if (error) {
+      logger.warn('Could not refresh daily metrics', error, 'PerformanceMonitor');
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    logger.error('Error refreshing daily metrics', error, 'PerformanceMonitor');
+    return false;
+  }
+}
+
+// ============================================================================
 // EXPORTS
 // ============================================================================
 
@@ -400,7 +478,10 @@ export const PerformanceMonitor = {
   clearCache,
   preloadCache,
   optimizedSelect,
-  paginatedQuery
+  paginatedQuery,
+  getQueryStatistics,
+  analyzeTables,
+  refreshDailyMetrics
 };
 
 // Extend Window interface for type checking
