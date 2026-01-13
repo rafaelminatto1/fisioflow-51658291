@@ -254,10 +254,10 @@ function ReactivationCampaignDialog({
       
       setOpen(false);
       onSuccess();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Erro ao enviar campanha',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
     }
@@ -279,7 +279,7 @@ function ReactivationCampaignDialog({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Canal de Envio</Label>
-            <Select value={channel} onValueChange={(v) => setChannel(v as any)}>
+            <Select value={channel} onValueChange={(v) => setChannel(v as 'whatsapp' | 'email' | 'sms')}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -605,7 +605,7 @@ export function PatientRetention() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="max-w-xs"
                 />
-                <Select value={riskFilter} onValueChange={(v) => setRiskFilter(v as any)}>
+                <Select value={riskFilter} onValueChange={(v) => setRiskFilter(v as 'all' | 'high' | 'medium' | 'low')}>
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Filtrar risco" />
                   </SelectTrigger>

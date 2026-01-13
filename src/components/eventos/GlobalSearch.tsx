@@ -78,12 +78,12 @@ export function GlobalSearch() {
           .limit(5);
 
         if (participantes) {
-          participantes.forEach((participante: any) => {
+          participantes.forEach((participante: Record<string, unknown>) => {
             searchResults.push({
-              id: participante.id,
+              id: participante.id as string,
               type: 'participante',
-              title: participante.nome,
-              subtitle: participante.eventos?.nome || 'Evento',
+              title: participante.nome as string,
+              subtitle: ((participante.eventos as Record<string, unknown>)?.nome as string | undefined) || 'Evento',
               icon: Users,
             });
           });
@@ -97,12 +97,12 @@ export function GlobalSearch() {
           .limit(5);
 
         if (prestadores) {
-          prestadores.forEach((prestador: any) => {
+          prestadores.forEach((prestador: Record<string, unknown>) => {
             searchResults.push({
-              id: prestador.id,
+              id: prestador.id as string,
               type: 'prestador',
-              title: prestador.nome,
-              subtitle: prestador.eventos?.nome || 'Evento',
+              title: prestador.nome as string,
+              subtitle: ((prestador.eventos as Record<string, unknown>)?.nome as string | undefined) || 'Evento',
               icon: Briefcase,
             });
           });

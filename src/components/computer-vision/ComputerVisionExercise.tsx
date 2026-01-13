@@ -4,11 +4,11 @@ import { useComputerVision, getExerciseInstructions, getFormScoreColor, getFeedb
 
 interface ComputerVisionExerciseProps {
   patientId?: string;
-  onSessionComplete?: (sessionData: any) => void;
+  onSessionComplete?: (sessionData: { totalRepetitions?: number; duration?: number }) => void;
 }
 
 // Componente de Feedback em Tempo Real
-const RealTimeFeedbackCard: React.FC<{ feedback: any }> = ({ feedback }) => {
+const RealTimeFeedbackCard: React.FC<{ feedback: { severity: string; type: string; message: string; suggestion: string } }> = ({ feedback }) => {
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'error': return 'bg-red-100 border-red-300 text-red-800';
@@ -32,7 +32,7 @@ const RealTimeFeedbackCard: React.FC<{ feedback: any }> = ({ feedback }) => {
 };
 
 // Componente de Métricas em Tempo Real
-const RealTimeMetrics: React.FC<{ session: any; processingStats: any }> = ({ session, processingStats }) => {
+const RealTimeMetrics: React.FC<{ session: { totalRepetitions?: number; formScore?: number }; processingStats: { fps?: number; latency?: number } }> = ({ session, processingStats }) => {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
       <div className="bg-white p-4 rounded-lg shadow-sm border">
@@ -176,7 +176,7 @@ const CalibrationModal: React.FC<{ isOpen: boolean; onClose: () => void; onCalib
 };
 
 // Componente de Configurações
-const SettingsPanel: React.FC<{ settings: any; onSettingsChange: (settings: any) => void; isOpen: boolean; onClose: () => void }> = ({ settings, onSettingsChange, isOpen, onClose }) => {
+const SettingsPanel: React.FC<{ settings: Record<string, unknown>; onSettingsChange: (settings: Record<string, unknown>) => void; isOpen: boolean; onClose: () => void }> = ({ settings, onSettingsChange, isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (

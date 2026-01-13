@@ -23,7 +23,7 @@ export interface AIAnalysisResult {
     disclaimer: string;
 }
 
-export const generateClinicalReport = async (metrics: any, history?: any): Promise<AIAnalysisResult> => {
+export const generateClinicalReport = async (metrics: Record<string, unknown>, history?: Record<string, unknown>): Promise<AIAnalysisResult> => {
     try {
         const { data, error } = await supabase.functions.invoke('analysis-ai', {
             body: { metrics, history }
@@ -41,7 +41,7 @@ export const generateClinicalReport = async (metrics: any, history?: any): Promi
     }
 };
 
-export const generateFormSuggestions = async (formData: Record<string, any>, formFields: any[]): Promise<string> => {
+export const generateFormSuggestions = async (formData: Record<string, unknown>, formFields: Array<{ id: string; label: string }>): Promise<string> => {
     try {
         // Construct a context string from the form data
         const context = formFields.map(field => {

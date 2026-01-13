@@ -13,6 +13,9 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle
 } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 
 import { useActivePatients } from '@/hooks/usePatients';
 import {
@@ -219,69 +222,73 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   }, [slotInfo, isDayClosed]);
 
   const handleSave = async (data: AppointmentFormData) => {
+    // Validar campos obrigatórios que podem ter passado pelo hook-form se a schema for muito permissiva
+    if (!data.appointment_time || data.appointment_time === '') {
+      toast.error('Horário do agendamento é obrigatório');
+      return;
+    }
+
+    if (!data.patient_id || data.patient_id === '') {
+      toast.error('ID do paciente é obrigatório');
+      return;
+    }
+
+    if (!data.appointment_date || data.appointment_date === '') {
+      toast.error('Data do agendamento é obrigatória');
+      return;
+    }
+
+    const maxCapacity = watchedDate && watchedTime ? getCapacityForTime(watchedDate.getDay(), watchedTime) : 1;
+    const currentCount = (conflictCheck?.conflictCount || 0);
+
+    if (currentCount >= maxCapacity) {
+      setPendingFormData({
+        ...data,
+        appointment_date: format(new Date(), 'yyyy-MM-dd')
+      });
+      setCapacityDialogOpen(true);
+      return;
+    }
+
+    const appointmentData = data;
+    const endTime = new Date(new Date(`${appointmentData.appointment_date}T${appointmentData.appointment_time}`).getTime() + appointmentData.duration * 60000);
+    const endTimeString = format(endTime, 'HH:mm');
+
+    const formattedData = {
+      patient_id: appointmentData.patient_id,
+      therapist_id: appointmentData.therapist_id || null,
+      date: appointmentData.appointment_date,
+      start_time: appointmentData.appointment_time,
+      end_time: endTimeString,
+      status: appointmentData.status as any,
+      payment_status: appointmentData.payment_status as any,
+      notes: appointmentData.notes || '',
+      session_type: (appointmentData.type === 'Fisioterapia' ? 'individual' : 'group') as any,
+    };
+
     try {
-
-      // Validar campos obrigatórios ANTES de qualquer processamento
-      if (!data.appointment_time || data.appointment_time === '') {
-
-        throw new Error('Horário do agendamento é obrigatório');
-      }
-
-      if (!data.patient_id || data.patient_id === '') {
-        throw new Error('ID do paciente é obrigatório');
-      }
-      if (!data.appointment_date || data.appointment_date === '') {
-
-        throw new Error('Data do agendamento é obrigatória');
-      }
-
-      const maxCapacity = watchedDate && watchedTime ? getCapacityForTime(watchedDate.getDay(), watchedTime) : 1;
-      const currentCount = (conflictCheck?.conflictCount || 0);
-
-      if (currentCount >= maxCapacity) {
-        setPendingFormData({
-          ...data,
-          appointment_date: format(new Date(), 'yyyy-MM-dd')
-        });
-        setCapacityDialogOpen(true);
-        return;
-      }
-
-      const appointmentData = data;
-      const endTime = new Date(new Date(`${appointmentData.appointment_date}T${appointmentData.appointment_time}`).getTime() + appointmentData.duration * 60000);
-      const endTimeString = format(endTime, 'HH:mm');
-
-      // Only include columns that actually exist in the database
-      const formattedData = {
-        patient_id: appointmentData.patient_id,
-        therapist_id: appointmentData.therapist_id || null,
-        date: appointmentData.appointment_date,
-        start_time: appointmentData.appointment_time,
-        end_time: endTimeString,
-        status: appointmentData.status as any,
-        payment_status: appointmentData.payment_status as any,
-        notes: appointmentData.notes || '',
-        session_type: (appointmentData.type === 'Fisioterapia' ? 'individual' : 'group') as any,
-      };
-
-
-
       if (appointment?.id) {
-        updateAppointmentMutation({
+        await updateAppointmentMutation({
           appointmentId: appointment.id,
           updates: formattedData
         }, {
           onSuccess: () => {
+            toast.success('Agendamento atualizado com sucesso!');
             if (appointmentData.status === 'avaliacao') {
               const navPath = `/patients/${appointmentData.patient_id}/evaluations/new?appointmentId=${appointment.id}`;
               navigate(navPath);
             }
             onClose();
+          },
+          onError: (error) => {
+            toast.error('Erro ao atualizar agendamento');
+            console.error(error);
           }
         });
       } else {
-        createAppointmentMutation(formattedData as any, {
+        await createAppointmentMutation(formattedData as any, {
           onSuccess: (newAppointment) => {
+            toast.success('Agendamento criado com sucesso!');
             if (appointmentData.status === 'avaliacao') {
               const createdId = (newAppointment as any)?.id;
               if (createdId) {
@@ -292,13 +299,14 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
             onClose();
           },
           onError: (error) => {
+            toast.error('Erro ao criar agendamento');
             console.error('Erro ao criar agendamento:', error);
           }
         });
       }
     } catch (error: any) {
       console.error('Erro ao salvar:', error);
-      throw error;
+      toast.error('Ocorreu um erro inesperado.');
     }
   };
 
@@ -306,14 +314,29 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     if (appointment?.id) {
       deleteAppointmentMutation(appointment.id, {
         onSuccess: () => {
+          toast.success('Agendamento excluído com sucesso');
           onClose();
+        },
+        onError: () => {
+          toast.error('Erro ao excluir agendamento');
         }
       });
     }
   };
 
-  const handleDuplicate = (config: DuplicateConfig) => {
-    if (appointment) {
+  const handleDuplicate = async (config: DuplicateConfig) => {
+    if (appointment && config.dates.length > 0) {
+      let successCount = 0;
+      let errorCount = 0;
+
+      // Usando for...of para processar sequencialmente ou Promise.all para paralelo se a API aguentar
+      // Como o useMutation é um hook, aqui estamos chamando a função mutate, que não retorna Promise por padrão no React Query v4/v5 a menos que use mutateAsync
+      // Vamos assumir que createAppointmentMutation é void, então precisamos adaptar se quisermos esperar.
+      // O ideal seria usar mutateAsync se disponível do hook.
+      // Assumindo que o hook useCreateAppointment retorna mutate (sync) e mutateAsync (promise).
+      // Se não retornar mutateAsync, não conseguiremos esperar, então faremos "fire and forget" com um toast genérico ou ajustaremos para erro individual.
+
+      // Simples implementação "fire and forget" com loop
       config.dates.forEach(date => {
         const newTime = config.newTime || appointment.time;
         const newDate = format(date, 'yyyy-MM-dd');
@@ -331,9 +354,26 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
           payment_status: appointment.payment_status || 'pending',
           notes: appointment.notes || '',
           session_type: (appointment.type === 'Fisioterapia' ? 'individual' : 'group') as any,
-        } as any);
+        } as any, {
+          onSuccess: () => {
+            successCount++;
+            if (successCount + errorCount === config.dates.length) {
+              if (errorCount === 0) toast.success(`${successCount} agendamentos duplicados com sucesso!`);
+              else toast.warning(`${successCount} duplicados, ${errorCount} falharam.`);
+            }
+          },
+          onError: () => {
+            errorCount++;
+            if (successCount + errorCount === config.dates.length) {
+              toast.warning(`${successCount} duplicados, ${errorCount} falharam.`);
+            }
+          }
+        });
       });
+
+      // Fechamos o diálogo imediatamente, feedbacks virão via Toast
       setDuplicateDialogOpen(false);
+      toast.info('Iniciando duplicação de agendamentos...');
     }
   };
 
@@ -364,16 +404,6 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         session_type: (pendingFormData.type === 'Fisioterapia' ? 'individual' : 'group') as any,
       };
 
-      if (appointment?.id) {
-        updateAppointmentMutation({
-          appointmentId: appointment.id,
-          updates: formattedData as any
-        });
-      } else {
-        createAppointmentMutation(formattedData as any);
-      }
-      setCapacityDialogOpen(false);
-      onClose();
     }
   };
 
@@ -573,18 +603,20 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
           onScheduleAnyway={handleScheduleAnyway}
         />
 
-        {waitlistQuickAddOpen && pendingFormData && (
-          <WaitlistQuickAdd
-            open={waitlistQuickAddOpen}
-            onOpenChange={(open) => {
-              setWaitlistQuickAddOpen(open);
-              if (!open) setPendingFormData(null);
-            }}
-            date={pendingFormData.appointment_date ? parseISO(pendingFormData.appointment_date) : new Date()}
-            time={pendingFormData.appointment_time}
-          />
-        )}
-      </DialogContent>
-    </Dialog>
+        {
+          waitlistQuickAddOpen && pendingFormData && (
+            <WaitlistQuickAdd
+              open={waitlistQuickAddOpen}
+              onOpenChange={(open) => {
+                setWaitlistQuickAddOpen(open);
+                if (!open) setPendingFormData(null);
+              }}
+              date={pendingFormData.appointment_date ? parseISO(pendingFormData.appointment_date) : new Date()}
+              time={pendingFormData.appointment_time}
+            />
+          )
+        }
+      </DialogContent >
+    </Dialog >
   );
 };

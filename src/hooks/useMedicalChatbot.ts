@@ -10,7 +10,7 @@ interface ChatMessage {
   metadata?: {
     confidence?: number;
     intent?: string;
-    entities?: any[];
+    entities?: Array<{ type: string; value: string; confidence: number }>;
     suggestions?: string[];
     attachments?: ChatAttachment[];
   };
@@ -47,10 +47,10 @@ interface ChatSession {
 interface ChatContext {
   patientId?: string;
   currentSymptoms?: string[];
-  recentAppointments?: any[];
-  activeTreatments?: any[];
-  medications?: any[];
-  emergencyContacts?: any[];
+  recentAppointments?: Array<{ id: string; date: string; type: string }>;
+  activeTreatments?: Array<{ name: string; startDate: string }>;
+  medications?: Array<{ name: string; dosage: string }>;
+  emergencyContacts?: Array<{ name: string; phone: string; relationship: string }>;
   preferredLanguage: string;
   accessibilityNeeds?: string[];
 }

@@ -105,8 +105,8 @@ export function InternalDashboard() {
       return packages?.map(pkg => ({
         id: pkg.id,
         patientId: pkg.patient_id,
-        patientName: (pkg.patients as any)?.name || "N/A",
-        patientPhone: (pkg.patients as any)?.phone || null,
+        patientName: (pkg.patients as { name?: string } | null)?.name || "N/A",
+        patientPhone: (pkg.patients as { phone?: string } | null)?.phone || null,
         totalSessions: pkg.total_sessions,
         usedSessions: pkg.used_sessions,
         remainingSessions: pkg.remaining_sessions,

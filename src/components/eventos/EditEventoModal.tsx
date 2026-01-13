@@ -75,8 +75,8 @@ export function EditEventoModal({ open, onOpenChange, evento }: EditEventoModalP
         id: evento.id,
         nome: evento.nome,
         descricao: evento.descricao || '',
-        categoria: evento.categoria as any,
-        status: evento.status as any,
+        categoria: evento.categoria as 'corrida' | 'corporativo' | 'ativacao' | 'workshop' | 'outro',
+        status: evento.status as 'AGENDADO' | 'EM_ANDAMENTO' | 'CONCLUIDO' | 'CANCELADO',
         local: evento.local,
         data_inicio: evento.data_inicio,
         data_fim: evento.data_fim,
@@ -89,12 +89,11 @@ export function EditEventoModal({ open, onOpenChange, evento }: EditEventoModalP
 
   const onSubmit = async (formData: UpdateFormData) => {
     const { id, data_inicio, data_fim, ...rest } = formData;
-    const data: any = {
-      ...rest,
+    const data: Record<string, Date | undefined> = {
       data_inicio: data_inicio ? new Date(data_inicio) : undefined,
       data_fim: data_fim ? new Date(data_fim) : undefined,
     };
-    await updateEvento.mutateAsync({ id, data });
+    await updateEvento.mutateAsync({ id, data: { ...rest, ...data } });
     onOpenChange(false);
   };
 
@@ -128,7 +127,7 @@ export function EditEventoModal({ open, onOpenChange, evento }: EditEventoModalP
               <Label htmlFor="categoria">Categoria *</Label>
               <Select
                 value={categoria}
-                onValueChange={(value) => setValue('categoria', value as any)}
+                onValueChange={(value) => setValue('categoria', value as 'corrida' | 'corporativo' | 'ativacao' | 'workshop' | 'outro')}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione" />
@@ -147,7 +146,7 @@ export function EditEventoModal({ open, onOpenChange, evento }: EditEventoModalP
               <Label htmlFor="status">Status *</Label>
               <Select
                 value={status}
-                onValueChange={(value) => setValue('status', value as any)}
+                onValueChange={(value) => setValue('status', value as 'AGENDADO' | 'EM_ANDAMENTO' | 'CONCLUIDO' | 'CANCELADO')}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione" />

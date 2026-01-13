@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,7 +18,6 @@ import {
 } from '@/components/ui/select';
 import { NewPatientModal } from '@/components/modals/NewPatientModal';
 import { EditPatientModal } from '@/components/modals/EditPatientModal';
-import { ViewPatientModal } from '@/components/modals/ViewPatientModal';
 import { DeletePatientDialog } from '@/components/modals/DeletePatientDialog';
 import { usePatientsQuery, useDeletePatient, PatientDB } from '@/hooks/usePatientsQuery';
 import {
@@ -38,12 +38,12 @@ const Patients = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [conditionFilter, setConditionFilter] = useState<string>('all');
   const [editingPatient, setEditingPatient] = useState<string | null>(null);
-  const [viewingPatient, setViewingPatient] = useState<string | null>(null);
   const [deletingPatient, setDeletingPatient] = useState<PatientDB | null>(null);
   const [isNewPatientModalOpen, setIsNewPatientModalOpen] = useState(false);
   const { data: patients = [], isLoading: loading } = usePatientsQuery();
   const deletePatient = useDeletePatient();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
 
 
@@ -80,15 +80,15 @@ const Patients = () => {
     const data = filteredPatients.map(patient => {
       const patientName = PatientHelpers.getName(patient);
       return {
-      name: patientName || 'Sem nome',
-      email: patient.email || '',
-      phone: patient.phone || '',
-      age: calculateAge(patient.birth_date),
-      gender: patient.gender || '',
-      condition: patient.main_condition || '',
-      status: patient.status || '',
-      progress: patient.progress || 0
-    };
+        name: patientName || 'Sem nome',
+        email: patient.email || '',
+        phone: patient.phone || '',
+        age: calculateAge(patient.birth_date),
+        gender: patient.gender || '',
+        condition: patient.main_condition || '',
+        status: patient.status || '',
+        progress: patient.progress || 0
+      };
     });
 
     const headers = ['Nome', 'Email', 'Telefone', 'Idade', 'Gênero', 'Condição Principal', 'Status', 'Progresso'];
@@ -326,7 +326,7 @@ const Patients = () => {
                 <Card
                   className="group flex items-center gap-4 p-3 rounded-xl bg-card hover:bg-slate-50 dark:hover:bg-slate-800/50 active:bg-slate-100 dark:active:bg-slate-800 transition-colors cursor-pointer border border-transparent hover:border-border dark:hover:border-slate-700"
                   style={{ animationDelay: `${index * 50}ms` }}
-                  onClick={() => setViewingPatient(patient.id)}
+                  onClick={() => navigate(`/patients/${patient.id}`)}
                 >
                   <div className="relative shrink-0">
                     <Avatar className="h-12 w-12 ring-2 ring-border dark:ring-slate-700 shrink-0">
@@ -381,13 +381,7 @@ const Patients = () => {
         />
       )}
 
-      {viewingPatient && (
-        <ViewPatientModal
-          patientId={viewingPatient}
-          open={true}
-          onOpenChange={() => setViewingPatient(null)}
-        />
-      )}
+
 
       <DeletePatientDialog
         open={!!deletingPatient}

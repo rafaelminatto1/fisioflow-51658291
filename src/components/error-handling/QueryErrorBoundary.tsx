@@ -1,6 +1,5 @@
 import { Component, ReactNode } from 'react';
 import { Query } from '@tanstack/react-query';
-import { useErrorBoundary } from './ErrorBoundaryContext';
 
 interface Props {
   children: ReactNode;

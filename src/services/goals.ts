@@ -9,8 +9,8 @@ export interface GoalProfile {
     name: string;
     description: string;
     applicable_tests: string[]; // Stored as array of strings
-    quality_gate: any;
-    evidence: any;
+    quality_gate: Record<string, unknown>;
+    evidence: Record<string, unknown>;
     tags: string[];
     status: GoalProfileStatus;
     version: number;
@@ -74,7 +74,7 @@ export const GoalService = {
     /**
      * Internal helper to log audits
      */
-    async logAudit(action: 'CREATE' | 'UPDATE' | 'DELETE' | 'PUBLISH' | 'ARCHIVE', entity: 'GoalProfile' | 'GoalTarget', entityId: string, before?: any, after?: any) {
+    async logAudit(action: 'CREATE' | 'UPDATE' | 'DELETE' | 'PUBLISH' | 'ARCHIVE', entity: 'GoalProfile' | 'GoalTarget', entityId: string, before?: Record<string, unknown>, after?: Record<string, unknown>) {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 

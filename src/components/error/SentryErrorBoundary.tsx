@@ -1,4 +1,4 @@
-import { Component, ReactNode } from 'react';
+import { ReactNode } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

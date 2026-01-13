@@ -93,6 +93,7 @@ const CalendarSettings = lazy(() => import("./pages/configuracoes/CalendarSettin
 const PublicPrescriptionPage = lazy(() => import("./pages/prescricoes/PublicPrescriptionPage"));
 const ImageAnalysisDashboard = lazy(() => import("./components/analysis/dashboard/ImageAnalysisDashboard"));
 const DynamicCompareDetailsPage = lazy(() => import("./pages/dashboard/dinamica/DynamicCompareDetailsPage"));
+const PatientProfilePage = lazy(() => import("./pages/patients/PatientProfilePage"));
 
 // Goals Admin
 const GoalProfileListPage = lazy(() => import("./pages/admin/goals/GoalProfileListPage"));
@@ -211,6 +212,9 @@ export function AppRoutes() {
             <Route path="/dashboard/imagens" element={<ProtectedRoute><ImageAnalysisDashboard /></ProtectedRoute>} />
             <Route path="/pacientes/:id/imagens" element={<ProtectedRoute><ImageAnalysisDashboard /></ProtectedRoute>} />
             <Route path="/dashboard/dinamica/:id" element={<ProtectedRoute><DynamicCompareDetailsPage /></ProtectedRoute>} />
+
+            {/* Patient Profile - New Route */}
+            <Route path="/patients/:id" element={<ProtectedRoute><PatientProfilePage /></ProtectedRoute>} />
 
             {/* Goals Admin */}
             <Route path="/admin/goals" element={<ProtectedRoute allowedRoles={['admin', 'fisioterapeuta']}><GoalProfileListPage /></ProtectedRoute>} />

@@ -1,7 +1,7 @@
 // Feed de agendamentos em tempo real (Refatorado para usar RealtimeContext)
 // Agora usa o contexto central para obter dados, eliminando duplicações de subscrições
 
-import { useEffect, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -38,7 +38,7 @@ const statusLabels: Record<string, string> = {
  */
 export function LiveAppointmentsFeed() {
   // Usar dados do contexto Realtime central
-  const { appointments, metrics, isSubscribed } = useRealtime();
+  const { appointments } = useRealtime();
 
   // Estado local de ordenação
   const [sortConfig, setSortConfig] = useState({

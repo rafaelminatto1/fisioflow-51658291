@@ -21,7 +21,11 @@ interface Props {
   resetOnPropsChange?: boolean;
 }
 
-interface State extends ErrorBoundaryState {}
+interface State {
+  hasError: boolean;
+  error: Error | null;
+  errorInfo: ErrorInfo | null;
+}
 
 /**
  * Error Boundary para capturar erros em componentes React
@@ -54,8 +58,8 @@ export class ErrorBoundary extends Component<Props, State> {
     });
 
     // Enviar para serviço de monitoramento (ex: Sentry)
-    if (typeof window !== 'undefined' && (window as any).Sentry) {
-      (window as any).Sentry.captureException(error, {
+    if (typeof window !== 'undefined' && (window as Record<string, unknown>).Sentry) {
+      (window as Record<string, unknown>).Sentry?.captureException?.(error, {
         contexts: {
           react: {
             componentStack: errorInfo.componentStack,

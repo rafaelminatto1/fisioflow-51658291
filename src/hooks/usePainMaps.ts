@@ -12,7 +12,12 @@ interface PainMap {
   created_at: string;
   updated_at?: string;
   global_pain_level?: number;
-  pain_points?: any;
+  pain_points?: Array<{
+    x: number;
+    y: number;
+    intensity: number;
+    type: string;
+  }>;
   notes?: string;
   points?: PainMapPoint[];
 }

@@ -13,6 +13,13 @@ export interface ExerciseTemplate {
   created_by?: string;
   created_at?: string;
   updated_at?: string;
+  // Campos clínicos baseados em evidências
+  clinical_notes?: string;
+  contraindications?: string;
+  precautions?: string;
+  progression_notes?: string;
+  evidence_level?: 'A' | 'B' | 'C' | 'D';
+  references?: string[];
 }
 
 export interface ExerciseTemplateItem {
@@ -26,6 +33,10 @@ export interface ExerciseTemplateItem {
   notes?: string;
   week_start?: number;
   week_end?: number;
+  // Campos clínicos específicos por exercício
+  clinical_notes?: string;
+  focus_muscles?: string[];
+  purpose?: string;
   exercise?: {
     id: string;
     name: string;

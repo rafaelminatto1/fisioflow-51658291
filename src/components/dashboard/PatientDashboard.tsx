@@ -3,35 +3,28 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { StatCard } from './StatCard';
-import { AppointmentWidget } from './AppointmentWidget';
 import { ChartWidget } from './ChartWidget';
 import { toast } from '@/hooks/use-toast';
 import { useRealtime } from '@/contexts/RealtimeContext';
 import { Profile } from '@/types/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import {
   Calendar,
   Activity,
-  TrendingUp,
-  FileText,
   MessageSquare,
   Download,
   Play,
-  CheckCircle,
-  Target
+  CheckCircle
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 interface PatientDashboardProps {
-  lastUpdate: Date;
+  _lastUpdate: Date;
   profile: Profile;
 }
 
-export function PatientDashboard({ lastUpdate, profile }: PatientDashboardProps) {
+export function PatientDashboard({ _lastUpdate, profile }: PatientDashboardProps) {
   // Usar contexto Realtime central para obter dados
   const { appointments, metrics } = useRealtime();
 
@@ -40,7 +33,6 @@ export function PatientDashboard({ lastUpdate, profile }: PatientDashboardProps)
   const [todayExercises, setTodayExercises] = useState(5);
   const [progressData, setProgressData] = useState<Array<{date: string, value: number}>>([]);
   const [messages, setMessages] = useState<Array<{type: 'success' | 'error', text: string}>>([]);
-  const [documents, setDocuments] = useState(0);
 
   /**
    * Carregar dados específicos do paciente
@@ -90,13 +82,12 @@ export function PatientDashboard({ lastUpdate, profile }: PatientDashboardProps)
   }, [appointments, metrics, profile]);
 
   const stats = useMemo(() => ({
-    nextAppointments: Math.min(upcomingAppointments.length, 5),
+    nextAppointments: Math.min(upcomingAppointments, 5),
     todayExercises,
-    treatmentProgress: progressData.length > 0 
+    treatmentProgress: progressData.length > 0
       ? Math.round(progressData.reduce((sum, p) => sum + p.value, 0) / progressData.length)
       : 0,
     totalMessages: messages.length,
-    totalDocuments: documents,
   }), [upcomingAppointments, todayExercises, progressData, messages]);
 
   return (
@@ -155,15 +146,6 @@ export function PatientDashboard({ lastUpdate, profile }: PatientDashboardProps)
           gradient="from-purple-500 to-purple-600"
           loading={false}
         />
-        
-        <StatCard
-          title="Documentos"
-          value={stats.totalDocuments}
-          change="neutral"
-          icon={<FileText className="w-5 h-5 text-green-500" />}
-          gradient="from-green-500 to-green-600"
-          loading={false}
-        />
       </div>
 
       {/* Action Buttons */}
@@ -210,31 +192,7 @@ export function PatientDashboard({ lastUpdate, profile }: PatientDashboardProps)
         </div>
       )}
 
-      {/* Document Section */}
-      {stats.totalDocuments > 0 && (
-        <div className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Documentos Recentes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 border rounded-lg">
-                    <FileText className="h-8 w-8 text-blue-600 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium">Documento {i}</p>
-                      <p className="text-sm text-muted-foreground">Enviado em {format(new Date(Date.now() - i * 24 * 60 * 60 * 1000), 'dd/MM')}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Progress Chart */}
+      {/* Progress Section */}
       {progressData.length > 0 && (
         <div className="mt-6">
           <Card>
