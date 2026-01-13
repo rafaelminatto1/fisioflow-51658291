@@ -1,6 +1,12 @@
+/**
+ * useLivePoseAnalysis - Hook otimizado com lazy loading
+ * Carrega o MediaPipe apenas quando o hook é usado
+ * Reduz o tamanho inicial do bundle
+ */
+
 import { useRef, useState, useEffect, useCallback } from 'react';
-import { PoseLandmarker, FilesetResolver, DrawingUtils } from '@mediapipe/tasks-vision';
 import { UnifiedLandmark, POSE_LANDMARKS, calculateAngle } from '@/utils/geometry';
+import { useMediaPipeVision } from '@/hooks/performance';
 
 export interface BiofeedbackMetrics {
     kneeValgusL: number;
@@ -17,42 +23,71 @@ export const useLivePoseAnalysis = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [metrics, setMetrics] = useState<BiofeedbackMetrics | null>(null);
-    const landmarkerRef = useRef<PoseLandmarker | null>(null);
+
+    // Armazena as dependências do MediaPipe carregadas
+    const [mediaPipeModules, setMediaPipeModules] = useState<{
+        PoseLandmarker: any;
+        FilesetResolver: any;
+        DrawingUtils: any;
+    } | null>(null);
+
+    const landmarkerRef = useRef<any>(null);
     const requestRef = useRef<number>();
 
-    // Initialize Landmarker
+    // Carregar MediaPipe sob demanda
+    const { load: loadMediaPipe, isLoaded: mediaPipeLoaded, isLoading: mediaPipeLoading } = useMediaPipeVision();
+
+    // Initialize Landmarker com lazy loading
     useEffect(() => {
         const initLandmarker = async () => {
-            try {
-                const vision = await FilesetResolver.forVisionTasks(
-                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
-                );
-                const landmarker = await PoseLandmarker.createFromOptions(vision, {
-                    baseOptions: {
-                        modelAssetPath: `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task`,
-                        delegate: "GPU"
-                    },
-                    runningMode: "VIDEO", // Use VIDEO for better tracking continuity than IMAGE, but feed it stream frames
-                    numPoses: 1,
-                    minPoseDetectionConfidence: 0.5,
-                    minPosePresenceConfidence: 0.5,
-                    minTrackingConfidence: 0.5,
-                });
-                landmarkerRef.current = landmarker;
-            } catch (err) {
-                console.error("Failed to init landmarker", err);
-                setError("Falha ao carregar modelo de IA.");
+            if (!mediaPipeLoaded && mediaPipeModules) {
+                try {
+                    const { PoseLandmarker, FilesetResolver } = mediaPipeModules;
+                    const vision = await FilesetResolver.forVisionTasks(
+                        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
+                    );
+                    const landmarker = await PoseLandmarker.createFromOptions(vision, {
+                        baseOptions: {
+                            modelAssetPath: `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task`,
+                            delegate: "GPU"
+                        },
+                        runningMode: "VIDEO",
+                        numPoses: 1,
+                        minPoseDetectionConfidence: 0.5,
+                        minPosePresenceConfidence: 0.5,
+                        minTrackingConfidence: 0.5,
+                    });
+                    landmarkerRef.current = landmarker;
+                } catch (err) {
+                    console.error("Failed to init landmarker", err);
+                    setError("Falha ao carregar modelo de IA.");
+                }
             }
         };
-        initLandmarker();
+
+        if (mediaPipeLoaded && !mediaPipeModules) {
+            // Carregar dependências do MediaPipe
+            import('@mediapipe/tasks-vision').then((module) => {
+                const { PoseLandmarker: PL, FilesetResolver: FR, DrawingUtils: DU } = module;
+                setMediaPipeModules({ PoseLandmarker: PL, FilesetResolver: FR, DrawingUtils: DU });
+                initLandmarker();
+            });
+        }
+
         return () => {
             landmarkerRef.current?.close();
         };
-    }, []);
+    }, [mediaPipeLoaded, mediaPipeModules]);
 
     const startCamera = async () => {
         setIsLoading(true);
         setError(null);
+
+        // Carregar MediaPipe se ainda não foi carregado
+        if (!mediaPipeLoaded) {
+            await loadMediaPipe();
+        }
+
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { width: 640, height: 480, facingMode: 'user' }
@@ -86,11 +121,12 @@ export const useLivePoseAnalysis = () => {
     };
 
     const predictWebcam = useCallback(async () => {
-        if (!landmarkerRef.current || !videoRef.current || !canvasRef.current) return;
+        if (!landmarkerRef.current || !videoRef.current || !canvasRef.current || !mediaPipeModules) return;
 
         const video = videoRef.current;
         const canvas = canvasRef.current;
         const ctx = canvas.getContext("2d");
+        const { DrawingUtils, PoseLandmarker } = mediaPipeModules;
         const drawingUtils = new DrawingUtils(ctx!);
 
         const startTimeMs = performance.now();
@@ -106,12 +142,12 @@ export const useLivePoseAnalysis = () => {
 
                 // Draw
                 drawingUtils.drawLandmarks(landmarks, {
-                    radius: (data) => DrawingUtils.lerp(data.from!.z, -0.15, 0.1, 5, 1)
+                    radius: (data: any) => DrawingUtils.lerp(data.from!.z, -0.15, 0.1, 5, 1)
                 });
                 drawingUtils.drawConnectors(landmarks, PoseLandmarker.POSE_CONNECTIONS);
 
                 // Calculate Live Metrics
-                const unified = landmarks.map((l) => ({ x: l.x, y: l.y, z: l.z, visibility: l.visibility })) as UnifiedLandmark[];
+                const unified = landmarks.map((l: any) => ({ x: l.x, y: l.y, z: l.z, visibility: l.visibility })) as UnifiedLandmark[];
 
                 const hipL = unified[POSE_LANDMARKS.LEFT_HIP];
                 const hipR = unified[POSE_LANDMARKS.RIGHT_HIP];
@@ -122,29 +158,17 @@ export const useLivePoseAnalysis = () => {
                 const shoulderL = unified[POSE_LANDMARKS.LEFT_SHOULDER];
                 const shoulderR = unified[POSE_LANDMARKS.RIGHT_SHOULDER];
 
-                // Simple 2D Projections
-                // Valgus Proxy: Knee deviation from Hip-Ankle line? 
-                // Better: Angle Hip-Knee-Ankle (Frontal Projection)
-                // 180 is straight. <170 is valgus? It depends on coords. 
-                // Let's use simple hip-knee-ankle angle.
                 const angleL = calculateAngle(hipL, kneeL, ankleL);
                 const angleR = calculateAngle(hipR, kneeR, ankleR);
 
-                // Trunk Lean (Shoulder Mid vs Hip Mid) - Simplified as Shoulder slope
-                // Or Vertical alignment. Let's use Shoulder Slope for simple feedback ("Keep shoulders level")
-                // Or Trunk Lean: Angle of Torso Vector vs Vertical.
                 const midHip = { x: (hipL.x + hipR.x) / 2, y: (hipL.y + hipR.y) / 2, z: 0 };
                 const midShoulder = { x: (shoulderL.x + shoulderR.x) / 2, y: (shoulderL.y + shoulderR.y) / 2, z: 0 };
                 const trunkVertical = Math.abs(calculateAngle(
-                    { x: midHip.x, y: midHip.y - 0.5, z: 0 }, // Point above hip
+                    { x: midHip.x, y: midHip.y - 0.5, z: 0 },
                     midHip,
                     midShoulder
-                ));  // 0 is perfectly vertical? calculateAngle returns 0-180. 
-                // calculateAngle(A, B, C). B is vertex. 
-                // A=Vertical Up, B=Hip, C=Shoulder. 
-                // Ideally 0 or 180. 
+                ));
 
-                // Pelvic Drop (Hip slope)
                 const pelvicSlope = Math.abs((Math.atan2(hipR.y - hipL.y, hipR.x - hipL.x) * 180) / Math.PI);
 
                 setMetrics({
@@ -163,9 +187,9 @@ export const useLivePoseAnalysis = () => {
         if (isAnalyzing) {
             requestRef.current = requestAnimationFrame(predictWebcam);
         }
-    }, [isAnalyzing]);
+    }, [isAnalyzing, mediaPipeModules]);
 
-    // Restart loop if isAnalyzing changes state (handled by layout effect usually, but here recursive reqAnimFrame)
+    // Restart loop if isAnalyzing changes state
     useEffect(() => {
         if (isAnalyzing) {
             requestRef.current = requestAnimationFrame(predictWebcam);
@@ -181,7 +205,7 @@ export const useLivePoseAnalysis = () => {
         videoRef,
         canvasRef,
         isAnalyzing,
-        isLoading,
+        isLoading: isLoading || mediaPipeLoading,
         error,
         metrics,
         startCamera,
