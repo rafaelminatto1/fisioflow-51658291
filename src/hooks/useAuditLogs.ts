@@ -9,9 +9,9 @@ export interface AuditLog {
   action: string;
   table_name: string;
   record_id: string | null;
-  old_data: any;
-  new_data: any;
-  changes: any;
+  old_data: Record<string, unknown>;
+  new_data: Record<string, unknown>;
+  changes: Record<string, unknown>;
   ip_address: unknown;
   user_agent: string | null;
   session_id: string | null;
@@ -70,8 +70,8 @@ export function useAuditLogs(filters?: AuditFilters) {
 
       // Enrich with user info
       const userIds = [...new Set(data?.map(log => log.user_id).filter(Boolean))];
-      
-      let profiles: any[] = [];
+
+      let profiles: { user_id: string; full_name: string; email: string }[] = [];
       if (userIds.length > 0) {
         const { data: profilesData } = await supabase
           .from('profiles')

@@ -1,7 +1,6 @@
 import { memo } from 'react';
 import { CalendarCheck, Clock, User, TrendingUp } from 'lucide-react';
-import { format, isToday, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { isToday, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { Appointment } from '@/types/appointment';
 
@@ -19,7 +18,7 @@ interface StatCardProps {
   variant?: 'default' | 'success' | 'warning';
 }
 
-const StatCard = memo(({ icon, value, label, trend, variant = 'default' }: StatCardProps) => {
+const StatCard = memo(({ icon, value, label, trend, _variant = 'default' }: StatCardProps) => {
   return (
     <div className="stat-card group cursor-default" role="article" aria-label={`${label}: ${value}`}>
       <div className="flex items-center gap-2 mb-1.5">
@@ -48,7 +47,7 @@ const StatCard = memo(({ icon, value, label, trend, variant = 'default' }: StatC
 
 StatCard.displayName = 'StatCard';
 
-const ScheduleStatsCards = memo(({ appointments, currentDate, className }: ScheduleStatsCardsProps) => {
+const ScheduleStatsCards = memo(({ appointments, _currentDate, className }: ScheduleStatsCardsProps) => {
   // Calculate stats for today
   const todayStats = (() => {
     const todayAppointments = appointments.filter(apt => {

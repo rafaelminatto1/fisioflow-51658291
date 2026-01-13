@@ -169,7 +169,7 @@ export const suggestAlternativeTimeSlots = (
   preferredStartTime: string,
   sessionDuration: number = 60 // minutes
 ): string[] => {
-  const dateObj = parseISO(date);
+  parseISO(date); // Validate date format
   const timeSlots = generateTimeSlots();
   const suggestions: string[] = [];
   

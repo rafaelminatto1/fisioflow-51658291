@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Camera, Play, Pause, Square, Settings, Zap, Target, Timer, Award, AlertTriangle, CheckCircle, Info, Download, RotateCcw } from 'lucide-react';
-import { useComputerVision, getExerciseInstructions, getFormScoreColor, getFeedbackIcon, calculateCaloriesBurned } from '../../hooks/useComputerVision';
+import React, { useState, useEffect } from 'react';
+import { Camera, Play, Square, Settings, Zap, Target, Timer, Award, AlertTriangle, CheckCircle, Info } from 'lucide-react';
+import { useComputerVision, getExerciseInstructions, getFormScoreColor, getFeedbackIcon } from '../../hooks/useComputerVision';
 
 interface ComputerVisionExerciseProps {
   patientId?: string;
@@ -278,10 +278,9 @@ const SettingsPanel: React.FC<{ settings: any; onSettingsChange: (settings: any)
 };
 
 // Componente Principal
-const ComputerVisionExercise: React.FC<ComputerVisionExerciseProps> = ({ patientId, onSessionComplete }) => {
+const ComputerVisionExercise: React.FC<ComputerVisionExerciseProps> = ({ onSessionComplete }) => {
   const {
     isActive,
-    currentExercise,
     currentSession,
     realTimeFeedback,
     settings,
@@ -305,7 +304,6 @@ const ComputerVisionExercise: React.FC<ComputerVisionExerciseProps> = ({ patient
   const [showSettings, setShowSettings] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [sessionHistory, setSessionHistory] = useState<any[]>([]);
 
   // Inicializar sistema ao montar
   useEffect(() => {
@@ -350,9 +348,8 @@ const ComputerVisionExercise: React.FC<ComputerVisionExerciseProps> = ({ patient
   // Parar exercício
   const handleStopExercise = () => {
     stopExerciseSession();
-    
+
     if (currentSession) {
-      setSessionHistory(prev => [...prev, currentSession]);
       onSessionComplete?.(currentSession);
     }
   };

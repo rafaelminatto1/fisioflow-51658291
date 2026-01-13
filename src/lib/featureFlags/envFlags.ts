@@ -24,9 +24,9 @@ export interface FeatureFlags {
 }
 
 const getEnv = (key: string) => {
-  // @ts-ignore
+  // @ts-expect-error - import.meta is not fully typed
   if (typeof import.meta !== 'undefined' && import.meta.env) {
-    // @ts-ignore
+    // @ts-expect-error - import.meta.env is not fully typed
     return import.meta.env[key];
   }
   if (typeof process !== 'undefined' && process.env) {

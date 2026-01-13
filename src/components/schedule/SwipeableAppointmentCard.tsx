@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Phone, MessageCircle, Check, X, Clock } from 'lucide-react';
+import { Phone, MessageCircle, Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AppointmentCard } from './AppointmentCard';
 import type { Appointment } from '@/types/appointment';

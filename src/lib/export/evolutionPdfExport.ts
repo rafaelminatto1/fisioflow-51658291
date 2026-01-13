@@ -72,7 +72,7 @@ export const generateEvolutionPDF = (
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
 
-  const patientName = PatientHelpers.getName(patient as any);
+  const patientName = patient.name;
   doc.text(`Nome: ${patientName}`, 20, yPosition);
   yPosition += 6;
   

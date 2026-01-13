@@ -1,6 +1,5 @@
 import React from 'react';
-import { Clock, MapPin, MessageCircle, AlertCircle, Star, CheckCircle, XCircle, FileText } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Clock, AlertCircle, CheckCircle, XCircle, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Appointment } from '@/types/appointment';
 

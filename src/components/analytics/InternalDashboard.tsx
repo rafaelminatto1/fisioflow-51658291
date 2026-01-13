@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Users, UserMinus, CreditCard, UserPlus, TrendingUp, Clock } from "lucide-react";
-import { format, subDays, subWeeks, subMonths, startOfDay, startOfWeek, startOfMonth } from "date-fns";
+import { format, subDays, subMonths, startOfDay, startOfWeek, startOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   Table,
@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import { PatientHelpers } from '@/types';
 
 export function InternalDashboard() {
@@ -115,7 +115,7 @@ export function InternalDashboard() {
   });
 
   // Novos pacientes por período
-  const { data: newPatientsData, isLoading: loadingNewPatients } = useQuery({
+  const { data: newPatientsData } = useQuery({
     queryKey: ["new-patients-by-period"],
     queryFn: async () => {
       const now = new Date();

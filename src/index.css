@@ -765,20 +765,126 @@ All colors MUST be HSL.
   }
 
   /* ========================================
-     APPOINTMENT CARD REDESIGN - HIGH CONTRAST
+     CALENDAR APPOINTMENT CARDS - COLOR CODED BY STATUS
      ======================================== */
 
-  /* Card principal - fundo claro com texto escuro */
+  /* Card principal - background colorido por status com bom contraste */
   .calendar-appointment-card {
-    @apply relative bg-white dark:bg-card border border-border/50 rounded-lg overflow-hidden;
-    @apply shadow-sm hover:shadow-md hover:border-border/70;
+    @apply relative rounded-xl overflow-hidden;
+    @apply shadow-md hover:shadow-lg hover:scale-[1.02] hover:-translate-y-0.5;
     @apply transition-all duration-200 cursor-pointer;
+    @apply border border-white/20 dark:border-white/10;
   }
 
-  /* Border esquerda colorida por status */
-  .calendar-appointment-card-status-bg {
-    @apply absolute left-0 top-0 bottom-0 w-1;
-    @apply rounded-l-lg;
+  /* Cores por status - Codificação visual */
+  /* 🔵 Azul: Agendado (aguardando confirmação) */
+  .calendar-card-agendado {
+    @apply bg-blue-500 text-white;
+    @apply hover:bg-blue-600;
+  }
+  .calendar-card-agendado .calendar-patient-name,
+  .calendar-card-agendado .calendar-appointment-type,
+  .calendar-card-agendado .calendar-appointment-footer {
+    @apply text-white;
+  }
+
+  /* 🟢 Verde: Confirmado */
+  .calendar-card-confirmado {
+    @apply bg-emerald-500 text-white;
+    @apply hover:bg-emerald-600;
+  }
+  .calendar-card-confirmado .calendar-patient-name,
+  .calendar-card-confirmado .calendar-appointment-type,
+  .calendar-card-confirmado .calendar-appointment-footer {
+    @apply text-white;
+  }
+
+  /* ⚪ Cinza: Realizado */
+  .calendar-card-realizado,
+  .calendar-card-concluido,
+  .calendar-card-atendido,
+  .calendar-card-completado {
+    @apply bg-slate-400 text-white;
+    @apply hover:bg-slate-500;
+  }
+  .calendar-card-realizado .calendar-patient-name,
+  .calendar-card-realizado .calendar-appointment-type,
+  .calendar-card-realizado .calendar-appointment-footer,
+  .calendar-card-concluido .calendar-patient-name,
+  .calendar-card-concluido .calendar-appointment-type,
+  .calendar-card-concluido .calendar-appointment-footer,
+  .calendar-card-atendido .calendar-patient-name,
+  .calendar-card-atendido .calendar-appointment-type,
+  .calendar-card-atendido .calendar-appointment-footer,
+  .calendar-card-completado .calendar-patient-name,
+  .calendar-card-completado .calendar-appointment-type,
+  .calendar-card-completado .calendar-appointment-footer {
+    @apply text-white;
+  }
+
+  /* 🔴 Vermelho: Cancelado */
+  .calendar-card-cancelado {
+    @apply bg-red-500 text-white;
+    @apply hover:bg-red-600;
+  }
+  .calendar-card-cancelado .calendar-patient-name,
+  .calendar-card-cancelado .calendar-appointment-type,
+  .calendar-card-cancelado .calendar-appointment-footer {
+    @apply text-white;
+  }
+
+  /* 🟡 Amarelo: Em avaliação */
+  .calendar-card-avaliacao,
+  .calendar-card-avaliação {
+    @apply bg-amber-400 text-amber-950;
+    @apply hover:bg-amber-500;
+  }
+  .calendar-card-avaliacao .calendar-patient-name,
+  .calendar-card-avaliacao .calendar-appointment-type,
+  .calendar-card-avaliacao .calendar-appointment-footer,
+  .calendar-card-avaliação .calendar-patient-name,
+  .calendar-card-avaliação .calendar-appointment-type,
+  .calendar-card-avaliação .calendar-appointment-footer {
+    @apply text-amber-950;
+  }
+
+  /* 🟣 Roxo: Com fisioterapeuta específico atribuído */
+  .calendar-card-fisioterapeuta {
+    @apply bg-violet-500 text-white;
+    @apply hover:bg-violet-600;
+  }
+  .calendar-card-fisioterapeuta .calendar-patient-name,
+  .calendar-card-fisioterapeuta .calendar-appointment-type,
+  .calendar-card-fisioterapeuta .calendar-appointment-footer {
+    @apply text-white;
+  }
+
+  /* 🟠 Laranja: Em andamento */
+  .calendar-card-em_andamento,
+  .calendar-card-pendente {
+    @apply bg-orange-500 text-white;
+    @apply hover:bg-orange-600;
+  }
+  .calendar-card-em_andamento .calendar-patient-name,
+  .calendar-card-em_andamento .calendar-appointment-type,
+  .calendar-card-em_andamento .calendar-appointment-footer,
+  .calendar-card-pendente .calendar-patient-name,
+  .calendar-card-pendente .calendar-appointment-type,
+  .calendar-card-pendente .calendar-appointment-footer {
+    @apply text-white;
+  }
+
+  /* Indicador de paciente com agendamento próximo (bolinha) */
+  .calendar-appointment-card .nearby-appointment-indicator {
+    @apply absolute -top-1 -right-1 w-4 h-4 rounded-full;
+    @apply bg-yellow-400 border-2 border-white dark:border-gray-800;
+    @apply shadow-sm z-10;
+    animation: pulse-indicator 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-indicator {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
   }
 
   /* Container do conteúdo */
@@ -786,25 +892,20 @@ All colors MUST be HSL.
     @apply p-2.5 pl-3 pr-2 h-full flex flex-col justify-between;
   }
 
-  /* Nome do paciente - ALTO CONTRASTE */
+  /* Nome do paciente - sempre visível */
   .calendar-patient-name {
-    @apply text-sm font-semibold text-foreground truncate leading-tight;
+    @apply text-sm font-bold truncate leading-tight;
   }
 
   /* Tipo de atendimento */
   .calendar-appointment-type {
-    @apply text-xs text-muted-foreground truncate;
+    @apply text-xs opacity-90 truncate;
   }
 
   /* Footer com horário e sala */
   .calendar-appointment-footer {
     @apply flex items-center justify-between gap-2 mt-1.5 pt-1.5;
-    @apply border-t border-border/30 text-[11px] text-muted-foreground;
-  }
-
-  /* Hover no card - nome fica com cor primária */
-  .calendar-appointment-card:hover .calendar-patient-name {
-    @apply text-primary;
+    @apply border-t border-current border-opacity-20 text-[11px] opacity-90;
   }
 
   /* Card sendo arrastado */
@@ -814,12 +915,14 @@ All colors MUST be HSL.
 
   /* Card com excesso de capacidade */
   .calendar-appointment-card.over-capacity {
-    @apply ring-2 ring-amber-400/50 ring-offset-1;
+    @apply ring-2 ring-yellow-300 ring-offset-2;
   }
 
-  /* Wrapper do card para positioning absolute */
+  /* Wrapper do card para positioning - respeitando grid */
   .calendar-appointment-wrapper {
     @apply absolute transition-all duration-200 group/card z-10;
+    /* Garantir que o card não ultrapasse os limites da coluna */
+    @apply box-border;
   }
 
   .calendar-appointment-wrapper:hover {
@@ -833,7 +936,7 @@ All colors MUST be HSL.
     }
 
     .calendar-patient-name {
-      @apply text-[13px] font-semibold;
+      @apply text-[13px] font-bold;
     }
 
     .calendar-appointment-type {
@@ -846,24 +949,24 @@ All colors MUST be HSL.
   }
 
   /* ========================================
-     TIME SLOTS MELHORADOS
+     TIME SLOTS - LINHAS DO GRID MAIS ESCURAS
      ======================================== */
 
   .calendar-time-slot {
-    @apply relative h-14 sm:h-16 border-b border-border/40;
+    @apply relative h-12 sm:h-16 border-b border-border;
     @apply transition-colors duration-150;
   }
 
   .calendar-time-slot:hover {
-    @apply bg-accent/30;
+    @apply bg-accent/40;
   }
 
   .calendar-time-slot.blocked {
-    @apply bg-destructive/10 cursor-not-allowed;
+    @apply bg-destructive/15 cursor-not-allowed;
   }
 
   .calendar-time-slot.is-drop-target {
-    @apply bg-primary/15 ring-inset ring-2 ring-primary/50;
+    @apply bg-primary/20 ring-inset ring-2 ring-primary/60;
   }
 
   /* Current time line */
@@ -883,14 +986,19 @@ All colors MUST be HSL.
      ======================================== */
 
   .calendar-grid-lines {
-    @apply border-b border-border/50;
+    @apply border-b border-border;
+  }
+
+  /* Linhas verticais entre colunas mais visíveis */
+  .calendar-column-divider {
+    @apply border-r border-border;
   }
 
   /* Cabeçalho do dia na semana */
   .calendar-day-header {
-    @apply h-14 sm:h-16 border-b border-border/50 sticky top-0 z-10;
+    @apply h-14 sm:h-16 border-b-2 border-border sticky top-0 z-10;
     @apply p-2 sm:p-3 text-center text-xs sm:text-sm backdrop-blur-md;
-    @apply transition-all duration-300 shadow-sm shrink-0;
+    @apply transition-all duration-300 shadow-md shrink-0;
   }
 
   .calendar-day-header.today {
@@ -899,7 +1007,7 @@ All colors MUST be HSL.
   }
 
   .calendar-day-header:not(.today) {
-    @apply bg-gradient-to-br from-muted/60 to-muted/40;
-    @apply hover:from-muted/80 hover:to-muted/60;
+    @apply bg-gradient-to-br from-muted/80 to-muted/60;
+    @apply hover:from-muted/90 hover:to-muted/70;
   }
 }

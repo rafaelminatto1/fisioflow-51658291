@@ -43,7 +43,6 @@ import {
   Trash2,
   Save,
   AlertTriangle,
-  CheckCircle2,
   UserCog,
   FileText,
 } from 'lucide-react';
@@ -94,7 +93,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
   appointment,
   open,
   onOpenChange,
-  onDeleted,
+  _onDeleted,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);

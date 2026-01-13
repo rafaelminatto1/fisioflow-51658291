@@ -11,7 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Calendar, Clock, ArrowRight, User } from 'lucide-react';
+import { Calendar, Clock, ArrowRight } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 
 interface RescheduleConfirmDialogProps {

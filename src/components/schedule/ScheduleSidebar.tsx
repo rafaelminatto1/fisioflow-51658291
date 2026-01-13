@@ -1,11 +1,11 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, MapPin, User, Stethoscope } from 'lucide-react';
+import { Calendar, Clock, MapPin, Stethoscope } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Appointment } from '@/types/appointment';
@@ -46,18 +46,6 @@ export const ScheduleSidebar: React.FC<ScheduleSidebarProps> = ({
             ...filters,
             [category]: newValues
         });
-    };
-
-    const isAllSelected = (category: keyof FilterState, allOptions: string[]) => {
-        return allOptions.every(opt => filters[category].includes(opt));
-    };
-
-    const toggleAll = (category: keyof FilterState, allOptions: string[]) => {
-        if (isAllSelected(category, allOptions)) {
-            onFilterChange({ ...filters, [category]: [] });
-        } else {
-            onFilterChange({ ...filters, [category]: allOptions });
-        }
     };
 
     // Helper to determine badge color based on therapist (mock logic for now)

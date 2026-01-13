@@ -1,7 +1,5 @@
 import {
     init as csRenderInit,
-    getRenderingEngine,
-    RenderingEngine,
 } from '@cornerstonejs/core';
 import {
     init as csToolsInit,

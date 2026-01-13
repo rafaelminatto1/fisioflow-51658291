@@ -43,13 +43,13 @@ export function FinancialAnalytics() {
         .gte("created_at", format(subMonths(new Date(), 1), "yyyy-MM-dd"));
 
       const paymentMap = new Map<string, number>();
-      let total = 0;
+      // let total = 0;
 
       data?.forEach((payment) => {
         const method = payment.payment_method || "Outros";
         const amount = Number(payment.amount) || 0;
         paymentMap.set(method, (paymentMap.get(method) || 0) + amount);
-        total += amount;
+        // total += amount;
       });
 
       return Array.from(paymentMap.entries()).map(([metodo, valor]) => ({

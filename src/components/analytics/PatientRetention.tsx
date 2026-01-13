@@ -22,8 +22,6 @@ import {
   PatientAtRisk 
 } from '@/hooks/usePatientRetention';
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -31,11 +29,9 @@ import {
   ResponsiveContainer,
   AreaChart,
   Area,
-  Legend,
 } from 'recharts';
-import { 
-  TrendingDown, 
-  TrendingUp, 
+import {
+  TrendingDown,
   Users, 
   AlertTriangle, 
   DollarSign,

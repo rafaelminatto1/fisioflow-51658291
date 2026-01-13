@@ -1,5 +1,5 @@
 import React from 'react';
-import { Page, Text, View, Document, StyleSheet, Image, Font } from '@react-pdf/renderer';
+import { Page, Text, View, Document, StyleSheet } from '@react-pdf/renderer';
 import { AIAnalysisResult } from '@/services/ai/clinicalAnalysisService';
 
 // Register fonts if needed (using default Helvetica for now to ensure compatibility)
@@ -131,7 +131,7 @@ interface ClinicalReportPDFProps {
     logoUrl?: string; // Optional logo
 }
 
-const ClinicalReportPDF: React.FC<ClinicalReportPDFProps> = ({ report, patientName, professionalName, date, logoUrl }) => {
+const ClinicalReportPDF: React.FC<ClinicalReportPDFProps> = ({ report, patientName, professionalName, date }) => {
 
     // Parse markdown table minimally if needed, or just use structured data. 
     // Ideally we should pass structured metrics to the PDF, but for now we might rely on the AI structured output if available.

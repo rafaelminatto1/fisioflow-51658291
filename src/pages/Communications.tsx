@@ -1,31 +1,26 @@
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Skeleton } from '@/components/ui/skeleton';
-import { 
-  Mail, 
-  MessageSquare, 
-  Phone, 
-  Send, 
-  Plus,
+import {
+  Mail,
+  MessageSquare,
+  Phone,
+  Send,
   Search,
   Clock,
   CheckCircle,
   AlertCircle,
   RefreshCw,
-  Trash2,
   MoreVertical
 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { usePatientsQuery } from '@/hooks/usePatientsQuery';
-import { 
-  useCommunications, 
-  useCommunicationStats, 
-  useSendCommunication, 
+import {
+  useCommunications,
+  useCommunicationStats,
+  useSendCommunication,
   useDeleteCommunication,
   useResendCommunication,
   getStatusLabel,

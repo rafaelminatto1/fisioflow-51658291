@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Card } from '@/components/ui/card';
 import {
-    ZoomIn, ZoomOut, Move, AlertCircle, Sun, Contrast,
-    MousePointer2, Circle, Square, Type, Ruler, ArrowRight, Save, History
+    ZoomIn, ZoomOut, Move, Sun, Contrast,
+    MousePointer2, Circle, Square, Type, ArrowRight, Save
 } from 'lucide-react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import AnnotationLayer from './AnnotationLayer';
@@ -39,9 +39,9 @@ const AssetViewer: React.FC<AssetViewerProps> = ({ file, fileUrl, assetId }) => 
         annotations,
         setAnnotations,
         saveVersion,
-        versions,
+        // versions,
         currentVersion,
-        setCurrentVersion
+        // setCurrentVersion
     } = useAssetAnnotations(assetId);
 
     useEffect(() => {
@@ -57,8 +57,9 @@ const AssetViewer: React.FC<AssetViewerProps> = ({ file, fileUrl, assetId }) => 
     }, [file, fileUrl]);
 
     // Image load handler to set dimensions
-    const onImageLoad = (e: any) => {
-        setDimensions({ width: e.target.naturalWidth, height: e.target.naturalHeight });
+    const onImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+        const target = e.target as HTMLImageElement;
+        setDimensions({ width: target.naturalWidth, height: target.naturalHeight });
     };
 
     const handleZoom = (delta: number) => {

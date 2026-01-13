@@ -131,6 +131,26 @@ export const useGamification = (patientId: string) => {
         .maybeSingle();
 
       if (!data) {
+        // Fetch active quest definitions for display preview
+        const { data: activeQuests } = await supabase
+          .from('quest_definitions')
+          .select('*')
+          .eq('is_active', true)
+          .eq('category', 'daily');
+
+        const displayQuests = (activeQuests || []).map(q => ({
+          id: q.id,
+          title: q.title,
+          completed: false,
+          xp: q.xp_reward,
+          icon: q.icon || 'Star',
+          description: q.description || ''
+        }));
+
+        if (displayQuests.length > 0) {
+          return { quests_data: displayQuests };
+        }
+
         return {
           quests_data: [
             { id: "session", title: "Realizar Sessão", completed: false, xp: 50, icon: "Activity", description: "Complete sua sessão de exercícios" },
@@ -243,17 +263,40 @@ export const useGamification = (patientId: string) => {
       }
 
       if (!record) {
-        const initialQuests: DailyQuestItem[] = [
-          { id: "session", title: "Realizar Sessão", completed: false, xp: 50, icon: "Activity", description: "Complete sua sessão de exercícios" },
-          { id: "pain", title: "Registrar Dor", completed: false, xp: 20, icon: "Thermometer", description: "Atualize seu mapa de dor" },
-          { id: "hydration", title: "Hidratação", completed: false, xp: 10, icon: "Droplets", description: "Beba água e registre" }
-        ];
+        // Fetch active quest definitions
+        const { data: activeQuests, error: definitionsError } = await supabase
+          .from('quest_definitions')
+          .select('*')
+          .eq('is_active', true)
+          .eq('category', 'daily'); // Assuming 'daily' is the target. Could be dynamic later.
+
+        if (definitionsError) {
+          console.error("Error fetching quest definitions", definitionsError);
+        }
+
+        const initialQuests: DailyQuestItem[] = (activeQuests || []).map(q => ({
+          id: q.id,
+          title: q.title,
+          completed: false,
+          xp: q.xp_reward,
+          icon: q.icon || 'Star',
+          description: q.description || ''
+        }));
+
+        // Use fallback if DB is empty to avoid broken UI, or rely on earlier seed
+        if (initialQuests.length === 0) {
+          // Fallback only if really nothing exists
+          initialQuests.push(
+            { id: "session", title: "Realizar Sessão", completed: false, xp: 50, icon: "Activity", description: "Complete sua sessão de exercícios" }
+          );
+        }
+
         const { data: newRecord, error: createError } = await supabase
           .from('daily_quests')
           .insert({
             patient_id: patientId,
             date: today,
-            quests_data: initialQuests as unknown as Json, // Valid cast for Supabase JSON
+            quests_data: initialQuests as unknown as Json,
             completed_count: 0
           })
           .select()

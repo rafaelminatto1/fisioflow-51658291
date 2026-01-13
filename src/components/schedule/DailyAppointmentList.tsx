@@ -4,8 +4,6 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Clock, User, Phone, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 interface DailyAppointmentListProps {
   appointments: Appointment[];

@@ -9,13 +9,11 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { 
-  Plus, Zap, Cake, RefreshCw, Star, MessageSquare, Mail, 
-  Smartphone, Play, Pause, Settings, Trash2, Clock
+import {
+  Plus, Zap, Cake, RefreshCw, Star, MessageSquare, Mail,
+  Smartphone, Trash2, Clock
 } from 'lucide-react';
-import { useCRMAutomacoes, useCreateAutomacao, useToggleAutomacao, useDeleteAutomacao, CRMAutomacao } from '@/hooks/useCRM';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { useCRMAutomacoes, useCreateAutomacao, useToggleAutomacao, useDeleteAutomacao } from '@/hooks/useCRM';
 
 const TIPOS_AUTOMACAO = [
   { value: 'aniversario', label: 'Aniversário', icon: Cake, description: 'Mensagem automática no aniversário' },
@@ -54,7 +52,7 @@ export function CRMAutomacoes() {
     gatilho_config: {},
   });
 
-  const { data: automacoes = [], isLoading } = useCRMAutomacoes();
+  const { data: automacoes = [] } = useCRMAutomacoes();
   const createMutation = useCreateAutomacao();
   const toggleMutation = useToggleAutomacao();
   const deleteMutation = useDeleteAutomacao();

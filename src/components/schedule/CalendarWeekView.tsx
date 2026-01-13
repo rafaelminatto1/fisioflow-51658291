@@ -39,6 +39,7 @@ interface CalendarWeekViewProps {
 
 const CalendarWeekView = memo(({
     currentDate,
+    appointments: allAppointments, // Renomeado para passar todos os agendamentos
     onTimeSlotClick,
     onEditAppointment,
     onDeleteAppointment,
@@ -152,6 +153,7 @@ const CalendarWeekView = memo(({
                                     day={day}
                                     timeSlots={timeSlots}
                                     appointments={dayAppointments}
+                                    allAppointments={allAppointments}
                                     isDayClosed={isClosed}
                                     onTimeSlotClick={onTimeSlotClick}
                                     onEditAppointment={onEditAppointment}
@@ -202,6 +204,7 @@ const CalendarWeekView = memo(({
                             day={currentMobileDay}
                             timeSlots={timeSlots}
                             appointments={dayAppointments}
+                            allAppointments={allAppointments}
                             isDayClosed={isClosed}
                             onTimeSlotClick={onTimeSlotClick}
                             onEditAppointment={onEditAppointment}

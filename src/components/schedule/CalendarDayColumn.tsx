@@ -1,7 +1,7 @@
-import React, { memo } from 'react';
-import { format, isToday, isSameDay } from 'date-fns';
+import React, { memo, useMemo } from 'react';
+import { format, isToday, isSameDay, differenceInDays, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Clock, Ban, AlertTriangle, GripVertical } from 'lucide-react';
+import { Clock, Ban, AlertTriangle, GripVertical, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Appointment } from '@/types/appointment';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -12,6 +12,7 @@ interface DayColumnProps {
     day: Date;
     timeSlots: string[];
     appointments: Appointment[];
+    allAppointments?: Appointment[]; // Todos os agendamentos para verificar próximos
     isDayClosed: boolean;
     onTimeSlotClick: (date: Date, time: string) => void;
     onEditAppointment?: (appointment: Appointment) => void;
@@ -35,6 +36,7 @@ export const DayColumn = memo(({
     day,
     timeSlots,
     appointments,
+    allAppointments,
     isDayClosed,
     onTimeSlotClick,
     onEditAppointment,
@@ -56,6 +58,76 @@ export const DayColumn = memo(({
     const isTodayDate = isToday(day);
     const isDraggable = !!onAppointmentReschedule;
 
+    // Função para verificar se o paciente tem agendamento próximo (1 dia de diferença)
+    const hasNearbyAppointment = useMemo(() => {
+        if (!allAppointments || allAppointments.length === 0) return {};
+        const nearbyMap: Record<string, {
+            hasNearby: boolean;
+            nearbyDates: string[];
+        }> = {};
+
+        appointments.forEach(apt => {
+            if (!apt.patientId || !apt.date) return;
+
+            const aptDate = typeof apt.date === 'string' ? parseISO(apt.date) : apt.date;
+
+            // Buscar agendamentos do mesmo paciente em dias próximos (diferença de 1 dia)
+            const nearby = allAppointments
+                .filter(a =>
+                    a.patientId === apt.patientId &&
+                    a.id !== apt.id &&
+                    a.date &&
+                    !['cancelado', 'cancelada'].includes(a.status?.toLowerCase() || '')
+                )
+                .map(a => {
+                    const aDate = typeof a.date === 'string' ? parseISO(a.date) : a.date;
+                    const diff = Math.abs(differenceInDays(aptDate, aDate));
+                    return { appointment: a, diff, date: aDate };
+                })
+                .filter(({ diff }) => diff === 1) // Apenas diferença de exatamente 1 dia
+                .map(({ appointment, date }) => ({
+                    date: format(date, 'dd/MM')
+                }));
+
+            if (nearby.length > 0) {
+                nearbyMap[apt.id] = {
+                    hasNearby: true,
+                    nearbyDates: nearby.map(n => n.date)
+                };
+            }
+        });
+
+        return nearbyMap;
+    }, [allAppointments, appointments]);
+
+    // Função para obter a classe CSS baseada no status
+    const getStatusClass = (status: string, therapistId?: string | null): string => {
+        const normalizedStatus = status?.toLowerCase().replace(/[^a-zà-ú0-9]/g, '') || '';
+
+        // Se tiver fisioterapeuta específico, usa a classe roxa
+        if (therapistId) {
+            return 'calendar-card-fisioterapeuta';
+        }
+
+        // Mapeamento de status para classes CSS
+        const statusMap: Record<string, string> = {
+            'agendado': 'calendar-card-agendado',
+            'confirmado': 'calendar-card-confirmado',
+            'realizado': 'calendar-card-realizado',
+            'concluido': 'calendar-card-concluido',
+            'atendido': 'calendar-card-atendido',
+            'completado': 'calendar-card-completado',
+            'cancelado': 'calendar-card-cancelado',
+            'avaliacao': 'calendar-card-avaliacao',
+            'avaliação': 'calendar-card-avaliação',
+            'emandamento': 'calendar-card-em_andamento',
+            'em_andamento': 'calendar-card-em_andamento',
+            'pendente': 'calendar-card-pendente',
+        };
+
+        return statusMap[normalizedStatus] || 'calendar-card-agendado';
+    };
+
     // Keyboard navigation handler for time slots
     const handleSlotKeyDown = (e: React.KeyboardEvent, date: Date, time: string, blocked: boolean) => {
         if (blocked) return;
@@ -67,15 +139,15 @@ export const DayColumn = memo(({
 
     return (
         <div
-            className="w-full sm:w-auto border-r border-border/50 last:border-r-0 relative group flex-shrink-0"
+            className="w-full sm:w-auto calendar-column-divider last:border-r-0 relative group flex-shrink-0"
             role="column"
             aria-label={`Coluna do dia ${format(day, 'dd/MM/yyyy')}`}
         >
             <div className={cn(
-                "h-14 sm:h-16 border-b border-border/50 sticky top-0 z-10 p-2 sm:p-3 text-center text-xs sm:text-sm backdrop-blur-md transition-all duration-300 shadow-sm",
+                "calendar-day-header",
                 isTodayDate
-                    ? "bg-gradient-to-br from-primary via-primary/95 to-primary/85 text-primary-foreground shadow-xl shadow-primary/30 ring-2 ring-primary/40"
-                    : "bg-gradient-to-br from-muted/60 to-muted/40 hover:from-muted/80 hover:to-muted/60"
+                    ? "today"
+                    : ""
             )}>
                 <div className="font-extrabold uppercase tracking-wider text-[10px] sm:text-xs opacity-90">
                     {format(day, 'EEE', { locale: ptBR })}
@@ -104,7 +176,7 @@ export const DayColumn = memo(({
                         </div>
                     </div>
                 ) : (
-                    timeSlots.map((time, index) => {
+                    timeSlots.map((time, _index) => {
                         const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === time;
                         const { blocked, reason } = checkTimeBlocked(day, time);
                         const dayString = format(day, 'dd/MM/yyyy');
@@ -115,11 +187,11 @@ export const DayColumn = memo(({
                                     <TooltipTrigger asChild>
                                         <div
                                             className={cn(
-                                                "time-slot h-12 sm:h-16 border-b border-border/20 cursor-pointer transition-all duration-200 group/slot relative",
+                                                "calendar-time-slot cursor-pointer group/slot relative",
                                                 blocked
-                                                    ? "bg-destructive/10 cursor-not-allowed"
-                                                    : "hover:bg-gradient-to-r hover:from-primary/15 hover:to-primary/5 active:bg-primary/20",
-                                                isDropTarget && !blocked && "bg-primary/25 ring-2 ring-primary ring-inset drop-zone-active"
+                                                    ? "blocked"
+                                                    : "",
+                                                isDropTarget && !blocked && "is-drop-target"
                                             )}
                                             onClick={() => !blocked && onTimeSlotClick(day, time)}
                                             onKeyDown={(e) => handleSlotKeyDown(e, day, time, blocked)}
@@ -227,9 +299,9 @@ export const DayColumn = memo(({
                                     top: `${topMobile}px`,
                                     height: `${heightMobile}px`,
                                     // Posicionamento dinâmico para appointments empilhados
-                                    left: stackCount > 1 ? `${leftPercent}%` : '2px',
-                                    right: stackCount > 1 ? 'auto' : '2px',
-                                    width: stackCount > 1 ? `${widthPercent}%` : 'calc(100% - 4px)',
+                                    left: stackCount > 1 ? `${leftPercent}%` : '1px',
+                                    right: stackCount > 1 ? 'auto' : '1px',
+                                    width: stackCount > 1 ? `${widthPercent}%` : 'calc(100% - 2px)',
                                     ['--top-desktop' as string]: `${topDesktop}px`,
                                     ['--height-desktop' as string]: `${heightDesktop}px`,
                                     zIndex: stackCount > 1 ? 10 + stackIndex : undefined,
@@ -255,21 +327,34 @@ export const DayColumn = memo(({
                                     onEdit={onEditAppointment ? () => onEditAppointment(apt) : undefined}
                                     onDelete={onDeleteAppointment ? () => onDeleteAppointment(apt) : undefined}
                                 >
-                                    <div className="calendar-appointment-card">
-                                        {/* Status indicator - border esquerda colorida */}
-                                        <div
-                                            className="calendar-appointment-card-status-bg"
-                                            style={{ background: getStatusColor(apt.status, isOverCapacity(apt)) }}
-                                            aria-hidden="true"
-                                        />
+                                    <div className={cn(
+                                        "calendar-appointment-card",
+                                        getStatusClass(apt.status, apt.therapistId),
+                                        isOverCapacity(apt) && "over-capacity"
+                                    )}>
+                                        {/* Indicador de agendamento próximo (bolinha amarela) */}
+                                        {hasNearbyAppointment[apt.id]?.hasNearby && (
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <span className="nearby-appointment-indicator" aria-hidden="true" />
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        <p className="text-xs">
+                                                            Paciente tem agendamento próximo em: {hasNearbyAppointment[apt.id]?.nearbyDates.join(', ')}
+                                                        </p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </TooltipProvider>
+                                        )}
 
                                         {/* Content */}
                                         <div className="calendar-appointment-card-content">
                                             <div className="min-w-0">
-                                                {/* Patient Name - ALTO CONTRASTE */}
+                                                {/* Patient Name */}
                                                 <div className="calendar-patient-name" title={apt.patientName}>
                                                     {isOverCapacity(apt) && (
-                                                        <AlertTriangle className="h-3 w-3 inline mr-1 text-amber-500 flex-shrink-0" aria-label="Excedente" />
+                                                        <AlertTriangle className="h-3 w-3 inline mr-1 flex-shrink-0" aria-label="Excedente" />
                                                     )}
                                                     <span className="truncate">{apt.patientName}</span>
                                                 </div>

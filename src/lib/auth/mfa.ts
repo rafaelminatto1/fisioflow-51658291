@@ -6,7 +6,6 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
 
 export interface MFAEnrollment {
   id: string;
@@ -38,7 +37,7 @@ export class MFAService {
    * Enroll a user in MFA using TOTP (Time-based One-Time Password)
    * Requires user to be authenticated
    */
-  async enrollMFA(userId: string, friendlyName?: string): Promise<{
+  async enrollMFA(_userId: string, friendlyName?: string): Promise<{
     qrCode: string;
     secret: string;
     factorId: string;
@@ -112,7 +111,7 @@ export class MFAService {
   /**
    * Get list of enrolled MFA factors for user
    */
-  async getEnrolledFactors(userId: string): Promise<MFAEnrollment[]> {
+  async getEnrolledFactors(_userId: string): Promise<MFAEnrollment[]> {
     try {
       const supabase = createClient(
         import.meta.env.VITE_SUPABASE_URL,

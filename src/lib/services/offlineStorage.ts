@@ -83,7 +83,7 @@ class OfflineStorageService {
     return this.db;
   }
 
-  async set(storeName: string, value: any): Promise<void> {
+  async set(storeName: string, value: unknown): Promise<void> {
     const db = this.ensureDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([storeName], 'readwrite');
@@ -144,7 +144,7 @@ class OfflineStorageService {
   }
 
   // Cache com expiração
-  async setCache(key: string, value: any, ttlMinutes: number = 60): Promise<void> {
+  async setCache(key: string, value: unknown, ttlMinutes: number = 60): Promise<void> {
     const expiresAt = Date.now() + ttlMinutes * 60 * 1000;
     await this.set('cachedData', { key, value, expiresAt });
   }
@@ -166,7 +166,7 @@ class OfflineStorageService {
   }
 
   // Sync pendente
-  async addPendingSync(data: any): Promise<void> {
+  async addPendingSync(data: unknown): Promise<void> {
     const id = `${Date.now()}-${Math.random()}`;
     await this.set('pendingSync', {
       id,

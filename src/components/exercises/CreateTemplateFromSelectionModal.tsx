@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useExerciseTemplates, useTemplateItems } from '@/hooks/useExerciseTemplates';
+import { useExerciseTemplates } from '@/hooks/useExerciseTemplates';
 import { toast } from 'sonner';
 
 interface CreateTemplateFromSelectionModalProps {
@@ -28,7 +28,7 @@ export function CreateTemplateFromSelectionModal({
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const { createTemplateAsync } = useExerciseTemplates();
-    const { addItem } = useTemplateItems(); // We need a way to add items, but hook requires templateId.
+    // We need a way to add items, but hook requires templateId.
     // Actually, useTemplateItems hook depends on templateId query key.
     // We can't really use it easily here without mounting it for the new template ID.
     // Better approach: Create a specialized service function or use direct supabase call here for efficiency.

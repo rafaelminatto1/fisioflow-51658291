@@ -210,7 +210,7 @@ export const useAttendanceReport = (filters: AttendanceFilters = { period: 'mont
       const therapistMap = new Map<string, TherapistAttendance>();
       appointmentsList.forEach(apt => {
         const therapistId = apt.therapist_id || 'unknown';
-        const therapistName = (apt.profiles as any)?.full_name || 'Não atribuído';
+        const therapistName = (apt.profiles as { full_name?: string } | null)?.full_name || 'Não atribuído';
 
         if (!therapistMap.has(therapistId)) {
           therapistMap.set(therapistId, {
@@ -263,11 +263,11 @@ export const useAttendanceReport = (filters: AttendanceFilters = { period: 'mont
       const appointmentDetails: AppointmentDetail[] = appointmentsList
         .map(apt => ({
           id: apt.id,
-          patientName: (apt.patients as any)?.full_name || (apt.patients as any)?.name || 'Paciente',
-          patientPhone: (apt.patients as any)?.phone,
+          patientName: (apt.patients as { full_name?: string; name?: string } | null)?.full_name || (apt.patients as { full_name?: string; name?: string } | null)?.name || 'Paciente',
+          patientPhone: (apt.patients as { phone?: string } | null)?.phone,
           date: apt.appointment_date,
           time: apt.appointment_time,
-          therapistName: (apt.profiles as any)?.full_name || 'Não atribuído',
+          therapistName: (apt.profiles as { full_name?: string } | null)?.full_name || 'Não atribuído',
           status: apt.status || 'agendado',
           notes: apt.notes
         }))

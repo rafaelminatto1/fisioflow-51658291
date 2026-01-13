@@ -2,15 +2,23 @@ import { useState } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { useGamification } from '@/hooks/useGamification';
+import { useAuth } from '@/contexts/AuthContext';
 import {
-  Trophy, Users, TrendingUp, Award, Search,
-  Flame, Star, Crown, Medal, Zap
+  Trophy, TrendingUp, Search,
+  Flame, Star, Crown, Medal, Award, CheckCircle2
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
+import { motion } from 'framer-motion';
+
+// New Components
+import GamificationHeader from '@/components/gamification/GamificationHeader';
+import StreakCalendar from '@/components/gamification/StreakCalendar';
+import LevelJourneyMap from '@/components/gamification/LevelJourneyMap';
+import { Input } from '@/components/ui/input';
 
 interface LeaderboardEntry {
   patient_id: string;
@@ -24,10 +32,36 @@ interface LeaderboardEntry {
 const RANK_ICONS = [Crown, Medal, Award];
 const RANK_COLORS = ['text-yellow-500', 'text-gray-400', 'text-amber-600'];
 
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const item = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0 }
+};
+
 export default function PatientGamificationPage() {
+  const { user } = useAuth();
+  const {
+    profile,
+    dailyQuests,
+    completeQuest,
+    xpPerLevel,
+    unlockedAchievements,
+    allAchievements
+  } = useGamification(user?.id || '');
+
   const [search, setSearch] = useState('');
 
-  const { data: leaderboard = [], isLoading } = useQuery({
+  // Fetch Leaderboard (optimized)
+  const { data: leaderboard = [], isLoading: isLoadingLeaderboard } = useQuery({
     queryKey: ['gamification-leaderboard'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -40,56 +74,25 @@ export default function PatientGamificationPage() {
           title
         `)
         .order('total_xp', { ascending: false })
-        .limit(50);
+        .limit(20);
 
       if (error) throw error;
 
-      // Fetch patient names
       const patientIds = (data || []).map(d => d.patient_id);
+      if (patientIds.length === 0) return [];
 
-      if (patientIds.length === 0) {
-        return (data || []).map(entry => ({
-          ...entry,
-          patient_name: 'Paciente'
-        })) as LeaderboardEntry[];
-      }
-
+      // Corrigir: usar full_name em vez de name
       const { data: patients } = await supabase
         .from('patients')
-        .select('id, name')
+        .select('id, full_name')
         .in('id', patientIds);
 
-      const patientMap = new Map((patients || []).map(p => [p.id, p.name]));
+      const patientMap = new Map((patients || []).map(p => [p.id, p.full_name]));
 
       return (data || []).map(entry => ({
         ...entry,
         patient_name: patientMap.get(entry.patient_id) || 'Paciente'
       })) as LeaderboardEntry[];
-    },
-  });
-
-  const { data: stats } = useQuery({
-    queryKey: ['gamification-stats'],
-    queryFn: async () => {
-      const { data: levels } = await supabase
-        .from('patient_levels')
-        .select('total_xp, current_streak');
-
-      const { count: achievementsCount } = await supabase
-        .from('achievements_log')
-        .select('*', { count: 'exact', head: true });
-
-      const totalXP = (levels || []).reduce((sum, l) => sum + (l.total_xp || 0), 0);
-      const avgStreak = levels?.length
-        ? Math.round((levels || []).reduce((sum, l) => sum + (l.current_streak || 0), 0) / levels.length)
-        : 0;
-
-      return {
-        totalParticipants: levels?.length || 0,
-        totalXP,
-        avgStreak,
-        totalAchievements: achievementsCount || 0
-      };
     },
   });
 
@@ -99,149 +102,185 @@ export default function PatientGamificationPage() {
 
   return (
     <MainLayout>
-      <div className="p-6 max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-            <Trophy className="h-8 w-8 text-yellow-500" />
-            Gamificação & Engajamento
-          </h1>
-          <p className="text-muted-foreground">
-            Acompanhe o progresso e engajamento dos pacientes através de níveis, conquistas e rankings
-          </p>
-        </div>
+      <div className="min-h-screen bg-gray-50/50 pb-20">
+        <div className="max-w-md mx-auto md:max-w-6xl p-4 md:p-6 space-y-6">
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Users className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats?.totalParticipants || 0}</p>
-                <p className="text-xs text-muted-foreground">Participantes</p>
-              </div>
-            </div>
-          </Card>
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                <Zap className="h-5 w-5 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{(stats?.totalXP || 0).toLocaleString()}</p>
-                <p className="text-xs text-muted-foreground">XP Total</p>
-              </div>
-            </div>
-          </Card>
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                <Flame className="h-5 w-5 text-orange-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats?.avgStreak || 0}</p>
-                <p className="text-xs text-muted-foreground">Streak Médio</p>
-              </div>
-            </div>
-          </Card>
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-yellow-500/10 flex items-center justify-center">
-                <Trophy className="h-5 w-5 text-yellow-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{stats?.totalAchievements || 0}</p>
-                <p className="text-xs text-muted-foreground">Conquistas</p>
-              </div>
-            </div>
-          </Card>
-        </div>
+          {/* 1. Hero / Header Section */}
+          <GamificationHeader
+            level={profile?.level || 1}
+            currentXp={profile?.current_xp || 0}
+            xpPerLevel={xpPerLevel}
+            streak={profile?.current_streak || 0}
+          />
 
-        {/* Leaderboard */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              Ranking de Pacientes
-            </h2>
-            <div className="relative max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar paciente..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
+          {/* Grid Layout for Tablet/Desktop */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+
+            {/* Left Column (Main Actions) */}
+            <div className="md:col-span-7 space-y-6">
+
+              {/* 2. Daily Quests */}
+              <motion.div
+                variants={container}
+                initial="hidden"
+                animate="show"
+                className="space-y-4"
+              >
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-lg">Missões de Hoje</h3>
+                  <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20">
+                    {dailyQuests?.filter(q => q.completed).length}/{dailyQuests?.length || 0} Completas
+                  </Badge>
+                </div>
+
+                <div className="grid gap-3">
+                  {dailyQuests?.map((quest) => (
+                    <motion.div
+                      key={quest.id}
+                      variants={item}
+                      whileHover={{ scale: 1.02, backgroundColor: 'rgba(var(--primary), 0.02)' }}
+                      whileTap={{ scale: 0.98 }}
+                      className={`
+                                relative overflow-hidden p-4 rounded-xl border transition-all cursor-pointer
+                                ${quest.completed
+                          ? 'bg-green-50/50 border-green-200'
+                          : 'bg-white hover:border-primary/50 shadow-sm hover:shadow-md'
+                        }
+                            `}
+                      onClick={() => !quest.completed && completeQuest.mutate({ questId: quest.id })}
+                    >
+                      {/* Quest Completion Animation BG */}
+                      {quest.completed && (
+                        <motion.div
+                          initial={{ scaleX: 0 }}
+                          animate={{ scaleX: 1 }}
+                          className="absolute inset-0 bg-green-500/5 origin-left"
+                        />
+                      )}
+
+                      <div className="relative flex items-center gap-4">
+                        <div className={`
+                                    h-12 w-12 rounded-full flex items-center justify-center text-xl shrink-0 transition-colors
+                                    ${quest.completed ? 'bg-green-100 text-green-600' : 'bg-blue-50 text-blue-500'}
+                                `}>
+                          {quest.completed ? <CheckCircle2 className="w-6 h-6" /> : <Star className="w-5 h-5 fill-current" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className={`font-semibold truncate ${quest.completed && 'text-muted-foreground line-through'}`}>
+                            {quest.title}
+                          </h4>
+                          <p className="text-sm text-muted-foreground truncate">{quest.description}</p>
+                        </div>
+                        <div className="flex flex-col items-end shrink-0">
+                          <Badge variant="outline" className={`
+                                        ${quest.completed ? 'border-green-200 text-green-700 bg-green-50' : 'border-yellow-200 text-yellow-700 bg-yellow-50'}
+                                    `}>
+                            +{quest.xp} XP
+                          </Badge>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+
+                  {(!dailyQuests || dailyQuests.length === 0) && (
+                    <div className="text-center p-8 bg-white rounded-xl border border-dashed text-muted-foreground">
+                      Nenhuma missão disponível hoje.
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+
+              {/* 3. Journey Map */}
+              <LevelJourneyMap currentLevel={profile?.level || 1} />
+
+            </div>
+
+            {/* Right Column (Stats & Social) */}
+            <div className="md:col-span-5 space-y-6">
+
+              {/* 4. Streak Calendar */}
+              <StreakCalendar
+                todayActivity={dailyQuests?.some(q => q.completed) || false}
+                activeDates={profile?.last_activity_date ? [profile.last_activity_date] : []}
               />
+
+              {/* 5. Achievements Preview */}
+              <Card className="overflow-hidden border-none shadow-sm bg-gradient-to-br from-slate-50 to-white border">
+                <div className="p-4 border-b flex justify-between items-center bg-white/50 backdrop-blur-sm">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Award className="w-5 h-5 text-purple-500" />
+                    Conquistas
+                  </h3>
+                  <span className="text-xs text-muted-foreground">
+                    {unlockedAchievements?.length || 0}/{allAchievements?.length || 0}
+                  </span>
+                </div>
+                <div className="p-4 grid grid-cols-4 gap-2">
+                  {allAchievements.slice(0, 8).map(achievement => {
+                    const isUnlocked = unlockedAchievements.some(ua => ua.achievement_id === achievement.id);
+                    return (
+                      <div key={achievement.id} className="flex flex-col items-center gap-1 group relative">
+                        <div className={`
+                                    w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300
+                                    ${isUnlocked
+                            ? 'bg-purple-100 text-purple-600 shadow-sm group-hover:scale-110'
+                            : 'bg-muted text-muted-foreground/30 grayscale'
+                          }
+                                `}>
+                          <Award className="w-6 h-6" />
+                        </div>
+                        {/* Tooltip-ish */}
+                        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-gray-900 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 pointer-events-none z-10 transition-opacity">
+                          {achievement.title}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+                <Button variant="ghost" className="w-full text-xs text-muted-foreground hover:bg-slate-50 border-t rounded-none h-10">
+                  Ver todas
+                </Button>
+              </Card>
+
+              {/* 6. Leaderboard */}
+              <Card className="border-none shadow-sm h-fit">
+                <div className="p-4 border-b">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-blue-500" />
+                    Ranking
+                  </h3>
+                </div>
+                <div className="divide-y max-h-[400px] overflow-y-auto">
+                  {isLoadingLeaderboard ? (
+                    <div className="p-4 space-y-3">
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  ) : (
+                    filteredLeaderboard.map((entry, index) => (
+                      <div key={entry.patient_id} className="flex items-center gap-3 p-3 hover:bg-slate-50 transition-colors">
+                        <div className={`
+                                    w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold
+                                    ${index < 3 ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-100 text-slate-500'}
+                                `}>
+                          {index + 1}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{entry.patient_name}</p>
+                          <p className="text-xs text-muted-foreground">Nível {entry.current_level}</p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-xs font-bold text-primary">{entry.total_xp} XP</span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </Card>
             </div>
           </div>
-
-          {isLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3, 4, 5].map(i => (
-                <Skeleton key={i} className="h-16" />
-              ))}
-            </div>
-          ) : filteredLeaderboard.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <Trophy className="h-16 w-16 mx-auto mb-4 opacity-30" />
-              <p>Nenhum paciente no ranking ainda</p>
-              <p className="text-sm">Os pacientes aparecerão aqui conforme acumulam XP</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {filteredLeaderboard.map((entry, index) => {
-                const RankIcon = RANK_ICONS[index] || Star;
-                const rankColor = RANK_COLORS[index] || 'text-muted-foreground';
-                const isTopThree = index < 3;
-
-                return (
-                  <div
-                    key={entry.patient_id}
-                    className={`flex items-center gap-4 p-4 rounded-lg transition-colors ${isTopThree
-                        ? 'bg-gradient-to-r from-primary/10 to-transparent border border-primary/20'
-                        : 'bg-muted/50 hover:bg-muted'
-                      }`}
-                  >
-                    {/* Rank */}
-                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${isTopThree ? 'bg-primary/20' : 'bg-muted'
-                      }`}>
-                      {isTopThree ? (
-                        <RankIcon className={`h-5 w-5 ${rankColor}`} />
-                      ) : (
-                        <span className="font-bold text-muted-foreground">{index + 1}</span>
-                      )}
-                    </div>
-
-                    {/* Patient Info */}
-                    <div className="flex-1">
-                      <p className="font-semibold">{entry.patient_name}</p>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Badge variant="outline" className="text-xs">
-                          Nível {entry.current_level}
-                        </Badge>
-                        <span>{entry.title}</span>
-                      </div>
-                    </div>
-
-                    {/* Stats */}
-                    <div className="flex items-center gap-4 text-right">
-                      <div>
-                        <p className="font-bold text-primary">{entry.total_xp.toLocaleString()}</p>
-                        <p className="text-xs text-muted-foreground">XP</p>
-                      </div>
-                      <div className="flex items-center gap-1 text-orange-500">
-                        <Flame className="h-4 w-4" />
-                        <span className="font-bold">{entry.current_streak}</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </Card>
+        </div>
       </div>
     </MainLayout>
   );

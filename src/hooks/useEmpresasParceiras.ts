@@ -52,10 +52,10 @@ export function useCreateEmpresaParceira() {
         description: 'Empresa adicionada com sucesso.',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao criar empresa',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
     },
@@ -85,10 +85,10 @@ export function useUpdateEmpresaParceira() {
         description: 'Alterações salvas com sucesso.',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao atualizar empresa',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
     },
@@ -115,10 +115,10 @@ export function useDeleteEmpresaParceira() {
         description: 'Empresa excluída com sucesso.',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao remover empresa',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
     },

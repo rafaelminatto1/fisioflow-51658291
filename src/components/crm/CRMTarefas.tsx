@@ -9,11 +9,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  Plus, Phone, Mail, MessageSquare, Calendar, Clock, 
-  CheckCircle2, Circle, AlertCircle, Trash2, Users
+import {
+  Plus, Phone, Mail, MessageSquare, Calendar, Clock,
+  CheckCircle2, Trash2, Users
 } from 'lucide-react';
-import { useCRMTarefas, useCreateTarefa, useConcluirTarefa, useDeleteTarefa, CRMTarefa } from '@/hooks/useCRM';
+import { useCRMTarefas, useCreateTarefa, useConcluirTarefa, useDeleteTarefa } from '@/hooks/useCRM';
 import { useLeads } from '@/hooks/useLeads';
 import { format, isToday, isPast, isTomorrow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -50,7 +50,7 @@ export function CRMTarefas({ leadId, compact = false }: CRMTarefasProps) {
     lead_id: leadId || '',
   });
 
-  const { data: tarefas = [], isLoading } = useCRMTarefas(leadId);
+  const { data: tarefas = [] } = useCRMTarefas(leadId);
   const { data: leads = [] } = useLeads();
   const createMutation = useCreateTarefa();
   const concluirMutation = useConcluirTarefa();

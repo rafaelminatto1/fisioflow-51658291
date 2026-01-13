@@ -3,7 +3,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { FileText, Stethoscope, MessageCircle, Copy, Check, Download } from 'lucide-react';
 import { PDFDownloadLink } from '@react-pdf/renderer';
@@ -90,7 +89,7 @@ const ShareReportModal: React.FC<ShareReportModalProps> = ({ isOpen, onClose, re
                                 }
                                 fileName={`Relatorio_Clinico_${patientName.replace(/\s+/g, '_')}.pdf`}
                             >
-                                {({ blob, url, loading, error }) => (
+                                {({ loading }) => (
                                     <Button disabled={loading} onClick={handleDownloadAudit} className="gap-2">
                                         {loading ? 'Gerando PDF...' : <><Download className="w-4 h-4" /> Baixar PDF Completo</>}
                                     </Button>

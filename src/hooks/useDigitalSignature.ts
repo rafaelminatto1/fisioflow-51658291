@@ -22,7 +22,7 @@ export function useDocumentSignatures(documentId?: string) {
     queryKey: ['document-signatures', documentId],
     queryFn: async () => {
       let query = supabase
-        .from('document_signatures' as any)
+        .from('document_signatures')
         .select('*')
         .order('signed_at', { ascending: false });
 
@@ -53,7 +53,7 @@ export function useCreateSignature() {
       signature_hash: string;
     }) => {
       const { data: signature, error } = await supabase
-        .from('document_signatures' as any)
+        .from('document_signatures')
         .insert({
           ...data,
           signed_at: new Date().toISOString()
@@ -85,7 +85,7 @@ export function useVerifySignature() {
   return useMutation({
     mutationFn: async ({ documentId, hash }: { documentId: string; hash: string }) => {
       const { data, error } = await supabase
-        .from('document_signatures' as any)
+        .from('document_signatures')
         .select('*')
         .eq('document_id', documentId)
         .eq('signature_hash', hash)

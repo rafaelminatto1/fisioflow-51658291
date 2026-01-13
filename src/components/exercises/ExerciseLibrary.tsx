@@ -4,11 +4,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Play, Search, Edit, Trash2, Heart, Dumbbell,
   Video, Clock, Repeat, LayoutGrid, List, VideoOff,
-  Filter, SortAsc, Eye, MoreVertical, Sparkles
+  Eye, MoreVertical
 } from 'lucide-react';
 import { useExercises, type Exercise } from '@/hooks/useExercises';
 import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';
@@ -23,13 +22,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -355,7 +347,7 @@ import { CreateTemplateFromSelectionModal } from './CreateTemplateFromSelectionM
 
 // ... (existing imports)
 
-export function ExerciseLibrary({ onSelectExercise, onEditExercise }: ExerciseLibraryProps) {
+export function ExerciseLibrary({ onSelectExercise: _onSelectExercise, onEditExercise }: ExerciseLibraryProps) {
   const [searchTerm, setSearchTerm] = useState('');
   // ... (existing state)
   const [activeFilter, setActiveFilter] = useState<'all' | 'favorites' | 'no-video'>('all');

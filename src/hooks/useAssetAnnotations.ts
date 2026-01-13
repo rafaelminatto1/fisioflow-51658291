@@ -71,11 +71,11 @@ export const useAssetAnnotations = (assetId: string | null) => {
                 description: `Versão ${nextVersion} criada com sucesso.`
             });
 
-        } catch (e: any) {
+        } catch (e) {
             toast({
                 variant: "destructive",
                 title: "Erro ao salvar",
-                description: e.message
+                description: e instanceof Error ? e.message : 'Erro desconhecido'
             });
         }
     }, [assetId, annotations, versions, toast]);

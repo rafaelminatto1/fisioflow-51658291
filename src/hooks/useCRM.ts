@@ -42,8 +42,8 @@ export interface CRMAutomacao {
   descricao: string | null;
   tipo: 'aniversario' | 'reengajamento' | 'pos_avaliacao' | 'boas_vindas' | 'follow_up_automatico';
   ativo: boolean;
-  gatilho_config: Record<string, any>;
-  acao_config: Record<string, any>;
+  gatilho_config: Record<string, unknown>;
+  acao_config: Record<string, unknown>;
   canal: 'whatsapp' | 'email' | 'sms';
   template_mensagem: string | null;
   total_executado: number;

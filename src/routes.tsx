@@ -51,6 +51,7 @@ const ProtocolsPage = lazy(() => import("./pages/Protocols"));
 const SmartDashboard = lazy(() => import("./pages/SmartDashboard"));
 const Inventory = lazy(() => import("./pages/Inventory"));
 const PatientGamificationPage = lazy(() => import("./pages/PatientGamificationPage"));
+const AdminGamificationPage = lazy(() => import("./pages/admin/gamification/AdminGamificationPage"));
 const NewEvaluationPage = lazy(() => import("./pages/patients/NewEvaluationPage"));
 const PainMapHistoryPage = lazy(() => import("./pages/patients/PainMapHistoryPage"));
 const SessionEvolutionPage = lazy(() => import("./pages/SessionEvolutionPage"));
@@ -204,6 +205,7 @@ export function AppRoutes() {
             <Route path="/computer-vision" element={<ProtectedRoute><ComputerVisionExercise patientId="current-patient" /></ProtectedRoute>} />
             <Route path="/intelligent-reports" element={<ProtectedRoute><IntelligentReports patientId="demo-patient" patientName="Paciente Demo" /></ProtectedRoute>} />
             <Route path="/augmented-reality" element={<ProtectedRoute><AugmentedRealityExercise patientId="current-patient" /></ProtectedRoute>} />
+            <Route path="/admin/gamification" element={<ProtectedRoute allowedRoles={['admin', 'fisioterapeuta']}><AdminGamificationPage /></ProtectedRoute>} />
 
             {/* Image Analysis Module (NeuroPose) */}
             <Route path="/dashboard/imagens" element={<ProtectedRoute><ImageAnalysisDashboard /></ProtectedRoute>} />

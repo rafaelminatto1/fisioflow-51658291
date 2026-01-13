@@ -38,7 +38,7 @@ import {
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-const ACTION_LABELS: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive'; icon: any }> = {
+const ACTION_LABELS: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive'; icon: typeof Plus }> = {
   INSERT: { label: 'Criação', variant: 'default', icon: Plus },
   UPDATE: { label: 'Atualização', variant: 'secondary', icon: Edit },
   DELETE: { label: 'Exclusão', variant: 'destructive', icon: Trash2 },

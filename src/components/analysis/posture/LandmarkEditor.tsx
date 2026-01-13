@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Stage, Layer, Circle, Line, Image as KonvaImage } from 'react-konva';
 import { UnifiedLandmark } from '@/utils/geometry';
 import { POSE_CONNECTIONS } from '@mediapipe/pose';
@@ -36,10 +36,10 @@ const LandmarkEditor: React.FC<LandmarkEditorProps> = ({ imageUrl, landmarks, on
         };
     }, [imageUrl]);
 
-    const handleDragMove = (index: number, e: any) => {
+    const handleDragMove = (index: number, e: { target: { position: () => { x: number; y: number } } }) => {
         if (!editable) return;
 
-        const stage = e.target.getStage();
+        // const stage = e.target.getStage();
         const pos = e.target.position();
 
         const newX = pos.x / dimensions.width;

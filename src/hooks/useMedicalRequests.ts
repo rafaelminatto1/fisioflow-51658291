@@ -46,7 +46,7 @@ export const useMedicalRequests = (patientId?: string | null) => {
                 .order('request_date', { ascending: false });
 
             if (error) throw error;
-            setRequests(data as MedicalRequest[]);
+            setRequests(data || []);
         } finally {
             setIsLoading(false);
         }

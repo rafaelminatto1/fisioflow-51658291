@@ -58,6 +58,6 @@ export interface AssessmentResponse {
     id: string;
     assessment_id: string;
     question_id: string;
-    value: any; // Dependent on question type
+    value: unknown; // Dependent on question type
     notes?: string;
 }

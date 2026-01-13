@@ -4,7 +4,8 @@ import {
     METRIC_KEYS,
     SCHEMA_VERSION,
     MetricDelta,
-    Summary
+    Summary,
+    MetricUnit
 } from '@/types/analysis/dynamic_compare';
 
 // Helper to sanitize numbers
@@ -97,7 +98,7 @@ export const analyzeDynamicComparison = (
 // -- Helpers --
 
 function createDelta(
-    key: string, label: string, unit: any,
+    key: string, label: string, unit: MetricUnit,
     valA: number, valB: number,
     directionality: "LOWER_IS_BETTER" | "HIGHER_IS_BETTER"
 ): MetricDelta {
@@ -125,7 +126,7 @@ function createDelta(
     };
 }
 
-function extractGaitMetrics(frames: VideoAnalysisFrame[]) {
+function extractGaitMetrics(_frames: VideoAnalysisFrame[]) {
     // Mock values for demo robustness
     return {
         cadence: 110 + (Math.random() * 10 - 5),

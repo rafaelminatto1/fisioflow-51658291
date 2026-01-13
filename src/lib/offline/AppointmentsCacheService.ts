@@ -63,7 +63,7 @@ class AppointmentsCacheService {
 
             if (appointments.length > 0) {
                 // Converter para formato serializável com ID garantido
-                const serializableAppointments = appointments.map(apt => ({
+                const serializableAppointments = appointments.map((apt) => ({
                     ...apt,
                     id: apt.id, // Garantir que ID existe (keyPath do IndexedDB)
                     date: apt.date instanceof Date ? apt.date.toISOString() : apt.date,

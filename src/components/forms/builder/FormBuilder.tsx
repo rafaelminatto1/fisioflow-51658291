@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
     Type,
     AlignLeft,
@@ -22,7 +21,7 @@ import {
     Loader2,
     Hash
 } from 'lucide-react';
-import { ClinicalFieldType, EvaluationForm, EvaluationFormField } from '@/types/clinical-forms';
+import { ClinicalFieldType, EvaluationForm } from '@/types/clinical-forms';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';

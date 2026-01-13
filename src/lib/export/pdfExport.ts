@@ -69,7 +69,7 @@ export function exportPrestadoresPDF(
     .filter(p => p.status_pagamento === 'PENDENTE')
     .reduce((sum, p) => sum + p.valor_acordado, 0);
 
-  const finalY = (doc as any).lastAutoTable.finalY || 45;
+  const finalY = (doc as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY || 45;
   
   doc.setFontSize(10);
   doc.text(`Total Pago: R$ ${totalPago.toFixed(2)}`, 14, finalY + 10);
@@ -116,7 +116,7 @@ export function exportParticipantesPDF(
     ? (seguidores / participantes.length) * 100 
     : 0;
 
-  const finalY = (doc as any).lastAutoTable.finalY || 45;
+  const finalY = (doc as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY || 45;
   
   doc.setFontSize(10);
   doc.text(`Total de Participantes: ${participantes.length}`, 14, finalY + 10);

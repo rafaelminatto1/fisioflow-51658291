@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEventosStats } from '@/hooks/useEventosStats';
-import { BarChart, PieChart, TrendingUp, Users, DollarSign } from 'lucide-react';
+import { BarChart, Users, DollarSign } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
 export function EventosAnalytics() {

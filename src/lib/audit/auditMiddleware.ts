@@ -52,9 +52,7 @@ export function calculateDiff(
  */
 export async function logAuditEntry(entry: AuditEntry): Promise<boolean> {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-
-    const { error } = await (supabase as any).from('audit_log').insert({
+    const { error } = await supabase.from('audit_log').insert({
       action: entry.action,
       table_name: entry.table_name,
       record_id: entry.record_id || null,
@@ -147,7 +145,7 @@ const sensitiveFields = ['password', 'cpf', 'token', 'secret', 'key'];
 /**
  * Mascara campos sensíveis nos dados de auditoria
  */
-export function maskSensitiveData(data: Record<string, any> | null): Record<string, any> | null {
+export function maskSensitiveData(data: Record<string, unknown> | null): Record<string, unknown> | null {
   if (!data) return null;
 
   const masked = { ...data };

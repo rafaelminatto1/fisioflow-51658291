@@ -1,15 +1,13 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, Upload, Play, Save, CheckCircle2, ChevronRight, AlertTriangle, SplitSquareHorizontal, Video } from 'lucide-react';
+import { Loader2, Upload, Play, ChevronRight } from 'lucide-react';
 import { detectPoseInImage } from '@/services/ai/poseDetectionService';
 import { UnifiedLandmark } from '@/utils/geometry';
 import { calculatePostureMetrics, PostureReport } from '@/utils/postureMetrics';
 import LandmarkEditor from './LandmarkEditor';
-import LiveBiofeedbackSession from '../live/LiveBiofeedbackSession';
-import CameraConsentModal from '../live/CameraConsentModal';
 
 type Step = 'upload' | 'analysis' | 'report';
 type ViewType = 'front' | 'side' | 'back';
@@ -72,10 +70,10 @@ const ClinicalPostureAnalysis = () => {
     };
 
     // 4. Save
-    const handleSave = async () => {
-        // Here we would call supabase to save 'analysis_runs'
-        toast({ title: 'Salvo com sucesso!', description: 'Relatório registrado no prontuário.' });
-    };
+    // const handleSave = async () => {
+    //     // Here we would call supabase to save 'analysis_runs'
+    //     toast({ title: 'Salvo com sucesso!', description: 'Relatório registrado no prontuário.' });
+    // };
 
     return (
         <div className="flex flex-col h-full gap-4 p-4">

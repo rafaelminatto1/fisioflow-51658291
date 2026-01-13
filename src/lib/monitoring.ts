@@ -9,7 +9,7 @@ import { logger } from './errors/logger';
 export interface MetricData {
   value: number;
   timestamp?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export const METRICS = {

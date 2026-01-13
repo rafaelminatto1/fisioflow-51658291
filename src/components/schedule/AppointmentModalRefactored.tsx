@@ -6,8 +6,6 @@ import { format, parseISO } from 'date-fns';
 import {
   User, CreditCard, FileText, Check, X
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Tabs, TabsContent, TabsList, TabsTrigger
@@ -27,9 +25,7 @@ import { useScheduleCapacity } from '@/hooks/useScheduleCapacity';
 import { useAvailableTimeSlots } from '@/hooks/useAvailableTimeSlots';
 import {
   type AppointmentBase,
-  type AppointmentFormData,
-  type AppointmentType,
-  type AppointmentStatus
+  type AppointmentFormData
 } from '@/types/appointment';
 import { appointmentFormSchema } from '@/lib/validations/agenda';
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
@@ -221,22 +217,6 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     }
     return slotInfo.map(s => s.time);
   }, [slotInfo, isDayClosed]);
-
-  const dataToDuplicate = (apt: AppointmentBase): AppointmentFormData => {
-    return {
-      patient_id: apt.patientId,
-      appointment_date: format(new Date(apt.date), 'yyyy-MM-dd'),
-      appointment_time: apt.time || '',
-      duration: apt.duration,
-      type: apt.type,
-      status: apt.status,
-      notes: apt.notes,
-      therapist_id: apt.therapistId,
-      room: apt.room,
-      payment_status: apt.payment_status,
-      payment_amount: apt.payment_amount,
-    };
-  };
 
   const handleSave = async (data: AppointmentFormData) => {
     try {

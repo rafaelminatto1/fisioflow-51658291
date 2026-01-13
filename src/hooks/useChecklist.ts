@@ -28,7 +28,7 @@ export function useCreateChecklistItem() {
     mutationFn: async (item: ChecklistItemCreate) => {
       const { data, error } = await supabase
         .from('checklist_items')
-        .insert([item as any])
+        .insert([item])
         .select()
         .single();
 
@@ -42,10 +42,10 @@ export function useCreateChecklistItem() {
         description: 'Item do checklist criado com sucesso.',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao adicionar item',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
     },
@@ -60,7 +60,7 @@ export function useUpdateChecklistItem() {
     mutationFn: async ({ id, data, eventoId }: { id: string; data: ChecklistItemUpdate; eventoId: string }) => {
       const { data: updated, error } = await supabase
         .from('checklist_items')
-        .update(data as any)
+        .update(data)
         .eq('id', id)
         .select()
         .single();
@@ -75,10 +75,10 @@ export function useUpdateChecklistItem() {
         description: 'Alterações salvas com sucesso.',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao atualizar item',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
     },
@@ -114,10 +114,10 @@ export function useToggleChecklistItem() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['checklist', data.eventoId] });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao atualizar item',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
     },
@@ -145,10 +145,10 @@ export function useDeleteChecklistItem() {
         description: 'Item excluído com sucesso.',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao remover item',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
     },

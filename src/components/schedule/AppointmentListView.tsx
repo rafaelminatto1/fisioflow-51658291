@@ -50,7 +50,7 @@ export const AppointmentListView: React.FC<AppointmentListViewProps> = ({
           title: "Atualizado!",
           description: "Lista de agendamentos atualizada",
         });
-      } catch (error) {
+      } catch {
         toast({
           title: "Erro ao atualizar",
           description: "Tente novamente",
@@ -65,14 +65,14 @@ export const AppointmentListView: React.FC<AppointmentListViewProps> = ({
   };
 
   // Swipe action handlers - memoized to prevent re-renders
-  const handleConfirm = useCallback((id: string) => {
+  const handleConfirm = useCallback((_id: string) => {
     toast({
       title: "Agendamento confirmado",
       description: "O paciente será notificado",
     });
   }, [toast]);
 
-  const handleCancel = useCallback((id: string) => {
+  const handleCancel = useCallback((_id: string) => {
     toast({
       title: "Agendamento cancelado",
       description: "O paciente será notificado",
@@ -80,13 +80,13 @@ export const AppointmentListView: React.FC<AppointmentListViewProps> = ({
     });
   }, [toast]);
 
-  const handleCall = useCallback((id: string) => {
+  const handleCall = useCallback((_id: string) => {
     toast({
       title: "Iniciando ligação...",
     });
   }, [toast]);
 
-  const handleWhatsApp = useCallback((id: string) => {
+  const handleWhatsApp = useCallback((_id: string) => {
     toast({
       title: "Abrindo WhatsApp...",
     });

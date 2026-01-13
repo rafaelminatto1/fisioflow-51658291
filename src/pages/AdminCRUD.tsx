@@ -2,20 +2,16 @@ import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Users, 
-  Calendar, 
-  Dumbbell, 
-  FileText, 
-  Building2, 
+import {
+  Users,
+  Calendar,
+  Dumbbell,
+  FileText,
+  Building2,
   Briefcase,
   Activity,
   DollarSign,
   ClipboardList,
-  Target,
-  Stethoscope,
-  Heart,
-  Scissors,
   TrendingUp
 } from 'lucide-react';
 import { PatientsManager } from '@/components/admin/crud/PatientsManager';

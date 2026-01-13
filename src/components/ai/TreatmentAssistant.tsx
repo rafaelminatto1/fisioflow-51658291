@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,10 +44,10 @@ export function TreatmentAssistant({ patientId, patientName }: TreatmentAssistan
         title: '✨ Análise de IA concluída',
         description: 'Sugestões geradas com sucesso',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: 'Erro na análise',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
         variant: 'destructive',
       });
     } finally {

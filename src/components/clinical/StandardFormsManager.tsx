@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -36,18 +35,18 @@ function StandardFormCard({ type, onCreate }: StandardFormCardProps) {
     }
   };
 
-  const getTypeLabel = () => {
-    switch (type) {
-      case 'ANAMNESE':
-        return 'Anamnese';
-      case 'AVALIACAO_POSTURAL':
-        return 'Avaliação Postural';
-      case 'AVALIACAO_FUNCIONAL':
-        return 'Avaliação Funcional';
-      default:
-        return type;
-    }
-  };
+  // const getTypeLabel = () => {
+  //   switch (type) {
+  //     case 'ANAMNESE':
+  //       return 'Anamnese';
+  //     case 'AVALIACAO_POSTURAL':
+  //       return 'Avaliação Postural';
+  //     case 'AVALIACAO_FUNCIONAL':
+  //       return 'Avaliação Funcional';
+  //     default:
+  //       return type;
+  //   }
+  // };
 
   const getFieldSections = () => {
     const sections = config.campos.reduce((acc, campo) => {

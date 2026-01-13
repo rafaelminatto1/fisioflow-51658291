@@ -125,7 +125,7 @@ export class ReportGeneratorService {
           ex.frequency
         ]),
         theme: 'striped',
-        headStyles: { fillColor: [41, 85, 185] as any },
+        headStyles: { fillColor: [41, 85, 185] as [number, number, number] },
       });
     }
     

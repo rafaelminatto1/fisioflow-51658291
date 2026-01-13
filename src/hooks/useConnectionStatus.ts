@@ -55,9 +55,9 @@ async function checkRealConnectivity(): Promise<boolean> {
 
         // Se não há erro, está conectado
         return !error;
-    } catch (error: any) {
+    } catch (error) {
         // Erros de rede/timeout = offline
-        if (error.name === 'AbortError' || error.message?.includes('fetch')) {
+        if (error instanceof Error && (error.name === 'AbortError' || error.message?.includes('fetch'))) {
             return false;
         }
         // Outros erros (ex: auth) podem significar que está online
@@ -146,7 +146,7 @@ export function useConnectionStatus(options: UseConnectionStatusOptions = {}) {
             });
 
             return isConnected;
-        } catch (error: any) {
+        } catch (error) {
             setStatus(prev => ({
                 ...prev,
                 state: 'offline',
@@ -154,7 +154,7 @@ export function useConnectionStatus(options: UseConnectionStatusOptions = {}) {
                 isChecking: false,
                 isReconnecting: autoReconnect,
                 lastCheckAt: new Date(),
-                error: error.message,
+                error: error instanceof Error ? error.message : 'Erro desconhecido',
             }));
             return false;
         } finally {

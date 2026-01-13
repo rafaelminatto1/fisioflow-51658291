@@ -14,7 +14,7 @@ export interface ExcelColumn {
 export interface ExcelSheet {
   name: string;
   title?: string;
-  data: Record<string, any>[];
+  data: Record<string, unknown>[];
   columns: ExcelColumn[];
   includeHeader?: boolean;
 }
@@ -26,26 +26,10 @@ export interface ExcelExportOptions {
   clinicName?: string;
 }
 
-// Styling constants - xlsx-style não está disponível, mas podemos definir configurações
-const HEADER_STYLE = {
-  fill: { fgColor: { rgb: '5034FF' } },
-  font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 12 },
-  alignment: { horizontal: 'center', vertical: 'center' }
-};
-
-const TITLE_STYLE = {
-  font: { bold: true, sz: 14 },
-  alignment: { horizontal: 'center' }
-};
-
-const ALTERNATE_ROW_STYLE = {
-  fill: { fgColor: { rgb: 'F5F5F5' } }
-};
-
 /**
  * Formata valor para exibição no Excel
  */
-const formatValue = (value: any, type?: ExcelColumn['type']): string | number => {
+const formatValue = (value: unknown, type?: ExcelColumn['type']): string | number => {
   if (value === null || value === undefined) return '';
   
   switch (type) {

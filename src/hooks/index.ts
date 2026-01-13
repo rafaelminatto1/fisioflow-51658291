@@ -1,13 +1,12 @@
 // Basic hooks
 export const useNavPreload = () => ({});
 
-export interface UseFileUploadOptions { }
-export const useFileUpload = (options?: any) => ({
+export const useFileUpload = (_options?: unknown) => ({
   isUploading: false,
   progress: 0,
   uploadedFiles: [],
-  upload: (files: File[]) => Promise.resolve(),
-  removeFile: (id: string) => { },
+  upload: (_files: File[]) => Promise.resolve(),
+  removeFile: (_id: string) => { },
   UseFileUploadOptions: {}
 });
 

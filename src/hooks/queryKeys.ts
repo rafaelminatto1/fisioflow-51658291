@@ -101,7 +101,7 @@ export const QueryKeys = {
 /**
  * Helper para criar query keys dinâmicas
  */
-export function createQueryKeys<T extends Record<string, (...args: any[]) => any[]>>(
+export function createQueryKeys<T extends Record<string, (...args: unknown[]) => unknown[]>>(
   keys: T
 ): T {
   return keys;

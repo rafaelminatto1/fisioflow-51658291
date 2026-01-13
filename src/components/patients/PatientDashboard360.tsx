@@ -1,9 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
 import {
   User,
   Calendar,
@@ -12,10 +10,8 @@ import {
   MapPin,
   AlertTriangle,
   Activity,
-  Target,
   FileText,
   Clock,
-  TrendingUp,
   CheckCircle2
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';

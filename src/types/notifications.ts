@@ -63,7 +63,7 @@ export interface NotificationPayload {
   icon?: string
   badge?: string
   image?: string
-  data?: Record<string, any>
+  data?: Record<string, unknown>
   actions?: NotificationAction[]
   requireInteraction?: boolean
   silent?: boolean
@@ -77,7 +77,7 @@ export interface NotificationHistory {
   type: NotificationType
   title: string
   body: string
-  data: Record<string, any>
+  data: Record<string, unknown>
   sentAt: Date
   deliveredAt?: Date
   clickedAt?: Date
@@ -94,7 +94,7 @@ export interface NotificationTemplate {
   iconUrl?: string
   badgeUrl?: string
   actions: NotificationAction[]
-  defaultData: Record<string, any>
+  defaultData: Record<string, unknown>
   active: boolean
   createdAt: Date
   updatedAt: Date
@@ -104,7 +104,7 @@ export interface NotificationTrigger {
   id: string
   name: string
   eventType: string
-  conditions: Record<string, any>
+  conditions: Record<string, unknown>
   templateType: NotificationType
   scheduleDelayMinutes: number
   isRecurring: boolean
@@ -153,7 +153,7 @@ export interface SendNotificationRequest {
   type: NotificationType
   title: string
   body: string
-  data?: Record<string, any>
+  data?: Record<string, unknown>
   actions?: NotificationAction[]
   scheduleAt?: Date
 }
@@ -168,7 +168,7 @@ export interface NotificationPermissionState {
 // Service Worker message types
 export interface ServiceWorkerMessage {
   type: 'NOTIFICATION_CLICKED' | 'NOTIFICATION_CLOSED' | 'SUBSCRIPTION_CHANGED'
-  payload?: any
+  payload?: unknown
 }
 
 export interface PushEventData {
@@ -183,7 +183,7 @@ export type NotificationStatusKey = keyof typeof NotificationStatus
 export interface NotificationError {
   code: string
   message: string
-  details?: Record<string, any>
+  details?: Record<string, unknown>
 }
 
 export interface NotificationBatch {
