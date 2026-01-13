@@ -25,7 +25,6 @@ interface DayColumnProps {
     handleDragLeave: () => void;
     handleDrop: (e: React.DragEvent, date: Date, time: string) => void;
     checkTimeBlocked: (date: Date, time: string) => { blocked: boolean; reason?: string };
-    _getStatusColor: (status: string, isOverCapacity?: boolean) => string;
     isOverCapacity: (apt: Appointment) => boolean;
     openPopoverId: string | null;
     setOpenPopoverId: (id: string | null) => void;
@@ -49,7 +48,6 @@ export const DayColumn = memo(({
     handleDragLeave,
     handleDrop,
     checkTimeBlocked,
-    _getStatusColor,
     isOverCapacity,
     openPopoverId,
     setOpenPopoverId,
@@ -299,9 +297,8 @@ export const DayColumn = memo(({
                                     top: `${topMobile}px`,
                                     height: `${heightMobile}px`,
                                     // Posicionamento dinâmico para appointments empilhados
-                                    left: stackCount > 1 ? `${leftPercent}%` : '2px',
-                                    right: stackCount > 1 ? 'auto' : '2px',
-                                    width: stackCount > 1 ? `${widthPercent}%` : 'calc(100% - 4px)',
+                                    left: stackCount > 1 ? `${leftPercent}%` : '4px',
+                                    width: stackCount > 1 ? `${widthPercent}%` : 'calc(100% - 8px)',
                                     ['--top-desktop' as string]: `${topDesktop}px`,
                                     ['--height-desktop' as string]: `${heightDesktop}px`,
                                     zIndex: stackCount > 1 ? 10 + stackIndex : undefined,

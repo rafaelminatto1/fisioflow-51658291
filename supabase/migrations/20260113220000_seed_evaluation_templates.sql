@@ -1,7 +1,15 @@
 -- =====================================================
--- Seed 20+ Physiotherapy Evaluation Templates
+-- Seed 20+ Physiotherapy Evaluation Templates WITH REFERENCES
 -- Based on gold-standard scientific assessment scales
 -- =====================================================
+
+-- Add Referencias Column if not exists
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'evaluation_forms' AND column_name = 'referencias') THEN
+        ALTER TABLE public.evaluation_forms ADD COLUMN referencias TEXT;
+    END IF;
+END $$;
 
 DO $$
 DECLARE
@@ -11,12 +19,13 @@ BEGIN
 -- =====================================================
 -- TEMPLATE 1: Avaliação Padrão (Default Template)
 -- =====================================================
-INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo)
+INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo, referencias)
 VALUES (
     'Avaliação Fisioterapêutica Padrão',
     'Template base com campos essenciais para avaliação fisioterapêutica completa',
     'padrao',
-    true
+    true,
+    'APTA Guide to Physical Therapist Practice 3.0. American Physical Therapy Association; 2014.'
 ) RETURNING id INTO v_form_id;
 
 INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placeholder, opcoes, ordem, obrigatorio) VALUES
@@ -39,12 +48,13 @@ INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placehold
 -- =====================================================
 
 -- Template 2: Lesão Muscular
-INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo)
+INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo, referencias)
 VALUES (
     'Avaliação de Lesão Muscular',
     'Avaliação baseada na classificação de Munich (Grau I-III) para lesões musculares',
     'esportiva',
-    true
+    true,
+    'Müller-Wohlfahrt HW, et al. Terminology and classification of muscle injuries in sport: the Munich consensus statement. Br J Sports Med. 2013.'
 ) RETURNING id INTO v_form_id;
 
 INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placeholder, opcoes, ordem, obrigatorio) VALUES
@@ -60,12 +70,13 @@ INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placehold
 (v_form_id, 'Tempo Estimado de Retorno', 'selecao', NULL, '["1-2 semanas", "2-4 semanas", "4-8 semanas", "8-12 semanas", ">12 semanas"]', 10, false);
 
 -- Template 3: Entorse de Tornozelo
-INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo)
+INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo, referencias)
 VALUES (
     'Avaliação de Entorse de Tornozelo',
     'Avaliação baseada nas Ottawa Ankle Rules para entorses de tornozelo',
     'esportiva',
-    true
+    true,
+    'Stiell IG, et al. Implementation of the Ottawa Ankle Rules. JAMA. 1994.'
 ) RETURNING id INTO v_form_id;
 
 INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placeholder, opcoes, ordem, obrigatorio) VALUES
@@ -82,12 +93,13 @@ INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placehold
 (v_form_id, 'Indicação de RX (Ottawa Rules)', 'opcao_unica', NULL, '["Não indicado", "Indicado"]', 11, true);
 
 -- Template 4: Lesão de LCA
-INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo)
+INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo, referencias)
 VALUES (
     'Avaliação de Lesão de LCA',
     'Avaliação para lesão do Ligamento Cruzado Anterior com testes especiais',
     'esportiva',
-    true
+    true,
+    'Torg JS, et al. Clinical diagnosis of anterior cruciate ligament instability in the athlete. Am J Sports Med. 1976.'
 ) RETURNING id INTO v_form_id;
 
 INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placeholder, opcoes, ordem, obrigatorio) VALUES
@@ -103,12 +115,13 @@ INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placehold
 (v_form_id, 'IKDC Score', 'numero', 'Pontuação 0-100', NULL, 10, false);
 
 -- Template 5: Tendinopatia Patelar (VISA-P)
-INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo)
+INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo, referencias)
 VALUES (
     'Avaliação de Tendinopatia Patelar (VISA-P)',
     'Avaliação baseada no questionário VISA-P validado para tendinopatia patelar',
     'esportiva',
-    true
+    true,
+    'Visentini PJ, et al. The VISA score: an index of severity of symptoms in patients with jumper''s knee (patellar tendinosis). J Sci Med Sport. 1998.'
 ) RETURNING id INTO v_form_id;
 
 INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placeholder, opcoes, ordem, obrigatorio) VALUES
@@ -124,12 +137,13 @@ INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placehold
 (v_form_id, 'Achados Ultrassonográficos', 'texto_longo', 'Espessamento, neovascularização, etc.', NULL, 10, false);
 
 -- Template 6: Síndrome do Trato Iliotibial
-INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo)
+INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo, referencias)
 VALUES (
     'Avaliação de Síndrome do Trato Iliotibial',
     'Avaliação específica para síndrome do trato iliotibial em corredores',
     'esportiva',
-    true
+    true,
+    'Fredericson M, et al. Iliotibial band syndrome in runners. Sports Med. 2005.'
 ) RETURNING id INTO v_form_id;
 
 INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placeholder, opcoes, ordem, obrigatorio) VALUES
@@ -145,12 +159,13 @@ INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placehold
 (v_form_id, 'Análise de Pisada', 'selecao', NULL, '["Neutra", "Pronada", "Supinada"]', 10, false);
 
 -- Template 7: Lesão de Ombro no Atleta (ASES)
-INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo)
+INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo, referencias)
 VALUES (
     'Avaliação de Ombro no Atleta (ASES)',
     'Avaliação baseada no ASES Score para lesões de ombro em atletas',
     'esportiva',
-    true
+    true,
+    'Richards RR, et al. A standardized method for the assessment of shoulder function. J Shoulder Elbow Surg. 1994.'
 ) RETURNING id INTO v_form_id;
 
 INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placeholder, opcoes, ordem, obrigatorio) VALUES
@@ -166,12 +181,13 @@ INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placehold
 (v_form_id, 'ASES Score', 'numero', 'Pontuação 0-100', NULL, 10, true);
 
 -- Template 8: Concussão Esportiva (SCAT5)
-INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo)
+INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo, referencias)
 VALUES (
     'Avaliação de Concussão Esportiva (SCAT5)',
     'Avaliação baseada no Sport Concussion Assessment Tool 5',
     'esportiva',
-    true
+    true,
+    'Echemendia RJ, et al. The Sport Concussion Assessment Tool 5th Edition (SCAT5). Br J Sports Med. 2017.'
 ) RETURNING id INTO v_form_id;
 
 INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placeholder, opcoes, ordem, obrigatorio) VALUES
@@ -189,12 +205,13 @@ INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placehold
 (v_form_id, 'Red Flags', 'lista', NULL, '["Convulsão", "Vômitos repetidos", "Deterioração neurológica", "Alteração pupilar", "Déficit motor"]', 12, true);
 
 -- Template 9: Overtraining Syndrome
-INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo)
+INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo, referencias)
 VALUES (
     'Avaliação de Síndrome de Overtraining',
     'Avaliação para identificação de overtraining em atletas',
     'esportiva',
-    true
+    true,
+    'Kellmann M, Kallus KW. Recovery-Stress Questionnaire for Athletes: User Manual. 2001.'
 ) RETURNING id INTO v_form_id;
 
 INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placeholder, opcoes, ordem, obrigatorio) VALUES
@@ -210,12 +227,13 @@ INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placehold
 (v_form_id, 'RESTQ Score', 'numero', 'Pontuação do questionário', NULL, 10, false);
 
 -- Template 10: Return-to-Play
-INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo)
+INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo, referencias)
 VALUES (
     'Avaliação de Return-to-Play',
     'Protocolo de clearance para retorno ao esporte após lesão',
     'esportiva',
-    true
+    true,
+    'Creighton DW, et al. Return-to-play in sport: a decision-based model. Clin J Sport Med. 2010.'
 ) RETURNING id INTO v_form_id;
 
 INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placeholder, opcoes, ordem, obrigatorio) VALUES
@@ -231,12 +249,13 @@ INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placehold
 (v_form_id, 'Liberação para Return-to-Play', 'opcao_unica', NULL, '["Sim - Liberado", "Parcial - Com restrições", "Não - Continuar reabilitação"]', 10, true);
 
 -- Template 11: FMS (Functional Movement Screen)
-INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo)
+INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo, referencias)
 VALUES (
     'Functional Movement Screen (FMS)',
     'Avaliação funcional padronizada de 7 movimentos fundamentais',
     'esportiva',
-    true
+    true,
+    'Cook G, et al. Functional movement screening: the use of fundamental movements as an assessment of function. Int J Sports Phys Ther. 2014.'
 ) RETURNING id INTO v_form_id;
 
 INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placeholder, opcoes, ordem, obrigatorio) VALUES
@@ -259,12 +278,13 @@ INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placehold
 -- =====================================================
 
 -- Template 12: Lombalgia Crônica (Oswestry)
-INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo)
+INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo, referencias)
 VALUES (
     'Avaliação de Lombalgia (Oswestry)',
     'Avaliação baseada no Oswestry Disability Index para lombalgia',
     'ortopedica',
-    true
+    true,
+    'Fairbank JC, Pynsent PB. The Oswestry Disability Index. Spine. 2000.'
 ) RETURNING id INTO v_form_id;
 
 INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placeholder, opcoes, ordem, obrigatorio) VALUES
@@ -280,12 +300,13 @@ INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placehold
 (v_form_id, 'Classificação', 'selecao', NULL, '["Lombalgia mecânica", "Dor radicular", "Claudicação neurogênica", "Dor referida"]', 10, true);
 
 -- Template 13: Cervicalgia (NDI)
-INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo)
+INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo, referencias)
 VALUES (
     'Avaliação de Cervicalgia (NDI)',
     'Avaliação baseada no Neck Disability Index para cervicalgia',
     'ortopedica',
-    true
+    true,
+    'Vernon H, Mior S. The Neck Disability Index: a study of reliability and validity. J Manipulative Physiol Ther. 1991.'
 ) RETURNING id INTO v_form_id;
 
 INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placeholder, opcoes, ordem, obrigatorio) VALUES
@@ -301,12 +322,13 @@ INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placehold
 (v_form_id, 'NDI Score (%)', 'numero', 'Porcentagem de incapacidade', NULL, 10, true);
 
 -- Template 14: Avaliação de Ombro (DASH)
-INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo)
+INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo, referencias)
 VALUES (
     'Avaliação de Ombro (DASH)',
     'Avaliação baseada no DASH Score para disfunções de ombro',
     'ortopedica',
-    true
+    true,
+    'Hudak PL, et al. Development of an upper extremity outcome measure: the DASH. Am J Ind Med. 1996.'
 ) RETURNING id INTO v_form_id;
 
 INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placeholder, opcoes, ordem, obrigatorio) VALUES
@@ -322,12 +344,13 @@ INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placehold
 (v_form_id, 'DASH Score', 'numero', 'Pontuação 0-100', NULL, 10, true);
 
 -- Template 15: Avaliação de Joelho (KOOS)
-INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo)
+INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo, referencias)
 VALUES (
     'Avaliação de Joelho (KOOS)',
     'Avaliação baseada no Knee Injury and Osteoarthritis Outcome Score',
     'ortopedica',
-    true
+    true,
+    'Roos EM, et al. Knee Injury and Osteoarthritis Outcome Score (KOOS). J Orthop Sports Phys Ther. 1998.'
 ) RETURNING id INTO v_form_id;
 
 INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placeholder, opcoes, ordem, obrigatorio) VALUES
@@ -346,12 +369,13 @@ INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placehold
 (v_form_id, 'KOOS - QV', 'numero', '0-100', NULL, 13, true);
 
 -- Template 16: Avaliação de Quadril (HOOS)
-INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo)
+INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo, referencias)
 VALUES (
     'Avaliação de Quadril (HOOS)',
     'Avaliação baseada no Hip Disability and Osteoarthritis Outcome Score',
     'ortopedica',
-    true
+    true,
+    'Nilsdotter AK, et al. Hip Disability and Osteoarthritis Outcome Score (HOOS). Health Qual Life Outcomes. 2003.'
 ) RETURNING id INTO v_form_id;
 
 INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placeholder, opcoes, ordem, obrigatorio) VALUES
@@ -367,12 +391,13 @@ INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placehold
 (v_form_id, 'HOOS Score Total', 'numero', '0-100', NULL, 10, true);
 
 -- Template 17: Avaliação de Punho/Mão (PRWE)
-INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo)
+INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo, referencias)
 VALUES (
     'Avaliação de Punho e Mão (PRWE)',
     'Avaliação baseada no Patient-Rated Wrist Evaluation',
     'ortopedica',
-    true
+    true,
+    'MacDermid JC. Development of a scale for patient rating of wrist pain and disability. J Hand Ther. 1996.'
 ) RETURNING id INTO v_form_id;
 
 INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placeholder, opcoes, ordem, obrigatorio) VALUES
@@ -388,12 +413,13 @@ INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placehold
 (v_form_id, 'PRWE Score', 'numero', '0-100', NULL, 10, true);
 
 -- Template 18: Avaliação de Pé/Tornozelo (FAAM)
-INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo)
+INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo, referencias)
 VALUES (
     'Avaliação de Pé e Tornozelo (FAAM)',
     'Avaliação baseada no Foot and Ankle Ability Measure',
     'ortopedica',
-    true
+    true,
+    'Martin RL, et al. Evidence of validity for the Foot and Ankle Ability Measure (FAAM). Foot Ankle Int. 2005.'
 ) RETURNING id INTO v_form_id;
 
 INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placeholder, opcoes, ordem, obrigatorio) VALUES
@@ -409,12 +435,13 @@ INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placehold
 (v_form_id, 'FAAM - Esporte (%)', 'numero', '0-100', NULL, 10, false);
 
 -- Template 19: Avaliação de Artrose (WOMAC)
-INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo)
+INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo, referencias)
 VALUES (
     'Avaliação de Artrose (WOMAC)',
     'Avaliação baseada no Western Ontario and McMaster Universities Index',
     'ortopedica',
-    true
+    true,
+    'Bellamy N, et al. Validation study of WOMAC. J Orthop Rheumatol. 1988.'
 ) RETURNING id INTO v_form_id;
 
 INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placeholder, opcoes, ordem, obrigatorio) VALUES
@@ -431,12 +458,13 @@ INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placehold
 (v_form_id, 'Dispositivo Auxiliar', 'selecao', NULL, '["Nenhum", "Bengala", "Muleta", "Andador"]', 11, false);
 
 -- Template 20: Avaliação Postural Completa
-INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo)
+INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo, referencias)
 VALUES (
     'Avaliação Postural Completa',
     'Avaliação postural sistemática nos planos sagital, frontal e transverso',
     'ortopedica',
-    true
+    true,
+    'Kendall FP, et al. Muscles: Testing and Function, with Posture and Pain. 5th ed. 2005.'
 ) RETURNING id INTO v_form_id;
 
 INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placeholder, opcoes, ordem, obrigatorio) VALUES
@@ -453,12 +481,13 @@ INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placehold
 (v_form_id, 'Teste de Adams', 'opcao_unica', NULL, '["Negativo", "Gibosidade D", "Gibosidade E"]', 11, true);
 
 -- Template 21: Síndrome Dolorosa Miofascial
-INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo)
+INSERT INTO public.evaluation_forms (nome, descricao, tipo, ativo, referencias)
 VALUES (
     'Avaliação de Síndrome Miofascial',
     'Avaliação específica para síndrome dolorosa miofascial com mapeamento de trigger points',
     'ortopedica',
-    true
+    true,
+    'Travell JG, Simons DG. Myofascial Pain and Dysfunction: The Trigger Point Manual. 1983.'
 ) RETURNING id INTO v_form_id;
 
 INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placeholder, opcoes, ordem, obrigatorio) VALUES
@@ -473,6 +502,6 @@ INSERT INTO public.evaluation_form_fields (form_id, label, tipo_campo, placehold
 (v_form_id, 'Limitação Funcional', 'texto_longo', 'Atividades limitadas pela dor', NULL, 9, false),
 (v_form_id, 'Mapa de Trigger Points', 'texto_longo', 'Descreva localização e intensidade', NULL, 10, true);
 
-RAISE NOTICE 'All 21 evaluation templates seeded successfully!';
+RAISE NOTICE 'All 21 evaluation templates with scientific references seeded successfully!';
 
 END $$;

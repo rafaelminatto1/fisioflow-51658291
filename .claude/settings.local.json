@@ -88,7 +88,9 @@
       "mcp__zai-mcp-server__extract_text_from_screenshot",
       "Bash(identify:*)",
       "Bash(convert:*)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "mcp__supabase__get_advisors",
+      "mcp__supabase__get_logs"
     ],
     "deny": [],
     "ask": []
