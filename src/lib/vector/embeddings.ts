@@ -8,10 +8,10 @@
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const getEnv = (key: string) => {
-  // @ts-ignore
+const getEnv = (key: string): string | undefined => {
+  // @ts-expect-error - import.meta is not fully typed in all environments
   if (typeof import.meta !== 'undefined' && import.meta.env) {
-    // @ts-ignore
+    // @ts-expect-error - import.meta.env is not fully typed
     return import.meta.env[key];
   }
   if (typeof process !== 'undefined' && process.env) {
@@ -37,7 +37,7 @@ export interface EmbeddingResult {
   model: string;
 }
 
-export interface SemanticSearchResult<T = any> {
+export interface SemanticSearchResult<T = unknown> {
   id: string;
   similarity: number;
   data: T;

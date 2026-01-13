@@ -189,7 +189,7 @@ export class ReportGeneratorService {
         ]
       ],
       theme: 'striped',
-      headStyles: { fillColor: [41, 128, 185] as any }
+      headStyles: { fillColor: [41, 128, 185] as [number, number, number] }
     });
     
     // Improvements
@@ -347,7 +347,7 @@ export class ReportGeneratorService {
         head: [['Cirurgia', 'Data', 'Tempo Decorrido']],
         body: data.surgeries.map(s => [s.name, s.date, s.timeSince]),
         theme: 'striped',
-        headStyles: { fillColor: this.HEADER_COLOR as any }
+        headStyles: { fillColor: [...this.HEADER_COLOR] as [number, number, number] }
       });
       yPos = doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 10 : yPos + 40;
     }
@@ -394,7 +394,7 @@ export class ReportGeneratorService {
         ]
       ],
       theme: 'striped',
-      headStyles: { fillColor: this.HEADER_COLOR as any }
+      headStyles: { fillColor: [...this.HEADER_COLOR] as [number, number, number] }
     });
     yPos = doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 10 : yPos + 50;
 
@@ -405,7 +405,7 @@ export class ReportGeneratorService {
         head: [['Teste', 'Inicial', 'Atual', 'Progresso']],
         body: data.testResults.map(t => [t.test, t.initial, t.current, t.progress]),
         theme: 'striped',
-        headStyles: { fillColor: this.SECONDARY_COLOR as any }
+        headStyles: { fillColor: [...this.SECONDARY_COLOR] as [number, number, number] }
       });
       yPos = doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 10 : yPos + 40;
     }
@@ -432,7 +432,7 @@ export class ReportGeneratorService {
           p.regions.toString()
         ]),
         theme: 'grid',
-        headStyles: { fillColor: this.SECONDARY_COLOR as any }
+        headStyles: { fillColor: [...this.SECONDARY_COLOR] as [number, number, number] }
       });
       yPos = doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 10 : yPos + 40;
     }
@@ -652,7 +652,7 @@ export class ReportGeneratorService {
         ['Taxa de Adesão aos Exercícios', `${data.complianceRate.toFixed(1)}%`]
       ],
       theme: 'striped',
-      headStyles: { fillColor: this.HEADER_COLOR as any }
+      headStyles: { fillColor: [...this.HEADER_COLOR] as [number, number, number] }
     });
     yPos = doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 10 : yPos + 40;
 
@@ -686,7 +686,7 @@ export class ReportGeneratorService {
         ]
       ],
       theme: 'grid',
-      headStyles: { fillColor: this.HEADER_COLOR as any }
+      headStyles: { fillColor: [...this.HEADER_COLOR] as [number, number, number] }
     });
     yPos = doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 10 : yPos + 50;
 

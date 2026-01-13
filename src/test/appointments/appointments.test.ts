@@ -88,7 +88,7 @@ describe('Appointments - Criação de Agendamento', () => {
     });
 
     it('deve validar campos obrigatórios', () => {
-      const validateAppointmentData = (data: any) => {
+      const validateAppointmentData = (data: Record<string, unknown>) => {
         const requiredFields = ['patient_id', 'appointment_date', 'appointment_time'];
         const missingFields = requiredFields.filter(field => !data[field]);
         return missingFields.length === 0;

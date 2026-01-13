@@ -21,11 +21,10 @@ import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';
 import { useExerciseProtocols } from '@/hooks/useExerciseProtocols';
 import { useExerciseTemplates } from '@/hooks/useExerciseTemplates';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
 
 export default function Exercises() {
   const { exercises, loading: loadingExercises, createExercise, updateExercise, isCreating, isUpdating } = useExercises();
-  const { favorites: _favorites } = useExerciseFavorites();
+  const { favorites } = useExerciseFavorites();
   const { protocols, loading: loadingProtocols } = useExerciseProtocols();
   const { templates, loading: loadingTemplates } = useExerciseTemplates();
 

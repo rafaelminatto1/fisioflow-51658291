@@ -73,7 +73,7 @@ export const generateMockTherapist = (overrides = {}) => ({
 
 // ============= Mock Supabase Response Builders =============
 
-export const createMockSupabaseResponse = <T>(data: T, error: any = null) => ({
+export const createMockSupabaseResponse = <T>(data: T, error: Error | null = null) => ({
   data,
   error,
   count: Array.isArray(data) ? data.length : (data ? 1 : 0),
@@ -163,7 +163,7 @@ export const invalidPhones = [
 // ============= Mock Function Creators =============
 
 export const createMockQueryChain = () => {
-  const chain: any = {
+  const chain: { query: () => chain; eq: () => chain; select: () => chain; single: () => chain; order: () => chain; limit: () => chain; gte: () => chain; lt: () => chain } = {
     select: vi.fn().mockReturnThis(),
     insert: vi.fn().mockReturnThis(),
     update: vi.fn().mockReturnThis(),

@@ -83,7 +83,12 @@
       "Bash(NODE_OPTIONS='--max-old-space-size=4096' pnpm run build:prod:*)",
       "Bash(do npx eslint:*)",
       "mcp__zai-mcp-server__ui_diff_check",
-      "Bash(do echo \"=== $file ===\" npx eslint \"$file\" --format=json)"
+      "Bash(do echo \"=== $file ===\" npx eslint \"$file\" --format=json)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" pnpm build:*)",
+      "mcp__zai-mcp-server__extract_text_from_screenshot",
+      "Bash(identify:*)",
+      "Bash(convert:*)",
+      "Bash(lsof:*)"
     ],
     "deny": [],
     "ask": []

@@ -14,6 +14,7 @@ interface State {
  * Error Boundary leve para componentes pequenos
  * Use para cards, widgets e outras partes isoladas da UI
  */
+/* eslint-disable-next-line react-refresh/only-export-components */
 export function withErrorBoundary<P extends object>(
   Component: ComponentType<P>,
   fallback?: ReactNode,

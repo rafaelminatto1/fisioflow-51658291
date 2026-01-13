@@ -31,12 +31,19 @@ import { PainMapRegistration } from '@/components/patient/PainMapRegistration';
 import { PatientHelpers } from '@/types';
 import { ExercisePlayer } from '@/components/patient/ExercisePlayer';
 
+interface PrescriptionExercise {
+  id: string;
+  exercise: { name: string };
+  sets: number;
+  reps: number;
+}
+
 const PatientPortal = () => {
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('overview');
   const [showPainReg, setShowPainReg] = useState(false);
-  const [selectedPrescription, setSelectedPrescription] = useState<any>(null);
+  const [selectedPrescription, setSelectedPrescription] = useState<PrescriptionExercise | null>(null);
 
   // Fetch patient data linked to the profile
   const { data: patient, isLoading: isLoadingPatient } = useQuery({

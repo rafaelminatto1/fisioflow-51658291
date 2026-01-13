@@ -7,7 +7,7 @@ interface PatientInsightResponse {
 
 export function usePatientInsight() {
     return useMutation({
-        mutationFn: async (patientData: any) => {
+        mutationFn: async (patientData: Record<string, unknown>) => {
             const response = await fetch('/api/ai/patient-insight', {
                 method: 'POST',
                 headers: {

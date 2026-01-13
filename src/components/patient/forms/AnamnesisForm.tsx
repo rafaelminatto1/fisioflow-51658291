@@ -5,14 +5,30 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 
+interface LifestyleData {
+    smoking?: boolean;
+    alcohol?: boolean;
+}
+
+interface AnamnesisFormData {
+    chiefComplaint?: string;
+    currentHistory?: string;
+    pastHistory?: string;
+    familyHistory?: string;
+    medications?: string;
+    allergies?: string;
+    physicalActivity?: string;
+    lifestyle?: LifestyleData;
+}
+
 interface AnamnesisFormProps {
-    data: any;
-    onChange: (data: any) => void;
+    data: AnamnesisFormData;
+    onChange: (data: AnamnesisFormData) => void;
     readOnly?: boolean;
 }
 
 export const AnamnesisForm = ({ data, onChange, readOnly = false }: AnamnesisFormProps) => {
-    const handleChange = (field: string, value: any) => {
+    const handleChange = (field: keyof AnamnesisFormData, value: string | LifestyleData) => {
         onChange({ ...data, [field]: value });
     };
 

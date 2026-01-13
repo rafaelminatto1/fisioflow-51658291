@@ -42,7 +42,7 @@ export function useCreatePrestador() {
         description: 'Prestador cadastrado com sucesso.',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao adicionar prestador',
         description: error.message,
@@ -75,7 +75,7 @@ export function useUpdatePrestador() {
         description: 'Alterações salvas com sucesso.',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao atualizar prestador',
         description: error.message,
@@ -106,7 +106,7 @@ export function useDeletePrestador() {
         description: 'Prestador excluído com sucesso.',
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao remover prestador',
         description: error.message,
@@ -149,7 +149,7 @@ export function useMarcarPagamento() {
         description: `Pagamento marcado como ${data.status_pagamento.toLowerCase()}.`,
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast({
         title: 'Erro ao atualizar status',
         description: error.message,
