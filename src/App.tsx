@@ -17,6 +17,7 @@ import { AppRoutes } from "./routes";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { VersionManager } from "@/components/system/VersionManager";
+import { initWebVitalsMonitoring, WebVitalsIndicator } from "@/lib/monitoring/web-vitals";
 
 // Create a client with performance optimizations
 const queryClient = new QueryClient({
@@ -76,6 +77,11 @@ const App = () => {
     // Initialize monitoring (performance, errors, analytics)
     initMonitoring();
 
+    // Initialize Core Web Vitals monitoring
+    initWebVitalsMonitoring().catch((error) => {
+      logger.error('Falha ao inicializar Core Web Vitals', error, 'App');
+    });
+
     // Initialize notification system
     const initNotifications = async () => {
       try {
@@ -118,6 +124,7 @@ const App = () => {
                   <VersionManager />
                   <Analytics />
                   <SpeedInsights />
+                  <WebVitalsIndicator />
                 </Suspense>
               </BrowserRouter>
             </DataProvider>
