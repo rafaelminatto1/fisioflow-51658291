@@ -59,8 +59,6 @@ export default defineConfig(({ mode }) => {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff2}'],
           globIgnores: [
             '**/node_modules/**/*',
-            '**/*dicom-image-loader*',
-            '**/computeWorker*'
           ],
           // Don't cache cornerstone chunks to avoid 404s when hash changes
           navigateFallback: null,

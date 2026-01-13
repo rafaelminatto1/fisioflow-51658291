@@ -250,36 +250,51 @@ const CalendarDayView = memo(({
                                         onEdit={onEditAppointment ? () => onEditAppointment(apt) : undefined}
                                         onDelete={onDeleteAppointment ? () => onDeleteAppointment(apt) : undefined}
                                     >
-                                        <div
-                                            className={cn(
-                                                "w-full h-full p-2 rounded-xl text-white cursor-pointer shadow-xl border-l-4 backdrop-blur-sm animate-fade-in overflow-hidden",
-                                                getStatusColor(apt.status, isOverCapacity(apt)),
-                                                "hover:shadow-2xl hover:scale-[1.02] transition-all duration-300",
-                                                isDraggable && "cursor-grab active:cursor-grabbing",
-                                                isOverCapacity(apt) && "animate-pulse"
-                                            )}
-                                            title={`${apt.patientName} - ${apt.type}${stackCount > 1 ? ` [${stackIndex + 1}/${stackCount}]` : ''}`}
-                                        >
-                                            <div className="flex items-start justify-between gap-1">
-                                                <div className="font-bold text-sm line-clamp-3 leading-tight flex-1 flex items-center gap-1">
-                                                    {isOverCapacity(apt) && (
-                                                        <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 text-white" />
-                                                    )}
-                                                    {apt.patientName}
+                                        <div className="calendar-appointment-card">
+                                            {/* Status indicator - border esquerda colorida */}
+                                            <div
+                                                className="calendar-appointment-card-status-bg"
+                                                style={{ background: getStatusColor(apt.status, isOverCapacity(apt)) }}
+                                                aria-hidden="true"
+                                            />
+
+                                            {/* Content */}
+                                            <div className="calendar-appointment-card-content">
+                                                <div className="min-w-0">
+                                                    {/* Patient Name - ALTO CONTRASTE */}
+                                                    <div className="calendar-patient-name" title={apt.patientName}>
+                                                        {isOverCapacity(apt) && (
+                                                            <AlertTriangle className="h-3 w-3 inline mr-1 text-amber-500 flex-shrink-0" aria-label="Excedente" />
+                                                        )}
+                                                        <span className="truncate">{apt.patientName}</span>
+                                                    </div>
+
+                                                    {/* Service Type */}
+                                                    <div className="calendar-appointment-type" title={apt.type}>
+                                                        <span className="truncate">{apt.type || 'Consulta'}</span>
+                                                    </div>
                                                 </div>
-                                                {isDraggable && (
-                                                    <GripVertical className="h-4 w-4 opacity-50 flex-shrink-0 group-hover/card:opacity-100 transition-opacity" />
-                                                )}
+
+                                                {/* Footer: Time & Room */}
+                                                <div className="calendar-appointment-footer">
+                                                    <div className="flex items-center gap-1">
+                                                        <Clock className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+                                                        <span>{apt.time}</span>
+                                                    </div>
+                                                    {apt.room && (
+                                                        <span className="truncate" aria-label={`Sala ${apt.room}`}>
+                                                            {apt.room}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
-                                            <div className="text-xs opacity-90 flex items-center gap-1 mt-1">
-                                                <Clock className="h-3 w-3 flex-shrink-0" />
-                                                <span>{apt.time}</span>
-                                                {isOverCapacity(apt) && (
-                                                    <Badge variant="secondary" className="text-[8px] px-1 py-0 h-4 bg-white/20 text-white ml-1">
-                                                        EXCEDENTE
-                                                    </Badge>
-                                                )}
-                                            </div>
+
+                                            {/* Drag handle */}
+                                            {isDraggable && (
+                                                <div className="absolute top-1.5 right-1.5 opacity-0 group-hover/card:opacity-40 transition-opacity" aria-hidden="true">
+                                                    <GripVertical className="h-3 w-3" />
+                                                </div>
+                                            )}
                                         </div>
                                     </AppointmentQuickView>
                                 </div>

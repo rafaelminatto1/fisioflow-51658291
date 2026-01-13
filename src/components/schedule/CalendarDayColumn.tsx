@@ -255,54 +255,48 @@ export const DayColumn = memo(({
                                     onEdit={onEditAppointment ? () => onEditAppointment(apt) : undefined}
                                     onDelete={onDeleteAppointment ? () => onDeleteAppointment(apt) : undefined}
                                 >
-                                    <div
-                                        className={cn(
-                                            "w-full h-full p-2 rounded-xl text-white cursor-pointer shadow-md backdrop-blur-sm animate-fade-in overflow-hidden flex flex-col justify-between border-2 border-white/20",
-                                            "hover:shadow-lg hover:scale-[1.02] hover:border-white/40 hover:z-20",
-                                            isDraggable && "cursor-grab active:cursor-grabbing",
-                                            isOverCapacity(apt) && "animate-pulse ring-2 ring-amber-400/70"
-                                        )}
-                                        style={{
-                                            background: getStatusColor(apt.status, isOverCapacity(apt))
-                                        }}
-                                    >
-                                        {/* Status border indicator */}
+                                    <div className="calendar-appointment-card">
+                                        {/* Status indicator - border esquerda colorida */}
                                         <div
-                                            className={cn(
-                                                "status-border rounded-l-xl",
-                                                isOverCapacity(apt) ? "bg-amber-300" : "bg-white/40"
-                                            )}
+                                            className="calendar-appointment-card-status-bg"
+                                            style={{ background: getStatusColor(apt.status, isOverCapacity(apt)) }}
                                             aria-hidden="true"
                                         />
 
-                                        <div className="flex flex-col gap-0.5 min-w-0 pl-1">
-                                            {/* Patient Name */}
-                                            <div className="font-bold text-[11px] sm:text-xs leading-tight line-clamp-2 text-white drop-shadow-sm">
-                                                {isOverCapacity(apt) && <AlertTriangle className="h-3 w-3 inline mr-1 text-amber-300" aria-label="Excedente" />}
-                                                {apt.patientName}
-                                            </div>
-
-                                            {/* Service Type */}
-                                            <div className="text-[9px] sm:text-[10px] opacity-90 truncate font-medium">
-                                                {apt.type || 'Consulta'}
-                                            </div>
-                                        </div>
-
-                                        {/* Bottom Info: Time & Room */}
-                                        <div className="flex items-center justify-between text-[9px] sm:text-[10px] bg-black/20 -mx-2 -mb-2 px-2 py-1 mt-auto font-medium rounded-b-lg">
-                                            <div className="flex items-center gap-1">
-                                                <Clock className="h-2.5 w-2.5 opacity-90" aria-hidden="true" />
-                                                <span>{apt.time}</span>
-                                            </div>
-                                            {apt.room && (
-                                                <div className="flex items-center gap-1 opacity-90">
-                                                    <span>{apt.room}</span>
+                                        {/* Content */}
+                                        <div className="calendar-appointment-card-content">
+                                            <div className="min-w-0">
+                                                {/* Patient Name - ALTO CONTRASTE */}
+                                                <div className="calendar-patient-name" title={apt.patientName}>
+                                                    {isOverCapacity(apt) && (
+                                                        <AlertTriangle className="h-3 w-3 inline mr-1 text-amber-500 flex-shrink-0" aria-label="Excedente" />
+                                                    )}
+                                                    <span className="truncate">{apt.patientName}</span>
                                                 </div>
-                                            )}
+
+                                                {/* Service Type */}
+                                                <div className="calendar-appointment-type" title={apt.type}>
+                                                    <span className="truncate">{apt.type || 'Consulta'}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Footer: Time & Room */}
+                                            <div className="calendar-appointment-footer">
+                                                <div className="flex items-center gap-1">
+                                                    <Clock className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+                                                    <span>{apt.time}</span>
+                                                </div>
+                                                {apt.room && (
+                                                    <span className="truncate" aria-label={`Sala ${apt.room}`}>
+                                                        {apt.room}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
 
+                                        {/* Drag handle */}
                                         {isDraggable && (
-                                            <div className="absolute top-1 right-1 opacity-0 group-hover/card:opacity-50 transition-opacity" aria-hidden="true">
+                                            <div className="absolute top-1.5 right-1.5 opacity-0 group-hover/card:opacity-40 transition-opacity" aria-hidden="true">
                                                 <GripVertical className="h-3 w-3 hidden sm:block" />
                                             </div>
                                         )}

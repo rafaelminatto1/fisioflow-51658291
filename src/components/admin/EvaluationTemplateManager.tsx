@@ -19,11 +19,10 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
     DialogDescription,
 } from "@/components/ui/dialog";
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit2, Trash2, FileText, Check, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Template {
@@ -31,7 +30,7 @@ interface Template {
     title: string;
     description: string;
     category: string;
-    content: any;
+    content: Record<string, unknown>;
     isActive: boolean;
 }
 
@@ -61,9 +60,9 @@ export const EvaluationTemplateManager = () => {
     });
 
     const saveMutation = useMutation({
-        mutationFn: async (data: any) => {
+        mutationFn: async (data: typeof formData) => {
             // Validate JSON content
-            const contentJson = typeof data.content === 'string'
+            const contentJson: Record<string, unknown> = typeof data.content === 'string'
                 ? JSON.parse(data.content)
                 : data.content;
 
@@ -94,7 +93,7 @@ export const EvaluationTemplateManager = () => {
             setIsOpen(false);
             resetForm();
         },
-        onError: (err) => {
+        onError: (err: Error) => {
             toast.error('Erro ao salvar: ' + err.message);
         }
     });
@@ -118,7 +117,7 @@ export const EvaluationTemplateManager = () => {
         setEditingTemplate(null);
     };
 
-    const handleEdit = (template: any) => {
+    const handleEdit = (template: Template) => {
         setEditingTemplate(template);
         setFormData({
             title: template.title,
@@ -133,7 +132,7 @@ export const EvaluationTemplateManager = () => {
         if (!formData.title) return toast.error('Título é obrigatório');
         try {
             JSON.parse(formData.content);
-        } catch (e) {
+        } catch {
             return toast.error('JSON inválido no conteúdo');
         }
         saveMutation.mutate(formData);
@@ -164,7 +163,7 @@ export const EvaluationTemplateManager = () => {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {templates.map((template: any) => (
+                            {templates.map((template: Template) => (
                                 <TableRow key={template.id}>
                                     <TableCell className="font-medium">{template.title}</TableCell>
                                     <TableCell>

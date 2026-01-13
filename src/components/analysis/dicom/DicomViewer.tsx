@@ -19,11 +19,10 @@ import {
     Enums as ToolEnums,
 } from '@cornerstonejs/tools';
 // import * as cornerstoneDICOMImageLoader from '@cornerstonejs/dicom-image-loader';
-import * as cornerstone from '@cornerstonejs/core'; // Import cornerstone for external injection
 import initCornerstone from './initCornerstone';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Ruler, MousePointer2, ZoomIn, Activity, Move } from 'lucide-react';
+import { Ruler, MousePointer2, ZoomIn, Move } from 'lucide-react';
 
 interface DicomViewerProps {
     file?: File; // Local mode
@@ -61,7 +60,7 @@ const DicomViewer: React.FC<DicomViewerProps> = ({ file, studyInstanceUid, serie
                 // addTool(AngleTool);
                 // addTool(CobbAngleTool);
                 addTool(ProbeTool);
-            } catch (e) {
+            } catch {
                 // Tools might be already added
             }
 
@@ -126,7 +125,6 @@ const DicomViewer: React.FC<DicomViewerProps> = ({ file, studyInstanceUid, serie
             };
 
             renderingEngine.enableElement(viewportInput);
-            const viewport = renderingEngine.getViewport(VIEWPORT_ID) as StackViewport;
 
             // Setup ToolGroup
             let toolGroup = ToolGroupManager.getToolGroup(TOOL_GROUP_ID);
@@ -193,7 +191,7 @@ const DicomViewer: React.FC<DicomViewerProps> = ({ file, studyInstanceUid, serie
                     // 2. Construct ImageIDs
                     if (instances && instances.length > 0) {
                         const baseUrl = wadoUrl; // https://.../dicom-proxy
-                        imageIds = instances.map((inst: any) => {
+                        imageIds = instances.map((inst: Record<string, { Value?: string[] }>) => {
                             const sopUid = inst['00080018']?.Value?.[0]; // SOPInstanceUID
                             const dicomWebPath = `studies/${studyInstanceUid}/series/${seriesInstanceUid}/instances/${sopUid}/frames/1`;
 
@@ -204,7 +202,7 @@ const DicomViewer: React.FC<DicomViewerProps> = ({ file, studyInstanceUid, serie
                             return `wadors:${baseUrl}?path=${encodeURIComponent(dicomWebPath)}`;
                         });
                     }
-                } catch (e) {
+                } catch {
                     console.error("WADO Init Error", e);
                 }
             }
@@ -228,7 +226,7 @@ const DicomViewer: React.FC<DicomViewerProps> = ({ file, studyInstanceUid, serie
                 if (tg) {
                     ToolGroupManager.destroyToolGroup(TOOL_GROUP_ID);
                 }
-            } catch (e) { console.error(e) }
+            } catch { console.error(e) }
         };
     }, [file, studyInstanceUid, seriesInstanceUid, wadoUrl, isCornerstoneInitialized]);
 
@@ -255,7 +253,7 @@ const DicomViewer: React.FC<DicomViewerProps> = ({ file, studyInstanceUid, serie
     }, [file, isCornerstoneInitialized]);
 
     // 4. Toolbar Helpers
-    const activateTool = (toolName: string, binding: string = 'Primary') => {
+    const activateTool = (toolName: string) => {
         const toolGroup = ToolGroupManager.getToolGroup(TOOL_GROUP_ID);
         if (!toolGroup) return;
 

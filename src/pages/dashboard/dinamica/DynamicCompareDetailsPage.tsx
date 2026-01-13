@@ -64,7 +64,7 @@ const DynamicCompareDetailsPage = () => {
                     const validData = parseDynamicCompare(raw);
                     setData(validData);
                     setStatus('success');
-                } catch (e) {
+                } catch {
                     console.error(e);
                     setError((e as Error).message);
                     setStatus('error');

@@ -745,7 +745,7 @@ export default function NFSePage() {
                         // Atualizar configuração
                         supabase.from('nfse_config').upsert({
                           auto_emissao: checked,
-                        }).then(() => {
+                        }).then( {
                           queryClient.invalidateQueries({ queryKey: ['nfse-config'] });
                           toast.success('Configuração atualizada!');
                         });
