@@ -32,9 +32,6 @@ export const AppointmentActions: React.FC<AppointmentActionsProps> = ({
   const { toast } = useToast();
 
   const handleStartAttendance = () => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'src/components/appointments/AppointmentActions.tsx:34',message:'handleStartAttendance called',data:{appointmentId:appointment.id,patientName:appointment.patientName,appointmentStatus:appointment.status,targetUrl:`/patient-evolution/${appointment.id}`},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H5'})}).catch(()=>{});
-    // #endregion
     navigate(`/patient-evolution/${appointment.id}`);
     toast({
       title: 'Iniciando atendimento',
