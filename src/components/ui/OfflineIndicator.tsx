@@ -20,7 +20,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { WifiOff, RefreshCw, Wifi, AlertCircle, CloudOff } from 'lucide-react';
+import { WifiOff, RefreshCw, AlertCircle, CloudOff } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 

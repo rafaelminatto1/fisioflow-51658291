@@ -62,7 +62,6 @@ interface CalendarDayViewProps {
     handleDragLeave: () => void;
     handleDrop: (e: React.DragEvent, date: Date, time: string) => void;
     // Helpers
-    checkTimeBlocked: (date: Date, time: string) => { blocked: boolean; reason?: string };
     isTimeBlocked: (time: string) => boolean;
     getBlockReason: (time: string) => string | undefined;
     _getStatusColor: (status: string, isOverCapacity?: boolean) => string;
@@ -90,7 +89,6 @@ const CalendarDayView = memo(({
     handleDragOver,
     handleDragLeave,
     handleDrop,
-    checkTimeBlocked,
     isTimeBlocked,
     getBlockReason,
     _getStatusColor,

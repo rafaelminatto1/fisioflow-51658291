@@ -1,5 +1,5 @@
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo, useCallback, useEffect } from 'react';
 import { useExerciseProtocols, type ExerciseProtocol } from '@/hooks/useExerciseProtocols';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,9 +35,10 @@ import {
 } from '@/components/ui/accordion';
 import { NewProtocolModal } from '@/components/modals/NewProtocolModal';
 
-export function ProtocolsManager() {
+export const ProtocolsManager = memo(function ProtocolsManager() {
   const [activeTab, setActiveTab] = useState<'patologia' | 'pos_operatorio'>('pos_operatorio');
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [viewProtocol, setViewProtocol] = useState<ExerciseProtocol | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -45,11 +46,19 @@ export function ProtocolsManager() {
 
   const { protocols, loading, createProtocol, updateProtocol, deleteProtocol, isCreating, isUpdating, isDeleting } = useExerciseProtocols();
 
+  // Debounce para busca - evita recalcular filtros a cada tecla
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
   const filteredProtocols = useMemo(() => protocols.filter(p =>
-    (p.name?.toLowerCase().includes(search.toLowerCase()) ||
-      p.condition_name?.toLowerCase().includes(search.toLowerCase())) &&
+    (p.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      p.condition_name?.toLowerCase().includes(debouncedSearch.toLowerCase())) &&
     p.protocol_type === activeTab
-  ), [protocols, search, activeTab]);
+  ), [protocols, debouncedSearch, activeTab]);
 
   // Agrupar por condição
   const groupedProtocols = useMemo(() => filteredProtocols.reduce((acc, protocol) => {
@@ -394,4 +403,4 @@ export function ProtocolsManager() {
       />
     </>
   );
-}
+});

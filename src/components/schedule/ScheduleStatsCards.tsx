@@ -20,7 +20,7 @@ interface StatCardProps {
 
 const StatCard = memo(({ icon, value, label, trend, _variant = 'default' }: StatCardProps) => {
   return (
-    <div className="stat-card group cursor-default" role="article" aria-label={`${label}: ${value}`}>
+    <div className="stat-card group cursor-default min-w-[120px] xs:min-w-[140px]" role="article" aria-label={`${label}: ${value}`}>
       <div className="flex items-center gap-2 mb-1.5">
         <div className="flex-shrink-0 p-1.5 bg-white/10 rounded-lg group-hover:bg-white/15 transition-colors">
           {icon}
@@ -101,7 +101,7 @@ const ScheduleStatsCards = memo(({ appointments, _currentDate, className }: Sche
 
   return (
     <div className={cn(
-      "flex items-center gap-2 xs:gap-3 overflow-x-auto pb-1 scrollbar-hide flex-shrink-0",
+      "flex items-center gap-2 xs:gap-3 overflow-x-auto pb-1 scrollbar-hide flex-shrink-0 w-full lg:w-auto",
       className
     )} role="group" aria-label="Estatísticas da agenda">
       {/* Today's Total */}

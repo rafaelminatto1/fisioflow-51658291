@@ -408,7 +408,6 @@ export const CalendarView = memo(({
                 handleDragOver={handleDragOver}
                 handleDragLeave={handleDragLeave}
                 handleDrop={handleDrop}
-                checkTimeBlocked={checkTimeBlocked}
                 isTimeBlocked={isTimeBlocked}
                 getBlockReason={getBlockReason}
                 getStatusColor={getStatusColor}
