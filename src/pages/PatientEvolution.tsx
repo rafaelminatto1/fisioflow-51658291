@@ -28,9 +28,11 @@ import {
   Keyboard,
   Eye,
   EyeOff,
-  Target
+  Target,
+  Cloud,
+  RefreshCw
 } from 'lucide-react';
-import { format, formatDistanceToNow, differenceInDays } from 'date-fns';
+import { format, formatDistanceToNow, differenceInDays, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   usePatientSurgeries,
@@ -118,6 +120,7 @@ const PatientEvolution = () => {
       </MainLayout>
     );
   }
+
   const [currentSoapRecordId, setCurrentSoapRecordId] = useState<string | undefined>();
   const [sessionStartTime] = useState(new Date());
   const [currentWizardStep, setCurrentWizardStep] = useState('subjective');
@@ -208,7 +211,7 @@ const PatientEvolution = () => {
     };
   }, [previousEvolutions, goals, pathologies, measurements]);
 
-  // Atualizar contagem de palavras
+  // Atualizar contagem de palavras - memoizado para performance
   useEffect(() => {
     setWordCount({
       subjective: subjective.split(/\s+/).filter(w => w.length > 0).length,
@@ -252,7 +255,7 @@ const PatientEvolution = () => {
   ], [subjective, objective, assessment, plan, measurements]);
 
   // Auto-save SOAP data
-  useAutoSave({
+  const { lastSavedAt } = useAutoSave({
     data: { subjective, objective, assessment, plan },
     onSave: async (data) => {
       if (!patientId || !appointmentId) return;
@@ -284,6 +287,15 @@ const PatientEvolution = () => {
     return grouped;
   }, [measurements]);
 
+  // Verificar medições realizadas na sessão atual (hoje)
+  const todayMeasurements = useMemo(() => {
+    const today = startOfDay(new Date());
+    return measurements.filter(m => {
+      const measurementDate = startOfDay(new Date(m.measured_at));
+      return measurementDate.getTime() === today.getTime();
+    });
+  }, [measurements]);
+
   const handleCopyPreviousEvolution = (evolution: {
     subjective?: string;
     objective?: string;
@@ -312,12 +324,11 @@ const PatientEvolution = () => {
   };
 
   const handleSave = async () => {
-    // Check for mandatory tests
+    // Check for mandatory tests - FIXED: now checks if measurement was done TODAY
     const pendingCriticalTests = requiredMeasurements.filter(req => {
-      // Check if this measurement exists in current session measurements
-      const hasMeasurement = measurements.some(m => m.measurement_name === req.measurement_name); // Simplified check
-      // In a real app, you'd check if it was measured *today* or within valid window
-      return req.alert_level === 'high' && !hasMeasurement;
+      // Check if this measurement exists in today's measurements
+      const hasMeasurementToday = todayMeasurements.some(m => m.measurement_name === req.measurement_name);
+      return req.alert_level === 'high' && !hasMeasurementToday;
     });
 
     if (pendingCriticalTests.length > 0) {
@@ -338,73 +349,83 @@ const PatientEvolution = () => {
       return;
     }
 
-    if (!patientId) return;
+    if (!patientId) {
+      return;
+    }
 
-    const record = await createSoapRecord.mutateAsync({
-      patient_id: patientId,
-      appointment_id: appointmentId,
-      subjective,
-      objective,
-      assessment,
-      plan,
-      pain_level: painScale.level,
-      pain_location: painScale.location,
-      pain_character: painScale.character
-    });
-
-    setCurrentSoapRecordId(record.id);
-
-    // Save to treatment_sessions (Exercises Performed)
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      // Check for existing session linked to this appointment to upsert
-      let existingSessionId = null;
-      if (appointmentId) {
-        const { data: existingSession } = await supabase
-          .from('treatment_sessions')
-          .select('id')
-          .eq('appointment_id', appointmentId)
-          .maybeSingle(); // Use maybeSingle to avoid errors if not found
-        if (existingSession) existingSessionId = existingSession.id;
-      }
-
-      const sessionData = {
+    try {
+      const record = await createSoapRecord.mutateAsync({
         patient_id: patientId,
-        therapist_id: user.id,
-        appointment_id: appointmentId || null,
-        session_date: new Date().toISOString(),
-        session_type: 'treatment',
-        pain_level_before: 0,
-        pain_level_after: 0,
-        functional_score_before: 0,
-        functional_score_after: 0,
-        exercises_performed: sessionExercises,
-        observations: assessment,
-        status: 'completed',
-        created_by: user.id
-      };
+        appointment_id: appointmentId,
+        subjective,
+        objective,
+        assessment,
+        plan,
+        pain_level: painScale.level,
+        pain_location: painScale.location,
+        pain_character: painScale.character
+      });
 
-      let sessionError;
-      if (existingSessionId) {
-        const { error } = await supabase
-          .from('treatment_sessions')
-          .update(sessionData)
-          .eq('id', existingSessionId);
-        sessionError = error;
-      } else {
-        const { error } = await supabase
-          .from('treatment_sessions')
-          .insert(sessionData);
-        sessionError = error;
-      }
+      setCurrentSoapRecordId(record.id);
 
-      if (sessionError) {
-        toast({
-          title: 'Aviso',
-          description: 'Evolução salva, mas houve um erro ao salvar a sessão de exercícios.',
-          variant: 'default'
-        });
+      // Save to treatment_sessions (Exercises Performed) with improved error handling
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // Check for existing session linked to this appointment to upsert
+        let existingSessionId = null;
+        if (appointmentId) {
+          const { data: existingSession } = await supabase
+            .from('treatment_sessions')
+            .select('id')
+            .eq('appointment_id', appointmentId)
+            .maybeSingle();
+          if (existingSession) existingSessionId = existingSession.id;
+        }
+
+        const sessionData = {
+          patient_id: patientId,
+          therapist_id: user.id,
+          appointment_id: appointmentId || null,
+          session_date: new Date().toISOString(),
+          session_type: 'treatment',
+          pain_level_before: 0,
+          pain_level_after: 0,
+          functional_score_before: 0,
+          functional_score_after: 0,
+          exercises_performed: sessionExercises,
+          observations: assessment,
+          status: 'completed',
+          created_by: user.id
+        };
+
+        let sessionError;
+        if (existingSessionId) {
+          const { error } = await supabase
+            .from('treatment_sessions')
+            .update(sessionData)
+            .eq('id', existingSessionId);
+          sessionError = error;
+        } else {
+          const { error } = await supabase
+            .from('treatment_sessions')
+            .insert(sessionData);
+          sessionError = error;
+        }
+
+        if (sessionError) {
+          toast({
+            title: 'Aviso',
+            description: 'Evolução salva, mas houve um erro ao salvar a sessão de exercícios.',
+            variant: 'default'
+          });
+        }
       }
+    } catch (error) {
+      toast({
+        title: 'Erro ao salvar',
+        description: error instanceof Error ? error.message : 'Ocorreu um erro ao salvar a evolução.',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -468,10 +489,17 @@ const PatientEvolution = () => {
         setActiveTab('measurements');
       } else if (section === 'history') {
         setActiveTab('history');
+      } else if (section === 'ai') {
+        setActiveTab('ai');
       }
     },
     () => setShowKeyboardHelp(true),
-    () => setShowApplyTemplate(true)
+    () => setShowApplyTemplate(true),
+    // Save + Analyze with AI
+    async () => {
+      await handleSave();
+      setActiveTab('ai');
+    }
   );
 
   if (dataLoading) {
@@ -487,52 +515,100 @@ const PatientEvolution = () => {
     );
   }
 
+  // Verificar se é um problema de permissão
+  const isPermissionError = appointmentError?.message?.includes('permission') || 
+                            appointmentError?.message?.includes('RLS') ||
+                            appointmentError?.message?.includes('row-level security') ||
+                            patientError?.message?.includes('permission') ||
+                            patientError?.message?.includes('RLS') ||
+                            patientError?.message?.includes('row-level security') ||
+                            (!appointment && !appointmentError && !dataLoading) ||
+                            (!patient && !patientError && !dataLoading && appointment);
+
   if (!appointment || !patient) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center h-[50vh]">
           <div className="text-center space-y-4 max-w-md">
             <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
-            <p className="text-lg font-semibold">Agendamento não encontrado</p>
-            <p className="text-muted-foreground">Não foi possível carregar os dados do agendamento.</p>
-            {/* Debug info for developers */}
-            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-left">
-              <p className="text-xs font-semibold text-amber-800 mb-2">INFO DEV (Debug):</p>
-              <div className="text-[10px] font-mono text-amber-900 space-y-1">
-                <div className="flex gap-2">
-                  <span className="text-amber-600">appointmentId:</span>
-                  <span className="font-mono">{appointmentId || 'undefined'}</span>
-                </div>
-                <div className="flex gap-2">
-                  <span className="text-amber-600">appointment:</span>
-                  <span>{appointment ? 'found' : 'NOT found'}</span>
-                </div>
-                <div className="flex gap-2">
-                  <span className="text-amber-600">patient:</span>
-                  <span>{patient ? 'found' : 'NOT found'}</span>
-                </div>
-                <div className="flex gap-2">
-                  <span className="text-amber-600">patientId:</span>
-                  <span className="font-mono">{patientId || 'undefined'}</span>
-                </div>
-                {appointmentError && (
-                  <div className="mt-2 pt-2 border-t border-amber-300">
-                    <span className="text-amber-600">appointmentError:</span>
-                    <p className="text-red-700 truncate">{appointmentError.message}</p>
+            
+            {isPermissionError ? (
+              <>
+                <p className="text-lg font-semibold">Acesso não autorizado</p>
+                <p className="text-muted-foreground">
+                  Você não tem permissão para acessar este agendamento. 
+                  Entre em contato com o administrador do sistema para solicitar acesso.
+                </p>
+                <Alert className="mt-4 text-left">
+                  <AlertDescription>
+                    <strong>O que fazer:</strong>
+                    <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
+                      <li>Verifique se você está logado com a conta correta</li>
+                      <li>Entre em contato com o administrador para verificar suas permissões</li>
+                      <li>Certifique-se de que você pertence à organização correta</li>
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              </>
+            ) : (
+              <>
+                <p className="text-lg font-semibold">Agendamento não encontrado</p>
+                <p className="text-muted-foreground">
+                  Não foi possível carregar os dados do agendamento. 
+                  O agendamento pode ter sido removido ou não existe mais.
+                </p>
+              </>
+            )}
+
+            {/* Debug info for developers - apenas em desenvolvimento */}
+            {import.meta.env.DEV && (
+              <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-left">
+                <p className="text-xs font-semibold text-amber-800 mb-2">INFO DEV (Debug):</p>
+                <div className="text-[10px] font-mono text-amber-900 space-y-1">
+                  <div className="flex gap-2">
+                    <span className="text-amber-600">appointmentId:</span>
+                    <span className="font-mono">{appointmentId || 'undefined'}</span>
                   </div>
-                )}
-                {patientError && (
-                  <div className="mt-2 pt-2 border-t border-amber-300">
-                    <span className="text-amber-600">patientError:</span>
-                    <p className="text-red-700 truncate">{patientError.message}</p>
+                  <div className="flex gap-2">
+                    <span className="text-amber-600">appointment:</span>
+                    <span>{appointment ? 'found' : 'NOT found'}</span>
                   </div>
-                )}
+                  <div className="flex gap-2">
+                    <span className="text-amber-600">patient:</span>
+                    <span>{patient ? 'found' : 'NOT found'}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="text-amber-600">patientId:</span>
+                    <span className="font-mono">{patientId || 'undefined'}</span>
+                  </div>
+                  {appointmentError && (
+                    <div className="mt-2 pt-2 border-t border-amber-300">
+                      <span className="text-amber-600">appointmentError:</span>
+                      <p className="text-red-700 truncate">{appointmentError.message}</p>
+                    </div>
+                  )}
+                  {patientError && (
+                    <div className="mt-2 pt-2 border-t border-amber-300">
+                      <span className="text-amber-600">patientError:</span>
+                      <p className="text-red-700 truncate">{patientError.message}</p>
+                    </div>
+                  )}
+                </div>
               </div>
+            )}
+
+            <div className="flex gap-2 justify-center mt-4">
+              <Button onClick={() => navigate('/schedule')} variant="outline">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Voltar para Agenda
+              </Button>
+              {isPermissionError && (
+                <Button onClick={() => window.location.reload()} variant="default">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Tentar Novamente
+                </Button>
+              )}
             </div>
-            <Button onClick={() => navigate('/schedule')} variant="outline">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Voltar para Agenda
-            </Button>
           </div>
         </div>
       </MainLayout>
@@ -617,11 +693,20 @@ const PatientEvolution = () => {
                     onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
                     size="sm"
                     variant="ghost"
-                    className="h-8 w-8 px-2 hover:bg-primary/10 touch-target flex-shrink-0"
+                    className="h-8 px-2 hover:bg-primary/10 touch-target flex-shrink-0 relative"
                     title={autoSaveEnabled ? 'Auto Salvar Ativado' : 'Auto Salvar Desativado'}
                   >
                     <Save className={`h-4 w-4 ${autoSaveEnabled ? 'text-green-500' : 'text-muted-foreground'}`} />
+                    {lastSavedAt && autoSaveEnabled && (
+                      <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                    )}
                   </Button>
+                  {lastSavedAt && autoSaveEnabled && (
+                    <span className="hidden sm:flex items-center gap-1 text-[9px] text-muted-foreground">
+                      <Cloud className="h-2.5 w-2.5" />
+                      {format(lastSavedAt, 'HH:mm')}
+                    </span>
+                  )}
                   <Button
                     onClick={() => setShowKeyboardHelp(true)}
                     size="sm"
@@ -685,20 +770,25 @@ const PatientEvolution = () => {
             </div>
           )}
 
-          {/* Mandatory Tests Alert */}
-          <MandatoryTestAlert
-            tests={requiredMeasurements.map(req => ({
-              id: req.id || req.measurement_name, // Fallback ID
-              name: req.measurement_name,
-              critical: req.alert_level === 'high',
-              completed: measurements.some(m => m.measurement_name === req.measurement_name)
-            }))}
-            onResolve={(testId) => {
-              const test = requiredMeasurements.find(t => t.id === testId || t.measurement_name === testId);
-              // navigate to measurement tab or open modal
-              document.querySelector('[value="measurements"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-            }}
-          />
+          {/* Mandatory Tests Alert - FIXED: now shows only pending tests for today */}
+          {requiredMeasurements.length > 0 && (
+            <MandatoryTestAlert
+              tests={requiredMeasurements.map(req => {
+                // Check if measurement was done today
+                const completedToday = todayMeasurements.some(m => m.measurement_name === req.measurement_name);
+                return {
+                  id: req.id || req.measurement_name,
+                  name: req.measurement_name,
+                  critical: req.alert_level === 'high',
+                  completed: completedToday
+                };
+              })}
+              onResolve={(testId) => {
+                // navigate to measurement tab or open modal
+                document.querySelector('[value="measurements"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+              }}
+            />
+          )}
 
           {/* Modern Tab Navigation */}
           <Tabs defaultValue="soap" className="w-full">
@@ -870,8 +960,11 @@ const PatientEvolution = () => {
                         Medições e Testes
                       </h2>
 
-                      {/* Alertas de Medições Obrigatórias */}
-                      {requiredMeasurements.length > 0 && (
+                      {/* Alertas de Medições Obrigatórias - FIXED: shows only pending tests */}
+                      {requiredMeasurements.filter(req => {
+                        const completedToday = todayMeasurements.some(m => m.measurement_name === req.measurement_name);
+                        return !completedToday;
+                      }).length > 0 && (
                         <Card className="border-destructive/30 shadow-sm mb-4">
                           <CardHeader className="bg-destructive/5 py-3">
                             <CardTitle className="flex items-center gap-2 text-destructive text-base">
@@ -880,20 +973,25 @@ const PatientEvolution = () => {
                             </CardTitle>
                           </CardHeader>
                           <CardContent className="space-y-2 pt-4">
-                            {requiredMeasurements.map((req) => (
-                              <Alert
-                                key={req.id}
-                                variant={req.alert_level === 'high' ? 'destructive' : 'default'}
-                                className="py-2"
-                              >
-                                <AlertTriangle className="h-4 w-4" />
-                                <AlertTitle className="text-sm font-semibold">{req.measurement_name}</AlertTitle>
-                                <AlertDescription className="text-xs">
-                                  {req.instructions}
-                                  {req.measurement_unit && ` (${req.measurement_unit})`}
-                                </AlertDescription>
-                              </Alert>
-                            ))}
+                            {requiredMeasurements
+                              .filter(req => {
+                                const completedToday = todayMeasurements.some(m => m.measurement_name === req.measurement_name);
+                                return !completedToday;
+                              })
+                              .map((req) => (
+                                <Alert
+                                  key={req.id}
+                                  variant={req.alert_level === 'high' ? 'destructive' : 'default'}
+                                  className="py-2"
+                                >
+                                  <AlertTriangle className="h-4 w-4" />
+                                  <AlertTitle className="text-sm font-semibold">{req.measurement_name}</AlertTitle>
+                                  <AlertDescription className="text-xs">
+                                    {req.instructions}
+                                    {req.measurement_unit && ` (${req.measurement_unit})`}
+                                  </AlertDescription>
+                                </Alert>
+                              ))}
                           </CardContent>
                         </Card>
                       )}
