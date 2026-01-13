@@ -4,7 +4,7 @@ const PROXY_FUNCTION = 'dicom-proxy';
 
 // Type definitions for standard DICOMweb JSON
 export interface DicomStudy {
-    [tag: string]: any;
+    [tag: string]: unknown;
     "0020000D"?: { Value: string[] }; // StudyInstanceUID
     "00080020"?: { Value: string[] }; // StudyDate
     "00081030"?: { Value: string[] }; // StudyDescription
@@ -66,13 +66,12 @@ export const dicomWebClient = {
      * Uploads DICOM files
      */
     storeInstances: async (files: File[]) => {
-        const formData = new FormData();
         // STOW-RS usually sends multipart/related.
         // Creating a proper multipart/related request in JS fetch is tricky manually.
-        // However, Orthanc also accepts simple POST of a raw DICOM file to /instances 
+        // However, Orthanc also accepts simple POST of a raw DICOM file to /instances
         // OR standard STOW.
 
-        // For simplicity with the Proxy (which handles streaming body), we can try sending single file 
+        // For simplicity with the Proxy (which handles streaming body), we can try sending single file
         // to /instances if we iterate, or use a STOW library.
         // Let's iterate for MVP robustness if STOW is complex to construct manually.
 
@@ -80,7 +79,7 @@ export const dicomWebClient = {
         for (const file of files) {
             const path = 'instances';
             // We need to send raw binary body
-            const { data, error } = await supabase.functions.invoke(PROXY_FUNCTION, {
+            const { error } = await supabase.functions.invoke(PROXY_FUNCTION, {
                 method: 'POST',
                 body: file, // Send file directly as body
                 headers: {

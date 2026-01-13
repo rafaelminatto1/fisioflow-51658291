@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { MainLayout } from '@/components/layout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { EmptyState } from '@/components/ui/empty-state';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -29,11 +28,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { useAuditLogs, useExportAuditLogs, useBackups, type AuditLog } from '@/hooks/useAuditLogs';
-import { 
-  Search, Eye, FileText, Download, Database, RefreshCw, 
+import { useAuditLogs, useExportAuditLogs, useBackups } from '@/hooks/useAuditLogs';
+import {
+  Search, Eye, FileText, Download, Database, RefreshCw,
   Plus, Minus, Edit, Trash2, Shield, Clock, HardDrive,
-  CheckCircle, XCircle, AlertCircle
+  CheckCircle, AlertCircle
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';

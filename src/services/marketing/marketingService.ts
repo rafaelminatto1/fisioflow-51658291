@@ -1,5 +1,3 @@
-import { supabase } from '@/integrations/supabase/client';
-
 export interface MarketingExportParams {
     patientId: string;
     organizationId: string;
@@ -22,7 +20,7 @@ export const createMarketingExportRecord = async (params: MarketingExportParams,
     console.log('[MarketingService] Creating export record...', params);
 
     // 1. Upload Blob to Storage (Mock)
-    const fileName = `marketing_${params.patientId}_${Date.now()}.mp4`;
+    // const fileName = `marketing_${params.patientId}_${Date.now()}.mp4`;
     // const { data: uploadData, error: uploadError } = await supabase.storage.from('exports').upload(fileName, blob);
 
     // 2. Insert DB Record (Mock)
