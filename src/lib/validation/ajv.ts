@@ -9,7 +9,7 @@ const ajv = new Ajv({
 });
 
 // @ts-ignore - ajv-formats might not be installed, handle gracefully
-try { addFormats(ajv); } catch (e) { console.warn("ajv-formats not installed"); }
+try { addFormats(ajv); } catch { console.warn("ajv-formats not installed"); }
 
 const validate = ajv.compile(dynamicCompareSchema);
 

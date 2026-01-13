@@ -95,11 +95,11 @@ const Communications = () => {
   }, [patients, patientSearch]);
 
   const filteredCommunications = useMemo(() => {
-    return communications.filter(comm => 
-      !searchTerm || 
+    return communications.filter(comm =>
+      !searchTerm ||
       comm.patient?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       comm.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      comm.recipient.toLowerCase().includes(searchTerm.toLowerCase())
+      (comm.recipient || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [communications, searchTerm]);
 

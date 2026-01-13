@@ -91,7 +91,7 @@ class Logger {
             });
           });
           observer.observe({ entryTypes: ['longtask'] });
-        } catch (e) {
+        } catch {
           // PerformanceObserver not supported
         }
       }

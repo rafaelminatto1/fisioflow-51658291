@@ -35,7 +35,7 @@ export const generateClinicalReport = async (metrics: any, history?: any): Promi
         }
 
         return data;
-    } catch (e) {
+    } catch {
         console.error("AI Service Exception:", e);
         return mockClinicalReport(metrics);
     }
@@ -63,7 +63,7 @@ export const generateFormSuggestions = async (formData: Record<string, any>, for
         }
 
         return data.suggestions || mockFormSuggestions(context);
-    } catch (e) {
+    } catch {
         console.error("AI Service Exception:", e);
         return mockFormSuggestions("");
     }
