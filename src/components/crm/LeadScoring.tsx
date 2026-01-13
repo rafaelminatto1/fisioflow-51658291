@@ -1,51 +1,24 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
-  TrendingUp, Target, Award, Settings, Info, Zap, AlertCircle,
+  TrendingUp, Target, Award, Info, Zap, AlertCircle,
   CheckCircle2, Clock, Phone, Mail, Calendar
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-
-interface LeadScore {
-  id: string;
-  lead_id: string;
-  total_score: number;
-  engagement_score: number;
-  demographic_score: number;
-  behavioral_score: number;
-  tier: 'hot' | 'warm' | 'cold';
-  last_calculated: string;
-  factors: ScoreFactor[];
-}
 
 interface ScoreFactor {
   type: string;
   description: string;
   points: number;
-}
-
-interface LeadScoringRule {
-  id: string;
-  name: string;
-  factor: string;
-  points: number;
-  condition: string;
-  value: any;
-  active: boolean;
 }
 
 const TIERS = {
@@ -55,10 +28,10 @@ const TIERS = {
 };
 
 export function useLeadScoring() {
-  const queryClient = useQueryClient();
+  const _queryClient = useQueryClient();
 
   const calculateScores = useMutation({
-    mutationFn: async (leadId?: string) => {
+    mutationFn: async (_leadId?: string) => {
       // Buscar leads
       const { data: leads } = await supabase
         .from('leads')
@@ -72,7 +45,7 @@ export function useLeadScoring() {
         .select('*');
 
       // Buscar regras de pontuação
-      const { data: regras } = await supabase
+      const { data: _regras } = await supabase
         .from('lead_scoring_regras')
         .select('*')
         .eq('active', true);
@@ -109,7 +82,7 @@ export function useLeadScoring() {
         }
 
         // Verificar respostas rápidas
-        const quickResponses = leadInteracoes.filter((i: any) => {
+        const quickResponses = leadInteracoes.filter((i: Record<string, unknown>) => {
           if (!i.created_at || !lead.created_at) return false;
           const responseTime = new Date(i.created_at).getTime() - new Date(lead.created_at).getTime();
           return responseTime < 24 * 60 * 60 * 1000; // Respondeu em menos de 24h
@@ -172,7 +145,7 @@ export function useLeadScoring() {
       return calculatedScores;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['lead-scores'] });
+      _queryClient.invalidateQueries({ queryKey: ['lead-scores'] });
       toast.success('Scores calculados com sucesso!');
     },
   });
@@ -185,16 +158,16 @@ interface LeadScoringProps {
   showSettings?: boolean;
 }
 
-export function LeadScoring({ leadId, showSettings = false }: LeadScoringProps) {
+export function LeadScoring({ _leadId, showSettings = false }: LeadScoringProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'leads' | 'rules' | 'settings'>('overview');
 
   // Buscar scores calculados
   const { data: scores = [], isLoading } = useQuery({
-    queryKey: ['lead-scores', leadId],
+    queryKey: ['lead-scores', _leadId],
     queryFn: async () => {
       let query = supabase.from('lead_scores').select('*, leads(*)');
-      if (leadId) {
-        query = query.eq('lead_id', leadId);
+      if (_leadId) {
+        query = query.eq('lead_id', _leadId);
       }
       const { data, error } = await query.order('total_score', { ascending: false });
       if (error) throw error;
@@ -202,18 +175,18 @@ export function LeadScoring({ leadId, showSettings = false }: LeadScoringProps) 
     },
   });
 
-  // Buscar regras
-  const { data: regras = [] } = useQuery({
-    queryKey: ['lead-scoring-regras'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('lead_scoring_regras')
-        .select('*')
-        .order('points', { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-  });
+  // Buscar regras (unused but kept for future use)
+  // const { data: regras = [] } = useQuery({
+  //   queryKey: ['lead-scoring-regras'],
+  //   queryFn: async () => {
+  //     const { data, error } = await supabase
+  //       .from('lead_scoring_regras')
+  //       .select('*')
+  //       .order('points', { ascending: false });
+  //     if (error) throw error;
+  //     return data;
+  //   },
+  // });
 
   const { calculateScores } = useLeadScoring();
 
@@ -223,10 +196,10 @@ export function LeadScoring({ leadId, showSettings = false }: LeadScoringProps) 
 
     return {
       total: scores.length,
-      hot: scores.filter((s: any) => s.tier === 'hot').length,
-      warm: scores.filter((s: any) => s.tier === 'warm').length,
-      cold: scores.filter((s: any) => s.tier === 'cold').length,
-      avgScore: Math.round(scores.reduce((acc: number, s: any) => acc + s.total_score, 0) / scores.length),
+      hot: scores.filter((s: { tier: string }) => s.tier === 'hot').length,
+      warm: scores.filter((s: { tier: string }) => s.tier === 'warm').length,
+      cold: scores.filter((s: { tier: string }) => s.tier === 'cold').length,
+      avgScore: Math.round(scores.reduce((acc: number, s: { total_score: number }) => acc + s.total_score, 0) / scores.length),
     };
   }, [scores]);
 
@@ -262,7 +235,7 @@ export function LeadScoring({ leadId, showSettings = false }: LeadScoringProps) 
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'overview' | 'leads' | 'rules' | 'settings')}>
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="leads">Leads por Score</TabsTrigger>
@@ -386,10 +359,10 @@ export function LeadScoring({ leadId, showSettings = false }: LeadScoringProps) 
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {(scores as any[]).map((score) => (
+                    {(scores as Array<{ id: string; leads?: { name: string } | null; total_score: number; engagement_score: number; demographic_score: number; behavioral_score: number; tier: string; factors?: { length: number } }>).map((score) => (
                       <TableRow key={score.id}>
                         <TableCell className="font-medium">
-                          {(score.leads as any)?.name || 'Lead'}
+                          {score.leads?.name || 'Lead'}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
@@ -469,26 +442,7 @@ export function LeadScoring({ leadId, showSettings = false }: LeadScoringProps) 
                 <Separator />
                 <div className="space-y-2">
                   <h4 className="font-medium text-sm text-muted-foreground">Regras Customizadas</h4>
-                  {regras.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Nenhuma regra customizada criada.</p>
-                  ) : (
-                    regras.map((regra: any) => (
-                      <div key={regra.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium">{regra.name}</p>
-                          <p className="text-xs text-muted-foreground">{regra.description}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant={regra.active ? 'default' : 'secondary'}>
-                            {regra.active ? 'Ativa' : 'Inativa'}
-                          </Badge>
-                          <Badge className={regra.points > 0 ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}>
-                            {regra.points > 0 ? '+' : ''}{regra.points}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))
-                  )}
+                  <p className="text-sm text-muted-foreground">Nenhuma regra customizada criada.</p>
                 </div>
               </div>
             </CardContent>

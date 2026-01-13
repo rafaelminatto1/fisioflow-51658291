@@ -13,12 +13,16 @@ import { format } from 'date-fns';
 
 interface FinanceiroTabProps {
   eventoId: string;
-  evento: any;
+  evento: {
+    gratuito: boolean;
+    valor_padrao_prestador?: number | null;
+    link_whatsapp?: string | null;
+  };
 }
 
 export function FinanceiroTab({ eventoId, evento }: FinanceiroTabProps) {
   const [isPagamentoModalOpen, setIsPagamentoModalOpen] = useState(false);
-  const [selectedPagamento, setSelectedPagamento] = useState<any>(null);
+  const [selectedPagamento, setSelectedPagamento] = useState<Record<string, unknown> | null>(null);
   
   const { data: prestadores } = usePrestadores(eventoId);
   const { data: checklistItems } = useChecklist(eventoId);
@@ -41,7 +45,7 @@ export function FinanceiroTab({ eventoId, evento }: FinanceiroTabProps) {
   const checklistTotal = checklistItems?.length || 0;
   const percentualChecklist = checklistTotal > 0 ? (checklistOk / checklistTotal) * 100 : 0;
 
-  const handleEditPagamento = (pagamento: any) => {
+  const handleEditPagamento = (pagamento: Record<string, unknown>) => {
     setSelectedPagamento(pagamento);
     setIsPagamentoModalOpen(true);
   };

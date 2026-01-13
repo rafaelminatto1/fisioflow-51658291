@@ -24,20 +24,20 @@ import { useMedicalChatbot, formatChatTime, getSatisfactionEmoji, getMessageType
 interface MedicalChatbotProps {
   userId: string;
   patientId?: string;
-  initialContext?: any;
+  initialContext?: Record<string, unknown>;
   onClose?: () => void;
   embedded?: boolean;
   theme?: 'light' | 'dark';
 }
 
 interface ChatBubbleProps {
-  message: any;
+  message: { id?: string; content: string; type?: string; timestamp?: string };
   isUser: boolean;
   showTime?: boolean;
 }
 
 interface QuickReplyButtonProps {
-  reply: any;
+  reply: { payload: string; text: string; icon?: string };
   onClick: (payload: string, text: string) => void;
 }
 

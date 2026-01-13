@@ -18,7 +18,10 @@ interface PagamentoModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   eventoId: string;
-  pagamento?: any;
+  pagamento?: {
+    id: string;
+    pago_em: string;
+  } | null;
 }
 
 export function PagamentoModal({ open, onOpenChange, eventoId, pagamento }: PagamentoModalProps) {
@@ -87,7 +90,7 @@ export function PagamentoModal({ open, onOpenChange, eventoId, pagamento }: Paga
             <Label htmlFor="tipo">Tipo</Label>
             <Select
               value={tipo}
-              onValueChange={(value) => setValue('tipo', value as any)}
+              onValueChange={(value) => setValue('tipo', value as 'prestador' | 'insumo' | 'outro')}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o tipo" />

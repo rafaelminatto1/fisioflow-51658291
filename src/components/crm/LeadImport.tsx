@@ -5,8 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Upload, FileSpreadsheet, AlertCircle, CheckCircle2, X } from 'lucide-react';
+import { Upload, FileSpreadsheet, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
+import { useCallback } from 'react';
 import { useImportLeads } from '@/hooks/useCRM';
 import * as XLSX from 'xlsx';
 
@@ -37,7 +38,7 @@ export function LeadImport() {
         const workbook = XLSX.read(data, { type: 'binary' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const json = XLSX.utils.sheet_to_json(worksheet) as Record<string, any>[];
+        const json = XLSX.utils.sheet_to_json(worksheet) as Record<string, unknown>[];
         
         const previews: LeadPreview[] = json.map(row => {
           const errors: string[] = [];
