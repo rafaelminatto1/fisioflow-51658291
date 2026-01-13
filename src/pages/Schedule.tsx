@@ -9,7 +9,7 @@ import { WaitlistQuickAdd } from '@/components/schedule/WaitlistQuickAdd';
 import { WaitlistQuickViewModal } from '@/components/schedule/WaitlistQuickViewModal';
 import { ScheduleHero } from '@/components/schedule/ScheduleHero';
 import { KeyboardShortcuts } from '@/components/schedule/KeyboardShortcuts';
-import { useAppointments, useCreateAppointment, useRescheduleAppointment } from '@/hooks/useAppointments';
+import { useAppointments, useRescheduleAppointment } from '@/hooks/useAppointments';
 import { useWaitlistMatch } from '@/hooks/useWaitlistMatch';
 import { logger } from '@/lib/errors/logger';
 import { AlertTriangle, Users, Plus, Settings as SettingsIcon, RefreshCw, Keyboard } from 'lucide-react';
@@ -21,8 +21,6 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
-import { format, isAfter, parseISO, startOfDay, isToday } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { formatDateToLocalISO, formatDateToBrazilian } from '@/utils/dateUtils';
 
@@ -55,7 +53,6 @@ const Schedule = () => {
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
 
   const { data: appointments = [], isLoading: loading, error, refetch, isFromCache, cacheTimestamp } = useAppointments();
-  const createAppointmentMutation = useCreateAppointment();
   const { mutateAsync: rescheduleAppointment, isPending: isRescheduling } = useRescheduleAppointment();
   const { totalInWaitlist, isWaitlistFromCache, waitlistCacheTimestamp } = useWaitlistMatch();
 
@@ -92,7 +89,100 @@ const Schedule = () => {
     }, 'Schedule');
   }, [appointments.length, loading]);
 
-  // Keyboard shortcuts
+  // Filter appointments by search term
+  const filteredAppointments = useMemo(() => {
+    if (!searchTerm) return appointments;
+    return appointments.filter(appointment =>
+      appointment.patientName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [appointments, searchTerm]);
+
+  // Handlers - Define ALL handlers before the useEffect that uses them
+  const handleCreateAppointment = useCallback(() => {
+    setSelectedAppointment(null);
+
+    const now = new Date();
+    setModalDefaultDate(now);
+
+    const currentMinutes = now.getMinutes();
+    const roundedMinutes = currentMinutes < 30 ? 30 : 0;
+    let nextHour = currentMinutes < 30 ? now.getHours() : now.getHours() + 1;
+
+    if (nextHour >= 21) {
+      nextHour = 8;
+    } else if (nextHour < 7) {
+      nextHour = 8;
+    }
+
+    const nextTime = `${String(nextHour).padStart(2, '0')}:${String(roundedMinutes).padStart(2, '0')}`;
+    setModalDefaultTime(nextTime);
+
+    setIsModalOpen(true);
+  }, []);
+
+  const handleTimeSlotClick = useCallback((date: Date, time: string) => {
+    setSelectedAppointment(null);
+    setModalDefaultDate(date);
+    setModalDefaultTime(time);
+    setIsModalOpen(true);
+  }, []);
+
+  const handleModalClose = useCallback(() => {
+    setIsModalOpen(false);
+    setSelectedAppointment(null);
+    setModalDefaultDate(undefined);
+    setModalDefaultTime(undefined);
+  }, []);
+
+  const handleAppointmentReschedule = useCallback(async (appointment: Appointment, newDate: Date, newTime: string) => {
+    try {
+      const formattedDate = formatDateToLocalISO(newDate);
+
+      await rescheduleAppointment({
+        appointmentId: appointment.id,
+        appointment_date: formattedDate,
+        appointment_time: newTime,
+        duration: appointment.duration
+      });
+      toast({
+        title: '✅ Reagendado com sucesso',
+        description: `Atendimento de ${appointment.patientName} movido para ${formatDateToBrazilian(newDate)} às ${newTime}.`,
+      });
+    } catch (error) {
+      toast({
+        title: '❌ Erro ao reagendar',
+        description: 'Não foi possível reagendar o atendimento.',
+        variant: 'destructive'
+      });
+      throw error;
+    }
+  }, [rescheduleAppointment]);
+
+  const handleEditAppointment = useCallback((appointment: Appointment) => {
+    setSelectedAppointment(appointment);
+    setIsModalOpen(true);
+  }, []);
+
+  const handleDeleteAppointment = useCallback(async (appointment: Appointment) => {
+    try {
+      const { error } = await supabase
+        .from('appointments')
+        .delete()
+        .eq('id', appointment.id);
+
+      if (error) throw error;
+      toast({ title: '✅ Agendamento excluído', description: `Agendamento de ${appointment.patientName} foi excluído.` });
+      refetch();
+    } catch (error) {
+      toast({ title: '❌ Erro ao excluir', description: 'Não foi possível excluir o agendamento.', variant: 'destructive' });
+    }
+  }, [refetch]);
+
+  const handleAppointmentClick = useCallback((appointment: Appointment) => {
+    setQuickEditAppointment(appointment);
+  }, []);
+
+  // Keyboard shortcuts - must come AFTER all handlers are defined
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ignore if user is typing in an input
@@ -177,99 +267,6 @@ const Schedule = () => {
     setViewType,
     setCurrentDate
   ]);
-
-  // Filter appointments by search term
-  const filteredAppointments = useMemo(() => {
-    if (!searchTerm) return appointments;
-    return appointments.filter(appointment =>
-      appointment.patientName.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [appointments, searchTerm]);
-
-  // Handlers
-  const handleAppointmentClick = useCallback((appointment: Appointment) => {
-    setQuickEditAppointment(appointment);
-  }, []);
-
-  const handleCreateAppointment = useCallback(() => {
-    setSelectedAppointment(null);
-
-    const now = new Date();
-    setModalDefaultDate(now);
-
-    const currentMinutes = now.getMinutes();
-    const roundedMinutes = currentMinutes < 30 ? 30 : 0;
-    let nextHour = currentMinutes < 30 ? now.getHours() : now.getHours() + 1;
-
-    if (nextHour >= 21) {
-      nextHour = 8;
-    } else if (nextHour < 7) {
-      nextHour = 8;
-    }
-
-    const nextTime = `${String(nextHour).padStart(2, '0')}:${String(roundedMinutes).padStart(2, '0')}`;
-    setModalDefaultTime(nextTime);
-
-    setIsModalOpen(true);
-  }, []);
-
-  const handleTimeSlotClick = useCallback((date: Date, time: string) => {
-    setSelectedAppointment(null);
-    setModalDefaultDate(date);
-    setModalDefaultTime(time);
-    setIsModalOpen(true);
-  }, []);
-
-  const handleModalClose = useCallback(() => {
-    setIsModalOpen(false);
-    setSelectedAppointment(null);
-    setModalDefaultDate(undefined);
-    setModalDefaultTime(undefined);
-  }, []);
-
-  const handleAppointmentReschedule = useCallback(async (appointment: Appointment, newDate: Date, newTime: string) => {
-    try {
-      const formattedDate = formatDateToLocalISO(newDate);
-
-      await rescheduleAppointment({
-        appointmentId: appointment.id,
-        appointment_date: formattedDate,
-        appointment_time: newTime,
-        duration: appointment.duration
-      });
-      toast({
-        title: '✅ Reagendado com sucesso',
-        description: `Atendimento de ${appointment.patientName} movido para ${formatDateToBrazilian(newDate)} às ${newTime}.`,
-      });
-    } catch (error) {
-      toast({
-        title: '❌ Erro ao reagendar',
-        description: 'Não foi possível reagendar o atendimento.',
-        variant: 'destructive'
-      });
-      throw error;
-    }
-  }, [rescheduleAppointment]);
-
-  const handleEditAppointment = useCallback((appointment: Appointment) => {
-    setSelectedAppointment(appointment);
-    setIsModalOpen(true);
-  }, []);
-
-  const handleDeleteAppointment = useCallback(async (appointment: Appointment) => {
-    try {
-      const { error } = await supabase
-        .from('appointments')
-        .delete()
-        .eq('id', appointment.id);
-
-      if (error) throw error;
-      toast({ title: '✅ Agendamento excluído', description: `Agendamento de ${appointment.patientName} foi excluído.` });
-      refetch();
-    } catch (error) {
-      toast({ title: '❌ Erro ao excluir', description: 'Não foi possível excluir o agendamento.', variant: 'destructive' });
-    }
-  }, [refetch]);
 
   if (error) {
     logger.error('Erro na página Schedule', { error }, 'Schedule');
@@ -419,7 +416,6 @@ const Schedule = () => {
                   onAppointmentClick={handleAppointmentClick}
                   onTimeSlotClick={handleTimeSlotClick}
                   onAppointmentReschedule={handleAppointmentReschedule}
-                  isRescheduling={isRescheduling}
                   onEditAppointment={handleEditAppointment}
                   onDeleteAppointment={handleDeleteAppointment}
                 />
