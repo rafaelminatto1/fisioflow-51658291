@@ -14,10 +14,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  ArrowLeft, Calendar, FileText, TrendingDown, TrendingUp, Minus, Activity,
-  MapPin, Target, Clock, ChevronRight, Download, GitCompare
+  ArrowLeft, Calendar, FileText, TrendingDown, Activity,
+  MapPin, Target, Clock, Download, GitCompare
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { usePainMapHistory } from '@/hooks/usePainMapHistory';

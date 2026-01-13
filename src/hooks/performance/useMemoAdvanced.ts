@@ -122,7 +122,7 @@ export function useMultiMemo<T>(
 ): T[] {
   return useMemo(
     () => factories.map(factory => factory()),
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+     
     depsArrays.flat()
   );
 }

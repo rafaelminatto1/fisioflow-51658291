@@ -102,7 +102,7 @@ export const useTeamPerformance = (filters: PerformanceFilters = { period: 'mont
       const therapistIds = therapists.map(t => t.id);
       
       // Get appointments with payment info (apenas se houver therapists)
-      let appointments: any[] = [];
+      let appointments: Array<{ id?: string; patient_id?: string; appointment_date?: string }> = [];
       if (therapistIds.length > 0) {
         const { data: appointmentsData } = await supabase
           .from('appointments')
@@ -121,7 +121,7 @@ export const useTeamPerformance = (filters: PerformanceFilters = { period: 'mont
         .lte('created_at', end.toISOString());
       
       // Get patient first appointments to calculate retention (apenas se houver therapists)
-      let allPatientAppointments: any[] = [];
+      let allPatientAppointments: unknown[] = [];
       if (therapistIds.length > 0) {
         const { data: patientAppointmentsData } = await supabase
           .from('appointments')

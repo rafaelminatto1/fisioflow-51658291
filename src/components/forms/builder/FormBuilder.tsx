@@ -175,11 +175,12 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ formId, initialData, o
 
             if (onSave) onSave();
 
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "Ocorreu um erro ao salvar a ficha.";
             logger.error('Erro ao salvar ficha de avaliação', error, 'FormBuilder');
             toast({
                 title: "Erro ao salvar",
-                description: error.message || "Ocorreu um erro ao salvar a ficha.",
+                description: errorMessage,
                 variant: "destructive"
             });
         } finally {

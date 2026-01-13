@@ -10,11 +10,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Link2, Plus, Copy, Trash2, Eye, UserPlus, Clock, Users, CheckCircle, XCircle, Loader2, MessageCircle, Settings2 } from 'lucide-react';
+import { Link2, Plus, Copy, UserPlus, Clock, Users, CheckCircle, XCircle, Loader2, MessageCircle, Settings2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -189,7 +188,7 @@ const PreCadastroAdmin = () => {
     toast.success('Link copiado!');
   };
 
-  const shareWhatsApp = (token: string, tokenName: string) => {
+  const shareWhatsApp = (token: string, _tokenName: string) => {
     const url = `${window.location.origin}/pre-cadastro/${token}`;
     const message = encodeURIComponent(
       `Olá! 👋\n\nPara agilizar seu atendimento, preencha seu pré-cadastro através do link abaixo:\n\n${url}\n\nLevará apenas alguns minutos. Aguardamos você! 💙`

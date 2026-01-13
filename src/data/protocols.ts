@@ -1,6 +1,6 @@
 import {
     Grid3X3, Activity, Heart, Layers, Dumbbell, Target,
-    Calendar, Zap, Users, Brain, Baby, Bone, ZapOff
+    Calendar, Zap, Users
 } from 'lucide-react';
 
 // Dados clínicos detalhados dos protocolos
