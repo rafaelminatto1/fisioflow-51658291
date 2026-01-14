@@ -16,6 +16,19 @@ export { useSidebarProvider, SidebarContext } from './useSidebar';
 export { useSidebar } from './useSidebar';
 export { useIsMobile } from './use-mobile';
 
+// Error handling
+export {
+  useErrorHandler,
+  useAsyncOperation,
+  getErrorMessageFromStatus,
+  extractErrorInfo
+} from './useErrorHandler';
+export type {
+  ApiErrorOptions,
+  AsyncOperationResult,
+  UseErrorHandlerReturn
+} from './useErrorHandler';
+
 // Real hooks from separate files
 export { useAuth } from './useAuth';
 export { useData } from './useData';
