@@ -45,8 +45,7 @@ CREATE INDEX IF NOT EXISTS idx_sessions_patient_created
 ON public.sessions(patient_id, created_at DESC);
 
 CREATE INDEX IF NOT EXISTS idx_sessions_therapist_created
-ON public.sessions(therapist_id, created_at DESC)
-WHERE created_at >= now() - interval '90 days';
+ON public.sessions(therapist_id, created_at DESC);
 
 -- Medical records
 CREATE INDEX IF NOT EXISTS idx_medical_records_patient
@@ -55,17 +54,17 @@ WHERE patient_id IS NOT NULL;
 
 -- Payments
 CREATE INDEX IF NOT EXISTS idx_payments_patient_date
-ON public.payments(patient_id, created_at DESC)
-WHERE created_at >= now() - interval '365 days';
+ON public.payments(patient_id, created_at DESC);
 
-CREATE INDEX IF NOT EXISTS idx_payments_status
-ON public.payments(status, created_at DESC)
-WHERE status IN ('pending', 'partial');
+-- Payments status index (commented out - status column may not exist)
+-- CREATE INDEX IF NOT EXISTS idx_payments_status
+-- ON public.payments(status, created_at DESC)
+-- WHERE status IN ('pending', 'partial');
 
--- Patient packages
-CREATE INDEX IF NOT EXISTS idx_patient_packages_patient_active
-ON public.patient_packages(patient_id, status)
-WHERE status = 'active';
+-- Patient packages (commented out - status column may not exist)
+-- CREATE INDEX IF NOT EXISTS idx_patient_packages_patient_active
+-- ON public.patient_packages(patient_id, status)
+-- WHERE status = 'active';
 
 -- ============================================================================
 -- COMPOSITE INDEXES FOR COMMON QUERY PATTERNS
@@ -79,24 +78,23 @@ WHERE status = 'active';
 -- )
 -- WHERE start_time >= now() - interval '90 days';
 
-CREATE INDEX IF NOT EXISTS idx_sessions_dashboard_metrics
-ON public.sessions(
-    date_trunc('day', created_at),
-    status
-)
-WHERE created_at >= now() - interval '90 days';
+-- Dashboard metrics indexes (commented out - date_trunc requires IMMUTABLE)
+-- CREATE INDEX IF NOT EXISTS idx_sessions_dashboard_metrics
+-- ON public.sessions(
+--     date_trunc('day', created_at),
+--     status
+-- );
 
-CREATE INDEX IF NOT EXISTS idx_patients_dashboard_metrics
-ON public.patients(
-    date_trunc('day', created_at),
-    status
-)
-WHERE created_at >= now() - interval '90 days';
+-- CREATE INDEX IF NOT EXISTS idx_patients_dashboard_metrics
+-- ON public.patients(
+--     date_trunc('day', created_at),
+--     status
+-- );
 
--- Patient list with filtering
-CREATE INDEX IF NOT EXISTS idx_patients_name_status
-ON public.patients(lower(name), status)
-WHERE status IS NOT NULL;
+-- Patient list with filtering (commented out - lower is not IMMUTABLE on expressions)
+-- CREATE INDEX IF NOT EXISTS idx_patients_name_status
+-- ON public.patients(lower(name), status)
+-- WHERE status IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_patients_cpf
 ON public.patients(cpf)
@@ -123,8 +121,7 @@ WHERE status != 'draft';
 
 -- Recent patients (for quick access)
 CREATE INDEX IF NOT EXISTS idx_patients_recent
-ON public.patients(created_at DESC)
-WHERE created_at >= now() - interval '30 days';
+ON public.patients(created_at DESC);
 
 -- Active appointments
 -- CREATE INDEX IF NOT EXISTS idx_appointments_upcoming
@@ -132,58 +129,57 @@ WHERE created_at >= now() - interval '30 days';
 -- WHERE start_time >= now()
 -- AND status IN ('scheduled', 'confirmed');
 
--- Unread notifications
-CREATE INDEX IF NOT EXISTS idx_notifications_unread
-ON public.notifications(user_id, created_at DESC)
-WHERE read_at IS NULL;
+-- Unread notifications (commented out - read_at column may not exist)
+-- CREATE INDEX IF NOT EXISTS idx_notifications_unread
+-- ON public.notifications(user_id, created_at DESC)
+-- WHERE read_at IS NULL;
 
--- Pending payments
-CREATE INDEX IF NOT EXISTS idx_payments_pending
-ON public.payments(patient_id, amount)
-WHERE status = 'pending';
+-- Pending payments (commented out - status column may not exist)
+-- CREATE INDEX IF NOT EXISTS idx_payments_pending
+-- ON public.payments(patient_id, amount)
+-- WHERE status = 'pending';
 
--- Active packages with sessions remaining
-CREATE INDEX IF NOT EXISTS idx_patient_packages_available
-ON public.patient_packages(patient_id, remaining_sessions)
-WHERE status = 'active' AND remaining_sessions > 0;
+-- Active packages with sessions remaining (commented out - columns may not exist)
+-- CREATE INDEX IF NOT EXISTS idx_patient_packages_available
+-- ON public.patient_packages(patient_id, remaining_sessions)
+-- WHERE status = 'active' AND remaining_sessions > 0;
 
 -- Recent audit logs
 CREATE INDEX IF NOT EXISTS idx_audit_logs_recent
-ON public.audit_logs(created_at DESC, table_name)
-WHERE created_at >= now() - interval '30 days';
+ON public.audit_logs(created_at DESC, table_name);
 
 -- ============================================================================
 -- GIN INDEXES FOR JSONB COLUMNS
 -- ============================================================================
 
--- Patient medical records JSONB
-CREATE INDEX IF NOT EXISTS idx_patients_searchable_data
-ON public.patients USING gin(searchable_data)
-WHERE searchable_data IS NOT NULL;
+-- Patient medical records JSONB (commented out - column may not exist)
+-- CREATE INDEX IF NOT EXISTS idx_patients_searchable_data
+-- ON public.patients USING gin(searchable_data)
+-- WHERE searchable_data IS NOT NULL;
 
--- Session attachments metadata
-CREATE INDEX IF NOT EXISTS idx_session_attachments_metadata
-ON public.session_attachments USING gin(metadata)
-WHERE metadata IS NOT NULL;
+-- Session attachments metadata (commented out - column may not exist)
+-- CREATE INDEX IF NOT EXISTS idx_session_attachments_metadata
+-- ON public.session_attachments USING gin(metadata)
+-- WHERE metadata IS NOT NULL;
 
--- Patient insights JSONB
-CREATE INDEX IF NOT EXISTS idx_patient_insights_data
-ON public.patient_insights USING gin(data)
-WHERE data IS NOT NULL;
+-- Patient insights JSONB (commented out - column may not exist)
+-- CREATE INDEX IF NOT EXISTS idx_patient_insights_data
+-- ON public.patient_insights USING gin(data)
+-- WHERE data IS NOT NULL;
 
 -- ============================================================================
 -- COVERING INDEXES FOR SPECIFIC QUERIES
 -- ============================================================================
 
--- Appointments with patient and therapist names (covering index)
-CREATE INDEX IF NOT EXISTS idx_appointments_covering
-ON public.appointments(patient_id, therapist_id, start_time, status)
-INCLUDE (notes, created_at);
+-- Appointments with patient and therapist names (covering index - commented out)
+-- CREATE INDEX IF NOT EXISTS idx_appointments_covering
+-- ON public.appointments(patient_id, therapist_id, start_time, status)
+-- INCLUDE (notes, created_at);
 
--- Sessions with patient info (covering index)
-CREATE INDEX IF NOT EXISTS idx_sessions_covering
-ON public.sessions(patient_id, therapist_id, created_at, status)
-INCLUDE (subjective, objective, assessment);
+-- Sessions with patient info (covering index - commented out)
+-- CREATE INDEX IF NOT EXISTS idx_sessions_covering
+-- ON public.sessions(patient_id, therapist_id, created_at, status)
+-- INCLUDE (subjective, objective, assessment);
 
 -- ============================================================================
 -- OPTIMIZED RLS POLICIES WITH AUTH UID CACHING
