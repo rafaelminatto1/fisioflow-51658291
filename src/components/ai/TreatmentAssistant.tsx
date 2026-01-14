@@ -5,23 +5,27 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { 
-  Brain, 
-  Sparkles, 
-  TrendingUp, 
-  FileText, 
+import {
+  Brain,
+  Sparkles,
+  TrendingUp,
+  FileText,
   Loader2,
   CheckCircle,
   AlertTriangle,
-  Target
+  Target,
+  FileCheck,
+  Wand2,
+  Plus
 } from 'lucide-react';
 
 interface TreatmentAssistantProps {
   patientId: string;
   patientName: string;
+  onApplyToSoap?: (field: 'subjective' | 'objective' | 'assessment' | 'plan', content: string) => void;
 }
 
-export function TreatmentAssistant({ patientId, patientName }: TreatmentAssistantProps) {
+export function TreatmentAssistant({ patientId, patientName, onApplyToSoap }: TreatmentAssistantProps) {
   const [loading, setLoading] = useState(false);
   const [suggestion, setSuggestion] = useState<string | null>(null);
   const [activeAction, setActiveAction] = useState<string | null>(null);
@@ -181,7 +185,7 @@ export function TreatmentAssistant({ patientId, patientName }: TreatmentAssistan
 
             <Separator className="my-4" />
 
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <Button
                 variant="outline"
                 onClick={() => {
@@ -189,15 +193,72 @@ export function TreatmentAssistant({ patientId, patientName }: TreatmentAssistan
                   toast({ title: 'Copiado!', description: 'Texto copiado para a área de transferência' });
                 }}
               >
+                <FileText className="h-4 w-4 mr-2" />
                 Copiar Texto
               </Button>
+
+              {/* Apply to Assessment */}
               <Button
                 onClick={() => {
-                  // Implementar salvamento no prontuário
-                  toast({ title: 'Em breve', description: 'Funcionalidade de salvar no prontuário em desenvolvimento' });
+                  onApplyToSoap?.('assessment', suggestion);
+                  toast({
+                    title: 'Aplicado à Avaliação',
+                    description: 'O conteúdo foi adicionado ao campo de Avaliação (A).'
+                  });
                 }}
+                variant="secondary"
+                className="bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30"
               >
-                Salvar no Prontuário
+                <Wand2 className="h-4 w-4 mr-2" />
+                Aplicar à Avaliação (A)
+              </Button>
+
+              {/* Apply to Plan */}
+              <Button
+                onClick={() => {
+                  onApplyToSoap?.('plan', suggestion);
+                  toast({
+                    title: 'Aplicado ao Plano',
+                    description: 'O conteúdo foi adicionado ao campo de Plano (P).'
+                  });
+                }}
+                variant="secondary"
+                className="bg-orange-500/10 hover:bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/30"
+              >
+                <FileCheck className="h-4 w-4 mr-2" />
+                Aplicar ao Plano (P)
+              </Button>
+
+              {/* Append to Assessment */}
+              <Button
+                onClick={() => {
+                  onApplyToSoap?.('assessment', '\n\n' + suggestion);
+                  toast({
+                    title: 'Adicionado à Avaliação',
+                    description: 'O conteúdo foi anexado ao campo de Avaliação (A).'
+                  });
+                }}
+                variant="outline"
+                size="sm"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Anexar à Avaliação
+              </Button>
+
+              {/* Append to Plan */}
+              <Button
+                onClick={() => {
+                  onApplyToSoap?.('plan', '\n\n' + suggestion);
+                  toast({
+                    title: 'Anexado ao Plano',
+                    description: 'O conteúdo foi anexado ao campo de Plano (P).'
+                  });
+                }}
+                variant="outline"
+                size="sm"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Anexar ao Plano
               </Button>
             </div>
           </CardContent>
