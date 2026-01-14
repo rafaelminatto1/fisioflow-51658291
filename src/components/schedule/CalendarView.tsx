@@ -268,6 +268,10 @@ export const CalendarView = memo(({
     return dayConfig ? !dayConfig.is_open : dayOfWeek === 0;
   }, [businessHours]);
 
+  const memoizedTimeSlots = useMemo(() => {
+    return dayTimeSlotInfo.length > 0 ? dayTimeSlotInfo.map(s => s.time) : generateTimeSlots(currentDate);
+  }, [dayTimeSlotInfo, currentDate]);
+
   return (
     <>
       <Card className="flex flex-col border-0 shadow-xl min-h-[500px] sm:min-h-[600px]" role="region" aria-label="Calendário de agendamentos">
@@ -395,7 +399,7 @@ export const CalendarView = memo(({
                 // If we had many appointments, passing full list 'appointments' is okay as reference doesn't change often
                 // But filtering inside DayView is cleaner if we only render one day
                 appointments={appointments}
-                timeSlots={dayTimeSlotInfo.length > 0 ? dayTimeSlotInfo.map(s => s.time) : generateTimeSlots(currentDate)}
+                timeSlots={memoizedTimeSlots}
                 isDayClosed={isDayClosed}
                 onTimeSlotClick={onTimeSlotClick}
                 onEditAppointment={onEditAppointment}

@@ -54,7 +54,7 @@ END;
 $$;
 
 -- Add comment
-COMMENT ON FUNCTION public.search_exercises_semantic IS 'Semantic search for exercises using vector similarity. SECURE: search_path is set to empty string to prevent SQL injection.';
+COMMENT ON FUNCTION public.search_exercises_semantic(text, float, int) IS 'Semantic search for exercises using vector similarity. SECURE: search_path is set to empty string to prevent SQL injection.';
 
 -- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.search_protocols_semantic(
@@ -72,7 +72,7 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 DECLARE
-    query_vector vector(1536);
+    query_vector public.vector(1536);
 BEGIN
     SELECT public.generate_embedding(search_query) INTO query_vector;
 
@@ -92,7 +92,7 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION public.search_protocols_semantic IS 'Semantic search for protocols using vector similarity. SECURE: search_path is set to empty string.';
+COMMENT ON FUNCTION public.search_protocols_semantic(text, float, int) IS 'Semantic search for protocols using vector similarity. SECURE: search_path is set to empty string.';
 
 -- ============================================================================
 -- APPOINTMENT MANAGEMENT FUNCTIONS
@@ -182,7 +182,7 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION public.reschedule_appointment IS 'Reschedule an appointment with proper authorization checks. SECURE: search_path is set to empty string.';
+COMMENT ON FUNCTION public.reschedule_appointment(uuid, timestamptz, timestamptz, text) IS 'Reschedule an appointment with proper authorization checks. SECURE: search_path is set to empty string.';
 
 -- ============================================================================
 -- PATIENT MANAGEMENT FUNCTIONS
@@ -244,7 +244,7 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION public.find_similar_patients IS 'Find patients with similar conditions. Admin/Therapist only. SECURE: search_path is set to empty string.';
+COMMENT ON FUNCTION public.find_similar_patients(uuid, int) IS 'Find patients with similar conditions. Admin/Therapist only. SECURE: search_path is set to empty string.';
 
 -- ============================================================================
 -- TEST DATA FUNCTIONS
@@ -293,7 +293,7 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION public.create_test_user IS 'Create a test user with specified role. Admin only. SECURE: search_path is set to empty string.';
+COMMENT ON FUNCTION public.create_test_user(text, text, text) IS 'Create a test user with specified role. Admin only. SECURE: search_path is set to empty string.';
 
 -- ============================================================================
 -- CLINICAL TEST FUNCTIONS
@@ -351,7 +351,7 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION public.get_patient_clinical_tests IS 'Get clinical tests for a patient. Requires proper authorization. SECURE: search_path is set to empty string.';
+COMMENT ON FUNCTION public.get_patient_clinical_tests(uuid, boolean) IS 'Get clinical tests for a patient. Requires proper authorization. SECURE: search_path is set to empty string.';
 
 -- ============================================================================
 -- DASHBOARD FUNCTIONS
@@ -414,7 +414,7 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION public.get_dashboard_metrics IS 'Get dashboard metrics for a date range. Authenticated users only. SECURE: search_path is set to empty string.';
+COMMENT ON FUNCTION public.get_dashboard_metrics(timestamptz, timestamptz) IS 'Get dashboard metrics for a date range. Authenticated users only. SECURE: search_path is set to empty string.';
 
 -- ============================================================================
 -- REPORT FUNCTIONS
@@ -483,7 +483,7 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION public.generate_patient_report IS 'Generate a patient report. Requires proper authorization. SECURE: search_path is set to empty string.';
+COMMENT ON FUNCTION public.generate_patient_report(uuid, text) IS 'Generate a patient report. Requires proper authorization. SECURE: search_path is set to empty string.';
 
 -- ============================================================================
 -- SESSION MANAGEMENT FUNCTIONS
@@ -526,7 +526,7 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION public.get_active_sessions_for_patient IS 'Get active sessions for a patient. Patient can only see their own sessions. SECURE: search_path is set to empty string.';
+COMMENT ON FUNCTION public.get_active_sessions_for_patient(uuid) IS 'Get active sessions for a patient. Patient can only see their own sessions. SECURE: search_path is set to empty string.';
 
 -- ============================================================================
 -- SECURITY AUDIT FUNCTIONS
@@ -564,22 +564,22 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION private.log_security_event IS 'Log a security event. Only callable from other functions. SECURE: search_path is set to empty string.';
+COMMENT ON FUNCTION private.log_security_event(text, text, uuid, jsonb) IS 'Log a security event. Only callable from other functions. SECURE: search_path is set to empty string.';
 
 -- ============================================================================
 -- GRANT PERMISSIONS
 -- ============================================================================
 
 -- Grant execute on functions to authenticated users
-GRANT EXECUTE ON FUNCTION public.search_exercises_semantic TO authenticated;
-GRANT EXECUTE ON FUNCTION public.search_protocols_semantic TO authenticated;
-GRANT EXECUTE ON FUNCTION public.reschedule_appointment TO authenticated;
-GRANT EXECUTE ON FUNCTION public.find_similar_patients TO authenticated;
-GRANT EXECUTE ON FUNCTION public.get_patient_clinical_tests TO authenticated;
-GRANT EXECUTE ON FUNCTION public.get_dashboard_metrics TO authenticated;
-GRANT EXECUTE ON FUNCTION public.generate_patient_report TO authenticated;
-GRANT EXECUTE ON FUNCTION public.get_active_sessions_for_patient TO authenticated;
-GRANT EXECUTE ON FUNCTION private.log_security_event TO authenticated;
+GRANT EXECUTE ON FUNCTION public.search_exercises_semantic(text, float, int) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.search_protocols_semantic(text, float, int) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.reschedule_appointment(uuid, timestamptz, timestamptz, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.find_similar_patients(uuid, int) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_patient_clinical_tests(uuid, boolean) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_dashboard_metrics(timestamptz, timestamptz) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.generate_patient_report(uuid, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.get_active_sessions_for_patient(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION private.log_security_event(text, text, uuid, jsonb) TO authenticated;
 
 -- ============================================================================
 -- TRIGGERS FOR AUTOMATIC AUDITING
@@ -615,7 +615,7 @@ BEGIN
                 'old_status', OLD.status,
                 'new_status', NEW.status,
                 'changes', jsonb_build_object(
-                    'status', CASE WHEN OLD.status != NEW.status THEN jsonb_build_object('from', OLD.status, 'to', NEW.status) END NULL
+                    'status', CASE WHEN OLD.status != NEW.status THEN jsonb_build_object('from', OLD.status, 'to', NEW.status) ELSE NULL END
                 )
             )
         );
