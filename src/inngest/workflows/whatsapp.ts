@@ -5,9 +5,9 @@
  * Uses the WhatsAppService for templates and rendering
  */
 
-import { inngest, retryConfig } from '@/lib/inngest/client';
-import { Events, WhatsAppSendPayload } from '@/lib/inngest/types';
-import { WhatsAppService } from '@/lib/whatsapp';
+import { inngest, retryConfig } from '../../lib/inngest/client';
+import { Events, WhatsAppSendPayload, InngestStep } from '../../lib/inngest/types';
+import { WhatsAppService } from '../../lib/whatsapp';
 
 /**
  * Send a single WhatsApp message
@@ -21,7 +21,7 @@ export const sendWhatsAppWorkflow = inngest.createFunction(
   {
     event: Events.WHATSAPP_SEND,
   },
-  async ({ event, step }: { event: { data: WhatsAppSendPayload }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
+  async ({ event, step }: { event: { data: WhatsAppSendPayload }; step: InngestStep }) => {
     const { to, message, type, mediaUrl, templateName, templateData } = event.data;
 
     const result = await step.run('send-whatsapp', async () => {
@@ -66,7 +66,7 @@ export const sendAppointmentConfirmationWhatsAppWorkflow = inngest.createFunctio
   {
     event: 'whatsapp/appointment.confirmation',
   },
-  async ({ event, step }: { event: { data: Record<string, unknown> }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
+  async ({ event, step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
     const { to, patientName, therapistName, date, time, location, organizationName } = event.data;
 
     const result = await step.run('send-confirmation', async () => {
@@ -102,7 +102,7 @@ export const sendAppointmentReminderWhatsAppWorkflow = inngest.createFunction(
   {
     event: 'whatsapp/appointment.reminder',
   },
-  async ({ event, step }: { event: { data: Record<string, unknown> }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
+  async ({ event, step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
     const { to, patientName, therapistName, date, time, location, organizationName } = event.data;
 
     const result = await step.run('send-reminder', async () => {
@@ -138,7 +138,7 @@ export const sendBirthdayGreetingWhatsAppWorkflow = inngest.createFunction(
   {
     event: 'whatsapp/birthday.greeting',
   },
-  async ({ event, step }: { event: { data: Record<string, unknown> }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
+  async ({ event, step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
     const { to, patientName, organizationName, therapistName } = event.data;
 
     const result = await step.run('send-birthday-greeting', async () => {
@@ -171,7 +171,7 @@ export const sendWhatsAppBatchWorkflow = inngest.createFunction(
   {
     event: Events.WHATSAPP_SEND_BATCH,
   },
-  async ({ event, step }: { event: { data: { messages: WhatsAppSendPayload[] } }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
+  async ({ event, step }: { event: { data: { messages: WhatsAppSendPayload[] } }; step: InngestStep }) => {
     const { messages } = event.data;
 
     const results = await step.run('send-batch', async () => {

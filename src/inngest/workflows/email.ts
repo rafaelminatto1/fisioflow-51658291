@@ -5,9 +5,9 @@
  * Uses the ResendService for templates and rendering
  */
 
-import { inngest, retryConfig } from '@/lib/inngest/client';
-import { Events, EmailSendPayload } from '@/lib/inngest/types';
-import { ResendService } from '@/lib/email';
+import { inngest, retryConfig } from '../../lib/inngest/client';
+import { Events, EmailSendPayload, InngestStep } from '../../lib/inngest/types';
+import { ResendService } from '../../lib/email';
 
 export const sendEmailWorkflow = inngest.createFunction(
   {
@@ -18,10 +18,10 @@ export const sendEmailWorkflow = inngest.createFunction(
   {
     event: Events.EMAIL_SEND,
   },
-  async ({ event, step }: { event: { data: EmailSendPayload }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
+  async ({ event, step }: { event: { data: EmailSendPayload }; step: InngestStep }) => {
     const { to, subject, html, text, from, replyTo, tags } = event.data;
 
-    const result = await step.run('send-email', async () => {
+    const result = (await step.run('send-email', async (): Promise<{ success: boolean; messageId?: string; error?: any }> => {
       return await ResendService.sendEmail({
         to,
         subject,
@@ -31,7 +31,7 @@ export const sendEmailWorkflow = inngest.createFunction(
         replyTo,
         tags,
       });
-    });
+    })) as { success: boolean; messageId?: string; error?: any };
 
     return {
       success: result.success,
@@ -55,10 +55,10 @@ export const sendAppointmentConfirmationWorkflow = inngest.createFunction(
   {
     event: 'email/appointment.confirmation',
   },
-  async ({ event, step }: { event: { data: Record<string, unknown> }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
+  async ({ event, step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
     const { to, patientName, therapistName, date, time, location, onlineMeetingUrl, organizationName } = event.data;
 
-    const result = await step.run('send-confirmation', async () => {
+    const result = (await step.run('send-confirmation', async (): Promise<{ success: boolean; messageId?: string; error?: any }> => {
       return await ResendService.sendAppointmentConfirmation(
         to,
         {
@@ -72,7 +72,7 @@ export const sendAppointmentConfirmationWorkflow = inngest.createFunction(
         },
         organizationName
       );
-    });
+    })) as { success: boolean; messageId?: string; error?: any };
 
     return {
       success: result.success,
@@ -96,10 +96,10 @@ export const sendAppointmentReminderEmailWorkflow = inngest.createFunction(
   {
     event: 'email/appointment.reminder',
   },
-  async ({ event, step }: { event: { data: Record<string, unknown> }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
+  async ({ event, step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
     const { to, patientName, therapistName, date, time, location, organizationName } = event.data;
 
-    const result = await step.run('send-reminder', async () => {
+    const result = (await step.run('send-reminder', async (): Promise<{ success: boolean; messageId?: string; error?: any }> => {
       return await ResendService.sendAppointmentReminder(
         to,
         {
@@ -112,7 +112,7 @@ export const sendAppointmentReminderEmailWorkflow = inngest.createFunction(
         },
         organizationName
       );
-    });
+    })) as { success: boolean; messageId?: string; error?: any };
 
     return {
       success: result.success,
@@ -136,10 +136,10 @@ export const sendBirthdayGreetingWorkflow = inngest.createFunction(
   {
     event: 'email/birthday.greeting',
   },
-  async ({ event, step }: { event: { data: Record<string, unknown> }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
+  async ({ event, step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
     const { to, patientName, organizationName, therapistName } = event.data;
 
-    const result = await step.run('send-birthday-greeting', async () => {
+    const result = (await step.run('send-birthday-greeting', async (): Promise<{ success: boolean; messageId?: string; error?: any }> => {
       return await ResendService.sendBirthdayGreeting(
         to,
         {
@@ -149,7 +149,7 @@ export const sendBirthdayGreetingWorkflow = inngest.createFunction(
         },
         organizationName
       );
-    });
+    })) as { success: boolean; messageId?: string; error?: any };
 
     return {
       success: result.success,
@@ -173,7 +173,7 @@ export const sendDailyReportWorkflow = inngest.createFunction(
   {
     event: 'email/daily.report',
   },
-  async ({ event, step }: { event: { data: Record<string, unknown> }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
+  async ({ event, step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
     const {
       to,
       therapistName,
@@ -185,7 +185,7 @@ export const sendDailyReportWorkflow = inngest.createFunction(
       newPatients,
     } = event.data;
 
-    const result = await step.run('send-daily-report', async () => {
+    const result = (await step.run('send-daily-report', async (): Promise<{ success: boolean; messageId?: string; error?: any }> => {
       return await ResendService.sendDailyReport(
         to,
         {
@@ -199,7 +199,7 @@ export const sendDailyReportWorkflow = inngest.createFunction(
         },
         organizationName
       );
-    });
+    })) as { success: boolean; messageId?: string; error?: any };
 
     return {
       success: result.success,
@@ -223,7 +223,7 @@ export const sendEmailBatchWorkflow = inngest.createFunction(
   {
     event: Events.EMAIL_SEND_BATCH,
   },
-  async ({ event, step }: { event: { data: { emails: EmailSendPayload[] } }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
+  async ({ event, step }: { event: { data: { emails: EmailSendPayload[] } }; step: InngestStep }) => {
     const { emails } = event.data;
 
     const results = await step.run('send-batch', async () => {

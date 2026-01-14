@@ -1,11 +1,15 @@
 import { useState, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { PainType } from '@/types/painMap';
+import { MuscleSelectorModal } from './MuscleSelectorModal';
+import { Muscle } from '@/lib/data/bodyMuscles';
 
 export interface PainPoint {
   id: string;
   regionCode: string;
   region: string;
+  muscleCode?: string; // Código do músculo específico (opcional)
+  muscleName?: string; // Nome do músculo específico (opcional)
   intensity: number;
   painType: PainType;
   notes?: string;
@@ -122,6 +126,8 @@ export function BodyMap({
   const svgRef = useRef<SVGSVGElement>(null);
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
   const [selectedPoint, setSelectedPoint] = useState<string | null>(null);
+  const [muscleModalOpen, setMuscleModalOpen] = useState(false);
+  const [pendingRegion, setPendingRegion] = useState<{ code: string; name: string; x: number; y: number } | null>(null);
 
   const regions = BODY_REGIONS[view];
 
@@ -163,15 +169,42 @@ export function BodyMap({
       return;
     }
 
+    // Abrir modal de seleção de músculo
+    setPendingRegion({ code: region.code, name: region.name, x: region.x, y: region.y });
+    setMuscleModalOpen(true);
+  }, [readOnly, onPointAdd, findNearestRegion, points]);
+
+  // Handler para seleção de músculo
+  const handleMuscleSelect = useCallback((muscle: Muscle) => {
+    if (!pendingRegion || !onPointAdd) return;
     onPointAdd({
-      regionCode: region.code,
-      region: region.name,
+      regionCode: pendingRegion.code,
+      region: pendingRegion.name,
+      muscleCode: muscle.code,
+      muscleName: muscle.name,
       intensity: selectedIntensity,
       painType: selectedPainType,
-      x: region.x,
-      y: region.y,
+      x: pendingRegion.x,
+      y: pendingRegion.y,
     });
-  }, [readOnly, onPointAdd, findNearestRegion, points, selectedIntensity, selectedPainType]);
+    setMuscleModalOpen(false);
+    setPendingRegion(null);
+  }, [pendingRegion, onPointAdd, selectedIntensity, selectedPainType]);
+
+  // Handler para pular seleção de músculo (região geral)
+  const handleMuscleSkip = useCallback(() => {
+    if (!pendingRegion || !onPointAdd) return;
+    onPointAdd({
+      regionCode: pendingRegion.code,
+      region: pendingRegion.name,
+      intensity: selectedIntensity,
+      painType: selectedPainType,
+      x: pendingRegion.x,
+      y: pendingRegion.y,
+    });
+    setMuscleModalOpen(false);
+    setPendingRegion(null);
+  }, [pendingRegion, onPointAdd, selectedIntensity, selectedPainType]);
 
   return (
     <div className={cn('relative', className)}>
@@ -378,6 +411,11 @@ export function BodyMap({
             return (
               <div className="space-y-2">
                 <div className="font-medium">{point.region}</div>
+                {point.muscleName && (
+                  <div className="text-sm font-medium text-primary">
+                    💪 {point.muscleName}
+                  </div>
+                )}
                 <div className="text-sm text-muted-foreground">
                   Intensidade: {point.intensity}/10
                 </div>
@@ -402,6 +440,22 @@ export function BodyMap({
             );
           })()}
         </div>
+      )}
+
+      {/* Modal de seleção de músculos */}
+      {pendingRegion && (
+        <MuscleSelectorModal
+          regionCode={pendingRegion.code}
+          regionName={pendingRegion.name}
+          view={view}
+          isOpen={muscleModalOpen}
+          onClose={() => {
+            setMuscleModalOpen(false);
+            setPendingRegion(null);
+          }}
+          onSelect={handleMuscleSelect}
+          onSkip={handleMuscleSkip}
+        />
       )}
     </div>
   );

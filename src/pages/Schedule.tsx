@@ -7,12 +7,12 @@ import { AppointmentListView } from '@/components/schedule/AppointmentListView';
 import { AppointmentSearch } from '@/components/schedule/AppointmentSearch';
 import { WaitlistQuickAdd } from '@/components/schedule/WaitlistQuickAdd';
 import { WaitlistQuickViewModal } from '@/components/schedule/WaitlistQuickViewModal';
-import { ScheduleHero } from '@/components/schedule/ScheduleHero';
+import { ScheduleHeader } from '@/components/schedule/ScheduleHeader';
 import { KeyboardShortcuts } from '@/components/schedule/KeyboardShortcuts';
 import { useAppointments, useRescheduleAppointment } from '@/hooks/useAppointments';
 import { useWaitlistMatch } from '@/hooks/useWaitlistMatch';
 import { logger } from '@/lib/errors/logger';
-import { AlertTriangle, Users, Plus, Settings as SettingsIcon, RefreshCw, Keyboard, Calendar, TrendingUp, Clock, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, Users, Plus, Settings as SettingsIcon, RefreshCw, Keyboard, Calendar, TrendingUp, Clock, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { EmptyState } from '@/components/ui';
@@ -60,132 +60,7 @@ const KEYBOARD_SHORTCUTS = {
 // TYPES
 // =====================================================================
 
-interface ScheduleStats {
-  total: number;
-  completed: number;
-  confirmed: number;
-  pending: number;
-  completionRate: number;
-  nextAppointment: Appointment | null;
-  weekTotal: number;
-}
 
-interface StatCardProps {
-  icon: React.ReactNode;
-  label: string;
-  value: string | number;
-  description: string;
-  className?: string;
-  progress?: number;
-  variant?: 'blue' | 'emerald' | 'violet' | 'amber' | 'cyan' | 'rose';
-}
-
-// =====================================================================
-// UTILITY FUNCTIONS
-// =====================================================================
-
-/**
- * Safely parses an appointment date string or Date object
- * @param date - Date string or Date object to parse
- * @returns Parsed Date or null if parsing fails
- */
-const safeParseDate = (date: string | Date): Date | null => {
-  try {
-    return typeof date === 'string' ? parseISO(date) : date;
-  } catch {
-    return null;
-  }
-};
-
-/**
- * Checks if a date is within the specified range
- * @param date - Date to check
- * @param start - Start of range
- * @param end - End of range
- * @returns True if date is within range
- */
-const isDateInRange = (date: Date, start: Date, end: Date): boolean => {
-  return date >= start && date <= end;
-};
-
-/**
- * Calculates the time until the next appointment in minutes
- * @param appointment - Appointment to check
- * @returns Minutes until appointment or null if invalid
- */
-const getTimeUntilAppointment = (appointment: Appointment): number | null => {
-  try {
-    const aptDate = safeParseDate(appointment.appointmentDate);
-    if (!aptDate) return null;
-
-    const [hours, minutes] = appointment.appointmentTime.split(':').map(Number);
-    const aptDateTime = new Date(aptDate);
-    aptDateTime.setHours(hours, minutes, 0, 0);
-
-    return differenceInMinutes(aptDateTime, new Date());
-  } catch {
-    return null;
-  }
-};
-
-/**
- * Rounds time to nearest business hour slot
- * @param date - Date to round
- * @returns Rounded time string in HH:MM format
- */
-const roundToNextSlot = (date: Date): string => {
-  const minutes = date.getMinutes();
-  const roundedMinutes = minutes < BUSINESS_HOURS.defaultRound ? BUSINESS_HOURS.defaultRound : 0;
-  let hour = minutes < BUSINESS_HOURS.defaultRound ? date.getHours() : date.getHours() + 1;
-
-  // Adjust to business hours
-  if (hour >= BUSINESS_HOURS.end) {
-    hour = BUSINESS_HOURS.start;
-  } else if (hour < BUSINESS_HOURS.start) {
-    hour = BUSINESS_HOURS.start;
-  }
-
-  return `${String(hour).padStart(2, '0')}:${String(roundedMinutes).padStart(2, '0')}`;
-};
-
-// =====================================================================
-// STAT CARD COMPONENT
-// =====================================================================
-
-const STAT_CARD_VARIANTS = {
-  blue: 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/30 border-blue-200 dark:border-blue-800',
-  emerald: 'bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/30 dark:to-emerald-900/30 border-emerald-200 dark:border-emerald-800',
-  violet: 'bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-950/30 dark:to-violet-900/30 border-violet-200 dark:border-violet-800',
-  amber: 'bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/30 border-amber-200 dark:border-amber-800',
-  cyan: 'bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-950/30 dark:to-cyan-900/30 border-cyan-200 dark:border-cyan-800',
-  rose: 'bg-gradient-to-br from-rose-50 to-rose-100 dark:from-rose-950/30 dark:to-rose-900/30 border-rose-200 dark:border-rose-800',
-} as const;
-
-const StatCard = memo(({ icon, label, value, description, className, progress, variant = 'blue' }: StatCardProps) => (
-  <Card
-    className={cn(
-      "hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 group cursor-default",
-      STAT_CARD_VARIANTS[variant],
-      className
-    )}
-  >
-    <CardContent className="p-4">
-      <div className="flex items-center gap-2 mb-2">
-        <div className="p-1.5 rounded-lg bg-current shadow-sm group-hover:scale-110 transition-transform">
-          <div className="text-white">{icon}</div>
-        </div>
-        <span className="text-xs font-semibold opacity-80 uppercase tracking-wide">{label}</span>
-      </div>
-      <p className="text-2xl font-bold tabular-nums tracking-tight">{value}</p>
-      {progress !== undefined && (
-        <Progress value={progress} className="h-1.5 mt-2 opacity-60" />
-      )}
-      <p className="text-xs opacity-70 mt-1">{description}</p>
-    </CardContent>
-  </Card>
-));
-
-StatCard.displayName = 'StatCard';
 
 // =====================================================================
 // MAIN COMPONENT
@@ -545,206 +420,104 @@ const Schedule = () => {
           className="shrink-0"
         />
 
-        {/* Hero Section */}
-        <ScheduleHero
-          currentDate={currentDate}
-          appointments={filteredAppointments}
-          className="shrink-0"
-        />
-
-        {/* Stats Dashboard - Modern Grid Layout */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4 shrink-0">
-          <StatCard
-            icon={<Calendar className="h-3.5 w-3.5" strokeWidth={2.5} />}
-            label="Total Hoje"
-            value={enhancedStats.total}
-            description="agendamentos"
-            variant="blue"
-          />
-
-          <StatCard
-            icon={<CheckCircle2 className="h-3.5 w-3.5" strokeWidth={2.5} />}
-            label="Completados"
-            value={enhancedStats.completed}
-            description="sessões realizadas"
-            variant="emerald"
-          />
-
-          <StatCard
-            icon={<Users className="h-3.5 w-3.5" strokeWidth={2.5} />}
-            label="Confirmados"
-            value={enhancedStats.confirmed}
-            description="aguardando atendimento"
-            variant="violet"
-          />
-
-          <StatCard
-            icon={<Clock className="h-3.5 w-3.5" strokeWidth={2.5} />}
-            label="Pendentes"
-            value={enhancedStats.pending}
-            description="sem confirmação"
-            variant="amber"
-          />
-
-          <StatCard
-            icon={<TrendingUp className="h-3.5 w-3.5" strokeWidth={2.5} />}
-            label="Taxa"
-            value={`${enhancedStats.completionRate}%`}
-            description="taxa de conclusão"
-            progress={enhancedStats.completionRate}
-            variant="cyan"
-          />
-
-          <StatCard
-            icon={<Calendar className="h-3.5 w-3.5" strokeWidth={2.5} />}
-            label="Semana"
-            value={enhancedStats.weekTotal}
-            description="esta semana"
-            variant="rose"
+        {/* Schedule Header (New Clinic Overview) */}
+        <div className="relative z-10">
+          <Link to="/schedule/settings" className="absolute top-8 right-8 z-50">
+            <Button variant="ghost" className="text-white/50 hover:text-white hover:bg-white/10">
+              <SettingsIcon className="w-5 h-5" />
+            </Button>
+          </Link>
+          <ScheduleHeader
+            displayName="Dr. Rafael" // This could be dynamic from user profile
+            consultasRestantes={enhancedStats.pending}
+            completedCount={enhancedStats.completed}
+            totalCount={enhancedStats.total}
+            confirmationRate={enhancedStats.completionRate}
           />
         </div>
 
-        {/* Next Appointment Card */}
-        {enhancedStats.nextAppointment && (
-          <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 shrink-0 animate-slide-up-fade">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-primary rounded-full shadow-lg animate-pulse">
-                    <Clock className="h-4 w-4 text-primary-foreground" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">Próximo Atendimento</p>
-                    <p className="text-xs text-muted-foreground">
-                      {enhancedStats.nextAppointment.patientName} às {enhancedStats.nextAppointment.appointmentTime}
-                    </p>
-                  </div>
-                </div>
-                <Badge variant="secondary" className="hidden sm:inline-flex">
-                  Em breve
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Action Bar */}
-        <Card className="border-2 border-border/50 shadow-lg shrink-0">
-          <CardContent className="p-3">
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              {/* Search */}
-              <div className="flex-1 min-w-0">
-                <AppointmentSearch
-                  value={searchTerm}
-                  onChange={setSearchTerm}
-                  onClear={() => setSearchTerm('')}
-                  className="w-full"
-                />
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center gap-2 flex-shrink-0 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
-                <Button
-                  onClick={() => setShowKeyboardShortcuts(true)}
-                  variant="outline"
-                  size="sm"
-                  className="h-10 px-3 touch-target hidden sm:flex"
-                  aria-label="Atalhos de teclado"
-                  title={`Pressione ${KEYBOARD_SHORTCUTS.HELP} para abrir`}
-                >
-                  <Keyboard className="h-4 w-4" />
+        {/* Main Content Area */}
+        <div className="flex flex-col lg:flex-row gap-6 h-full min-h-0">
+          {/* Main Calendar - Full Width now */}
+          <div className="flex-1 min-h-0 flex flex-col h-full bg-transparent">
+            {/* Action Bar (Search/New) */}
+            <div className="flex items-center justify-between mb-4 px-1">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" onClick={() => setCurrentDate(new Date())} className="text-sm font-medium text-gray-400 hover:text-white">
+                  Hoje
                 </Button>
-
-                <Link to="/schedule/settings">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-10 px-3 touch-target"
-                    aria-label="Configurações da agenda"
-                  >
-                    <SettingsIcon className="h-4 w-4" />
+                <div className="h-4 w-px bg-gray-700 mx-2"></div>
+                <div className="flex items-center gap-2">
+                  <Button size="icon" variant="ghost" onClick={() => setCurrentDate(date => addDays(date, -7))} className="h-8 w-8 text-gray-400">
+                    <ChevronLeft className="h-4 w-4" />
                   </Button>
-                </Link>
+                  <span className="text-white font-medium capitalize">{formattedMonth}</span>
+                  <Button size="icon" variant="ghost" onClick={() => setCurrentDate(date => addDays(date, 7))} className="h-8 w-8 text-gray-400">
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
 
-                <Button
-                  onClick={() => setShowWaitlistModal(true)}
-                  variant="outline"
-                  size="sm"
-                  className="h-10 px-3 touch-target gap-2 min-w-[100px]"
-                  aria-label={`Lista de espera - ${totalInWaitlist} pacientes`}
-                >
-                  <div className="relative">
-                    <Users className="h-4 w-4" />
-                    {totalInWaitlist > 0 && (
-                      <span className="absolute -top-2 -right-2 h-4 w-4 bg-primary text-primary-foreground text-[9px] rounded-full flex items-center justify-center font-bold">
-                        {totalInWaitlist > 9 ? '9+' : totalInWaitlist}
-                      </span>
-                    )}
-                  </div>
-                  <span className="hidden md:inline text-xs font-medium">Lista</span>
-                </Button>
-
-                <Button
-                  onClick={handleRefresh}
-                  variant="outline"
-                  size="sm"
-                  className="h-10 px-3 touch-target"
-                  aria-label="Atualizar agendamentos"
-                  title="Forçar atualização"
-                >
-                  <RefreshCw className={cn("h-4 w-4 transition-transform", loading && "animate-spin")} />
-                </Button>
+              <div className="flex items-center gap-3">
+                {/* View Selectors */}
+                <div className="flex bg-dark-800 p-1 rounded-xl border border-gray-800">
+                  <Button
+                    size="sm"
+                    variant={viewType === 'day' ? 'secondary' : 'ghost'}
+                    onClick={() => setViewType('day')}
+                    className="h-8 text-xs"
+                  >
+                    Dia
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={viewType === 'week' ? 'secondary' : 'ghost'}
+                    onClick={() => setViewType('week')}
+                    className="h-8 text-xs"
+                  >
+                    Semana
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={viewType === 'month' ? 'secondary' : 'ghost'}
+                    onClick={() => setViewType('month')}
+                    className="h-8 text-xs"
+                  >
+                    Mês
+                  </Button>
+                </div>
 
                 <Button
                   onClick={handleCreateAppointment}
-                  size="sm"
-                  className="h-10 px-4 shadow-md bg-primary hover:bg-primary/90 touch-target gap-2 font-medium"
-                  aria-label="Novo agendamento"
+                  className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20"
                 >
-                  <Plus className="h-4 w-4" />
-                  <span className="hidden sm:inline text-xs font-medium">Novo</span>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo Agendamento
                 </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Main Calendar Container */}
-        <div className="flex-1 min-h-0">
-          <Card className="h-full border-2 border-border/50 shadow-xl">
-            <CardHeader className="p-4 border-b bg-gradient-to-r from-muted/30 to-muted/10">
-              <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-primary" />
-                {formattedMonth}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0 h-[calc(100%-73px)] overflow-hidden">
-              {viewType === 'list' ? (
-                <AppointmentListView
+            {/* Calendar View */}
+            <div className="flex-1 min-h-[600px] rounded-xl overflow-hidden shadow-2xl border border-gray-800/50">
+              <Suspense fallback={<LoadingSkeleton type="card" rows={3} className="h-full w-full" />}>
+                <CalendarView
                   appointments={filteredAppointments}
-                  selectedDate={currentDate}
+                  currentDate={currentDate}
+                  onDateChange={setCurrentDate}
+                  viewType={viewType as CalendarViewType}
+                  onViewTypeChange={handleViewTypeChange}
                   onAppointmentClick={handleAppointmentClick}
-                  onRefresh={handleRefresh}
+                  onTimeSlotClick={handleTimeSlotClick}
+                  onAppointmentReschedule={handleAppointmentReschedule}
+                  onEditAppointment={handleEditAppointment}
+                  onDeleteAppointment={handleDeleteAppointment}
                 />
-              ) : (
-                <Suspense fallback={<LoadingSkeleton type="card" rows={3} className="min-h-[500px]" />}>
-                  <CalendarView
-                    appointments={filteredAppointments}
-                    currentDate={currentDate}
-                    onDateChange={setCurrentDate}
-                    viewType={viewType as CalendarViewType}
-                    onViewTypeChange={handleViewTypeChange}
-                    onAppointmentClick={handleAppointmentClick}
-                    onTimeSlotClick={handleTimeSlotClick}
-                    onAppointmentReschedule={handleAppointmentReschedule}
-                    onEditAppointment={handleEditAppointment}
-                    onDeleteAppointment={handleDeleteAppointment}
-                  />
-                </Suspense>
-              )}
-            </CardContent>
-          </Card>
+              </Suspense>
+            </div>
+          </div>
         </div>
+
+
 
         {/* Modals */}
         <AppointmentQuickEditModal
