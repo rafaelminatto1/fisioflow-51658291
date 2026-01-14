@@ -8,7 +8,7 @@ import { PainEvolutionChart } from '@/components/pain-map/PainEvolutionChart';
 import { PainMapHistory } from './PainMapHistory';
 import { PainGauge } from '@/components/pain-map/PainGauge';
 import { EvaScaleBar } from '@/components/pain-map/EvaScaleBar';
-import { PainPointsBottomSheet } from '@/components/pain-map/PainPointsBottomSheet';
+import { PainPointsList } from '@/components/pain-map/PainPointsList';
 import { PainPointDetailPanel } from '@/components/pain-map/PainPointDetailPanel';
 import { usePainMaps, usePainEvolution, usePainStatistics, useCreatePainMap, useUpdatePainMap } from '@/hooks/usePainMaps';
 import { useAuth } from '@/contexts/AuthContext';
@@ -41,7 +41,6 @@ export function PainMapManager({ patientId, sessionId, _appointmentId, readOnly 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _updatePainMap = useUpdatePainMap();
 
-  const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
   const [selectedPointForDetail, setSelectedPointForDetail] = useState<PainPoint | null>(null);
   const [selectedIntensity, setSelectedIntensity] = useState<PainIntensity>(5);
 
@@ -263,8 +262,7 @@ export function PainMapManager({ patientId, sessionId, _appointmentId, readOnly 
 
                   <div className="mb-4">
                     <Button
-                      onClick={() => setIsBottomSheetOpen(true)}
-                      className="w-full"
+                      className="w-full hidden" // Hidden or removed
                       variant="outline"
                       disabled={painPoints.length === 0}
                     >
@@ -272,7 +270,19 @@ export function PainMapManager({ patientId, sessionId, _appointmentId, readOnly 
                       Ver Pontos ({painPoints.length})
                     </Button>
                   </div>
+
+                  {/* Lista de pontos sempre visível */}
+                  <div className="flex-1 min-h-0 border-t pt-4">
+                    <p className="text-sm font-medium mb-2">Pontos Registrados ({painPoints.length})</p>
+                    <PainPointsList
+                      points={bodyMapPoints}
+                      onPointEdit={(point) => setSelectedPointForDetail(point)}
+                      onPointRemove={handlePointRemove}
+                      className="h-[200px]"
+                    />
+                  </div>
                 </div>
+
 
                 {/* Auto-save status indicator */}
                 {!readOnly && (
@@ -332,26 +342,21 @@ export function PainMapManager({ patientId, sessionId, _appointmentId, readOnly 
         </TabsContent>
       </Tabs>
 
-      {/* Bottom Sheet para lista de pontos */}
-      <PainPointsBottomSheet
-        points={bodyMapPoints}
-        onPointEdit={(point) => setSelectedPointForDetail(point)}
-        onPointRemove={handlePointRemove}
-        open={isBottomSheetOpen}
-        onOpenChange={setIsBottomSheetOpen}
-      />
+
 
       {/* Painel de detalhes do ponto */}
-      {selectedPointForDetail && (
-        <div className="fixed right-4 top-20 z-50 w-96 max-w-[calc(100vw-2rem)]">
-          <PainPointDetailPanel
-            point={selectedPointForDetail}
-            onUpdate={handlePointUpdate}
-            onDelete={handlePointRemove}
-            onClose={() => setSelectedPointForDetail(null)}
-          />
-        </div>
-      )}
-    </div>
+      {
+        selectedPointForDetail && (
+          <div className="fixed right-4 top-20 z-50 w-96 max-w-[calc(100vw-2rem)]">
+            <PainPointDetailPanel
+              point={selectedPointForDetail}
+              onUpdate={handlePointUpdate}
+              onDelete={handlePointRemove}
+              onClose={() => setSelectedPointForDetail(null)}
+            />
+          </div>
+        )
+      }
+    </div >
   );
 }

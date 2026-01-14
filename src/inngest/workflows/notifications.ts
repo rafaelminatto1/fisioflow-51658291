@@ -5,9 +5,11 @@
  * Supports batch sending and individual retry
  */
 
-import { inngest, retryConfig } from '@/lib/inngest/client';
-import { Events, NotificationSendPayload, NotificationBatchPayload } from '@/lib/inngest/types';
+import { inngest, retryConfig } from '../../lib/inngest/client';
+import { Events, NotificationSendPayload, NotificationBatchPayload, InngestStep } from '../../lib/inngest/types';
 import { createClient } from '@supabase/supabase-js';
+
+type NotificationResult = { sent: boolean; channel: string; error?: string };
 
 /**
  * Send a single notification
@@ -21,7 +23,7 @@ export const sendNotificationWorkflow = inngest.createFunction(
   {
     event: Events.NOTIFICATION_SEND,
   },
-  async ({ event, step }: { event: { data: NotificationSendPayload }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
+  async ({ event, step }: { event: { data: NotificationSendPayload }; step: InngestStep }) => {
     const { userId, organizationId, type, data } = event.data;
 
     // Log notification attempt
@@ -45,7 +47,7 @@ export const sendNotificationWorkflow = inngest.createFunction(
     });
 
     // Send based on type
-    const result = await step.run('send-notification', async () => {
+    const result = await step.run('send-notification', async (): Promise<NotificationResult> => {
       switch (type) {
         case 'email':
           // Trigger email workflow
@@ -122,7 +124,7 @@ export const sendNotificationBatchWorkflow = inngest.createFunction(
   {
     event: Events.NOTIFICATION_SEND_BATCH,
   },
-  async ({ event, step }: { event: { data: NotificationBatchPayload }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
+  async ({ event, step }: { event: { data: NotificationBatchPayload }; step: InngestStep }) => {
     const { organizationId, notifications } = event.data;
 
     const results = await step.run('process-batch', async () => {

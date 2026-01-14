@@ -107,7 +107,14 @@ export function PainPointDetailPanel({
                 className="w-2 h-2 rounded-full"
                 style={{ backgroundColor: color }}
               />
-              <CardTitle className="text-xl font-bold">{point.region}</CardTitle>
+              <div className="flex flex-col">
+                <CardTitle className="text-xl font-bold">{point.region}</CardTitle>
+                {point.muscleName && (
+                  <span className="text-sm text-primary font-medium">
+                    💪 {point.muscleName}
+                  </span>
+                )}
+              </div>
             </div>
             <p className="text-xs text-muted-foreground">
               {point.regionCode} • Registrado

@@ -1,15 +1,14 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useMemo } from 'react';
+import { format, startOfWeek, addDays, isSameDay, differenceInMinutes, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
-
-
-
-import { format, startOfWeek, addDays, isToday, isSameDay } from 'date-fns';
-import { Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Appointment } from '@/types/appointment';
 import { generateTimeSlots } from '@/lib/config/agenda';
-import { DayColumn } from './CalendarDayColumn';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { AppointmentQuickView } from './AppointmentQuickView';
+import { logger } from '@/lib/errors/logger';
 
 interface CalendarWeekViewProps {
     currentDate: Date;
@@ -18,7 +17,6 @@ interface CalendarWeekViewProps {
     onAppointmentClick?: (appointment: Appointment) => void;
     onEditAppointment?: (appointment: Appointment) => void;
     onDeleteAppointment?: (appointment: Appointment) => void;
-    // Drag and drop props
     onAppointmentReschedule?: (appointment: Appointment, newDate: Date, newTime: string) => Promise<void>;
     dragState: { appointment: Appointment | null; isDragging: boolean };
     dropTarget: { date: Date; time: string } | null;
@@ -27,7 +25,6 @@ interface CalendarWeekViewProps {
     handleDragOver: (e: React.DragEvent, date: Date, time: string) => void;
     handleDragLeave: () => void;
     handleDrop: (e: React.DragEvent, date: Date, time: string) => void;
-    // Helpers
     checkTimeBlocked: (date: Date, time: string) => { blocked: boolean; reason?: string };
     isDayClosedForDate: (date: Date) => boolean;
     getAppointmentsForDate: (date: Date) => Appointment[];
@@ -37,9 +34,14 @@ interface CalendarWeekViewProps {
     setOpenPopoverId: (id: string | null) => void;
 }
 
-const CalendarWeekView = memo(({
+// Helper to calculate grid position
+const START_HOUR = 7;
+const END_HOUR = 21; // Until 21:00 inclusive = 21 * 60 minutes from start
+const SLOT_DURATION_MINUTES = 30; // 30 min slots
+
+export const CalendarWeekView = memo(({
     currentDate,
-    appointments: allAppointments, // Renomeado para passar todos os agendamentos
+    appointments,
     onTimeSlotClick,
     onEditAppointment,
     onDeleteAppointment,
@@ -53,175 +55,194 @@ const CalendarWeekView = memo(({
     handleDrop,
     checkTimeBlocked,
     isDayClosedForDate,
-    getAppointmentsForDate,
     getStatusColor,
     isOverCapacity,
     openPopoverId,
     setOpenPopoverId
 }: CalendarWeekViewProps) => {
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
-    // Criar datas com horário fixo (meio-dia) para evitar problemas de timezone
-    const weekDays = Array.from({ length: 7 }, (_, i) => {
-        const day = addDays(weekStart, i);
-        return new Date(day.getFullYear(), day.getMonth(), day.getDate(), 12, 0, 0);
-    });
+    const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
     const timeSlots = generateTimeSlots(currentDate);
+    // timeSlots should ideally be 07:00, 07:30, ... 20:30
 
-    // Mobile: Show one day at a time with navigation
-    const [mobileDayIndex, setMobileDayIndex] = useState(() => {
-        const today = new Date();
-        const todayIndex = weekDays.findIndex(d => isSameDay(d, today));
-        return todayIndex >= 0 ? todayIndex : 0;
-    });
+    // Filter appointments for this week
+    const weekAppointments = useMemo(() => {
+        const start = startOfDay(weekDays[0]);
+        const end = startOfDay(addDays(weekDays[6], 1));
 
-    const currentMobileDay = weekDays[mobileDayIndex];
-    const dayAppointments = currentMobileDay ? getAppointmentsForDate(currentMobileDay) : [];
-    const isClosed = currentMobileDay ? isDayClosedForDate(currentMobileDay) : false;
+        return appointments.filter(apt => {
+            if (!apt.date) return false;
+            const aptDate = typeof apt.date === 'string' ? parseISO(apt.date) : apt.date;
+            return aptDate >= start && aptDate < end;
+        });
+    }, [appointments, weekDays]);
 
-    const handlePrevDay = () => {
-        setMobileDayIndex(prev => Math.max(0, prev - 1));
+    // Calculate grid row for a given time string "HH:mm"
+    const getGridRow = (time: string) => {
+        const [h, m] = time.split(':').map(Number);
+        const minutesFromStart = (h - START_HOUR) * 60 + m;
+        // Row 1 is header. Row 2 is start time.
+        // Each slot is 1 row.
+        return Math.floor(minutesFromStart / SLOT_DURATION_MINUTES) + 2;
     };
 
-    const handleNextDay = () => {
-        setMobileDayIndex(prev => Math.min(weekDays.length - 1, prev + 1));
+    // Calculate grid span based on duration
+    const getGridSpan = (duration: number) => {
+        return Math.ceil(duration / SLOT_DURATION_MINUTES);
     };
+
+    const isDraggable = !!onAppointmentReschedule;
 
     return (
-        <div className="flex bg-background h-full overflow-hidden flex-col" role="region" aria-label="Visualização semanal do calendário">
-            {/* Mobile Day Selector - Only visible on mobile */}
-            <div className="md:hidden flex items-center justify-between p-2 bg-gradient-to-r from-primary/10 to-primary/5 border-b border-border/50" role="toolbar" aria-label="Navegação por dia">
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handlePrevDay}
-                    disabled={mobileDayIndex === 0}
-                    className="h-9 w-9 p-0 touch-target"
-                    aria-label="Dia anterior"
-                >
-                    <ChevronLeft className="h-4 w-4" />
-                </Button>
+        <div className="flex flex-col h-full bg-dark-800 rounded-xl border border-gray-800 shadow-xl overflow-hidden">
+            {/* Note: The user requested specific styling. I'm adapting their `calendar-grid` class concept into inline styles or Tailwind arbitrary values for React control */}
 
-                <div className="flex flex-col items-center" aria-live="polite">
-                    <span className={`text-lg font-bold ${isToday(currentMobileDay) ? 'text-primary' : ''}`}>
-                        {format(currentMobileDay, 'd')}
-                    </span>
-                    <span className="text-[10px] uppercase text-muted-foreground">
-                        {format(currentMobileDay, 'EEE', { locale: ptBR })}
-                    </span>
-                </div>
+            {/* Header Row */}
+            <div className="grid grid-cols-[60px_repeat(7,1fr)] bg-dark-800 border-b border-gray-700 sticky top-0 z-30">
+                {/* Empty corner */}
+                <div className="h-16 border-r border-gray-700 bg-dark-800/95 backdrop-blur-sm"></div>
 
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleNextDay}
-                    disabled={mobileDayIndex === weekDays.length - 1}
-                    className="h-9 w-9 p-0 touch-target"
-                    aria-label="Próximo dia"
-                >
-                    <ChevronRight className="h-4 w-4" />
-                </Button>
+                {/* Days Headers */}
+                {weekDays.map((day, i) => {
+                    const isTodayDate = isSameDay(day, new Date());
+                    return (
+                        <div key={i} className="h-16 flex flex-col items-center justify-center border-r border-gray-700 bg-dark-800/95 backdrop-blur-sm last:border-r-0">
+                            <span className={cn("text-xs font-medium mb-1 uppercase", isTodayDate ? "text-blue-400" : "text-gray-400")}>
+                                {format(day, 'EEE', { locale: ptBR })}
+                            </span>
+                            <span className={cn(
+                                "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-glow transition-all",
+                                isTodayDate ? "bg-blue-600 text-white" : "text-gray-200"
+                            )}>
+                                {format(day, 'd')}
+                            </span>
+                        </div>
+                    );
+                })}
             </div>
 
-            {/* Week Grid - Desktop */}
-            <div className="hidden md:flex flex-1 overflow-hidden" role="row" aria-label="Dias da semana">
-                {/* Time column - Sticky e otimizado */}
-                <div className="w-16 lg:w-20 border-r border-border/50 bg-gradient-to-b from-card via-muted/30 to-muted/50 flex-shrink-0 flex flex-col" role="columnheader" aria-label="Horários">
-                    <div className="h-16 lg:h-20 border-b border-border/50 flex items-center justify-center bg-gradient-primary backdrop-blur-sm z-20 shadow-md shrink-0" aria-hidden="true">
-                        <Clock className="h-4 lg:h-5 w-4 lg:w-5 text-primary-foreground" />
-                    </div>
-                    <div className="flex-1 overflow-hidden">
-                        <div className="flex flex-col" role="list">
-                            {timeSlots.map(time => (
-                                <div key={time} className="h-16 lg:h-20 border-b border-border/30 p-1 lg:p-2 text-xs text-foreground/70 font-bold flex items-center justify-center hover:bg-accent/50 transition-colors shrink-0" role="listitem">
-                                    {time}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
+            {/* Scrollable Grid Area */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar relative bg-dark-900">
+                {/* 
+                    Grid Container 
+                    Rows: 1fr for each time slot.
+                 */}
+                <div className="grid grid-cols-[60px_repeat(7,1fr)] relative" style={{
+                    gridTemplateRows: `repeat(${timeSlots.length}, 60px)` // Fixed height per slot as per mockup
+                }}>
 
-                {/* Week days - Grid */}
-                <div className="flex-1 overflow-auto calendar-scroll" role="rowgroup">
-                    <div className="grid grid-cols-7 min-w-full bg-background/30 [&>div]:min-w-[140px] md:[&>div]:min-w-[180px] lg:[&>div]:min-w-[220px] [&>div]:w-full" role="row">
-                        {weekDays.map(day => {
-                            const dayAppointments = getAppointmentsForDate(day);
-                            const isClosed = isDayClosedForDate(day);
+                    {/* Time Labels Column */}
+                    {timeSlots.map((time, index) => (
+                        <div
+                            key={`time-${time}`}
+                            className="border-r border-gray-800 text-xs text-gray-500 flex justify-center pt-2 sticky left-0 bg-dark-900 z-10"
+                            style={{ gridRow: index + 1, gridColumn: 1 }}
+                        >
+                            {time}
+                        </div>
+                    ))}
+
+                    {/* Grid Background Cells for Interaction */}
+                    {weekDays.map((day, colIndex) => {
+                        const isClosed = isDayClosedForDate(day);
+                        return timeSlots.map((time, rowIndex) => {
+                            const { blocked, reason } = checkTimeBlocked(day, time);
+                            const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === time;
 
                             return (
-                                <DayColumn
-                                    key={day.toISOString()}
-                                    day={day}
-                                    timeSlots={timeSlots}
-                                    appointments={dayAppointments}
-                                    allAppointments={allAppointments}
-                                    isDayClosed={isClosed}
-                                    onTimeSlotClick={onTimeSlotClick}
-                                    onEditAppointment={onEditAppointment}
-                                    onDeleteAppointment={onDeleteAppointment}
-                                    dragState={dragState}
-                                    dropTarget={dropTarget}
-                                    handleDragStart={handleDragStart}
-                                    handleDragEnd={handleDragEnd}
-                                    handleDragOver={handleDragOver}
-                                    handleDragLeave={handleDragLeave}
-                                    handleDrop={handleDrop}
-                                    checkTimeBlocked={checkTimeBlocked}
-                                    isOverCapacity={isOverCapacity}
-                                    openPopoverId={openPopoverId}
-                                    setOpenPopoverId={setOpenPopoverId}
-                                    onAppointmentReschedule={onAppointmentReschedule}
-                                />
-                            );
-                        })}
-                    </div>
-                </div>
-            </div>
-
-            {/* Mobile Single Day View */}
-            <div className="md:hidden flex-1 flex overflow-hidden" role="region" aria-label={`Dia ${format(currentMobileDay, 'dd/MM')}`}>
-                {/* Time column - Mobile */}
-                <div className="w-14 border-r border-border/50 bg-gradient-to-b from-card via-muted/30 to-muted/50 flex-shrink-0 flex flex-col" role="columnheader" aria-label="Horários">
-                    <div className="h-16 border-b border-border/50 flex items-center justify-center bg-gradient-primary backdrop-blur-sm z-20 shadow-md shrink-0" aria-hidden="true">
-                        <Clock className="h-4 w-4 text-primary-foreground" />
-                    </div>
-                    <div className="flex-1 overflow-hidden">
-                        <div className="flex flex-col" role="list">
-                            {timeSlots.map(time => (
-                                <div key={time} className="h-16 border-b border-border/30 p-1 text-[10px] text-foreground/70 font-bold flex items-center justify-center hover:bg-accent/50 transition-colors shrink-0" role="listitem">
-                                    {time}
+                                <div
+                                    key={`cell-${colIndex}-${rowIndex}`}
+                                    className={cn(
+                                        "border-b border-r border-slate-800/50 transition-colors relative",
+                                        colIndex === 6 && "border-r-0", // Last col no border right
+                                        isClosed ? "bg-slate-900/40 pattern-diagonal-lines" : "hover:bg-white/5",
+                                        blocked && "bg-red-900/10 cursor-not-allowed",
+                                        isDropTarget && "bg-blue-500/10 shadow-[inset_0_0_0_2px_rgba(59,130,246,0.5)]"
+                                    )}
+                                    style={{ gridRow: rowIndex + 1, gridColumn: colIndex + 2 }}
+                                    onClick={() => !blocked && !isClosed && onTimeSlotClick(day, time)}
+                                    onDragOver={(e) => !blocked && !isClosed && handleDragOver(e, day, time)}
+                                    onDragLeave={handleDragLeave}
+                                    onDrop={(e) => !blocked && !isClosed && handleDrop(e, day, time)}
+                                >
+                                    {/* Add button on hover */}
+                                    {!blocked && !isClosed && (
+                                        <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 pointer-events-none">
+                                            <span className="text-[10px] bg-blue-600/20 text-blue-200 px-1 rounded">+</span>
+                                        </div>
+                                    )}
                                 </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
+                            );
+                        });
+                    })}
 
-                {/* Single Day Column - Mobile */}
-                <div className="flex-1 overflow-auto calendar-scroll">
-                    <div className="min-w-full bg-background/30">
-                        <DayColumn
-                            key={currentMobileDay.toISOString()}
-                            day={currentMobileDay}
-                            timeSlots={timeSlots}
-                            appointments={dayAppointments}
-                            allAppointments={allAppointments}
-                            isDayClosed={isClosed}
-                            onTimeSlotClick={onTimeSlotClick}
-                            onEditAppointment={onEditAppointment}
-                            onDeleteAppointment={onDeleteAppointment}
-                            dragState={dragState}
-                            dropTarget={dropTarget}
-                            handleDragStart={handleDragStart}
-                            handleDragEnd={handleDragEnd}
-                            handleDragOver={handleDragOver}
-                            handleDragLeave={handleDragLeave}
-                            handleDrop={handleDrop}
-                            checkTimeBlocked={checkTimeBlocked}
-                            isOverCapacity={isOverCapacity}
-                            openPopoverId={openPopoverId}
-                            setOpenPopoverId={setOpenPopoverId}
-                            onAppointmentReschedule={onAppointmentReschedule}
-                        />
-                    </div>
+                    {/* Appointments Overlay */}
+                    {weekAppointments.map(apt => {
+                        const aptDate = typeof apt.date === 'string' ? parseISO(apt.date) : apt.date;
+                        if (!aptDate) return null;
+
+                        // Find column index (0-6)
+                        const dayDist = weekDays.findIndex(d => isSameDay(d, aptDate));
+                        if (dayDist === -1) return null;
+
+                        // Calculate Row and Span
+                        const startTime = apt.time || '00:00';
+                        const startRowIndex = timeSlots.findIndex(t => t === startTime);
+                        if (startRowIndex === -1) return null; // Time not in grid
+
+                        const duration = apt.duration || 60; // Default 60 min
+                        const span = Math.ceil(duration / 30); // Assuming 30min slots
+
+                        // Check for collisions to adjust width/position (simple version)
+                        // For a robust full calendar, we'd need a complex collision algo.
+                        // Here we'll just allow overlaps via z-index or slight offset if exact match
+
+                        return (
+                            <div
+                                key={apt.id}
+                                draggable={isDraggable}
+                                onDragStart={(e) => handleDragStart(e, apt)}
+                                onDragEnd={handleDragEnd}
+                                className={cn(
+                                    "m-1 rounded-md p-2 flex flex-col justify-center border-l-4 transition-all hover:z-20 hover:scale-105 shadow-md cursor-pointer overflow-hidden",
+                                    dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50",
+                                    // Custom styling based on status/type provided in CSS
+                                    getStatusColor(apt.status, isOverCapacity(apt))
+                                )}
+                                style={{
+                                    gridColumn: dayDist + 2, // +2 because col 1 is time
+                                    gridRow: `${startRowIndex + 1} / span ${span}`,
+                                    zIndex: 10
+                                }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onAppointmentClick && onAppointmentClick(apt);
+                                }}
+                            >
+                                <AppointmentQuickView
+                                    appointment={apt}
+                                    open={openPopoverId === apt.id}
+                                    onOpenChange={(open) => setOpenPopoverId(open ? apt.id : null)}
+                                    onEdit={onEditAppointment ? () => onEditAppointment(apt) : undefined}
+                                    onDelete={onDeleteAppointment ? () => onDeleteAppointment(apt) : undefined}
+                                >
+                                    <div className="w-full h-full">
+                                        <p className="text-xs font-bold text-white truncate shadow-black/50 drop-shadow-sm">
+                                            {apt.therapistId || 'Dr. Desconhecido'}
+                                        </p>
+                                        <p className="text-[10px] text-gray-200 truncate font-medium">
+                                            {apt.patientName}
+                                        </p>
+                                        <div className="flex gap-1 items-center mt-0.5">
+                                            <span className="text-[10px] text-gray-300 truncate opacity-90">{apt.type}</span>
+                                            {apt.room && <span className="text-[9px] bg-black/20 px-1 rounded text-white/80">{apt.room}</span>}
+                                        </div>
+                                    </div>
+                                </AppointmentQuickView>
+                            </div>
+                        );
+                    })}
+
                 </div>
             </div>
         </div>
@@ -230,4 +251,3 @@ const CalendarWeekView = memo(({
 
 CalendarWeekView.displayName = 'CalendarWeekView';
 
-export { CalendarWeekView };
