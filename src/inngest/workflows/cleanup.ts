@@ -10,8 +10,8 @@
  * - Detailed logging
  */
 
-import { inngest, retryConfig } from '@/lib/inngest/client';
-import { Events, CleanupPayload, CleanupResult } from '@/lib/inngest/types';
+import { inngest, retryConfig } from '../../lib/inngest/client';
+import { Events, CleanupPayload, CleanupResult, InngestStep } from '../../lib/inngest/types';
 import { createClient } from '@supabase/supabase-js';
 
 export const cleanupWorkflow = inngest.createFunction(
@@ -23,7 +23,7 @@ export const cleanupWorkflow = inngest.createFunction(
   {
     event: Events.CRON_DAILY_CLEANUP,
   },
-  async ({ step }: { event: { data: CleanupPayload }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
+  async ({ step }: { event: { data: CleanupPayload }; step: InngestStep }) => {
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -40,9 +40,9 @@ export const cleanupWorkflow = inngest.createFunction(
     };
 
     // Step 1: Clean up old notification logs (older than 90 days)
-    const notificationResult = await step.run(
+    const notificationResult = (await step.run(
       'cleanup-old-notifications',
-      async () => {
+      async (): Promise<number> => {
         const ninetyDaysAgo = new Date();
         ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
@@ -58,13 +58,13 @@ export const cleanupWorkflow = inngest.createFunction(
 
         return count || 0;
       }
-    );
+    )) as number;
     result.deletedRecords.notificationHistory = notificationResult;
 
     // Step 2: Clean up expired password reset tokens (older than 24 hours)
-    const resetTokensResult = await step.run(
+    const resetTokensResult = (await step.run(
       'cleanup-expired-tokens',
-      async () => {
+      async (): Promise<number> => {
         const twentyFourHoursAgo = new Date();
         twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
@@ -81,13 +81,13 @@ export const cleanupWorkflow = inngest.createFunction(
 
         return count || 0;
       }
-    );
+    )) as number;
     result.deletedRecords.passwordResetTokens = resetTokensResult;
 
     // Step 3: Clean up old system health logs (older than 30 days)
-    const healthLogsResult = await step.run(
+    const healthLogsResult = (await step.run(
       'cleanup-old-health-logs',
-      async () => {
+      async (): Promise<number> => {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -104,11 +104,11 @@ export const cleanupWorkflow = inngest.createFunction(
 
         return count || 0;
       }
-    );
+    )) as number;
     result.deletedRecords.systemHealthLogs = healthLogsResult;
 
     // Step 4: Clean up incomplete sessions (older than 7 days)
-    const sessionsResult = await step.run('cleanup-incomplete-sessions', async () => {
+    const sessionsResult = (await step.run('cleanup-incomplete-sessions', async (): Promise<number> => {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -125,7 +125,7 @@ export const cleanupWorkflow = inngest.createFunction(
       }
 
       return count || 0;
-    });
+    })) as number;
     result.deletedRecords.incompleteSessions = sessionsResult;
 
     // Log completion

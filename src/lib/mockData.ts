@@ -143,70 +143,102 @@ const generateUUID = () => {
 
 // ============= AGENDAMENTOS MOCK =============
 const generateAppointmentsForWeek = (): AppointmentBase[] => {
-  const today = new Date();
-  const appointments: AppointmentBase[] = [];
-  
-  const types: AppointmentType[] = [
-    'Consulta Inicial',
-    'Fisioterapia',
-    'Reavaliação',
-    'Consulta de Retorno',
-    'Avaliação Funcional',
-    'Terapia Manual',
-    'Pilates Clínico'
-  ];
+  try {
+    const today = new Date();
+    const appointments: AppointmentBase[] = [];
 
-  const times = ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'];
-  
-  // Gerar agendamentos para os próximos 14 dias
-  for (let dayOffset = -7; dayOffset < 7; dayOffset++) {
-    const date = new Date(today);
-    date.setDate(date.getDate() + dayOffset);
-    
-    // Pular finais de semana
-    if (date.getDay() === 0 || date.getDay() === 6) continue;
-    
-    // 2-4 agendamentos por dia
-    const appointmentsPerDay = Math.floor(Math.random() * 3) + 2;
-    
-    for (let i = 0; i < appointmentsPerDay; i++) {
-      const patient = mockPatients[Math.floor(Math.random() * mockPatients.length)];
-      const time = times[Math.floor(Math.random() * times.length)];
-      const type = types[Math.floor(Math.random() * types.length)];
-      
-      let status: AppointmentStatus;
-      if (dayOffset < 0) {
-        status = Math.random() > 0.3 ? 'concluido' : 'cancelado';
-      } else if (dayOffset === 0) {
-        status = Math.random() > 0.5 ? 'confirmado' : 'em_andamento';
-      } else {
-        status = Math.random() > 0.3 ? 'confirmado' : 'agendado';
-      }
-      
-      appointments.push({
-        id: generateUUID(),
-        patientId: patient.id,
-        patientName: patient.name,
-        phone: patient.phone || '',
-        date: new Date(date),
-        time: time,
-        duration: type === 'Consulta Inicial' ? 90 : 60,
-        type: type,
-        status: status,
-        notes: status === 'cancelado' ? 'Paciente solicitou cancelamento' : 
-               type === 'Consulta Inicial' ? 'Primeira consulta - anamnese completa' :
-               'Sessão regular de tratamento',
-        createdAt: new Date(date.getTime() - 7 * 24 * 60 * 60 * 1000),
-        updatedAt: new Date()
-      });
+    // Validar que mockPatients é um array
+    if (!Array.isArray(mockPatients) || mockPatients.length === 0) {
+      console.error('mockPatients não é um array ou está vazio');
+      return [];
     }
+
+    const types: AppointmentType[] = [
+      'Consulta Inicial',
+      'Fisioterapia',
+      'Reavaliação',
+      'Consulta de Retorno',
+      'Avaliação Funcional',
+      'Terapia Manual',
+      'Pilates Clínico'
+    ];
+
+    const times = ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'];
+
+    // Gerar agendamentos para os próximos 14 dias
+    for (let dayOffset = -7; dayOffset < 7; dayOffset++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() + dayOffset);
+
+      // Pular finais de semana
+      if (date.getDay() === 0 || date.getDay() === 6) continue;
+
+      // 2-4 agendamentos por dia
+      const appointmentsPerDay = Math.floor(Math.random() * 3) + 2;
+
+      for (let i = 0; i < appointmentsPerDay; i++) {
+        const patientIndex = Math.floor(Math.random() * mockPatients.length);
+        const patient = mockPatients[patientIndex];
+        if (!patient) continue;
+
+        const timeIndex = Math.floor(Math.random() * times.length);
+        const time = times[timeIndex];
+        if (!time) continue;
+
+        const typeIndex = Math.floor(Math.random() * types.length);
+        const type = types[typeIndex];
+        if (!type) continue;
+
+        let status: AppointmentStatus;
+        if (dayOffset < 0) {
+          status = Math.random() > 0.3 ? 'concluido' : 'cancelado';
+        } else if (dayOffset === 0) {
+          status = Math.random() > 0.5 ? 'confirmado' : 'em_andamento';
+        } else {
+          status = Math.random() > 0.3 ? 'confirmado' : 'agendado';
+        }
+
+        const appointmentDate = new Date(date);
+        if (isNaN(appointmentDate.getTime())) continue;
+
+        appointments.push({
+          id: generateUUID(),
+          patientId: patient.id,
+          patientName: patient.name,
+          phone: patient.phone || '',
+          date: appointmentDate,
+          time: time,
+          duration: type === 'Consulta Inicial' ? 90 : 60,
+          type: type,
+          status: status,
+          notes: status === 'cancelado' ? 'Paciente solicitou cancelamento' :
+                 type === 'Consulta Inicial' ? 'Primeira consulta - anamnese completa' :
+                 'Sessão regular de tratamento',
+          createdAt: new Date(date.getTime() - 7 * 24 * 60 * 60 * 1000),
+          updatedAt: new Date()
+        });
+      }
+    }
+
+    // Validar que appointments ainda é um array antes de chamar sort
+    if (!Array.isArray(appointments)) {
+      console.error('appointments não é um array antes do sort');
+      return [];
+    }
+
+    return appointments.sort((a, b) => {
+      const aTime = a.date?.getTime() ?? 0;
+      const bTime = b.date?.getTime() ?? 0;
+      const dateCompare = aTime - bTime;
+      if (dateCompare !== 0) return dateCompare;
+      const aTimeStr = String(a.time ?? '');
+      const bTimeStr = String(b.time ?? '');
+      return aTimeStr.localeCompare(bTimeStr);
+    });
+  } catch (error) {
+    console.error('Erro ao gerar agendamentos mock:', error);
+    return [];
   }
-  
-  return appointments.sort((a, b) => {
-    const dateCompare = a.date.getTime() - b.date.getTime();
-    if (dateCompare !== 0) return dateCompare;
-    return a.time.localeCompare(b.time);
-  });
 };
 
 export const mockAppointments = generateAppointmentsForWeek();

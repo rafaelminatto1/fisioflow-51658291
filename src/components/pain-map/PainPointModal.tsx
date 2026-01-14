@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { PainPoint } from './BodyMap';
 import { EvaScaleBar } from './EvaScaleBar';
+import { getMusclesByRegion } from '@/lib/data/bodyMuscles';
 
 interface PainPointModalProps {
   point: PainPoint | null;
@@ -21,6 +22,7 @@ interface PainPointModalProps {
   onSave?: (point: PainPoint) => void;
   onCancel?: () => void;
   region?: string;
+  view?: 'front' | 'back'; // Adicionado para buscar músculos da vista correta
 }
 
 const PAIN_TYPES = [
@@ -39,12 +41,20 @@ export function PainPointModal({
   onSave,
   onCancel,
   region,
+  view = 'front',
 }: PainPointModalProps) {
   const [intensity, setIntensity] = useState<number>(point?.intensity ?? 5);
   const [painType, setPainType] = useState<PainPoint['painType']>(
     point?.painType ?? 'sharp'
   );
   const [notes, setNotes] = useState(point?.notes ?? '');
+  const [muscleCode, setMuscleCode] = useState(point?.muscleCode ?? '');
+  const [muscleName, setMuscleName] = useState(point?.muscleName ?? '');
+
+  // Buscar músculos disponíveis para a região
+  const availableMuscles = point?.regionCode
+    ? getMusclesByRegion(point.regionCode, view)
+    : [];
 
   // Resetar valores quando o ponto mudar ou modal abrir/fechar
   useEffect(() => {
@@ -53,15 +63,21 @@ export function PainPointModal({
         setIntensity(point.intensity);
         setPainType(point.painType);
         setNotes(point.notes ?? '');
+        setMuscleCode(point.muscleCode ?? '');
+        setMuscleName(point.muscleName ?? '');
       } else {
         // Reset para valores padrão quando criando novo ponto
         setIntensity(5);
         setPainType('sharp');
         setNotes('');
+        setMuscleCode('');
+        setMuscleName('');
       }
     } else {
       // Limpar ao fechar
       setNotes('');
+      setMuscleCode('');
+      setMuscleName('');
     }
   }, [point, open]);
 
@@ -72,6 +88,8 @@ export function PainPointModal({
       id: point?.id ?? `temp-${Date.now()}`,
       regionCode: point?.regionCode ?? region ?? '',
       region: point?.region ?? region ?? '',
+      muscleCode: muscleCode || undefined,
+      muscleName: muscleName || undefined,
       intensity: intensity as PainPoint['intensity'],
       painType,
       notes: notes || undefined,
@@ -147,6 +165,43 @@ export function PainPointModal({
               </SelectContent>
             </Select>
           </div>
+
+          {/* Seletor de Músculo (quando disponível) */}
+          {availableMuscles.length > 0 && (
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold">Músculo Específico (opcional)</Label>
+              <Select
+                value={muscleCode}
+                onValueChange={(value) => {
+                  const selected = availableMuscles.find(m => m.code === value);
+                  if (selected) {
+                    setMuscleCode(selected.code);
+                    setMuscleName(selected.name);
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um músculo ou deixe em branco" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Região geral</SelectItem>
+                  {availableMuscles.map((muscle) => (
+                    <SelectItem key={muscle.code} value={muscle.code}>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{muscle.name}</span>
+                        <span className="text-xs text-muted-foreground">{muscle.nameEn}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {muscleName && (
+                <p className="text-xs text-primary">
+                  💪 Músculo selecionado: {muscleName}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Notas */}
           <div className="space-y-2">

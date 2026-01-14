@@ -10,8 +10,8 @@
  * - Email delivery via Resend
  */
 
-import { inngest, retryConfig } from '@/lib/inngest/client';
-import { Events, DailyReportPayload } from '@/lib/inngest/types';
+import { inngest, retryConfig } from '../../lib/inngest/client';
+import { Events, DailyReportPayload, InngestStep } from '../../lib/inngest/types';
 import { createClient } from '@supabase/supabase-js';
 
 export const dailyReportsWorkflow = inngest.createFunction(
@@ -24,16 +24,16 @@ export const dailyReportsWorkflow = inngest.createFunction(
     event: Events.CRON_DAILY_REPORTS,
     cron: '0 8 * * *', // 8:00 AM daily
   },
-  async ({ step }: { event: { data: DailyReportPayload }; step: {
-    run: (name: string, fn: () => Promise<unknown>) => Promise<unknown>;
-  } }) => {
+  async ({ step }: {
+    event: { data: DailyReportPayload }; step: InngestStep
+  }) => {
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
     // Step 1: Get all active organizations
-    const organizations = await step.run('get-organizations', async () => {
+    const organizations = await step.run('get-organizations', async (): Promise<any[]> => {
       const { data, error } = await supabase
         .from('organizations')
         .select('id, name, settings')
@@ -49,7 +49,15 @@ export const dailyReportsWorkflow = inngest.createFunction(
     // Step 2: Process each organization in parallel
     const results = await step.run(
       'process-organizations',
-      async () => {
+      async (): Promise<{
+        organizationId: string;
+        organizationName?: string;
+        reportsGenerated: number;
+        emailsSent: number;
+        skipped?: boolean;
+        error?: string;
+        reportData?: any;
+      }[]> => {
         return await Promise.all(
           organizations.map(async (org: { id: string; name?: string; settings?: Record<string, unknown> }) => {
             try {

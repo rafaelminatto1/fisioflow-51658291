@@ -5,12 +5,29 @@
  * This demonstrates the power of Inngest for long-running AI workflows
  */
 
-import { inngest, retryConfig } from '@/lib/inngest/client';
-import { Events } from '@/lib/inngest/types';
+import { inngest, retryConfig } from '../../lib/inngest/client';
+import { Events, InngestStep } from '../../lib/inngest/types';
 import { createClient } from '@supabase/supabase-js';
 import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
+
+type PatientData = {
+  id: string;
+  name: string;
+  date_of_birth: string;
+  main_complaint?: string;
+  sessions?: Array<{
+    id?: string;
+    pain_level_after?: number;
+    created_at?: string;
+    patient_id?: string;
+    subjective?: string;
+    objective?: string;
+    assessment?: string;
+    plan?: string;
+  }>;
+};
 
 const insightSchema = z.object({
   summary: z.string().describe('Brief summary of patient progress'),
@@ -25,12 +42,12 @@ export const aiPatientInsightsWorkflow = inngest.createFunction(
     id: 'fisioflow-ai-patient-insights',
     name: 'Generate AI Patient Insights',
     retries: retryConfig.api.maxAttempts,
-    maxDuration: '5m', // Allow up to 5 minutes for AI processing
+    // maxDuration: '5m', // Allow up to 5 minutes for AI processing
   },
   {
     event: Events.AI_PATIENT_INSIGHTS,
   },
-  async ({ event, step }: { event: { data: Record<string, unknown> }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
+  async ({ event, step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
     const { patientId, organizationId } = event.data;
 
     const supabase = createClient(
@@ -39,7 +56,7 @@ export const aiPatientInsightsWorkflow = inngest.createFunction(
     );
 
     // Step 1: Fetch patient data
-    const patient = await step.run('fetch-patient-data', async () => {
+    const patient = await step.run('fetch-patient-data', async (): Promise<PatientData> => {
       const { data, error } = await supabase
         .from('patients')
         .select(`
@@ -68,11 +85,11 @@ export const aiPatientInsightsWorkflow = inngest.createFunction(
         throw new Error(`Failed to fetch patient: ${error.message}`);
       }
 
-      return data;
+      return (data || {}) as unknown as PatientData;
     });
 
     // Step 2: Generate AI insights
-    const insights = await step.run('generate-ai-insights', async () => {
+    const insights = await step.run('generate-ai-insights', async (): Promise<z.infer<typeof insightSchema>> => {
       const sessions = patient.sessions || [];
       const recentSessions = sessions.slice(-10); // Last 10 sessions
 
@@ -97,7 +114,7 @@ Age: ${patient.date_of_birth}
 Main Complaint: ${patient.main_complaint || 'Not specified'}
 
 Recent Sessions (${recentSessions.length}):
-${recentSessions.map((s: { id?: string; pain_level_after?: number; created_at?: string; patient_id?: string }, i: number) => `
+${recentSessions.map((s, i: number) => `
 Session ${i + 1} (${s.created_at}):
 - Subjective: ${s.subjective || 'N/A'}
 - Objective: ${s.objective || 'N/A'}
@@ -171,12 +188,12 @@ export const aiBatchInsightsWorkflow = inngest.createFunction(
   {
     event: 'ai/batch.insights',
   },
-  async ({ event, step }: { event: { data: Record<string, unknown> }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
+  async ({ event, step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
     const { organizationId, patientIds } = event.data;
 
-    const results = await step.run('process-batch', async () => {
+    const results = await step.run('process-batch', async (): Promise<{ queued: number }> => {
       // Queue individual insight generation for each patient
-      const events = patientIds.map((patientId: string) => ({
+      const events = (patientIds as string[]).map((patientId) => ({
         name: Events.AI_PATIENT_INSIGHTS,
         data: {
           patientId,

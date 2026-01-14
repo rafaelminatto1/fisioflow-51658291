@@ -150,9 +150,16 @@ export function PainPointsBottomSheet({
                       {/* Point Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start mb-1">
-                          <h4 className="font-medium text-sm text-foreground truncate">
-                            {point.region}
-                          </h4>
+                          <div className="flex flex-col">
+                            <h4 className="font-medium text-sm text-foreground">
+                              {point.region}
+                            </h4>
+                            {point.muscleName && (
+                              <span className="text-xs text-primary font-medium">
+                                💪 {point.muscleName}
+                              </span>
+                            )}
+                          </div>
                           <Badge
                             variant="outline"
                             className="text-[10px] ml-2 shrink-0"
@@ -164,13 +171,13 @@ export function PainPointsBottomSheet({
                             {PAIN_TYPE_ICONS[point.painType]} {PAIN_TYPE_LABELS[point.painType]}
                           </Badge>
                         </div>
-                        
+
                         {point.notes && (
                           <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
                             {point.notes}
                           </p>
                         )}
-                        
+
                         {!point.notes && (
                           <p className="text-xs text-muted-foreground mt-1">
                             Intensidade: {point.intensity}/10
