@@ -17,7 +17,7 @@ import { get, set, del } from 'idb-keyval';
 import { AppRoutes } from "./routes";
 import { VersionManager } from "@/components/system/VersionManager";
 import { initWebVitalsMonitoring, WebVitalsIndicator } from "@/lib/monitoring/web-vitals";
-import { PerformanceDashboard } from "@/components/system";
+
 import { FeatureFlagProvider } from "@/lib/featureFlags/hooks";
 import { useServiceWorkerUpdate } from "@/hooks/useServiceWorkerUpdate";
 import { SkipLink, FocusVisibleHandler } from "@/components/accessibility";
@@ -171,8 +171,7 @@ const App = () => {
                     {Analytics && <Analytics />}
                     {SpeedInsights && <SpeedInsights />}
                     <WebVitalsIndicator />
-                    {/* Performance Dashboard - Dev Only */}
-                    {import.meta.env.DEV && <PerformanceDashboard />}
+
                   </Suspense>
                 </BrowserRouter>
               </DataProvider>
