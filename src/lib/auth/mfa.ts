@@ -6,6 +6,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface MFAEnrollment {
   id: string;
@@ -28,10 +29,7 @@ export interface MFAChallenge {
 }
 
 export class MFAService {
-  private supabase = createClient(
-    import.meta.env.VITE_SUPABASE_URL,
-    import.meta.env.VITE_SUPABASE_ANON_KEY
-  );
+  private supabase = supabase;
 
   /**
    * Enroll a user in MFA using TOTP (Time-based One-Time Password)
@@ -43,25 +41,15 @@ export class MFAService {
     factorId: string;
   }> {
     try {
-      const supabase = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_ANON_KEY,
-        {
-          auth: {
-            store: false,
-          },
-        }
-      );
-
       // Get user session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await this.supabase.auth.getSession();
 
       if (sessionError || !session) {
         throw new Error('User not authenticated');
       }
 
       // Enroll MFA factor
-      const { data, error } = await supabase.auth.mfa.enroll({
+      const { data, error } = await this.supabase.auth.mfa.enroll({
         factorType: 'totp',
         friendlyName: friendlyName || 'Authenticator App',
       });
@@ -87,12 +75,7 @@ export class MFAService {
    */
   async verifyMFAEnrollment(factorId: string, code: string): Promise<boolean> {
     try {
-      const supabase = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_ANON_KEY
-      );
-
-      const { data, error } = await supabase.auth.mfa.verify({
+      const { data, error } = await this.supabase.auth.mfa.verify({
         factorId,
         code,
       });
@@ -113,12 +96,7 @@ export class MFAService {
    */
   async getEnrolledFactors(_userId: string): Promise<MFAEnrollment[]> {
     try {
-      const supabase = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_ANON_KEY
-      );
-
-      const { data, error } = await supabase.auth.mfa.listFactors();
+      const { data, error } = await this.supabase.auth.mfa.listFactors();
 
       if (error) {
         throw error;
@@ -136,12 +114,7 @@ export class MFAService {
    */
   async createChallenge(factorId: string): Promise<MFAChallenge> {
     try {
-      const supabase = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_ANON_KEY
-      );
-
-      const { data, error } = await supabase.auth.mfa.challenge({
+      const { data, error } = await this.supabase.auth.mfa.challenge({
         factorId,
       });
 
@@ -164,12 +137,7 @@ export class MFAService {
    */
   async verifyChallenge(challengeId: string, code: string): Promise<boolean> {
     try {
-      const supabase = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_ANON_KEY
-      );
-
-      const { data, error } = await supabase.auth.mfa.verify({
+      const { data, error } = await this.supabase.auth.mfa.verify({
         challengeId,
         code,
       });
@@ -190,12 +158,7 @@ export class MFAService {
    */
   async unenrollMFA(factorId: string): Promise<boolean> {
     try {
-      const supabase = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_ANON_KEY
-      );
-
-      const { error } = await supabase.auth.mfa.unenroll({
+      const { error } = await this.supabase.auth.mfa.unenroll({
         factorId,
       });
 

@@ -57,7 +57,17 @@ export function FeatureFlagProvider({
   const [userId] = useState(user?.userID || null);
 
   // Get the SDK key from props or environment
-  const statsigKey = sdkKey || import.meta.env.VITE_STATSIG_CLIENT_KEY || import.meta.env.NEXT_PUBLIC_STATSIG_CLIENT_KEY;
+  const rawKey = sdkKey || import.meta.env.VITE_STATSIG_CLIENT_KEY || import.meta.env.NEXT_PUBLIC_STATSIG_CLIENT_KEY;
+  const statsigKey = rawKey?.trim();
+
+  // Debug log to verify key (masked)
+  useEffect(() => {
+    if (statsigKey) {
+      console.log('[Statsig] Initializing with key:', `${statsigKey.substring(0, 10)}...`);
+    } else {
+      console.warn('[Statsig] No key found');
+    }
+  }, [statsigKey]);
 
   // Check if we have a valid Statsig key (must start with "client-")
   const isValidKey = statsigKey && statsigKey.startsWith('client-') && statsigKey.length > 10;

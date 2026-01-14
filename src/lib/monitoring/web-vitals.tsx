@@ -86,8 +86,8 @@ export function getRatingColor(rating: Rating): string {
  */
 export function sendToAnalytics(metrics: WebVitalsMetrics) {
   try {
-    // Enviar para Vercel Analytics
-    if (typeof window !== 'undefined' && window.va) {
+    // Enviar para Vercel Analytics (apenas em produção ou se explicitamente habilitado)
+    if (import.meta.env.PROD && typeof window !== 'undefined' && window.va) {
       try {
         window.va('event', 'web-vitals', {
           event_category: 'Web Vitals',
