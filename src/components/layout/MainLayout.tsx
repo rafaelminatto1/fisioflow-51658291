@@ -171,7 +171,12 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         </header>
 
         {/* Main Content - Com padding para mobile header e bottom navigation - Otimizado para iPhone/iPad */}
-        <main className="flex-1 p-3 xs:p-4 sm:p-6 md:p-8 pt-[60px] md:pt-8 pb-24 md:pb-8 overflow-x-hidden bg-gray-50/50 dark:bg-background/50">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          aria-label="Conteúdo principal"
+          className="flex-1 p-3 xs:p-4 sm:p-6 md:p-8 pt-[60px] md:pt-8 pb-24 md:pb-8 overflow-x-hidden bg-gray-50/50 dark:bg-background/50"
+        >
           <div className={cn(
             "mx-auto transition-all duration-300",
             fullWidth
