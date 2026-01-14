@@ -251,6 +251,90 @@ export default defineConfig(({ mode }) => {
               if (id.includes('konva')) {
                 return 'konva-vendor';
               }
+              // Lucide icons
+              if (id.includes('lucide-react')) {
+                return 'icons-vendor';
+              }
+              // AI SDK
+              if (id.includes('@ai-sdk') || id.includes('ai')) {
+                return 'ai-vendor';
+              }
+              // Vercel SDKs
+              if (id.includes('@vercel')) {
+                return 'vercel-vendor';
+              }
+              // React PDF
+              if (id.includes('react-pdf')) {
+                return 'react-pdf-vendor';
+              }
+              // Sonner (toast)
+              if (id.includes('sonner')) {
+                return 'toast-vendor';
+              }
+              // Class variance authority
+              if (id.includes('class-variance-authority') || id.includes('clsx') || id.includes('tailwind-merge')) {
+                return 'cn-vendor';
+              }
+              // Cmdk (command palette)
+              if (id.includes('cmdk')) {
+                return 'cmdk-vendor';
+              }
+              // Embla carousel
+              if (id.includes('embla-carousel')) {
+                return 'carousel-vendor';
+              }
+              // React Dropzone
+              if (id.includes('react-dropzone')) {
+                return 'dropzone-vendor';
+              }
+              // React markdown
+              if (id.includes('react-markdown')) {
+                return 'markdown-vendor';
+              }
+              // UUID
+              if (id.includes('uuid')) {
+                return 'uuid-vendor';
+              }
+              // Recharts
+              if (id.includes('recharts')) {
+                return 'recharts-vendor';
+              }
+              // D3 (dependency of recharts)
+              if (id.includes('d3-')) {
+                return 'd3-vendor';
+              }
+              // Zustand
+              if (id.includes('zustand')) {
+                return 'zustand-vendor';
+              }
+              // Inngest
+              if (id.includes('inngest')) {
+                return 'inngest-vendor';
+              }
+              // Resend
+              if (id.includes('resend')) {
+                return 'resend-vendor';
+              }
+              // Sendgrid
+              if (id.includes('@sendgrid')) {
+                return 'sendgrid-vendor';
+              }
+              // Web vitals
+              if (id.includes('web-vitals')) {
+                return 'web-vitals-vendor';
+              }
+              // React error boundary
+              if (id.includes('react-error-boundary')) {
+                return 'error-boundary-vendor';
+              }
+              // Vaul drawer
+              if (id.includes('vaul')) {
+                return 'vaul-vendor';
+              }
+              // IDB keyval
+              if (id.includes('idb-keyval')) {
+                return 'idb-vendor';
+              }
               // Outros node_modules
               return 'vendor';
             }
