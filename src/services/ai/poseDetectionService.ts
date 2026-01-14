@@ -42,9 +42,14 @@ export const initPoseEstimator = async () => {
 
     // Dynamically import the @mediapipe/pose module
     if (!PoseClass) {
-        const mediapipePose = await import('@mediapipe/pose');
-        // The module exports Pose as a property
-        PoseClass = mediapipePose.Pose as unknown as PoseConstructor;
+        await import('@mediapipe/pose');
+        // The module attaches Pose to the global window object
+        if (typeof window !== 'undefined' && (window as any).Pose) {
+            PoseClass = (window as any).Pose as PoseConstructor;
+        } else {
+            console.error('Pose constructor not found on window object');
+            throw new Error('Failed to load MediaPipe Pose');
+        }
     }
 
     const pose = new PoseClass({
