@@ -24,9 +24,9 @@ export const inngest = new Inngest({
  * Inngest middleware for logging
  */
 export const loggerMiddleware = {
-  onFunctionRun: ({ ctx, fn }) => {
+  onFunctionRun: ({ ctx, fn }: { ctx: any; fn: any }) => {
     return {
-      transformOutput: (output) => {
+      transformOutput: (output: any) => {
         console.log(`[Inngest] Function ${fn.name} completed`, {
           runId: ctx.runId,
           eventId: ctx.event.id,
@@ -41,18 +41,21 @@ export const loggerMiddleware = {
  * Inngest middleware for error tracking with Sentry
  */
 export const errorTrackingMiddleware = {
-  onFunctionRun: ({ fn }) => {
+  onFunctionRun: ({ fn }: { fn: any }) => {
     return {
-      transformOutput: (output) => {
+      transformOutput: (output: any) => {
         if (output.error) {
           // Import Sentry dynamically to avoid issues in non-Sentry environments
-          import('@sentry/react').then((Sentry) => {
-            Sentry.captureException(output.error, {
-              tags: {
-                inngest_function: fn.name,
-                inngest_event: 'workflow',
-              },
-            });
+          import('@sentry/react').then((SentryModule) => {
+            const Sentry = SentryModule.default || SentryModule;
+            if (typeof Sentry.captureException === 'function') {
+              Sentry.captureException(output.error, {
+                tags: {
+                  inngest_function: fn.name,
+                  inngest_event: 'workflow',
+                },
+              });
+            }
           });
         }
         return output;

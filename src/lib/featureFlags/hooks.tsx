@@ -69,19 +69,26 @@ export function FeatureFlagProvider({
     }
   }, [statsigKey]);
 
+  // DISABLED: Statsig is disabled to prevent "ne is not a function" errors
+  // The statsig-react v2 SDK has compatibility issues
+  // Feature flags will use default values defined in statsig.ts
+  // To re-enable, uncomment the StatsigProvider block below
+  
   // Check if we have a valid Statsig key (must start with "client-")
   const isValidKey = statsigKey && statsigKey.startsWith('client-') && statsigKey.length > 10;
-
-  // If no valid key, just render children without StatsigProvider
-  if (!isValidKey) {
-    console.warn('Statsig: No valid client SDK key provided. Feature flags will use default values. Get your key at https://statsig.com/');
-    return (
-      <FeatureFlagContext.Provider value={{ isInitialized: false, userId }}>
-        {children}
-      </FeatureFlagContext.Provider>
-    );
+  
+  if (isValidKey) {
+    console.info('[Statsig] Valid key found but Statsig is disabled. Using default values.');
   }
 
+  // Always render without StatsigProvider to avoid SDK errors
+  return (
+    <FeatureFlagContext.Provider value={{ isInitialized: false, userId }}>
+      {children}
+    </FeatureFlagContext.Provider>
+  );
+
+  /* DISABLED - Re-enable when statsig-react compatibility is fixed
   return (
     <FeatureFlagContext.Provider value={{ isInitialized: true, userId }}>
       <Statsig.StatsigProvider sdkKey={statsigKey} user={user || { userID: 'anonymous' }}>
@@ -89,6 +96,7 @@ export function FeatureFlagProvider({
       </Statsig.StatsigProvider>
     </FeatureFlagContext.Provider>
   );
+  */
 }
 
 // ============================================================================
