@@ -7,10 +7,26 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { visualizer } from 'rollup-plugin-visualizer';
 import viteCompression from 'vite-plugin-compression';
 
+// Plugin para substituir placeholders no HTML
+function htmlPlugin(appVersion: string, buildTime: string): any {
+  return {
+    name: 'html-transform',
+    transformIndexHtml(html: string) {
+      return html
+        .replace(/%APP_VERSION%/g, appVersion)
+        .replace(/%BUILD_TIME%/g, buildTime);
+    }
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production';
   const isAnalyze = process.env.ANALYZE === 'true';
+
+  // Gerar versão única para cada build
+  const buildTime = Date.now().toString();
+  const appVersion = process.env.VERCEL_GIT_COMMIT_SHA || buildTime;
 
   return {
     server: {
@@ -22,11 +38,15 @@ export default defineConfig(({ mode }) => {
       },
     },
     define: {
-      __APP_VERSION__: JSON.stringify(process.env.VERCEL_GIT_COMMIT_SHA || new Date().toISOString()),
+      __APP_VERSION__: JSON.stringify(appVersion),
+      __BUILD_TIME__: JSON.stringify(buildTime),
+      __CACHE_BUSTER__: JSON.stringify(buildTime),
     },
     plugins: [
       react(),
       mode === 'development' && componentTagger(),
+      // Substituir placeholders no HTML
+      htmlPlugin(appVersion, buildTime),
       isProduction && sentryVitePlugin({
         org: "fisioflow",
         project: "fisioflow-web",
@@ -81,7 +101,7 @@ export default defineConfig(({ mode }) => {
           ],
           categories: ['health', 'medical', 'productivity'],
           // Versão dinâmica do manifest - força atualização do PWA
-          version: process.env.VERCEL_GIT_COMMIT_SHA || Date.now().toString(),
+          version: appVersion,
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff2}'],
@@ -95,7 +115,7 @@ export default defineConfig(({ mode }) => {
           clientsClaim: true,
           cleanupOutdatedCaches: true,
           // Cache ID dinâmico para forçar invalidação
-          cacheId: `fisioflow-v${process.env.VERCEL_GIT_COMMIT_SHA || Date.now()}`,
+          cacheId: `fisioflow-v${appVersion}`,
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
