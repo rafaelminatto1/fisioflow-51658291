@@ -20,6 +20,7 @@ import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
@@ -721,14 +722,7 @@ const Schedule = () => {
                   onRefresh={handleRefresh}
                 />
               ) : (
-                <Suspense fallback={
-                  <div className="flex items-center justify-center h-full">
-                    <div className="flex flex-col items-center gap-4">
-                      <div className="animate-spin h-10 w-10 border-4 border-primary border-t-transparent rounded-full" />
-                      <p className="text-sm text-muted-foreground animate-pulse">Carregando calendário...</p>
-                    </div>
-                  </div>
-                }>
+                <Suspense fallback={<LoadingSkeleton type="card" rows={3} className="min-h-[500px]" />}>
                   <CalendarView
                     appointments={filteredAppointments}
                     currentDate={currentDate}
