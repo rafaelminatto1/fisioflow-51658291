@@ -318,10 +318,6 @@ const ScheduleRefactored = () => {
     }
   }, [refetch]);
 
-  const handleAppointmentClick = useCallback((appointment: Appointment) => {
-    setQuickEditAppointment(appointment);
-  }, []);
-
   const handleScheduleFromWaitlist = useCallback((patientId: string, patientName: string) => {
     setScheduleFromWaitlist({ patientId, patientName });
     setShowWaitlistModal(false);
@@ -352,7 +348,7 @@ const ScheduleRefactored = () => {
         return;
       }
 
-      const isModalActive = isModalOpen || showKeyboardShortcuts || showWaitlistModal || quickEditAppointment;
+      const isModalActive = isModalOpen || showKeyboardShortcuts || showWaitlistModal;
       if (isModalActive && e.key !== 'Escape') {
         return;
       }
@@ -566,7 +562,6 @@ const ScheduleRefactored = () => {
                 onDateChange={setCurrentDate}
                 viewType={viewType as CalendarViewType}
                 onViewTypeChange={handleViewTypeChange}
-                onAppointmentClick={handleAppointmentClick}
                 onTimeSlotClick={handleTimeSlotClick}
                 onAppointmentReschedule={handleAppointmentReschedule}
                 onEditAppointment={handleEditAppointment}
@@ -577,12 +572,6 @@ const ScheduleRefactored = () => {
         </div>
 
         {/* Modals */}
-        <AppointmentQuickEditModal
-          appointment={quickEditAppointment}
-          open={!!quickEditAppointment}
-          onOpenChange={(open) => !open && setQuickEditAppointment(null)}
-        />
-
         <AppointmentModal
           isOpen={isModalOpen}
           onClose={() => {
