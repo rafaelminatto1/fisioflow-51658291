@@ -1,41 +1,218 @@
 import type { StatusConfig, RolePermissions, UserRole, SessionStatus } from "@/types/agenda";
 
 // Status configuration for visual representation and allowed actions
+import { CheckCircle, Clock, AlertCircle, XCircle } from 'lucide-react';
+
+// Status configuration for visual representation and allowed actions
 export const STATUS_CONFIG: Record<SessionStatus, StatusConfig> = {
-  scheduled: {
-    label: "Agendado",
-    color: "#3B82F6", // Blue
-    bgColor: "#EFF6FF", // Blue-50
-    borderColor: "#DBEAFE", // Blue-200
-    allowedActions: ["complete", "miss", "cancel", "reschedule", "edit", "payment"]
-  },
-  completed: {
-    label: "Concluído",
-    color: "#10B981", // Green
-    bgColor: "#ECFDF5", // Green-50
-    borderColor: "#D1FAE5", // Green-200
+  // Positive/Completed States
+  realizado: {
+    label: "Realizado",
+    color: "#22C55E",
+    bgColor: "#F0FDF4",
+    borderColor: "#16A34A",
+    twBg: "bg-green-50",
+    twBorder: "border-green-500",
+    twText: "text-green-700",
+    icon: CheckCircle,
     allowedActions: ["view", "payment", "evolution"]
   },
-  missed: {
-    label: "Faltou",
-    color: "#EF4444", // Red
-    bgColor: "#FEF2F2", // Red-50
-    borderColor: "#FECACA", // Red-200
-    allowedActions: ["reschedule", "view", "payment"]
+  completed: { // Legacy/Duplicate mapping
+    label: "Concluído",
+    color: "#22C55E",
+    bgColor: "#F0FDF4",
+    borderColor: "#16A34A",
+    twBg: "bg-green-50",
+    twBorder: "border-green-500",
+    twText: "text-green-700",
+    icon: CheckCircle,
+    allowedActions: ["view", "payment", "evolution"]
   },
-  cancelled: {
+  concluido: {
+    label: "Concluído",
+    color: "#22C55E",
+    bgColor: "#F0FDF4",
+    borderColor: "#16A34A",
+    twBg: "bg-green-50",
+    twBorder: "border-green-500",
+    twText: "text-green-700",
+    icon: CheckCircle,
+    allowedActions: ["view", "payment", "evolution"]
+  },
+  atendido: {
+    label: "Atendido",
+    color: "#22C55E",
+    bgColor: "#F0FDF4",
+    borderColor: "#16A34A",
+    twBg: "bg-green-50",
+    twBorder: "border-green-500",
+    twText: "text-green-700",
+    icon: CheckCircle,
+    allowedActions: ["view", "payment", "evolution"]
+  },
+
+  // Confirmed States
+  confirmado: {
+    label: "Confirmado",
+    color: "#10B981",
+    bgColor: "#ECFDF5",
+    borderColor: "#059669",
+    twBg: "bg-emerald-50",
+    twBorder: "border-emerald-500",
+    twText: "text-emerald-700",
+    icon: CheckCircle,
+    allowedActions: ["complete", "miss", "cancel", "reschedule", "edit", "payment"]
+  },
+  confirmed: { // Legacy
+    label: "Confirmado",
+    color: "#10B981",
+    bgColor: "#ECFDF5",
+    borderColor: "#059669",
+    twBg: "bg-emerald-50",
+    twBorder: "border-emerald-500",
+    twText: "text-emerald-700",
+    icon: CheckCircle,
+    allowedActions: ["complete", "miss", "cancel", "reschedule", "edit", "payment"]
+  },
+
+  // Scheduled States
+  agendado: {
+    label: "Agendado",
+    color: "#3B82F6",
+    bgColor: "#EFF6FF",
+    borderColor: "#2563EB",
+    twBg: "bg-blue-50",
+    twBorder: "border-blue-500",
+    twText: "text-blue-700",
+    icon: Clock,
+    allowedActions: ["confirm", "cancel", "reschedule", "edit"]
+  },
+  scheduled: { // Legacy
+    label: "Agendado",
+    color: "#3B82F6",
+    bgColor: "#EFF6FF",
+    borderColor: "#2563EB",
+    twBg: "bg-blue-50",
+    twBorder: "border-blue-500",
+    twText: "text-blue-700",
+    icon: Clock,
+    allowedActions: ["confirm", "cancel", "reschedule", "edit"]
+  },
+
+  // Evaluation - The Specific Fix request
+  avaliacao: {
+    label: "Avaliação",
+    color: "#8B5CF6",
+    bgColor: "#F5F3FF",
+    borderColor: "#7C3AED",
+    twBg: "bg-violet-50",
+    twBorder: "border-violet-500",
+    twText: "text-violet-700",
+    icon: Clock,
+    allowedActions: ["confirm", "cancel", "reschedule", "edit"]
+  },
+
+  // Pending/Waiting States
+  aguardando_confirmacao: {
+    label: "Aguardando",
+    color: "#F59E0B",
+    bgColor: "#FFFBEB",
+    borderColor: "#D97706",
+    twBg: "bg-amber-50",
+    twBorder: "border-amber-500",
+    twText: "text-amber-700",
+    icon: Clock,
+    allowedActions: ["confirm", "cancel", "reschedule", "edit"]
+  },
+  em_espera: {
+    label: "Em Espera",
+    color: "#6366F1",
+    bgColor: "#EEF2FF",
+    borderColor: "#4F46E5",
+    twBg: "bg-indigo-50",
+    twBorder: "border-indigo-500",
+    twText: "text-indigo-700",
+    icon: Clock,
+    allowedActions: ["start", "cancel", "reschedule"]
+  },
+
+  // Negative States
+  cancelado: {
     label: "Cancelado",
-    color: "#6B7280", // Gray
-    bgColor: "#F9FAFB", // Gray-50
-    borderColor: "#E5E7EB", // Gray-200
+    color: "#EF4444",
+    bgColor: "#FEF2F2",
+    borderColor: "#DC2626",
+    twBg: "bg-red-50",
+    twBorder: "border-red-500",
+    twText: "text-red-700",
+    icon: XCircle,
     allowedActions: ["view", "reschedule"]
   },
-  rescheduled: {
-    label: "Reagendado",
-    color: "#F59E0B", // Orange
-    bgColor: "#FFFBEB", // Orange-50
-    borderColor: "#FED7AA", // Orange-200
+  falta: {
+    label: "Falta",
+    color: "#F43F5E",
+    bgColor: "#FFF1F2",
+    borderColor: "#E11D48",
+    twBg: "bg-rose-50",
+    twBorder: "border-rose-500",
+    twText: "text-rose-700",
+    icon: AlertCircle,
+    allowedActions: ["view", "reschedule", "payment"]
+  },
+  faltou: {
+    label: "Faltou",
+    color: "#F43F5E",
+    bgColor: "#FFF1F2",
+    borderColor: "#E11D48",
+    twBg: "bg-rose-50",
+    twBorder: "border-rose-500",
+    twText: "text-rose-700",
+    icon: AlertCircle,
+    allowedActions: ["view", "reschedule", "payment"]
+  },
+
+  // Rescheduled/Delayed
+  remarcado: {
+    label: "Remarcado",
+    color: "#06B6D4",
+    bgColor: "#ECFEFF",
+    borderColor: "#0891B2",
+    twBg: "bg-cyan-50",
+    twBorder: "border-cyan-500",
+    twText: "text-cyan-700",
     allowedActions: ["view"]
+  },
+  reagendado: {
+    label: "Reagendado",
+    color: "#14B8A6",
+    bgColor: "#F0FDFA",
+    borderColor: "#0D9488",
+    twBg: "bg-teal-50",
+    twBorder: "border-teal-500",
+    twText: "text-teal-700",
+    allowedActions: ["view"]
+  },
+  atrasado: {
+    label: "Atrasado",
+    color: "#F97316",
+    bgColor: "#FFF7ED",
+    borderColor: "#EA580C",
+    twBg: "bg-orange-50",
+    twBorder: "border-orange-500",
+    twText: "text-orange-700",
+    allowedActions: ["start", "cancel", "reschedule"]
+  },
+
+  // Handling 'em_andamento'
+  em_andamento: {
+    label: "Em Andamento",
+    color: "#EAB308",
+    bgColor: "#FEFCE8",
+    borderColor: "#CA8A04",
+    twBg: "bg-yellow-50",
+    twBorder: "border-yellow-500",
+    twText: "text-yellow-700",
+    allowedActions: ["complete", "cancel"]
   }
 };
 
@@ -102,18 +279,18 @@ export const BUSINESS_HOURS = {
 export const generateTimeSlots = (date?: Date): string[] => {
   const slots: string[] = [];
   const isSaturday = date && date.getDay() === 6;
-  
+
   const startHour = 7;
   const endHour = isSaturday ? 13 : 21; // Sábado até 13h, outros dias até 21h
   const slotDuration = 30;
-  
+
   for (let hour = startHour; hour < endHour; hour++) {
     for (let minute = 0; minute < 60; minute += slotDuration) {
       const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
       slots.push(timeString);
     }
   }
-  
+
   return slots;
 };
 
@@ -152,7 +329,7 @@ export const getStatusConfig = (status: SessionStatus): StatusConfig => {
 export const getAllowedActions = (status: SessionStatus, userRole: UserRole): string[] => {
   const statusConfig = STATUS_CONFIG[status];
   const permissions = ROLE_PERMISSIONS[userRole];
-  
+
   // Filter actions based on both status and role permissions
   return statusConfig.allowedActions.filter(action => {
     switch (action) {
@@ -184,7 +361,7 @@ export const isWithinBusinessHours = (startTime: string, endTime: string, date?:
   const [startHour] = startTime.split(':').map(Number);
   const [endHour] = endTime.split(':').map(Number);
   const isSaturday = date && date.getDay() === 6;
-  
+
   const maxHour = isSaturday ? 13 : 21;
   return startHour >= 7 && endHour <= maxHour;
 };
@@ -192,9 +369,9 @@ export const isWithinBusinessHours = (startTime: string, endTime: string, date?:
 export const calculateSessionDuration = (startTime: string, endTime: string): number => {
   const [startHour, startMin] = startTime.split(':').map(Number);
   const [endHour, endMin] = endTime.split(':').map(Number);
-  
+
   const startMinutes = startHour * 60 + startMin;
   const endMinutes = endHour * 60 + endMin;
-  
+
   return endMinutes - startMinutes;
 };

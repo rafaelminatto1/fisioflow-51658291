@@ -7,12 +7,13 @@ import { AppointmentListView } from '@/components/schedule/AppointmentListView';
 import { AppointmentSearch } from '@/components/schedule/AppointmentSearch';
 import { WaitlistQuickAdd } from '@/components/schedule/WaitlistQuickAdd';
 import { WaitlistQuickViewModal } from '@/components/schedule/WaitlistQuickViewModal';
+import { WaitlistSidebar } from '@/components/schedule/WaitlistSidebar';
 import { ScheduleHeader } from '@/components/schedule/ScheduleHeader';
 import { KeyboardShortcuts } from '@/components/schedule/KeyboardShortcuts';
 import { useAppointments, useRescheduleAppointment } from '@/hooks/useAppointments';
 import { useWaitlistMatch } from '@/hooks/useWaitlistMatch';
 import { logger } from '@/lib/errors/logger';
-import { AlertTriangle, Users, Plus, Settings as SettingsIcon, RefreshCw, Keyboard, Calendar, TrendingUp, Clock, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { AlertTriangle, Users, Plus, Settings as SettingsIcon, RefreshCw, Keyboard, Calendar, TrendingUp, Clock, CheckCircle2, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { EmptyState } from '@/components/ui';
@@ -27,7 +28,7 @@ import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { formatDateToLocalISO, formatDateToBrazilian } from '@/utils/dateUtils';
-import { format, startOfDay, endOfDay, parseISO, differenceInMinutes } from 'date-fns';
+import { format, startOfDay, endOfDay, parseISO, differenceInMinutes, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 // Lazy load CalendarView for better initial load performance
@@ -57,30 +58,9 @@ const KEYBOARD_SHORTCUTS = {
 } as const;
 
 // =====================================================================
-// TYPES
-// =====================================================================
-
-
-
-interface ScheduleStats {
-  total: number;
-  completed: number;
-  confirmed: number;
-  pending: number;
-  completionRate: number;
-  nextAppointment: Appointment | null;
-  weekTotal: number;
-}
-
-// =====================================================================
 // UTILITY FUNCTIONS
 // =====================================================================
 
-/**
- * Safely parses an appointment date string or Date object
- * @param date - Date string or Date object to parse
- * @returns Parsed Date or null if parsing fails
- */
 const safeParseDate = (date: string | Date): Date | null => {
   try {
     return typeof date === 'string' ? parseISO(date) : date;
@@ -89,48 +69,15 @@ const safeParseDate = (date: string | Date): Date | null => {
   }
 };
 
-/**
- * Checks if a date is within the specified range
- * @param date - Date to check
- * @param start - Start of range
- * @param end - End of range
- * @returns True if date is within range
- */
 const isDateInRange = (date: Date, start: Date, end: Date): boolean => {
   return date >= start && date <= end;
 };
 
-/**
- * Calculates the time until the next appointment in minutes
- * @param appointment - Appointment to check
- * @returns Minutes until appointment or null if invalid
- */
-const getTimeUntilAppointment = (appointment: Appointment): number | null => {
-  try {
-    const aptDate = safeParseDate(appointment.appointmentDate);
-    if (!aptDate) return null;
-
-    const [hours, minutes] = appointment.appointmentTime.split(':').map(Number);
-    const aptDateTime = new Date(aptDate);
-    aptDateTime.setHours(hours, minutes, 0, 0);
-
-    return differenceInMinutes(aptDateTime, new Date());
-  } catch {
-    return null;
-  }
-};
-
-/**
- * Rounds time to nearest business hour slot
- * @param date - Date to round
- * @returns Rounded time string in HH:MM format
- */
 const roundToNextSlot = (date: Date): string => {
   const minutes = date.getMinutes();
   const roundedMinutes = minutes < BUSINESS_HOURS.defaultRound ? BUSINESS_HOURS.defaultRound : 0;
   let hour = minutes < BUSINESS_HOURS.defaultRound ? date.getHours() : date.getHours() + 1;
 
-  // Adjust to business hours
   if (hour >= BUSINESS_HOURS.end) {
     hour = BUSINESS_HOURS.start;
   } else if (hour < BUSINESS_HOURS.start) {
@@ -162,11 +109,10 @@ const Schedule = () => {
     return isMobile ? 'day' : 'week';
   });
 
-  const [searchTerm, setSearchTerm] = useState('');
   const [waitlistQuickAdd, setWaitlistQuickAdd] = useState<{ date: Date; time: string } | null>(null);
-  const [showWaitlistModal, setShowWaitlistModal] = useState(false);
   const [scheduleFromWaitlist, setScheduleFromWaitlist] = useState<{ patientId: string; patientName: string } | null>(null);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Toggle for Waitlist Sidebar
 
   // ===================================================================
   // HOOKS
@@ -174,7 +120,6 @@ const Schedule = () => {
 
   const { data: appointments = [], isLoading: loading, error, refetch, isFromCache, cacheTimestamp } = useAppointments();
   const { mutateAsync: rescheduleAppointment } = useRescheduleAppointment();
-  const { totalInWaitlist } = useWaitlistMatch();
 
   const {
     isOnline,
@@ -199,74 +144,6 @@ const Schedule = () => {
   // COMPUTED VALUES
   // ===================================================================
 
-  const filteredAppointments = useMemo(() => {
-    if (!searchTerm.trim()) return appointments;
-    const term = searchTerm.toLowerCase();
-    return appointments.filter(appointment =>
-      appointment.patientName.toLowerCase().includes(term)
-    );
-  }, [appointments, searchTerm]);
-
-  const enhancedStats: ScheduleStats = useMemo(() => {
-    const now = new Date();
-    const todayStart = startOfDay(now);
-    const todayEnd = endOfDay(now);
-
-    // Filter today's appointments
-    const todayAppointments = filteredAppointments.filter(apt => {
-      const aptDate = safeParseDate(apt.appointmentDate);
-      return aptDate && isDateInRange(aptDate, todayStart, todayEnd);
-    });
-
-    // Calculate status counts
-    const completed = todayAppointments.filter(
-      apt => apt.status === 'completed' || apt.status === 'concluido'
-    ).length;
-
-    const confirmed = todayAppointments.filter(
-      apt => apt.status === 'confirmed' || apt.status === 'confirmado'
-    ).length;
-
-    const pending = todayAppointments.filter(
-      apt => apt.status === 'scheduled' || apt.status === 'agendado'
-    ).length;
-
-    const total = todayAppointments.length;
-    const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-    // Find next upcoming appointment
-    const nextAppointment = todayAppointments
-      .filter(apt => {
-        const timeUntil = getTimeUntilAppointment(apt);
-        return timeUntil !== null && timeUntil > 0;
-      })
-      .sort((a, b) => a.appointmentTime.localeCompare(b.appointmentTime))[0] || null;
-
-    // Calculate week stats (Monday to Sunday)
-    const weekStart = new Date(now);
-    weekStart.setDate(now.getDate() - now.getDay() + 1);
-    weekStart.setHours(0, 0, 0, 0);
-
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
-    weekEnd.setHours(23, 59, 59, 999);
-
-    const weekAppointments = filteredAppointments.filter(apt => {
-      const aptDate = safeParseDate(apt.appointmentDate);
-      return aptDate && isDateInRange(aptDate, weekStart, weekEnd);
-    });
-
-    return {
-      total,
-      completed,
-      confirmed,
-      pending,
-      completionRate,
-      nextAppointment,
-      weekTotal: weekAppointments.length
-    };
-  }, [filteredAppointments]);
-
   const formattedMonth = useMemo(() => {
     const month = format(currentDate, "MMMM 'de' yyyy", { locale: ptBR });
     return month.charAt(0).toUpperCase() + month.slice(1);
@@ -283,7 +160,6 @@ const Schedule = () => {
 
   const handleCreateAppointment = useCallback(() => {
     setSelectedAppointment(null);
-
     const now = new Date();
     setModalDefaultDate(now);
     setModalDefaultTime(roundToNextSlot(now));
@@ -364,7 +240,6 @@ const Schedule = () => {
 
   const handleScheduleFromWaitlist = useCallback((patientId: string, patientName: string) => {
     setScheduleFromWaitlist({ patientId, patientName });
-    setShowWaitlistModal(false);
     setSelectedAppointment(null);
     setModalDefaultDate(currentDate);
     setIsModalOpen(true);
@@ -382,10 +257,8 @@ const Schedule = () => {
     }, 'Schedule');
   }, [appointments.length, loading, viewType]);
 
-  // Keyboard shortcuts effect
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if user is typing in an input
       if (
         e.target instanceof HTMLInputElement ||
         e.target instanceof HTMLTextAreaElement ||
@@ -394,8 +267,7 @@ const Schedule = () => {
         return;
       }
 
-      // Don't trigger if modal is open (except for Escape)
-      const isModalActive = isModalOpen || showKeyboardShortcuts || showWaitlistModal || quickEditAppointment;
+      const isModalActive = isModalOpen || showKeyboardShortcuts || quickEditAppointment;
       if (isModalActive && e.key !== 'Escape') {
         return;
       }
@@ -407,26 +279,22 @@ const Schedule = () => {
           e.preventDefault();
           handleCreateAppointment();
           break;
-
         case KEYBOARD_SHORTCUTS.SEARCH: {
           e.preventDefault();
           const searchInput = document.querySelector('input[aria-label="Buscar agendamentos por nome do paciente"]') as HTMLInputElement;
           searchInput?.focus();
           break;
         }
-
         case KEYBOARD_SHORTCUTS.DAY_VIEW:
         case KEYBOARD_SHORTCUTS.WEEK_VIEW:
         case KEYBOARD_SHORTCUTS.MONTH_VIEW:
           e.preventDefault();
           setViewType(key === KEYBOARD_SHORTCUTS.DAY_VIEW ? 'day' : key === KEYBOARD_SHORTCUTS.WEEK_VIEW ? 'week' : 'month');
           break;
-
         case KEYBOARD_SHORTCUTS.TODAY:
           e.preventDefault();
           setCurrentDate(new Date());
           break;
-
         case 'arrowleft':
         case 'arrowright':
           if (e.metaKey || e.ctrlKey) {
@@ -437,13 +305,11 @@ const Schedule = () => {
             setCurrentDate(newDate);
           }
           break;
-
         case KEYBOARD_SHORTCUTS.HELP:
         case KEYBOARD_SHORTCUTS.HELP_ALT:
           e.preventDefault();
           setShowKeyboardShortcuts(true);
           break;
-
         case 'escape':
           if (showKeyboardShortcuts) {
             setShowKeyboardShortcuts(false);
@@ -458,14 +324,9 @@ const Schedule = () => {
     currentDate,
     isModalOpen,
     showKeyboardShortcuts,
-    showWaitlistModal,
     quickEditAppointment,
     handleCreateAppointment
   ]);
-
-  // ===================================================================
-  // RENDER
-  // ===================================================================
 
   if (error) {
     logger.error('Erro na página Schedule', { error }, 'Schedule');
@@ -483,9 +344,9 @@ const Schedule = () => {
 
   return (
     <MainLayout fullWidth showBreadcrumbs={false}>
-      <div className="flex flex-col gap-4 md:gap-6 animate-fade-in relative min-h-[calc(100vh-80px)] p-4 md:p-6">
+      <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden bg-slate-50 dark:bg-slate-950">
 
-        {/* Offline/Cache Warning Banner */}
+        {/* Offline Cache Indicator */}
         <OfflineIndicator
           isFromCache={isFromCache}
           isOnline={isOnline}
@@ -493,93 +354,60 @@ const Schedule = () => {
           isReconnecting={isReconnecting}
           cacheTimestamp={cacheTimestamp}
           itemCount={appointments.length}
-          itemLabel="agendamentos"
           onRefresh={handleRefresh}
-          className="shrink-0"
+          className=""
         />
 
-        {/* Schedule Header (New Clinic Overview) */}
-        <div className="relative z-10">
-          <Link to="/schedule/settings" className="absolute top-8 right-8 z-50">
-            <Button variant="ghost" className="text-white/50 hover:text-white hover:bg-white/10">
-              <SettingsIcon className="w-5 h-5" />
-            </Button>
-          </Link>
-          <ScheduleHeader
-            displayName="Dr. Rafael" // This could be dynamic from user profile
-            consultasRestantes={enhancedStats.pending}
-            completedCount={enhancedStats.completed}
-            totalCount={enhancedStats.total}
-            confirmationRate={enhancedStats.completionRate}
-          />
-        </div>
+        {/* Header Section - Kept simple/clean to match design */}
+        <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Agenda</h1>
+            <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-2" />
 
-        {/* Main Content Area */}
-        <div className="flex flex-col lg:flex-row gap-6 h-full min-h-0">
-          {/* Main Calendar - Full Width now */}
-          <div className="flex-1 min-h-0 flex flex-col h-full bg-transparent">
-            {/* Action Bar (Search/New) */}
-            <div className="flex items-center justify-between mb-4 px-1">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" onClick={() => setCurrentDate(new Date())} className="text-sm font-medium text-gray-400 hover:text-white">
-                  Hoje
-                </Button>
-                <div className="h-4 w-px bg-gray-700 mx-2"></div>
-                <div className="flex items-center gap-2">
-                  <Button size="icon" variant="ghost" onClick={() => setCurrentDate(date => addDays(date, -7))} className="h-8 w-8 text-gray-400">
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <span className="text-white font-medium capitalize">{formattedMonth}</span>
-                  <Button size="icon" variant="ghost" onClick={() => setCurrentDate(date => addDays(date, 7))} className="h-8 w-8 text-gray-400">
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                {/* View Selectors */}
-                <div className="flex bg-dark-800 p-1 rounded-xl border border-gray-800">
-                  <Button
-                    size="sm"
-                    variant={viewType === 'day' ? 'secondary' : 'ghost'}
-                    onClick={() => setViewType('day')}
-                    className="h-8 text-xs"
-                  >
-                    Dia
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={viewType === 'week' ? 'secondary' : 'ghost'}
-                    onClick={() => setViewType('week')}
-                    className="h-8 text-xs"
-                  >
-                    Semana
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={viewType === 'month' ? 'secondary' : 'ghost'}
-                    onClick={() => setViewType('month')}
-                    className="h-8 text-xs"
-                  >
-                    Mês
-                  </Button>
-                </div>
-
-                <Button
-                  onClick={handleCreateAppointment}
-                  className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Novo Agendamento
-                </Button>
-              </div>
+            <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5">
+              <Button variant="ghost" size="sm" onClick={() => setCurrentDate(date => addDays(date, -7))}>
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <span className="w-32 text-center text-sm font-medium text-slate-700 dark:text-slate-200">
+                {formattedMonth}
+              </span>
+              <Button variant="ghost" size="sm" onClick={() => setCurrentDate(date => addDays(date, 7))}>
+                <ChevronRight className="w-4 h-4" />
+              </Button>
             </div>
 
-            {/* Calendar View */}
-            <div className="flex-1 min-h-[600px] rounded-xl overflow-hidden shadow-2xl border border-gray-800/50">
+            <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())} className="text-xs">
+              Hoje
+            </Button>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg">
+              <Button size="sm" variant={viewType === 'day' ? 'white' : 'ghost'} onClick={() => setViewType('day')} className="h-7 text-xs px-3 shadow-none">Dia</Button>
+              <Button size="sm" variant={viewType === 'week' ? 'white' : 'ghost'} onClick={() => setViewType('week')} className="h-7 text-xs px-3 shadow-none">Semana</Button>
+              <Button size="sm" variant={viewType === 'month' ? 'white' : 'ghost'} onClick={() => setViewType('month')} className="h-7 text-xs px-3 shadow-none">Mês</Button>
+            </div>
+
+            <Button variant="outline" size="sm" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={cn("gap-2", isSidebarOpen && "bg-slate-100 dark:bg-slate-800")}>
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline">Espera</span>
+            </Button>
+
+            <Button onClick={handleCreateAppointment} className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm">
+              <Plus className="w-4 h-4" />
+              Novo Agendamento
+            </Button>
+          </div>
+        </div>
+
+        {/* Main Workspace */}
+        <div className="flex flex-1 overflow-hidden relative">
+          {/* Calendar Area */}
+          <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950 overflow-hidden p-6">
+            <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950 overflow-hidden relative">
               <Suspense fallback={<LoadingSkeleton type="card" rows={3} className="h-full w-full" />}>
                 <CalendarView
-                  appointments={filteredAppointments}
+                  appointments={appointments}
                   currentDate={currentDate}
                   onDateChange={setCurrentDate}
                   viewType={viewType as CalendarViewType}
@@ -593,11 +421,17 @@ const Schedule = () => {
               </Suspense>
             </div>
           </div>
+
+          {/* Waitlist Sidebar */}
+          {isSidebarOpen && (
+            <WaitlistSidebar
+              onSchedulePatient={handleScheduleFromWaitlist}
+              className="flex-shrink-0 animate-fade-in border-l border-slate-200 dark:border-slate-800"
+            />
+          )}
         </div>
 
-
-
-        {/* Modals */}
+        {/* Modals Layer */}
         <AppointmentQuickEditModal
           appointment={quickEditAppointment}
           open={!!quickEditAppointment}
@@ -626,16 +460,11 @@ const Schedule = () => {
           />
         )}
 
-        <WaitlistQuickViewModal
-          open={showWaitlistModal}
-          onOpenChange={setShowWaitlistModal}
-          onSchedulePatient={handleScheduleFromWaitlist}
-        />
-
         <KeyboardShortcuts
           open={showKeyboardShortcuts}
           onOpenChange={setShowKeyboardShortcuts}
         />
+
       </div>
     </MainLayout>
   );

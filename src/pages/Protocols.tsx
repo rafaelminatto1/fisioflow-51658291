@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
-  Search, Calendar, SortAsc, Grid3X3, List, Filter,
+  Search, Calendar, SortAsc, Grid3X3, List, Filter, Download, PlusCircle, Target, Shield,
 } from 'lucide-react';
 import { useExerciseProtocols, type ExerciseProtocol } from '@/hooks/useExerciseProtocols';
 import { Skeleton } from '@/components/ui/skeleton';
