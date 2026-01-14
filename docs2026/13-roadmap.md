@@ -41,9 +41,12 @@
 - ✅ **FocusVisibleHandler para distinguir foco de teclado vs mouse**
 - ✅ **CSS utilities para focus-visible e is-using-keyboard**
 - ✅ **Testes E2E de acessibilidade expandidos (skip link, foco visível, reduced-motion)**
-- ✅ **Memoização adicionada à página Exercises (useMemo, useCallback)**
+- ✅ **Memoização adicionada às páginas Exercises e Reports**
 - ✅ **Hook useErrorHandler para tratamento padronizado de erros**
 - ✅ **Hook useAsyncOperation para operações assíncronas com loading states**
+- ✅ **Utilitários de monitoramento de performance (measureAsync, useRenderTime, Core Web Vitals)**
+- ✅ **Configurações centralizadas de query (CACHE_TIMES, STALE_TIMES, QUERY_CONFIGS)**
+- ✅ **Type-safe query keys factory para invalidação eficiente**
 
 ## 🚧 Funcionalidades Incompletas
 
