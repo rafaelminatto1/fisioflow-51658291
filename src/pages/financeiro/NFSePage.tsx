@@ -24,7 +24,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, pdf } from '@react-pdf/renderer';
 
-interface NFS-e {
+interface NFSe {
   id: string;
   numero: string;
   serie: string;
@@ -144,17 +144,17 @@ const styles = StyleSheet.create({
 });
 
 // Componente PDF da NFS-e
-function NFSePDFDocument({ nfse }: { nfse: NFS-e }) {
+function NFSePDFDocument({ nfse }: { nfse: NFSe }) {
   return (
     <Document size="A4">
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>NOTA FISCAL DE SERVIÇO ELETRÔNICA - NFS-e</Text>
+          <Text style={styles.title}>NOTA FISCAL DE SERVIÇO ELETRÔNICA - NFSe</Text>
           <Text style={styles.subtitle}>Número: {nfse.numero} | Série: {nfse.serie}</Text>
         </View>
 
-        {/* Dados da NFS-e */}
+        {/* Dados da NFSe */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>DADOS DA NOTA FISCAL</Text>
           <View style={styles.row}>
@@ -299,8 +299,9 @@ function NFSePDFDocument({ nfse }: { nfse: NFS-e }) {
       </Page>
     </Document>
   );
+}
 
-function NFSePreview({ nfse, onEdit }: { nfse: NFS-e; onEdit?: () => void }) {
+function NFSePreview({ nfse, onEdit }: { nfse: NFSe; onEdit?: () => void }) {
   const handlePrint = () => {
     window.print();
   };
@@ -309,11 +310,11 @@ function NFSePreview({ nfse, onEdit }: { nfse: NFS-e; onEdit?: () => void }) {
     <div className="border rounded-lg p-8 bg-white max-w-3xl mx-auto shadow-lg">
       {/* Header */}
       <div className="text-center border-b-2 border-gray-300 pb-4 mb-6">
-        <h1 className="text-xl font-bold">NOTA FISCAL DE SERVIÇO ELETRÔNICA - NFS-e</h1>
+        <h1 className="text-xl font-bold">NOTA FISCAL DE SERVIÇO ELETRÔNICA - NFSe</h1>
         <p className="text-sm text-gray-600">Número: {nfse.numero} | Série: {nfse.serie}</p>
       </div>
 
-      {/* Dados da NFS-e */}
+      {/* Dados da NFSe */}
       <div className="mb-6">
         <h3 className="text-sm font-bold bg-gray-100 p-2 rounded mb-2">DADOS DA NOTA FISCAL</h3>
         <div className="grid grid-cols-2 gap-2 text-sm">
@@ -441,8 +442,8 @@ export default function NFSePage() {
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
-  const [previewNFSe, setPreviewNFSe] = useState<NFS-e | null>(null);
-  const [editingNFSe, setEditingNFSe] = useState<NFS-e | null>(null);
+  const [previewNFSe, setPreviewNFSe] = useState<NFSe | null>(null);
+  const [editingNFSe, setEditingNFSe] = useState<NFSe | null>(null);
   const [activeTab, setActiveTab] = useState<'lista' | 'config'>('lista');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('todos');
@@ -459,7 +460,7 @@ export default function NFSePage() {
     codigo_tributario: '010700',
   });
 
-  // Buscar NFS-e
+  // Buscar NFSe
   const { data: nfses = [], isLoading } = useQuery({
     queryKey: ['nfse-list'],
     queryFn: async () => {
@@ -468,7 +469,7 @@ export default function NFSePage() {
         .select('*')
         .order('data_emissao', { ascending: false });
       if (error) throw error;
-      return data as NFS-e[];
+      return data as NFSe[];
     },
   });
 
@@ -484,7 +485,7 @@ export default function NFSePage() {
     },
   });
 
-  // Criar NFS-e
+  // Criar NFSe
   const createNFSe = useMutation({
     mutationFn: async (data: typeof formData) => {
       // Buscar dados do prestador
@@ -513,7 +514,7 @@ export default function NFSePage() {
 
       const novoNumero = (lastNFSe?.numero || 0) + 1;
 
-      const nfse: Omit<NFS-e, 'id'> = {
+      const nfse: Omit<NFSe, 'id'> = {
         numero: novoNumero.toString().padStart(10, '0'),
         serie: '1',
         tipo: data.tipo,
@@ -551,10 +552,10 @@ export default function NFSePage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['nfse-list'] });
-      toast.success('NFS-e criada com sucesso!');
+      toast.success('NFSe criada com sucesso!');
       setIsDialogOpen(false);
     },
-    onError: () => toast.error('Erro ao criar NFS-e'),
+    onError: () => toast.error('Erro ao criar NFSe'),
   });
 
   const filteredNFSe = nfses.filter(nfse => {
@@ -588,7 +589,7 @@ export default function NFSePage() {
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-2">
               <FileText className="h-8 w-8 text-primary" />
-              NFS-e Eletrônica
+              NFSe Eletrônica
             </h1>
             <p className="text-muted-foreground mt-1">
               Emissão e gerenciamento de Notas Fiscais de Serviço Eletrônicas
@@ -601,7 +602,7 @@ export default function NFSePage() {
             </Button>
             <Button onClick={() => setIsDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Nova NFS-e
+              Nova NFSe
             </Button>
           </div>
         </div>
@@ -612,7 +613,7 @@ export default function NFSePage() {
             <CardContent className="py-3">
               <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">
                 <CheckCircle2 className="h-4 w-4" />
-                <span>Emissão automática está ATIVA. NFS-e serão geradas automaticamente para atendimentos concluídos.</span>
+                <span>Emissão automática está ATIVA. NFSe serão geradas automaticamente para atendimentos concluídos.</span>
               </div>
             </CardContent>
           </Card>
@@ -620,7 +621,7 @@ export default function NFSePage() {
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
           <TabsList>
-            <TabsTrigger value="lista">Lista de NFS-e</TabsTrigger>
+            <TabsTrigger value="lista">Lista de NFSe</TabsTrigger>
             <TabsTrigger value="config">Configurações</TabsTrigger>
           </TabsList>
 
@@ -661,9 +662,9 @@ export default function NFSePage() {
                 ) : !filteredNFSe.length ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <FileText className="h-12 w-12 mx-auto mb-4 opacity-30" />
-                    <p>Nenhuma NFS-e emitida ainda.</p>
+                    <p>Nenhuma NFSe emitida ainda.</p>
                     <Button variant="link" onClick={() => setIsDialogOpen(true)}>
-                      Emitir primeira NFS-e
+                      Emitir primeira NFSe
                     </Button>
                   </div>
                 ) : (
@@ -719,12 +720,12 @@ export default function NFSePage() {
           <TabsContent value="config" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Configuração de NFS-e</CardTitle>
+                <CardTitle>Configuração de NFSe</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg">
                   <p className="text-sm text-blue-700 dark:text-blue-300">
-                    Configure os dados para emissão automática de NFS-e através da API da prefeitura.
+                    Configure os dados para emissão automática de NFSe através da API da prefeitura.
                     Verifique com o município qual a integração disponível.
                   </p>
                 </div>
@@ -736,7 +737,7 @@ export default function NFSePage() {
                     <div>
                       <p className="font-medium">Emissão Automática</p>
                       <p className="text-sm text-muted-foreground">
-                        Gerar NFS-e automaticamente para cada atendimento concluído
+                        Gerar NFSe automaticamente para cada atendimento concluído
                       </p>
                     </div>
                     <Switch
@@ -745,7 +746,7 @@ export default function NFSePage() {
                         // Atualizar configuração
                         supabase.from('nfse_config').upsert({
                           auto_emissao: checked,
-                        }).then( {
+                        }).then(() => {
                           queryClient.invalidateQueries({ queryKey: ['nfse-config'] });
                           toast.success('Configuração atualizada!');
                         });
@@ -810,11 +811,11 @@ export default function NFSePage() {
           </TabsContent>
         </Tabs>
 
-        {/* Dialog Nova NFS-e */}
+        {/* Dialog Nova NFSe */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Nova NFS-e</DialogTitle>
+              <DialogTitle>Nova NFSe</DialogTitle>
               <DialogDescription>
                 Preencha os dados para emissão da Nota Fiscal de Serviço Eletrônica
               </DialogDescription>
@@ -944,7 +945,7 @@ export default function NFSePage() {
                 onClick={handleSubmit}
                 disabled={createNFSe.isPending}
               >
-                {createNFSe.isPending ? 'Salvando...' : 'Criar NFS-e'}
+                {createNFSe.isPending ? 'Salvando...' : 'Criar NFSe'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -955,7 +956,7 @@ export default function NFSePage() {
           <Dialog open={!!previewNFSe} onOpenChange={() => setPreviewNFSe(null)}>
             <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Visualização de NFS-e</DialogTitle>
+                <DialogTitle>Visualização de NFSe</DialogTitle>
               </DialogHeader>
               <NFSePreview nfse={previewNFSe} />
             </DialogContent>
