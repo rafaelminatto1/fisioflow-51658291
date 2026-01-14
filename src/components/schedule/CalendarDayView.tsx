@@ -114,12 +114,12 @@ const CalendarDayView = memo(({
         <div className="flex bg-gradient-to-br from-background to-muted/20 h-[calc(100vh-240px)] md:h-full overflow-hidden">
             {/* Time column com design melhorado */}
             <div className="w-20 md:w-24 border-r bg-muted/30 backdrop-blur-sm flex-shrink-0" role="columnheader" aria-label="Horários">
-                <div className="h-14 md:h-16 border-b flex items-center justify-center sticky top-0 bg-muted/30 z-10 backdrop-blur-sm shadow-sm" aria-hidden="true">
-                    <Clock className="h-3.5 md:h-4 w-3.5 md:w-4 text-muted-foreground" />
+                <div className="h-16 md:h-20 border-b flex items-center justify-center sticky top-0 bg-muted/30 z-10 backdrop-blur-sm shadow-sm" aria-hidden="true">
+                    <Clock className="h-4 md:h-5 w-4 md:w-5 text-muted-foreground" />
                 </div>
                 <div className="flex-1 overflow-hidden">
                     {timeSlots.map(time => (
-                        <div key={time} className="h-14 md:h-16 border-b border-border/50 p-2 md:p-3 text-sm font-medium text-muted-foreground flex items-center" role="listitem">
+                        <div key={time} className="h-16 md:h-20 border-b border-border/50 p-2 md:p-3 text-sm font-medium text-muted-foreground flex items-center" role="listitem">
                             {time}
                         </div>
                     ))}
@@ -128,7 +128,7 @@ const CalendarDayView = memo(({
 
             {/* Day column com hover states */}
             <div className="flex-1 relative bg-background/50 min-w-0">
-                <div className="h-14 md:h-16 border-b bg-gradient-to-r from-primary/10 to-primary/5 p-2 md:p-4 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
+                <div className="h-16 md:h-20 border-b bg-gradient-to-r from-primary/10 to-primary/5 p-2 md:p-4 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
                     <div className="font-semibold text-center flex items-center justify-center gap-2 text-sm md:text-base">
                         <Calendar className="h-3.5 md:h-4 w-3.5 md:w-4" />
                         <span className="hidden sm:inline">{format(currentDate, "EEEE, d 'de' MMMM", { locale: ptBR })}</span>
@@ -239,10 +239,12 @@ const CalendarDayView = memo(({
                             const widthPercent = stackCount > 1 ? (100 / stackCount) - 2 : 100;
                             const leftOffset = stackCount > 1 ? (stackIndex * (100 / stackCount)) + 1 : 0;
 
-                            // Calcular altura baseada na duração (cada slot = 64px, cada slot = 30min)
+                            // Calcular altura baseada na duração (cada slot = 80px desktop, 64px mobile, cada slot = 30min)
                             const duration = apt.duration || 60;
-                            const heightInPixels = (duration / 30) * 64;
-                            const top = slotIndex * 64;
+                            const heightMobile = (duration / 30) * 64;
+                            const heightDesktop = (duration / 30) * 80;
+                            const topMobile = slotIndex * 64;
+                            const topDesktop = slotIndex * 80;
                             const isDraggable = !!onAppointmentReschedule;
 
                             return (
@@ -258,16 +260,27 @@ const CalendarDayView = memo(({
                                         "hover:z-20"
                                     )}
                                     style={{
-                                        top: `${top}px`,
-                                        height: `${heightInPixels}px`,
+                                        top: `${topMobile}px`,
+                                        height: `${heightMobile}px`,
                                         // Posicionamento dinâmico para appointments empilhados
                                         left: stackCount > 1 ? `${leftOffset}%` : '4px',
                                         right: stackCount > 1 ? 'auto' : '4px',
                                         width: stackCount > 1 ? `${widthPercent}%` : 'calc(100% - 8px)',
                                         zIndex: stackCount > 1 ? 10 + stackIndex : 1,
-                                    }}
+                                        ['--top-desktop' as string]: `${topDesktop}px`,
+                                        ['--height-desktop' as string]: `${heightDesktop}px`,
+                                    } as React.CSSProperties}
                                     onPointerDownCapture={(e) => e.stopPropagation()}
                                 >
+                                    <style dangerouslySetInnerHTML={{
+                                        __html: `
+                  @media (min-width: 768px) {
+                    [style*="--top-desktop"][style*="--height-desktop"] {
+                      top: var(--top-desktop) !important;
+                      height: var(--height-desktop) !important;
+                    }
+                  }
+                `}} />
                                     <AppointmentQuickView
                                         appointment={apt}
                                         open={openPopoverId === apt.id}
