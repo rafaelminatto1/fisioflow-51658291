@@ -1,0 +1,170 @@
+import React, { memo, useState } from 'react';
+import { format, addDays, parseISO } from 'date-fns';
+import { Appointment, AppointmentStatus } from '@/types/appointment';
+import { STATUS_CONFIG } from '@/lib/config/agenda';
+import { cn } from '@/lib/utils';
+import { MoreVertical, GripVertical } from 'lucide-react';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { AppointmentQuickView } from './AppointmentQuickView';
+import { Badge } from '@/components/ui/badge';
+import { Clock } from 'lucide-react';
+
+interface CalendarAppointmentCardProps {
+    appointment: Appointment;
+    style: React.CSSProperties;
+    isDraggable: boolean;
+    isDragging: boolean;
+    onDragStart: (e: React.DragEvent, appointment: Appointment) => void;
+    onDragEnd: () => void;
+    onEditAppointment?: (appointment: Appointment) => void;
+    onDeleteAppointment?: (appointment: Appointment) => void;
+    onOpenPopover: (id: string | null) => void;
+    isPopoverOpen: boolean;
+}
+
+const normalizeTime = (time: string | null | undefined): string => {
+    if (!time || !time.trim()) return '00:00';
+    return time.substring(0, 5);
+};
+
+export const CalendarAppointmentCard = memo(({
+    appointment,
+    style,
+    isDraggable,
+    isDragging,
+    onDragStart,
+    onDragEnd,
+    onEditAppointment,
+    onDeleteAppointment,
+    onOpenPopover,
+    isPopoverOpen
+}: CalendarAppointmentCardProps) => {
+    const [isHovered, setIsHovered] = useState(false);
+
+    const config = STATUS_CONFIG[appointment.status as AppointmentStatus] || STATUS_CONFIG.agendado;
+    const StatusIcon = config.icon;
+    const isSmall = (appointment.duration || 60) <= 30;
+
+    const handleMouseEnter = () => setIsHovered(true);
+    const handleMouseLeave = () => setIsHovered(false);
+
+    const cardContent = (
+        <div
+            draggable={isDraggable}
+            onDragStart={(e) => onDragStart(e, appointment)}
+            onDragEnd={onDragEnd}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            className={cn(
+                "absolute rounded-md flex flex-col border-l-[3px] transition-all shadow-sm cursor-pointer overflow-hidden group hover:shadow-md",
+                config.twBg,
+                config.twBorder,
+                "dark:bg-slate-800 dark:border-l-[3px]",
+                isDraggable && "cursor-grab active:cursor-grabbing",
+                isDragging && "opacity-50 scale-95 z-50 ring-2 ring-blue-400",
+                !isDragging && isHovered && "z-30 ring-1 ring-black/5 dark:ring-white/10",
+                appointment.status === 'cancelado' && "opacity-80 grayscale-[0.5]"
+            )}
+            style={style}
+        >
+            <div className="p-1.5 flex flex-col h-full relative">
+                {/* Header Line (Time + Status) */}
+                <div className="flex items-center justify-between mb-0.5">
+                    <span className={cn(
+                        "text-[9px] font-bold uppercase tracking-wide leading-none",
+                        config.twText?.replace('text-', 'text-opacity-80 text-') || ""
+                    )}>
+                        {normalizeTime(appointment.time)} - {normalizeTime(addDays(parseISO(`2000-01-01T${appointment.time}`), 0).toISOString().split('T')[1]?.substring(0, 5))}
+                        {appointment.duration &&
+                            (() => {
+                                const [h, m] = (appointment.time || "00:00").split(':').map(Number);
+                                const end = new Date(); end.setHours(h, m + appointment.duration);
+                                return format(end, 'HH:mm');
+                            })()
+                        }
+                    </span>
+                    {StatusIcon && !isSmall && (
+                        <StatusIcon className={cn("w-3 h-3 opacity-70", config.twText)} />
+                    )}
+                </div>
+
+                {/* Patient Name */}
+                <div className="flex items-start gap-1">
+                    <span className={cn(
+                        "text-[11px] font-bold truncate leading-tight",
+                        "text-slate-800 dark:text-slate-100",
+                        appointment.status === 'cancelado' && "line-through decoration-red-500/50"
+                    )}>
+                        {appointment.patientName || 'Paciente'}
+                    </span>
+                </div>
+
+                {/* Type/Treatment */}
+                {!isSmall && (
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5 leading-tight">
+                        {appointment.type || 'Consulta'}
+                    </span>
+                )}
+
+                {/* Actions / Drag Handle Popup */}
+                {isHovered && isDraggable && !isDragging && (
+                    <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity delay-75">
+                        <div className="bg-white/80 dark:bg-black/50 rounded p-0.5 hover:bg-white dark:hover:bg-black shadow-sm"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onEditAppointment?.(appointment);
+                            }}
+                        >
+                            <MoreVertical className="w-3 h-3 text-slate-500" />
+                        </div>
+                    </div>
+                )}
+
+                {/* Drag Handle (Visible on hover) */}
+                {isHovered && isDraggable && (
+                    <div className="absolute bottom-1 right-1 opacity-20 group-hover:opacity-100 cursor-grab">
+                        <GripVertical className="w-3 h-3 text-slate-400" />
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+
+    return (
+        <Tooltip>
+            {/* 
+               IMPORTANT: Tooltip requires a single child. AppointmentQuickView gives that,
+               wrapping the cardContent.
+            */}
+            <AppointmentQuickView
+                appointment={appointment}
+                open={isPopoverOpen}
+                onOpenChange={(open) => onOpenPopover(open ? appointment.id : null)}
+                onEdit={onEditAppointment ? () => onEditAppointment(appointment) : undefined}
+                onDelete={onDeleteAppointment ? () => onDeleteAppointment(appointment) : undefined}
+            >
+                <TooltipTrigger asChild>
+                    {cardContent}
+                </TooltipTrigger>
+            </AppointmentQuickView>
+
+            <TooltipContent side="right" className="p-0 overflow-hidden border-none shadow-xl">
+                <div className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800 w-56">
+                    <div className={cn("w-full h-1.5 rounded-full mb-2", config.twBg?.replace('bg-', 'bg-').replace('50', '500') || "")} />
+                    <p className="font-bold text-slate-800 dark:text-slate-100 text-sm mb-0.5">{appointment.patientName}</p>
+                    <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
+                        <Clock className="w-3 h-3" />
+                        {appointment.time} - {appointment.duration}min
+                    </div>
+                    <div className="flex gap-2">
+                        <Badge variant="outline" className={cn("text-[10px] uppercase", config.twText, config.twBg, config.twBorder)}>
+                            {appointment.status}
+                        </Badge>
+                    </div>
+                </div>
+            </TooltipContent>
+        </Tooltip>
+    );
+});
+
+CalendarAppointmentCard.displayName = 'CalendarAppointmentCard';

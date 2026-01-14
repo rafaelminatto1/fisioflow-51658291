@@ -20,11 +20,12 @@
  */
 
 import React, { useEffect, useState, useCallback, createContext } from 'react';
-import * as Statsig from 'statsig-react';
 import {
   StatsigService,
   FeatureFlagName,
   DynamicConfigName,
+  StatsigOptions,
+  StatsigUser
 } from './statsig';
 
 // ============================================================================
@@ -63,40 +64,18 @@ export function FeatureFlagProvider({
   // Debug log to verify key (masked)
   useEffect(() => {
     if (statsigKey) {
-      console.log('[Statsig] Initializing with key:', `${statsigKey.substring(0, 10)}...`);
+      console.log('[Statsig] Key present (Statsig removed in this build)');
     } else {
       console.warn('[Statsig] No key found');
     }
   }, [statsigKey]);
 
-  // DISABLED: Statsig is disabled to prevent "ne is not a function" errors
-  // The statsig-react v2 SDK has compatibility issues
-  // Feature flags will use default values defined in statsig.ts
-  // To re-enable, uncomment the StatsigProvider block below
-  
-  // Check if we have a valid Statsig key (must start with "client-")
-  const isValidKey = statsigKey && statsigKey.startsWith('client-') && statsigKey.length > 10;
-  
-  if (isValidKey) {
-    console.info('[Statsig] Valid key found but Statsig is disabled. Using default values.');
-  }
-
-  // Always render without StatsigProvider to avoid SDK errors
+  // Always render without StatsigProvider
   return (
     <FeatureFlagContext.Provider value={{ isInitialized: false, userId }}>
       {children}
     </FeatureFlagContext.Provider>
   );
-
-  /* DISABLED - Re-enable when statsig-react compatibility is fixed
-  return (
-    <FeatureFlagContext.Provider value={{ isInitialized: true, userId }}>
-      <Statsig.StatsigProvider sdkKey={statsigKey} user={user || { userID: 'anonymous' }}>
-        {children}
-      </Statsig.StatsigProvider>
-    </FeatureFlagContext.Provider>
-  );
-  */
 }
 
 // ============================================================================
@@ -105,25 +84,10 @@ export function FeatureFlagProvider({
 
 /**
  * Hook to check if a feature flag is enabled
- *
- * @param flagName - The name of the feature flag to check
- * @param options - Optional Statsig options
- * @returns Object with enabled status and metadata
- *
- * @example
- * ```tsx
- * function Dashboard() {
- *   const { enabled, isLoading, metadata } = useFeatureFlag('new_dashboard');
- *
- *   if (isLoading) return <LoadingSpinner />;
- *   if (!enabled) return <OldDashboard />;
- *   return <NewDashboard />;
- * }
- * ```
  */
 export function useFeatureFlag(
   flagName: FeatureFlagName,
-  _options?: Statsig.StatsigOptions
+  _options?: StatsigOptions
 ): {
   enabled: boolean;
   isLoading: boolean;
@@ -137,16 +101,10 @@ export function useFeatureFlag(
     enabled: StatsigService.isFeatureEnabled(flagName),
   }));
 
-  const [isLoading, setIsLoading] = useState(!StatsigService.isInitialized());
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!StatsigService.isInitialized()) {
-      setIsLoading(false);
-      return;
-    }
-
-    // Initial check - just get the value, no subscription needed
-    // statsig-react v2 doesn't have subscribeToGateChanges
+    // Initial check - just get the value
     const checkGate = () => {
       const metadata = StatsigService.getFeatureFlagMetadata(flagName);
       setData({
@@ -157,7 +115,6 @@ export function useFeatureFlag(
     };
 
     checkGate();
-    // No subscription in statsig-react v2 - values are reactive via provider
   }, [flagName]);
 
   return {
@@ -169,28 +126,6 @@ export function useFeatureFlag(
 
 /**
  * Hook to check multiple feature flags at once
- *
- * @param flagNames - Array of feature flag names to check
- * @returns Object with all flag values
- *
- * @example
- * ```tsx
- * function Settings() {
- *   const flags = useMultipleFeatureFlags([
- *     'whatsapp_notifications',
- *     'email_reminders',
- *     'ai_chatbot'
- *   ]);
- *
- *   return (
- *     <div>
- *       <Toggle checked={flags.whatsapp_notifications} />
- *       <Toggle checked={flags.email_reminders} />
- *       <Toggle checked={flags.ai_chatbot} />
- *     </div>
- *   );
- * }
- * ```
  */
 export function useMultipleFeatureFlags(
   flagNames: FeatureFlagName[]
@@ -198,21 +133,15 @@ export function useMultipleFeatureFlags(
   const [flags, setFlags] = useState<Record<FeatureFlagName, boolean>>(() =>
     StatsigService.getMultipleFeatureFlags(flagNames)
   );
-  const [isLoading, setIsLoading] = useState(!StatsigService.isInitialized());
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!StatsigService.isInitialized()) {
-      setIsLoading(false);
-      return;
-    }
-
     const checkFlags = () => {
       setFlags(StatsigService.getMultipleFeatureFlags(flagNames));
       setIsLoading(false);
     };
 
     checkFlags();
-    // No subscription in statsig-react v2 - values are reactive via provider
   }, [flagNames]);
 
   return {
@@ -227,23 +156,6 @@ export function useMultipleFeatureFlags(
 
 /**
  * Hook to get dynamic configuration
- *
- * @param configName - The name of the dynamic config
- * @returns Object with config value and loading state
- *
- * @example
- * ```tsx
- * function AppointmentForm() {
- *   const { config: settings } = useDynamicConfig('appointment_settings');
- *
- *   return (
- *     <form>
- *       <Duration defaultValue={settings?.defaultDuration} />
- *       <BufferTime defaultValue={settings?.bufferTime} />
- *     </form>
- *   );
- * }
- * ```
  */
 export function useDynamicConfig<T = unknown>(
   configName: DynamicConfigName
@@ -255,21 +167,15 @@ export function useDynamicConfig<T = unknown>(
   const [config, setConfig] = useState<T | null>(() =>
     StatsigService.getDynamicConfig<T>(configName)
   );
-  const [isLoading, setIsLoading] = useState(!StatsigService.isInitialized());
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!StatsigService.isInitialized()) {
-      setIsLoading(false);
-      return;
-    }
-
     const checkConfig = () => {
       setConfig(StatsigService.getDynamicConfig<T>(configName));
       setIsLoading(false);
     };
 
     checkConfig();
-    // No subscription in statsig-react v2 - values are reactive via provider
   }, [configName]);
 
   return { config, isLoading, error: null };
@@ -277,20 +183,6 @@ export function useDynamicConfig<T = unknown>(
 
 /**
  * Hook to get a specific value from a dynamic config
- *
- * @param configName - The name of the dynamic config
- * @param key - The key to get from the config
- * @param defaultValue - Default value if key not found
- * @returns The config value or default
- *
- * @example
- * ```tsx
- * function AIChat() {
- *   const model = useConfigValue('ai_models_config', 'chat', 'gemini-2.0-flash-exp');
- *
- *   return <AIModelPicker selected={model} />;
- * }
- * ```
  */
 export function useConfigValue<T = unknown>(
   configName: DynamicConfigName,
@@ -308,20 +200,6 @@ export function useConfigValue<T = unknown>(
 
 /**
  * Hook to get experiment variant
- *
- * @param experimentName - The name of the experiment
- * @returns Object with variant value and loading state
- *
- * @example
- * ```tsx
- * function DashboardLayout() {
- *   const { variant, name } = useExperiment('dashboard_layout_ab_test');
- *
- *   if (name === 'A') return <ClassicLayout />;
- *   if (name === 'B') return <NewLayout />;
- *   return <DefaultLayout />;
- * }
- * ```
  */
 export function useExperiment<T = string>(
   experimentName: string
@@ -338,14 +216,9 @@ export function useExperiment<T = string>(
       name: result?.name ?? '',
     };
   });
-  const [isLoading, setIsLoading] = useState(!StatsigService.isInitialized());
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!StatsigService.isInitialized()) {
-      setIsLoading(false);
-      return;
-    }
-
     const checkExperiment = () => {
       const result = StatsigService.getExperiment<T>(experimentName);
       setData({
@@ -356,7 +229,6 @@ export function useExperiment<T = string>(
     };
 
     checkExperiment();
-    // No subscription in statsig-react v2 - values are reactive via provider
   }, [experimentName]);
 
   const logExposure = useCallback(() => {
@@ -376,21 +248,6 @@ export function useExperiment<T = string>(
 
 /**
  * Hook for logging analytics events
- *
- * @returns Object with logEvent function
- *
- * @example
- * ```tsx
- * function AppointmentButton() {
- *   const { logEvent } = useAnalytics();
- *
- *   const handleClick = () => {
- *     logEvent('appointment_button_clicked', undefined, { location: 'dashboard' });
- *   };
- *
- *   return <button onClick={handleClick}>Book Appointment</button>;
- * }
- * ```
  */
 export function useAnalytics(): {
   logEvent: (
@@ -469,11 +326,6 @@ export function useSystemStatus() {
 
 /**
  * Higher-order component to conditionally render based on feature flag
- *
- * @example
- * ```tsx
- * const NewDashboard = withFeatureFlag('new_dashboard')(DashboardComponent);
- * ```
  */
 export function withFeatureFlag<P extends object>(
   flagName: FeatureFlagName,
@@ -498,16 +350,6 @@ export function withFeatureFlag<P extends object>(
 
 /**
  * Component for conditional rendering based on feature flag
- *
- * @example
- * ```tsx
- * <FeatureFlag flag="new_dashboard">
- *   <NewDashboard />
- * </FeatureFlag>
- * <FeatureFlag flag="new_dashboard" invert>
- *   <OldDashboard />
- * </FeatureFlag>
- * ```
  */
 export function FeatureFlag({
   flag,
