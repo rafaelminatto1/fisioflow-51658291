@@ -13,7 +13,9 @@
  * @see https://www.statsig.com/docs
  */
 
-import * as Statsig from 'statsig-react';
+import * as React from 'react';
+import Statsig, { StatsigUser, StatsigOptions } from 'statsig-js';
+import * as StatsigReact from 'statsig-react';
 
 // ============================================================================
 // TYPES
@@ -59,7 +61,7 @@ export interface FeatureFlagConfig {
   rules?: Array<{
     id: string;
     name: string;
-    conditions: Statsig.Condition[];
+    conditions: Record<string, any>[];
     return_value: boolean;
   }>;
 }
@@ -118,8 +120,10 @@ export async function initStatsig(
  */
 export function shutdownStatsig(): void {
   if (isInitialized) {
-    Statsig.shutdown();
-    isInitialized = false;
+    if (isInitialized) {
+      // Statsig.shutdown(); // Not available in all react sdk versions directly or handled by provider
+      isInitialized = false;
+    }
   }
 }
 
@@ -141,7 +145,7 @@ export function isFeatureEnabled(
   }
 
   try {
-    return Statsig.checkGate(flagName, user, options);
+    return Statsig.checkGate(flagName, user);
   } catch (error) {
     console.error(`Error checking gate ${flagName}:`, error);
     return getDefaultFlagValue(flagName);
@@ -154,7 +158,7 @@ export function isFeatureEnabled(
 export function getFeatureFlagMetadata(
   flagName: FeatureFlagName,
   user?: Statsig.StatsigUser
-): { enabled: boolean; metadata?: Statsig.GateEvaluation } {
+): { enabled: boolean; metadata?: Record<string, any> } {
   if (!isInitialized) {
     return {
       enabled: getDefaultFlagValue(flagName),
@@ -463,7 +467,7 @@ export function createFeatureFlagHook(flagName: FeatureFlagName) {
 
       // Listen for gate updates
       const checkGate = () => {
-        setEnabled(Statsig.checkGate(flagName, user, options));
+        setEnabled(Statsig.checkGate(flagName, user));
       };
 
       // Initial check
@@ -564,4 +568,4 @@ export const StatsigService = {
 
 // Re-export Statsig React utilities for convenience
 export { Statsig };
-export type { StatsigUser, StatsigOptions } from 'statsig-react';
+export type { StatsigUser, StatsigOptions };
