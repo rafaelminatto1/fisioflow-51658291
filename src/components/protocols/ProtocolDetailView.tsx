@@ -437,6 +437,42 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                 )}
             </Card>
 
+            {/* References */}
+            {protocol.references && protocol.references.length > 0 && (
+                <Card className="p-6">
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <BookOpen className="h-5 w-5 text-blue-500" />
+                        Referências Bibliográficas
+                    </h3>
+                    <div className="space-y-4">
+                        {protocol.references.map((ref, i) => (
+                            <div key={i} className="flex flex-col gap-1 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                {ref.url ? (
+                                    <a
+                                        href={ref.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="font-medium text-slate-900 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 hover:underline flex items-center gap-1"
+                                    >
+                                        {ref.title}
+                                        <Share2 className="h-3 w-3 opacity-50" />
+                                    </a>
+                                ) : (
+                                    <span className="font-medium text-slate-900 dark:text-slate-100">
+                                        {ref.title}
+                                    </span>
+                                )}
+                                <div className="text-sm text-slate-500 dark:text-slate-400 flex flex-wrap gap-x-2">
+                                    <span className="font-medium text-slate-700 dark:text-slate-300">{ref.authors}</span>
+                                    {ref.journal && <span className="italic text-slate-600 dark:text-slate-400">• {ref.journal}</span>}
+                                    <span className="text-slate-400">({ref.year})</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </Card>
+            )}
+
             {/* Contraindications & Expected Outcomes */}
             {details && (
                 <div className="grid md:grid-cols-2 gap-6">
