@@ -1,12 +1,58 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Pose, Results } from '@mediapipe/pose';
 import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils';
-import { POSE_CONNECTIONS } from '@mediapipe/pose';
 import { calculateAngle, POSE_LANDMARKS } from '@/utils/geometry';
 import { useToast } from '@/components/ui/use-toast';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, Camera, Upload } from 'lucide-react';
+
+// Type definitions for @mediapipe/pose (UMD module)
+interface PoseOptions {
+    locateFile?: (file: string) => string;
+}
+
+interface PoseConfig {
+    modelComplexity?: number;
+    smoothLandmarks?: boolean;
+    enableSegmentation?: boolean;
+    smoothSegmentation?: boolean;
+    minDetectionConfidence?: number;
+    minTrackingConfidence?: number;
+}
+
+interface PoseLandmark {
+    x: number;
+    y: number;
+    z?: number;
+    visibility?: number;
+}
+
+interface Results {
+    poseLandmarks?: PoseLandmark[];
+    poseWorldLandmarks?: PoseLandmark[];
+    image: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement;
+}
+
+interface PoseInstance {
+    setOptions(options: PoseConfig): void;
+    onResults(callback: (results: Results) => void): void;
+    send(input: { image: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement }): Promise<void>;
+    initialize(): Promise<void>;
+    close(): void;
+}
+
+interface PoseConstructor {
+    new(options: PoseOptions): PoseInstance;
+}
+
+// POSE_CONNECTIONS needs to be defined locally since it may not export properly
+const POSE_CONNECTIONS: [number, number][] = [
+    [0, 1], [1, 2], [2, 3], [3, 7], [0, 4], [4, 5], [5, 6], [6, 8],
+    [9, 10], [11, 12], [11, 13], [13, 15], [15, 17], [15, 19], [15, 21],
+    [17, 19], [12, 14], [14, 16], [16, 18], [16, 20], [16, 22], [18, 20],
+    [11, 23], [12, 24], [23, 24], [23, 25], [24, 26], [25, 27], [26, 28],
+    [27, 29], [28, 30], [29, 31], [30, 32], [27, 31], [28, 32]
+];
 
 interface PoseAnalyzerProps {
     videoSrc?: string; // URL object or null for webcam
@@ -16,7 +62,7 @@ interface PoseAnalyzerProps {
 const PoseAnalyzer: React.FC<PoseAnalyzerProps> = ({ videoSrc, onAnalysisUpdate: _onAnalysisUpdate }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const poseRef = useRef<Pose | null>(null);
+    const poseRef = useRef<PoseInstance | null>(null);
     const requestRef = useRef<number>();
     const [isProcessing, setIsProcessing] = useState(false);
     const [cameraActive, setCameraActive] = useState(false);
@@ -88,29 +134,40 @@ const PoseAnalyzer: React.FC<PoseAnalyzerProps> = ({ videoSrc, onAnalysisUpdate:
     useEffect(() => {
         // Capture ref for cleanup
         const videoElement = videoRef.current;
+        let poseInstance: PoseInstance | null = null;
 
-        // 1. Initialize Pose
-        const pose = new Pose({
-            locateFile: (file) => {
-                return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
-            },
-        });
+        // Async IIFE to handle dynamic import
+        (async () => {
+            // Dynamically import the @mediapipe/pose module
+            const mediapipePose = await import('@mediapipe/pose');
+            const PoseClass = mediapipePose.Pose as unknown as PoseConstructor;
 
-        pose.setOptions({
-            modelComplexity: 2,
-            smoothLandmarks: true,
-            enableSegmentation: false,
-            smoothSegmentation: false,
-            minDetectionConfidence: 0.5,
-            minTrackingConfidence: 0.5,
-        });
+            // 1. Initialize Pose
+            const pose = new PoseClass({
+                locateFile: (file) => {
+                    return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+                },
+            });
 
-        pose.onResults(onResults);
-        poseRef.current = pose;
+            pose.setOptions({
+                modelComplexity: 2,
+                smoothLandmarks: true,
+                enableSegmentation: false,
+                smoothSegmentation: false,
+                minDetectionConfidence: 0.5,
+                minTrackingConfidence: 0.5,
+            });
+
+            pose.onResults(onResults);
+            poseRef.current = pose;
+            poseInstance = pose;
+        })();
 
         return () => {
             cancelAnimationFrame(requestRef.current!);
-            pose.close();
+            if (poseInstance) {
+                poseInstance.close();
+            }
 
             // Use captured ref
             if (videoElement && videoElement.srcObject) {
@@ -118,7 +175,7 @@ const PoseAnalyzer: React.FC<PoseAnalyzerProps> = ({ videoSrc, onAnalysisUpdate:
                 tracks.forEach(track => track.stop());
             }
         };
-    }, [onResults]);  
+    }, [onResults]);
 
     // 2. Handle Video Source Changes
     useEffect(() => {

@@ -578,11 +578,34 @@ export function useUpdateAppointment() {
 
       logger.debug('Enviando atualização para Supabase', { appointmentId, updateData, organizationId }, 'useAppointments');
 
-      const { data: updatedAppointment, error } = await supabase
+      // Primeiro fazer o update sem select (evitar erro 400 com JOIN)
+      const { error: updateError } = await supabase
         .from('appointments')
         .update(updateData)
         .eq('id', appointmentId)
-        .eq('organization_id', organizationId) // Garantir que só atualiza da própria organização
+        .eq('organization_id', organizationId);
+
+      if (updateError) {
+        logger.error('Erro ao atualizar agendamento no Supabase', updateError, 'useAppointments');
+
+        // Melhorar mensagens de erro
+        if (updateError.message?.includes('violates row-level security')) {
+          throw new Error('Você não tem permissão para atualizar este agendamento.');
+        }
+        if (updateError.code === 'PGRST116') {
+          throw new Error('Agendamento não encontrado ou você não tem permissão para acessá-lo.');
+        }
+        // Tratamento para erro 400 data inválida
+        if (updateError.code === '22007' || updateError.code === '22008' || updateError.message?.includes('invalid input syntax')) {
+          throw new Error('Dados inválidos ao atualizar agendamento. Verifique data e hora.');
+        }
+
+        throw updateError;
+      }
+
+      // Agora buscar os dados atualizados com JOIN
+      const { data: updatedAppointment, error: selectError } = await supabase
+        .from('appointments')
         .select(`
           *,
           patients!inner(
@@ -592,24 +615,12 @@ export function useUpdateAppointment() {
             email
           )
         `)
+        .eq('id', appointmentId)
         .single();
 
-      if (error) {
-        logger.error('Erro ao atualizar agendamento no Supabase', error, 'useAppointments');
-
-        // Melhorar mensagens de erro
-        if (error.message?.includes('violates row-level security')) {
-          throw new Error('Você não tem permissão para atualizar este agendamento.');
-        }
-        if (error.code === 'PGRST116') {
-          throw new Error('Agendamento não encontrado ou você não tem permissão para acessá-lo.');
-        }
-        // Tratamento para erro 400 data inválida
-        if (error.code === '22007' || error.code === '22008' || error.message?.includes('invalid input syntax')) {
-          throw new Error('Dados inválidos ao atualizar agendamento. Verifique data e hora.');
-        }
-
-        throw error;
+      if (selectError) {
+        logger.error('Erro ao buscar agendamento atualizado', selectError, 'useAppointments');
+        throw new Error('Erro ao buscar dados atualizados do agendamento.');
       }
 
       // Verificar se o agendamento foi encontrado
