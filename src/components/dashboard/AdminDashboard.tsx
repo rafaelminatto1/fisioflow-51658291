@@ -17,8 +17,8 @@ import { useQuery } from '@tanstack/react-query';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, TooltipProps } from 'recharts';
 
-// Custom Tooltip Component for Charts
-const CustomChartTooltip = ({ active, payload, label }: TooltipProps<any, any>) => {
+// Custom Tooltip Component for Charts - memoized for performance
+const CustomChartTooltip = React.memo(({ active, payload, label }: TooltipProps<any, any>) => {
   if (active && payload && payload.length) {
     return (
       <div className="rounded-lg border border-border bg-card p-3 shadow-md">
@@ -41,16 +41,18 @@ const CustomChartTooltip = ({ active, payload, label }: TooltipProps<any, any>) 
     );
   }
   return null;
-};
+});
 
-// Animated Card Wrapper for staggered animations
+CustomChartTooltip.displayName = 'CustomChartTooltip';
+
+// Animated Card Wrapper for staggered animations - memoized for performance
 interface AnimatedCardProps {
   children: React.ReactNode;
   delay?: number;
   className?: string;
 }
 
-const AnimatedCard = ({ children, delay = 0, className = '' }: AnimatedCardProps) => (
+const AnimatedCard = React.memo(({ children, delay = 0, className = '' }: AnimatedCardProps) => (
   <div
     className={`animate-fade-in-up ${className}`}
     style={{
@@ -60,7 +62,9 @@ const AnimatedCard = ({ children, delay = 0, className = '' }: AnimatedCardProps
   >
     {children}
   </div>
-);
+));
+
+AnimatedCard.displayName = 'AnimatedCard';
 
 interface AdminDashboardProps {
   period?: string;
@@ -250,19 +254,32 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
               <CardHeader className="pb-3 px-4 sm:px-5 lg:px-6 pt-4 sm:pt-5 lg:pt-6">
                 <CardTitle className="flex items-center justify-between text-sm sm:text-base font-medium">
                   <span className="text-muted-foreground">Taxa de No-Show</span>
-                  <UserX className={`h-4 w-4 sm:h-5 sm:w-5 ${(metrics?.taxaNoShow || 0) > 10 ? 'text-destructive' : 'text-success'}`} />
+                  {metricsLoading ? (
+                    <div className="h-4 w-4 sm:h-5 sm:w-5 bg-muted animate-pulse rounded" />
+                  ) : (
+                    <UserX className={`h-4 w-4 sm:h-5 sm:w-5 ${(metrics?.taxaNoShow || 0) > 10 ? 'text-destructive' : 'text-success'}`} />
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-4 sm:px-5 lg:px-6 pb-4 sm:pb-5 lg:pb-6">
-                <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
-                  <p className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight" aria-live="polite">{metrics?.taxaNoShow || 0}%</p>
-                  <Badge variant="outline" className="text-xs sm:text-sm font-medium">
-                    meta: 0%
-                  </Badge>
-                </div>
-                <CardDescription className="mt-2 text-xs">
-                  {(metrics?.taxaNoShow || 0) > 10 ? 'Acima da meta recomendada' : 'Dentro da meta ideal'}
-                </CardDescription>
+                {metricsLoading ? (
+                  <div className="space-y-2">
+                    <div className="h-8 w-16 bg-muted animate-pulse rounded" />
+                    <div className="h-3 w-24 bg-muted animate-pulse rounded" />
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
+                      <p className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight" aria-live="polite">{metrics?.taxaNoShow || 0}%</p>
+                      <Badge variant="outline" className="text-xs sm:text-sm font-medium">
+                        meta: 0%
+                      </Badge>
+                    </div>
+                    <CardDescription className="mt-2 text-xs">
+                      {(metrics?.taxaNoShow || 0) > 10 ? 'Acima da meta recomendada' : 'Dentro da meta ideal'}
+                    </CardDescription>
+                  </>
+                )}
               </CardContent>
             </Card>
           </AnimatedCard>
@@ -272,14 +289,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
               <CardHeader className="pb-3 px-4 sm:px-5 lg:px-6 pt-4 sm:pt-5 lg:pt-6">
                 <CardTitle className="flex items-center justify-between text-sm sm:text-base font-medium">
                   <span className="text-muted-foreground">Pacientes Ativos</span>
-                  <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                  {metricsLoading ? (
+                    <div className="h-4 w-4 sm:h-5 sm:w-5 bg-muted animate-pulse rounded" />
+                  ) : (
+                    <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-4 sm:px-5 lg:px-6 pb-4 sm:pb-5 lg:pb-6">
-                <p className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight" aria-live="polite">{metrics?.pacientesAtivos || 0}</p>
-                <CardDescription className="mt-2 text-xs">
-                  Com atendimentos nos últimos 30 dias
-                </CardDescription>
+                {metricsLoading ? (
+                  <div className="space-y-2">
+                    <div className="h-8 w-12 bg-muted animate-pulse rounded" />
+                    <div className="h-3 w-32 bg-muted animate-pulse rounded" />
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight" aria-live="polite">{metrics?.pacientesAtivos || 0}</p>
+                    <CardDescription className="mt-2 text-xs">
+                      Com atendimentos nos últimos 30 dias
+                    </CardDescription>
+                  </>
+                )}
               </CardContent>
             </Card>
           </AnimatedCard>
@@ -289,14 +319,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
               <CardHeader className="pb-3 px-4 sm:px-5 lg:px-6 pt-4 sm:pt-5 lg:pt-6">
                 <CardTitle className="flex items-center justify-between text-sm sm:text-base font-medium">
                   <span className="text-muted-foreground">Agendamentos Semanais</span>
-                  <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
+                  {metricsLoading ? (
+                    <div className="h-4 w-4 sm:h-5 sm:w-5 bg-muted animate-pulse rounded" />
+                  ) : (
+                    <CalendarDays className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-4 sm:px-5 lg:px-6 pb-4 sm:pb-5 lg:pb-6">
-                <p className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight" aria-live="polite">{metrics?.agendamentosSemana || 0}</p>
-                <CardDescription className="mt-2 text-xs">
-                  Total de sessões agendadas esta semana
-                </CardDescription>
+                {metricsLoading ? (
+                  <div className="space-y-2">
+                    <div className="h-8 w-12 bg-muted animate-pulse rounded" />
+                    <div className="h-3 w-36 bg-muted animate-pulse rounded" />
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight" aria-live="polite">{metrics?.agendamentosSemana || 0}</p>
+                    <CardDescription className="mt-2 text-xs">
+                      Total de sessões agendadas esta semana
+                    </CardDescription>
+                  </>
+                )}
               </CardContent>
             </Card>
           </AnimatedCard>
@@ -306,19 +349,32 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
               <CardHeader className="pb-3 px-4 sm:px-5 lg:px-6 pt-4 sm:pt-5 lg:pt-6">
                 <CardTitle className="flex items-center justify-between text-sm sm:text-base font-medium">
                   <span className="text-muted-foreground">Cancelamentos</span>
-                  <XCircle className={`h-4 w-4 sm:h-5 sm:w-5 ${(metrics?.cancelamentosSemana || 0) > 3 ? 'text-warning' : 'text-muted-foreground'}`} />
+                  {metricsLoading ? (
+                    <div className="h-4 w-4 sm:h-5 sm:w-5 bg-muted animate-pulse rounded" />
+                  ) : (
+                    <XCircle className={`h-4 w-4 sm:h-5 sm:w-5 ${(metrics?.cancelamentosSemana || 0) > 3 ? 'text-warning' : 'text-muted-foreground'}`} />
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-4 sm:px-5 lg:px-6 pb-4 sm:pb-5 lg:pb-6">
-                <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
-                  <p className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight" aria-live="polite">{metrics?.cancelamentosSemana || 0}</p>
-                  <Badge variant="secondary" className={`text-xs sm:text-sm font-medium ${(metrics?.cancelamentosSemana || 0) > 3 ? 'bg-warning/10 text-warning hover:bg-warning/20 border-warning/20' : ''}`}>
-                    esta semana
-                  </Badge>
-                </div>
-                <CardDescription className="mt-2 text-xs">
-                  {(metrics?.cancelamentosSemana || 0) > 3 ? 'Atenção: alto índice de cancelamentos' : 'Taxa de cancelamento normal'}
-                </CardDescription>
+                {metricsLoading ? (
+                  <div className="space-y-2">
+                    <div className="h-8 w-8 bg-muted animate-pulse rounded" />
+                    <div className="h-3 w-28 bg-muted animate-pulse rounded" />
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
+                      <p className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight" aria-live="polite">{metrics?.cancelamentosSemana || 0}</p>
+                      <Badge variant="secondary" className={`text-xs sm:text-sm font-medium ${(metrics?.cancelamentosSemana || 0) > 3 ? 'bg-warning/10 text-warning hover:bg-warning/20 border-warning/20' : ''}`}>
+                        esta semana
+                      </Badge>
+                    </div>
+                    <CardDescription className="mt-2 text-xs">
+                      {(metrics?.cancelamentosSemana || 0) > 3 ? 'Atenção: alto índice de cancelamentos' : 'Taxa de cancelamento normal'}
+                    </CardDescription>
+                  </>
+                )}
               </CardContent>
             </Card>
           </AnimatedCard>
@@ -342,28 +398,42 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
               <CardContent className="px-4 sm:px-5 lg:px-6 pb-4 sm:pb-5 lg:pb-6">
                 {metricsLoading ? (
                   <LoadingSkeleton type="card" rows={1} />
+                ) : !metrics?.tendenciaSemanal || metrics.tendenciaSemanal.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+                    <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-muted flex items-center justify-center">
+                      <TrendingUp className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-base font-semibold text-foreground mb-2">
+                      Sem dados para exibir
+                    </h3>
+                    <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                      Os dados de tendência aparecerão aqui após os primeiros agendamentos da semana
+                    </p>
+                  </div>
                 ) : (
-                  <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={metrics?.tendenciaSemanal || []}>
+                  <ResponsiveContainer width="100%" height={180} className="xs:height-[200px]">
+                    <BarChart data={metrics.tendenciaSemanal} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
                       <XAxis
                         dataKey="dia"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                        interval={0}
                       />
                       <YAxis
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                        width={28}
                       />
                       <Tooltip content={<CustomChartTooltip />} cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }} />
-                      <Bar dataKey="agendamentos" name="Agendamentos" radius={[6, 6, 0, 0]}>
-                        {(metrics?.tendenciaSemanal || []).map((_, index) => (
+                      <Bar dataKey="agendamentos" name="Agendamentos" radius={[4, 4, 0, 0]}>
+                        {metrics.tendenciaSemanal.map((_, index) => (
                           <Cell key={index} fill="hsl(var(--primary))" opacity={0.7} />
                         ))}
                       </Bar>
-                      <Bar dataKey="concluidos" name="Concluídos" radius={[6, 6, 0, 0]}>
-                        {(metrics?.tendenciaSemanal || []).map((_, index) => (
+                      <Bar dataKey="concluidos" name="Concluídos" radius={[4, 4, 0, 0]}>
+                        {metrics.tendenciaSemanal.map((_, index) => (
                           <Cell key={index} fill="hsl(var(--success))" />
                         ))}
                       </Bar>
@@ -396,9 +466,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
                     <h3 className="text-base font-semibold text-foreground mb-2">
                       Nenhum atendimento registrado
                     </h3>
-                    <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                    <p className="text-sm text-muted-foreground mb-5 max-w-sm mx-auto">
                       Os dados de desempenho aparecerão aqui após os primeiros atendimentos do mês
                     </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-xl font-medium"
+                      onClick={() => navigate('/agenda')}
+                    >
+                      <Calendar className="mr-2 h-4 w-4" />
+                      Criar Agendamento
+                    </Button>
                   </div>
                 ) : (
                   <div className="space-y-4">
