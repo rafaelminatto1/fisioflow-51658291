@@ -71,7 +71,19 @@ export function useDashboardWidgets() {
 
       const saved = localStorage.getItem(`dashboard-widgets-${user.id}`);
       if (saved) {
-        setWidgets(JSON.parse(saved));
+        try {
+          const parsed = JSON.parse(saved);
+          // Validar estrutura dos widgets
+          if (Array.isArray(parsed) && parsed.every(w =>
+            w.id && w.type && w.title && typeof w.position === 'number'
+          )) {
+            setWidgets(parsed);
+          } else {
+            console.warn('Invalid widget structure, using defaults');
+          }
+        } catch (parseError) {
+          console.error('Failed to parse widgets, using defaults', parseError);
+        }
       }
     } catch (error) {
       console.error('Error loading widgets:', error);
