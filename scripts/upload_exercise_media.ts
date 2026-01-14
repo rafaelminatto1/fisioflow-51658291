@@ -28,7 +28,17 @@ const images = [
     { id: '63058119-f79a-4aaf-ac42-0fb342d1df3e', file: 'glute_strengthening_exercise_1768417582810.png' },
     { id: '5fd7f81f-bb4a-47e6-bcce-c95b7fd0103b', file: 'glute_strengthening_exercise_1768417582810.png' }, // Duplicate name ID
     { id: 'de6f57be-c016-49c3-8a74-cfddfef25563', file: 'shoulder_mobility_exercise_1768417597271.png' },
-    { id: 'b8780f14-2037-4cb9-b0d5-d92222b1e296', file: 'shoulder_mobility_exercise_1768417597271.png' }  // Duplicate name ID
+    { id: 'b8780f14-2037-4cb9-b0d5-d92222b1e296', file: 'shoulder_mobility_exercise_1768417597271.png' }, // Duplicate name ID
+    // Phase 2 Images
+    { id: '124c3df3-bba5-431a-87f5-c14f77fcb4b3', file: 'deadlift_exercise_1768428556929.png', name: 'Levantamento Terra' },
+    { id: '9e3aa6fb-1b3c-4acd-bc32-f5adc1ad0602', file: 'deadlift_exercise_1768428556929.png', name: 'Levantamento Terra' },
+    { id: '137960fc-89dd-4b2d-b972-2fe7a014e4cb', file: 'spine_mobility_exercise_1768428571231.png', name: 'Mobilidade de Coluna' },
+    { id: 'e505e16a-bb39-41c8-8c4d-7dcda1fa572c', file: 'spine_mobility_exercise_1768428571231.png', name: 'Mobilidade de Coluna' },
+    { id: '1b8da9f8-7f2b-4bf0-88b3-4c42f73343e0', file: 'free_squat_exercise_1768428598080.png', name: 'Agachamento Livre' },
+    { id: 'ce0f4293-94cb-4f30-9bb0-f323ba8c1f28', file: 'free_squat_exercise_1768428598080.png', name: 'Agachamento Livre' },
+    { id: '9fc590c6-49c7-47da-a1fa-b454fdbd43f4', file: 'free_squat_exercise_1768428598080.png', name: 'Agachamento Livre' },
+    { id: 'c59164bc-13a1-41af-89c0-a4d13efc489e', file: 'lunge_exercise_1768428610424.png', name: 'Afundo Frontal (Lunge)' },
+    { id: '9ddf66b7-69ca-47db-b004-0b9c7cf47382', file: 'lunge_exercise_1768428610424.png', name: 'Afundo' }
 ];
 
 async function upload() {
