@@ -111,24 +111,7 @@ const PatientEvolution = () => {
   // Command Palette hook - handles Ctrl+K globally
   const { CommandPaletteComponent } = useCommandPalette();
 
-  // Validação inicial do appointmentId
-  if (!appointmentId) {
-    return (
-      <MainLayout>
-        <div className="flex items-center justify-center h-[50vh]">
-          <div className="text-center space-y-4">
-            <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
-            <p className="text-lg font-semibold">ID do agendamento não fornecido</p>
-            <p className="text-muted-foreground">Não foi possível identificar qual atendimento deve ser iniciado.</p>
-            <Button onClick={() => navigate('/schedule')} variant="outline">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Voltar para Agenda
-            </Button>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
+
 
   const [currentSoapRecordId, setCurrentSoapRecordId] = useState<string | undefined>();
   const [sessionStartTime] = useState(new Date());
@@ -512,6 +495,25 @@ const PatientEvolution = () => {
     }
   );
 
+  // Validação inicial do appointmentId
+  if (!appointmentId) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center h-[50vh]">
+          <div className="text-center space-y-4">
+            <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <p className="text-lg font-semibold">ID do agendamento não fornecido</p>
+            <p className="text-muted-foreground">Não foi possível identificar qual atendimento deve ser iniciado.</p>
+            <Button onClick={() => navigate('/schedule')} variant="outline">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Voltar para Agenda
+            </Button>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
   if (dataLoading) {
     return (
       <MainLayout>
@@ -526,14 +528,14 @@ const PatientEvolution = () => {
   }
 
   // Verificar se é um problema de permissão
-  const isPermissionError = appointmentError?.message?.includes('permission') || 
-                            appointmentError?.message?.includes('RLS') ||
-                            appointmentError?.message?.includes('row-level security') ||
-                            patientError?.message?.includes('permission') ||
-                            patientError?.message?.includes('RLS') ||
-                            patientError?.message?.includes('row-level security') ||
-                            (!appointment && !appointmentError && !dataLoading) ||
-                            (!patient && !patientError && !dataLoading && appointment);
+  const isPermissionError = appointmentError?.message?.includes('permission') ||
+    appointmentError?.message?.includes('RLS') ||
+    appointmentError?.message?.includes('row-level security') ||
+    patientError?.message?.includes('permission') ||
+    patientError?.message?.includes('RLS') ||
+    patientError?.message?.includes('row-level security') ||
+    (!appointment && !appointmentError && !dataLoading) ||
+    (!patient && !patientError && !dataLoading && appointment);
 
   if (!appointment || !patient) {
     return (
@@ -541,12 +543,12 @@ const PatientEvolution = () => {
         <div className="flex items-center justify-center h-[50vh]">
           <div className="text-center space-y-4 max-w-md">
             <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
-            
+
             {isPermissionError ? (
               <>
                 <p className="text-lg font-semibold">Acesso não autorizado</p>
                 <p className="text-muted-foreground">
-                  Você não tem permissão para acessar este agendamento. 
+                  Você não tem permissão para acessar este agendamento.
                   Entre em contato com o administrador do sistema para solicitar acesso.
                 </p>
                 <Alert className="mt-4 text-left">
@@ -564,7 +566,7 @@ const PatientEvolution = () => {
               <>
                 <p className="text-lg font-semibold">Agendamento não encontrado</p>
                 <p className="text-muted-foreground">
-                  Não foi possível carregar os dados do agendamento. 
+                  Não foi possível carregar os dados do agendamento.
                   O agendamento pode ter sido removido ou não existe mais.
                 </p>
               </>
@@ -1000,36 +1002,36 @@ const PatientEvolution = () => {
                             const completedToday = todayMeasurements.some(m => m.measurement_name === req.measurement_name);
                             return !completedToday;
                           }).length > 0 && (
-                            <Card className="border-destructive/30 shadow-sm">
-                              <CardHeader className="bg-destructive/5 py-2 px-3">
-                                <CardTitle className="flex items-center gap-2 text-destructive text-sm">
-                                  <AlertTriangle className="h-3.5 w-3.5" />
-                                  Medições Obrigatórias Pendentes
-                                </CardTitle>
-                              </CardHeader>
-                              <CardContent className="space-y-2 pt-3 px-3 pb-3">
-                                {requiredMeasurements
-                                  .filter(req => {
-                                    const completedToday = todayMeasurements.some(m => m.measurement_name === req.measurement_name);
-                                    return !completedToday;
-                                  })
-                                  .map((req) => (
-                                    <Alert
-                                      key={req.id}
-                                      variant={req.alert_level === 'high' ? 'destructive' : 'default'}
-                                      className="py-2"
-                                    >
-                                      <AlertTriangle className="h-3.5 w-3.5" />
-                                      <AlertTitle className="text-xs font-semibold">{req.measurement_name}</AlertTitle>
-                                      <AlertDescription className="text-[10px]">
-                                        {req.instructions}
-                                        {req.measurement_unit && ` (${req.measurement_unit})`}
-                                      </AlertDescription>
-                                    </Alert>
-                                  ))}
-                              </CardContent>
-                            </Card>
-                          )}
+                              <Card className="border-destructive/30 shadow-sm">
+                                <CardHeader className="bg-destructive/5 py-2 px-3">
+                                  <CardTitle className="flex items-center gap-2 text-destructive text-sm">
+                                    <AlertTriangle className="h-3.5 w-3.5" />
+                                    Medições Obrigatórias Pendentes
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-2 pt-3 px-3 pb-3">
+                                  {requiredMeasurements
+                                    .filter(req => {
+                                      const completedToday = todayMeasurements.some(m => m.measurement_name === req.measurement_name);
+                                      return !completedToday;
+                                    })
+                                    .map((req) => (
+                                      <Alert
+                                        key={req.id}
+                                        variant={req.alert_level === 'high' ? 'destructive' : 'default'}
+                                        className="py-2"
+                                      >
+                                        <AlertTriangle className="h-3.5 w-3.5" />
+                                        <AlertTitle className="text-xs font-semibold">{req.measurement_name}</AlertTitle>
+                                        <AlertDescription className="text-[10px]">
+                                          {req.instructions}
+                                          {req.measurement_unit && ` (${req.measurement_unit})`}
+                                        </AlertDescription>
+                                      </Alert>
+                                    ))}
+                                </CardContent>
+                              </Card>
+                            )}
 
                           <MeasurementForm
                             patientId={patientId}
@@ -1152,13 +1154,12 @@ const PatientEvolution = () => {
                           {goals.slice(0, 3).map(goal => (
                             <div
                               key={goal.id}
-                              className={`p-2 rounded-lg border text-[10px] ${
-                                goal.status === 'concluido'
-                                  ? 'bg-green-500/5 border-green-500/20'
-                                  : goal.status === 'em_andamento'
-                                    ? 'bg-blue-500/5 border-blue-500/20'
-                                    : 'bg-muted/30 border-border/50'
-                              }`}
+                              className={`p-2 rounded-lg border text-[10px] ${goal.status === 'concluido'
+                                ? 'bg-green-500/5 border-green-500/20'
+                                : goal.status === 'em_andamento'
+                                  ? 'bg-blue-500/5 border-blue-500/20'
+                                  : 'bg-muted/30 border-border/50'
+                                }`}
                             >
                               <div className="flex items-center justify-between">
                                 <span className="font-medium truncate flex-1">{goal.goal_title}</span>

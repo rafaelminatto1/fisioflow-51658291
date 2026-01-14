@@ -628,7 +628,7 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
 export default MedicalChatbot;
 
 // Componente de botão flutuante para abrir o chatbot
-/* eslint-disable-next-line react-refresh/only-export-components */
+ 
 export const ChatbotFloatingButton: React.FC<{
   onClick: () => void;
   hasUnreadMessages?: boolean;

@@ -54,7 +54,6 @@ export function FeatureFlagProvider({
   sdkKey?: string;
   user?: { userID?: string; email?: string;[key: string]: unknown };
 }) {
-  const [isInitialized, setIsInitialized] = useState(false);
   const [userId] = useState(user?.userID || null);
 
   // Get the SDK key from props or environment
@@ -63,36 +62,9 @@ export function FeatureFlagProvider({
   // Check if we have a valid Statsig key (must start with "client-")
   const isValidKey = statsigKey && statsigKey.startsWith('client-') && statsigKey.length > 10;
 
-  useEffect(() => {
-    // Skip initialization if no valid key is provided
-    if (!isValidKey) {
-      console.warn('Statsig: No valid client SDK key provided. Feature flags will use default values. Get your key at https://statsig.com/');
-      setIsInitialized(false);
-      return;
-    }
-
-    let mounted = true;
-
-    StatsigService.init(statsigKey, user)
-      .then((success) => {
-        if (mounted) {
-          setIsInitialized(success);
-        }
-      })
-      .catch((error) => {
-        console.error('Failed to initialize Statsig:', error);
-        if (mounted) {
-          setIsInitialized(false);
-        }
-      });
-
-    return () => {
-      mounted = false;
-    };
-  }, [statsigKey, user, isValidKey]);
-
   // If no valid key, just render children without StatsigProvider
   if (!isValidKey) {
+    console.warn('Statsig: No valid client SDK key provided. Feature flags will use default values. Get your key at https://statsig.com/');
     return (
       <FeatureFlagContext.Provider value={{ isInitialized: false, userId }}>
         {children}
@@ -101,7 +73,7 @@ export function FeatureFlagProvider({
   }
 
   return (
-    <FeatureFlagContext.Provider value={{ isInitialized, userId }}>
+    <FeatureFlagContext.Provider value={{ isInitialized: true, userId }}>
       <Statsig.StatsigProvider sdkKey={statsigKey} user={user || { userID: 'anonymous' }}>
         {children}
       </Statsig.StatsigProvider>

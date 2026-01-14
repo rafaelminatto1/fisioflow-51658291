@@ -38,7 +38,7 @@ export function useVideoIntegration(config?: VideoIntegrationConfig) {
 
   useEffect(() => {
     // Verificar se a API do provedor está disponível
-    if (provider === 'whereby' {
+    if (provider === 'whereby') {
       const wherebyEmbed = (window as any).WherebyEmbed;
       if (!wherebyEmbed && !config?.roomUrl) {
         setError('Whereby não está configurado');

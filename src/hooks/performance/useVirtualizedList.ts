@@ -84,7 +84,17 @@ export function useVirtualizedList<T>({
   /**
    * Handler de scroll com throttle para performance
    */
-    setScrollTop(e.currentTarget.scrollTop);
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleScroll = (e: Event) => {
+      const target = e.target as HTMLDivElement;
+      setScrollTop(target.scrollTop);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
   }, []);
 
   /**

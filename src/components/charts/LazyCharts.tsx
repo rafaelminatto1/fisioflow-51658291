@@ -102,7 +102,7 @@ export function preloadCharts() {
 }
 
 // Re-exportar tudo do recharts para compatibilidade
-/* eslint-disable react-refresh/only-export-components */
+ 
 export {
   LineChart,
   BarChart,
@@ -131,4 +131,4 @@ export type {
   PieChartProps,
   RadarChartProps,
 } from 'recharts';
-/* eslint-enable react-refresh/only-export-components */
+ 

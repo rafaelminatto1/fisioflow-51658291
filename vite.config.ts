@@ -73,6 +73,8 @@ export default defineConfig(({ mode }) => {
       }),
       VitePWA({
         registerType: 'autoUpdate',
+        // Disable PWA in development to avoid manifest errors
+        disable: !isProduction,
         // Versão dinâmica baseada no commit SHA ou timestamp para forçar atualização
         includeAssets: ['icons/*.svg', 'icons/*.png', 'favicon.ico'],
         manifest: {
@@ -100,8 +102,8 @@ export default defineConfig(({ mode }) => {
             }
           ],
           categories: ['health', 'medical', 'productivity'],
-          // Versão dinâmica do manifest - força atualização do PWA
-          version: appVersion,
+          // Use a simple version format for PWA manifest
+          version: '1.0.0',
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff2}'],

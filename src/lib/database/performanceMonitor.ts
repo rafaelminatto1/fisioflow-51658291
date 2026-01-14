@@ -202,10 +202,16 @@ export async function getTableIndexes(tableName: string): Promise<IndexInfo[]> {
  * Generate a comprehensive performance report
  */
 export async function generatePerformanceReport(): Promise<PerformanceReport> {
-  const [slowQueries, tableSizes] = await Promise.all([
-    getSlowQueries(),
-    getTableSizes()
-  ]);
+  // Try to get slow queries, but don't fail if migration is not applied
+  let slowQueries: SlowQuery[] = [];
+  try {
+    slowQueries = await getSlowQueries();
+  } catch {
+    // Migration not applied, continue with empty slow queries
+    logger.warn('Slow queries migration not applied, skipping slow queries analysis', {}, 'PerformanceMonitor');
+  }
+
+  const tableSizes = await getTableSizes();
 
   const recommendations: string[] = [];
   const missingIndexes: string[] = [];

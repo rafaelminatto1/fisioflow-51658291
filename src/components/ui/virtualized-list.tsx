@@ -198,13 +198,8 @@ export function VirtualizedList<T>({
   // Handler de scroll otimizado com RAF-based throttle
   const throttledSetScrollTop = useScrollThrottle(setScrollTop, 16); // ~60fps
 
-  // Debounce para onEndReached evitar chamadas múltiplas
-  const debouncedOnEndReached = useMemo(
-    () => onEndReached
-      ? useDebounce(onEndReached, 300)
-      : undefined,
-    [onEndReached]
-  );
+  const noop = useCallback(() => { }, []);
+  const debouncedOnEndReached = useDebounce(onEndReached || noop, 300);
 
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const currentScrollTop = e.currentTarget.scrollTop;
@@ -217,7 +212,9 @@ export function VirtualizedList<T>({
       const scrollHeight = e.currentTarget.scrollHeight;
       const clientHeight = e.currentTarget.clientHeight;
       if (scrollHeight - currentScrollTop - clientHeight < onEndReachedThreshold) {
-        debouncedOnEndReached?.();
+        if (onEndReached) {
+          debouncedOnEndReached();
+        }
       }
     }
   }, [throttledSetScrollTop, onEndReached, isLoading, onEndReachedThreshold, debouncedOnEndReached]);

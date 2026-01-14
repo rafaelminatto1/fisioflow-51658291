@@ -261,6 +261,6 @@ export const useEvolutionShortcuts = (
   return null;
 };
 
-/* eslint-disable react-refresh/only-export-components */
+ 
 export type { EvolutionKeyboardShortcutsProps, ShortcutItemProps };
-/* eslint-enable react-refresh/only-export-components */
+ 

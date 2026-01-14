@@ -18,7 +18,7 @@ interface UpdateState {
   isUpdating: boolean;
 }
 
-let updateCallback: ((accept: boolean) => void) | null = null;
+
 
 export function useServiceWorkerUpdate() {
   const [state, setState] = useState<UpdateState>({
@@ -29,8 +29,8 @@ export function useServiceWorkerUpdate() {
   useEffect(() => {
     // Apenas executar em produção com SW suportado
     if (typeof window === 'undefined' ||
-        !('serviceWorker' in navigator) ||
-        import.meta.env.DEV) {
+      !('serviceWorker' in navigator) ||
+      import.meta.env.DEV) {
       return;
     }
 

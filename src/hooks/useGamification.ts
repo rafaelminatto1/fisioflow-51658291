@@ -9,7 +9,7 @@ type XPTransaction = Database['public']['Tables']['xp_transactions']['Row'];
 type Achievement = Database['public']['Tables']['achievements']['Row'];
 type UnlockedAchievement = Database['public']['Tables']['achievements_log']['Row'];
 
-export interface GamificationProfile extends PatientGamification { }
+export type GamificationProfile = PatientGamification;
 
 export interface DailyQuestItem {
   id: string;
@@ -250,7 +250,7 @@ export const useGamification = (patientId: string) => {
     mutationFn: async ({ questId }: { questId: string }) => {
       const today = new Date().toISOString().split('T')[0];
 
-      // 1. Get or Create Daily Quest Record
+      // eslint-disable-next-line prefer-const
       let { data: record, error } = await supabase
         .from('daily_quests')
         .select('*')

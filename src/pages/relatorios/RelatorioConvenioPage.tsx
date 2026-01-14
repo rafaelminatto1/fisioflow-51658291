@@ -178,7 +178,8 @@ interface RelatorioConvenioData {
   data_emissao: string;
 }
 
-interface RelatorioConvenioPageProps {}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+interface RelatorioConvenioPageProps { }
 
 // Componente PDF do Relatório
 function RelatorioConvenioPDF({ data }: { data: RelatorioConvenioData }) {
@@ -318,8 +319,8 @@ function RelatorioConvenioPDF({ data }: { data: RelatorioConvenioData }) {
                 </Text>
                 <Text style={styles.tableCell}>
                   {atendimento.tipo === 'avaliacao' ? 'Avaliação' :
-                   atendimento.tipo === 'evolucao' ? 'Evolução' :
-                   atendimento.tipo === 'alta' ? 'Alta' : 'Retorno'}
+                    atendimento.tipo === 'evolucao' ? 'Evolução' :
+                      atendimento.tipo === 'alta' ? 'Alta' : 'Retorno'}
                 </Text>
                 <Text style={styles.tableCell}>
                   {atendimento.procedimentos.join(', ')}
@@ -1004,7 +1005,7 @@ export default function RelatorioConvenioPage() {
                             <Eye className="h-4 w-4 mr-1" />
                             Visualizar
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => setEditingRelatorio(relatorio); setIsEditorOpen(true)}>
+                          <Button variant="ghost" size="sm" onClick={() => { setEditingRelatorio(relatorio); setIsEditorOpen(true); }}>
                             <Edit className="h-4 w-4 mr-1" />
                             Editar
                           </Button>
@@ -1152,7 +1153,7 @@ export default function RelatorioConvenioPage() {
                   </pre>
                 </div>
                 <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setEditingRelatorio(previewRelatorio); setPreviewRelatorio(null); setIsEditorOpen(true);}}>
+                  <Button variant="outline" onClick={() => { setEditingRelatorio(previewRelatorio); setPreviewRelatorio(null); setIsEditorOpen(true); }}>
                     <Edit className="h-4 w-4 mr-2" />
                     Editar
                   </Button>
