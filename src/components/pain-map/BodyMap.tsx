@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { PainType } from '@/types/painMap';
 import { MuscleSelectorModal } from './MuscleSelectorModal';
@@ -128,6 +128,40 @@ export function BodyMap({
   const [selectedPoint, setSelectedPoint] = useState<string | null>(null);
   const [muscleModalOpen, setMuscleModalOpen] = useState(false);
   const [pendingRegion, setPendingRegion] = useState<{ code: string; name: string; x: number; y: number } | null>(null);
+  const [focusedRegionIndex, setFocusedRegionIndex] = useState<number>(-1);
+
+  // Keyboard navigation for regions
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (readOnly || !onPointAdd) return;
+
+      if (e.key === 'Escape') {
+        setSelectedPoint(null);
+        setFocusedRegionIndex(-1);
+        return;
+      }
+
+      if (focusedRegionIndex >= 0) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          const region = regions[focusedRegionIndex];
+          if (region) {
+            setPendingRegion({ code: region.code, name: region.name, x: region.x, y: region.y });
+            setMuscleModalOpen(true);
+          }
+        } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          setFocusedRegionIndex((prev) => (prev + 1) % regions.length);
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          setFocusedRegionIndex((prev) => (prev - 1 + regions.length) % regions.length);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [focusedRegionIndex, regions, readOnly, onPointAdd]);
 
   const regions = BODY_REGIONS[view];
 
@@ -206,10 +240,22 @@ export function BodyMap({
     setPendingRegion(null);
   }, [pendingRegion, onPointAdd, selectedIntensity, selectedPainType]);
 
+  // Generate aria-label for a pain point
+  const getPointAriaLabel = useCallback((point: PainPoint): string => {
+    const labels = [
+      `${point.region}`,
+      point.muscleName && `Músculo: ${point.muscleName}`,
+      `Intensidade: ${point.intensity} de 10`,
+      `Tipo: ${point.painType}`,
+      point.notes && `Observações: ${point.notes}`,
+    ].filter(Boolean);
+    return labels.join('. ');
+  }, []);
+
   return (
-    <div className={cn('relative', className)}>
+    <div className={cn('relative', className)} role="application" aria-label={`Mapa de dor - Vista ${view === 'front' ? 'frontal' : 'posterior'}`}>
       {/* Legenda */}
-      <div className="absolute top-2 right-2 bg-background/90 backdrop-blur p-2 rounded-lg text-xs space-y-1 z-10">
+      <div className="absolute top-2 right-2 bg-background/90 backdrop-blur p-2 rounded-lg text-xs space-y-1 z-10" role="legend" aria-label="Legenda de intensidade de dor">
         <div className="font-medium mb-2">{view === 'front' ? 'Frente' : 'Costas'}</div>
         <div className="flex items-center gap-1">
           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#22c55e' }} />
@@ -239,6 +285,9 @@ export function BodyMap({
         viewBox="0 0 100 100"
         className="w-full h-full cursor-crosshair"
         onClick={handleMapClick}
+        role="img"
+        aria-label={`Corpo humano - Vista ${view === 'front' ? 'frontal' : 'posterior'}. ${points.length} pontos de dolor registrados.`}
+        tabIndex={readOnly ? -1 : 0}
       >
         {/* Silhueta do corpo */}
         <g fill="none" stroke="currentColor" strokeWidth="0.5" opacity="0.3">
