@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,25 +33,45 @@ export default function Exercises() {
   const [showNewModal, setShowNewModal] = useState(false);
   const [showVideoUpload, setShowVideoUpload] = useState(false);
 
-  const exercisesWithoutVideo = exercises.filter(ex => !ex.video_url);
-  const exercisesWithVideo = exercises.filter(ex => ex.video_url);
-  const videoPercentage = exercises.length > 0 ? Math.round((exercisesWithVideo.length / exercises.length) * 100) : 0;
+  // Memoized computed values to prevent unnecessary recalculations
+  const exercisesWithoutVideo = useMemo(() =>
+    exercises.filter(ex => !ex.video_url),
+    [exercises]
+  );
 
-  // Get unique categories
-  const categories = Array.from(new Set(exercises.map(e => e.category).filter(Boolean)));
-  const topCategories = categories.slice(0, 3); // Show fewer categories on mobile
+  const exercisesWithVideo = useMemo(() =>
+    exercises.filter(ex => ex.video_url),
+    [exercises]
+  );
 
-  const handleEditExercise = (exercise: Exercise) => {
+  const videoPercentage = useMemo(() =>
+    exercises.length > 0 ? Math.round((exercisesWithVideo.length / exercises.length) * 100) : 0,
+    [exercises.length, exercisesWithVideo.length]
+  );
+
+  // Get unique categories - memoized
+  const categories = useMemo(() =>
+    Array.from(new Set(exercises.map(e => e.category).filter(Boolean))),
+    [exercises]
+  );
+
+  const topCategories = useMemo(() =>
+    categories.slice(0, 3),
+    [categories]
+  );
+
+  // Memoized callbacks to prevent unnecessary re-renders
+  const handleEditExercise = useCallback((exercise: Exercise) => {
     setEditingExercise(exercise);
     setShowNewModal(true);
-  };
+  }, []);
 
-  const handleNewExercise = () => {
+  const handleNewExercise = useCallback(() => {
     setEditingExercise(null);
     setShowNewModal(true);
-  };
+  }, []);
 
-  const handleSubmit = (data: Omit<Exercise, 'id' | 'created_at' | 'updated_at'>) => {
+  const handleSubmit = useCallback((data: Omit<Exercise, 'id' | 'created_at' | 'updated_at'>) => {
     if (editingExercise) {
       updateExercise({ id: editingExercise.id, ...data });
     } else {
@@ -59,7 +79,24 @@ export default function Exercises() {
     }
     setShowNewModal(false);
     setEditingExercise(null);
-  };
+  }, [editingExercise, updateExercise, createExercise]);
+
+  const handleModalOpenChange = useCallback((open: boolean) => {
+    setShowNewModal(open);
+    if (!open) setEditingExercise(null);
+  }, []);
+
+  const handleVideoUploadOpenChange = useCallback((open: boolean) => {
+    setShowVideoUpload(open);
+  }, []);
+
+  const handleTabChange = useCallback((v: string) => {
+    setActiveTab(v as 'library' | 'videos' | 'templates' | 'protocols');
+  }, []);
+
+  const handleUploadClick = useCallback(() => {
+    setShowVideoUpload(true);
+  }, []);
 
   const isLoading = loadingExercises || loadingProtocols || loadingTemplates;
 
@@ -115,7 +152,7 @@ export default function Exercises() {
                 <span>Novo Exercício</span>
               </Button>
               <Button
-                onClick={() => setShowVideoUpload(true)}
+                onClick={handleUploadClick}
                 variant="outline"
                 size="default"
                 className="flex-1 sm:flex-auto gap-2 touch-target"
@@ -227,7 +264,7 @@ export default function Exercises() {
                 variant="outline"
                 size="sm"
                 className="border-orange-500/30 text-orange-700 hover:bg-orange-500/10 flex-shrink-0 touch-target h-8 sm:h-9"
-                onClick={() => setActiveTab('library')}
+                onClick={() => handleTabChange('library')}
               >
                 Ver
               </Button>
@@ -237,7 +274,7 @@ export default function Exercises() {
 
         {/* Main Content Tabs - Mobile Optimized */}
         <Card className="overflow-hidden">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'library' | 'videos' | 'templates' | 'protocols')}>
+          <Tabs value={activeTab} onValueChange={handleTabChange}>
             <div className="border-b bg-muted/30">
               <TabsList className="w-full justify-start rounded-none border-0 bg-transparent h-12 sm:h-14 p-0">
                 <TabsTrigger
@@ -285,7 +322,7 @@ export default function Exercises() {
             </TabsContent>
 
             <TabsContent value="videos" className="m-0 p-3 sm:p-4 md:p-6">
-              <ExerciseVideoLibrary onUploadClick={() => setShowVideoUpload(true)} />
+              <ExerciseVideoLibrary onUploadClick={handleUploadClick} />
             </TabsContent>
 
             <TabsContent value="templates" className="m-0 p-3 sm:p-4 md:p-6">
@@ -301,10 +338,7 @@ export default function Exercises() {
 
       <NewExerciseModal
         open={showNewModal}
-        onOpenChange={(open) => {
-          setShowNewModal(open);
-          if (!open) setEditingExercise(null);
-        }}
+        onOpenChange={handleModalOpenChange}
         onSubmit={handleSubmit}
         exercise={editingExercise || undefined}
         isLoading={isCreating || isUpdating}
@@ -312,7 +346,7 @@ export default function Exercises() {
 
       <ExerciseVideoUpload
         open={showVideoUpload}
-        onOpenChange={setShowVideoUpload}
+        onOpenChange={handleVideoUploadOpenChange}
         onSuccess={() => {
           // Invalidate queries to refresh video list
         }}
