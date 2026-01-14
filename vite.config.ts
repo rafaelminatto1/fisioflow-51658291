@@ -356,7 +356,7 @@ export default defineConfig(({ mode }) => {
       // Report de tamanho dos chunks
       reportCompressedSize: false,
       // Soucemaps em produção para debugging
-      sourcemap: isProduction ? false : true,
+      sourcemap: true,
     },
     optimizeDeps: {
       // Evita re-otimizações contínuas que causam erro 504
