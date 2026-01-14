@@ -7,6 +7,7 @@ import type { PainMapPoint, PainIntensity, PainType, BodyRegion, PainEvolutionDa
 import { PainMapService } from '@/lib/services/painMapService';
 import { BodyMapRealistic } from '@/components/pain-map/BodyMapRealistic';
 import { PainPoint } from '@/components/pain-map/BodyMap';
+import { Badge } from '@/components/ui/badge';
 
 interface PainMapCanvasProps {
   painPoints: PainMapPoint[];
