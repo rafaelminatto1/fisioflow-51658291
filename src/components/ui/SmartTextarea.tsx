@@ -18,7 +18,7 @@ export const SmartTextarea = React.forwardRef<HTMLTextAreaElement, SmartTextarea
             if (typeof ref === 'function') {
                 ref(element);
             } else if (ref) {
-                // @ts-ignore
+                // @ts-expect-error - ref type mismatch with internalRef
                 ref.current = element;
             }
         }, [ref]);
