@@ -125,7 +125,8 @@
       "Bash(npm why:*)",
       "Bash(pnpm ls:*)",
       "mcp__playwright__browser_close",
-      "mcp__playwright__browser_fill_form"
+      "mcp__playwright__browser_fill_form",
+      "Bash(pnpm dlx shadcn:*)"
     ],
     "deny": [],
     "ask": []
