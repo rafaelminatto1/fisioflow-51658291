@@ -1,7 +1,7 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, Users, Calendar, DollarSign, Activity } from "lucide-react";
+import { BarChart3, Users, Calendar, DollarSign, Activity, LayoutDashboard } from "lucide-react";
 import { AppointmentAnalytics } from "@/components/analytics/AppointmentAnalytics";
 import { PatientAnalytics } from "@/components/analytics/PatientAnalytics";
 import { FinancialAnalytics } from "@/components/analytics/FinancialAnalytics";
@@ -13,16 +13,20 @@ export default function AdvancedAnalytics() {
   const { summary, isLoading } = useAnalyticsSummary();
 
   return (
-    <MainLayout>
-      <div className="container max-w-7xl py-8 space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <BarChart3 className="h-8 w-8 text-primary" />
-            Analytics Avançado
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Análises detalhadas e insights preditivos para otimizar sua clínica
-          </p>
+    <MainLayout fullWidth>
+      <div className="px-6 py-8 space-y-8 animate-fade-in">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <BarChart3 className="h-8 w-8 text-primary" />
+              </div>
+              Advanced Analytics & IA
+            </h1>
+            <p className="text-muted-foreground mt-2 max-w-2xl">
+              Insights inteligentes e previsões baseadas em inteligência artificial para otimizar o desempenho da sua clínica e antecipar tendências.
+            </p>
+          </div>
         </div>
 
         {/* Cards de Resumo */}

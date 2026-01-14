@@ -22,6 +22,7 @@ export interface ExerciseProtocol {
   milestones: ProtocolMilestone[] | Record<string, unknown>;
   restrictions: ProtocolRestriction[] | Record<string, unknown>;
   progression_criteria: Record<string, unknown>[] | Record<string, unknown>;
+  clinical_tests?: string[]; // Array of clinical_test_template IDs
   organization_id?: string;
   created_by?: string;
   created_at?: string;
