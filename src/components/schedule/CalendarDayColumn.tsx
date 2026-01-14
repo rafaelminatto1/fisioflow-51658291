@@ -147,18 +147,18 @@ export const DayColumn = memo(({
                     ? "today"
                     : ""
             )}>
-                <div className="font-extrabold uppercase tracking-wider text-[10px] sm:text-xs opacity-90">
+                <div className="font-extrabold uppercase tracking-wider text-[11px] sm:text-xs lg:text-sm opacity-90">
                     {format(day, 'EEE', { locale: ptBR })}
                 </div>
                 <div className={cn(
-                    "text-lg sm:text-2xl font-black mt-0.5 sm:mt-1 relative inline-flex items-center justify-center",
+                    "text-xl sm:text-2xl lg:text-3xl font-black mt-1 sm:mt-1.5 relative inline-flex items-center justify-center leading-none",
                     isTodayDate && "drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]"
                 )}>
                     {format(day, 'd')}
                     {isTodayDate && (
                         <>
                             <span className="sr-only"> (Hoje)</span>
-                            <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-white rounded-full animate-pulse" aria-hidden="true" />
+                            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full animate-pulse shadow-lg" aria-hidden="true" />
                         </>
                     )}
                 </div>
@@ -273,13 +273,13 @@ export const DayColumn = memo(({
                         const widthPercent = stackCount > 1 ? (100 / stackCount) - 2 : 100;
                         const leftPercent = stackCount > 1 ? (stackIndex * (100 / stackCount)) + 1 : 0;
 
-                        // Altura e posição baseada na duração: 48px/slot mobile, 64px/slot desktop (cada slot = 30min)
+                        // Altura e posição baseada na duração: 64px/slot mobile, 80px/slot desktop (cada slot = 30min)
                         const duration = apt.duration || 60;
                         const slots = duration / 30;
-                        const heightMobile = slots * 48; // h-12 = 48px
-                        const heightDesktop = slots * 64; // sm:h-16 = 64px
-                        const topMobile = slotIndex >= 0 ? slotIndex * 48 : 0;
-                        const topDesktop = slotIndex >= 0 ? slotIndex * 64 : 0;
+                        const heightMobile = slots * 64; // h-16 = 64px
+                        const heightDesktop = slots * 80; // sm:h-20 = 80px
+                        const topMobile = slotIndex >= 0 ? slotIndex * 64 : 0;
+                        const topDesktop = slotIndex >= 0 ? slotIndex * 80 : 0;
 
                         return (
                             // Wrapper de posicionamento

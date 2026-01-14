@@ -19,7 +19,7 @@
  * ```
  */
 
-import { useEffect, useState, useCallback, createContext } from 'react';
+import React, { useEffect, useState, useCallback, createContext } from 'react';
 import * as Statsig from 'statsig-react';
 import {
   StatsigService,
@@ -57,10 +57,23 @@ export function FeatureFlagProvider({
   const [isInitialized, setIsInitialized] = useState(false);
   const [userId] = useState(user?.userID || null);
 
+  // Get the SDK key from props or environment
+  const statsigKey = sdkKey || import.meta.env.VITE_STATSIG_CLIENT_KEY || import.meta.env.NEXT_PUBLIC_STATSIG_CLIENT_KEY;
+
+  // Check if we have a valid Statsig key (must start with "client-")
+  const isValidKey = statsigKey && statsigKey.startsWith('client-') && statsigKey.length > 10;
+
   useEffect(() => {
+    // Skip initialization if no valid key is provided
+    if (!isValidKey) {
+      console.warn('Statsig: No valid client SDK key provided. Feature flags will use default values. Get your key at https://statsig.com/');
+      setIsInitialized(false);
+      return;
+    }
+
     let mounted = true;
 
-    StatsigService.init(sdkKey, user)
+    StatsigService.init(statsigKey, user)
       .then((success) => {
         if (mounted) {
           setIsInitialized(success);
@@ -76,11 +89,20 @@ export function FeatureFlagProvider({
     return () => {
       mounted = false;
     };
-  }, [sdkKey, user]);
+  }, [statsigKey, user, isValidKey]);
+
+  // If no valid key, just render children without StatsigProvider
+  if (!isValidKey) {
+    return (
+      <FeatureFlagContext.Provider value={{ isInitialized: false, userId }}>
+        {children}
+      </FeatureFlagContext.Provider>
+    );
+  }
 
   return (
     <FeatureFlagContext.Provider value={{ isInitialized, userId }}>
-      <Statsig.StatsigProvider sdkKey={sdkKey || import.meta.env.VITE_STATSIG_CLIENT_KEY || import.meta.env.NEXT_PUBLIC_STATSIG_CLIENT_KEY || ''} user={user}>
+      <Statsig.StatsigProvider sdkKey={statsigKey} user={user || { userID: 'anonymous' }}>
         {children}
       </Statsig.StatsigProvider>
     </FeatureFlagContext.Provider>
