@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { logger } from '@/lib/errors/logger';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -50,28 +50,33 @@ const Reports = () => {
   const { data: patients = [] } = usePatients();
   const { activeTransactions, stats: finStats } = useFinancial();
 
-  // Calculate real reports data
-  const reportsData = {
-    patients: {
-      total: patients?.length || 0,
-      newThisMonth: patients?.filter(p => new Date(p.created_at).getMonth() === new Date().getMonth()).length || 0,
-      active: patients?.filter(p => p.status === 'Em Tratamento').length || 0,
-      completed: patients?.filter(p => p.status === 'Alta').length || 0
-    },
-    appointments: {
-      total: data?.length || 0,
-      completed: data?.filter(a => a.status === 'concluido').length || 0,
-      cancelled: data?.filter(a => a.status === 'cancelado').length || 0,
-      noShow: data?.filter(a => a.status === 'falta').length || 0
-    },
-    financial: {
-      revenue: finStats?.totalRevenue || 0,
-      pending: finStats?.pendingPayments || 0,
-      growth: finStats?.monthlyGrowth || 0
-    }
-  };
+  // Memoized calculations to prevent unnecessary recomputations
+  const reportsData = useMemo(() => {
+    const currentMonth = new Date().getMonth();
 
-  const reportTemplates = [
+    return {
+      patients: {
+        total: patients?.length || 0,
+        newThisMonth: patients?.filter(p => new Date(p.created_at).getMonth() === currentMonth).length || 0,
+        active: patients?.filter(p => p.status === 'Em Tratamento').length || 0,
+        completed: patients?.filter(p => p.status === 'Alta').length || 0
+      },
+      appointments: {
+        total: data?.length || 0,
+        completed: data?.filter(a => a.status === 'concluido').length || 0,
+        cancelled: data?.filter(a => a.status === 'cancelado').length || 0,
+        noShow: data?.filter(a => a.status === 'falta').length || 0
+      },
+      financial: {
+        revenue: finStats?.totalRevenue || 0,
+        pending: finStats?.pendingPayments || 0,
+        growth: finStats?.monthlyGrowth || 0
+      }
+    };
+  }, [patients, data, finStats]);
+
+  // Memoized report templates
+  const reportTemplates = useMemo(() => [
     {
       id: 'patients-summary',
       name: 'Resumo de Pacientes',
@@ -107,9 +112,10 @@ const Reports = () => {
       icon: Activity,
       category: 'Geral'
     }
-  ];
+  ], []);
 
-  const recentReports = [
+  // Memoized recent reports (static data)
+  const recentReports = useMemo(() => [
     {
       id: 1,
       name: 'Relatório Mensal - Janeiro 2024',
@@ -131,7 +137,7 @@ const Reports = () => {
       generatedAt: new Date('2024-01-02'),
       status: 'Concluído'
     }
-  ];
+  ], []);
 
   const generateReport = useCallback((templateId: string) => {
     logger.info('Gerando relatório', { templateId }, 'Reports');
