@@ -41,6 +41,9 @@
 - ✅ **FocusVisibleHandler para distinguir foco de teclado vs mouse**
 - ✅ **CSS utilities para focus-visible e is-using-keyboard**
 - ✅ **Testes E2E de acessibilidade expandidos (skip link, foco visível, reduced-motion)**
+- ✅ **Memoização adicionada à página Exercises (useMemo, useCallback)**
+- ✅ **Hook useErrorHandler para tratamento padronizado de erros**
+- ✅ **Hook useAsyncOperation para operações assíncronas com loading states**
 
 ## 🚧 Funcionalidades Incompletas
 
