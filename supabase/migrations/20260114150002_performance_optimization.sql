@@ -36,9 +36,9 @@ CREATE INDEX IF NOT EXISTS idx_appointments_patient_status
 ON public.appointments(patient_id, status)
 WHERE status IN ('scheduled', 'confirmed', 'in_progress');
 
-CREATE INDEX IF NOT EXISTS idx_appointments_therapist_date
-ON public.appointments(therapist_id, start_time DESC)
-WHERE start_time >= now() - interval '30 days';
+-- CREATE INDEX IF NOT EXISTS idx_appointments_therapist_date
+-- ON public.appointments(therapist_id, start_time DESC)
+-- WHERE start_time::timestamptz >= now() - interval '30 days';
 
 -- Sessions optimization
 CREATE INDEX IF NOT EXISTS idx_sessions_patient_created
@@ -72,12 +72,12 @@ WHERE status = 'active';
 -- ============================================================================
 
 -- Dashboard metrics queries
-CREATE INDEX IF NOT EXISTS idx_appointments_dashboard_metrics
-ON public.appointments(
-    date_trunc('day', start_time),
-    status
-)
-WHERE start_time >= now() - interval '90 days';
+-- CREATE INDEX IF NOT EXISTS idx_appointments_dashboard_metrics
+-- ON public.appointments(
+--     date_trunc('day', start_time),
+--     status
+-- )
+-- WHERE start_time >= now() - interval '90 days';
 
 CREATE INDEX IF NOT EXISTS idx_sessions_dashboard_metrics
 ON public.sessions(
@@ -108,9 +108,9 @@ ON public.patients(status, created_at DESC)
 WHERE status = 'active';
 
 -- Appointments lookup
-CREATE INDEX IF NOT EXISTS idx_appointments_date_range_status
-ON public.appointments(start_time, end_time, status)
-WHERE start_time >= now() - interval '7 days';
+-- CREATE INDEX IF NOT EXISTS idx_appointments_date_range_status
+-- ON public.appointments(start_time, end_time, status)
+-- WHERE start_time >= now() - interval '7 days';
 
 -- Sessions with SOAP filtering
 CREATE INDEX IF NOT EXISTS idx_sessions_patient_status
@@ -127,10 +127,10 @@ ON public.patients(created_at DESC)
 WHERE created_at >= now() - interval '30 days';
 
 -- Active appointments
-CREATE INDEX IF NOT EXISTS idx_appointments_upcoming
-ON public.appointments(start_time, patient_id)
-WHERE start_time >= now()
-AND status IN ('scheduled', 'confirmed');
+-- CREATE INDEX IF NOT EXISTS idx_appointments_upcoming
+-- ON public.appointments(start_time, patient_id)
+-- WHERE start_time >= now()
+-- AND status IN ('scheduled', 'confirmed');
 
 -- Unread notifications
 CREATE INDEX IF NOT EXISTS idx_notifications_unread
@@ -207,9 +207,9 @@ $$;
 -- ============================================================================
 
 -- Appointments time series
-CREATE INDEX IF NOT EXISTS idx_appointments_start_time_brin
-ON public.appointments USING brin(start_time)
-WITH (pages_per_range = 32);
+-- CREATE INDEX IF NOT EXISTS idx_appointments_start_time_brin
+-- ON public.appointments USING brin(start_time)
+-- WITH (pages_per_range = 32);
 
 -- Sessions time series
 CREATE INDEX IF NOT EXISTS idx_sessions_created_at_brin

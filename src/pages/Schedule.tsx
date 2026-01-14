@@ -344,6 +344,10 @@ const Schedule = () => {
     setIsModalOpen(true);
   }, []);
 
+  const handleViewTypeChange = useCallback((type: CalendarViewType) => {
+    setViewType(type);
+  }, []);
+
   const handleModalClose = useCallback(() => {
     setIsModalOpen(false);
     setSelectedAppointment(null);
@@ -729,7 +733,7 @@ const Schedule = () => {
                     currentDate={currentDate}
                     onDateChange={setCurrentDate}
                     viewType={viewType as CalendarViewType}
-                    onViewTypeChange={(type) => setViewType(type)}
+                    onViewTypeChange={handleViewTypeChange}
                     onAppointmentClick={handleAppointmentClick}
                     onTimeSlotClick={handleTimeSlotClick}
                     onAppointmentReschedule={handleAppointmentReschedule}
