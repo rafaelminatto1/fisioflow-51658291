@@ -28,56 +28,93 @@ interface BodyMapRealisticProps {
 }
 
 // Reusing regions from BodyMap.tsx
+// Reusing regions from BodyMap.tsx but defining click zones for the realistic image
 const BODY_REGIONS = {
     front: [
-        { code: 'cabeca', name: 'Cabeça', x: 50, y: 6, width: 12, height: 8 },
-        { code: 'pescoco', name: 'Pescoço', x: 50, y: 14, width: 8, height: 4 },
+        // Head (Split)
+        { code: 'cabeca_frente_esquerda', name: 'Cabeça (Frente Esq.)', x: 44, y: 6, width: 6, height: 8 },
+        { code: 'cabeca_frente_direita', name: 'Cabeça (Frente Dir.)', x: 56, y: 6, width: 6, height: 8 },
+
+        // Neck (Split)
+        { code: 'pescoco_frontal_esquerdo', name: 'Pescoço (Frente Esq.)', x: 46, y: 14, width: 4, height: 4 },
+        { code: 'pescoco_frontal_direito', name: 'Pescoço (Frente Dir.)', x: 54, y: 14, width: 4, height: 4 },
+
         { code: 'ombro_esquerdo', name: 'Ombro Esquerdo', x: 32, y: 18, width: 10, height: 6 },
         { code: 'ombro_direito', name: 'Ombro Direito', x: 68, y: 18, width: 10, height: 6 },
-        { code: 'torax', name: 'Peito Esquerdo', x: 40, y: 22, width: 10, height: 10 },
-        { code: 'torax', name: 'Peito Direito', x: 60, y: 22, width: 10, height: 10 },
+
+        // Thorax (Split - previously named Peito)
+        { code: 'torax_esquerdo', name: 'Tórax (Esquerdo)', x: 40, y: 22, width: 10, height: 10 },
+        { code: 'torax_direito', name: 'Tórax (Direito)', x: 60, y: 22, width: 10, height: 10 },
+
         { code: 'braco_esquerdo', name: 'Braço Esquerdo', x: 25, y: 24, width: 7, height: 12 },
         { code: 'braco_direito', name: 'Braço Direito', x: 75, y: 24, width: 7, height: 12 },
-        { code: 'abdomen', name: 'Abdômen Superior', x: 50, y: 34, width: 16, height: 8 },
+
+        // Abdomen (Split)
+        { code: 'abdomen_esquerdo', name: 'Abdômen (Esq.)', x: 42, y: 39, width: 8, height: 12 },
+        { code: 'abdomen_direito', name: 'Abdômen (Dir.)', x: 58, y: 39, width: 8, height: 12 },
+
         { code: 'antebraco_esquerdo', name: 'Antebraço Esquerdo', x: 20, y: 38, width: 6, height: 12 },
         { code: 'antebraco_direito', name: 'Antebraço Direito', x: 80, y: 38, width: 6, height: 12 },
-        { code: 'abdomen', name: 'Abdômen Inferior', x: 50, y: 44, width: 16, height: 8 },
+
         { code: 'mao_esquerda', name: 'Mão Esquerda', x: 15, y: 52, width: 6, height: 8 },
         { code: 'mao_direita', name: 'Mão Direita', x: 85, y: 52, width: 6, height: 8 },
+
+        // Hips/Pelvis (Split)
         { code: 'quadril_esquerdo', name: 'Quadril Esquerdo', x: 40, y: 52, width: 10, height: 8 },
         { code: 'quadril_direito', name: 'Quadril Direito', x: 60, y: 52, width: 10, height: 8 },
+
         { code: 'coxa_esquerda', name: 'Coxa Esquerda', x: 40, y: 62, width: 10, height: 14 },
-        { code: 'coxa_direito', name: 'Coxa Direita', x: 60, y: 62, width: 10, height: 14 },
+        { code: 'coxa_direita', name: 'Coxa Direita', x: 60, y: 62, width: 10, height: 14 }, // Fixed typo coxa_direito -> coxa_direita
+
         { code: 'joelho_esquerdo', name: 'Joelho Esquerdo', x: 40, y: 76, width: 8, height: 6 },
         { code: 'joelho_direito', name: 'Joelho Direito', x: 60, y: 76, width: 8, height: 6 },
-        { code: 'perna_esquerda', name: 'Panturrilha Esquerda', x: 40, y: 82, width: 7, height: 10 },
-        { code: 'perna_direito', name: 'Panturrilha Direita', x: 60, y: 82, width: 7, height: 10 },
+
+        { code: 'perna_esquerda', name: 'Perna Esquerda', x: 40, y: 82, width: 7, height: 10 },
+        { code: 'perna_direita', name: 'Perna Direita', x: 60, y: 82, width: 7, height: 10 }, // Fixed typo perna_direito
+
         { code: 'tornozelo_esquerdo', name: 'Tornozelo Esquerdo', x: 40, y: 92, width: 6, height: 4 },
         { code: 'tornozelo_direito', name: 'Tornozelo Direito', x: 60, y: 92, width: 6, height: 4 },
+
         { code: 'pe_esquerdo', name: 'Pé Esquerdo', x: 40, y: 96, width: 8, height: 4 },
         { code: 'pe_direito', name: 'Pé Direito', x: 60, y: 96, width: 8, height: 4 },
     ],
     back: [
-        { code: 'cabeca', name: 'Cabeça', x: 50, y: 6, width: 12, height: 8 },
-        { code: 'pescoco', name: 'Pescoço', x: 50, y: 14, width: 8, height: 4 },
+        // Head Back (Nuca)
+        { code: 'cabeca_nuca_esquerda', name: 'Nuca (Esq.)', x: 44, y: 6, width: 6, height: 8 },
+        { code: 'cabeca_nuca_direita', name: 'Nuca (Dir.)', x: 56, y: 6, width: 6, height: 8 },
+
+        // Neck Back (Cervical)
+        { code: 'pescoco_nuca_esquerdo', name: 'Cervical (Esq.)', x: 46, y: 14, width: 4, height: 4 },
+        { code: 'pescoco_nuca_direito', name: 'Cervical (Dir.)', x: 54, y: 14, width: 4, height: 4 },
+
         { code: 'ombro_esquerdo', name: 'Ombro Esquerdo', x: 32, y: 18, width: 10, height: 6 },
         { code: 'ombro_direito', name: 'Ombro Direito', x: 68, y: 18, width: 10, height: 6 },
-        { code: 'torax', name: 'Costas Superior Esquerda', x: 40, y: 22, width: 10, height: 10 },
-        { code: 'torax', name: 'Costas Superior Direita', x: 60, y: 22, width: 10, height: 10 },
+
+        // Upper Back (Costas Superior)
+        { code: 'costas_superior_esquerda', name: 'Costas Superior (Esq.)', x: 40, y: 25, width: 10, height: 12 },
+        { code: 'costas_superior_direita', name: 'Costas Superior (Dir.)', x: 60, y: 25, width: 10, height: 12 },
+
         { code: 'braco_esquerdo', name: 'Braço Esquerdo', x: 25, y: 24, width: 7, height: 12 },
         { code: 'braco_direito', name: 'Braço Direito', x: 75, y: 24, width: 7, height: 12 },
-        { code: 'torax', name: 'Costas Média Esquerda', x: 40, y: 34, width: 10, height: 8 },
-        { code: 'torax', name: 'Costas Média Direita', x: 60, y: 34, width: 10, height: 8 },
+
         { code: 'antebraco_esquerdo', name: 'Antebraço Esquerdo', x: 20, y: 38, width: 6, height: 12 },
         { code: 'antebraco_direito', name: 'Antebraço Direito', x: 80, y: 38, width: 6, height: 12 },
-        { code: 'lombar', name: 'Lombar Esquerda', x: 40, y: 44, width: 10, height: 8 },
-        { code: 'lombar', name: 'Lombar Direita', x: 60, y: 44, width: 10, height: 8 },
-        { code: 'quadril_esquerdo', name: 'Glúteo Esquerdo', x: 40, y: 54, width: 10, height: 8 },
-        { code: 'quadril_direito', name: 'Glúteo Direito', x: 60, y: 54, width: 10, height: 8 },
+
+        // Lumbar
+        { code: 'lombar_esquerda', name: 'Lombar (Esq.)', x: 42, y: 44, width: 8, height: 8 },
+        { code: 'lombar_direita', name: 'Lombar (Dir.)', x: 58, y: 44, width: 8, height: 8 },
+
+        // Glutes
+        { code: 'gluteo_esquerdo', name: 'Glúteo (Esq.)', x: 42, y: 54, width: 8, height: 8 },
+        { code: 'gluteo_direito', name: 'Glúteo (Dir.)', x: 58, y: 54, width: 8, height: 8 },
+
         { code: 'coxa_esquerda', name: 'Coxa Esquerda', x: 40, y: 64, width: 10, height: 12 },
-        { code: 'coxa_direito', name: 'Coxa Direita', x: 60, y: 64, width: 10, height: 12 },
-        { code: 'perna_esquerda', name: 'Panturrilha Esquerda', x: 40, y: 80, width: 7, height: 12 },
-        { code: 'perna_direito', name: 'Panturrilha Direita', x: 60, y: 80, width: 7, height: 12 },
+        { code: 'coxa_direita', name: 'Coxa Direita', x: 60, y: 64, width: 10, height: 12 }, // Fixed typo
+
+        // Calves (Panturrilhas)
+        { code: 'panturrilha_esquerda', name: 'Panturrilha Esquerda', x: 40, y: 80, width: 7, height: 12 },
+        { code: 'panturrilha_direita', name: 'Panturrilha Direita', x: 60, y: 80, width: 7, height: 12 }, // Fixed typo
+
         { code: 'tornozelo_esquerdo', name: 'Tornozelo Esquerdo', x: 40, y: 92, width: 6, height: 4 },
         { code: 'tornozelo_direito', name: 'Tornozelo Direito', x: 60, y: 92, width: 6, height: 4 },
     ],
