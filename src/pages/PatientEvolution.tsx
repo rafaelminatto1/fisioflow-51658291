@@ -1053,89 +1053,44 @@ const PatientEvolution = () => {
                       )}
                     </div>
                   )}
-                </div>
-              </div>                                  </div>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-          title="Copiar evolução"
-        >
-          <Copy className="h-3 w-3" />
-        </Button>
-      </div>
 
-      {/* Preview SOAP */}
-      <div className="mt-2 grid grid-cols-2 gap-1">
-        {evolution.subjective && (
-          <div className="p-1.5 rounded bg-blue-500/5">
-            <p className="text-[8px] text-muted-foreground">S</p>
-            <p className="text-[9px] line-clamp-1">{evolution.subjective}</p>
-          </div>
-        )}
-        {evolution.objective && (
-          <div className="p-1.5 rounded bg-green-500/5">
-            <p className="text-[8px] text-muted-foreground">O</p>
-            <p className="text-[9px] line-clamp-1">{evolution.objective}</p>
-          </div>
-        )}
-        {evolution.assessment && (
-          <div className="p-1.5 rounded bg-purple-500/5">
-            <p className="text-[8px] text-muted-foreground">A</p>
-            <p className="text-[9px] line-clamp-1">{evolution.assessment}</p>
-          </div>
-        )}
-        {evolution.plan && (
-          <div className="p-1.5 rounded bg-orange-500/5">
-            <p className="text-[8px] text-muted-foreground">P</p>
-            <p className="text-[9px] line-clamp-1">{evolution.plan}</p>
-          </div>
-        )}
-      </div>
-    </CardContent>
-                          </Card >
-                        ))}
-                      </div >
-                    )}
 
-{/* Resumo rápido das metas */ }
-{
-  goals.length > 0 && (
-    <div className="mt-6">
-      <h4 className="text-xs font-semibold mb-2 flex items-center gap-1">
-        <Target className="h-3 w-3" />
-        Metas ({goals.filter(g => g.status === 'concluido').length}/{goals.length})
-      </h4>
-      <div className="space-y-1">
-        {goals.slice(0, 3).map(goal => (
-          <div
-            key={goal.id}
-            className={`p-2 rounded-lg border text-[10px] ${goal.status === 'concluido'
-              ? 'bg-green-500/5 border-green-500/20'
-              : goal.status === 'em_andamento'
-                ? 'bg-blue-500/5 border-blue-500/20'
-                : 'bg-muted/30 border-border/50'
-              }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="font-medium truncate flex-1">{goal.goal_title}</span>
-              <Badge
-                variant={goal.status === 'concluido' ? 'default' : 'outline'}
-                className="ml-1 text-[8px] px-1 py-0 h-4 scale-75 origin-right"
-              >
-                {goal.status === 'concluido' ? 'OK' : goal.status === 'em_andamento' ? 'Em andamento' : 'Pendente'}
-              </Badge>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-                  </div >
-                </ResizablePanel >
-              </ResizablePanelGroup >
+                  {/* Resumo rápido das metas */}
+                  {
+                    goals.length > 0 && (
+                      <div className="mt-6">
+                        <h4 className="text-xs font-semibold mb-2 flex items-center gap-1">
+                          <Target className="h-3 w-3" />
+                          Metas ({goals.filter(g => g.status === 'concluido').length}/{goals.length})
+                        </h4>
+                        <div className="space-y-1">
+                          {goals.slice(0, 3).map(goal => (
+                            <div
+                              key={goal.id}
+                              className={`p-2 rounded-lg border text-[10px] ${goal.status === 'concluido'
+                                ? 'bg-green-500/5 border-green-500/20'
+                                : goal.status === 'em_andamento'
+                                  ? 'bg-blue-500/5 border-blue-500/20'
+                                  : 'bg-muted/30 border-border/50'
+                                }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium truncate flex-1">{goal.goal_title}</span>
+                                <Badge
+                                  variant={goal.status === 'concluido' ? 'default' : 'outline'}
+                                  className="ml-1 text-[8px] px-1 py-0 h-4 scale-75 origin-right"
+                                >
+                                  {goal.status === 'concluido' ? 'OK' : goal.status === 'em_andamento' ? 'Em andamento' : 'Pendente'}
+                                </Badge>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  }
+                </div >
+              </div>
             </TabsContent >
 
             <TabsContent value="history" className="mt-6">
@@ -1292,26 +1247,26 @@ const PatientEvolution = () => {
           </Tabs >
         </div >
 
-  {/* Modal para aplicar template */ }
-{
-  patientId && (
-    <ApplyTemplateModal
-      open={showApplyTemplate}
-      onOpenChange={setShowApplyTemplate}
-      patientId={patientId}
-      patientName={PatientHelpers.getName(patient)}
-    />
-  )
-}
+        {/* Modal para aplicar template */}
+        {
+          patientId && (
+            <ApplyTemplateModal
+              open={showApplyTemplate}
+              onOpenChange={setShowApplyTemplate}
+              patientId={patientId}
+              patientName={PatientHelpers.getName(patient)}
+            />
+          )
+        }
 
-{/* Modal de atalhos de teclado */ }
-<EvolutionKeyboardShortcuts
-  open={showKeyboardHelp}
-  onOpenChange={setShowKeyboardHelp}
-/>
+        {/* Modal de atalhos de teclado */}
+        <EvolutionKeyboardShortcuts
+          open={showKeyboardHelp}
+          onOpenChange={setShowKeyboardHelp}
+        />
 
-{/* Command Palette - Busca Rápida Ctrl+K */ }
-<CommandPaletteComponent />
+        {/* Command Palette - Busca Rápida Ctrl+K */}
+        <CommandPaletteComponent />
       </MainLayout >
     </PatientEvolutionErrorBoundary >
   );
