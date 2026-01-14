@@ -9,7 +9,7 @@ import { useAnalyticsExport, useBatchAnalyticsExport } from '../useAnalyticsExpo
 
 // Mock jsPDF
 vi.mock('jspdf', () => ({
-  default: vi.fn(function() {
+  default: vi.fn(function () {
     this.text = vi.fn();
     this.rect = vi.fn();
     this.setFillColor = vi.fn();
@@ -79,7 +79,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
   <QueryClientProvider client={createQueryClient()}>
     {children}
   </QueryClientProvider>
-});
+);
 
 describe('useAnalyticsExport', () => {
   beforeEach(() => {

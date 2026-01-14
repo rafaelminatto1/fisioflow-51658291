@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { EvaluationFormFieldFormData } from './useEvaluationForms';
+
 
 // Definição das fichas padrão
 export const STANDARD_FORMS = {
@@ -18,7 +18,7 @@ export const STANDARD_FORMS = {
         secao: 'Dados Pessoais',
         ordem: 1,
         obrigatorio: true,
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Data de Nascimento',
         pergunta: 'Data de nascimento',
@@ -26,7 +26,7 @@ export const STANDARD_FORMS = {
         secao: 'Dados Pessoais',
         ordem: 2,
         obrigatorio: true,
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Ocupação',
         pergunta: 'Qual a ocupação profissional?',
@@ -34,7 +34,7 @@ export const STANDARD_FORMS = {
         secao: 'Dados Pessoais',
         ordem: 3,
         obrigatorio: false,
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Telefone',
         pergunta: 'Telefone para contato',
@@ -42,7 +42,7 @@ export const STANDARD_FORMS = {
         secao: 'Dados Pessoais',
         ordem: 4,
         obrigatorio: true,
-      } as EvaluationFormFieldFormData,
+      },
       // Queixa e Histórico
       {
         rotulo: 'Queixa Principal',
@@ -51,7 +51,7 @@ export const STANDARD_FORMS = {
         secao: 'Queixa e Histórico',
         ordem: 5,
         obrigatorio: true,
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Início do Problema',
         pergunta: 'Quando o problema começou?',
@@ -59,7 +59,7 @@ export const STANDARD_FORMS = {
         secao: 'Queixa e Histórico',
         ordem: 6,
         obrigatorio: true,
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Histórico da Doença Atual',
         pergunta: 'Descreva como a doença evoluiu até hoje',
@@ -67,7 +67,7 @@ export const STANDARD_FORMS = {
         secao: 'Queixa e Histórico',
         ordem: 7,
         obrigatorio: false,
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Dor',
         pergunta: 'Qual a intensidade da dor (0-10)?',
@@ -78,7 +78,7 @@ export const STANDARD_FORMS = {
         minimo: 0,
         maximo: 10,
         opcoes: ['Sem dor', 'Dor máxima'],
-      } as EvaluationFormFieldFormData,
+      },
       // Histórico Médico
       {
         rotulo: 'Doenças Preexistentes',
@@ -87,7 +87,7 @@ export const STANDARD_FORMS = {
         secao: 'Histórico Médico',
         ordem: 9,
         obrigatorio: false,
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Cirurgias Prévias',
         pergunta: 'Já realizou alguma cirurgia? Quais?',
@@ -95,7 +95,7 @@ export const STANDARD_FORMS = {
         secao: 'Histórico Médico',
         ordem: 10,
         obrigatorio: false,
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Medicamentos em Uso',
         pergunta: 'Toma algum medicamento atualmente? Quais?',
@@ -103,7 +103,7 @@ export const STANDARD_FORMS = {
         secao: 'Histórico Médico',
         ordem: 11,
         obrigatorio: false,
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Alergias',
         pergunta: 'Possui alguma alergia a medicamentos ou alimentos?',
@@ -111,7 +111,7 @@ export const STANDARD_FORMS = {
         secao: 'Histórico Médico',
         ordem: 12,
         obrigatorio: true,
-      } as EvaluationFormFieldFormData,
+      },
       // Histórico Familiar
       {
         rotulo: 'Histórico Familiar',
@@ -120,7 +120,7 @@ export const STANDARD_FORMS = {
         secao: 'Histórico Familiar',
         ordem: 13,
         obrigatorio: false,
-      } as EvaluationFormFieldFormData,
+      },
       // Hábitos de Vida
       {
         rotulo: 'Prática de Atividade Física',
@@ -130,7 +130,7 @@ export const STANDARD_FORMS = {
         ordem: 14,
         obrigatorio: false,
         opcoes: ['Sim', 'Não', 'Anteriormente'],
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Frequência da Atividade',
         pergunta: 'Quantas vezes por semana?',
@@ -138,7 +138,7 @@ export const STANDARD_FORMS = {
         secao: 'Hábitos de Vida',
         ordem: 15,
         obrigatorio: false,
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Tabagismo',
         pergunta: 'É fumante?',
@@ -147,7 +147,7 @@ export const STANDARD_FORMS = {
         ordem: 16,
         obrigatorio: false,
         opcoes: ['Sim', 'Não', 'Ex-fumante'],
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Consumo de Álcool',
         pergunta: 'Consome bebidas alcoólicas?',
@@ -156,7 +156,7 @@ export const STANDARD_FORMS = {
         ordem: 17,
         obrigatorio: false,
         opcoes: ['Não', 'Socialmente', 'Diariamente'],
-      } as EvaluationFormFieldFormData,
+      },
       // Outros
       {
         rotulo: 'Observações Adicionais',
@@ -165,7 +165,7 @@ export const STANDARD_FORMS = {
         secao: 'Outros',
         ordem: 18,
         obrigatorio: false,
-      } as EvaluationFormFieldFormData,
+      },
     ],
   },
   AVALIACAO_POSTURAL: {
@@ -182,7 +182,7 @@ export const STANDARD_FORMS = {
         ordem: 1,
         obrigatorio: false,
         descricao: 'Inclinações laterais, rotações, assimetrias',
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Ombros - Vista Anterior',
         pergunta: 'Observações sobre os ombros (vista anterior)',
@@ -191,7 +191,7 @@ export const STANDARD_FORMS = {
         ordem: 2,
         obrigatorio: false,
         descricao: 'Nivelamento, elevação, protração, assimetrias',
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Escápulas - Vista Anterior',
         pergunta: 'Observações sobre as escápulas (vista anterior)',
@@ -200,7 +200,7 @@ export const STANDARD_FORMS = {
         ordem: 3,
         obrigatorio: false,
         descricao: 'Alada, aderida, assimetrias',
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Pelve - Vista Anterior',
         pergunta: 'Observações sobre a pelve (vista anterior)',
@@ -209,7 +209,7 @@ export const STANDARD_FORMS = {
         ordem: 4,
         obrigatorio: false,
         descricao: 'Nivelamento, inclinações, rotações',
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Joelhos - Vista Anterior',
         pergunta: 'Observações sobre os joelhos (vista anterior)',
@@ -218,7 +218,7 @@ export const STANDARD_FORMS = {
         ordem: 5,
         obrigatorio: false,
         descricao: 'Varo, valgo, simetria',
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Pés - Vista Anterior',
         pergunta: 'Observações sobre os pés (vista anterior)',
@@ -227,7 +227,7 @@ export const STANDARD_FORMS = {
         ordem: 6,
         obrigatorio: false,
         descricao: 'Plano, cavo, abdução, adução',
-      } as EvaluationFormFieldFormData,
+      },
       // Vista Posterior
       {
         rotulo: 'Coluna Vertebral - Vista Posterior',
@@ -237,7 +237,7 @@ export const STANDARD_FORMS = {
         ordem: 7,
         obrigatorio: false,
         descricao: 'Escolioses, gibosidade, alinhamento',
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Escápulas - Vista Posterior',
         pergunta: 'Observações sobre as escápulas (vista posterior)',
@@ -246,7 +246,7 @@ export const STANDARD_FORMS = {
         ordem: 8,
         obrigatorio: false,
         descricao: 'Alinhamento, simetria, mobilidade',
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Pelve - Vista Posterior',
         pergunta: 'Observações sobre a pelve (vista posterior)',
@@ -255,7 +255,7 @@ export const STANDARD_FORMS = {
         ordem: 9,
         obrigatorio: false,
         descricao: 'Nível, torsão, diferença de altura',
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Tornozelos - Vista Posterior',
         pergunta: 'Observações sobre os tornozelos (vista posterior)',
@@ -264,7 +264,7 @@ export const STANDARD_FORMS = {
         ordem: 10,
         obrigatorio: false,
         descricao: 'Valgo, varo, diferença de altura',
-      } as EvaluationFormFieldFormData,
+      },
       // Vista Lateral
       {
         rotulo: 'Cabeça - Vista Lateral',
@@ -274,7 +274,7 @@ export const STANDARD_FORMS = {
         ordem: 11,
         obrigatorio: false,
         descricao: 'Posição anteriorizada, posteriorizada, rotação',
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Cervical - Vista Lateral',
         pergunta: 'Observações sobre a região cervical (vista lateral)',
@@ -283,7 +283,7 @@ export const STANDARD_FORMS = {
         ordem: 12,
         obrigatorio: false,
         descricao: 'Lordose, retificação, protração de cabeça',
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Ombros - Vista Lateral',
         pergunta: 'Observações sobre os ombros (vista lateral)',
@@ -292,7 +292,7 @@ export const STANDARD_FORMS = {
         ordem: 13,
         obrigatorio: false,
         descricao: 'Protração, arredondamento',
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Torax - Vista Lateral',
         pergunta: 'Observações sobre o tórax (vista lateral)',
@@ -301,7 +301,7 @@ export const STANDARD_FORMS = {
         ordem: 14,
         obrigatorio: false,
         descricao: 'Cifose, retificação, simetria',
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Lombar - Vista Lateral',
         pergunta: 'Observações sobre a região lombar (vista lateral)',
@@ -310,7 +310,7 @@ export const STANDARD_FORMS = {
         ordem: 15,
         obrigatorio: false,
         descricao: 'Lordose, retificação, flexão',
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Pelve - Vista Lateral',
         pergunta: 'Observações sobre a pelve (vista lateral)',
@@ -319,7 +319,7 @@ export const STANDARD_FORMS = {
         ordem: 16,
         obrigatorio: false,
         descricao: 'Anterversão, retroversão, nível',
-      } as EvaluationFormFieldFormData,
+      },
       // Testes Específicos
       {
         rotulo: 'Teste de Nash',
@@ -329,7 +329,7 @@ export const STANDARD_FORMS = {
         ordem: 17,
         obrigatorio: false,
         opcoes: ['Normal', 'Alterado à direita', 'Alterado à esquerda', 'Não realizado'],
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Teste de Adams',
         pergunta: 'Resultado do teste de Adams para escoliose',
@@ -338,7 +338,7 @@ export const STANDARD_FORMS = {
         ordem: 18,
         obrigatorio: false,
         opcoes: ['Negativo', 'Positivo à direita', 'Positivo à esquerda', 'Não realizado'],
-      } as EvaluationFormFieldFormData,
+      },
       // Mapa Corporal
       {
         rotulo: 'Mapa de Dor',
@@ -347,7 +347,7 @@ export const STANDARD_FORMS = {
         secao: 'Mapa Corporal',
         ordem: 19,
         obrigatorio: false,
-      } as EvaluationFormFieldFormData,
+      },
       // Conclusão
       {
         rotulo: 'Diagnóstico Postural',
@@ -356,7 +356,7 @@ export const STANDARD_FORMS = {
         secao: 'Conclusão',
         ordem: 20,
         obrigatorio: true,
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Conduta Sugerida',
         pergunta: 'Conduta terapêutica sugerida',
@@ -364,7 +364,7 @@ export const STANDARD_FORMS = {
         secao: 'Conclusão',
         ordem: 21,
         obrigatorio: true,
-      } as EvaluationFormFieldFormData,
+      },
     ],
   },
   AVALIACAO_FUNCIONAL: {
@@ -381,7 +381,7 @@ export const STANDARD_FORMS = {
         ordem: 1,
         obrigatorio: false,
         descricao: 'Descreva os graus de movimento encontrados',
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'ADM - Ombros',
         pergunta: 'Amplitude de movimento dos ombros',
@@ -389,7 +389,7 @@ export const STANDARD_FORMS = {
         secao: 'Amplitude de Movimento (ADM)',
         ordem: 2,
         obrigatorio: false,
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'ADM - Cotovelos',
         pergunta: 'Amplitude de movimento dos cotovelos',
@@ -397,7 +397,7 @@ export const STANDARD_FORMS = {
         secao: 'Amplitude de Movimento (ADM)',
         ordem: 3,
         obrigatorio: false,
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'ADM - Punhos',
         pergunta: 'Amplitude de movimento dos punhos',
@@ -405,7 +405,7 @@ export const STANDARD_FORMS = {
         secao: 'Amplitude de Movimento (ADM)',
         ordem: 4,
         obrigatorio: false,
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'ADM - Coluna Torácica',
         pergunta: 'Amplitude de movimento da coluna torácica',
@@ -413,7 +413,7 @@ export const STANDARD_FORMS = {
         secao: 'Amplitude de Movimento (ADM)',
         ordem: 5,
         obrigatorio: false,
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'ADM - Coluna Lombar',
         pergunta: 'Amplitude de movimento da coluna lombar',
@@ -421,7 +421,7 @@ export const STANDARD_FORMS = {
         secao: 'Amplitude de Movimento (ADM)',
         ordem: 6,
         obrigatorio: false,
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'ADM - Quadris',
         pergunta: 'Amplitude de movimento dos quadris',
@@ -429,7 +429,7 @@ export const STANDARD_FORMS = {
         secao: 'Amplitude de Movimento (ADM)',
         ordem: 7,
         obrigatorio: false,
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'ADM - Joelhos',
         pergunta: 'Amplitude de movimento dos joelhos',
@@ -437,7 +437,7 @@ export const STANDARD_FORMS = {
         secao: 'Amplitude de Movimento (ADM)',
         ordem: 8,
         obrigatorio: false,
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'ADM - Tornozelos',
         pergunta: 'Amplitude de movimento dos tornozelos',
@@ -445,7 +445,7 @@ export const STANDARD_FORMS = {
         secao: 'Amplitude de Movimento (ADM)',
         ordem: 9,
         obrigatorio: false,
-      } as EvaluationFormFieldFormData,
+      },
       // Força Muscular
       {
         rotulo: 'Força - Cintura Escapular',
@@ -455,7 +455,7 @@ export const STANDARD_FORMS = {
         ordem: 10,
         obrigatorio: false,
         descricao: 'Use escala de Oxford/LOF (0-5)',
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Força - Cintura Pélvica',
         pergunta: 'Testes de força da cintura pélvica',
@@ -463,7 +463,7 @@ export const STANDARD_FORMS = {
         secao: 'Força Muscular',
         ordem: 11,
         obrigatorio: false,
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Força - Membros Superiores',
         pergunta: 'Testes de força dos membros superiores',
@@ -471,7 +471,7 @@ export const STANDARD_FORMS = {
         secao: 'Força Muscular',
         ordem: 12,
         obrigatorio: false,
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Força - Membros Inferiores',
         pergunta: 'Testes de força dos membros inferiores',
@@ -479,7 +479,7 @@ export const STANDARD_FORMS = {
         secao: 'Força Muscular',
         ordem: 13,
         obrigatorio: false,
-      } as EvaluationFormFieldFormData,
+      },
       // Reflexos
       {
         rotulo: 'Reflexos - Bicipital',
@@ -489,7 +489,7 @@ export const STANDARD_FORMS = {
         ordem: 14,
         obrigatorio: false,
         opcoes: ['Normal (2+)', 'Hipo reflexia (0-1+)', 'Hiper reflexia (3-4+)', 'Ausente'],
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Reflexos - Tricipital',
         pergunta: 'Reflexo tricipital',
@@ -498,7 +498,7 @@ export const STANDARD_FORMS = {
         ordem: 15,
         obrigatorio: false,
         opcoes: ['Normal (2+)', 'Hipo reflexia (0-1+)', 'Hiper reflexia (3-4+)', 'Ausente'],
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Reflexos - Patelar',
         pergunta: 'Reflexo patelar',
@@ -507,7 +507,7 @@ export const STANDARD_FORMS = {
         ordem: 16,
         obrigatorio: false,
         opcoes: ['Normal (2+)', 'Hipo reflexia (0-1+)', 'Hiper reflexia (3-4+)', 'Ausente'],
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Reflexos - Aquileu',
         pergunta: 'Reflexo aquileu',
@@ -516,7 +516,7 @@ export const STANDARD_FORMS = {
         ordem: 17,
         obrigatorio: false,
         opcoes: ['Normal (2+)', 'Hipo reflexia (0-1+)', 'Hiper reflexia (3-4+)', 'Ausente'],
-      } as EvaluationFormFieldFormData,
+      },
       // Testes Especiais
       {
         rotulo: 'Testes Especiais',
@@ -526,7 +526,7 @@ export const STANDARD_FORMS = {
         ordem: 18,
         obrigatorio: false,
         descricao: 'Ex: Lasegue, slump, Yergason, Speed, etc.',
-      } as EvaluationFormFieldFormData,
+      },
       // Sensibilidade
       {
         rotulo: 'Sensibilidade - Superficial',
@@ -535,7 +535,7 @@ export const STANDARD_FORMS = {
         secao: 'Sensibilidade',
         ordem: 19,
         obrigatorio: false,
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Sensibilidade - Profunda',
         pergunta: 'Teste de sensibilidade profunda (vibração, propriocepção)',
@@ -543,7 +543,7 @@ export const STANDARD_FORMS = {
         secao: 'Sensibilidade',
         ordem: 20,
         obrigatorio: false,
-      } as EvaluationFormFieldFormData,
+      },
       // Testes Funcionais
       {
         rotulo: 'Marcha',
@@ -552,7 +552,7 @@ export const STANDARD_FORMS = {
         secao: 'Testes Funcionais',
         ordem: 21,
         obrigatorio: false,
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Equilíbrio',
         pergunta: 'Testes de equilíbrio (Romberg, tandem, etc.)',
@@ -560,7 +560,7 @@ export const STANDARD_FORMS = {
         secao: 'Testes Funcionais',
         ordem: 22,
         obrigatorio: false,
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Coordenação',
         pergunta: 'Testes de coordenação (dedo-nariz, calcanhar-joelho)',
@@ -568,7 +568,7 @@ export const STANDARD_FORMS = {
         secao: 'Testes Funcionais',
         ordem: 23,
         obrigatorio: false,
-      } as EvaluationFormFieldFormData,
+      },
       // Conclusão
       {
         rotulo: 'Diagnóstico Funcional',
@@ -577,7 +577,7 @@ export const STANDARD_FORMS = {
         secao: 'Conclusão',
         ordem: 24,
         obrigatorio: true,
-      } as EvaluationFormFieldFormData,
+      },
       {
         rotulo: 'Prognóstico',
         pergunta: 'Prognóstico estimado',
@@ -585,7 +585,7 @@ export const STANDARD_FORMS = {
         secao: 'Conclusão',
         ordem: 25,
         obrigatorio: true,
-      } as EvaluationFormFieldFormData,
+      },
     ],
   },
 };
@@ -621,10 +621,10 @@ export function useCreateStandardForm() {
         secao: campo.secao,
         ordem: campo.ordem,
         obrigatorio: campo.obrigatorio,
-        descricao: campo.descricao || null,
-        opcoes: campo.opcoes ? JSON.stringify(campo.opcoes) : null,
-        minimo: campo.minimo || null,
-        maximo: campo.maximo || null,
+        descricao: (campo as any).descricao || null,
+        opcoes: (campo as any).opcoes ? JSON.stringify((campo as any).opcoes) : null,
+        minimo: (campo as any).minimo || null,
+        maximo: (campo as any).maximo || null,
       }));
 
       const { error: fieldsError } = await supabase
