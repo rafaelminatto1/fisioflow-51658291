@@ -437,7 +437,6 @@ export const CalendarView = memo(({
                 handleDrop={handleDrop}
                 checkTimeBlocked={checkTimeBlocked}
                 isDayClosedForDate={isDayClosedForDate}
-                getAppointmentsForDate={getAppointmentsForDate}
                 getStatusColor={getStatusColor}
                 isOverCapacity={isOverCapacity}
                 openPopoverId={openPopoverId}

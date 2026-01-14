@@ -1,20 +1,22 @@
-import React, { memo, useMemo } from 'react';
-import { format, startOfWeek, addDays, isSameDay, differenceInMinutes, parseISO, startOfDay } from 'date-fns';
+import React, { memo, useMemo, useState, useCallback } from 'react';
+import { format, startOfWeek, addDays, isSameDay, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Appointment } from '@/types/appointment';
+import { Appointment, AppointmentStatus } from '@/types/appointment';
 import { generateTimeSlots } from '@/lib/config/agenda';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AppointmentQuickView } from './AppointmentQuickView';
-import { logger } from '@/lib/errors/logger';
+import { Badge } from '@/components/ui/badge';
+import { Calendar as CalendarIcon, GripVertical } from 'lucide-react';
+
+// =====================================================================
+// TYPES
+// =====================================================================
 
 interface CalendarWeekViewProps {
     currentDate: Date;
     appointments: Appointment[];
     onTimeSlotClick: (date: Date, time: string) => void;
-    onAppointmentClick?: (appointment: Appointment) => void;
     onEditAppointment?: (appointment: Appointment) => void;
     onDeleteAppointment?: (appointment: Appointment) => void;
     onAppointmentReschedule?: (appointment: Appointment, newDate: Date, newTime: string) => Promise<void>;
@@ -27,17 +29,61 @@ interface CalendarWeekViewProps {
     handleDrop: (e: React.DragEvent, date: Date, time: string) => void;
     checkTimeBlocked: (date: Date, time: string) => { blocked: boolean; reason?: string };
     isDayClosedForDate: (date: Date) => boolean;
-    getAppointmentsForDate: (date: Date) => Appointment[];
     getStatusColor: (status: string, isOverCapacity?: boolean) => string;
     isOverCapacity: (apt: Appointment) => boolean;
     openPopoverId: string | null;
     setOpenPopoverId: (id: string | null) => void;
 }
 
-// Helper to calculate grid position
+// =====================================================================
+// CONSTANTS
+// =====================================================================
+
 const START_HOUR = 7;
-const END_HOUR = 21; // Until 21:00 inclusive = 21 * 60 minutes from start
-const SLOT_DURATION_MINUTES = 30; // 30 min slots
+const END_HOUR = 21;
+const SLOT_DURATION_MINUTES = 30;
+const SLOT_HEIGHT = 60; // px per slot
+
+const STATUS_COLORS: Record<AppointmentStatus, string> = {
+    agendado: 'bg-blue-500 border-l-blue-500',
+    confirmado: 'bg-emerald-500 border-l-emerald-500',
+    concluido: 'bg-slate-400 border-l-slate-400',
+    cancelado: 'bg-red-500 border-l-red-500',
+    realizado: 'bg-slate-400 border-l-slate-400',
+    completed: 'bg-slate-400 border-l-slate-400',
+    em_andamento: 'bg-yellow-500 border-l-yellow-500',
+    avaliacao: 'bg-violet-500 border-l-violet-500',
+    aguardando_confirmacao: 'bg-amber-500 border-l-amber-500',
+    em_espera: 'bg-indigo-500 border-l-indigo-500',
+    atrasado: 'bg-orange-500 border-l-orange-500',
+    falta: 'bg-rose-500 border-l-rose-500',
+    faltou: 'bg-rose-600 border-l-rose-600',
+    remarcado: 'bg-cyan-500 border-l-cyan-500',
+    reagendado: 'bg-teal-500 border-l-teal-500',
+    atendido: 'bg-green-600 border-l-green-600',
+};
+
+// =====================================================================
+// HELPER FUNCTIONS
+// =====================================================================
+
+const getStatusClass = (status: string): string => {
+    return STATUS_COLORS[status as AppointmentStatus] || STATUS_COLORS.agendado;
+};
+
+const normalizeTime = (time: string | null | undefined): string => {
+    if (!time || !time.trim()) return '00:00';
+    return time.substring(0, 5); // "08:00:00" -> "08:00"
+};
+
+const parseAppointmentDate = (date: string | Date | null | undefined): Date | null => {
+    if (!date) return null;
+    return typeof date === 'string' ? parseISO(date) : date;
+};
+
+// =====================================================================
+// MAIN COMPONENT
+// =====================================================================
 
 export const CalendarWeekView = memo(({
     currentDate,
@@ -63,7 +109,9 @@ export const CalendarWeekView = memo(({
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
     const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
     const timeSlots = generateTimeSlots(currentDate);
-    // timeSlots should ideally be 07:00, 07:30, ... 20:30
+
+    // Local state for hover effects
+    const [hoveredAppointmentId, setHoveredAppointmentId] = useState<string | null>(null);
 
     // Filter appointments for this week
     const weekAppointments = useMemo(() => {
@@ -71,199 +119,281 @@ export const CalendarWeekView = memo(({
         const end = startOfDay(addDays(weekDays[6], 1));
 
         return appointments.filter(apt => {
-            if (!apt.date) return false;
-            const aptDate = typeof apt.date === 'string' ? parseISO(apt.date) : apt.date;
-            return aptDate >= start && aptDate < end;
+            const aptDate = parseAppointmentDate(apt.date);
+            return aptDate && aptDate >= start && aptDate < end;
         });
     }, [appointments, weekDays]);
 
-    // Calculate grid row for a given time string "HH:mm"
-    const getGridRow = (time: string) => {
-        const [h, m] = time.split(':').map(Number);
-        const minutesFromStart = (h - START_HOUR) * 60 + m;
-        // Row 1 is header. Row 2 is start time.
-        // Each slot is 1 row.
-        return Math.floor(minutesFromStart / SLOT_DURATION_MINUTES) + 2;
-    };
+    // Group appointments by time slot for collision detection
+    const appointmentsByTimeSlot = useMemo(() => {
+        const result: Record<string, Appointment[]> = {};
+        weekAppointments.forEach(apt => {
+            const time = normalizeTime(apt.time);
+            const date = parseAppointmentDate(apt.date);
+            if (!date) return;
 
-    // Calculate grid span based on duration
-    const getGridSpan = (duration: number) => {
-        return Math.ceil(duration / SLOT_DURATION_MINUTES);
-    };
+            const dayIndex = weekDays.findIndex(d => isSameDay(d, date));
+            if (dayIndex === -1) return;
+
+            const key = `${dayIndex}-${time}`;
+            if (!result[key]) result[key] = [];
+            result[key].push(apt);
+        });
+        return result;
+    }, [weekAppointments, weekDays]);
+
+    // Calculate position and width for overlapping appointments
+    const getAppointmentStyle = useCallback((apt: Appointment) => {
+        const aptDate = parseAppointmentDate(apt.date);
+        if (!aptDate) return null;
+
+        const dayIndex = weekDays.findIndex(d => isSameDay(d, aptDate));
+        if (dayIndex === -1) return null;
+
+        const time = normalizeTime(apt.time);
+        const startRowIndex = timeSlots.findIndex(t => t === time);
+        if (startRowIndex === -1) return null;
+
+        const duration = apt.duration || 60;
+        const span = Math.ceil(duration / SLOT_DURATION_MINUTES);
+
+        // Check for collisions
+        const key = `${dayIndex}-${time}`;
+        const sameTimeAppointments = appointmentsByTimeSlot[key] || [];
+        const index = sameTimeAppointments.findIndex(a => a.id === apt.id);
+        const count = sameTimeAppointments.length;
+
+        // Calculate width and offset
+        const cardMargin = 4; // px
+        const availableWidth = 100 - (cardMargin * 2);
+        const width = count > 1 ? (availableWidth / count) - cardMargin : availableWidth;
+        const left = cardMargin + (count > 1 ? index * (width + cardMargin) : 0);
+
+        return {
+            gridColumn: dayIndex + 2,
+            gridRow: `${startRowIndex + 1} / span ${span}`,
+            width: `${width}%`,
+            left: `${left}%`,
+        };
+    }, [weekDays, timeSlots, appointmentsByTimeSlot]);
 
     const isDraggable = !!onAppointmentReschedule;
+    const isDraggingThis = useCallback((aptId: string) =>
+        dragState.isDragging && dragState.appointment?.id === aptId, [dragState]
+    );
 
     return (
-        <div className="flex flex-col h-full bg-dark-800 rounded-xl border border-gray-800 shadow-xl overflow-hidden">
-            {/* Note: The user requested specific styling. I'm adapting their `calendar-grid` class concept into inline styles or Tailwind arbitrary values for React control */}
+        <TooltipProvider>
+            <div className="flex flex-col h-full bg-slate-900 rounded-xl border border-slate-800 shadow-xl overflow-hidden">
+                {/* Header Row */}
+                <div className="grid grid-cols-[60px_repeat(7,1fr)] bg-slate-800 border-b border-slate-700 sticky top-0 z-30">
+                    {/* Time icon */}
+                    <div className="h-20 border-r border-slate-700 bg-slate-800 flex items-center justify-center">
+                        <CalendarIcon className="w-5 h-5 text-slate-400" />
+                    </div>
 
-            {/* Header Row */}
-            <div className="grid grid-cols-[60px_repeat(7,1fr)] bg-dark-800 border-b border-gray-700 sticky top-0 z-30">
-                {/* Empty corner */}
-                <div className="h-16 border-r border-gray-700 bg-dark-800/95 backdrop-blur-sm"></div>
-
-                {/* Days Headers */}
-                {weekDays.map((day, i) => {
-                    const isTodayDate = isSameDay(day, new Date());
-                    return (
-                        <div key={i} className="h-16 flex flex-col items-center justify-center border-r border-gray-700 bg-dark-800/95 backdrop-blur-sm last:border-r-0">
-                            <span className={cn("text-xs font-medium mb-1 uppercase", isTodayDate ? "text-blue-400" : "text-gray-400")}>
-                                {format(day, 'EEE', { locale: ptBR })}
-                            </span>
-                            <span className={cn(
-                                "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-glow transition-all",
-                                isTodayDate ? "bg-blue-600 text-white" : "text-gray-200"
-                            )}>
-                                {format(day, 'd')}
-                            </span>
-                        </div>
-                    );
-                })}
-            </div>
-
-            {/* Scrollable Grid Area */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar relative bg-dark-900">
-                {/* 
-                    Grid Container 
-                    Rows: 1fr for each time slot.
-                 */}
-                <div className="grid grid-cols-[60px_repeat(7,1fr)] relative" style={{
-                    gridTemplateRows: `repeat(${timeSlots.length}, 60px)` // Fixed height per slot as per mockup
-                }}>
-
-                    {/* Time Labels Column */}
-                    {timeSlots.map((time, index) => (
-                        <div
-                            key={`time-${time}`}
-                            className="border-r border-gray-800 text-xs text-gray-500 flex justify-center pt-2 sticky left-0 bg-dark-900 z-10"
-                            style={{ gridRow: index + 1, gridColumn: 1 }}
-                        >
-                            {time}
-                        </div>
-                    ))}
-
-                    {/* Grid Background Cells for Interaction */}
-                    {weekDays.map((day, colIndex) => {
-                        const isClosed = isDayClosedForDate(day);
-                        return timeSlots.map((time, rowIndex) => {
-                            const { blocked, reason } = checkTimeBlocked(day, time);
-                            const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === time;
-
-                            return (
-                                <div
-                                    key={`cell-${colIndex}-${rowIndex}`}
-                                    className={cn(
-                                        "border-b border-r border-slate-800/50 transition-colors relative",
-                                        colIndex === 6 && "border-r-0", // Last col no border right
-                                        isClosed ? "bg-slate-900/40 pattern-diagonal-lines" : "hover:bg-white/5",
-                                        blocked && "bg-red-900/10 cursor-not-allowed",
-                                        isDropTarget && "bg-blue-500/10 shadow-[inset_0_0_0_2px_rgba(59,130,246,0.5)]"
-                                    )}
-                                    style={{ gridRow: rowIndex + 1, gridColumn: colIndex + 2 }}
-                                    onClick={() => !blocked && !isClosed && onTimeSlotClick(day, time)}
-                                    onDragOver={(e) => !blocked && !isClosed && handleDragOver(e, day, time)}
-                                    onDragLeave={handleDragLeave}
-                                    onDrop={(e) => !blocked && !isClosed && handleDrop(e, day, time)}
-                                >
-                                    {/* Add button on hover */}
-                                    {!blocked && !isClosed && (
-                                        <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 pointer-events-none">
-                                            <span className="text-[10px] bg-blue-600/20 text-blue-200 px-1 rounded">+</span>
-                                        </div>
-                                    )}
-                                </div>
-                            );
+                    {/* Days Headers */}
+                    {weekDays.map((day, i) => {
+                        const isTodayDate = isSameDay(day, new Date());
+                        const dayAppointments = weekAppointments.filter(apt => {
+                            const aptDate = parseAppointmentDate(apt.date);
+                            return aptDate && isSameDay(aptDate, day);
                         });
-                    })}
 
-                    {/* Appointments Overlay */}
-                    {weekAppointments.map(apt => {
-                        const aptDate = typeof apt.date === 'string' ? parseISO(apt.date) : apt.date;
-                        if (!aptDate) return null;
-
-                        // Find column index (0-6)
-                        const dayDist = weekDays.findIndex(d => isSameDay(d, aptDate));
-                        if (dayDist === -1) return null;
-
-                        // Calculate Row and Span
-                        // Normalize time to HH:mm format (handles "08:00:00" -> "08:00")
-                        const rawTime = apt.time || '00:00';
-                        const startTime = rawTime.substring(0, 5);
-                        const startRowIndex = timeSlots.findIndex(t => t === startTime);
-                        if (startRowIndex === -1) return null; // Time not in grid
-
-                        const duration = apt.duration || 60; // Default 60 min
-                        const span = Math.ceil(duration / 30); // Assuming 30min slots
-
-                        // Check for collisions to adjust width/position (simple version)
-                        // For a robust full calendar, we'd need a complex collision algo.
-                        // Here we'll just allow overlaps via z-index or slight offset if exact match
+                        const confirmed = dayAppointments.filter(a =>
+                            a.status === 'confirmado' || a.status === 'confirmed'
+                        ).length;
+                        const scheduled = dayAppointments.filter(a =>
+                            a.status === 'agendado' || a.status === 'scheduled'
+                        ).length;
 
                         return (
-                            <div
-                                key={apt.id}
-                                draggable={isDraggable}
-                                onDragStart={(e) => handleDragStart(e, apt)}
-                                onDragEnd={handleDragEnd}
-                                className={cn(
-                                    "m-1 rounded-md p-2 flex flex-col justify-center border-l-4 transition-all hover:z-20 hover:scale-105 shadow-md cursor-pointer overflow-hidden",
-                                    dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50",
-                                    // Custom styling based on status/type provided in CSS
-                                    getStatusColor(apt.status, isOverCapacity(apt))
-                                )}
-                                style={{
-                                    gridColumn: dayDist + 2, // +2 because col 1 is time
-                                    gridRow: `${startRowIndex + 1} / span ${span}`,
-                                    zIndex: 10
-                                }}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onAppointmentClick && onAppointmentClick(apt);
-                                }}
-                            >
-                                <AppointmentQuickView
-                                    appointment={apt}
-                                    open={openPopoverId === apt.id}
-                                    onOpenChange={(open) => setOpenPopoverId(open ? apt.id : null)}
-                                    onEdit={onEditAppointment ? () => onEditAppointment(apt) : undefined}
-                                    onDelete={onDeleteAppointment ? () => onDeleteAppointment(apt) : undefined}
-                                >
-                                    <div className="w-full h-full flex flex-col">
-                                        {/* Nome do Paciente - destaque principal */}
-                                        <p className="text-xs font-bold text-white truncate drop-shadow-sm leading-tight">
-                                            {apt.patientName || 'Paciente não identificado'}
-                                        </p>
+                            <div key={i} className="h-20 flex flex-col items-center justify-center border-r border-slate-700 bg-slate-800/50">
+                                <span className={cn(
+                                    "text-xs font-bold uppercase tracking-wide mb-1",
+                                    isTodayDate ? "text-blue-400" : "text-slate-500"
+                                )}>
+                                    {format(day, 'EEE', { locale: ptBR })}
+                                </span>
+                                <span className={cn(
+                                    "text-2xl font-bold",
+                                    isTodayDate ? "text-blue-400" : "text-slate-200"
+                                )}>
+                                    {format(day, 'd')}
+                                </span>
 
-                                        {/* Horário e Terapeuta */}
-                                        <div className="flex items-center gap-1.5 mt-0.5">
-                                            <span className="text-[10px] font-medium bg-black/30 px-1.5 py-0.5 rounded text-white/90">
-                                                {startTime}
-                                            </span>
-                                            <span className="text-[10px] text-gray-200 truncate">
-                                                {apt.therapistName || apt.therapistId || 'Terapeuta'}
-                                            </span>
-                                        </div>
-
-                                        {/* Tipo e Sala */}
-                                        <div className="flex gap-1 items-center mt-auto">
-                                            <span className="text-[10px] text-gray-300 truncate opacity-90">{apt.type}</span>
-                                            {apt.room && (
-                                                <span className="text-[9px] bg-black/20 px-1 rounded text-white/80">
-                                                    {apt.room}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                </AppointmentQuickView>
+                                {/* Status indicators */}
+                                <div className="flex items-center gap-1.5 mt-1">
+                                    {confirmed > 0 && (
+                                        <Badge variant="outline" className="h-5 px-1.5 bg-emerald-900/20 border-emerald-700 text-emerald-400 text-[9px]">
+                                            <span className="w-1 h-1 rounded-full bg-emerald-500 mr-1" />
+                                            {confirmed}
+                                        </Badge>
+                                    )}
+                                    {scheduled > 0 && (
+                                        <Badge variant="outline" className="h-5 px-1.5 bg-blue-900/20 border-blue-700 text-blue-400 text-[9px]">
+                                            <span className="w-1 h-1 rounded-full bg-blue-500 mr-1" />
+                                            {scheduled}
+                                        </Badge>
+                                    )}
+                                </div>
                             </div>
                         );
                     })}
+                </div>
 
+                {/* Scrollable Grid Area */}
+                <div className="flex-1 overflow-y-auto custom-scrollbar relative bg-slate-950">
+                    <div className="grid grid-cols-[60px_repeat(7,1fr)] relative" style={{
+                        gridTemplateRows: `repeat(${timeSlots.length}, ${SLOT_HEIGHT}px)`
+                    }}>
+
+                        {/* Time Labels Column */}
+                        {timeSlots.map((time, index) => {
+                            const isHalfHour = time.includes(':30');
+                            return (
+                                <div
+                                    key={`time-${time}`}
+                                    className={cn(
+                                        "border-r border-slate-800 text-xs flex justify-center pt-2 sticky left-0 z-10",
+                                        isHalfHour ? "bg-slate-900/50 text-slate-600" : "bg-slate-900 text-slate-500"
+                                    )}
+                                    style={{ gridRow: index + 1, gridColumn: 1 }}
+                                >
+                                    {time}
+                                </div>
+                            );
+                        })}
+
+                        {/* Grid Background Cells for Interaction */}
+                        {weekDays.map((day, colIndex) => {
+                            const isClosed = isDayClosedForDate(day);
+                            return timeSlots.map((time, rowIndex) => {
+                                const { blocked } = checkTimeBlocked(day, time);
+                                const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === time;
+
+                                return (
+                                    <div
+                                        key={`cell-${colIndex}-${rowIndex}`}
+                                        className={cn(
+                                            "border-b border-r border-slate-800/50 transition-colors relative",
+                                            colIndex === 6 && "border-r-0",
+                                            isClosed && "bg-slate-900/40",
+                                            !isClosed && !blocked && "hover:bg-blue-500/5 cursor-pointer",
+                                            blocked && "bg-red-900/10 cursor-not-allowed",
+                                            isDropTarget && "bg-blue-500/10 shadow-[inset_0_0_0_2px_rgba(59,130,246,0.5)]"
+                                        )}
+                                        style={{ gridRow: rowIndex + 1, gridColumn: colIndex + 2 }}
+                                        onClick={() => !blocked && !isClosed && onTimeSlotClick(day, time)}
+                                        onDragOver={(e) => !blocked && !isClosed && handleDragOver(e, day, time)}
+                                        onDragLeave={handleDragLeave}
+                                        onDrop={(e) => !blocked && !isClosed && handleDrop(e, day, time)}
+                                    >
+                                        {/* Add button on hover */}
+                                        {!blocked && !isClosed && (
+                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 pointer-events-none">
+                                                <span className="text-[10px] bg-blue-600/20 text-blue-200 px-1 rounded">+</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            });
+                        })}
+
+                        {/* Appointments Overlay */}
+                        {weekAppointments.map(apt => {
+                            const style = getAppointmentStyle(apt);
+                            if (!style) return null;
+
+                            const dragging = isDraggingThis(apt.id);
+                            const hovered = hoveredAppointmentId === apt.id;
+
+                            return (
+                                <Tooltip key={apt.id}>
+                                    <TooltipTrigger asChild>
+                                        <div
+                                            draggable={isDraggable}
+                                            onDragStart={(e) => handleDragStart(e, apt)}
+                                            onDragEnd={handleDragEnd}
+                                            onMouseEnter={() => setHoveredAppointmentId(apt.id)}
+                                            onMouseLeave={() => setHoveredAppointmentId(null)}
+                                            className={cn(
+                                                "absolute rounded-md p-2 flex flex-col justify-center border-l-4 transition-all shadow-md cursor-pointer overflow-hidden",
+                                                isDraggable && "cursor-grab active:cursor-grabbing",
+                                                !dragging && "hover:z-20 hover:scale-[1.02] hover:shadow-lg",
+                                                dragging && "opacity-40 scale-95 rotate-1",
+                                                !dragging && dragState.isDragging && "opacity-60 scale-[0.98]",
+                                                isDraggable && hovered && !dragging && "ring-2 ring-blue-400/50",
+                                                getStatusColor(apt.status)
+                                            )}
+                                            style={{
+                                                ...style,
+                                                zIndex: dragging ? 5 : hovered ? 20 : 10,
+                                            }}
+                                        >
+                                            {/* Drag handle indicator */}
+                                            {isDraggable && hovered && !dragging && (
+                                                <div className="absolute top-1 left-1 z-10" aria-label="Arraste para reagendar">
+                                                    <div className="bg-white/90 dark:bg-slate-800/90 rounded-md p-1 shadow-md">
+                                                        <GripVertical className="w-3 h-3 text-slate-600 dark:text-slate-400" />
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <AppointmentQuickView
+                                                appointment={apt}
+                                                open={openPopoverId === apt.id}
+                                                onOpenChange={(open) => setOpenPopoverId(open ? apt.id : null)}
+                                                onEdit={onEditAppointment ? () => onEditAppointment(apt) : undefined}
+                                                onDelete={onDeleteAppointment ? () => onDeleteAppointment(apt) : undefined}
+                                            >
+                                                <div className="w-full h-full flex flex-col">
+                                                    {/* Nome do Paciente */}
+                                                    <p className="text-xs font-bold text-white truncate drop-shadow-sm leading-tight">
+                                                        {apt.patientName || 'Paciente não identificado'}
+                                                    </p>
+
+                                                    {/* Horário e Terapeuta */}
+                                                    <div className="flex items-center gap-1.5 mt-0.5">
+                                                        <span className="text-[10px] font-medium bg-black/30 px-1.5 py-0.5 rounded text-white/90">
+                                                            {normalizeTime(apt.time)}
+                                                        </span>
+                                                        <span className="text-[10px] text-slate-200 truncate">
+                                                            {apt.therapistName || apt.therapistId || 'Terapeuta'}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Tipo e Sala */}
+                                                    <div className="flex gap-1 items-center mt-auto">
+                                                        <span className="text-[10px] text-slate-300 truncate opacity-90">
+                                                            {apt.type}
+                                                        </span>
+                                                        {apt.room && (
+                                                            <span className="text-[9px] bg-black/20 px-1 rounded text-white/80">
+                                                                {apt.room}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </AppointmentQuickView>
+                                        </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <div className="space-y-1">
+                                            <p className="font-medium">{apt.patientName || 'Paciente'}</p>
+                                            <p className="text-xs text-slate-500">{apt.type} • {apt.duration}min</p>
+                                            <p className="text-xs text-slate-500">Status: {apt.status}</p>
+                                        </div>
+                                    </TooltipContent>
+                                </Tooltip>
+                            );
+                        })}
+
+                    </div>
                 </div>
             </div>
-        </div>
+        </TooltipProvider>
     );
 });
 
 CalendarWeekView.displayName = 'CalendarWeekView';
-
