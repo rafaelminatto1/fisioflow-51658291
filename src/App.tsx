@@ -21,6 +21,7 @@ import { VersionManager } from "@/components/system/VersionManager";
 import { initWebVitalsMonitoring, WebVitalsIndicator } from "@/lib/monitoring/web-vitals";
 import { PerformanceDashboard } from "@/components/system";
 import { FeatureFlagProvider } from "@/lib/featureFlags/hooks";
+import { useServiceWorkerUpdate } from "@/hooks/useServiceWorkerUpdate";
 
 // Create a client with performance optimizations
 const queryClient = new QueryClient({
@@ -98,6 +99,9 @@ const StatsigProviderWrapper = ({ children }: { children: React.ReactNode }) => 
 };
 
 const App = () => {
+  // Gerenciar atualizações do Service Worker
+  useServiceWorkerUpdate();
+
   useEffect(() => {
     logger.info('Aplicação iniciada', { timestamp: new Date().toISOString() }, 'App');
 
