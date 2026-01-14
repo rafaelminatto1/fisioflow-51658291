@@ -5,217 +5,38 @@
  * Only visible in development mode or with specific permissions.
  */
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useState, useEffect, useCallback } from 'react';
 import { QueryOptimizer } from '@/hooks/database/useOptimizedQuery';
-import { PerformanceMonitor } from '@/lib/database/performanceMonitor';
-import { logger } from '@/lib/errors/logger';
-
-interface QueryMetric {
-  queryKey: string;
-  duration: number;
-  cacheHit: boolean;
-  timestamp: number;
-}
-
-interface SlowQuery {
-  queryId: string;
-  calls: number;
-  totalTime: number;
-  meanTime: number;
-  maxTime: number;
-  query: string;
-}
-
-export function PerformanceDashboard() {
-  const [metrics, setMetrics] = useState<QueryMetric[]>([]);
-  const [slowQueries, setSlowQueries] = useState<SlowQuery[]>([]);
-  const [avgTime, setAvgTime] = useState(0);
-  const [cacheHitRate, setCacheHitRate] = useState(0);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const refreshMetrics = async () => {
-    setRefreshing(true);
-    try {
-      const allMetrics = QueryOptimizer.getQueryMetrics();
-      const avg = QueryOptimizer.getAverageQueryTime();
-      const hitRate = QueryOptimizer.getCacheHitRate();
-      const slow = await PerformanceMonitor.getSlowQueries();
-
-      setMetrics(allMetrics.slice(-20)); // Last 20 queries
-      setAvgTime(avg);
-      setCacheHitRate(hitRate);
-      setSlowQueries(slow);
-    } catch (error) {
-      logger.error('Error refreshing performance metrics', error, 'PerformanceDashboard');
-    } finally {
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    refreshMetrics();
-    const interval = setInterval(refreshMetrics, 5000); // Auto-refresh every 5s
-    return () => clearInterval(interval);
-  }, []);
-
-  const formatDuration = (ms: number) => {
-    if (ms < 1) return `${ms.toFixed(2)}ms`;
-    if (ms < 1000) return `${ms.toFixed(0)}ms`;
-    return `${(ms / 1000).toFixed(2)}s`;
-  };
-
-  const getScoreColor = (value: number, type: 'duration' | 'cache') => {
-    if (type === 'duration') {
-      if (value < 100) return 'text-green-500';
-      if (value < 500) return 'text-yellow-500';
-      return 'text-red-500';
-    } else {
-      if (value > 70) return 'text-green-500';
-      if (value > 40) return 'text-yellow-500';
-      return 'text-red-500';
-    }
-  };
-
-  // Only show in development
-  if (import.meta.env.PROD && process.env.NODE_ENV !== 'development') {
-    return null;
-  }
-
-  return (
-    <Card className="w-full">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-lg">Performance Dashboard</CardTitle>
-            <CardDescription>Real-time Supabase query metrics</CardDescription>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={refreshMetrics}
-            disabled={refreshing}
-          >
-            {refreshing ? 'Refreshing...' : 'Refresh'}
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="queries">Recent Queries</TabsTrigger>
-            <TabsTrigger value="slow">Slow Queries</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">Avg Query Time</p>
-                <p className={`text-2xl font-bold ${getScoreColor(avgTime, 'duration')}`}>
-                  {formatDuration(avgTime)}
-                </p>
-              </div>
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">Cache Hit Rate</p>
-                <p className={`text-2xl font-bold ${getScoreColor(cacheHitRate, 'cache')}`}>
-                  {cacheHitRate.toFixed(1)}%
-                </p>
-              </div>
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">Total Queries</p>
-                <p className="text-2xl font-bold">{metrics.length}</p>
-              </div>
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">Slow Queries</p>
-                <p className="text-2xl font-bold text-red-500">{slowQueries.length}</p>
-              </div>
-            </div>
-
-            <div className="p-4 bg-muted rounded-lg">
-              <h4 className="font-semibold mb-2">Cache Status</h4>
-              <div className="flex gap-2">
-                <Badge variant={cacheHitRate > 70 ? 'default' : 'secondary'}>
-                  {cacheHitRate > 70 ? 'Good' : cacheHitRate > 40 ? 'Fair' : 'Poor'}
-                </Badge>
-                <Badge variant="outline">
-                  {metrics.filter(m => m.cacheHit).length} hits
-                </Badge>
-                <Badge variant="outline">
-                  {metrics.filter(m => !m.cacheHit).length} misses
-                </Badge>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="queries" className="space-y-2">
-            {metrics.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">No queries recorded yet</p>
-            ) : (
-              <div className="space-y-2 max-h-80 overflow-y-auto">
-                {metrics.map((metric, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between p-3 bg-muted rounded-lg text-sm"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Badge variant={metric.cacheHit ? 'default' : 'secondary'}>
-                        {metric.cacheHit ? 'CACHE' : 'DB'}
-                      </Badge>
-                      <code className="text-xs max-w-md truncate">
-                        {metric.queryKey.replace(/"/g, '').slice(0, 50)}
-                      </code>
-                    </div>
-                    <span className={metric.cacheHit ? 'text-green-500' : undefined}>
-                      {formatDuration(metric.duration)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="slow" className="space-y-2">
-            {slowQueries.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">
-                No slow queries detected - Great job! 🎉
-              </p>
-            ) : (
-              <div className="space-y-3 max-h-80 overflow-y-auto">
-                {slowQueries.map((query, i) => (
-                  <Card key={i}>
-                    <CardContent className="pt-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <Badge variant="destructive">
-                          {formatDuration(query.meanTime)} avg
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {query.calls} calls
-                        </span>
-                      </div>
-                      <pre className="text-xs bg-muted p-2 rounded overflow-x-auto">
-                        {query.query}
-                      </pre>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
-  );
-}
+import { PerformanceMonitor, type QueryStatistics, type PerformanceReport } from '@/lib/database/performanceMonitor';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Activity, Database, Zap, AlertTriangle, RefreshCw, Trash2, Search } from 'lucide-react';
+import { useToast } from "@/components/ui/use-toast";
 
 /**
  * Mini performance indicator for inline display
  */
 export function PerformanceIndicator() {
   const [avgTime, setAvgTime] = useState(0);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     const updateAvg = () => {
@@ -226,17 +47,334 @@ export function PerformanceIndicator() {
     return () => clearInterval(interval);
   }, []);
 
-  if (!import.meta.env.DE) return null;
+  if (!import.meta.env.DEV) return null;
 
   return (
-    <div
-      className={`text-xs px-2 py-1 rounded ${
-        avgTime < 100 ? 'bg-green-500/20 text-green-500' :
-        avgTime < 500 ? 'bg-yellow-500/20 text-yellow-500' :
-        'bg-red-500/20 text-red-500'
-      }`}
-    >
-      {avgTime.toFixed(0)}ms
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <div
+          className={`text-xs px-2 py-1 rounded cursor-pointer transition-colors flex items-center gap-1 ${avgTime < 100 ? 'bg-green-500/20 text-green-500 hover:bg-green-500/30' :
+            avgTime < 500 ? 'bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30' :
+              'bg-red-500/20 text-red-500 hover:bg-red-500/30'
+            }`}
+          title="Click to open Performance Dashboard"
+        >
+          <Activity className="h-3 w-3" />
+          {avgTime.toFixed(0)}ms
+        </div>
+      </DialogTrigger>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5 text-primary" />
+            System Performance Dashboard
+          </DialogTitle>
+        </DialogHeader>
+
+        <PerformanceDashboardContent />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/**
+ * Main Content of the Dashboard
+ */
+function PerformanceDashboardContent() {
+  const [loading, setLoading] = useState(false);
+  const [report, setReport] = useState<PerformanceReport | null>(null);
+  const [queryStats, setQueryStats] = useState<QueryStatistics[]>([]);
+  const { toast } = useToast();
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [perfReport, stats] = await Promise.all([
+        PerformanceMonitor.generatePerformanceReport(),
+        PerformanceMonitor.getQueryStatistics()
+      ]);
+      setReport(perfReport);
+      setQueryStats(stats);
+      toast({
+        title: "Metrics updated",
+        description: "Latest performance data has been loaded.",
+      });
+    } catch (error) {
+      console.error("Failed to load metrics", error);
+      toast({
+        title: "Error",
+        description: "Failed to load performance metrics.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleClearCache = () => {
+    PerformanceMonitor.clearCache();
+    toast({
+      title: "Cache Cleared",
+      description: "All cached query data has been removed.",
+    });
+  };
+
+  const handleAnalyzeTables = async () => {
+    setLoading(true);
+    const success = await PerformanceMonitor.analyzeTables();
+    if (success) {
+      toast({
+        title: "Analysis Complete",
+        description: "Database statistics have been updated.",
+      });
+      loadData();
+    } else {
+      toast({
+        title: "Analysis Failed",
+        description: "Could not run ANLAYZE command.",
+        variant: "destructive",
+      });
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={loadData} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleClearCache}>
+            <Trash2 className="h-4 w-4 mr-2" />
+            Clear Cache
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleAnalyzeTables} disabled={loading}>
+            <Search className="h-4 w-4 mr-2" />
+            Analyze Tables
+          </Button>
+        </div>
+      </div>
+
+      <Tabs defaultValue="overview" className="flex-1 flex flex-col overflow-hidden">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="slow-queries">Slow Queries</TabsTrigger>
+          <TabsTrigger value="database">Database Stats</TabsTrigger>
+          <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
+        </TabsList>
+
+        <div className="flex-1 overflow-auto mt-4">
+          <TabsContent value="overview" className="h-full space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Avg Query Time</CardTitle>
+                  <Zap className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {QueryOptimizer.getAverageQueryTime().toFixed(0)}ms
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Client-side measured average
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Slow Queries</CardTitle>
+                  <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {report?.slowQueries.length || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Detected in last 24h
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Large Tables</CardTitle>
+                  <Database className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {report?.largeTables.length || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    &gt; 10MB size
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {report?.recommendations.length ? (
+              <Card className="border-yellow-500/50 bg-yellow-500/10">
+                <CardHeader>
+                  <CardTitle className="text-yellow-600 flex items-center">
+                    <AlertTriangle className="h-4 w-4 mr-2" />
+                    Top Recommendations
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="list-disc pl-5 space-y-1">
+                    {report.recommendations.slice(0, 3).map((rec, i) => (
+                      <li key={i} className="text-sm text-yellow-700 dark:text-yellow-400">{rec}</li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            ) : null}
+          </TabsContent>
+
+          <TabsContent value="slow-queries" className="h-full">
+            <Card>
+              <CardHeader>
+                <CardTitle>Slowest Queries</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <ScrollArea className="h-[400px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Calls</TableHead>
+                        <TableHead>Mean Time</TableHead>
+                        <TableHead>Max Time</TableHead>
+                        <TableHead>Query Fragment</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {report?.slowQueries.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                            No slow queries detected
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        report?.slowQueries.map((query) => (
+                          <TableRow key={query.queryId}>
+                            <TableCell>{query.calls}</TableCell>
+                            <TableCell className={query.meanTime > 500 ? 'text-red-500 font-bold' : ''}>
+                              {query.meanTime.toFixed(2)}ms
+                            </TableCell>
+                            <TableCell>{query.maxTime.toFixed(2)}ms</TableCell>
+                            <TableCell className="font-mono text-xs max-w-[300px] truncate" title={query.query}>
+                              {query.query}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="database" className="h-full space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Table Statistics</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <ScrollArea className="h-[300px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Table</TableHead>
+                        <TableHead>Size</TableHead>
+                        <TableHead>Seq Scans</TableHead>
+                        <TableHead>Idx Scans</TableHead>
+                        <TableHead>Idx Ratio</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {queryStats.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                            No statistics available. Try "Analyze Tables".
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        queryStats.map((stat) => (
+                          <TableRow key={stat.tableName}>
+                            <TableCell className="font-medium">{stat.tableName}</TableCell>
+                            <TableCell>{stat.tableSize}</TableCell>
+                            <TableCell>{stat.seqScan}</TableCell>
+                            <TableCell>{stat.idxScan}</TableCell>
+                            <TableCell>
+                              <Badge variant={stat.idxScanRatio > 90 ? 'secondary' : stat.idxScanRatio < 50 ? 'destructive' : 'outline'}>
+                                {stat.idxScanRatio}%
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="recommendations" className="h-full">
+            <Card>
+              <CardHeader>
+                <CardTitle>Optimization Recommendations</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {report?.recommendations.length === 0 && report?.missingIndexes.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No recommendations at this time. Good job!
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {report?.recommendations.length ? (
+                      <div>
+                        <h4 className="font-semibold mb-2 flex items-center">
+                          <Zap className="h-4 w-4 mr-2 text-yellow-500" /> General Improvements
+                        </h4>
+                        <ul className="space-y-2">
+                          {report.recommendations.map((rec, i) => (
+                            <li key={i} className="text-sm p-2 bg-muted rounded flex items-start">
+                              <span className="mr-2">•</span> {rec}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+
+                    {report?.missingIndexes.length ? (
+                      <div>
+                        <h4 className="font-semibold mb-2 flex items-center">
+                          <Database className="h-4 w-4 mr-2 text-blue-500" /> Missing Indexes
+                        </h4>
+                        <ul className="space-y-2">
+                          {report.missingIndexes.map((rec, i) => (
+                            <li key={i} className="text-sm p-2 bg-blue-500/10 border border-blue-500/20 rounded text-blue-700 dark:text-blue-300">
+                              {rec}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </div>
+      </Tabs>
     </div>
   );
 }

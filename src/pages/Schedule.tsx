@@ -451,11 +451,12 @@ const Schedule = () => {
           handleCreateAppointment();
           break;
 
-        case KEYBOARD_SHORTCUTS.SEARCH:
+        case KEYBOARD_SHORTCUTS.SEARCH: {
           e.preventDefault();
           const searchInput = document.querySelector('input[aria-label="Buscar agendamentos por nome do paciente"]') as HTMLInputElement;
           searchInput?.focus();
           break;
+        }
 
         case KEYBOARD_SHORTCUTS.DAY_VIEW:
         case KEYBOARD_SHORTCUTS.WEEK_VIEW:
