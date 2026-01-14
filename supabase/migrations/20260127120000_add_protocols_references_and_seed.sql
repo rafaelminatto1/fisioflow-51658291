@@ -225,7 +225,7 @@ INSERT INTO exercise_protocols (
     ]'::jsonb,
     '[
         {"week_start": 0, "week_end": 6, "description": "Rotação externa limitada a 30°"},
-        {"week_start": 0, "week_end": 12, "description": "Evitar posição de 'High Five' (Abdução + RE máxima)"}
+        {"week_start": 0, "week_end": 12, "description": "Evitar posição de ''High Five'' (Abdução + RE máxima)"}
     ]'::jsonb,
     '[
         {"type": "Stability", "value": "Teste de Apreensão negativo"},
@@ -1250,7 +1250,7 @@ INSERT INTO exercise_protocols (
         {"type": "Pain", "value": "Finkelstein Test negativo"}
     ]'::jsonb,
     '[
-        {"title": "Management of De Quervain's Tenosynovitis", "authors": "Ilyas AM et al.", "year": 2007}
+        {"title": "Management of De Quervain''s Tenosynovitis", "authors": "Ilyas AM et al.", "year": 2007}
     ]'::jsonb,
     '[]'::jsonb,
     NULL
