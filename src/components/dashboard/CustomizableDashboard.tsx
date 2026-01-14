@@ -39,7 +39,9 @@ export function CustomizableDashboard() {
   const { summary, isLoading } = useAnalyticsSummary();
   const [customizeOpen, setCustomizeOpen] = useState(false);
 
-  const visibleWidgets = widgets.filter(w => w.visible).sort((a, b) => a.position - b.position);
+  const visibleWidgets = widgets
+    .filter(w => w.visible && typeof w.position === 'number')
+    .sort((a, b) => (a.position || 0) - (b.position || 0));
 
   const getWidgetData = (type: string) => {
     // Sempre retornar valores válidos, mesmo durante carregamento

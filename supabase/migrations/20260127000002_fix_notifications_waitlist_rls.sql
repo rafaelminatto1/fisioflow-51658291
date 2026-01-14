@@ -7,10 +7,12 @@ DROP POLICY IF EXISTS "notifications_select_policy" ON notifications;
 DROP POLICY IF EXISTS "notifications_insert_policy" ON notifications;
 DROP POLICY IF EXISTS "notifications_update_policy" ON notifications;
 
+DROP POLICY IF EXISTS "notifications_select_own" ON notifications;
 CREATE POLICY "notifications_select_own" ON notifications
 FOR SELECT TO authenticated
 USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "notifications_insert_authenticated" ON notifications;
 CREATE POLICY "notifications_insert_authenticated" ON notifications
 FOR INSERT TO authenticated
 WITH CHECK (auth.uid() = user_id OR EXISTS (
@@ -19,6 +21,7 @@ WITH CHECK (auth.uid() = user_id OR EXISTS (
   AND role = 'admin'
 ));
 
+DROP POLICY IF EXISTS "notifications_update_own" ON notifications;
 CREATE POLICY "notifications_update_own" ON notifications
 FOR UPDATE TO authenticated
 USING (auth.uid() = user_id)
@@ -29,6 +32,7 @@ DROP POLICY IF EXISTS "waitlist_select_policy" ON waitlist;
 DROP POLICY IF EXISTS "waitlist_insert_policy" ON waitlist;
 DROP POLICY IF EXISTS "waitlist_update_policy" ON waitlist;
 
+DROP POLICY IF EXISTS "waitlist_select_authenticated" ON waitlist;
 CREATE POLICY "waitlist_select_authenticated" ON waitlist
 FOR SELECT TO authenticated
 USING (
@@ -46,6 +50,7 @@ USING (
   )
 );
 
+DROP POLICY IF EXISTS "waitlist_insert_authenticated" ON waitlist;
 CREATE POLICY "waitlist_insert_authenticated" ON waitlist
 FOR INSERT TO authenticated
 WITH CHECK (
@@ -62,6 +67,7 @@ WITH CHECK (
   )
 );
 
+DROP POLICY IF EXISTS "waitlist_update_authenticated" ON waitlist;
 CREATE POLICY "waitlist_update_authenticated" ON waitlist
 FOR UPDATE TO authenticated
 USING (

@@ -318,28 +318,29 @@ $$;
 -- VIEW FOR MFA STATUS DASHBOARD
 -- ============================================================================
 
+DROP VIEW IF EXISTS private.mfa_status_dashboard CASCADE;
 CREATE OR REPLACE VIEW private.mfa_status_dashboard AS
-SELECT
-    u.id as user_id,
-    u.email,
-    ur.role,
+SELECT 
+    u.id as user_id, 
+    u.email, 
+    ur.role, 
     COUNT(mfa.id) FILTER (WHERE mfa.status = 'verified') as mfa_factors_enabled,
     COUNT(mfa.id) as total_mfa_factors,
     MAX(mfa.created_at) as mfa_enabled_at,
     COUNT(DISTINCT mal.id) as mfa_events,
     COUNT(DISTINCT mal.id) FILTER (WHERE mal.success = false) as failed_mfa_attempts,
-    CASE
+    CASE 
         WHEN ur.role = 'admin' AND COUNT(mfa.id) FILTER (WHERE mfa.status = 'verified') = 0 THEN 'mfa_required'
         WHEN COUNT(mfa.id) FILTER (WHERE mfa.status = 'verified') > 0 THEN 'mfa_enabled'
         ELSE 'no_mfa'
     END as mfa_status
 FROM auth.users u
-LEFT JOIN public.user_roles ur ON ur.user_id = u.id
+LEFT JOIN public.user_roles ur ON ur.user_id = u.id 
     AND ur.revoked_at IS NULL
 LEFT JOIN auth.mfa_factors mfa ON mfa.user_id = u.id
 LEFT JOIN public.mfa_audit_log mal ON mal.user_id = u.id
     AND mal.created_at >= now() - interval '30 days'
-WHERE ur.role IN ('admin', 'fisioterapeuta', 'estagiario', 'partner')
+WHERE ur.role IS NOT NULL AND ur.role IN ('admin', 'fisioterapeuta', 'estagiario')
 GROUP BY u.id, u.email, ur.role
 ORDER BY ur.role, u.email;
 
