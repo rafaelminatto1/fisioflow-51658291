@@ -325,6 +325,7 @@ export function PainMapEditor({
         open={modalOpen}
         onOpenChange={setModalOpen}
         onSave={handlePointUpdate}
+        view={activeView}
       />
     </div>
   );

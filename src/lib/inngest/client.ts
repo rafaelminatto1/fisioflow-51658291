@@ -47,7 +47,7 @@ export const errorTrackingMiddleware = {
         if (output.error) {
           // Import Sentry dynamically to avoid issues in non-Sentry environments
           import('@sentry/react').then((SentryModule) => {
-            const Sentry = SentryModule.default || SentryModule;
+            const Sentry = SentryModule as any;
             if (typeof Sentry.captureException === 'function') {
               Sentry.captureException(output.error, {
                 tags: {

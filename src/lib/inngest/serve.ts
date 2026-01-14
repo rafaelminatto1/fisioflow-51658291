@@ -5,7 +5,7 @@
  * It registers all Inngest functions and handles incoming events.
  */
 
-import { serve } from 'inngest';
+import { serve } from 'inngest/next';
 import { inngest } from './client.js';
 
 // Import all workflows

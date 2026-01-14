@@ -81,7 +81,7 @@ export function usePerformanceMonitor(componentName: string, enabled = process.e
  * Hook para medir tempo de execução de funções assíncronas
  */
 export function useAsyncPerformance() {
-  const measureAsync = useCallback(async <T>(
+  const measureAsync = useCallback(async <T,>(
     name: string,
     fn: () => Promise<T>
   ): Promise<T> => {

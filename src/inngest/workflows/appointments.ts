@@ -5,9 +5,27 @@
  * Can be triggered manually or scheduled
  */
 
-import { inngest, retryConfig } from '@/lib/inngest/client';
-import { Events } from '@/lib/inngest/types';
+import { inngest, retryConfig } from '../../lib/inngest/client';
+import { Events, InngestStep } from '../../lib/inngest/types';
 import { createClient } from '@supabase/supabase-js';
+
+type AppointmentWithRelations = {
+  id: string;
+  date: string;
+  time: string;
+  patient: {
+    id: string;
+    name: string;
+    email?: string;
+    phone?: string;
+    notification_preferences?: { email?: boolean; whatsapp?: boolean };
+  };
+  organization: {
+    id: string;
+    name?: string;
+    settings?: { email_enabled?: boolean; whatsapp_enabled?: boolean };
+  };
+};
 
 export const appointmentReminderWorkflow = inngest.createFunction(
   {
@@ -18,14 +36,14 @@ export const appointmentReminderWorkflow = inngest.createFunction(
   {
     event: Events.APPOINTMENT_REMINDER,
   },
-  async ({ step }: { event: { data: Record<string, unknown> }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
+  async ({ step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
     // Get appointments that need reminders
-    const appointments = await step.run('get-appointments', async () => {
+    const appointments = await step.run('get-appointments', async (): Promise<AppointmentWithRelations[]> => {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       tomorrow.setHours(0, 0, 0, 0);
@@ -48,7 +66,7 @@ export const appointmentReminderWorkflow = inngest.createFunction(
         throw new Error(`Failed to fetch appointments: ${error.message}`);
       }
 
-      return data || [];
+      return (data || []) as unknown as AppointmentWithRelations[];
     });
 
     if (appointments.length === 0) {
@@ -60,9 +78,9 @@ export const appointmentReminderWorkflow = inngest.createFunction(
     }
 
     // Send reminders
-    const results = await step.run('send-reminders', async () => {
+    const results = await step.run('send-reminders', async (): Promise<{ appointmentId: string; patientId: string; notificationsQueued: number }[]> => {
       return await Promise.all(
-        appointments.map(async (appointment: { id: string; patient_id?: string }) => {
+        appointments.map(async (appointment) => {
           const patient = appointment.patient;
           const preferences = patient.notification_preferences || {};
           const orgSettings = appointment.organization?.settings || {};
@@ -135,7 +153,7 @@ export const appointmentCreatedWorkflow = inngest.createFunction(
   {
     event: Events.APPOINTMENT_CREATED,
   },
-  async ({ step }: { event: { data: Record<string, unknown> }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
+  async ({ step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
 
     // Invalidate cache for patient
     await step.run('invalidate-cache', async () => {

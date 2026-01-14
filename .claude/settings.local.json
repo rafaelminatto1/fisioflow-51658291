@@ -120,7 +120,11 @@
       "mcp__playwright__browser_snapshot",
       "mcp__playwright__browser_run_code",
       "mcp__supabase__get_edge_function",
-      "Bash(NODE_OPTIONS='--max-old-space-size=4096' pnpm run build:*)"
+      "Bash(NODE_OPTIONS='--max-old-space-size=4096' pnpm run build:*)",
+      "Bash(pnpm why:*)",
+      "Bash(npm why:*)",
+      "Bash(pnpm ls:*)",
+      "mcp__playwright__browser_close"
     ],
     "deny": [],
     "ask": []
