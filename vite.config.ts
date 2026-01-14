@@ -256,7 +256,8 @@ export default defineConfig(({ mode }) => {
             }
           },
           // Perfis modernos para melhor performance
-          experimentalMinChunkSize: 10000,
+          // Aumentado para reduzir uso de memória durante build
+          experimentalMinChunkSize: 20000,
         },
         // Preservar nomes dos módulos para melhor debugging
         preserveEntrySignatures: 'strict',
