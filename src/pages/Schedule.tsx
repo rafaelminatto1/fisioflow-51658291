@@ -62,6 +62,84 @@ const KEYBOARD_SHORTCUTS = {
 
 
 
+interface ScheduleStats {
+  total: number;
+  completed: number;
+  confirmed: number;
+  pending: number;
+  completionRate: number;
+  nextAppointment: Appointment | null;
+  weekTotal: number;
+}
+
+// =====================================================================
+// UTILITY FUNCTIONS
+// =====================================================================
+
+/**
+ * Safely parses an appointment date string or Date object
+ * @param date - Date string or Date object to parse
+ * @returns Parsed Date or null if parsing fails
+ */
+const safeParseDate = (date: string | Date): Date | null => {
+  try {
+    return typeof date === 'string' ? parseISO(date) : date;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Checks if a date is within the specified range
+ * @param date - Date to check
+ * @param start - Start of range
+ * @param end - End of range
+ * @returns True if date is within range
+ */
+const isDateInRange = (date: Date, start: Date, end: Date): boolean => {
+  return date >= start && date <= end;
+};
+
+/**
+ * Calculates the time until the next appointment in minutes
+ * @param appointment - Appointment to check
+ * @returns Minutes until appointment or null if invalid
+ */
+const getTimeUntilAppointment = (appointment: Appointment): number | null => {
+  try {
+    const aptDate = safeParseDate(appointment.appointmentDate);
+    if (!aptDate) return null;
+
+    const [hours, minutes] = appointment.appointmentTime.split(':').map(Number);
+    const aptDateTime = new Date(aptDate);
+    aptDateTime.setHours(hours, minutes, 0, 0);
+
+    return differenceInMinutes(aptDateTime, new Date());
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Rounds time to nearest business hour slot
+ * @param date - Date to round
+ * @returns Rounded time string in HH:MM format
+ */
+const roundToNextSlot = (date: Date): string => {
+  const minutes = date.getMinutes();
+  const roundedMinutes = minutes < BUSINESS_HOURS.defaultRound ? BUSINESS_HOURS.defaultRound : 0;
+  let hour = minutes < BUSINESS_HOURS.defaultRound ? date.getHours() : date.getHours() + 1;
+
+  // Adjust to business hours
+  if (hour >= BUSINESS_HOURS.end) {
+    hour = BUSINESS_HOURS.start;
+  } else if (hour < BUSINESS_HOURS.start) {
+    hour = BUSINESS_HOURS.start;
+  }
+
+  return `${String(hour).padStart(2, '0')}:${String(roundedMinutes).padStart(2, '0')}`;
+};
+
 // =====================================================================
 // MAIN COMPONENT
 // =====================================================================
