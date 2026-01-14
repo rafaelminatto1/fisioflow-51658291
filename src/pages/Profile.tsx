@@ -48,20 +48,12 @@ export const Profile = () => {
     async function loadProfile() {
       if (!user) return;
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Profile.tsx:47',message:'loadProfile called',data:{userId:user.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
-
       try {
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('user_id', user.id)
           .single();
-
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Profile.tsx:55',message:'loadProfile result',data:{hasError:!!error,errorCode:error?.code,errorMessage:error?.message,hasData:!!data,status:error?.status,statusText:error?.statusText},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
 
         if (error) throw error;
 

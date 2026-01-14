@@ -68,6 +68,7 @@ USING (
 );
 
 -- Criar políticas para INSERT
+DROP POLICY IF EXISTS "appointments_insert_authenticated" ON appointments;
 CREATE POLICY "appointments_insert_authenticated" ON appointments
 FOR INSERT TO authenticated
 WITH CHECK (
@@ -87,6 +88,7 @@ WITH CHECK (
 );
 
 -- Criar políticas para UPDATE
+DROP POLICY IF EXISTS "appointments_update_authenticated" ON appointments;
 CREATE POLICY "appointments_update_authenticated" ON appointments
 FOR UPDATE TO authenticated
 USING (
@@ -121,6 +123,7 @@ WITH CHECK (
 );
 
 -- Criar políticas para DELETE (apenas admins)
+DROP POLICY IF EXISTS "appointments_delete_admin" ON appointments;
 CREATE POLICY "appointments_delete_admin" ON appointments
 FOR DELETE TO authenticated
 USING (
