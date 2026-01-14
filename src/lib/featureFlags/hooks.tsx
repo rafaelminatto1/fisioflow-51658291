@@ -115,18 +115,18 @@ export function FeatureFlagProvider({
  */
 export function useFeatureFlag(
   flagName: FeatureFlagName,
-  options?: Statsig.StatsigOptions
+  _options?: Statsig.StatsigOptions
 ): {
   enabled: boolean;
   isLoading: boolean;
-  metadata?: Statsig.GateEvaluation;
+  metadata?: unknown;
   error: Error | null;
 } {
   const [data, setData] = useState<{
     enabled: boolean;
-    metadata?: Statsig.GateEvaluation;
+    metadata?: unknown;
   }>(() => ({
-    enabled: StatsigService.isFeatureEnabled(flagName, undefined, options),
+    enabled: StatsigService.isFeatureEnabled(flagName),
   }));
 
   const [isLoading, setIsLoading] = useState(!StatsigService.isInitialized());
@@ -137,7 +137,8 @@ export function useFeatureFlag(
       return;
     }
 
-    // Initial check
+    // Initial check - just get the value, no subscription needed
+    // statsig-react v2 doesn't have subscribeToGateChanges
     const checkGate = () => {
       const metadata = StatsigService.getFeatureFlagMetadata(flagName);
       setData({
@@ -148,24 +149,8 @@ export function useFeatureFlag(
     };
 
     checkGate();
-
-    // Subscribe to changes
-    const unsubscribe = Statsig.subscribeToGateChanges(
-      [flagName],
-      (result) => {
-        const value = result[flagName];
-        setData({
-          enabled: value,
-          metadata: Statsig.getGateEvaluation(flagName),
-        });
-        setIsLoading(false);
-      }
-    );
-
-    return () => {
-      unsubscribe();
-    };
-  }, [flagName, options]);
+    // No subscription in statsig-react v2 - values are reactive via provider
+  }, [flagName]);
 
   return {
     ...data,
@@ -219,15 +204,7 @@ export function useMultipleFeatureFlags(
     };
 
     checkFlags();
-
-    const unsubscribe = Statsig.subscribeToGateChanges(flagNames, (result) => {
-      setFlags(result);
-      setIsLoading(false);
-    });
-
-    return () => {
-      unsubscribe();
-    };
+    // No subscription in statsig-react v2 - values are reactive via provider
   }, [flagNames]);
 
   return {
@@ -284,17 +261,7 @@ export function useDynamicConfig<T = unknown>(
     };
 
     checkConfig();
-
-    const unsubscribe = Statsig.subscribeToConfigChanges(
-      [configName],
-      () => {
-        checkConfig();
-      }
-    );
-
-    return () => {
-      unsubscribe();
-    };
+    // No subscription in statsig-react v2 - values are reactive via provider
   }, [configName]);
 
   return { config, isLoading, error: null };
@@ -381,18 +348,7 @@ export function useExperiment<T = string>(
     };
 
     checkExperiment();
-
-    // Subscribe to experiment changes
-    const unsubscribe = Statsig.subscribeToExperimentChanges(
-      [experimentName],
-      () => {
-        checkExperiment();
-      }
-    );
-
-    return () => {
-      unsubscribe();
-    };
+    // No subscription in statsig-react v2 - values are reactive via provider
   }, [experimentName]);
 
   const logExposure = useCallback(() => {
