@@ -5,8 +5,8 @@
  * Runs periodically to check for orphaned records and data consistency
  */
 
-import { inngest, retryConfig } from '@/lib/inngest/client';
-import { Events } from '@/lib/inngest/types';
+import { inngest, retryConfig } from '../../lib/inngest/client';
+import { Events, InngestStep } from '../../lib/inngest/types';
 import { createClient } from '@supabase/supabase-js';
 
 export const dataIntegrityWorkflow = inngest.createFunction(
@@ -19,7 +19,7 @@ export const dataIntegrityWorkflow = inngest.createFunction(
     event: Events.CRON_DATA_INTEGRITY,
     cron: '0 */6 * * *', // Every 6 hours
   },
-  async ({ step }: { event: { data: Record<string, unknown> }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
+  async ({ step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -28,7 +28,7 @@ export const dataIntegrityWorkflow = inngest.createFunction(
     const issues: string[] = [];
 
     // Check 1: Appointments without valid patients
-    await step.run('check-orphaned-appointments', async () => {
+    await step.run('check-orphaned-appointments', async (): Promise<number> => {
       const { data, error } = await supabase
         .from('appointments')
         .select('id')

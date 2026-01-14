@@ -36,6 +36,10 @@ export default defineConfig(({ mode }) => {
         "Cross-Origin-Embedder-Policy": "require-corp",
         "Cross-Origin-Opener-Policy": "same-origin",
       },
+      // Aumentar timeout do HMR para evitar desconexões em projetos grandes
+      hmr: {
+        timeout: 60000, // 60 segundos
+      },
     },
     define: {
       __APP_VERSION__: JSON.stringify(appVersion),
@@ -355,6 +359,25 @@ export default defineConfig(({ mode }) => {
       sourcemap: isProduction ? false : true,
     },
     optimizeDeps: {
+      // Evita re-otimizações contínuas que causam erro 504
+      // Mas mantém descoberta automática para não quebrar imports
+      holdUntilCrawlEnd: false,
+
+      // Incluir dependências críticas que precisam ser pré-bundladas
+      include: [
+        'react',
+        'react-dom/client',
+        'react-router-dom',
+        '@supabase/supabase-js',
+        '@tanstack/react-query',
+        'date-fns',
+        'zod',
+        'framer-motion',
+        'recharts',
+        'lucide-react',
+      ],
+
+      // Excluir bibliotecas médicas/visuais complexas que causam timeouts
       exclude: [
         '@cornerstonejs/dicom-image-loader',
         '@cornerstonejs/core',
@@ -363,16 +386,10 @@ export default defineConfig(({ mode }) => {
         '@cornerstonejs/codec-libjpeg-turbo-8bit',
         '@cornerstonejs/codec-openjpeg',
         '@cornerstonejs/codec-openjph',
-      ],
-      include: [
-        'react',
-        'react-dom',
-        'react-router-dom',
-        '@supabase/supabase-js',
-        '@tanstack/react-query',
-        'date-fns',
-        'zod',
-        'recharts'
+        '@mediapipe/pose',
+        '@mediapipe/tasks-vision',
+        'konva',
+        'react-konva',
       ],
     },
     esbuild: {

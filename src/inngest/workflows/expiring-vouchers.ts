@@ -5,9 +5,24 @@
  * Runs daily at 10:00 AM to send reminders for vouchers expiring in 7 days
  */
 
-import { inngest, retryConfig } from '@/lib/inngest/client';
-import { Events } from '@/lib/inngest/types';
+import { inngest, retryConfig } from '../../lib/inngest/client';
+import { Events, InngestStep } from '../../lib/inngest/types';
 import { createClient } from '@supabase/supabase-js';
+
+type VoucherWithRelations = {
+  id: string;
+  expires_at?: string;
+  patient: {
+    id: string;
+    name: string;
+    email?: string;
+    phone?: string;
+  };
+  organization: {
+    id: string;
+    name?: string;
+  };
+};
 
 export const expiringVouchersWorkflow = inngest.createFunction(
   {
@@ -19,14 +34,14 @@ export const expiringVouchersWorkflow = inngest.createFunction(
     event: Events.CRON_EXPIRING_VOUCHERS,
     cron: '0 10 * * *', // 10:00 AM daily
   },
-  async ({ step }: { event: { data: Record<string, unknown> }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
+  async ({ step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
     // Find vouchers expiring in 7 days
-    const vouchers = await step.run('find-expiring-vouchers', async () => {
+    const vouchers = await step.run('find-expiring-vouchers', async (): Promise<VoucherWithRelations[]> => {
       const sevenDaysFromNow = new Date();
       sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
       sevenDaysFromNow.setHours(23, 59, 59);
@@ -45,7 +60,8 @@ export const expiringVouchersWorkflow = inngest.createFunction(
         throw new Error(`Failed to fetch expiring vouchers: ${error.message}`);
       }
 
-      return data || [];
+      // We need to cast here because Supabase types might not perfectly match our explicit nested structure
+      return (data || []) as unknown as VoucherWithRelations[];
     });
 
     if (vouchers.length === 0) {
@@ -60,7 +76,7 @@ export const expiringVouchersWorkflow = inngest.createFunction(
     // Send reminders
     const results = await step.run('send-reminders', async () => {
       return await Promise.all(
-        vouchers.map(async (voucher: { id: string; expires_at?: string }) => {
+        vouchers.map(async (voucher) => {
           try {
             // Send email reminder
             if (voucher.patient?.email) {
