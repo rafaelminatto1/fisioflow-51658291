@@ -125,7 +125,7 @@ ${errorInfo?.componentStack || 'No component stack'}
       .filter(line => line.includes('src/') || line.includes('webpack'))
       .slice(0, 3)
       .map(line => {
-        const match = line.match(/(?:src\/|webpack:\/\/[^\/]+\/)([^\s]+)/);
+        const match = line.match(/(src\/|webpack:\/\/[^/]+\/)([^\s]+)/);
         return match ? match[1] : line.trim();
       });
 

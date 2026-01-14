@@ -13,11 +13,13 @@ export function PWAUpdatePrompt() {
   } = useRegisterSW({
     onRegisteredSW(swUrl, r) {
       console.log('Service Worker registrado:', swUrl);
-      
+
       // Verificar atualizações a cada 1 hora
-      r && setInterval(() => {
-        r.update();
-      }, 60 * 60 * 1000);
+      if (r) {
+        setInterval(() => {
+          r.update();
+        }, 60 * 60 * 1000);
+      }
     },
     onRegisterError(error) {
       console.log('Erro ao registrar SW:', error);

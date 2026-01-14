@@ -226,19 +226,21 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
           video.volume = Math.max(0, video.volume - 0.1);
           break;
         case '<':
-        case ',':
+        case ',': {
           // Slow down
           e.preventDefault();
           const newSlowerRate = SPEED_OPTIONS[Math.max(0, SPEED_OPTIONS.indexOf(playbackRate) - 1)] || playbackRate / 2;
           handleSpeedChange(newSlowerRate);
           break;
+        }
         case '>':
-        case '.':
+        case '.': {
           // Speed up
           e.preventDefault();
           const newFasterRate = SPEED_OPTIONS[Math.min(SPEED_OPTIONS.length - 1, SPEED_OPTIONS.indexOf(playbackRate) + 1)] || playbackRate * 2;
           handleSpeedChange(newFasterRate);
           break;
+        }
         case 'Home':
           e.preventDefault();
           video.currentTime = 0;
@@ -256,12 +258,13 @@ export const ExerciseVideoPlayer: React.FC<ExerciseVideoPlayerProps> = ({
         case '6':
         case '7':
         case '8':
-        case '9':
+        case '9': {
           // Jump to percentage (0-90%)
           e.preventDefault();
           const percent = parseInt(e.key) * 0.1;
           video.currentTime = (duration || 0) * percent;
           break;
+        }
       }
     };
 
