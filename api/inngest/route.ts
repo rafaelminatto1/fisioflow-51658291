@@ -7,7 +7,7 @@
  * Route: /api/inngest
  */
 
-import { GET, POST, OPTIONS } from '../../src/lib/inngest/serve';
+import { GET, POST, OPTIONS } from '../../src/lib/inngest/serve.js';
 
 export { GET, POST, OPTIONS };
 

@@ -1,5 +1,5 @@
 // Tipos simplificados para evitar conflitos
-interface Patient {
+export interface Patient {
   id: string;
   name: string;
   email: string;
@@ -12,7 +12,7 @@ interface Patient {
   updatedAt: string;
 }
 
-interface Appointment {
+export interface Appointment {
   id: string;
   patientId: string;
   date: string;
@@ -22,7 +22,7 @@ interface Appointment {
   notes?: string;
 }
 
-interface Exercise {
+export interface Exercise {
   id: string;
   name: string;
   category: string;
@@ -30,14 +30,14 @@ interface Exercise {
   description: string;
 }
 
-interface ExercisePlan {
+export interface ExercisePlan {
   id: string;
   name: string;
   patientId: string;
   exercises: Record<string, unknown>[];
 }
 
-interface MedicalRecord {
+export interface MedicalRecord {
   id: string;
   patientId: string;
   type: string;
@@ -45,7 +45,7 @@ interface MedicalRecord {
   content: string;
 }
 
-interface TreatmentSession {
+export interface TreatmentSession {
   id: string;
   patientId: string;
   observations: string;
@@ -53,7 +53,7 @@ interface TreatmentSession {
   evolutionNotes: string;
 }
 
-interface SOAPRecord {
+export interface SOAPRecord {
   id: string;
   patientId: string;
   subjective?: string;
