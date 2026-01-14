@@ -23,7 +23,6 @@ interface CalendarViewProps {
   onDateChange: (date: Date) => void;
   viewType: CalendarViewType;
   onViewTypeChange: (type: CalendarViewType) => void;
-  onAppointmentClick: (appointment: Appointment) => void;
   onTimeSlotClick: (date: Date, time: string) => void;
   onAppointmentReschedule?: (appointment: Appointment, newDate: Date, newTime: string) => Promise<void>;
   onEditAppointment?: (appointment: Appointment) => void;
@@ -36,7 +35,6 @@ export const CalendarView = memo(({
   onDateChange,
   viewType,
   onViewTypeChange,
-  onAppointmentClick: _onAppointmentClick,
   onTimeSlotClick,
   onAppointmentReschedule,
   onEditAppointment,
@@ -427,7 +425,6 @@ export const CalendarView = memo(({
                 currentDate={currentDate}
                 appointments={appointments}
                 onTimeSlotClick={onTimeSlotClick}
-                onAppointmentClick={_onAppointmentClick}
                 onEditAppointment={onEditAppointment}
                 onDeleteAppointment={onDeleteAppointment}
                 onAppointmentReschedule={onAppointmentReschedule}
