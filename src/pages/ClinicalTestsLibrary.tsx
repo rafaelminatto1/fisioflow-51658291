@@ -1,13 +1,25 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 import {
     Dialog,
     DialogContent,
     DialogTitle,
 } from '@/components/ui/dialog';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
     HeartPulse,
     Search,
@@ -18,7 +30,16 @@ import {
     CheckSquare,
     FileText,
     Image as ImageIcon,
+    ArrowRight,
+    Plus,
+    Edit3,
+    Trash2,
+    Download,
+    CalendarCheck,
 } from 'lucide-react';
+import { ClinicalTestFormModal } from '@/components/clinical/ClinicalTestFormModal';
+import { useExerciseProtocols } from '@/hooks/useExerciseProtocols';
+import { generateClinicalTestPdf } from '@/utils/generateClinicalTestPdf';
 
 const MediaPlaceholder = ({ label }: { label: string }) => (
     <div className="aspect-square rounded-lg bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-center p-4 transition-colors hover:bg-slate-100 hover:border-slate-300">
@@ -37,15 +58,29 @@ interface ClinicalTest {
     execution: string;
     positive_sign?: string;
     reference?: string;
+    sensitivity_specificity?: string;
     tags?: string[];
     media_urls?: string[];
-    description?: string; // Fallback
+    description?: string;
+    fields_definition?: unknown[];
+    regularity_sessions?: number | null;
+    organization_id?: string | null;
 }
 
 export default function ClinicalTestsLibrary() {
+    const queryClient = useQueryClient();
     const [activeFilter, setActiveFilter] = useState("Todos");
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedTest, setSelectedTest] = useState<ClinicalTest | null>(null);
+    const [formModalOpen, setFormModalOpen] = useState(false);
+    const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
+    const [testToEdit, setTestToEdit] = useState<ClinicalTest | null>(null);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [testToDelete, setTestToDelete] = useState<ClinicalTest | null>(null);
+
+    // Protocol integration state
+    const [protocolDialogOpen, setProtocolDialogOpen] = useState(false);
+    const { protocols, updateProtocol } = useExerciseProtocols();
 
     const { data: tests = [], isLoading } = useQuery({
         queryKey: ['clinical-tests-library'],
@@ -59,6 +94,80 @@ export default function ClinicalTestsLibrary() {
             return data as ClinicalTest[];
         }
     });
+
+    const deleteMutation = useMutation({
+        mutationFn: async (testId: string) => {
+            const { error } = await supabase
+                .from('clinical_test_templates')
+                .delete()
+                .eq('id', testId);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            toast.success('Teste excluído com sucesso!');
+            queryClient.invalidateQueries({ queryKey: ['clinical-tests-library'] });
+            setDeleteDialogOpen(false);
+            setTestToDelete(null);
+            setSelectedTest(null);
+        },
+        onError: () => {
+            toast.error('Erro ao excluir teste');
+        },
+    });
+
+    const handleCreateNew = () => {
+        setTestToEdit(null);
+        setFormMode('create');
+        setFormModalOpen(true);
+    };
+
+    const handleEdit = (test: ClinicalTest) => {
+        setTestToEdit(test);
+        setFormMode('edit');
+        setFormModalOpen(true);
+        setSelectedTest(null);
+    };
+
+    const handleDeleteConfirm = () => {
+        if (testToDelete) {
+            deleteMutation.mutate(testToDelete.id);
+        }
+    };
+
+    const handleDownloadPDF = (test: ClinicalTest) => {
+        try {
+            generateClinicalTestPdf(test);
+            toast.success('PDF gerado com sucesso!');
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            toast.error('Erro ao gerar PDF');
+        }
+    };
+
+    const handleAddToProtocol = (test: ClinicalTest) => {
+        setSelectedTest(test);
+        setProtocolDialogOpen(true);
+    };
+
+    const confirmAddToProtocol = (protocolId: string) => {
+        if (!selectedTest) return;
+
+        const protocol = protocols.find(p => p.id === protocolId);
+        if (!protocol) return;
+
+        const currentTests = Array.isArray(protocol.clinical_tests) ? protocol.clinical_tests : [];
+        if (currentTests.includes(selectedTest.id)) {
+            toast.info('Este teste já está vinculado a este protocolo.');
+            return;
+        }
+
+        updateProtocol({
+            id: protocolId,
+            clinical_tests: [...currentTests, selectedTest.id]
+        });
+
+        setProtocolDialogOpen(false);
+    };
 
     // Derived filters based on user prototype
     // Primary Filters: Todos, Esportiva, Ortopedica, PosOp (mapped from test.category)
@@ -114,6 +223,14 @@ export default function ClinicalTestsLibrary() {
                             <button onClick={() => filterTests('Ortopedia')} className={`hover:text-teal-200 transition ${activeFilter === 'Ortopedia' ? 'text-white font-bold underline decoration-2 underline-offset-4' : 'text-teal-100'}`}>Ortopedia</button>
                             <button onClick={() => filterTests('Pós-Operatório')} className={`hover:text-teal-200 transition ${activeFilter === 'Pós-Operatório' ? 'text-white font-bold underline decoration-2 underline-offset-4' : 'text-teal-100'}`}>Pós-Operatório</button>
                         </nav>
+                        <Button
+                            onClick={handleCreateNew}
+                            size="sm"
+                            className="bg-white text-teal-700 hover:bg-teal-50 font-semibold gap-1.5"
+                        >
+                            <Plus className="h-4 w-4" />
+                            Novo Teste
+                        </Button>
                     </div>
                 </header>
 
@@ -249,10 +366,18 @@ export default function ClinicalTestsLibrary() {
                                 {/* Modal Header */}
                                 <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center sticky top-0 z-10 shrink-0">
                                     <div>
-                                        <span className="text-xs font-bold uppercase tracking-wider text-teal-600 bg-teal-50 px-2 py-1 rounded">
-                                            {selectedTest.category}
-                                        </span>
-                                        <DialogTitle className="text-2xl font-bold text-slate-800 mt-1 leading-tight flex flex-col">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="text-xs font-bold uppercase tracking-wider text-teal-600 bg-teal-50 px-2 py-1 rounded">
+                                                {selectedTest.category}
+                                            </span>
+                                            {selectedTest.regularity_sessions && (
+                                                <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded flex items-center gap-1">
+                                                    <CalendarCheck className="h-3 w-3" />
+                                                    A cada {selectedTest.regularity_sessions} sessões
+                                                </span>
+                                            )}
+                                        </div>
+                                        <DialogTitle className="text-2xl font-bold text-slate-800 leading-tight flex flex-col">
                                             <span>{selectedTest.name}</span>
                                             {selectedTest.name_en && (
                                                 <span className="text-sm font-normal text-slate-400 italic mt-0.5">
@@ -261,8 +386,27 @@ export default function ClinicalTestsLibrary() {
                                             )}
                                         </DialogTitle>
                                     </div>
-                                    <div onClick={() => setSelectedTest(null)} className="text-slate-400 hover:text-red-500 transition p-2 bg-white rounded-full shadow-sm cursor-pointer border border-slate-100">
-                                        <X className="h-5 w-5" />
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => handleEdit(selectedTest)}
+                                            className="text-slate-400 hover:text-teal-600 transition p-2 bg-white rounded-full shadow-sm cursor-pointer border border-slate-100"
+                                            title="Editar teste"
+                                        >
+                                            <Edit3 className="h-4 w-4" />
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setTestToDelete(selectedTest);
+                                                setDeleteDialogOpen(true);
+                                            }}
+                                            className="text-slate-400 hover:text-red-500 transition p-2 bg-white rounded-full shadow-sm cursor-pointer border border-slate-100"
+                                            title="Excluir teste"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
+                                        <button onClick={() => setSelectedTest(null)} className="text-slate-400 hover:text-red-500 transition p-2 bg-white rounded-full shadow-sm cursor-pointer border border-slate-100">
+                                            <X className="h-5 w-5" />
+                                        </button>
                                     </div>
                                 </div>
 
@@ -324,16 +468,92 @@ export default function ClinicalTestsLibrary() {
 
                                 {/* Modal Footer */}
                                 <div className="bg-slate-50 px-6 py-4 border-t border-slate-100 flex justify-end gap-3 shrink-0">
-                                    <Button variant="outline" className="border-slate-300 text-slate-600 hover:bg-slate-100">
-                                        <FileText className="h-4 w-4 mr-2" />
+                                    <Button
+                                        variant="outline"
+                                        className="border-slate-300 text-slate-600 hover:bg-slate-100"
+                                        onClick={() => handleDownloadPDF(selectedTest)}
+                                    >
+                                        <Download className="h-4 w-4 mr-2" />
                                         Baixar PDF
                                     </Button>
-                                    <Button className="bg-teal-600 text-white hover:bg-teal-700 shadow-lg shadow-teal-600/20 border-0">
+                                    <Button
+                                        className="bg-teal-600 text-white hover:bg-teal-700 shadow-lg shadow-teal-600/20 border-0"
+                                        onClick={() => handleAddToProtocol(selectedTest)}
+                                    >
                                         Adicionar ao Protocolo
                                     </Button>
                                 </div>
                             </>
                         )}
+                    </DialogContent>
+                </Dialog>
+
+                {/* Form Modal for Create/Edit */}
+                <ClinicalTestFormModal
+                    open={formModalOpen}
+                    onOpenChange={setFormModalOpen}
+                    test={testToEdit}
+                    mode={formMode}
+                />
+
+                {/* Delete Confirmation Dialog */}
+                <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Excluir Teste Clínico</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Tem certeza que deseja excluir o teste "{testToDelete?.name}"?
+                                Esta ação não pode ser desfeita.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={handleDeleteConfirm}
+                                className="bg-red-600 hover:bg-red-700"
+                            >
+                                Excluir
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+
+                {/* Protocol Selection Dialog */}
+                <Dialog open={protocolDialogOpen} onOpenChange={setProtocolDialogOpen}>
+                    <DialogContent className="max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Adicionar ao Protocolo</DialogTitle>
+                            <p className="text-sm text-slate-500">
+                                Selecione um protocolo para vincular o teste "{selectedTest?.name}".
+                            </p>
+                        </DialogHeader>
+                        <div className="py-4 space-y-2 max-h-[400px] overflow-y-auto pr-2">
+                            {protocols.length === 0 && !isLoading && (
+                                <p className="text-center py-8 text-slate-400 text-sm italic">
+                                    Nenhum protocolo encontrado.
+                                </p>
+                            )}
+                            {protocols.map((protocol) => (
+                                <button
+                                    key={protocol.id}
+                                    onClick={() => confirmAddToProtocol(protocol.id)}
+                                    className="w-full text-left p-4 rounded-xl border border-slate-100 bg-slate-50 hover:bg-teal-50 hover:border-teal-200 transition-all flex items-center justify-between group"
+                                >
+                                    <div>
+                                        <p className="font-semibold text-slate-800 group-hover:text-teal-700">{protocol.name}</p>
+                                        <p className="text-xs text-slate-500">{protocol.condition_name}</p>
+                                    </div>
+                                    <div className="text-teal-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <ArrowRight className="h-4 w-4" />
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                        <div className="flex justify-end gap-3 mt-4">
+                            <Button variant="outline" onClick={() => setProtocolDialogOpen(false)}>
+                                Cancelar
+                            </Button>
+                        </div>
                     </DialogContent>
                 </Dialog>
 

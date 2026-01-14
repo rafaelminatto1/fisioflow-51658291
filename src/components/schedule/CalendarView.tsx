@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback, memo } from 'react';
+import { useState, useMemo, useEffect, useCallback, memo } from 'react';
 import { format, startOfWeek, endOfWeek, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -122,7 +122,8 @@ export const CalendarView = memo(({
 
       const aptDate = typeof apt.date === 'string'
         ? (() => {
-          const parts = apt.date.split('-');
+          const dateStr = apt.date as string;
+          const parts = dateStr.split('-');
           if (parts.length !== 3) return new Date('Invalid');
           const [y, m, d] = parts.map(Number);
           return new Date(y, m - 1, d, 12, 0, 0);
@@ -414,7 +415,7 @@ export const CalendarView = memo(({
                 handleDrop={handleDrop}
                 isTimeBlocked={isTimeBlocked}
                 getBlockReason={getBlockReason}
-                getStatusColor={getStatusColor}
+                _getStatusColor={getStatusColor}
                 isOverCapacity={isOverCapacity}
                 openPopoverId={openPopoverId}
                 setOpenPopoverId={setOpenPopoverId}
@@ -426,6 +427,7 @@ export const CalendarView = memo(({
                 currentDate={currentDate}
                 appointments={appointments}
                 onTimeSlotClick={onTimeSlotClick}
+                onAppointmentClick={_onAppointmentClick}
                 onEditAppointment={onEditAppointment}
                 onDeleteAppointment={onDeleteAppointment}
                 onAppointmentReschedule={onAppointmentReschedule}

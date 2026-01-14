@@ -48,7 +48,15 @@ export const useCalendarDrag = ({ onAppointmentReschedule }: UseCalendarDragProp
     const [pendingReschedule, setPendingReschedule] = useState<{ appointment: Appointment; newDate: Date; newTime: string } | null>(null);
 
     const handleDragStart = useCallback((e: React.DragEvent, appointment: Appointment) => {
-        if (!onAppointmentReschedule) return;
+        logger.info('[useCalendarDrag] handleDragStart chamado', {
+            appointmentId: appointment.id,
+            hasOnAppointmentReschedule: !!onAppointmentReschedule
+        }, 'useCalendarDrag');
+
+        if (!onAppointmentReschedule) {
+            logger.warn('[useCalendarDrag] onAppointmentReschedule não está definido, drag não será iniciado', {}, 'useCalendarDrag');
+            return;
+        }
 
         // Configurar o drag transfer
         e.dataTransfer.setData('text/plain', appointment.id);
@@ -65,6 +73,7 @@ export const useCalendarDrag = ({ onAppointmentReschedule }: UseCalendarDragProp
             e.dataTransfer.setDragImage(e.currentTarget, rect.width / 2, 20);
         }
 
+        logger.info('[useCalendarDrag] Drag iniciado com sucesso', { appointmentId: appointment.id }, 'useCalendarDrag');
         setDragState({ appointment, isDragging: true });
     }, [onAppointmentReschedule]);
 

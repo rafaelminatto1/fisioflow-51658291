@@ -22,6 +22,9 @@ import { getProtocolCategory, PROTOCOL_CATEGORIES, PROTOCOL_DETAILS } from '@/da
 
 import { generateProtocolPdf } from '@/utils/generateProtocolPdf';
 import { useOrganizations } from '@/hooks/useOrganizations';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { ClipboardCheck } from 'lucide-react';
 
 interface ProtocolDetailViewProps {
     protocol: ExerciseProtocol;
@@ -45,6 +48,23 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
     const details = PROTOCOL_DETAILS[protocol.condition_name];
     const [expandedPhases, setExpandedPhases] = useState<string[]>(['Fase 1']);
     const { currentOrganization } = useOrganizations();
+
+    const { data: linkedTests = [], isLoading: isLoadingTests } = useQuery({
+        queryKey: ['protocol-linked-tests', protocol.id, protocol.clinical_tests],
+        queryFn: async () => {
+            const testIds = protocol.clinical_tests || [];
+            if (testIds.length === 0) return [];
+
+            const { data, error } = await supabase
+                .from('clinical_test_templates')
+                .select('id, name, target_joint, category')
+                .in('id', testIds);
+
+            if (error) throw error;
+            return data;
+        },
+        enabled: !!protocol.clinical_tests && protocol.clinical_tests.length > 0
+    });
 
     const getMilestones = (): Milestone[] => {
         if (!protocol.milestones) return [];
@@ -356,6 +376,34 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                                 <div>
                                     <p className="font-semibold">Semana {milestone.week}</p>
                                     <p className="text-sm text-muted-foreground">{milestone.description}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </Card>
+
+            {/* Associated Clinical Tests */}
+            <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <ClipboardCheck className="h-5 w-5 text-teal-500" />
+                    Testes Clínicos Associados
+                </h3>
+                {linkedTests.length === 0 ? (
+                    <div className="text-center py-8">
+                        <p className="text-muted-foreground text-sm italic">Nenhum teste clínico vinculado a este protocolo.</p>
+                        <p className="text-xs text-slate-400 mt-1">Vincule testes através da Biblioteca de Testes Clínicos.</p>
+                    </div>
+                ) : (
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {linkedTests.map((test: any) => (
+                            <div key={test.id} className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between group">
+                                <div className="flex flex-col">
+                                    <span className="text-sm font-semibold text-slate-700">{test.name}</span>
+                                    <span className="text-[10px] text-slate-500 uppercase tracking-wider">{test.target_joint} • {test.category}</span>
+                                </div>
+                                <div className="h-8 w-8 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 group-hover:bg-teal-600 group-hover:text-white transition-colors">
+                                    <CheckCircle2 className="h-4 w-4" />
                                 </div>
                             </div>
                         ))}

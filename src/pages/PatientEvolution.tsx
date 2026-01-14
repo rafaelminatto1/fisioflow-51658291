@@ -32,7 +32,8 @@ import {
   Cloud,
   RefreshCw,
   Minimize2,
-  Maximize2
+  Maximize2,
+  ImageIcon
 } from 'lucide-react';
 import { format, formatDistanceToNow, differenceInDays, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -787,8 +788,8 @@ const PatientEvolution = () => {
                   className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 xs:px-4 py-1.5 text-[10px] sm:text-xs font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-1 sm:gap-2 min-w-fit touch-target"
                 >
                   <tab.icon className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
-                  <span className="hidden xs:inline">{tab.label}</span>
-                  <span className="xs:hidden hidden sm:inline">{tab.shortLabel}</span>
+                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span className="hidden xs:inline sm:hidden">{tab.shortLabel}</span>
                 </TabsTrigger>
               ))}
             </TabsList>

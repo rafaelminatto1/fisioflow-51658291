@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Package, Plus, Search, AlertTriangle, ArrowUpCircle, ArrowDownCircle,
-  Edit, History
+  Edit, History, Filter
 } from 'lucide-react';
 import { useInventory, useCreateInventoryItem, useUpdateInventoryItem, useInventoryMovements, useCreateMovement, InventoryItem } from '@/hooks/useInnovations';
 import { format } from 'date-fns';
@@ -34,7 +34,7 @@ export default function Inventory() {
   const [isMovementDialogOpen, setIsMovementDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [activeTab, setActiveTab] = useState('items');
-  
+
   const [itemForm, setItemForm] = useState({
     item_name: '',
     category: '',
@@ -45,43 +45,43 @@ export default function Inventory() {
     supplier: '',
     location: '',
   });
-  
+
   const [movementForm, setMovementForm] = useState({
     inventory_id: '',
     movement_type: 'entrada' as 'entrada' | 'saida' | 'ajuste' | 'perda',
     quantity: 0,
     reason: '',
   });
-  
+
   const { data: inventory = [], isLoading } = useInventory();
   const { data: movements = [] } = useInventoryMovements();
   const createItem = useCreateInventoryItem();
   const updateItem = useUpdateInventoryItem();
   const createMovement = useCreateMovement();
-  
+
   const filteredInventory = inventory.filter(item => {
     const matchesSearch = item.item_name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = !categoryFilter || item.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
-  
+
   const lowStockItems = inventory.filter(i => i.current_quantity <= i.minimum_quantity);
   const totalValue = inventory.reduce((acc, i) => acc + (i.current_quantity * (i.cost_per_unit || 0)), 0);
-  
+
   const handleCreateItem = async () => {
     if (!itemForm.item_name) {
       toast.error('Nome do item é obrigatório');
       return;
     }
-    
+
     await createItem.mutateAsync(itemForm);
     setIsItemDialogOpen(false);
     resetItemForm();
   };
-  
+
   const handleUpdateItem = async () => {
     if (!selectedItem) return;
-    
+
     await updateItem.mutateAsync({
       id: selectedItem.id,
       ...itemForm,
@@ -90,18 +90,18 @@ export default function Inventory() {
     setSelectedItem(null);
     resetItemForm();
   };
-  
+
   const handleCreateMovement = async () => {
     if (!movementForm.inventory_id || movementForm.quantity <= 0) {
       toast.error('Selecione um item e quantidade válida');
       return;
     }
-    
+
     await createMovement.mutateAsync(movementForm);
     setIsMovementDialogOpen(false);
     resetMovementForm();
   };
-  
+
   const resetItemForm = () => {
     setItemForm({
       item_name: '',
@@ -114,7 +114,7 @@ export default function Inventory() {
       location: '',
     });
   };
-  
+
   const resetMovementForm = () => {
     setMovementForm({
       inventory_id: '',
@@ -123,7 +123,7 @@ export default function Inventory() {
       reason: '',
     });
   };
-  
+
   const openEditDialog = (item: InventoryItem) => {
     setSelectedItem(item);
     setItemForm({
@@ -175,7 +175,7 @@ export default function Inventory() {
               <p className="text-2xl font-bold mt-1">{inventory.length}</p>
             </CardContent>
           </Card>
-          
+
           <Card className={lowStockItems.length > 0 ? 'border-amber-500/50' : ''}>
             <CardContent className="p-4">
               <div className="flex items-center gap-2 text-amber-500">
@@ -185,7 +185,7 @@ export default function Inventory() {
               <p className="text-2xl font-bold mt-1">{lowStockItems.length}</p>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-2 text-muted-foreground">
@@ -197,7 +197,7 @@ export default function Inventory() {
               </p>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-2 text-muted-foreground">
@@ -376,7 +376,7 @@ export default function Inventory() {
                             </p>
                           </div>
                         </div>
-                        <Button 
+                        <Button
                           size="sm"
                           onClick={() => {
                             setMovementForm(prev => ({ ...prev, inventory_id: item.id }));
@@ -508,8 +508,8 @@ export default function Inventory() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Tipo</Label>
-                  <Select 
-                    value={movementForm.movement_type} 
+                  <Select
+                    value={movementForm.movement_type}
                     onValueChange={(v) => setMovementForm(prev => ({ ...prev, movement_type: v as 'entrada' | 'saida' | 'ajuste' | 'perda' }))}
                   >
                     <SelectTrigger><SelectValue /></SelectTrigger>

@@ -33,6 +33,21 @@ export {
   type PainMapExportData,
 } from '@/lib/utils/painMapExport';
 
+export {
+  validatePainPoint,
+  validatePainPoints,
+  validateDuplicatePoints,
+  sanitizeAndValidatePoint,
+  validateExportData,
+  sanitizeTextInput,
+  formatValidationErrors,
+  hasErrorCode,
+  filterErrorsByCode,
+  type ValidationError,
+  type ValidationResult,
+  ValidationErrorCode,
+} from '@/lib/utils/painMapValidation';
+
 // Data
 export {
   getMusclesByRegion,

@@ -1,7 +1,7 @@
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import { format, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Clock, Ban, AlertTriangle, Calendar, GripVertical } from 'lucide-react';
+import { Clock, Ban, AlertTriangle, Calendar, GripVertical, Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Appointment } from '@/types/appointment';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -100,6 +100,9 @@ const CalendarDayView = memo(({
     // Logic inconsistency fix: usage of helper passed from parent
     const dayAppointments = getAppointmentsForDate(currentDate);
 
+    // Local state for hover effects
+    const [hoveredAppointmentId, setHoveredAppointmentId] = useState<string | null>(null);
+
     if (isDayClosed) {
         return (
             <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
@@ -151,12 +154,18 @@ const CalendarDayView = memo(({
                                     <TooltipTrigger asChild>
                                         <div
                                             className={cn(
-                                                "calendar-time-slot",
+                                                "calendar-time-slot group",
                                                 blocked
                                                     ? "blocked"
                                                     : "",
                                                 isCurrentHour && !blocked && "bg-primary/5",
-                                                isDropTarget && !blocked && "is-drop-target"
+                                                // Enhanced drop target styles
+                                                isDropTarget && !blocked && cn(
+                                                    "is-drop-target",
+                                                    "bg-primary/20 ring-inset ring-2 ring-primary/60 animate-pulse-subtle"
+                                                ),
+                                                // Show drag hint when dragging
+                                                dragState.isDragging && !blocked && !isDropTarget && "bg-primary/5"
                                             )}
                                             onClick={() => !blocked && onTimeSlotClick(currentDate, time)}
                                             onDragOver={(e) => !blocked && handleDragOver(e, currentDate, time)}
@@ -170,10 +179,16 @@ const CalendarDayView = memo(({
                                                 </span>
                                             ) : (
                                                 <span className={cn(
-                                                    "absolute inset-0 flex items-center justify-center text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity",
+                                                    "absolute inset-0 flex items-center justify-center text-xs text-muted-foreground transition-all duration-200",
+                                                    !isDropTarget && "opacity-0 group-hover:opacity-100",
                                                     isDropTarget && "opacity-100 text-primary font-medium"
                                                 )}>
-                                                    {isDropTarget ? 'Soltar aqui' : 'Clique para agendar'}
+                                                    {isDropTarget ? (
+                                                        <div className="flex flex-col items-center gap-1">
+                                                            <CalendarIcon className="w-4 h-4" />
+                                                            <span>Solte aqui</span>
+                                                        </div>
+                                                    ) : 'Clique para agendar'}
                                                 </span>
                                             )}
                                         </div>
@@ -246,6 +261,8 @@ const CalendarDayView = memo(({
                             const topMobile = slotIndex * 64;
                             const topDesktop = slotIndex * 80;
                             const isDraggable = !!onAppointmentReschedule;
+                            const isDraggingThis = dragState.isDragging && dragState.appointment?.id === apt.id;
+                            const isHovered = hoveredAppointmentId === apt.id;
 
                             return (
                                 // Wrapper de posicionamento
@@ -254,10 +271,21 @@ const CalendarDayView = memo(({
                                     draggable={isDraggable}
                                     onDragStart={(e) => handleDragStart(e, apt)}
                                     onDragEnd={handleDragEnd}
+                                    onMouseEnter={() => setHoveredAppointmentId(apt.id)}
+                                    onMouseLeave={() => setHoveredAppointmentId(null)}
                                     className={cn(
-                                        "absolute transition-all duration-300 group/card",
-                                        dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50 scale-95",
-                                        "hover:z-20"
+                                        "absolute transition-all duration-200 group/card",
+                                        // Base cursor
+                                        isDraggable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
+                                        // Hover effects
+                                        !isDraggingThis && "hover:shadow-lg hover:scale-[1.01] hover:z-20",
+                                        // Dragging state - enhanced visual feedback
+                                        isDraggingThis && cn(
+                                            "opacity-40 scale-95 shadow-xl rotate-1",
+                                            "cursor-grabbing"
+                                        ),
+                                        // Another appointment being dragged
+                                        !isDraggingThis && dragState.isDragging && "opacity-60 scale-[0.98]"
                                     )}
                                     style={{
                                         top: `${topMobile}px`,
@@ -266,9 +294,10 @@ const CalendarDayView = memo(({
                                         left: stackCount > 1 ? `${leftOffset}%` : '4px',
                                         right: stackCount > 1 ? 'auto' : '4px',
                                         width: stackCount > 1 ? `${widthPercent}%` : 'calc(100% - 8px)',
-                                        zIndex: stackCount > 1 ? 10 + stackIndex : 1,
+                                        zIndex: isDraggingThis ? 5 : (isHovered || stackCount > 1) ? 20 : 1,
                                         ['--top-desktop' as string]: `${topDesktop}px`,
                                         ['--height-desktop' as string]: `${heightDesktop}px`,
+                                        transform: isDraggingThis ? 'rotate(2deg)' : undefined,
                                     } as React.CSSProperties}
                                     onPointerDownCapture={(e) => e.stopPropagation()}
                                 >
@@ -325,9 +354,11 @@ const CalendarDayView = memo(({
                                             </div>
 
                                             {/* Drag handle */}
-                                            {isDraggable && (
-                                                <div className="absolute top-1.5 right-1.5 opacity-0 group-hover/card:opacity-40 transition-opacity" aria-hidden="true">
-                                                    <GripVertical className="h-3 w-3" />
+                                            {isDraggable && isHovered && !isDraggingThis && (
+                                                <div className="absolute top-2 left-2 z-10" aria-label="Arraste para reagendar">
+                                                    <div className="bg-white/90 dark:bg-slate-800/90 rounded-md p-1.5 shadow-md">
+                                                        <GripVertical className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>

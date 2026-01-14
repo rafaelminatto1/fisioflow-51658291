@@ -1,16 +1,53 @@
-import { Pose, Results } from '@mediapipe/pose';
 import { UnifiedLandmark } from '@/utils/geometry';
+
+// Type definitions for @mediapipe/pose (UMD module)
+interface PoseOptions {
+    locateFile?: (file: string) => string;
+}
+
+interface PoseConfig {
+    modelComplexity?: number;
+    smoothLandmarks?: boolean;
+    enableSegmentation?: boolean;
+    minDetectionConfidence?: number;
+    minTrackingConfidence?: number;
+}
+
+interface PoseResults {
+    poseLandmarks?: UnifiedLandmark[];
+    poseWorldLandmarks?: UnifiedLandmark[];
+    image: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement;
+}
+
+interface PoseInstance {
+    setOptions(options: PoseConfig): void;
+    onResults(callback: (results: PoseResults) => void): void;
+    send(input: { image: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement }): Promise<void>;
+    initialize(): Promise<void>;
+    close(): void;
+}
+
+interface PoseConstructor {
+    new(options: PoseOptions): PoseInstance;
+}
 
 // We use the legacy solution for simplicity as it shares assets with the realtime one
 // provided in @mediapipe/pose package which is already installed.
 
-
-let poseEstimator: Pose | null = null;
+let poseEstimator: PoseInstance | null = null;
+let PoseClass: PoseConstructor | null = null;
 
 export const initPoseEstimator = async () => {
     if (poseEstimator) return poseEstimator;
 
-    const pose = new Pose({
+    // Dynamically import the @mediapipe/pose module
+    if (!PoseClass) {
+        const mediapipePose = await import('@mediapipe/pose');
+        // The module exports Pose as a property
+        PoseClass = mediapipePose.Pose as unknown as PoseConstructor;
+    }
+
+    const pose = new PoseClass({
         locateFile: (file) => {
             return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
         }
@@ -33,7 +70,7 @@ export const detectPoseInImage = async (imageElement: HTMLImageElement): Promise
     const detector = await initPoseEstimator();
 
     return new Promise((resolve, reject) => {
-        const onResults = (results: Results) => {
+        const onResults = (results: PoseResults) => {
             if (results.poseLandmarks) {
                 resolve(results.poseLandmarks as UnifiedLandmark[]);
             } else {
@@ -50,3 +87,4 @@ export const detectPoseInImage = async (imageElement: HTMLImageElement): Promise
         detector.send({ image: imageElement }).catch(reject);
     });
 };
+

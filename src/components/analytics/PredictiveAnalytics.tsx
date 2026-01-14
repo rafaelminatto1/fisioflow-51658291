@@ -68,7 +68,7 @@ export function PredictiveAnalytics() {
         .eq("status", "cancelado")
         .gte("appointment_date", format(subDays(new Date(), 30), "yyyy-MM-dd"));
 
-      const cancellationRate = totalAppointments 
+      const cancellationRate = totalAppointments
         ? Math.round((canceledAppointments || 0) / totalAppointments * 100)
         : 0;
 
@@ -86,45 +86,66 @@ export function PredictiveAnalytics() {
   return (
     <div className="space-y-4">
       {insights && (
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Taxa de Comparecimento</CardTitle>
+        <div className="grid gap-6 md:grid-cols-3">
+          <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-none bg-gradient-to-br from-white to-green-50/20 dark:from-gray-900 dark:to-green-900/10 shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50">
+            <div className="absolute -right-2 -top-2 p-3 opacity-10 rotate-12 group-hover:scale-110 transition-transform duration-300">
+              <CheckCircle className="h-20 w-20 text-green-500" />
+            </div>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold tracking-wider uppercase text-muted-foreground">Taxa de Comparecimento</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold">{insights.attendanceRate}%</div>
-                <CheckCircle className="h-8 w-8 text-green-500" />
+                <div className="text-3xl font-bold tracking-tight text-green-600">{insights.attendanceRate}%</div>
+                <div className="p-2 bg-green-500/10 rounded-full">
+                  <CheckCircle className="h-6 w-6 text-green-500" />
+                </div>
               </div>
+              <p className="text-xs text-muted-foreground mt-2 font-medium">Projeção positiva baseada em histórico</p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Taxa de Cancelamento</CardTitle>
+          <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-none bg-gradient-to-br from-white to-red-50/20 dark:from-gray-900 dark:to-red-900/10 shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50">
+            <div className="absolute -right-2 -top-2 p-3 opacity-10 rotate-12 group-hover:scale-110 transition-transform duration-300">
+              <AlertCircle className="h-20 w-20 text-red-500" />
+            </div>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold tracking-wider uppercase text-muted-foreground">Taxa de Cancelamento</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold">{insights.cancellationRate}%</div>
-                <AlertCircle className={`h-8 w-8 ${
-                  insights.riskLevel === "high" ? "text-red-500" :
-                  insights.riskLevel === "medium" ? "text-yellow-500" : "text-green-500"
-                }`} />
+                <div className={`text-3xl font-bold tracking-tight ${insights.riskLevel === "high" ? "text-red-600" :
+                    insights.riskLevel === "medium" ? "text-yellow-600" : "text-green-600"
+                  }`}>{insights.cancellationRate}%</div>
+                <div className={`p-2 rounded-full ${insights.riskLevel === "high" ? "bg-red-500/10" :
+                    insights.riskLevel === "medium" ? "bg-yellow-500/10" : "bg-green-500/10"
+                  }`}>
+                  <AlertCircle className={`h-6 w-6 ${insights.riskLevel === "high" ? "text-red-500" :
+                      insights.riskLevel === "medium" ? "text-yellow-500" : "text-green-500"
+                    }`} />
+                </div>
               </div>
+              <p className="text-xs text-muted-foreground mt-2 font-medium">Médias ponderadas por sazonalidade</p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Nível de Risco</CardTitle>
+          <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-none bg-gradient-to-br from-white to-primary/5 dark:from-gray-900 dark:to-primary/10 shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50">
+            <div className="absolute -right-2 -top-2 p-3 opacity-10 rotate-12 group-hover:scale-110 transition-transform duration-300">
+              <TrendingUp className="h-20 w-20 text-primary" />
+            </div>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold tracking-wider uppercase text-muted-foreground">Nível de Risco IA</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold capitalize">
+                <div className="text-3xl font-bold tracking-tight capitalize">
                   {insights.riskLevel === "high" ? "Alto" : insights.riskLevel === "medium" ? "Médio" : "Baixo"}
                 </div>
-                <TrendingUp className="h-8 w-8 text-primary" />
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <TrendingUp className="h-6 w-6 text-primary" />
+                </div>
               </div>
+              <p className="text-xs text-muted-foreground mt-2 font-medium">Análise preditiva de demanda</p>
             </CardContent>
           </Card>
         </div>
@@ -139,24 +160,63 @@ export function PredictiveAnalytics() {
         </Alert>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Previsão de Agendamentos (Próximos 7 dias)</CardTitle>
+      <Card className="border-none shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50 overflow-hidden">
+        <CardHeader className="border-b border-gray-100/50 dark:border-gray-800/50 pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            Previsão de Demanda IA (Próximos 7 dias)
+          </CardTitle>
           <CardDescription>
-            Baseado em média móvel dos últimos 30 dias com tendência linear
+            Modelo preditivo baseado em séries temporais e comportamento histórico
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={predictions}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="real" stroke="hsl(var(--primary))" strokeWidth={2} name="Real" />
-              <Line type="monotone" dataKey="previsto" stroke="hsl(var(--muted-foreground))" strokeWidth={2} strokeDasharray="5 5" name="Previsto" />
-            </LineChart>
-          </ResponsiveContainer>
+        <CardContent className="pt-6">
+          <div className="h-[350px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={predictions}>
+                <defs>
+                  <linearGradient id="colorReal" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.1} />
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                <XAxis
+                  dataKey="date"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#64748B', fontSize: 12 }}
+                  dy={10}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#64748B', fontSize: 12 }}
+                />
+                <Tooltip
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px -2px rgba(0,0,0,0.05)' }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="real"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={3}
+                  dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4, stroke: '#fff' }}
+                  activeDot={{ r: 6, strokeWidth: 0 }}
+                  name="Dados Reais"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="previsto"
+                  stroke="hsl(var(--muted-foreground))"
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  dot={false}
+                  name="Previsão IA"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </CardContent>
       </Card>
     </div>

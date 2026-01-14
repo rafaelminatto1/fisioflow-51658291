@@ -2,7 +2,6 @@ import { memo, useState, useMemo, useEffect, useCallback, lazy, Suspense } from 
 import { Button } from '@/components/ui/button';
 import { CalendarViewType } from '@/components/schedule/CalendarView';
 import { AppointmentModalRefactored as AppointmentModal } from '@/components/schedule/AppointmentModalRefactored';
-import { AppointmentQuickEditModal } from '@/components/schedule/AppointmentQuickEditModal';
 import { AppointmentSearch } from '@/components/schedule/AppointmentSearch';
 import { WaitlistQuickAdd } from '@/components/schedule/WaitlistQuickAdd';
 import { WaitlistQuickViewModal } from '@/components/schedule/WaitlistQuickViewModal';
@@ -121,7 +120,6 @@ const ScheduleRefactored = () => {
   // ===================================================================
 
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
-  const [quickEditAppointment, setQuickEditAppointment] = useState<Appointment | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalDefaultDate, setModalDefaultDate] = useState<Date | undefined>();
   const [modalDefaultTime, setModalDefaultTime] = useState<string | undefined>();
