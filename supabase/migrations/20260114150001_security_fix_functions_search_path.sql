@@ -8,6 +8,9 @@
 -- This migration adds SET search_path = '' to all vulnerable functions
 -- ============================================================================
 
+-- Ensure vector extension matches the type usage
+CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA public;
+
 -- ============================================================================
 -- VECTOR SEARCH FUNCTIONS
 -- ============================================================================
@@ -28,7 +31,7 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 DECLARE
-    query_vector vector(1536);
+    query_vector public.vector(1536);
 BEGIN
     -- Get embedding for the search query using Google AI
     -- This requires the GOOGLE_GENERATIVE_AI_API_KEY to be set
