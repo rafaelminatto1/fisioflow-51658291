@@ -114,7 +114,12 @@
       "mcp__supabase__execute_sql",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=6144\" pnpm build:*)",
       "mcp__supabase__apply_migration",
-      "Bash(kill:*)"
+      "Bash(kill:*)",
+      "mcp__playwright__browser_type",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_run_code",
+      "mcp__supabase__get_edge_function"
     ],
     "deny": [],
     "ask": []
