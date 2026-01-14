@@ -18,6 +18,9 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const { toast } = useToast();
 
   const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContextProvider.tsx:20',message:'fetchProfile called',data:{userId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
 
     try {
       const { data, error } = await supabase
@@ -26,7 +29,9 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
         .eq('user_id', userId)
         .single();
 
-
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContextProvider.tsx:27',message:'fetchProfile result',data:{hasError:!!error,errorCode:error?.code,errorMessage:error?.message,hasData:!!data,status:error?.status,statusText:error?.statusText},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
 
       if (error) {
         logger.error('Erro ao buscar perfil', error, 'AuthContextProvider');
@@ -35,6 +40,9 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
       return data as unknown as Profile;
     } catch (err) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/ae75a3a7-6143-4496-8bed-b84b16af833f',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AuthContextProvider.tsx:38',message:'fetchProfile exception',data:{error:err instanceof Error ? err.message : String(err)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
 
       logger.error('Erro ao buscar perfil', err, 'AuthContextProvider');
       return null;
