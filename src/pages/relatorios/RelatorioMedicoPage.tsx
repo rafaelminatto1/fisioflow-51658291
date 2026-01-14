@@ -12,8 +12,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-  FileText, Stethoscope, Plus, Edit, Eye,
-  Activity, Clock, CheckCircle2, PenTool,
+  FileText, Stethoscope, Edit, Eye,
+  Activity, CheckCircle2, PenTool,
   Bone, Heart, TrendingUp, Save
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -146,11 +146,11 @@ interface HistoricoClinico {
 }
 
 interface AvaliacaoFisioterapeutica {
-  data_avaliacao: string;
+  data_avaliacao?: string;
   inspecao_visual?: string;
   palpacao?: string;
   goniometria?: string;
-  força_muscular?: string;
+  forca_muscular?: string;
   reflexos?: string;
   sensibilidade?: string;
   teste_funcional?: string;

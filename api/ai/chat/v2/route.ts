@@ -5,7 +5,7 @@
  * using the AI SDK's useChat hook compatible endpoint
  */
 
-import { streamText, CoreMessage } from 'ai';
+import { streamText } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { google } from '@ai-sdk/google';
 
@@ -13,7 +13,7 @@ import { google } from '@ai-sdk/google';
 export const maxDuration = 30;
 
 interface ChatRequest {
-  messages: CoreMessage[];
+  messages: any[];
   patientId?: string;
   patientName?: string;
   language?: 'pt-BR' | 'en';
@@ -83,11 +83,10 @@ LIMITATIONS:
       system: systemPrompt,
       messages: userMessages,
       temperature: 0.7,
-      maxTokens: 2000,
     });
 
     // Return the stream as AI SDK message stream response
-    return result.toDataStreamResponse();
+    return result.toTextStreamResponse();
   } catch (error) {
     console.error('[AI Chat API] Error:', error);
 

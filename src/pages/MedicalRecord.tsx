@@ -122,8 +122,7 @@ const MedicalRecord = () => {
   const initialPatientId = searchParams.get('patientId');
   const initialAction = searchParams.get('action');
   // appointmentId captured but not used yet - reserved for future use
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _appointmentId = searchParams.get('appointmentId');
+  // const _appointmentId = searchParams.get('appointmentId');
   const initialType = searchParams.get('type');
 
   const [selectedPatient, setSelectedPatient] = useState<string | null>(initialPatientId);
@@ -131,13 +130,11 @@ const MedicalRecord = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isEditing, setIsEditing] = useState(initialAction === 'new');
   // viewingRecord captured but not used yet - reserved for future use
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_viewingRecord, _setViewingRecord] = useState<MedicalRecordItem | null>(null);
+  // const [_viewingRecord, _setViewingRecord] = useState<MedicalRecordItem | null>(null);
   const [editingRecord, setEditingRecord] = useState<MedicalRecordItem | null>(null);
   const [recordForm, setRecordForm] = useState<RecordFormData>(initialFormState);
   // showTemplateSelector captured but not used yet - reserved for future use
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_showTemplateSelector, _setShowTemplateSelector] = useState(false);
+  // const [_showTemplateSelector, _setShowTemplateSelector] = useState(false);
   const [selectedForComparison, setSelectedForComparison] = useState<string[]>([]);
   const [isComparing, setIsComparing] = useState(false);
   const [showTemplateManager, setShowTemplateManager] = useState(false);
@@ -245,7 +242,7 @@ const MedicalRecord = () => {
 
       if (error) throw error;
 
-      return (data || []).map((record: {
+      return ((data as any[]) || []).map((record: {
         id: string;
         record_type?: string;
         title?: string;
@@ -279,11 +276,11 @@ const MedicalRecord = () => {
     // Filter pending goals
     const goals = medicalRecords
       .flatMap(r => r.goals || [])
-      .filter((g: { status?: string }) => g.status !== 'achieved' && g.status !== 'abandoned');
+      .filter((g: any) => g.status !== 'achieved' && g.status !== 'abandoned');
 
     const pathologies = medicalRecords
       .flatMap(r => r.pathologies || [])
-      .filter((p: { status?: string }) => p.status === 'active');
+      .filter((p: any) => p.status === 'active');
 
     return {
       aggregatedSurgeries: surgeries,
@@ -308,37 +305,36 @@ const MedicalRecord = () => {
   });
 
   // handleSelectTemplate captured but not used yet - reserved for future use
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _handleSelectTemplate = (template: {
-    id: string;
-    title: string;
-    content: {
-      physical_exam?: Record<string, unknown>;
-      diagnosis?: string;
-      treatment_plan?: {
-        evolution?: string;
-        plan?: string;
-      };
-      vital_signs?: Record<string, unknown>;
-    };
-  }) => {
-    const content = template.content;
-    setRecordForm(prev => ({
-      ...prev,
-      type: 'assessment',
-      title: `${template.title} - ${format(new Date(), 'dd/MM/yyyy')}`,
-      // Map template fields to form
-      content: content.treatment_plan?.evolution || '',
-      physicalExam: content.physical_exam || {},
-      diagnosis: content.diagnosis || '',
-      treatmentPlan: content.treatment_plan?.plan || '',
-      vitalSigns: {
-        ...prev.vitalSigns,
-        ...content.vital_signs
-      }
-    }));
-    setShowTemplateSelector(false);
-  };
+  // const _handleSelectTemplate = (template: {
+  //   id: string;
+  //   title: string;
+  //   content: {
+  //     physical_exam?: Record<string, unknown>;
+  //     diagnosis?: string;
+  //     treatment_plan?: {
+  //       evolution?: string;
+  //       plan?: string;
+  //     };
+  //     vital_signs?: Record<string, unknown>;
+  //   };
+  // }) => {
+  //   const content = template.content;
+  //   setRecordForm(prev => ({
+  //     ...prev,
+  //     type: 'assessment',
+  //     title: `${template.title} - ${format(new Date(), 'dd/MM/yyyy')}`,
+  //     // Map template fields to form
+  //     content: content.treatment_plan?.evolution || '',
+  //     physicalExam: content.physical_exam || {},
+  //     diagnosis: content.diagnosis || '',
+  //     treatmentPlan: content.treatment_plan?.plan || '',
+  //     vitalSigns: {
+  //       ...prev.vitalSigns,
+  //       ...content.vital_signs
+  //     }
+  //   }));
+  //   setShowTemplateSelector(false);
+  // };
 
   const saveRecordMutation = useMutation({
     mutationFn: async (data: RecordFormData) => {

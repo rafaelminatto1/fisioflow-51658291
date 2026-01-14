@@ -64,20 +64,9 @@ UPSTASH_REDIS_REST_TOKEN=...
 
 ## 🎯 Opções do Marketplace para Postgres
 
-### 1. Neon (Recomendado - Oficial Vercel)
-**Por que escolher:**
-- ✅ Provider oficial do Vercel Postgres
-- ✅ Serverless Postgres
-- ✅ Branching de banco (como Supabase!)
-- ✅ Autoscaling
-- ✅ Generous free tier
+> **⚠️ NOTA PARA FISIOFLOW:** O FisioFlow usa **Supabase** como banco de dados principal, não providers do marketplace. As opções abaixo são apenas informativas para outros projetos.
 
-**Quando usar:**
-- Se você quiser um Postgres adicional além do Supabase
-- Para workloads analíticos
-- Para features específicas do Neon
-
-### 2. Outros Providers
+### Outros Providers Disponíveis no Marketplace
 - **AWS RDS** - Para integração com AWS
 - **MongoDB Atlas** - Se você precisa de NoSQL
 - **Nile** - Multi-tenant Postgres otimizado

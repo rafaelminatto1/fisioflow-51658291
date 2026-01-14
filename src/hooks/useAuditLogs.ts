@@ -31,7 +31,7 @@ export interface AuditFilters {
 }
 
 export function useAuditLogs(filters?: AuditFilters) {
-  const { data: logs = [], isLoading, refetch } = useQuery({
+  const { data: logs = [] as AuditLog[], isLoading, refetch } = useQuery<AuditLog[]>({
     queryKey: ['audit-logs', filters],
     queryFn: async () => {
       let query = supabase
@@ -92,7 +92,7 @@ export function useAuditLogs(filters?: AuditFilters) {
       // Filter by search term if provided
       if (filters?.searchTerm) {
         const term = filters.searchTerm.toLowerCase();
-        return enrichedLogs.filter(log => 
+        return enrichedLogs.filter(log =>
           log.table_name.toLowerCase().includes(term) ||
           log.action.toLowerCase().includes(term) ||
           log.record_id?.toLowerCase().includes(term) ||
@@ -124,9 +124,9 @@ export function useAuditLogs(filters?: AuditFilters) {
     }, {} as Record<string, number>),
   };
 
-  return { 
-    logs, 
-    isLoading, 
+  return {
+    logs,
+    isLoading,
     refetch,
     uniqueTables,
     uniqueActions,
@@ -139,10 +139,10 @@ export function useExportAuditLogs() {
   return useMutation({
     mutationFn: async (logs: AuditLog[]) => {
       const headers = [
-        'ID', 'Data/Hora', 'Usuário', 'Email', 'Ação', 'Tabela', 
+        'ID', 'Data/Hora', 'Usuário', 'Email', 'Ação', 'Tabela',
         'ID Registro', 'Dados Anteriores', 'Dados Novos', 'Alterações'
       ];
-      
+
       const rows = logs.map(log => [
         log.id,
         new Date(log.timestamp).toLocaleString('pt-BR'),
@@ -165,12 +165,12 @@ export function useExportAuditLogs() {
       const bom = '\uFEFF';
       const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
-      
+
       const link = document.createElement('a');
       link.href = url;
       link.download = `auditoria_${new Date().toISOString().split('T')[0]}.csv`;
       link.click();
-      
+
       URL.revokeObjectURL(url);
       return true;
     },
@@ -221,7 +221,7 @@ export function useBackups() {
   const createBackup = useMutation({
     mutationFn: async (backupType: 'daily' | 'weekly' | 'manual' = 'manual') => {
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       const response = await fetch(
         `https://ycvbtjfrchcyvmkvuocu.supabase.co/functions/v1/backup-manager`,
         {

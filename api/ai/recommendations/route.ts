@@ -121,11 +121,10 @@ IMPORTANT:
       system: systemPrompt,
       prompt,
       temperature: 0.6, // Slightly lower for more structured output
-      maxTokens: 2000,
     });
 
     // Return the stream as AI SDK message stream response
-    return result.toAIStreamResponse();
+    return result.toTextStreamResponse();
   } catch (error) {
     console.error('[AI Recommendations API] Error:', error);
 

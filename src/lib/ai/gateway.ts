@@ -16,6 +16,7 @@
 import { createOpenAI } from '@ai-sdk/openai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { generateText, streamText, generateObject } from 'ai';
+import { z } from 'zod';
 
 // ============================================================================
 // TYPES
@@ -220,24 +221,12 @@ export async function generateAIResponse(
       system: systemPrompt,
     });
 
-    // Calculate duration (for monitoring, not currently used)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const _duration = Date.now() - startTime;
-
-    // Calculate estimated cost (for monitoring, not currently used)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const _estimatedCost = _calculateCost(
-      primaryProvider,
-      result.usage.promptTokens,
-      result.usage.completionTokens
-    );
-
     return {
       success: true,
       data: result.text,
       provider: primaryProvider,
       model: modelName,
-      cached: result.usage?.promptTokens === 0, // Likely cached if no prompt tokens
+      cached: result.usage.promptTokens === 0,
       usage: {
         promptTokens: result.usage.promptTokens,
         completionTokens: result.usage.completionTokens,

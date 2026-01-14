@@ -16,7 +16,7 @@ Setup em 15 minutos para começar a usar as novas integrações Pro.
 **Vercel KV e Postgres agora são através do Marketplace!**
 
 - ⚠️ **KV** → Disponível via **Marketplace** (Upstash Redis)
-- ⚠️ **Postgres** → Disponível via **Marketplace** (Neon, etc.)
+- ⚠️ **Postgres** → Disponível via **Marketplace** (o FisioFlow usa Supabase como banco principal)
 - ✅ **Blob** → Continua nativo
 - ✅ **Edge Config** → Continua nativo
 

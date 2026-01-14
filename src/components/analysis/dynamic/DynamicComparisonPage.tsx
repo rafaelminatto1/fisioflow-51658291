@@ -8,7 +8,8 @@ import { Loader2, Upload, Video, Brain, Share2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 import DualVideoPlayer from './DualVideoPlayer';
-import DynamicAnalysisViewer from './DynamicAnalysisViewer';
+// Dynamic import to avoid bundling heavily if not used or duplicate chunk warning
+const DynamicAnalysisViewer = React.lazy(() => import('./DynamicAnalysisViewer'));
 import AIReportView from '../reports/AIReportView';
 import ShareReportModal from '../reports/ShareReportModal';
 import MarketingExportModal from '../marketing/MarketingExportModal';
@@ -229,8 +230,9 @@ const DynamicComparisonPage = () => {
                         </TabsContent>
 
                         <TabsContent value="details">
-                            {/* Pass full result to viewer (needs update) */}
-                            <DynamicAnalysisViewer data={comparisonResult} />
+                            <React.Suspense fallback={<div className="p-10 flex justify-center"><Loader2 className="animate-spin w-8 h-8 text-blue-500" /></div>}>
+                                <DynamicAnalysisViewer data={comparisonResult} />
+                            </React.Suspense>
                         </TabsContent>
 
                         <TabsContent value="report">
