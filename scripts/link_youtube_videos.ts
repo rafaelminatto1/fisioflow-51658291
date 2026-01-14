@@ -54,7 +54,20 @@ async function linkVideos() {
                     console.log(`Updated ${exercise.name}`);
                 }
             } else {
-                console.warn(`No video found for ${exercise.name}`);
+                console.warn(`No video found for ${exercise.name}, attempting fallback...`);
+                let fallbackTerm = '';
+                if (exercise.name.includes('Mobilidade de Ombro')) fallbackTerm = 'Shoulder Mobility Exercises';
+                if (exercise.name.includes('Abdominal Crupeado')) fallbackTerm = 'Abdominal Crunch';
+                if (exercise.name.includes('SLR')) fallbackTerm = 'Straight Leg Raise';
+
+                if (fallbackTerm) {
+                    console.log(`Searching fallback: ${fallbackTerm}...`);
+                    const fallbackVideo = await YouTube.searchOne(fallbackTerm, 'video');
+                    if (fallbackVideo && fallbackVideo.url) {
+                        console.log(`Found fallback video: ${fallbackVideo.title}`);
+                        await supabase.from('exercises').update({ video_url: fallbackVideo.url, needs_recording: true }).eq('id', exercise.id);
+                    }
+                }
             }
 
             // Respect rate limits (simple delay)
