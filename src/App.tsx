@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo } from 'react';
+import { lazy, Suspense, useEffect, useMemo } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,14 +15,20 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import { get, set, del } from 'idb-keyval';
 import { AppRoutes } from "./routes";
-import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/react";
 import { VersionManager } from "@/components/system/VersionManager";
 import { initWebVitalsMonitoring, WebVitalsIndicator } from "@/lib/monitoring/web-vitals";
 import { PerformanceDashboard } from "@/components/system";
 import { FeatureFlagProvider } from "@/lib/featureFlags/hooks";
 import { useServiceWorkerUpdate } from "@/hooks/useServiceWorkerUpdate";
 import { SkipLink, FocusVisibleHandler } from "@/components/accessibility";
+
+// Lazy load Vercel Analytics to avoid errors when not properly configured
+const Analytics = import.meta.env.PROD
+  ? lazy(() => import("@vercel/analytics/react").then(m => ({ default: m.Analytics })))
+  : null;
+const SpeedInsights = import.meta.env.PROD
+  ? lazy(() => import("@vercel/speed-insights/react").then(m => ({ default: m.SpeedInsights })))
+  : null;
 
 // Create a client with performance optimizations
 const queryClient = new QueryClient({
@@ -161,8 +167,9 @@ const App = () => {
                   <Suspense fallback={<PageLoadingFallback />}>
                     <AppRoutes />
                     <VersionManager />
-                    <Analytics />
-                    <SpeedInsights />
+                    {/* Vercel Analytics - Only in production */}
+                    {Analytics && <Analytics />}
+                    {SpeedInsights && <SpeedInsights />}
                     <WebVitalsIndicator />
                     {/* Performance Dashboard - Dev Only */}
                     {import.meta.env.DEV && <PerformanceDashboard />}
