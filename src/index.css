@@ -800,9 +800,31 @@ All colors MUST be HSL.
   /* Card principal - background colorido por status com bom contraste */
   .calendar-appointment-card {
     @apply relative rounded-xl overflow-hidden;
-    @apply shadow-md hover:shadow-lg hover:scale-[1.02] hover:-translate-y-0.5;
-    @apply transition-all duration-200 cursor-pointer;
+    @apply shadow-md hover:shadow-xl hover:scale-[1.02] hover:-translate-y-0.5;
+    @apply transition-all duration-200 ease-out cursor-pointer;
     @apply border border-white/20 dark:border-white/10;
+    @apply animate-fade-in-up;
+  }
+
+  /* Animação de entrada suave para cards */
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.3s ease-out;
+  }
+
+  .calendar-appointment-card:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+    @apply shadow-lg scale-[1.01];
   }
 
   /* Cores por status - Codificação visual */
@@ -921,20 +943,21 @@ All colors MUST be HSL.
     @apply p-2.5 pl-3 pr-2 h-full flex flex-col justify-between;
   }
 
-  /* Nome do paciente - sempre visível */
+  /* Nome do paciente - sempre visível com melhor contraste */
   .calendar-patient-name {
     @apply text-sm font-bold truncate leading-tight;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   }
 
   /* Tipo de atendimento */
   .calendar-appointment-type {
-    @apply text-xs opacity-90 truncate;
+    @apply text-xs opacity-95 truncate font-medium;
   }
 
   /* Footer com horário e sala */
   .calendar-appointment-footer {
     @apply flex items-center justify-between gap-2 mt-1.5 pt-1.5;
-    @apply border-t border-current border-opacity-20 text-[11px] opacity-90;
+    @apply border-t border-current border-opacity-20 text-[11px] opacity-95 font-medium;
   }
 
   /* Card sendo arrastado */
@@ -969,11 +992,26 @@ All colors MUST be HSL.
     }
 
     .calendar-appointment-type {
-      @apply text-[11px];
+      @apply text-[11px] font-medium;
     }
 
     .calendar-appointment-footer {
-      @apply text-[10px] mt-1 pt-1;
+      @apply text-[10px] mt-1 pt-1 font-medium;
+    }
+  }
+
+  /* Melhorias para tablets */
+  @media (min-width: 641px) and (max-width: 1023px) {
+    .calendar-appointment-card-content {
+      @apply p-2.5;
+    }
+
+    .calendar-patient-name {
+      @apply text-sm font-bold;
+    }
+
+    .calendar-appointment-type {
+      @apply text-xs font-medium;
     }
   }
 
@@ -982,7 +1020,7 @@ All colors MUST be HSL.
      ======================================== */
 
   .calendar-time-slot {
-    @apply relative w-full h-12 sm:h-16 border-b border-border;
+    @apply relative w-full h-16 sm:h-20 border-b border-border;
     @apply transition-colors duration-150;
   }
 
@@ -998,16 +1036,67 @@ All colors MUST be HSL.
     @apply bg-primary/20 ring-inset ring-2 ring-primary/60;
   }
 
+  .calendar-time-slot:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+    @apply bg-accent/60;
+  }
+
+  .calendar-time-slot.blocked:focus-visible {
+    @apply ring-0;
+  }
+
+  /* Acessibilidade - respeitar prefers-reduced-motion */
+  @media (prefers-reduced-motion: reduce) {
+    .calendar-time-slot {
+      @apply transition-none;
+    }
+
+    .calendar-day-header {
+      @apply transition-none;
+    }
+
+    .calendar-appointment-card {
+      @apply transition-none;
+    }
+
+    .calendar-current-time-line {
+      @apply transition-none;
+    }
+
+    .animate-pulse,
+    .animate-pulse-slow {
+      animation: none;
+    }
+  }
+
   /* Current time line */
   .calendar-current-time-line {
     @apply absolute left-0 right-0 h-px bg-primary;
     @apply shadow-[0_0_8px_hsl(var(--primary)_/_0.6)];
+    @apply transition-all duration-300 ease-out;
   }
 
   .calendar-current-time-line::before {
     content: '';
     @apply absolute left-[-5px] top-[-4px] w-2.5 h-2.5 rounded-full bg-primary;
     @apply shadow-[0_0_4px_hsl(var(--primary)_/_0.8)];
+    @apply animate-pulse-slow;
+  }
+
+  /* Animação de pulso lenta para o indicador de tempo atual */
+  @keyframes pulse-slow {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.1);
+    }
+  }
+
+  .animate-pulse-slow {
+    animation: pulse-slow 2s ease-in-out infinite;
   }
 
   /* ========================================
@@ -1025,18 +1114,79 @@ All colors MUST be HSL.
 
   /* Cabeçalho do dia na semana */
   .calendar-day-header {
-    @apply h-14 sm:h-16 border-b-2 border-border sticky top-0 z-10;
-    @apply p-2 sm:p-3 text-center text-xs sm:text-sm backdrop-blur-md;
-    @apply transition-all duration-300 shadow-md shrink-0;
+    @apply h-16 sm:h-20 border-b-2 border-border relative z-20;
+    @apply p-2 sm:p-3 text-center backdrop-blur-md;
+    @apply transition-all duration-200 ease-out shadow-md shrink-0;
+  }
+
+  .calendar-day-header:hover {
+    @apply shadow-lg;
   }
 
   .calendar-day-header.today {
     @apply bg-gradient-to-br from-primary via-primary/95 to-primary/85;
     @apply text-primary-foreground shadow-xl shadow-primary/30 ring-2 ring-primary/40;
+    @apply hover:shadow-2xl hover:scale-[1.01];
   }
 
   .calendar-day-header:not(.today) {
-    @apply bg-gradient-to-br from-muted/80 to-muted/60;
-    @apply hover:from-muted/90 hover:to-muted/70;
+    @apply bg-gradient-to-br from-muted/90 to-muted/70;
+    @apply hover:from-muted hover:to-muted/80;
+    @apply text-foreground;
+  }
+
+  /* Nome do dia da semana no cabeçalho - visibilidade melhorada */
+  .calendar-day-header .font-extrabold {
+    @apply text-[11px] sm:text-xs lg:text-sm tracking-wide font-black;
+  }
+
+  .calendar-day-header.today .font-extrabold {
+    @apply text-primary-foreground/95;
+  }
+
+  .calendar-day-header:not(.today) .font-extrabold {
+    @apply text-foreground/80;
+  }
+
+  /* Número do dia no cabeçalho - visibilidade melhorada */
+  .calendar-day-header .text-xl {
+    @apply text-xl sm:text-2xl lg:text-3xl font-black leading-none;
+  }
+
+  .calendar-day-header.today .text-xl {
+    @apply text-primary-foreground;
+  }
+
+  .calendar-day-header:not(.today) .text-xl {
+    @apply text-foreground;
+  }
+
+  /* Indicador de "hoje" - visibilidade melhorada */
+  .calendar-day-header.today .animate-pulse {
+    @apply bg-white shadow-lg;
+  }
+
+  /* Melhorar contraste do texto em dias não selecionados */
+  .calendar-day-header:not(.today):hover {
+    @apply text-foreground;
+  }
+
+  .calendar-day-header:not(.today):hover .font-extrabold {
+    @apply text-foreground;
+  }
+
+  /* Melhorias para dark mode */
+  @media (prefers-color-scheme: dark) {
+    .calendar-day-header:not(.today) {
+      @apply bg-gradient-to-br from-muted/30 to-muted/20;
+    }
+
+    .calendar-day-header:not(.today):hover {
+      @apply from-muted/40 to-muted/30;
+    }
+
+    .calendar-patient-name {
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
   }
 }

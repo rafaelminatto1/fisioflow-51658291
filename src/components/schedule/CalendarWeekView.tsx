@@ -126,13 +126,13 @@ const CalendarWeekView = memo(({
             <div className="hidden md:flex flex-1 overflow-hidden" role="row" aria-label="Dias da semana">
                 {/* Time column - Sticky e otimizado */}
                 <div className="w-16 lg:w-20 border-r border-border/50 bg-gradient-to-b from-card via-muted/30 to-muted/50 flex-shrink-0 flex flex-col" role="columnheader" aria-label="Horários">
-                    <div className="h-14 lg:h-16 border-b border-border/50 flex items-center justify-center bg-gradient-primary backdrop-blur-sm z-20 shadow-md shrink-0" aria-hidden="true">
-                        <Clock className="h-3.5 lg:h-4 w-3.5 lg:w-4 text-primary-foreground" />
+                    <div className="h-16 lg:h-20 border-b border-border/50 flex items-center justify-center bg-gradient-primary backdrop-blur-sm z-20 shadow-md shrink-0" aria-hidden="true">
+                        <Clock className="h-4 lg:h-5 w-4 lg:w-5 text-primary-foreground" />
                     </div>
                     <div className="flex-1 overflow-hidden">
                         <div className="flex flex-col" role="list">
                             {timeSlots.map(time => (
-                                <div key={time} className="h-14 lg:h-16 border-b border-border/30 p-1 lg:p-2 text-xs text-foreground/70 font-bold flex items-center justify-center hover:bg-accent/50 transition-colors shrink-100" role="listitem">
+                                <div key={time} className="h-16 lg:h-20 border-b border-border/30 p-1 lg:p-2 text-xs text-foreground/70 font-bold flex items-center justify-center hover:bg-accent/50 transition-colors shrink-0" role="listitem">
                                     {time}
                                 </div>
                             ))}
@@ -181,13 +181,13 @@ const CalendarWeekView = memo(({
             <div className="md:hidden flex-1 flex overflow-hidden" role="region" aria-label={`Dia ${format(currentMobileDay, 'dd/MM')}`}>
                 {/* Time column - Mobile */}
                 <div className="w-14 border-r border-border/50 bg-gradient-to-b from-card via-muted/30 to-muted/50 flex-shrink-0 flex flex-col" role="columnheader" aria-label="Horários">
-                    <div className="h-14 border-b border-border/50 flex items-center justify-center bg-gradient-primary backdrop-blur-sm z-20 shadow-md shrink-0" aria-hidden="true">
-                        <Clock className="h-3 w-3 text-primary-foreground" />
+                    <div className="h-16 border-b border-border/50 flex items-center justify-center bg-gradient-primary backdrop-blur-sm z-20 shadow-md shrink-0" aria-hidden="true">
+                        <Clock className="h-4 w-4 text-primary-foreground" />
                     </div>
                     <div className="flex-1 overflow-hidden">
                         <div className="flex flex-col" role="list">
                             {timeSlots.map(time => (
-                                <div key={time} className="h-12 border-b border-border/30 p-1 text-[10px] text-foreground/70 font-bold flex items-center justify-center hover:bg-accent/50 transition-colors shrink-0" role="listitem">
+                                <div key={time} className="h-16 border-b border-border/30 p-1 text-[10px] text-foreground/70 font-bold flex items-center justify-center hover:bg-accent/50 transition-colors shrink-0" role="listitem">
                                     {time}
                                 </div>
                             ))}
