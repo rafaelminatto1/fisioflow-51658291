@@ -113,7 +113,8 @@
       "mcp__supabase__search_docs",
       "mcp__supabase__execute_sql",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=6144\" pnpm build:*)",
-      "mcp__supabase__apply_migration"
+      "mcp__supabase__apply_migration",
+      "Bash(kill:*)"
     ],
     "deny": [],
     "ask": []
