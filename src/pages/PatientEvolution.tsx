@@ -31,8 +31,6 @@ import {
   Target,
   Cloud,
   RefreshCw,
-  PanelLeft,
-  PanelRight,
   Minimize2,
   Maximize2
 } from 'lucide-react';
@@ -56,14 +54,13 @@ import { PathologyStatus } from '@/components/evolution/PathologyStatus';
 import { MeasurementCharts } from '@/components/evolution/MeasurementCharts';
 import { PainMapManager } from '@/components/evolution/PainMapManager';
 import { TreatmentAssistant } from '@/components/ai/TreatmentAssistant';
-import { MandatoryTestAlert, type RequiredTest } from '@/components/session/MandatoryTestAlert';
+import { MandatoryTestAlert } from '@/components/session/MandatoryTestAlert';
 import { MedicalReportSuggestions } from '@/components/evolution/MedicalReportSuggestions';
 import { SessionExercisesPanel, type SessionExercise } from '@/components/evolution/SessionExercisesPanel';
 import { PatientGamification } from '@/components/gamification/PatientGamification';
 import { useGamification } from '@/hooks/useGamification';
 import { WhatsAppIntegration } from '@/components/whatsapp/WhatsAppIntegration';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { SessionWizard, WizardStep } from '@/components/evolution/SessionWizard';
 import { SessionTimer } from '@/components/evolution/SessionTimer';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
@@ -71,17 +68,16 @@ import { ApplyTemplateModal } from '@/components/exercises/ApplyTemplateModal';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { SmartTextarea } from '@/components/ui/SmartTextarea';
 import { PatientHelpers } from '@/types';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 // Novos componentes
 import PainScaleInput from '@/components/evolution/PainScaleInput';
 import { SessionImageUpload } from '@/components/evolution/SessionImageUpload';
 import { EvolutionTimeline } from '@/components/evolution/EvolutionTimeline';
-import { PainMapManager } from '@/components/evolution/PainMapManager';
+
 import {
   EvolutionKeyboardShortcuts,
   useEvolutionShortcuts
 } from '@/components/evolution/EvolutionKeyboardShortcuts';
-import { CommandPalette, useCommandPalette } from '@/components/ui/CommandPalette';
+import { useCommandPalette } from '@/components/ui/CommandPalette';
 // Tipo para escala de dor
 export interface PainScaleData {
   level: number;
@@ -116,13 +112,11 @@ const PatientEvolution = () => {
 
   const [currentSoapRecordId, setCurrentSoapRecordId] = useState<string | undefined>();
   const [sessionStartTime] = useState(new Date());
-  const [currentWizardStep, setCurrentWizardStep] = useState('subjective');
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
   const [showApplyTemplate, setShowApplyTemplate] = useState(false);
   const [showInsights, setShowInsights] = useState(true);
   const [showComparison, setShowComparison] = useState(false);
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
-  const [showHistoryPanel, setShowHistoryPanel] = useState(true);
   const [wordCount, setWordCount] = useState({ subjective: 0, objective: 0, assessment: 0, plan: 0 });
 
   // Estados do formulário SOAP
@@ -218,35 +212,7 @@ const PatientEvolution = () => {
   // Mutation para salvar evolução
   const createSoapRecord = useCreateSoapRecord();
 
-  // Wizard steps
-  const wizardSteps: WizardStep[] = useMemo(() => [
-    {
-      id: 'subjective',
-      label: 'Subjetivo',
-      completed: subjective.length > 10
-    },
-    {
-      id: 'objective',
-      label: 'Objetivo',
-      completed: objective.length > 10
-    },
-    {
-      id: 'assessment',
-      label: 'Avaliação',
-      completed: assessment.length > 10
-    },
-    {
-      id: 'plan',
-      label: 'Plano',
-      completed: plan.length > 10
-    },
-    {
-      id: 'measurements',
-      label: 'Medições',
-      completed: measurements.length > 0,
-      optional: true
-    }
-  ], [subjective, objective, assessment, plan, measurements]);
+
 
   // Auto-save SOAP data
   const { lastSavedAt } = useAutoSave({
@@ -472,7 +438,6 @@ const PatientEvolution = () => {
       // Navegação entre seções
       if (section === 'subjective' || section === 'objective' || section === 'assessment' || section === 'plan') {
         setActiveTab('soap');
-        setCurrentWizardStep(section);
         // Scroll para a seção
         setTimeout(() => {
           const element = document.getElementById(section);
@@ -796,15 +761,15 @@ const PatientEvolution = () => {
                   completed: completedToday
                 };
               })}
-              onResolve={(testId) => {
-                // navigate to measurement tab or open modal
-                document.querySelector('[value="measurements"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+              onResolve={() => {
+                // navigate to measurement tab
+                setActiveTab('measurements');
               }}
             />
           )}
 
           {/* Modern Tab Navigation */}
-          <Tabs defaultValue="soap" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="inline-flex h-9 sm:h-10 items-center justify-start rounded-lg bg-muted/40 p-1 text-muted-foreground w-full lg:w-auto overflow-x-auto scrollbar-hide">
               {[
                 { value: 'soap', label: 'SOAP', shortLabel: 'S', icon: FileText },

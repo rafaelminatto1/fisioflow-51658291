@@ -3,9 +3,12 @@
  *
  * Distributed Redis-based caching layer using Vercel KV
  * Replaces in-memory caching with persistent, shared cache across deployments
+ *
+ * @version 2.0.0 - Enhanced with monitoring, smart invalidation, and health checks
  */
 
 import { kv } from '@vercel/kv';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface CacheOptions {
   /**
@@ -19,19 +22,51 @@ export interface CacheOptions {
    * @default 'fisioflow'
    */
   prefix?: string;
+
+  /**
+   * Skip cache if error occurs
+   * @default true
+   */
+  failOpen?: boolean;
 }
 
 export interface CacheStats {
   hits: number;
   misses: number;
   rate: number;
+  sets: number;
+  deletes: number;
+  errors: number;
+  lastReset: Date;
 }
 
-// Cache statistics for monitoring
+// Enhanced cache statistics for monitoring
 const stats = {
   hits: 0,
   misses: 0,
+  sets: 0,
+  deletes: 0,
+  errors: 0,
+  lastReset: new Date(),
 };
+
+// Cache TTL constants for different data types
+export const CACHE_TTL = {
+  // Short TTL - rapidly changing data
+  SHORT: 60, // 1 minute
+  VERY_SHORT: 30, // 30 seconds
+
+  // Medium TTL - moderately changing data
+  MEDIUM: 300, // 5 minutes
+  DEFAULT: 600, // 10 minutes
+
+  // Long TTL - rarely changing data
+  LONG: 3600, // 1 hour
+  VERY_LONG: 86400, // 24 hours
+
+  // Extended TTL - static reference data
+  EXTENDED: 604800, // 7 days
+} as const;
 
 /**
  * Generate a cache key with prefix
@@ -49,6 +84,10 @@ export function getCacheStats(): CacheStats {
     hits: stats.hits,
     misses: stats.misses,
     rate: total > 0 ? stats.hits / total : 0,
+    sets: stats.sets,
+    deletes: stats.deletes,
+    errors: stats.errors,
+    lastReset: stats.lastReset,
   };
 }
 
@@ -96,9 +135,11 @@ export async function setCache<T>(
   try {
     const fullKey = getKey(key, options?.prefix);
     await kv.set(fullKey, value, { ex: options?.ttl || 3600 });
+    stats.sets++;
     return true;
   } catch (error) {
     console.error('Cache set error:', error);
+    stats.errors++;
     return false;
   }
 }
@@ -113,9 +154,11 @@ export async function deleteCache(
   try {
     const fullKey = getKey(key, options?.prefix);
     await kv.del(fullKey);
+    stats.deletes++;
     return true;
   } catch (error) {
     console.error('Cache delete error:', error);
+    stats.errors++;
     return false;
   }
 }
@@ -171,6 +214,170 @@ export function cachedQuery<T>(
       return result;
     },
   };
+}
+
+/**
+ * Cache health status
+ */
+export type CacheHealthStatus = 'healthy' | 'degraded' | 'unhealthy';
+
+export interface CacheHealthResult {
+  status: CacheHealthStatus;
+  hitRate: number;
+  errorRate: number;
+  recommendations: string[];
+}
+
+/**
+ * Get cache health status
+ */
+export async function getCacheHealth(): Promise<CacheHealthResult> {
+  const currentStats = getCacheStats();
+  const total = currentStats.hits + currentStats.misses;
+  const totalOperations = total + currentStats.sets + currentStats.deletes;
+
+  const hitRate = currentStats.rate;
+  const errorRate = totalOperations > 0 ? currentStats.errors / totalOperations : 0;
+
+  const status: CacheHealthStatus =
+    errorRate > 0.05 ? 'unhealthy' :
+    hitRate < 0.5 ? 'degraded' :
+    'healthy';
+
+  const recommendations: string[] = [];
+
+  if (hitRate < 0.5) {
+    recommendations.push('Low cache hit rate - consider increasing TTL values or caching more data');
+  }
+
+  if (errorRate > 0.01) {
+    recommendations.push('High error rate detected - check Vercel KV connectivity');
+  }
+
+  if (currentStats.sets > currentStats.hits * 10) {
+    recommendations.push('High set-to-hit ratio - cache may be expiring too quickly');
+  }
+
+  return {
+    status,
+    hitRate,
+    errorRate,
+    recommendations,
+  };
+}
+
+/**
+ * Smart cache invalidation based on entity type
+ */
+export async function smartInvalidate(
+  entityType: 'patient' | 'appointment' | 'session' | 'exercise' | 'protocol',
+  entityId?: string,
+  options?: CacheOptions
+): Promise<void> {
+  const prefix = options?.prefix || 'fisioflow';
+
+  try {
+    switch (entityType) {
+      case 'patient':
+        // Invalidate patient data and related appointments/sessions
+        await deleteCache(`${entityType}:${entityId}`, { prefix });
+        await invalidatePattern(`appointment:patient:${entityId}`, { prefix });
+        await invalidatePattern(`session:patient:${entityId}`, { prefix });
+        break;
+
+      case 'appointment':
+        // Invalidate appointment and patient's appointment list
+        if (entityId) {
+          await deleteCache(`${entityType}:${entityId}`, { prefix });
+        }
+        await invalidatePattern(`${entityType}:patient:*`, { prefix });
+        break;
+
+      case 'session':
+        // Invalidate session and patient's session list
+        if (entityId) {
+          await deleteCache(`${entityType}:${entityId}`, { prefix });
+        }
+        await invalidatePattern(`${entityType}:patient:*`, { prefix });
+        break;
+
+      case 'exercise':
+      case 'protocol':
+        // Invalidate specific entity and "all" cache
+        if (entityId) {
+          await deleteCache(`${entityType}:${entityId}`, { prefix });
+        }
+        await deleteCache(`${entityType}:all`, { prefix });
+        break;
+    }
+  } catch (error) {
+    console.error(`Smart invalidation error for ${entityType}:`, error);
+  }
+}
+
+/**
+ * Warm up cache with frequently accessed data
+ */
+export async function warmUpCache(
+  dataLoaders: Record<string, () => Promise<unknown>>,
+  options?: CacheOptions
+): Promise<void> {
+  const results = await Promise.allSettled(
+    Object.entries(dataLoaders).map(async ([key, loader]) => {
+      try {
+        const data = await loader();
+        await setCache(key, data, options);
+      } catch (error) {
+        console.error(`Cache warm-up failed for ${key}:`, error);
+      }
+    })
+  );
+
+  const failed = results.filter(r => r.status === 'rejected').length;
+  console.log(`Cache warm-up completed: ${results.length - failed}/${results.length} successful`);
+}
+
+/**
+ * Batch get multiple cache keys
+ */
+export async function batchGet<T>(
+  keys: string[],
+  options?: CacheOptions
+): Promise<Map<string, T>> {
+  const result = new Map<string, T>();
+
+  await Promise.all(
+    keys.map(async key => {
+      const value = await getCache<T>(key, options);
+      if (value !== null) {
+        result.set(key, value);
+      }
+    })
+  );
+
+  return result;
+}
+
+/**
+ * Batch set multiple cache keys
+ */
+export async function batchSet<T>(
+  entries: Array<{ key: string; value: T }>,
+  options?: CacheOptions
+): Promise<void> {
+  await Promise.all(
+    entries.map(({ key, value }) => setCache(key, value, options))
+  );
+}
+
+/**
+ * Batch delete multiple cache keys
+ */
+export async function batchDelete(
+  keys: string[],
+  options?: CacheOptions
+): Promise<void> {
+  await Promise.all(keys.map(key => deleteCache(key, options)));
 }
 
 /**

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { MainLayout } from '@/components/layout';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -32,7 +33,7 @@ import { useAuditLogs, useExportAuditLogs, useBackups } from '@/hooks/useAuditLo
 import {
   Search, Eye, FileText, Download, Database, RefreshCw,
   Plus, Minus, Edit, Trash2, Shield, Clock, HardDrive,
-  CheckCircle, AlertCircle
+  CheckCircle, AlertCircle, XCircle
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -147,8 +148,8 @@ export default function AuditLogs() {
               <RefreshCw className="h-4 w-4 mr-2" />
               Atualizar
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => exportLogs(logs)}
               disabled={isExporting || logs.length === 0}
             >
@@ -239,7 +240,7 @@ export default function AuditLogs() {
                     <Input
                       placeholder="Buscar..."
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                       className="pl-10"
                     />
                   </div>
@@ -272,13 +273,13 @@ export default function AuditLogs() {
                   <Input
                     type="date"
                     value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStartDate(e.target.value)}
                     placeholder="Data início"
                   />
                   <Input
                     type="date"
                     value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEndDate(e.target.value)}
                     placeholder="Data fim"
                   />
                 </div>
@@ -328,8 +329,8 @@ export default function AuditLogs() {
                                   <Clock className="h-4 w-4 text-muted-foreground" />
                                   {log.timestamp
                                     ? format(new Date(log.timestamp), 'dd/MM/yyyy HH:mm:ss', {
-                                        locale: ptBR,
-                                      })
+                                      locale: ptBR,
+                                    })
                                     : '-'}
                                 </div>
                               </TableCell>
@@ -391,11 +392,11 @@ export default function AuditLogs() {
                                           <span className="ml-2">{TABLE_LABELS[log.table_name] || log.table_name}</span>
                                         </div>
                                       </div>
-                                      
+
                                       <div className="border-t pt-4">
                                         <h4 className="font-semibold mb-3">Alterações</h4>
-                                        <DiffViewer 
-                                          oldData={log.old_data} 
+                                        <DiffViewer
+                                          oldData={log.old_data}
                                           newData={log.new_data}
                                           changes={log.changes}
                                         />
@@ -486,7 +487,7 @@ export default function AuditLogs() {
                       Crie um backup manual dos dados do sistema
                     </CardDescription>
                   </div>
-                  <Button 
+                  <Button
                     onClick={() => createBackup.mutate('manual')}
                     disabled={createBackup.isPending}
                   >
@@ -525,7 +526,7 @@ export default function AuditLogs() {
                     </TableHeader>
                     <TableBody>
                       {backups.map((backup) => {
-                        const totalRecords = backup.records_count 
+                        const totalRecords = backup.records_count
                           ? Object.values(backup.records_count).reduce((a, b) => a + b, 0)
                           : 0;
 
@@ -536,24 +537,24 @@ export default function AuditLogs() {
                             </TableCell>
                             <TableCell>
                               <Badge variant="outline">
-                                {backup.backup_type === 'daily' ? 'Diário' : 
-                                 backup.backup_type === 'weekly' ? 'Semanal' : 'Manual'}
+                                {backup.backup_type === 'daily' ? 'Diário' :
+                                  backup.backup_type === 'weekly' ? 'Semanal' : 'Manual'}
                               </Badge>
                             </TableCell>
                             <TableCell>
-                              <Badge 
+                              <Badge
                                 variant={
                                   backup.status === 'completed' ? 'default' :
-                                  backup.status === 'failed' ? 'destructive' :
-                                  backup.status === 'expired' ? 'secondary' : 'outline'
+                                    backup.status === 'failed' ? 'destructive' :
+                                      backup.status === 'expired' ? 'secondary' : 'outline'
                                 }
                               >
                                 {backup.status === 'completed' && <CheckCircle className="h-3 w-3 mr-1" />}
                                 {backup.status === 'failed' && <XCircle className="h-3 w-3 mr-1" />}
                                 {backup.status === 'pending' && <AlertCircle className="h-3 w-3 mr-1" />}
                                 {backup.status === 'completed' ? 'Concluído' :
-                                 backup.status === 'failed' ? 'Falhou' :
-                                 backup.status === 'expired' ? 'Expirado' : 'Pendente'}
+                                  backup.status === 'failed' ? 'Falhou' :
+                                    backup.status === 'expired' ? 'Expirado' : 'Pendente'}
                               </Badge>
                             </TableCell>
                             <TableCell>
