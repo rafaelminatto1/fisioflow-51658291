@@ -22,6 +22,7 @@ import { initWebVitalsMonitoring, WebVitalsIndicator } from "@/lib/monitoring/we
 import { PerformanceDashboard } from "@/components/system";
 import { FeatureFlagProvider } from "@/lib/featureFlags/hooks";
 import { useServiceWorkerUpdate } from "@/hooks/useServiceWorkerUpdate";
+import { SkipLink, FocusVisibleHandler } from "@/components/accessibility";
 
 // Create a client with performance optimizations
 const queryClient = new QueryClient({
@@ -131,6 +132,9 @@ const App = () => {
 
   return (
     <ErrorBoundary>
+      {/* Componentes de acessibilidade - WCAG 2.1 */}
+      <SkipLink />
+      <FocusVisibleHandler />
       <PersistQueryClientProvider
         client={queryClient}
         persistOptions={{
