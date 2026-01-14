@@ -228,16 +228,30 @@ export const CalendarWeekView = memo(({
                                     onEdit={onEditAppointment ? () => onEditAppointment(apt) : undefined}
                                     onDelete={onDeleteAppointment ? () => onDeleteAppointment(apt) : undefined}
                                 >
-                                    <div className="w-full h-full">
-                                        <p className="text-xs font-bold text-white truncate shadow-black/50 drop-shadow-sm">
-                                            {apt.patientName || 'Paciente'}
+                                    <div className="w-full h-full flex flex-col">
+                                        {/* Nome do Paciente - destaque principal */}
+                                        <p className="text-xs font-bold text-white truncate drop-shadow-sm leading-tight">
+                                            {apt.patientName || 'Paciente não identificado'}
                                         </p>
-                                        <p className="text-[10px] text-gray-200 truncate font-medium">
-                                            {apt.therapistId || 'Dr. Desconhecido'}
-                                        </p>
-                                        <div className="flex gap-1 items-center mt-0.5">
+
+                                        {/* Horário e Terapeuta */}
+                                        <div className="flex items-center gap-1.5 mt-0.5">
+                                            <span className="text-[10px] font-medium bg-black/30 px-1.5 py-0.5 rounded text-white/90">
+                                                {startTime}
+                                            </span>
+                                            <span className="text-[10px] text-gray-200 truncate">
+                                                {apt.therapistName || apt.therapistId || 'Terapeuta'}
+                                            </span>
+                                        </div>
+
+                                        {/* Tipo e Sala */}
+                                        <div className="flex gap-1 items-center mt-auto">
                                             <span className="text-[10px] text-gray-300 truncate opacity-90">{apt.type}</span>
-                                            {apt.room && <span className="text-[9px] bg-black/20 px-1 rounded text-white/80">{apt.room}</span>}
+                                            {apt.room && (
+                                                <span className="text-[9px] bg-black/20 px-1 rounded text-white/80">
+                                                    {apt.room}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                 </AppointmentQuickView>
