@@ -375,6 +375,9 @@ export default defineConfig(({ mode }) => {
         'framer-motion',
         'recharts',
         'lucide-react',
+        // Include konva for proper CJS/UMD interop
+        'konva',
+        'react-konva',
       ],
 
       // Excluir bibliotecas médicas/visuais complexas que causam timeouts
@@ -388,8 +391,6 @@ export default defineConfig(({ mode }) => {
         '@cornerstonejs/codec-openjph',
         '@mediapipe/pose',
         '@mediapipe/tasks-vision',
-        'konva',
-        'react-konva',
       ],
     },
     esbuild: {

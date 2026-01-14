@@ -38,7 +38,7 @@ export function InternalDashboard() {
     queryKey: ["inactive-patients-list"],
     queryFn: async () => {
       const thirtyDaysAgo = format(subDays(new Date(), 30), "yyyy-MM-dd");
-      
+
       // Buscar todos os pacientes
       const { data: allPatients } = await supabase
         .from("patients")
@@ -51,10 +51,10 @@ export function InternalDashboard() {
         .gte("appointment_date", thirtyDaysAgo);
 
       const activePatientIds = new Set(recentAppointments?.map(a => a.patient_id) || []);
-      
+
       // Filtrar inativos
       const inactive = allPatients?.filter(p => !activePatientIds.has(p.id)) || [];
-      
+
       // Buscar última consulta de cada paciente inativo
       const inactiveWithLastAppointment = await Promise.all(
         inactive.slice(0, 20).map(async (patient) => {
@@ -180,118 +180,152 @@ export function InternalDashboard() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-fade-in">
       {/* Cards de Resumo */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-none bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-950 shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50">
+          <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-110 transition-transform duration-300">
+            <Users className="h-12 w-12 text-primary" />
+          </div>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
               <Users className="h-4 w-4 text-primary" />
               Total de Pacientes
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalPatients || 0}</div>
-            <p className="text-xs text-muted-foreground">Cadastrados no sistema</p>
+            <div className="text-3xl font-bold tracking-tight">{totalPatients || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1 font-medium">Cadastrados no sistema</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-none bg-gradient-to-br from-white to-green-50/30 dark:from-gray-900 dark:to-green-900/5 shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50">
+          <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-110 transition-transform duration-300">
+            <TrendingUp className="h-12 w-12 text-green-500" />
+          </div>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
               <TrendingUp className="h-4 w-4 text-green-500" />
               Pacientes Ativos
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-3xl font-bold text-green-600 tracking-tight">
               {loadingActive ? "..." : activePatients}
             </div>
-            <p className="text-xs text-muted-foreground">Consulta nos últimos 30 dias</p>
+            <p className="text-xs text-muted-foreground mt-1 font-medium">Consulta nos últimos 30 dias</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-none bg-gradient-to-br from-white to-orange-50/30 dark:from-gray-900 dark:to-orange-900/5 shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50">
+          <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-110 transition-transform duration-300">
+            <UserMinus className="h-12 w-12 text-orange-500" />
+          </div>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
               <UserMinus className="h-4 w-4 text-orange-500" />
               Pacientes Inativos
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
+            <div className="text-3xl font-bold text-orange-600 tracking-tight">
               {loadingInactive ? "..." : inactivePatients?.total || 0}
             </div>
-            <p className="text-xs text-muted-foreground">Sem consulta há +30 dias</p>
+            <p className="text-xs text-muted-foreground mt-1 font-medium">Sem consulta há +30 dias</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-none bg-gradient-to-br from-white to-blue-50/30 dark:from-gray-900 dark:to-blue-900/5 shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50">
+          <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-110 transition-transform duration-300">
+            <CreditCard className="h-12 w-12 text-blue-500" />
+          </div>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
               <CreditCard className="h-4 w-4 text-blue-500" />
-              Com Sessões Disponíveis
+              Sessões Disponíveis
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-3xl font-bold text-blue-600 tracking-tight">
               {loadingSessions ? "..." : patientsWithSessions?.length || 0}
             </div>
-            <p className="text-xs text-muted-foreground">Pacotes ativos</p>
+            <p className="text-xs text-muted-foreground mt-1 font-medium">Pacotes ativos para uso</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Novos Pacientes */}
       <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <Card className="border-none shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50">
+          <CardHeader className="border-b border-gray-100/50 dark:border-gray-800/50 pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg">
               <UserPlus className="h-5 w-5 text-primary" />
-              Novos Pacientes
+              Crescimento de Pacientes
             </CardTitle>
-            <CardDescription>Cadastros por período</CardDescription>
+            <CardDescription>Acompanhamento de novos cadastros</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <div className="text-center p-3 rounded-lg bg-muted">
-                <div className="text-2xl font-bold">{newPatientsData?.today || 0}</div>
-                <p className="text-xs text-muted-foreground">Hoje</p>
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-3 gap-4 mb-8">
+              <div className="text-center p-4 rounded-2xl bg-primary/5 border border-primary/10">
+                <div className="text-3xl font-bold text-primary">{newPatientsData?.today || 0}</div>
+                <p className="text-xs font-semibold text-primary/70 mt-1 uppercase tracking-wider">Hoje</p>
               </div>
-              <div className="text-center p-3 rounded-lg bg-muted">
-                <div className="text-2xl font-bold">{newPatientsData?.thisWeek || 0}</div>
-                <p className="text-xs text-muted-foreground">Esta Semana</p>
+              <div className="text-center p-4 rounded-2xl bg-blue-500/5 border border-blue-500/10">
+                <div className="text-3xl font-bold text-blue-600">{newPatientsData?.thisWeek || 0}</div>
+                <p className="text-xs font-semibold text-blue-600/70 mt-1 uppercase tracking-wider">Esta Semana</p>
               </div>
-              <div className="text-center p-3 rounded-lg bg-muted">
-                <div className="text-2xl font-bold">{newPatientsData?.thisMonth || 0}</div>
-                <p className="text-xs text-muted-foreground">Este Mês</p>
+              <div className="text-center p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10">
+                <div className="text-3xl font-bold text-indigo-600">{newPatientsData?.thisMonth || 0}</div>
+                <p className="text-xs font-semibold text-indigo-600/70 mt-1 uppercase tracking-wider">Este Mês</p>
               </div>
             </div>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={newPatientsData?.byMonth || []}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip />
-                <Line 
-                  type="monotone" 
-                  dataKey="count" 
-                  stroke="hsl(var(--primary))" 
-                  strokeWidth={2}
-                  name="Novos Pacientes"
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <div className="h-[250px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={newPatientsData?.byMonth || []}>
+                  <defs>
+                    <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                  <XAxis
+                    dataKey="month"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#64748B', fontSize: 12 }}
+                    dy={10}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#64748B', fontSize: 12 }}
+                  />
+                  <Tooltip
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px -2px rgba(0,0,0,0.05)' }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="count"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth={3}
+                    dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4, stroke: '#fff' }}
+                    activeDot={{ r: 6, strokeWidth: 0 }}
+                    name="Novos Pacientes"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-primary" />
-              Pacientes com Sessões Pagas
+        <Card className="border-none shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50">
+          <CardHeader className="border-b border-gray-100/50 dark:border-gray-800/50 pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <CreditCard className="h-5 w-5 text-blue-500" />
+              Sessões Reutilizáveis
             </CardTitle>
-            <CardDescription>Pacotes ativos disponíveis para uso</CardDescription>
+            <CardDescription>Pacotes ativos de sessões pré-pagas</CardDescription>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[280px]">
@@ -329,14 +363,14 @@ export function InternalDashboard() {
       </div>
 
       {/* Lista de Pacientes Inativos */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <Card className="border-none shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50">
+        <CardHeader className="border-b border-gray-100/50 dark:border-gray-800/50 pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg">
             <Clock className="h-5 w-5 text-orange-500" />
             Pacientes Inativos
           </CardTitle>
           <CardDescription>
-            Pacientes sem consulta há mais de 30 dias - considere reativação
+            Pacientes sem consulta há mais de 30 dias - considere uma estratégia de reativação
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -363,7 +397,7 @@ export function InternalDashboard() {
                       <TableCell className="font-medium">{PatientHelpers.getName(patient)}</TableCell>
                       <TableCell>{patient.phone || "-"}</TableCell>
                       <TableCell>
-                        {patient.lastAppointment 
+                        {patient.lastAppointment
                           ? format(new Date(patient.lastAppointment), "dd/MM/yyyy", { locale: ptBR })
                           : "Nunca"}
                       </TableCell>
