@@ -63,6 +63,7 @@ export interface EvolutionMeasurement {
   value: number;
   unit?: string;
   notes?: string;
+  custom_data?: any;
   measured_at: string;
   created_by: string;
   created_at: string;
@@ -131,7 +132,7 @@ export const useRequiredMeasurements = (pathologyNames: string[]) => {
         .from('pathology_required_measurements')
         .select('*')
         .in('pathology_name', pathologyNames);
-      
+
       if (error) throw error;
       return data as PathologyRequiredMeasurement[];
     },
@@ -149,7 +150,7 @@ export const useEvolutionMeasurements = (patientId: string) => {
         .select('*')
         .eq('patient_id', patientId)
         .order('measured_at', { ascending: false });
-      
+
       if (error) throw error;
       return data as EvolutionMeasurement[];
     },
@@ -175,7 +176,7 @@ export const useCreateMeasurement = () => {
         })
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -209,7 +210,7 @@ export const useUpdateGoal = () => {
         .eq('id', goalId)
         .select()
         .single();
-      
+
       if (error) throw error;
       return goal as PatientGoal;
     },
@@ -233,7 +234,7 @@ export const useCompleteGoal = () => {
         .eq('id', goalId)
         .select()
         .single();
-      
+
       if (error) throw error;
       return goal as PatientGoal;
     },
@@ -263,7 +264,7 @@ export const useCreateGoal = () => {
         })
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },

@@ -61,39 +61,90 @@ export function FinancialAnalytics() {
 
   return (
     <div className="space-y-4">
-      <Card>
+      <Card className="border-none shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50">
         <CardHeader>
           <CardTitle>Receita Mensal (Últimos 6 meses)</CardTitle>
           <CardDescription>Evolução da receita ao longo do tempo</CardDescription>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={monthlyRevenue}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="mes" />
-              <YAxis />
-              <Tooltip formatter={(value) => `R$ ${value}`} />
-              <Line type="monotone" dataKey="receita" stroke="hsl(var(--primary))" strokeWidth={2} />
-            </LineChart>
-          </ResponsiveContainer>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={monthlyRevenue}>
+                <defs>
+                  <linearGradient id="colorReceita" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.1} />
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                <XAxis
+                  dataKey="mes"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#64748B', fontSize: 12 }}
+                  dy={10}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#64748B', fontSize: 12 }}
+                  tickFormatter={(value) => `R$ ${value}`}
+                />
+                <Tooltip
+                  formatter={(value) => `R$ ${value}`}
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px -2px rgba(0,0,0,0.05)' }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="receita"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={3}
+                  dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4, stroke: '#fff' }}
+                  activeDot={{ r: 6, strokeWidth: 0 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="border-none shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50">
         <CardHeader>
           <CardTitle>Distribuição por Método de Pagamento</CardTitle>
-          <CardDescription>Últimos 30 dias</CardDescription>
+          <CardDescription>Volume financeiro por método nos últimos 30 dias</CardDescription>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={paymentMethods}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="metodo" />
-              <YAxis />
-              <Tooltip formatter={(value) => `R$ ${value}`} />
-              <Bar dataKey="valor" fill="hsl(var(--primary))" />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={paymentMethods}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                <XAxis
+                  dataKey="metodo"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#64748B', fontSize: 12 }}
+                  dy={10}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#64748B', fontSize: 12 }}
+                  tickFormatter={(value) => `R$ ${value}`}
+                />
+                <Tooltip
+                  formatter={(value) => `R$ ${value}`}
+                  cursor={{ fill: 'rgba(var(--primary-rgb), 0.05)' }}
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px -2px rgba(0,0,0,0.05)' }}
+                />
+                <Bar
+                  dataKey="valor"
+                  fill="hsl(var(--primary))"
+                  radius={[4, 4, 0, 0]}
+                  barSize={40}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </CardContent>
       </Card>
     </div>
