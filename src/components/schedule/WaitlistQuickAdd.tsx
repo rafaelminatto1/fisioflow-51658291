@@ -59,7 +59,9 @@ export function WaitlistQuickAdd({ open, onOpenChange, date, time = '00:00' }: W
   const { mutate: addToWaitlist, isPending: isAdding } = useAddToWaitlist();
   const { data: patients = [] } = usePatients();
 
-  const dayOfWeek = DAY_MAP[date.getDay()];
+  // Safely handle potentially invalid dates
+  const safeDate = date instanceof Date && !isNaN(date.getTime()) ? date : new Date();
+  const dayOfWeek = DAY_MAP[safeDate.getDay()];
   const timeSlot = getTimeSlot(time);
 
   const handleSubmit = () => {
@@ -73,7 +75,7 @@ export function WaitlistQuickAdd({ open, onOpenChange, date, time = '00:00' }: W
       preferred_days: [dayOfWeek],
       preferred_periods: [timeSlot],
       priority,
-      notes: notes || `Interesse registrado para ${format(date, "EEEE, d 'de' MMMM", { locale: ptBR })} às ${time}`,
+      notes: notes || `Interesse registrado para ${format(safeDate, "EEEE, d 'de' MMMM", { locale: ptBR })} às ${time}`,
     });
 
     onOpenChange(false);
@@ -101,7 +103,7 @@ export function WaitlistQuickAdd({ open, onOpenChange, date, time = '00:00' }: W
             <Calendar className="h-4 w-4 text-muted-foreground" />
             <div className="text-sm">
               <span className="font-medium">
-                {format(date, "EEEE, d 'de' MMMM", { locale: ptBR })}
+                {format(safeDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
               </span>
               <span className="text-muted-foreground"> às </span>
               <span className="font-medium">{time}</span>
