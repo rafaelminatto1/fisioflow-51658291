@@ -327,9 +327,10 @@ export function BodyMap({
         </g>
 
         {/* Regiões clicáveis */}
-        {regions.map(region => {
+        {regions.map((region, index) => {
           const isHovered = hoveredRegion === region.code;
-          points.some(p => p.regionCode === region.code);
+          const isFocused = focusedRegionIndex === index;
+          const hasPoint = points.some(p => p.regionCode === region.code);
 
           return (
             <rect
@@ -338,16 +339,28 @@ export function BodyMap({
               y={region.y - region.height / 2}
               width={region.width}
               height={region.height}
-              fill={isHovered ? 'rgba(59, 130, 246, 0.15)' : 'transparent'}
-              stroke={isHovered ? 'rgba(59, 130, 246, 0.6)' : 'transparent'}
-              strokeWidth={isHovered ? '1' : '0.5'}
+              fill={isFocused ? 'rgba(59, 130, 246, 0.2)' : isHovered ? 'rgba(59, 130, 246, 0.15)' : 'transparent'}
+              stroke={isFocused ? 'rgba(59, 130, 246, 0.8)' : isHovered ? 'rgba(59, 130, 246, 0.6)' : 'transparent'}
+              strokeWidth={isFocused ? '1.5' : isHovered ? '1' : '0.5'}
               rx="2"
               className={cn(
                 'cursor-pointer transition-all duration-200',
-                isHovered && 'transform scale-105'
+                (isHovered || isFocused) && 'transform scale-105'
               )}
               onMouseEnter={() => setHoveredRegion(region.code)}
               onMouseLeave={() => setHoveredRegion(null)}
+              onFocus={() => setFocusedRegionIndex(index)}
+              onBlur={() => setFocusedRegionIndex(-1)}
+              aria-label={`${region.name}${hasPoint ? ' (possui ponto de dor)' : ''}. Clique para adicionar ou editar.`}
+              role="button"
+              tabIndex={readOnly ? -1 : 0}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!readOnly && onPointAdd) {
+                  setPendingRegion({ code: region.code, name: region.name, x: region.x, y: region.y });
+                  setMuscleModalOpen(true);
+                }
+              }}
             />
           );
         })}
@@ -360,7 +373,12 @@ export function BodyMap({
           const glowRadius = radius * 2.5;
 
           return (
-            <g key={point.id} className="pain-point-group">
+            <g
+              key={point.id}
+              className="pain-point-group"
+              role="group"
+              aria-label={getPointAriaLabel(point)}
+            >
               {/* Pulse Ring Animation - apenas para pontos de alta intensidade */}
               {point.intensity >= 7 && (
                 <circle
@@ -370,6 +388,7 @@ export function BodyMap({
                   fill={color}
                   opacity="0.3"
                   className="animate-pulse-ring pointer-events-none"
+                  aria-hidden="true"
                   style={{
                     animation: 'pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite',
                   }}
@@ -384,6 +403,7 @@ export function BodyMap({
                 fill={color}
                 opacity="0.2"
                 className="pointer-events-none"
+                aria-hidden="true"
               />
 
               {/* Círculo do ponto */}
@@ -407,6 +427,9 @@ export function BodyMap({
                   e.stopPropagation();
                   setSelectedPoint(isSelected ? null : point.id);
                 }}
+                aria-label={`${point.region} - Intensidade ${point.intensity}. ${isSelected ? 'Clique para fechar detalhes.' : 'Clique para ver detalhes.'}`}
+                role="button"
+                tabIndex={0}
               />
 
               {/* Ícone do tipo de dor */}
@@ -417,6 +440,7 @@ export function BodyMap({
                 dominantBaseline="middle"
                 fontSize="2.5"
                 className="pointer-events-none select-none drop-shadow-sm"
+                aria-hidden="true"
                 style={{
                   filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.3))',
                 }}
@@ -432,6 +456,7 @@ export function BodyMap({
                 fill={color}
                 fontWeight="bold"
                 className="pointer-events-none transition-all"
+                aria-hidden="true"
                 style={{
                   filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.3))',
                 }}
