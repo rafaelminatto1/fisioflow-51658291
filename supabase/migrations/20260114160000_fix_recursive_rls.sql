@@ -37,6 +37,7 @@ GRANT EXECUTE ON FUNCTION private.is_admin_secure TO authenticated;
 DROP POLICY IF EXISTS "user_roles_select_policy" ON public.user_roles;
 DROP POLICY IF EXISTS "user_roles_select_all" ON public.user_roles;
 DROP POLICY IF EXISTS "user_roles_admin_manage" ON public.user_roles;
+DROP POLICY IF EXISTS "user_roles_select_own_or_admin" ON public.user_roles;
 
 -- Create new non-recursive policies
 CREATE POLICY "user_roles_select_own_or_admin" ON public.user_roles

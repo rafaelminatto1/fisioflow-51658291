@@ -15,10 +15,10 @@ ADD COLUMN IF NOT EXISTS revoked_at timestamptz,
 ADD COLUMN IF NOT EXISTS revoked_by uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
 ADD COLUMN IF NOT EXISTS reason text;
 
--- Index for efficient role lookups with expiration (commented out - now() is not immutable)
--- CREATE INDEX IF NOT EXISTS idx_user_roles_active
--- ON public.user_roles(user_id, role, expires_at, revoked_at)
--- WHERE revoked_at IS NULL AND (expires_at IS NULL OR expires_at > now());
+-- Index for efficient role lookups for active roles
+CREATE INDEX IF NOT EXISTS idx_user_roles_active_lookup
+ON public.user_roles(user_id)
+WHERE revoked_at IS NULL AND (expires_at IS NULL OR expires_at > now());
 
 -- ============================================================================
 -- GRANULAR PERMISSIONS TABLE
@@ -64,7 +64,14 @@ INSERT INTO public.permissions (name, resource, action, description) VALUES
 ('roles.assign', 'roles', 'admin', 'Assign and revoke roles'),
 ('settings.manage', 'settings', 'admin', 'Manage system settings'),
 ('reports.access', 'reports', 'read', 'Access all reports'),
-('audit_logs.read', 'audit_logs', 'read', 'View audit logs')
+('audit_logs.read', 'audit_logs', 'read', 'View audit logs'),
+
+-- Exercise permissions
+('exercises.read', 'exercises', 'read', 'Ver biblioteca de exercícios'),
+('exercises.write', 'exercises', 'write', 'Criar e editar exercícios'),
+('exercises.delete', 'exercises', 'delete', 'Excluir exercícios'),
+('exercise_videos.read', 'exercise_videos', 'read', 'Ver biblioteca de vídeos'),
+('exercise_videos.manage', 'exercise_videos', 'admin', 'Gerenciar biblioteca de vídeos')
 ON CONFLICT (name) DO NOTHING;
 
 -- ============================================================================
@@ -91,7 +98,9 @@ ON CONFLICT (role, permission_id) DO NOTHING;
 INSERT INTO public.role_permissions (role, permission_id)
 SELECT 'fisioterapeuta', p.id
 FROM public.permissions p
-WHERE p.name NOT LIKE '%.admin' AND p.name NOT IN ('users.manage', 'roles.assign', 'settings.manage', 'audit_logs.read')
+WHERE p.name NOT LIKE '%.admin' 
+AND p.name NOT IN ('users.manage', 'roles.assign', 'settings.manage', 'audit_logs.read')
+OR p.resource = 'exercise_videos' -- Physiotherapists can manage videos
 ON CONFLICT (role, permission_id) DO NOTHING;
 
 -- Estagiario (Intern): Read and limited write access
@@ -215,6 +224,10 @@ USING (
         WHERE role = 'admin'
         AND revoked_at IS NULL
         AND (expires_at IS NULL OR expires_at > now())
+    )
+    AND (
+        -- Require MFA for admins to see audit logs
+        (current_setting('auth.aal', true) = 'aal2')
     )
 );
 
@@ -375,6 +388,8 @@ BEGIN
         action,
         old_values,
         new_values,
+        ip_address,
+        user_agent,
         success,
         error_message,
         metadata
@@ -389,6 +404,8 @@ BEGIN
         p_action,
         p_old_values,
         p_new_values,
+        (current_setting('request.headers', true)::jsonb->>'x-real-ip')::inet,
+        current_setting('request.headers', true)::jsonb->>'user-agent',
         p_success,
         p_error_message,
         p_metadata
@@ -414,8 +431,8 @@ BEGIN
         PERFORM private.log_audit_event(
             TG_TABLE_NAME || '_created',
             CASE
-                WHEN TG_TABLE_NAME IN ('patients', 'sessions', 'medical_records') THEN 'clinical'
-                WHEN TG_TABLE_NAME IN ('users', 'roles') THEN 'security'
+                WHEN TG_TABLE_NAME IN ('patients', 'sessions', 'medical_records', 'exercises', 'exercise_videos') THEN 'clinical'
+                WHEN TG_TABLE_NAME IN ('users', 'roles', 'user_roles') THEN 'security'
                 WHEN TG_TABLE_NAME IN ('payments', 'packages') THEN 'admin'
                 ELSE 'api'
             END,
@@ -506,6 +523,14 @@ FOR EACH ROW EXECUTE FUNCTION private.audit_trigger_func();
 
 CREATE TRIGGER user_roles_audit_trigger
 AFTER INSERT OR UPDATE OR DELETE ON public.user_roles
+FOR EACH ROW EXECUTE FUNCTION private.audit_trigger_func();
+
+CREATE TRIGGER exercises_audit_trigger
+AFTER INSERT OR UPDATE OR DELETE ON public.exercises
+FOR EACH ROW EXECUTE FUNCTION private.audit_trigger_func();
+
+CREATE TRIGGER exercise_videos_audit_trigger
+AFTER INSERT OR UPDATE OR DELETE ON public.exercise_videos
 FOR EACH ROW EXECUTE FUNCTION private.audit_trigger_func();
 
 -- ============================================================================
