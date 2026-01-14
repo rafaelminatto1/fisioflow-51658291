@@ -126,14 +126,7 @@ export const DayColumn = memo(({
         return statusMap[normalizedStatus] || 'calendar-card-agendado';
     };
 
-    // Keyboard navigation handler for time slots
-    const handleSlotKeyDown = (e: React.KeyboardEvent, date: Date, time: string, blocked: boolean) => {
-        if (blocked) return;
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onTimeSlotClick(date, time);
-        }
-    };
+
 
     return (
         <div
@@ -174,59 +167,23 @@ export const DayColumn = memo(({
                         </div>
                     </div>
                 ) : (
-                    timeSlots.map((time, _index) => {
+                    timeSlots.map((time) => {
                         const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === time;
                         const { blocked, reason } = checkTimeBlocked(day, time);
-                        const dayString = format(day, 'dd/MM/yyyy');
 
                         return (
-                            <TooltipProvider key={time}>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <div
-                                            className={cn(
-                                                "calendar-time-slot cursor-pointer group/slot relative",
-                                                blocked
-                                                    ? "blocked"
-                                                    : "",
-                                                isDropTarget && !blocked && "is-drop-target"
-                                            )}
-                                            onClick={() => !blocked && onTimeSlotClick(day, time)}
-                                            onKeyDown={(e) => handleSlotKeyDown(e, day, time, blocked)}
-                                            onDragOver={(e) => !blocked && handleDragOver(e, day, time)}
-                                            onDragLeave={handleDragLeave}
-                                            onDrop={(e) => !blocked && handleDrop(e, day, time)}
-                                            role="button"
-                                            tabIndex={blocked ? -1 : 0}
-                                            aria-label={
-                                                blocked
-                                                    ? `Horário ${time} bloqueado${reason ? ': ' + reason : ''}`
-                                                    : `Criar agendamento para ${dayString} às ${time}`
-                                            }
-                                        >
-                                            {blocked ? (
-                                                <span className="absolute inset-0 flex items-center justify-center text-[10px] text-destructive/60" aria-hidden="true">
-                                                    <Ban className="h-2 w-2" />
-                                                </span>
-                                            ) : (
-                                                <span className={cn(
-                                                    "absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs font-bold text-primary-foreground opacity-0 group-hover/slot:opacity-100 transition-all duration-200 scale-95 group-hover/slot:scale-100 pointer-events-none",
-                                                    isDropTarget && "opacity-100"
-                                                )} aria-hidden="true">
-                                                    <span className="bg-gradient-primary px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg shadow-lg">
-                                                        {isDropTarget ? '↓ Soltar' : '+ Novo'}
-                                                    </span>
-                                                </span>
-                                            )}
-                                        </div>
-                                    </TooltipTrigger>
-                                    {blocked && reason && (
-                                        <TooltipContent>
-                                            <p>{reason}</p>
-                                        </TooltipContent>
-                                    )}
-                                </Tooltip>
-                            </TooltipProvider>
+                            <TimeSlot
+                                key={time}
+                                time={time}
+                                day={day}
+                                blocked={blocked}
+                                reason={reason}
+                                isDropTarget={isDropTarget || false}
+                                onTimeSlotClick={onTimeSlotClick}
+                                onDragOver={handleDragOver}
+                                onDragLeave={handleDragLeave}
+                                onDrop={handleDrop}
+                            />
                         );
                     })
                 )}
@@ -394,3 +351,87 @@ export const DayColumn = memo(({
 });
 
 DayColumn.displayName = 'DayColumn';
+
+interface TimeSlotProps {
+    time: string;
+    day: Date;
+    blocked: boolean;
+    reason?: string;
+    isDropTarget: boolean;
+    onTimeSlotClick: (date: Date, time: string) => void;
+    onDragOver: (e: React.DragEvent, date: Date, time: string) => void;
+    onDragLeave: () => void;
+    onDrop: (e: React.DragEvent, date: Date, time: string) => void;
+}
+
+const TimeSlot = memo(({
+    time,
+    day,
+    blocked,
+    reason,
+    isDropTarget,
+    onTimeSlotClick,
+    onDragOver,
+    onDragLeave,
+    onDrop
+}: TimeSlotProps) => {
+    const dayString = format(day, 'dd/MM/yyyy');
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (blocked) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onTimeSlotClick(day, time);
+        }
+    };
+
+    return (
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <div
+                        className={cn(
+                            "calendar-time-slot cursor-pointer group/slot relative",
+                            blocked ? "blocked" : "",
+                            isDropTarget && !blocked && "is-drop-target"
+                        )}
+                        onClick={() => !blocked && onTimeSlotClick(day, time)}
+                        onKeyDown={handleKeyDown}
+                        onDragOver={(e) => !blocked && onDragOver(e, day, time)}
+                        onDragLeave={onDragLeave}
+                        onDrop={(e) => !blocked && onDrop(e, day, time)}
+                        role="button"
+                        tabIndex={blocked ? -1 : 0}
+                        aria-label={
+                            blocked
+                                ? `Horário ${time} bloqueado${reason ? ': ' + reason : ''}`
+                                : `Criar agendamento para ${dayString} às ${time}`
+                        }
+                    >
+                        {blocked ? (
+                            <span className="absolute inset-0 flex items-center justify-center text-[10px] text-destructive/60" aria-hidden="true">
+                                <Ban className="h-2 w-2" />
+                            </span>
+                        ) : (
+                            <span className={cn(
+                                "absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs font-bold text-primary-foreground opacity-0 group-hover/slot:opacity-100 transition-all duration-200 scale-95 group-hover/slot:scale-100 pointer-events-none",
+                                isDropTarget && "opacity-100"
+                            )} aria-hidden="true">
+                                <span className="bg-gradient-primary px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg shadow-lg">
+                                    {isDropTarget ? '↓ Soltar' : '+ Novo'}
+                                </span>
+                            </span>
+                        )}
+                    </div>
+                </TooltipTrigger>
+                {blocked && reason && (
+                    <TooltipContent>
+                        <p>{reason}</p>
+                    </TooltipContent>
+                )}
+            </Tooltip>
+        </TooltipProvider>
+    );
+});
+
+TimeSlot.displayName = 'TimeSlot';
