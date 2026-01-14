@@ -5,9 +5,14 @@
  * Runs every Monday at 9:00 AM to send weekly summary reports
  */
 
-import { inngest, retryConfig } from '@/lib/inngest/client';
-import { Events } from '@/lib/inngest/types';
+import { inngest, retryConfig } from '../../lib/inngest/client';
+import { Events, InngestStep } from '../../lib/inngest/types';
 import { createClient } from '@supabase/supabase-js';
+
+// Define types for steps
+type DateRange = { start: string; end: string };
+type Organization = { id: string; name?: string };
+
 
 export const weeklySummaryWorkflow = inngest.createFunction(
   {
@@ -19,14 +24,14 @@ export const weeklySummaryWorkflow = inngest.createFunction(
     event: Events.CRON_WEEKLY_SUMMARY,
     cron: '0 9 * * 1', // 9:00 AM every Monday
   },
-  async ({ step }: { event: { data: Record<string, unknown> }; step: { run: (name: string, fn: () => Promise<unknown>) => Promise<unknown> } }) => {
+  async ({ step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
     // Calculate date range for last week
-    const lastWeek = await step.run('calculate-date-range', async () => {
+    const lastWeek = await step.run('calculate-date-range', async (): Promise<DateRange> => {
       const now = new Date();
       const dayOfWeek = now.getDay();
       const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
@@ -60,7 +65,7 @@ export const weeklySummaryWorkflow = inngest.createFunction(
       }
 
       return await Promise.all(
-        organizations.map(async (org: { id: string; name?: string }) => {
+        (organizations as Organization[]).map(async (org) => {
           // Get sessions for the week
           const { data: sessions } = await supabase
             .from('sessions')

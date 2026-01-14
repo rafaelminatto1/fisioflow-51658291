@@ -182,3 +182,10 @@ export interface WorkflowOptions {
   idempotent?: boolean;
   concurrency?: number;
 }
+
+export type InngestStep = {
+  run: <T>(name: string, fn: () => Promise<T>) => Promise<T>;
+  send: (payload: { name: string; data: any; user?: any }) => Promise<void>; // Simplified send type, can be expanded
+  waitForEvent: (event: string, opts?: { timeout: string; match?: string }) => Promise<any>;
+  sleep: (duration: string) => Promise<void>;
+};

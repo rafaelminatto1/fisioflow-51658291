@@ -1,8 +1,48 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, ErrorInfo, ReactNode, useEffect } from 'react';
 import { trackError } from '../../lib/analytics';
 import { AlertTriangle, RefreshCw, Home, ArrowLeft, ChevronDown, ChevronRight, Copy, Terminal } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+
+/**
+ * Hook para configurar listener global de erros de preload do Vite
+ * Detecta erros "504 (Outdated Optimize Dep)" e recarrega a página automaticamente
+ */
+function useVitePreloadErrorHandler() {
+  useEffect(() => {
+    const handleVitePreloadError = (event: any) => {
+      console.error('[Vite] Erro de preload detectado:', event);
+
+      const storageKey = 'vite_preload_error_reload';
+      const reloadCountKey = 'vite_reload_count';
+      const reloadCount = parseInt(sessionStorage.getItem(reloadCountKey) || '0', 10);
+
+      // Limitar a 3 recargas automáticas para evitar loop infinito
+      if (reloadCount < 3) {
+        sessionStorage.setItem(storageKey, Date.now().toString());
+        sessionStorage.setItem(reloadCountKey, (reloadCount + 1).toString());
+
+        console.log(`[Vite] Recarregando página automaticamente (tentativa ${reloadCount + 1}/3)...`);
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } else {
+        console.error('[Vite] Limite de recargas automáticas atingido.');
+        // Limpar contador para permitir futuras tentativas manuais
+        sessionStorage.removeItem(reloadCountKey);
+      }
+    };
+
+    // Adicionar listener para erros de preload do Vite
+    window.addEventListener('vite:preloadError', handleVitePreloadError);
+
+    // Cleanup ao desmontar
+    return () => {
+      window.removeEventListener('vite:preloadError', handleVitePreloadError);
+    };
+  }, []);
+}
 
 interface Props {
   children: ReactNode;
@@ -257,4 +297,18 @@ ${errorInfo?.componentStack || 'No component stack'}
 }
 
 export { ErrorBoundary };
+
+/**
+ * Componente wrapper funcional que inclui o handler de erros de preload do Vite
+ * Use este componente ao invés do ErrorBoundary class diretamente para ter
+ * tratamento automático de erros "504 (Outdated Optimize Dep)"
+ */
+export function ErrorBoundaryWithViteHandler({ children, fallback, onError }: Props) {
+  // Usar o hook de tratamento de erros de preload
+  useVitePreloadErrorHandler();
+
+  // Wrapper do ErrorBoundary original
+  return <ErrorBoundary fallback={fallback} onError={onError}>{children}</ErrorBoundary>;
+}
+
 export default ErrorBoundary;
