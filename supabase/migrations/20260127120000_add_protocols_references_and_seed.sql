@@ -1,6 +1,6 @@
 -- Add references column to exercise_protocols table
 ALTER TABLE exercise_protocols 
-ADD COLUMN IF NOT EXISTS references jsonb DEFAULT '[]'::jsonb;
+ADD COLUMN IF NOT EXISTS "references" jsonb DEFAULT '[]'::jsonb;
 
 -- Seed high-quality protocols
 INSERT INTO exercise_protocols (
@@ -11,7 +11,7 @@ INSERT INTO exercise_protocols (
     milestones, 
     restrictions, 
     progression_criteria, 
-    references,
+    "references",
     clinical_tests,
     organization_id
 ) VALUES 
