@@ -6,7 +6,6 @@ import { AppointmentBase, AppointmentFormData, AppointmentStatus, AppointmentTyp
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
 import { logger } from '@/lib/errors/logger';
 import { useEffect } from 'react';
-import { useRealtimeSubscription } from './useRealtimeSubscription';
 import { AppointmentNotificationService } from '@/lib/services/AppointmentNotificationService';
 import { requireUserOrganizationId, getUserOrganizationId } from '@/utils/userHelpers';
 
@@ -248,22 +247,19 @@ async function getFromCacheWithMetadata(organizationId?: string): Promise<Appoin
 export function useAppointments() {
   const { toast } = useToast();
   const { profile, user } = useAuth();
+  const queryClient = useQueryClient();
   const organizationId = profile?.organization_id;
 
   // Setup Realtime subscription using custom hook
-  useRealtimeSubscription({
-    table: 'appointments',
-    queryKey: ['appointments'],
-    enabled: !!organizationId
-  });
+  // Esta inscrição já gerencia a invalidação de queries quando há mudanças
+  // Não precisamos de uma inscrição duplicada para toasts
+  const channelName = `appointments-changes-${organizationId || 'all'}`;
 
-  // Listener específico para toasts (opcional, mantendo comportamento anterior se desejado, 
-  // mas idealmente movido para um lugar central ou mantido aqui apenas para UX específica)
   useEffect(() => {
     if (!organizationId) return;
 
     const channel = supabase
-      .channel('appointments-toasts')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -273,6 +269,11 @@ export function useAppointments() {
           filter: `organization_id=eq.${organizationId}`
         },
         (payload) => {
+          logger.info(`Realtime event: appointments ${payload.eventType}`, {}, 'useAppointments');
+
+          // Invalidar queries para atualizar os dados
+          queryClient.invalidateQueries({ queryKey: ['appointments'] });
+
           // Show toast notification for changes made by other users
           if (payload.eventType === 'INSERT') {
             toast({
@@ -292,9 +293,20 @@ export function useAppointments() {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          logger.debug(`Realtime conectado: ${channelName}`, {}, 'useAppointments');
+        }
+        if (status === 'CHANNEL_ERROR') {
+          logger.error(`Erro no canal Realtime: ${channelName}`, {}, 'useAppointments');
+        }
+        if (status === 'CLOSED') {
+          logger.debug(`Canal Realtime fechado: ${channelName}`, {}, 'useAppointments');
+        }
+      });
 
     return () => {
+      logger.debug(`Removendo subscription ${channelName}`, {}, 'useAppointments');
       supabase.removeChannel(channel);
     };
   }, [toast, organizationId]);
