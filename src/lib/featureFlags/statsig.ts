@@ -132,7 +132,7 @@ export function shutdownStatsig(): void {
  */
 export function isFeatureEnabled(
   flagName: FeatureFlagName,
-  user?: Statsig.StatsigUser,
+  _user?: Statsig.StatsigUser,
   _options?: Statsig.StatsigOptions
 ): boolean {
   if (!isInitialized) {
@@ -141,7 +141,9 @@ export function isFeatureEnabled(
   }
 
   try {
-    return Statsig.checkGate(flagName, user);
+    // Note: statsig-js checkGate signature is (gateName, ignoreOverrides?)
+    // User is set during initialize() or updateUser()
+    return Statsig.checkGate(flagName);
   } catch (error) {
     console.error(`Error checking gate ${flagName}:`, error);
     return getDefaultFlagValue(flagName);
@@ -199,14 +201,15 @@ export function getMultipleFeatureFlags(
  */
 export function getDynamicConfig<T = DynamicConfigValue>(
   configName: DynamicConfigName,
-  user?: Statsig.StatsigUser
+  _user?: Statsig.StatsigUser
 ): T | null {
   if (!isInitialized) {
     return getDefaultConfigValue<T>(configName);
   }
 
   try {
-    const config = Statsig.getConfig(configName, user);
+    // Note: statsig-js getConfig signature is (configName, ignoreOverrides?)
+    const config = Statsig.getConfig(configName);
     return (config?.value as T) || null;
   } catch (error) {
     console.error(`Error getting config ${configName}:`, error);
@@ -241,14 +244,15 @@ export function getConfigValue<T = unknown>(
  */
 export function getExperiment<T = string>(
   experimentName: string,
-  user?: Statsig.StatsigUser
+  _user?: Statsig.StatsigUser
 ): { value: T; name: string } | null {
   if (!isInitialized) {
     return null;
   }
 
   try {
-    const experiment = Statsig.getExperiment(experimentName, user);
+    // Note: statsig-js getExperiment signature is (experimentName, keepDeviceValue?, ignoreOverrides?)
+    const experiment = Statsig.getExperiment(experimentName);
     return {
       value: experiment?.value as T,
       name: experimentName,
@@ -450,10 +454,10 @@ function getDefaultConfigValue<T>(configName: DynamicConfigName): T | null {
  */
 export function createFeatureFlagHook(flagName: FeatureFlagName) {
   return function useFeatureFlag(
-    user?: Statsig.StatsigUser,
-    options?: Statsig.StatsigOptions
+    _user?: Statsig.StatsigUser,
+    _options?: Statsig.StatsigOptions
   ): { enabled: boolean; isLoading: boolean; error: Error | null } {
-    const [enabled, setEnabled] = React.useState(() => isFeatureEnabled(flagName, user, options));
+    const [enabled, setEnabled] = React.useState(() => isFeatureEnabled(flagName));
     const [isLoading, setIsLoading] = React.useState(!isInitialized);
 
     React.useEffect(() => {
@@ -464,7 +468,8 @@ export function createFeatureFlagHook(flagName: FeatureFlagName) {
 
       // Check gate value
       try {
-        const value = Statsig.checkGate(flagName, user);
+        // Note: statsig-js checkGate signature is (gateName, ignoreOverrides?)
+        const value = Statsig.checkGate(flagName);
         setEnabled(value);
       } catch {
         setEnabled(getDefaultFlagValue(flagName));
@@ -472,7 +477,7 @@ export function createFeatureFlagHook(flagName: FeatureFlagName) {
       setIsLoading(false);
       // statsig-react v2 doesn't have subscribeToGateChanges
       // Values are reactive through the StatsigProvider
-    }, [flagName, user, options]);
+    }, [flagName]);
 
     return { enabled, isLoading, error: null };
   };
@@ -484,9 +489,9 @@ export function createFeatureFlagHook(flagName: FeatureFlagName) {
  */
 export function createDynamicConfigHook<T = DynamicConfigValue>(configName: DynamicConfigName) {
   return function useDynamicConfig(
-    user?: Statsig.StatsigUser
+    _user?: Statsig.StatsigUser
   ): { config: T | null; isLoading: boolean; error: Error | null } {
-    const [config, setConfig] = React.useState<T | null>(() => getDynamicConfig<T>(configName, user));
+    const [config, setConfig] = React.useState<T | null>(() => getDynamicConfig<T>(configName));
     const [isLoading, setIsLoading] = React.useState(!isInitialized);
 
     React.useEffect(() => {
@@ -495,11 +500,11 @@ export function createDynamicConfigHook<T = DynamicConfigValue>(configName: Dyna
         return;
       }
 
-      setConfig(getDynamicConfig<T>(configName, user));
+      setConfig(getDynamicConfig<T>(configName));
       setIsLoading(false);
       // statsig-react v2 doesn't have subscribeToConfigChanges
       // Values are reactive through the StatsigProvider
-    }, [configName, user]);
+    }, [configName]);
 
     return { config, isLoading, error: null };
   };
