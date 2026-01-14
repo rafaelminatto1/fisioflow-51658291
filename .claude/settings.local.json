@@ -96,7 +96,10 @@
       "Bash(head:*)",
       "Bash(pnpm tsc:*)",
       "Bash(NODE_OPTIONS='--max-old-space-size=8192' npx tsc:*)",
-      "Bash(NODE_OPTIONS='--max-old-space-size=4096' npx vite build:*)"
+      "Bash(NODE_OPTIONS='--max-old-space-size=4096' npx vite build:*)",
+      "Bash(pkill:*)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_take_screenshot"
     ],
     "deny": [],
     "ask": []

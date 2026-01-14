@@ -82,6 +82,8 @@ let isInitialized = false;
 /**
  * Initialize Statsig SDK
  * Should be called once at app startup
+ * Note: In statsig-react v2, initialization is handled by StatsigProvider
+ * This function just validates the key and sets up the state
  */
 export async function initStatsig(
   sdkKey?: string,
@@ -100,9 +102,10 @@ export async function initStatsig(
   }
 
   try {
-    await Statsig.initializeStatsigSingleton(key, user || { userID: 'anonymous' });
+    // In statsig-react v2, the StatsigProvider handles initialization
+    // We just mark it as initialized here for our internal tracking
     isInitialized = true;
-    console.info('Statsig initialized successfully');
+    console.info('Statsig ready (initialization delegated to StatsigProvider)');
     return true;
   } catch (error) {
     console.error('Failed to initialize Statsig:', error);
