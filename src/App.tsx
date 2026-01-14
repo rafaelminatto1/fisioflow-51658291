@@ -22,7 +22,7 @@ import { FeatureFlagProvider } from "@/lib/featureFlags/hooks";
 import { useServiceWorkerUpdate } from "@/hooks/useServiceWorkerUpdate";
 import { SkipLink, FocusVisibleHandler } from "@/components/accessibility";
 
-// Lazy load Vercel Analytics to avoid errors when not properly configured
+// Lazy load Vercel Analytics only in production
 const Analytics = import.meta.env.PROD
   ? lazy(() => import("@vercel/analytics/react").then(m => ({ default: m.Analytics })))
   : null;

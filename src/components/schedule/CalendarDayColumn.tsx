@@ -151,7 +151,7 @@ export const DayColumn = memo(({
                     {format(day, 'EEE', { locale: ptBR })}
                 </div>
                 <div className={cn(
-                    "text-xl sm:text-2xl lg:text-3xl font-black mt-1 sm:mt-1.5 relative inline-flex items-center justify-center leading-none",
+                    "day-number text-xl sm:text-2xl lg:text-3xl font-black mt-1 sm:mt-1.5 relative inline-flex items-center justify-center leading-none",
                     isTodayDate && "drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]"
                 )}>
                     {format(day, 'd')}
