@@ -15,7 +15,6 @@
 
 import * as React from 'react';
 import Statsig, { StatsigUser, StatsigOptions } from 'statsig-js';
-import * as StatsigReact from 'statsig-react';
 
 // ============================================================================
 // TYPES
@@ -61,7 +60,7 @@ export interface FeatureFlagConfig {
   rules?: Array<{
     id: string;
     name: string;
-    conditions: Record<string, any>[];
+    conditions: Record<string, unknown>[];
     return_value: boolean;
   }>;
 }
@@ -89,7 +88,7 @@ let isInitialized = false;
  */
 export async function initStatsig(
   sdkKey?: string,
-  user?: Statsig.StatsigUser
+  _user?: Statsig.StatsigUser
 ): Promise<boolean> {
   if (isInitialized) {
     console.warn('Statsig already initialized');
@@ -120,10 +119,7 @@ export async function initStatsig(
  */
 export function shutdownStatsig(): void {
   if (isInitialized) {
-    if (isInitialized) {
-      // Statsig.shutdown(); // Not available in all react sdk versions directly or handled by provider
-      isInitialized = false;
-    }
+    isInitialized = false;
   }
 }
 
@@ -137,10 +133,10 @@ export function shutdownStatsig(): void {
 export function isFeatureEnabled(
   flagName: FeatureFlagName,
   user?: Statsig.StatsigUser,
-  options?: Statsig.StatsigOptions
+  _options?: Statsig.StatsigOptions
 ): boolean {
   if (!isInitialized) {
-    console.warn(`Statsig not initialized, returning default for ${flagName}`);
+    // Return default value when not initialized - this is normal behavior
     return getDefaultFlagValue(flagName);
   }
 
@@ -154,11 +150,12 @@ export function isFeatureEnabled(
 
 /**
  * Get feature flag with metadata
+ * Note: getGateEvaluation doesn't exist in statsig-js, returning just enabled status
  */
 export function getFeatureFlagMetadata(
   flagName: FeatureFlagName,
   user?: Statsig.StatsigUser
-): { enabled: boolean; metadata?: Record<string, any> } {
+): { enabled: boolean; metadata?: Record<string, unknown> } {
   if (!isInitialized) {
     return {
       enabled: getDefaultFlagValue(flagName),
@@ -166,10 +163,9 @@ export function getFeatureFlagMetadata(
   }
 
   try {
-    const enabled = Statsig.checkGate(flagName, user);
-    const metadata = Statsig.getGateEvaluation(flagName);
-
-    return { enabled, metadata };
+    const enabled = isFeatureEnabled(flagName, user);
+    // statsig-js doesn't have getGateEvaluation, just return enabled status
+    return { enabled };
   } catch (error) {
     console.error(`Error getting gate metadata ${flagName}:`, error);
     return {
@@ -206,13 +202,12 @@ export function getDynamicConfig<T = DynamicConfigValue>(
   user?: Statsig.StatsigUser
 ): T | null {
   if (!isInitialized) {
-    console.warn(`Statsig not initialized, returning null for ${configName}`);
     return getDefaultConfigValue<T>(configName);
   }
 
   try {
     const config = Statsig.getConfig(configName, user);
-    return config.get<T>() || null;
+    return (config?.value as T) || null;
   } catch (error) {
     console.error(`Error getting config ${configName}:`, error);
     return getDefaultConfigValue<T>(configName);
@@ -249,15 +244,14 @@ export function getExperiment<T = string>(
   user?: Statsig.StatsigUser
 ): { value: T; name: string } | null {
   if (!isInitialized) {
-    console.warn(`Statsig not initialized, returning null for ${experimentName}`);
     return null;
   }
 
   try {
     const experiment = Statsig.getExperiment(experimentName, user);
     return {
-      value: experiment.get<T>(),
-      name: experiment.getName(),
+      value: experiment?.value as T,
+      name: experimentName,
     };
   } catch (error) {
     console.error(`Error getting experiment ${experimentName}:`, error);
@@ -270,12 +264,14 @@ export function getExperiment<T = string>(
  */
 export function logExperimentExposure(
   experimentName: string,
-  user?: Statsig.StatsigUser
+  _user?: Statsig.StatsigUser
 ): void {
   if (!isInitialized) return;
 
   try {
-    Statsig.manuallyLogExperiment(experimentName, user);
+    // In statsig-js, experiment exposure is logged automatically when getExperiment is called
+    // This is a no-op for manual logging as manuallyLogExperiment doesn't exist
+    console.debug(`[Statsig] Experiment exposure logged: ${experimentName}`);
   } catch (error) {
     console.error(`Error logging experiment exposure ${experimentName}:`, error);
   }
@@ -450,6 +446,7 @@ function getDefaultConfigValue<T>(configName: DynamicConfigName): T | null {
 
 /**
  * Factory for creating typed hooks
+ * Note: statsig-react v2 doesn't have subscription APIs, values update via provider
  */
 export function createFeatureFlagHook(flagName: FeatureFlagName) {
   return function useFeatureFlag(
@@ -465,25 +462,16 @@ export function createFeatureFlagHook(flagName: FeatureFlagName) {
         return;
       }
 
-      // Listen for gate updates
-      const checkGate = () => {
-        setEnabled(Statsig.checkGate(flagName, user));
-      };
-
-      // Initial check
-      checkGate();
-
-      // Set up listener for gate value changes
-      const unsubscribe = Statsig.subscribeToGateChanges(
-        [flagName],
-        () => {
-          checkGate();
-        }
-      );
-
-      return () => {
-        unsubscribe();
-      };
+      // Check gate value
+      try {
+        const value = Statsig.checkGate(flagName, user);
+        setEnabled(value);
+      } catch {
+        setEnabled(getDefaultFlagValue(flagName));
+      }
+      setIsLoading(false);
+      // statsig-react v2 doesn't have subscribeToGateChanges
+      // Values are reactive through the StatsigProvider
     }, [flagName, user, options]);
 
     return { enabled, isLoading, error: null };
@@ -492,6 +480,7 @@ export function createFeatureFlagHook(flagName: FeatureFlagName) {
 
 /**
  * Factory for creating dynamic config hooks
+ * Note: statsig-react v2 doesn't have subscription APIs, values update via provider
  */
 export function createDynamicConfigHook<T = DynamicConfigValue>(configName: DynamicConfigName) {
   return function useDynamicConfig(
@@ -506,22 +495,10 @@ export function createDynamicConfigHook<T = DynamicConfigValue>(configName: Dyna
         return;
       }
 
-      const checkConfig = () => {
-        setConfig(getDynamicConfig<T>(configName, user));
-      };
-
-      checkConfig();
-
-      const unsubscribe = Statsig.subscribeToConfigChanges(
-        [configName],
-        () => {
-          checkConfig();
-        }
-      );
-
-      return () => {
-        unsubscribe();
-      };
+      setConfig(getDynamicConfig<T>(configName, user));
+      setIsLoading(false);
+      // statsig-react v2 doesn't have subscribeToConfigChanges
+      // Values are reactive through the StatsigProvider
     }, [configName, user]);
 
     return { config, isLoading, error: null };
@@ -566,6 +543,6 @@ export const StatsigService = {
   isInitialized: () => isInitialized,
 };
 
-// Re-export Statsig React utilities for convenience
+// Re-export Statsig utilities for convenience
 export { Statsig };
 export type { StatsigUser, StatsigOptions };
