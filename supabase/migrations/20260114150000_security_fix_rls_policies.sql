@@ -12,6 +12,15 @@
 -- Drop insecure policies and create secure ones for core tables
 -- ----------------------------------------------------------------------------
 
+-- Ensure expires_at column exists in user_roles
+ALTER TABLE IF EXISTS user_roles ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;
+
+-- Ensure user_id column exists in patients for ownership checks
+ALTER TABLE IF EXISTS patients ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id);
+
+-- Ensure patient_id column exists in payments
+ALTER TABLE IF EXISTS payments ADD COLUMN IF NOT EXISTS patient_id UUID REFERENCES patients(id);
+
 -- ============================================================================
 -- PATIENTS TABLE - Critical security fix
 -- ============================================================================
@@ -223,7 +232,7 @@ USING (
     ) OR
     (select auth.uid()) IN (
         SELECT user_id FROM user_roles
-        WHERE role IN ('admin', 'fisioterapeuta', 'estagiario', 'partner')
+        WHERE role IN ('admin', 'fisioterapeuta', 'estagiario')
         AND expires_at IS NULL OR expires_at > now()
     )
 );
@@ -233,14 +242,14 @@ FOR ALL TO authenticated
 USING (
     (select auth.uid()) IN (
         SELECT user_id FROM user_roles
-        WHERE role IN ('admin', 'partner')
+        WHERE role = 'admin'
         AND expires_at IS NULL OR expires_at > now()
     )
 )
 WITH CHECK (
     (select auth.uid()) IN (
         SELECT user_id FROM user_roles
-        WHERE role IN ('admin', 'partner')
+        WHERE role = 'admin'
         AND expires_at IS NULL OR expires_at > now()
     )
 );
@@ -408,19 +417,12 @@ USING (
 -- ============================================================================
 
 -- Index for user_roles lookups in RLS policies
-CREATE INDEX IF NOT EXISTS idx_user_roles_lookup ON user_roles(user_id, role, expires_at)
-WHERE expires_at IS NULL OR expires_at > now();
+CREATE INDEX IF NOT EXISTS idx_user_roles_lookup ON user_roles(user_id, role, expires_at);
 
 -- Index for patient to user lookup
 CREATE INDEX IF NOT EXISTS idx_patients_user_id ON patients(user_id, id);
 
--- Computed index for patient access through roles
-CREATE INDEX IF NOT EXISTS idx_patients_for_roles ON patients(id)
-WHERE user_id IN (
-    SELECT user_id FROM user_roles
-    WHERE role IN ('admin', 'fisioterapeuta', 'estagiario')
-    AND expires_at IS NULL OR expires_at > now()
-);
+-- (Removed idx_patients_for_roles as subqueries are not allowed in indexes)
 
 -- ============================================================================
 -- GRANT PERMISSIONS
