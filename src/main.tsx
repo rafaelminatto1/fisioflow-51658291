@@ -10,6 +10,10 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 // Inicializar Sentry antes de renderizar a aplicação
 initSentry();
 
+// ============================================================================
+// ERROR HANDLERS
+// ============================================================================
+
 // Global Chunk Load Error Handler for Vite
 window.addEventListener('vite:preloadError', (event) => {
   console.error('Vite preload error detected:', event);
@@ -17,39 +21,77 @@ window.addEventListener('vite:preloadError', (event) => {
   window.location.reload();
 });
 
-// Registrar Service Worker do VitePWA com auto-update
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
+// Handler para erros não capturados
+window.addEventListener('error', (event) => {
+  console.error('Unhandled error:', event.error);
+});
+
+// Handler para promises rejeitadas não capturadas
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled promise rejection:', event.reason);
+});
+
+// ============================================================================
+// SERVICE WORKER UPDATE HANDLER
+// ============================================================================
+
+// Configurar handler para mensagens do Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event.data?.type === 'SKIP_WAITING') {
+      // SW solicitou ativação imediata
+      console.log('[SW] Skip waiting recebido, recarregando...');
+      window.location.reload();
+    }
+  });
+
+  // Limpar caches antigos ao iniciar
   window.addEventListener('load', async () => {
     try {
-      const registration = await navigator.serviceWorker.register('/sw.js', {
-        type: 'classic'
-      });
+      // Aguardar um momento para o SW estar pronto
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Verificar atualizações periodicamente
-      setInterval(() => {
-        registration.update();
-      }, 60 * 1000); // Verificar a cada minuto
+      const registrations = await navigator.serviceWorker.getRegistrations();
 
-      // Forçar atualização imediata ao detectar nova versão
-      registration.addEventListener('updatefound', () => {
-        const newWorker = registration.installing;
-        if (newWorker) {
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // Nova versão disponível, recarregar página
-              console.log('Nova versão disponível, recarregando...');
-              window.location.reload();
-            }
-          });
+      for (const registration of registrations) {
+        // Verificar se há um SW esperando ativação (de deploy anterior)
+        if (registration.waiting) {
+          console.log('[SW] SW waiting detectado, ativando...');
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+          // Recarregar após ativar
+          setTimeout(() => window.location.reload(), 1000);
+          return;
         }
-      });
-
-      console.log('Service Worker registrado com sucesso:', registration);
+      }
     } catch (error) {
-      console.error('Falha ao registrar Service Worker:', error);
+      console.warn('[SW] Erro ao verificar SWs existentes:', error);
     }
   });
 }
+
+// ============================================================================
+// CACHE INVALIDATION FOR DEVELOPMENT
+// ============================================================================
+
+// Em desenvolvimento, desabilitar cache agressivo
+if (import.meta.env.DEV) {
+  // Adicionar timestamp para evitar cache em dev
+  const originalFetch = window.fetch;
+  window.fetch = function(input, init) {
+    const url = typeof input === 'string' ? input : input.url;
+    if (url.includes('/sw.js')) {
+      // Adicionar timestamp para SW em dev
+      const separator = url.includes('?') ? '&' : '?';
+      const timestampedUrl = `${url}${separator}t=${Date.now()}`;
+      return originalFetch(timestampedUrl, init);
+    }
+    return originalFetch(input, init);
+  };
+}
+
+// ============================================================================
+// APP RENDERING
+// ============================================================================
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

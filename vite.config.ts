@@ -90,7 +90,8 @@ export default defineConfig(({ mode }) => {
           ],
           // Don't cache cornerstone chunks to avoid 404s when hash changes
           navigateFallback: null,
-          skipWaiting: true,
+          // NÃO usar skipWaiting automático - deixar o app controlar
+          skipWaiting: false,
           clientsClaim: true,
           cleanupOutdatedCaches: true,
           // Cache ID dinâmico para forçar invalidação
@@ -140,9 +141,7 @@ export default defineConfig(({ mode }) => {
           navigationPreload: false,
           maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB
         },
-        // Disable injectManifest mode to avoid IIFE conflict with cornerstone
-        injectManifest: undefined,
-        // Don't include cornerstone in any PWA processing
+        // Usar generateSW com configuração customizada
         strategies: 'generateSW',
         devOptions: {
           enabled: false,
