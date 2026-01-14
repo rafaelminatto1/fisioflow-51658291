@@ -1,10 +1,10 @@
 import { supabase } from '@/integrations/supabase/client';
-import type { 
-  PainMapRecord, 
-  PainMapFormData, 
+import type {
+  PainMapRecord,
+  PainMapFormData,
   PainEvolutionData,
   PainStatistics,
-  BodyRegion 
+  BodyRegion
 } from '@/types/painMap';
 
 export class PainMapService {
@@ -86,7 +86,7 @@ export class PainMapService {
 
   static async getPainStatistics(patientId: string): Promise<PainStatistics> {
     const records = await this.getPainMapsByPatientId(patientId);
-    
+
     if (records.length === 0) {
       return {
         averagePainLevel: 0,
@@ -137,7 +137,7 @@ export class PainMapService {
 
   private static getMostAffectedRegion(painPoints: { region: BodyRegion; intensity: number }[]): BodyRegion | undefined {
     if (painPoints.length === 0) return undefined;
-    
+
     const sorted = [...painPoints].sort((a, b) => b.intensity - a.intensity);
     return sorted[0].region;
   }
@@ -145,7 +145,16 @@ export class PainMapService {
   static getRegionLabel(region: BodyRegion): string {
     const labels: Record<BodyRegion, string> = {
       cabeca: 'Cabeça',
+      cabeca_frente: 'Cabeça (Frente)',
+      cabeca_frente_esquerda: 'Cabeça (Frente Esq.)',
+      cabeca_frente_direita: 'Cabeça (Frente Dir.)',
+      cabeca_nuca_esquerda: 'Nuca (Esq.)',
+      cabeca_nuca_direita: 'Nuca (Dir.)',
       pescoco: 'Pescoço',
+      pescoco_frontal_esquerdo: 'Pescoço (Frente Esq.)',
+      pescoco_frontal_direito: 'Pescoço (Frente Dir.)',
+      pescoco_nuca_esquerdo: 'Cervical (Esq.)', // Neck back usually referred to as Cervical in contexts
+      pescoco_nuca_direito: 'Cervical (Dir.)',
       ombro_direito: 'Ombro Direito',
       ombro_esquerdo: 'Ombro Esquerdo',
       braco_direito: 'Braço Direito',
@@ -155,8 +164,18 @@ export class PainMapService {
       mao_direita: 'Mão Direita',
       mao_esquerda: 'Mão Esquerda',
       torax: 'Tórax',
+      torax_esquerdo: 'Tórax (Esq.)',
+      torax_direito: 'Tórax (Dir.)',
+      costas_superior_esquerda: 'Costas Superior (Esq.)',
+      costas_superior_direita: 'Costas Superior (Dir.)',
       abdomen: 'Abdômen',
+      abdomen_esquerdo: 'Abdômen (Esq.)',
+      abdomen_direito: 'Abdômen (Dir.)',
       lombar: 'Lombar',
+      lombar_esquerda: 'Lombar (Esq.)',
+      lombar_direita: 'Lombar (Dir.)',
+      gluteo_esquerdo: 'Glúteo (Esq.)',
+      gluteo_direito: 'Glúteo (Dir.)',
       quadril_direito: 'Quadril Direito',
       quadril_esquerdo: 'Quadril Esquerdo',
       coxa_direita: 'Coxa Direita',
@@ -164,7 +183,9 @@ export class PainMapService {
       joelho_direito: 'Joelho Direito',
       joelho_esquerdo: 'Joelho Esquerdo',
       perna_direita: 'Perna Direita',
+      panturrilha_direita: 'Panturrilha Direita',
       perna_esquerda: 'Perna Esquerda',
+      panturrilha_esquerda: 'Panturrilha Esquerda',
       tornozelo_direito: 'Tornozelo Direito',
       tornozelo_esquerdo: 'Tornozelo Esquerdo',
       pe_direito: 'Pé Direito',

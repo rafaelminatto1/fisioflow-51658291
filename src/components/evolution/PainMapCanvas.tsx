@@ -17,16 +17,28 @@ interface PainMapCanvasProps {
   evolutionData?: PainEvolutionData[];
 }
 
-// Realistic SVG paths for human body silhouette
-const bodyPaths: Record<BodyRegion, { path: string; centerX: number; centerY: number }> = {
-  cabeca: {
-    path: "M50,5 C58,5 64,12 64,22 C64,32 58,38 50,38 C42,38 36,32 36,22 C36,12 42,5 50,5 Z",
-    centerX: 50, centerY: 20
+// Realistic SVG paths for human body silhouette - FRONT VIEW
+const frontPaths: Partial<Record<BodyRegion, { path: string; centerX: number; centerY: number }>> = {
+  // Head Split
+  cabeca_frente_direita: {
+    path: "M50,5 C42,5 36,12 36,22 C36,32 42,38 50,38 L50,5 Z", // Left side of screen (Patient Right)
+    centerX: 43, centerY: 20
   },
-  pescoco: {
-    path: "M45,38 C45,38 47,40 50,40 C53,40 55,38 55,38 L56,48 L44,48 Z",
-    centerX: 50, centerY: 44
+  cabeca_frente_esquerda: {
+    path: "M50,5 L50,38 C58,38 64,32 64,22 C64,12 58,5 50,5 Z", // Right side of screen (Patient Left)
+    centerX: 57, centerY: 20
   },
+
+  // Neck Split
+  pescoco_frontal_direito: {
+    path: "M50,38 L50,48 L44,48 L45,38 C45,38 47,40 50,40 L50,38 Z",
+    centerX: 47, centerY: 44
+  },
+  pescoco_frontal_esquerdo: {
+    path: "M50,38 C53,38 55,40 55,40 L56,48 L50,48 L50,38 Z",
+    centerX: 53, centerY: 44
+  },
+
   ombro_direito: {
     path: "M44,48 L44,52 C40,52 32,54 28,58 L26,54 C30,50 38,48 44,48 Z",
     centerX: 35, centerY: 52
@@ -35,10 +47,17 @@ const bodyPaths: Record<BodyRegion, { path: string; centerX: number; centerY: nu
     path: "M56,48 L56,52 C60,52 68,54 72,58 L74,54 C70,50 62,48 56,48 Z",
     centerX: 65, centerY: 52
   },
-  torax: {
-    path: "M44,48 L56,48 L58,52 L60,75 L40,75 L42,52 Z",
-    centerX: 50, centerY: 62
+
+  // Thorax Split
+  torax_direito: {
+    path: "M44,48 L50,48 L50,75 L40,75 L42,52 L44,48 Z",
+    centerX: 45, centerY: 62
   },
+  torax_esquerdo: {
+    path: "M50,48 L56,48 L58,52 L60,75 L50,75 L50,48 Z",
+    centerX: 55, centerY: 62
+  },
+
   braco_direito: {
     path: "M28,58 L26,54 L22,58 L20,80 L26,82 L30,62 Z",
     centerX: 24, centerY: 68
@@ -63,22 +82,37 @@ const bodyPaths: Record<BodyRegion, { path: string; centerX: number; centerY: nu
     path: "M84,103 L76,105 L75,115 C75,118 78,120 82,120 C86,120 88,117 87,114 Z",
     centerX: 81, centerY: 112
   },
-  abdomen: {
-    path: "M40,75 L60,75 L58,95 L42,95 Z",
-    centerX: 50, centerY: 85
+
+  // Abdomen Split
+  abdomen_direito: {
+    path: "M40,75 L50,75 L50,95 L42,95 L40,75 Z",
+    centerX: 45, centerY: 85
   },
-  lombar: {
-    path: "M42,95 L58,95 L56,108 L44,108 Z",
-    centerX: 50, centerY: 102
+  abdomen_esquerdo: {
+    path: "M50,75 L60,75 L58,95 L50,95 L50,75 Z",
+    centerX: 55, centerY: 85
   },
+
+  // Hips
   quadril_direito: {
-    path: "M44,108 L50,108 L50,118 L40,118 C38,114 40,110 44,108 Z",
-    centerX: 45, centerY: 113
+    path: "M42,95 L50,95 L50,118 L40,118 C38,114 40,110 44,108 L42,95 Z", // Merged lumbar/hip area for front? Or keep separate?
+    // Original had lumbar separate. But lumbar is back.
+    // Let's assume generic "pelvis/hip" area.
+    // Original lombar path: "M42,95 L58,95 L56,108 L44,108 Z" (Center Y 102)
+    // Original quadril_direito: "M44,108 L50,108 L50,118 ..."
+    // Effectively, Front doesn't have "Lumbar". It has "Lower Abdomen" or "Pelvis".
+    // For now, let's map the "Lumbar" area to "Hip/Pelvis" in Front view or simply extend Abdomen?
+    // Let's keep a "Lower Abdomen/Pelvis" area using the space of 'lombar' + 'quadril'.
+    // Or just Map "quadril_direito" to cover that lower side area.
+    // Let's use the space from Y=95 to Y=118 for Hips/Pelvis on front.
+    path: "M42,95 L50,95 L50,118 L40,118 C38,114 40,110 42,95 Z",
+    centerX: 45, centerY: 106
   },
   quadril_esquerdo: {
-    path: "M50,108 L56,108 C60,110 62,114 60,118 L50,118 Z",
-    centerX: 55, centerY: 113
+    path: "M50,95 L58,95 C60,100 62,114 60,118 L50,118 L50,95 Z",
+    centerX: 55, centerY: 106
   },
+
   coxa_direita: {
     path: "M40,118 L50,118 L48,155 L38,155 Z",
     centerX: 44, centerY: 136
@@ -118,6 +152,148 @@ const bodyPaths: Record<BodyRegion, { path: string; centerX: number; centerY: nu
   pe_esquerdo: {
     path: "M56,215 L70,215 L72,220 C74,224 72,228 68,228 L65,228 C60,228 56,226 56,222 Z",
     centerX: 64, centerY: 222
+  },
+};
+
+// Realistic SVG paths for human body silhouette - BACK VIEW
+// NOTE: For Back View, Patient Right is Screen Right (Anatomical Standard for Back View usually? 
+// Actually, if I am looking at someone's back, their Right arm is on my Right.
+// So 'Direito' regions should be X > 50.
+const backPaths: Partial<Record<BodyRegion, { path: string; centerX: number; centerY: number }>> = {
+  // Head Back (Nuca)
+  cabeca_nuca_esquerda: { // Patient Left (Screen Left)
+    path: "M50,5 L50,38 C42,38 36,32 36,22 C36,12 42,5 50,5 Z",
+    centerX: 43, centerY: 20
+  },
+  cabeca_nuca_direita: { // Patient Right (Screen Right)
+    path: "M50,5 C58,5 64,12 64,22 C64,32 58,38 50,38 L50,5 Z",
+    centerX: 57, centerY: 20
+  },
+
+  // Neck Back
+  pescoco_nuca_esquerdo: { // Screen Left
+    path: "M50,38 L50,48 L44,48 C44,48 42,40 50,38 Z",
+    centerX: 47, centerY: 44
+  },
+  pescoco_nuca_direito: { // Screen Right
+    path: "M50,38 C58,40 56,48 56,48 L50,48 L50,38 Z",
+    centerX: 53, centerY: 44
+  },
+
+  // Back uses inverted logic for Left/Right compared to Front
+  ombro_esquerdo: { // Screen Left
+    path: "M44,48 L44,52 C40,52 32,54 28,58 L26,54 C30,50 38,48 44,48 Z",
+    centerX: 35, centerY: 52
+  },
+  ombro_direito: { // Screen Right
+    path: "M56,48 L56,52 C60,52 68,54 72,58 L74,54 C70,50 62,48 56,48 Z",
+    centerX: 65, centerY: 52
+  },
+
+  // Upper Back (Costas Superior / Escápula)
+  costas_superior_esquerda: { // Screen Left
+    path: "M44,48 L50,48 L50,85 L40,85 L35,65 L44,48 Z", // Simplified shape
+    centerX: 45, centerY: 65
+  },
+  costas_superior_direita: { // Screen Right
+    path: "M50,48 L56,48 L65,65 L60,85 L50,85 L50,48 Z",
+    centerX: 55, centerY: 65
+  },
+
+  braco_esquerdo: { // Screen Left
+    path: "M28,58 L26,54 L22,58 L20,80 L26,82 L30,62 Z",
+    centerX: 24, centerY: 68
+  },
+  braco_direito: { // Screen Right
+    path: "M72,58 L74,54 L78,58 L80,80 L74,82 L70,62 Z",
+    centerX: 76, centerY: 68
+  },
+
+  antebraco_esquerdo: {
+    path: "M20,80 L26,82 L24,105 L16,103 Z",
+    centerX: 21, centerY: 92
+  },
+  antebraco_direito: {
+    path: "M80,80 L74,82 L76,105 L84,103 Z",
+    centerX: 79, centerY: 92
+  },
+
+  // Hands (Palms vs Back of hand - simple rect for now)
+  mao_esquerda: {
+    path: "M16,103 L24,105 L25,115 C25,118 22,120 18,120 C14,120 12,117 13,114 Z",
+    centerX: 19, centerY: 112
+  },
+  mao_direita: {
+    path: "M84,103 L76,105 L75,115 C75,118 78,120 82,120 C86,120 88,117 87,114 Z",
+    centerX: 81, centerY: 112
+  },
+
+  // Lumbar
+  lombar_esquerda: { // Screen Left
+    path: "M40,85 L50,85 L50,105 L42,105 Z",
+    centerX: 45, centerY: 95
+  },
+  lombar_direita: { // Screen Right
+    path: "M50,85 L60,85 L58,105 L50,105 Z",
+    centerX: 55, centerY: 95
+  },
+
+  // Glutes
+  gluteo_esquerdo: { // Screen Left
+    path: "M42,105 L50,105 L50,125 L38,125 C36,115 38,110 42,105 Z",
+    centerX: 44, centerY: 115
+  },
+  gluteo_direito: { // Screen Right
+    path: "M50,105 L58,105 C62,110 64,115 62,125 L50,125 L50,105 Z",
+    centerX: 56, centerY: 115
+  },
+
+  coxa_esquerda: {
+    path: "M38,125 L50,125 L48,160 L36,160 Z",
+    centerX: 44, centerY: 142
+  },
+  coxa_direita: {
+    path: "M50,125 L62,125 L64,160 L52,160 Z",
+    centerX: 56, centerY: 142
+  },
+
+  // Popliteal/Knee Back
+  joelho_esquerdo: {
+    path: "M36,160 L48,160 L47,175 L35,175 Z",
+    centerX: 42, centerY: 167
+  },
+  joelho_direito: {
+    path: "M52,160 L64,160 L63,175 L51,175 Z",
+    centerX: 58, centerY: 167
+  },
+
+  // Calves (Panturrilhas)
+  panturrilha_esquerda: {
+    path: "M35,175 L47,175 L45,210 L33,210 Z",
+    centerX: 40, centerY: 192
+  },
+  panturrilha_direita: {
+    path: "M53,175 L65,175 L67,210 L55,210 Z",
+    centerX: 60, centerY: 192
+  },
+
+  tornozelo_esquerdo: {
+    path: "M33,210 L45,210 L44,220 L32,220 Z",
+    centerX: 38, centerY: 215
+  },
+  tornozelo_direito: {
+    path: "M55,210 L67,210 L68,220 L56,220 Z",
+    centerX: 62, centerY: 215
+  },
+
+  // Feet Back (Heels)
+  pe_esquerdo: {
+    path: "M32,220 L44,220 L44,228 L30,228 Z",
+    centerX: 37, centerY: 224
+  },
+  pe_direito: {
+    path: "M56,220 L68,220 L70,228 L56,228 Z",
+    centerX: 63, centerY: 224
   },
 };
 
@@ -202,6 +378,10 @@ export function PainMapCanvas({ painPoints, onPainPointsChange, readOnly = false
     );
   }
 
+  // Merge paths for lookup
+  const allPaths = { ...frontPaths, ...backPaths };
+  const currentPaths = view === 'front' ? frontPaths : backPaths;
+
   const handleRegionClick = (region: BodyRegion) => {
     if (readOnly) return;
     setSelectedRegion(region);
@@ -210,7 +390,12 @@ export function PainMapCanvas({ painPoints, onPainPointsChange, readOnly = false
   const handlePainUpdate = (intensity: PainIntensity, painType: PainType, description?: string) => {
     if (!selectedRegion) return;
 
-    const regionData = bodyPaths[selectedRegion];
+    // Lookup in all paths because selectedRegion might be from the other view if we didn't clear it
+    // (though usually we see it). 
+    // Typescript might complain if we index with specific keys on partial record.
+    const regionData = allPaths[selectedRegion];
+    if (!regionData) return;
+
     const newPoint: PainMapPoint = {
       region: selectedRegion,
       intensity,
@@ -240,8 +425,34 @@ export function PainMapCanvas({ painPoints, onPainPointsChange, readOnly = false
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Body Map Canvas */}
       <Card className="p-6 bg-gradient-to-b from-card to-card/80">
-        <Label className="mb-4 block text-lg font-semibold">Mapa de Dor Corporal</Label>
-        <p className="text-xs text-muted-foreground mb-4">Clique nas regiões para registrar a dor</p>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <Label className="block text-lg font-semibold">Mapa de Dor Corporal</Label>
+            <p className="text-xs text-muted-foreground">Clique nas regiões para registrar a dor</p>
+          </div>
+          {!readOnly && (
+            <div className="flex bg-muted/50 p-1 rounded-lg">
+              <button
+                onClick={() => setView('front')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${view === 'front'
+                    ? 'bg-background shadow-sm text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                  }`}
+              >
+                Frente
+              </button>
+              <button
+                onClick={() => setView('back')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${view === 'back'
+                    ? 'bg-background shadow-sm text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                  }`}
+              >
+                Costas
+              </button>
+            </div>
+          )}
+        </div>
 
         <div className="relative bg-gradient-to-b from-muted/30 to-muted/10 rounded-2xl p-4">
           <svg
@@ -289,8 +500,10 @@ export function PainMapCanvas({ painPoints, onPainPointsChange, readOnly = false
 
             {/* Body outline for context */}
             <g filter="url(#bodyShadow)">
-              {(Object.keys(bodyPaths) as BodyRegion[]).map((region) => {
-                const { path } = bodyPaths[region];
+              {(Object.keys(currentPaths) as BodyRegion[]).map((region) => {
+                const data = currentPaths[region];
+                if (!data) return null;
+                const { path } = data;
                 return (
                   <path
                     key={`outline-${region}`}
@@ -305,8 +518,11 @@ export function PainMapCanvas({ painPoints, onPainPointsChange, readOnly = false
             </g>
 
             {/* Render interactive body regions */}
-            {(Object.keys(bodyPaths) as BodyRegion[]).map((region) => {
-              const { path, centerX, centerY } = bodyPaths[region];
+            {(Object.keys(currentPaths) as BodyRegion[]).map((region) => {
+              const data = currentPaths[region];
+              if (!data) return null;
+              const { path, centerX, centerY } = data;
+
               const painPoint = painPoints.find(p => p.region === region);
               const isSelected = selectedRegion === region;
               const isHovered = hoveredRegion === region;
@@ -332,7 +548,7 @@ export function PainMapCanvas({ painPoints, onPainPointsChange, readOnly = false
                     filter={isSelected ? 'url(#selectedGlow)' : undefined}
                   />
 
-                  {/* Pain intensity badge */}
+                  {/* Pain intensity badge points */}
                   {painPoint && painPoint.intensity > 0 && (
                     <g className="pointer-events-none animate-scale-in">
                       <circle
