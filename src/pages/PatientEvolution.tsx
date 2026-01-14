@@ -76,6 +76,7 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/componen
 import PainScaleInput from '@/components/evolution/PainScaleInput';
 import { SessionImageUpload } from '@/components/evolution/SessionImageUpload';
 import { EvolutionTimeline } from '@/components/evolution/EvolutionTimeline';
+import { PainMapManager } from '@/components/evolution/PainMapManager';
 import {
   EvolutionKeyboardShortcuts,
   useEvolutionShortcuts
@@ -807,6 +808,7 @@ const PatientEvolution = () => {
             <TabsList className="inline-flex h-9 sm:h-10 items-center justify-start rounded-lg bg-muted/40 p-1 text-muted-foreground w-full lg:w-auto overflow-x-auto scrollbar-hide">
               {[
                 { value: 'soap', label: 'SOAP', shortLabel: 'S', icon: FileText },
+                { value: 'pain-map', label: 'Mapa de Dor', shortLabel: 'Dor', icon: Activity },
                 { value: 'exercises', label: 'Exercícios', shortLabel: 'Exer', icon: Activity },
                 { value: 'history', label: 'Histórico', shortLabel: 'Hist', icon: Clock },
                 { value: 'measurements', label: 'Medições', shortLabel: 'Med', icon: BarChart3 },
@@ -836,349 +838,305 @@ const PatientEvolution = () => {
               />
             </TabsContent>
 
+            <TabsContent value="pain-map" className="mt-4">
+              <PainMapManager
+                patientId={patientId || ''}
+                appointmentId={appointmentId}
+                sessionId={currentSoapRecordId}
+              />
+            </TabsContent>
+
             <TabsContent value="soap" className="mt-4">
               {/* Layout com painéis redimensionáveis */}
-              <ResizablePanelGroup
-                direction="horizontal"
-                className="min-h-[600px] rounded-lg border"
-              >
-                {/* Painel Principal - SOAP Form */}
-                <ResizablePanel defaultSize={65} minSize={40}>
-                  <div className="h-full overflow-auto">
-                    <div className="p-4 space-y-4">
-                      {/* Header do painel SOAP */}
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold flex items-center gap-2">
-                          <FileText className="h-5 w-5 text-primary" />
-                          Evolução SOAP
-                        </h3>
-                        {/* Botão para expandir/colapsar medições */}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setShowInsights(!showInsights)}
-                          className="h-8 w-8 p-0"
-                          title={showInsights ? 'Ocultar Medições' : 'Mostrar Medições'}
-                        >
-                          {showInsights ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-                        </Button>
-                      </div>
+              <div className="h-full overflow-auto">
+                <div className="p-4 space-y-4">
+                  {/* Header do painel SOAP */}
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-primary" />
+                      Evolução SOAP
+                    </h3>
+                    {/* Botão para expandir/colapsar medições */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowInsights(!showInsights)}
+                      className="h-8 w-8 p-0"
+                      title={showInsights ? 'Ocultar Medições' : 'Mostrar Medições'}
+                    >
+                      {showInsights ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                    </Button>
+                  </div>
 
-                      {/* SOAP Card com grid 2x2 */}
-                      <Card className="border-border/50 shadow-sm overflow-visible bg-card/60 backdrop-blur-sm">
-                        <CardContent className="p-0">
-                          {/* SOAP Form em grid 2x2 */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border/50">
-                            {/* Subjective Section */}
-                            <div className="p-3 sm:p-4 hover:bg-muted/10 transition-colors group">
-                              <div className="flex items-center justify-between mb-2">
-                                <Label htmlFor="subjective" className="text-xs sm:text-sm font-medium flex items-center gap-2 text-primary">
-                                  <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] sm:text-xs font-bold shadow-sm">S</span>
-                                  <span className="hidden xs:inline">Subjetivo</span>
-                                  <span className="xs:hidden">Subj</span>
-                                </Label>
-                                <span className="text-[9px] sm:text-[10px] text-muted-foreground opacity-70 group-hover:opacity-100 transition-opacity">
-                                  {wordCount.subjective} palavras
-                                </span>
-                              </div>
-                              <SmartTextarea
-                                id="subjective"
-                                value={subjective}
-                                onChange={(e) => setSubjective(e.target.value)}
-                                placeholder="Queixa principal do paciente, relato de dor, desconforto, nível de estresse, sono..."
-                                className="min-h-[80px] sm:min-h-[100px] text-sm sm:text-base"
-                              />
-
-                              {/* Escala EVA de Dor - integrada no Subjetivo */}
-                              <div className="mt-3 pt-3 border-t border-border/50">
-                                <PainScaleInput
-                                  value={painScale}
-                                  onChange={setPainScale}
-                                  history={previousEvolutions
-                                    .filter(e => e.pain_level !== null && e.pain_level !== undefined)
-                                    .map(e => ({ date: e.created_at, level: e.pain_level || 0 }))
-                                  }
-                                />
-                              </div>
-                            </div>
-
-                            {/* Objective Section */}
-                            <div className="p-3 sm:p-4 hover:bg-muted/10 transition-colors group">
-                              <div className="flex items-center justify-between mb-2">
-                                <Label htmlFor="objective" className="text-xs sm:text-sm font-medium flex items-center gap-2 text-primary">
-                                  <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-green-500/15 text-green-600 dark:text-green-400 flex items-center justify-center text-[10px] sm:text-xs font-bold shadow-sm">O</span>
-                                  Objetivo
-                                </Label>
-                                <span className="text-[9px] sm:text-[10px] text-muted-foreground opacity-70 group-hover:opacity-100 transition-opacity">
-                                  {wordCount.objective} palavras
-                                </span>
-                              </div>
-                              <SmartTextarea
-                                id="objective"
-                                value={objective}
-                                onChange={(e) => setObjective(e.target.value)}
-                                placeholder="Achados do exame físico, amplitude de movimento, força, testes especiais..."
-                                className="min-h-[80px] sm:min-h-[100px] text-sm sm:text-base"
-                              />
-                            </div>
-
-                            {/* Assessment Section */}
-                            <div className="p-3 sm:p-4 hover:bg-muted/10 transition-colors group">
-                              <div className="flex items-center justify-between mb-2">
-                                <Label htmlFor="assessment" className="text-xs sm:text-sm font-medium flex items-center gap-2 text-primary">
-                                  <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center text-[10px] sm:text-xs font-bold shadow-sm">A</span>
-                                  Avaliação
-                                </Label>
-                                <span className="text-[9px] sm:text-[10px] text-muted-foreground opacity-70 group-hover:opacity-100 transition-opacity">
-                                  {wordCount.assessment} palavras
-                                </span>
-                              </div>
-                              <SmartTextarea
-                                id="assessment"
-                                value={assessment}
-                                onChange={(e) => setAssessment(e.target.value)}
-                                placeholder="Análise do progresso, resposta ao tratamento, correlações clínicas..."
-                                className="min-h-[80px] sm:min-h-[100px] text-sm sm:text-base"
-                              />
-                            </div>
-
-                            {/* Plan Section */}
-                            <div className="p-3 sm:p-4 hover:bg-muted/10 transition-colors group">
-                              <div className="flex items-center justify-between mb-2">
-                                <Label htmlFor="plan" className="text-xs sm:text-sm font-medium flex items-center gap-2 text-primary">
-                                  <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-orange-500/15 text-orange-600 dark:text-orange-400 flex items-center justify-center text-[10px] sm:text-xs font-bold shadow-sm">P</span>
-                                  Plano
-                                </Label>
-                                <span className="text-[9px] sm:text-[10px] text-muted-foreground opacity-70 group-hover:opacity-100 transition-opacity">
-                                  {wordCount.plan} palavras
-                                </span>
-                              </div>
-                              <SmartTextarea
-                                id="plan"
-                                value={plan}
-                                onChange={(e) => setPlan(e.target.value)}
-                                placeholder="Conduta realizada hoje, exercícios prescritos, orientações para casa, plano para próxima visita..."
-                                className="min-h-[80px] sm:min-h-[100px] text-sm sm:text-base"
-                              />
-                            </div>
+                  {/* SOAP Card com grid 2x2 */}
+                  <Card className="border-border/50 shadow-sm overflow-visible bg-card/60 backdrop-blur-sm">
+                    <CardContent className="p-0">
+                      {/* SOAP Form em grid 2x2 */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border/50">
+                        {/* Subjective Section */}
+                        <div className="p-3 sm:p-4 hover:bg-muted/10 transition-colors group">
+                          <div className="flex items-center justify-between mb-2">
+                            <Label htmlFor="subjective" className="text-xs sm:text-sm font-medium flex items-center gap-2 text-primary">
+                              <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] sm:text-xs font-bold shadow-sm">S</span>
+                              <span className="hidden xs:inline">Subjetivo</span>
+                              <span className="xs:hidden">Subj</span>
+                            </Label>
+                            <span className="text-[9px] sm:text-[10px] text-muted-foreground opacity-70 group-hover:opacity-100 transition-opacity">
+                              {wordCount.subjective} palavras
+                            </span>
                           </div>
-
-                          {/* Progress Footer */}
-                          <div className="px-3 sm:px-4 py-2 sm:py-3 bg-muted/30 border-t border-border/50 flex items-center justify-between gap-2">
-                            <span className="text-[10px] sm:text-xs text-muted-foreground"><span className="hidden xs:inline">Preenchimento da Evolução</span><span className="xs:hidden">Progresso</span></span>
-                            <div className="flex items-center gap-2">
-                              <Progress
-                                value={
-                                  ((wordCount.subjective >= 10 ? 1 : 0) +
-                                    (wordCount.objective >= 10 ? 1 : 0) +
-                                    (wordCount.assessment >= 10 ? 1 : 0) +
-                                    (wordCount.plan >= 10 ? 1 : 0)) / 4 * 100
-                                }
-                                className="h-1.5 w-16 sm:w-24"
-                              />
-                              <span className="text-[10px] sm:text-xs font-medium">
-                                {Math.round(
-                                  ((wordCount.subjective >= 10 ? 1 : 0) +
-                                    (wordCount.objective >= 10 ? 1 : 0) +
-                                    (wordCount.assessment >= 10 ? 1 : 0) +
-                                    (wordCount.plan >= 10 ? 1 : 0)) / 4 * 100
-                                )}%
-                              </span>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      {/* Formulário de Medições Integrado */}
-                      {showInsights && patientId && (
-                        <div className="space-y-4">
-                          <h3 className="text-base font-semibold flex items-center gap-2">
-                            <BarChart3 className="h-4 w-4 text-primary" />
-                            Medições e Testes
-                          </h3>
-
-                          {/* Alertas de Medições Obrigatórias */}
-                          {requiredMeasurements.filter(req => {
-                            const completedToday = todayMeasurements.some(m => m.measurement_name === req.measurement_name);
-                            return !completedToday;
-                          }).length > 0 && (
-                              <Card className="border-destructive/30 shadow-sm">
-                                <CardHeader className="bg-destructive/5 py-2 px-3">
-                                  <CardTitle className="flex items-center gap-2 text-destructive text-sm">
-                                    <AlertTriangle className="h-3.5 w-3.5" />
-                                    Medições Obrigatórias Pendentes
-                                  </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-2 pt-3 px-3 pb-3">
-                                  {requiredMeasurements
-                                    .filter(req => {
-                                      const completedToday = todayMeasurements.some(m => m.measurement_name === req.measurement_name);
-                                      return !completedToday;
-                                    })
-                                    .map((req) => (
-                                      <Alert
-                                        key={req.id}
-                                        variant={req.alert_level === 'high' ? 'destructive' : 'default'}
-                                        className="py-2"
-                                      >
-                                        <AlertTriangle className="h-3.5 w-3.5" />
-                                        <AlertTitle className="text-xs font-semibold">{req.measurement_name}</AlertTitle>
-                                        <AlertDescription className="text-[10px]">
-                                          {req.instructions}
-                                          {req.measurement_unit && ` (${req.measurement_unit})`}
-                                        </AlertDescription>
-                                      </Alert>
-                                    ))}
-                                </CardContent>
-                              </Card>
-                            )}
-
-                          <MeasurementForm
-                            patientId={patientId}
-                            soapRecordId={currentSoapRecordId}
-                            requiredMeasurements={requiredMeasurements}
+                          <SmartTextarea
+                            id="subjective"
+                            value={subjective}
+                            onChange={(e) => setSubjective(e.target.value)}
+                            placeholder="Queixa principal do paciente, relato de dor, desconforto, nível de estresse, sono..."
+                            className="min-h-[80px] sm:min-h-[100px] text-sm sm:text-base"
                           />
 
-                          {/* Gráficos de Medições - Lazy Loaded */}
-                          {Object.keys(measurementsByType).length > 0 && (
-                            <div className="mt-4">
-                              <Suspense fallback={<LoadingSkeleton type="card" />}>
-                                <LazyMeasurementCharts measurementsByType={measurementsByType} />
-                              </Suspense>
-                            </div>
-                          )}
+                          {/* Escala EVA de Dor - integrada no Subjetivo */}
+                          <div className="mt-3 pt-3 border-t border-border/50">
+                            <PainScaleInput
+                              value={painScale}
+                              onChange={setPainScale}
+                              history={previousEvolutions
+                                .filter(e => e.pain_level !== null && e.pain_level !== undefined)
+                                .map(e => ({ date: e.created_at, level: e.pain_level || 0 }))
+                              }
+                            />
+                          </div>
+                        </div>
+
+                        {/* Objective Section */}
+                        <div className="p-3 sm:p-4 hover:bg-muted/10 transition-colors group">
+                          <div className="flex items-center justify-between mb-2">
+                            <Label htmlFor="objective" className="text-xs sm:text-sm font-medium flex items-center gap-2 text-primary">
+                              <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-green-500/15 text-green-600 dark:text-green-400 flex items-center justify-center text-[10px] sm:text-xs font-bold shadow-sm">O</span>
+                              Objetivo
+                            </Label>
+                            <span className="text-[9px] sm:text-[10px] text-muted-foreground opacity-70 group-hover:opacity-100 transition-opacity">
+                              {wordCount.objective} palavras
+                            </span>
+                          </div>
+                          <SmartTextarea
+                            id="objective"
+                            value={objective}
+                            onChange={(e) => setObjective(e.target.value)}
+                            placeholder="Achados do exame físico, amplitude de movimento, força, testes especiais..."
+                            className="min-h-[80px] sm:min-h-[100px] text-sm sm:text-base"
+                          />
+                        </div>
+
+                        {/* Assessment Section */}
+                        <div className="p-3 sm:p-4 hover:bg-muted/10 transition-colors group">
+                          <div className="flex items-center justify-between mb-2">
+                            <Label htmlFor="assessment" className="text-xs sm:text-sm font-medium flex items-center gap-2 text-primary">
+                              <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center text-[10px] sm:text-xs font-bold shadow-sm">A</span>
+                              Avaliação
+                            </Label>
+                            <span className="text-[9px] sm:text-[10px] text-muted-foreground opacity-70 group-hover:opacity-100 transition-opacity">
+                              {wordCount.assessment} palavras
+                            </span>
+                          </div>
+                          <SmartTextarea
+                            id="assessment"
+                            value={assessment}
+                            onChange={(e) => setAssessment(e.target.value)}
+                            placeholder="Análise do progresso, resposta ao tratamento, correlações clínicas..."
+                            className="min-h-[80px] sm:min-h-[100px] text-sm sm:text-base"
+                          />
+                        </div>
+
+                        {/* Plan Section */}
+                        <div className="p-3 sm:p-4 hover:bg-muted/10 transition-colors group">
+                          <div className="flex items-center justify-between mb-2">
+                            <Label htmlFor="plan" className="text-xs sm:text-sm font-medium flex items-center gap-2 text-primary">
+                              <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-orange-500/15 text-orange-600 dark:text-orange-400 flex items-center justify-center text-[10px] sm:text-xs font-bold shadow-sm">P</span>
+                              Plano
+                            </Label>
+                            <span className="text-[9px] sm:text-[10px] text-muted-foreground opacity-70 group-hover:opacity-100 transition-opacity">
+                              {wordCount.plan} palavras
+                            </span>
+                          </div>
+                          <SmartTextarea
+                            id="plan"
+                            value={plan}
+                            onChange={(e) => setPlan(e.target.value)}
+                            placeholder="Conduta realizada hoje, exercícios prescritos, orientações para casa, plano para próxima visita..."
+                            className="min-h-[80px] sm:min-h-[100px] text-sm sm:text-base"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Progress Footer */}
+                      <div className="px-3 sm:px-4 py-2 sm:py-3 bg-muted/30 border-t border-border/50 flex items-center justify-between gap-2">
+                        <span className="text-[10px] sm:text-xs text-muted-foreground"><span className="hidden xs:inline">Preenchimento da Evolução</span><span className="xs:hidden">Progresso</span></span>
+                        <div className="flex items-center gap-2">
+                          <Progress
+                            value={
+                              ((wordCount.subjective >= 10 ? 1 : 0) +
+                                (wordCount.objective >= 10 ? 1 : 0) +
+                                (wordCount.assessment >= 10 ? 1 : 0) +
+                                (wordCount.plan >= 10 ? 1 : 0)) / 4 * 100
+                            }
+                            className="h-1.5 w-16 sm:w-24"
+                          />
+                          <span className="text-[10px] sm:text-xs font-medium">
+                            {Math.round(
+                              ((wordCount.subjective >= 10 ? 1 : 0) +
+                                (wordCount.objective >= 10 ? 1 : 0) +
+                                (wordCount.assessment >= 10 ? 1 : 0) +
+                                (wordCount.plan >= 10 ? 1 : 0)) / 4 * 100
+                            )}%
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Formulário de Medições Integrado */}
+                  {showInsights && patientId && (
+                    <div className="space-y-4">
+                      <h3 className="text-base font-semibold flex items-center gap-2">
+                        <BarChart3 className="h-4 w-4 text-primary" />
+                        Medições e Testes
+                      </h3>
+
+                      {/* Alertas de Medições Obrigatórias */}
+                      {requiredMeasurements.filter(req => {
+                        const completedToday = todayMeasurements.some(m => m.measurement_name === req.measurement_name);
+                        return !completedToday;
+                      }).length > 0 && (
+                          <Card className="border-destructive/30 shadow-sm">
+                            <CardHeader className="bg-destructive/5 py-2 px-3">
+                              <CardTitle className="flex items-center gap-2 text-destructive text-sm">
+                                <AlertTriangle className="h-3.5 w-3.5" />
+                                Medições Obrigatórias Pendentes
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-2 pt-3 px-3 pb-3">
+                              {requiredMeasurements
+                                .filter(req => {
+                                  const completedToday = todayMeasurements.some(m => m.measurement_name === req.measurement_name);
+                                  return !completedToday;
+                                })
+                                .map((req) => (
+                                  <Alert
+                                    key={req.id}
+                                    variant={req.alert_level === 'high' ? 'destructive' : 'default'}
+                                    className="py-2"
+                                  >
+                                    <AlertTriangle className="h-3.5 w-3.5" />
+                                    <AlertTitle className="text-xs font-semibold">{req.measurement_name}</AlertTitle>
+                                    <AlertDescription className="text-[10px]">
+                                      {req.instructions}
+                                      {req.measurement_unit && ` (${req.measurement_unit})`}
+                                    </AlertDescription>
+                                  </Alert>
+                                ))}
+                            </CardContent>
+                          </Card>
+                        )}
+
+                      <MeasurementForm
+                        patientId={patientId}
+                        soapRecordId={currentSoapRecordId}
+                        requiredMeasurements={requiredMeasurements}
+                      />
+
+                      {/* Gráficos de Medições - Lazy Loaded */}
+                      {Object.keys(measurementsByType).length > 0 && (
+                        <div className="mt-4">
+                          <Suspense fallback={<LoadingSkeleton type="card" />}>
+                            <LazyMeasurementCharts measurementsByType={measurementsByType} />
+                          </Suspense>
                         </div>
                       )}
                     </div>
-                  </div>
-                </ResizablePanel>
+                  )}
+                </div>
+              </div>                                  </div>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+          title="Copiar evolução"
+        >
+          <Copy className="h-3 w-3" />
+        </Button>
+      </div>
 
-                <ResizableHandle withHandle />
-
-                {/* Painel Lateral - Histórico Rápido */}
-                <ResizablePanel defaultSize={35} minSize={20} collapsible>
-                  <div className="h-full overflow-auto bg-muted/20 p-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base font-semibold flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-primary" />
-                        Evoluções Anteriores
-                      </h3>
-                      <Badge variant="secondary" className="text-xs">
-                        {previousEvolutions.length}
-                      </Badge>
-                    </div>
-
-                    {previousEvolutions.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground text-sm">
-                        Nenhuma evolução anterior encontrada.
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {previousEvolutions.map((evolution, index) => (
-                          <Card
-                            key={evolution.id}
-                            className="group hover:shadow-md transition-all cursor-pointer border-border/50"
-                            onClick={() => handleCopyPreviousEvolution(evolution)}
-                          >
-                            <CardContent className="p-3">
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="flex items-start gap-2 min-w-0">
-                                  <div className="w-6 h-6 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-[10px] font-bold flex-shrink-0">
-                                    {previousEvolutions.length - index}
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <p className="text-xs font-semibold truncate">
-                                      {format(new Date(evolution.record_date), 'dd/MM/yyyy', { locale: ptBR })}
-                                    </p>
-                                    <p className="text-[10px] text-muted-foreground">
-                                      {formatDistanceToNow(new Date(evolution.record_date), { locale: ptBR, addSuffix: true })}
-                                    </p>
-                                    {evolution.pain_level && (
-                                      <Badge variant="outline" className="mt-1 text-[9px] px-1 py-0 h-4">
-                                        Dor: {evolution.pain_level}/10
-                                      </Badge>
-                                    )}
-                                  </div>
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  title="Copiar evolução"
-                                >
-                                  <Copy className="h-3 w-3" />
-                                </Button>
-                              </div>
-
-                              {/* Preview SOAP */}
-                              <div className="mt-2 grid grid-cols-2 gap-1">
-                                {evolution.subjective && (
-                                  <div className="p-1.5 rounded bg-blue-500/5">
-                                    <p className="text-[8px] text-muted-foreground">S</p>
-                                    <p className="text-[9px] line-clamp-1">{evolution.subjective}</p>
-                                  </div>
-                                )}
-                                {evolution.objective && (
-                                  <div className="p-1.5 rounded bg-green-500/5">
-                                    <p className="text-[8px] text-muted-foreground">O</p>
-                                    <p className="text-[9px] line-clamp-1">{evolution.objective}</p>
-                                  </div>
-                                )}
-                                {evolution.assessment && (
-                                  <div className="p-1.5 rounded bg-purple-500/5">
-                                    <p className="text-[8px] text-muted-foreground">A</p>
-                                    <p className="text-[9px] line-clamp-1">{evolution.assessment}</p>
-                                  </div>
-                                )}
-                                {evolution.plan && (
-                                  <div className="p-1.5 rounded bg-orange-500/5">
-                                    <p className="text-[8px] text-muted-foreground">P</p>
-                                    <p className="text-[9px] line-clamp-1">{evolution.plan}</p>
-                                  </div>
-                                )}
-                              </div>
-                            </CardContent>
-                          </Card>
+      {/* Preview SOAP */}
+      <div className="mt-2 grid grid-cols-2 gap-1">
+        {evolution.subjective && (
+          <div className="p-1.5 rounded bg-blue-500/5">
+            <p className="text-[8px] text-muted-foreground">S</p>
+            <p className="text-[9px] line-clamp-1">{evolution.subjective}</p>
+          </div>
+        )}
+        {evolution.objective && (
+          <div className="p-1.5 rounded bg-green-500/5">
+            <p className="text-[8px] text-muted-foreground">O</p>
+            <p className="text-[9px] line-clamp-1">{evolution.objective}</p>
+          </div>
+        )}
+        {evolution.assessment && (
+          <div className="p-1.5 rounded bg-purple-500/5">
+            <p className="text-[8px] text-muted-foreground">A</p>
+            <p className="text-[9px] line-clamp-1">{evolution.assessment}</p>
+          </div>
+        )}
+        {evolution.plan && (
+          <div className="p-1.5 rounded bg-orange-500/5">
+            <p className="text-[8px] text-muted-foreground">P</p>
+            <p className="text-[9px] line-clamp-1">{evolution.plan}</p>
+          </div>
+        )}
+      </div>
+    </CardContent>
+                          </Card >
                         ))}
-                      </div>
+                      </div >
                     )}
 
-                    {/* Resumo rápido das metas */}
-                    {goals.length > 0 && (
-                      <div className="mt-6">
-                        <h4 className="text-xs font-semibold mb-2 flex items-center gap-1">
-                          <Target className="h-3 w-3" />
-                          Metas ({goals.filter(g => g.status === 'concluido').length}/{goals.length})
-                        </h4>
-                        <div className="space-y-1">
-                          {goals.slice(0, 3).map(goal => (
-                            <div
-                              key={goal.id}
-                              className={`p-2 rounded-lg border text-[10px] ${goal.status === 'concluido'
-                                ? 'bg-green-500/5 border-green-500/20'
-                                : goal.status === 'em_andamento'
-                                  ? 'bg-blue-500/5 border-blue-500/20'
-                                  : 'bg-muted/30 border-border/50'
-                                }`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <span className="font-medium truncate flex-1">{goal.goal_title}</span>
-                                <Badge
-                                  variant={goal.status === 'concluido' ? 'default' : 'outline'}
-                                  className="ml-1 text-[8px] px-1 py-0 h-4 scale-75 origin-right"
-                                >
-                                  {goal.status === 'concluido' ? 'OK' : goal.status === 'em_andamento' ? 'Em andamento' : 'Pendente'}
-                                </Badge>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </ResizablePanel>
-              </ResizablePanelGroup>
-            </TabsContent>
+{/* Resumo rápido das metas */ }
+{
+  goals.length > 0 && (
+    <div className="mt-6">
+      <h4 className="text-xs font-semibold mb-2 flex items-center gap-1">
+        <Target className="h-3 w-3" />
+        Metas ({goals.filter(g => g.status === 'concluido').length}/{goals.length})
+      </h4>
+      <div className="space-y-1">
+        {goals.slice(0, 3).map(goal => (
+          <div
+            key={goal.id}
+            className={`p-2 rounded-lg border text-[10px] ${goal.status === 'concluido'
+              ? 'bg-green-500/5 border-green-500/20'
+              : goal.status === 'em_andamento'
+                ? 'bg-blue-500/5 border-blue-500/20'
+                : 'bg-muted/30 border-border/50'
+              }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-medium truncate flex-1">{goal.goal_title}</span>
+              <Badge
+                variant={goal.status === 'concluido' ? 'default' : 'outline'}
+                className="ml-1 text-[8px] px-1 py-0 h-4 scale-75 origin-right"
+              >
+                {goal.status === 'concluido' ? 'OK' : goal.status === 'em_andamento' ? 'Em andamento' : 'Pendente'}
+              </Badge>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+                  </div >
+                </ResizablePanel >
+              </ResizablePanelGroup >
+            </TabsContent >
 
             <TabsContent value="history" className="mt-6">
               {/* Nova linha do tempo de evolução */}
@@ -1331,29 +1289,31 @@ const PatientEvolution = () => {
                 <LazyWhatsAppIntegration patientId={patientId!} patientPhone={patient.phone} />
               </Suspense>
             </TabsContent>
-          </Tabs>
-        </div>
+          </Tabs >
+        </div >
 
-        {/* Modal para aplicar template */}
-        {patientId && (
-          <ApplyTemplateModal
-            open={showApplyTemplate}
-            onOpenChange={setShowApplyTemplate}
-            patientId={patientId}
-            patientName={PatientHelpers.getName(patient)}
-          />
-        )}
+  {/* Modal para aplicar template */ }
+{
+  patientId && (
+    <ApplyTemplateModal
+      open={showApplyTemplate}
+      onOpenChange={setShowApplyTemplate}
+      patientId={patientId}
+      patientName={PatientHelpers.getName(patient)}
+    />
+  )
+}
 
-        {/* Modal de atalhos de teclado */}
-        <EvolutionKeyboardShortcuts
-          open={showKeyboardHelp}
-          onOpenChange={setShowKeyboardHelp}
-        />
+{/* Modal de atalhos de teclado */ }
+<EvolutionKeyboardShortcuts
+  open={showKeyboardHelp}
+  onOpenChange={setShowKeyboardHelp}
+/>
 
-        {/* Command Palette - Busca Rápida Ctrl+K */}
-        <CommandPaletteComponent />
-      </MainLayout>
-    </PatientEvolutionErrorBoundary>
+{/* Command Palette - Busca Rápida Ctrl+K */ }
+<CommandPaletteComponent />
+      </MainLayout >
+    </PatientEvolutionErrorBoundary >
   );
 };
 
