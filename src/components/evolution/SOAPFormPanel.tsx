@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { SmartTextarea } from '@/components/ui/SmartTextarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -165,17 +165,14 @@ export const SOAPFormPanel: React.FC<SOAPFormPanelProps> = ({
                 )}
               </div>
               <div className="px-3 pb-3">
-                <Textarea
+                <SmartTextarea
                   placeholder={section.placeholder}
                   value={data[section.key]}
                   onChange={(e) => handleFieldChange(section.key, e.target.value)}
                   onFocus={() => setActiveSection(section.key)}
                   disabled={disabled}
                   rows={isActive ? 5 : 3}
-                  className={cn(
-                    'resize-none transition-all bg-background/50',
-                    isActive && 'min-h-[120px]'
-                  )}
+                  className={isActive ? 'min-h-[120px]' : ''}
                 />
                 <p className="text-xs text-muted-foreground mt-1">{section.description}</p>
               </div>

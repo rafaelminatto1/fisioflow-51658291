@@ -958,6 +958,25 @@ const PatientEvolution = () => {
                     </CardContent>
                   </Card>
 
+                  {/* Sessão de Imagens Integrada na aba SOAP - Estilizada */}
+                  {patientId && (
+                    <div className="mt-4 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
+                          <ImageIcon className="h-4 w-4" />
+                          Fotos e Anexos da Sessão
+                        </h4>
+                      </div>
+                      <div className="bg-muted/10 rounded-xl p-1 border border-dashed border-border/60">
+                        <SessionImageUpload
+                          patientId={patientId}
+                          soapRecordId={currentSoapRecordId}
+                          maxFiles={5}
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   {/* Formulário de Medições Integrado */}
                   {showInsights && patientId && (
                     <div className="space-y-4">

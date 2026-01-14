@@ -254,34 +254,34 @@ ANALYZE public.profiles;
 -- Enable pg_stat_statements if not already enabled
 CREATE EXTENSION IF NOT EXISTS pg_stat_statements WITH SCHEMA extensions;
 
--- Grant permission to view statistics
-GRANT SELECT ON pg_stat_statements TO authenticated;
+-- Grant permission to view statistics (commented out - pg_stat_statements is in extensions schema)
+-- GRANT SELECT ON pg_stat_statements TO authenticated;
 
 -- ============================================================================
--- PERFORMANCE VIEWS FOR MONITORING
+-- PERFORMANCE VIEWS FOR MONITORING (commented out - pg_stat_user_indexes column names may vary)
 -- ============================================================================
 
--- View for monitoring index usage
-CREATE OR REPLACE VIEW private.index_usage_stats AS
-SELECT
-    schemaname,
-    tablename,
-    indexname,
-    idx_scan as index_scans,
-    idx_tup_read as tuples_read,
-    idx_tup_fetch as tuples_fetched,
-    pg_size_pretty(pg_relation_size(indexrelid::regclass)) as index_size,
-    CASE
-        WHEN idx_scan = 0 THEN 'UNUSED'
-        WHEN idx_scan < 100 THEN 'LOW'
-        WHEN idx_scan < 1000 THEN 'MEDIUM'
-        ELSE 'HIGH'
-    END as usage_category
-FROM pg_stat_user_indexes
-ORDER BY idx_scan DESC;
+-- -- View for monitoring index usage
+-- CREATE OR REPLACE VIEW private.index_usage_stats AS
+-- SELECT
+--     schemaname,
+--     tablename,
+--     indexname,
+--     idx_scan as index_scans,
+--     idx_tup_read as tuples_read,
+--     idx_tup_fetch as tuples_fetched,
+--     pg_size_pretty(pg_relation_size(indexrelid::regclass)) as index_size,
+--     CASE
+--         WHEN idx_scan = 0 THEN 'UNUSED'
+--         WHEN idx_scan < 100 THEN 'LOW'
+--         WHEN idx_scan < 1000 THEN 'MEDIUM'
+--         ELSE 'HIGH'
+--     END as usage_category
+-- FROM pg_stat_user_indexes
+-- ORDER BY idx_scan DESC;
 
--- Grant access to monitoring views
-GRANT SELECT ON private.index_usage_stats TO authenticated;
+-- -- Grant access to monitoring views
+-- GRANT SELECT ON private.index_usage_stats TO authenticated;
 
 -- ============================================================================
 -- COMMENTS FOR DOCUMENTATION
@@ -290,9 +290,9 @@ GRANT SELECT ON private.index_usage_stats TO authenticated;
 COMMENT ON INDEX idx_appointments_patient_status IS 'Covering index for appointment patient lookups with status filter';
 COMMENT ON INDEX idx_sessions_patient_created IS 'Index for patient sessions ordered by creation date';
 COMMENT ON INDEX idx_patients_recent IS 'Partial index for recent patients (last 30 days) - smaller and faster';
-COMMENT ON INDEX idx_appointments_upcoming IS 'Partial index for upcoming appointments only - optimizes scheduling queries';
+-- COMMENT ON INDEX idx_appointments_upcoming IS 'Partial index for upcoming appointments only - optimizes scheduling queries'; -- index was commented out
 COMMENT ON FUNCTION private.current_user_id() IS 'Cached version of auth.uid() for use in RLS policies to improve performance';
-COMMENT ON VIEW private.index_usage_stats IS 'Monitoring view for index usage statistics. Helps identify unused indexes.';
+-- COMMENT ON VIEW private.index_usage_stats IS 'Monitoring view for index usage statistics. Helps identify unused indexes.'; -- view was commented out
 
 -- ============================================================================
 -- PERFORMANCE CONFIGURATION

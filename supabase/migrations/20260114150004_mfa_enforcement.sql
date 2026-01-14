@@ -147,18 +147,20 @@ CREATE TABLE IF NOT EXISTS public.mfa_recovery_codes (
     expires_at TIMESTAMPTZ DEFAULT now() + interval '1 year'
 );
 
--- Index for recovery code lookups
-CREATE INDEX IF NOT EXISTS idx_mfa_recovery_codes_user_id
-ON public.mfa_recovery_codes(user_id, used)
-WHERE used = false AND expires_at > now();
+-- Index for recovery code lookups (commented out - now() is not immutable)
+-- CREATE INDEX IF NOT EXISTS idx_mfa_recovery_codes_user_id
+-- ON public.mfa_recovery_codes(user_id, used)
+-- WHERE used = false AND expires_at > now();
 
 -- RLS for recovery codes
 ALTER TABLE public.mfa_recovery_codes ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "mfa_recovery_codes_select_own" ON public.mfa_recovery_codes;
 CREATE POLICY "mfa_recovery_codes_select_own" ON public.mfa_recovery_codes
 FOR SELECT TO authenticated
 USING ((select auth.uid()) = user_id);
 
+DROP POLICY IF EXISTS "mfa_recovery_codes_insert_system" ON public.mfa_recovery_codes;
 CREATE POLICY "mfa_recovery_codes_insert_system" ON public.mfa_recovery_codes
 FOR INSERT TO authenticated
 WITH CHECK (false); -- Only system/triggers can insert
@@ -195,6 +197,7 @@ WHERE success = false;
 -- RLS for MFA audit log
 ALTER TABLE public.mfa_audit_log ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "mfa_audit_log_select_own" ON public.mfa_audit_log;
 CREATE POLICY "mfa_audit_log_select_own" ON public.mfa_audit_log
 FOR SELECT TO authenticated
 USING (
@@ -206,6 +209,7 @@ USING (
     )
 );
 
+DROP POLICY IF EXISTS "mfa_audit_log_insert_system" ON public.mfa_audit_log;
 CREATE POLICY "mfa_audit_log_insert_system" ON public.mfa_audit_log
 FOR INSERT TO authenticated
 WITH CHECK ((select auth.uid()) IS NOT NULL);

@@ -15,10 +15,10 @@ ADD COLUMN IF NOT EXISTS revoked_at timestamptz,
 ADD COLUMN IF NOT EXISTS revoked_by uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
 ADD COLUMN IF NOT EXISTS reason text;
 
--- Index for efficient role lookups with expiration
-CREATE INDEX IF NOT EXISTS idx_user_roles_active
-ON public.user_roles(user_id, role, expires_at, revoked_at)
-WHERE revoked_at IS NULL AND (expires_at IS NULL OR expires_at > now());
+-- Index for efficient role lookups with expiration (commented out - now() is not immutable)
+-- CREATE INDEX IF NOT EXISTS idx_user_roles_active
+-- ON public.user_roles(user_id, role, expires_at, revoked_at)
+-- WHERE revoked_at IS NULL AND (expires_at IS NULL OR expires_at > now());
 
 -- ============================================================================
 -- GRANULAR PERMISSIONS TABLE
@@ -51,7 +51,7 @@ INSERT INTO public.permissions (name, resource, action, description) VALUES
 -- Session permissions
 ('sessions.read', 'sessions', 'read', 'View session notes'),
 ('sessions.write', 'sessions', 'write', 'Create and edit session notes'),
-('sessions.delete', 'sessions', 'delete', 'delete', 'Delete session notes'),
+('sessions.delete', 'sessions', 'delete', 'Delete session notes'),
 ('sessions.finalize', 'sessions', 'finalize', 'Finalize draft sessions'),
 
 -- Payment permissions
@@ -163,10 +163,12 @@ ALTER TABLE public.role_permissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_log_enhanced ENABLE ROW LEVEL SECURITY;
 
 -- Permissions table: admins can manage, others can read
+DROP POLICY IF EXISTS "permissions_read_all" ON public.permissions;
 CREATE POLICY "permissions_read_all" ON public.permissions
 FOR SELECT TO authenticated
 USING (true);
 
+DROP POLICY IF EXISTS "permissions_manage_admin" ON public.permissions;
 CREATE POLICY "permissions_manage_admin" ON public.permissions
 FOR ALL TO authenticated
 USING (
@@ -179,6 +181,7 @@ USING (
 );
 
 -- Role permissions: admins can manage, others can read their role's permissions
+DROP POLICY IF EXISTS "role_permissions_read_all" ON public.role_permissions;
 CREATE POLICY "role_permissions_read_all" ON public.role_permissions
 FOR SELECT TO authenticated
 USING (
@@ -190,6 +193,7 @@ USING (
     )
 );
 
+DROP POLICY IF EXISTS "role_permissions_manage_admin" ON public.role_permissions;
 CREATE POLICY "role_permissions_manage_admin" ON public.role_permissions
 FOR ALL TO authenticated
 USING (
@@ -202,6 +206,7 @@ USING (
 );
 
 -- Audit log: admins can read, system can insert
+DROP POLICY IF EXISTS "audit_log_read_admin" ON public.audit_log_enhanced;
 CREATE POLICY "audit_log_read_admin" ON public.audit_log_enhanced
 FOR SELECT TO authenticated
 USING (
@@ -213,6 +218,7 @@ USING (
     )
 );
 
+DROP POLICY IF EXISTS "audit_log_insert_system" ON public.audit_log_enhanced;
 CREATE POLICY "audit_log_insert_system" ON public.audit_log_enhanced
 FOR INSERT TO authenticated
 WITH CHECK (
@@ -582,7 +588,7 @@ FROM public.profiles u
 JOIN public.user_roles ur ON ur.user_id = u.id
     AND ur.revoked_at IS NULL
     AND (ur.expires_at IS NULL OR ur.expires_at > now())
-JOIN public.role_permissions rp ON rp.role = ur.role
+JOIN public.role_permissions rp ON rp.role = ur.role::text
 JOIN public.permissions p ON p.id = rp.permission_id;
 
 GRANT SELECT ON private.user_permission_view TO authenticated;

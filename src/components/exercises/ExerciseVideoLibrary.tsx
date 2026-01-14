@@ -7,7 +7,7 @@ import {
   Search, Video, Upload, Trash2, Play,
   X, Clock, Edit, AlertCircle, Check,
   Download, ListVideo, ChevronRight, ChevronLeft,
-  Square
+  Square, MoreVertical
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -206,28 +206,23 @@ export function ExerciseVideoLibrary({ onUploadClick: _onUploadClick }: Exercise
     }
   }, [editingVideo, editTitle, editDescription, editCategory, editDifficulty, editBodyParts, editEquipment, updateVideoMutation, selectedVideo, handleCloseEdit]);
 
-  // Keyboard shortcuts - ESC to close modals
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        if (showEdit) {
-          handleCloseEdit();
-        } else if (selectedVideo) {
-          setSelectedVideo(null);
-          setShowPlaylist(false);
-        } else if (deleteId) {
-          setDeleteId(null);
-        } else if (showUpload) {
-          setShowUpload(false);
-        } else if (isBulkMode) {
-          exitBulkMode();
-        }
+  // Bulk selection handlers
+  const toggleSelectVideo = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
       }
-    };
+      return next;
+    });
+  }, []);
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [showEdit, selectedVideo, deleteId, showUpload, handleCloseEdit, isBulkMode, exitBulkMode]);
+  const exitBulkMode = useCallback(() => {
+    setIsBulkMode(false);
+    setSelectedIds(new Set());
+  }, []);
 
   const toggleEditBodyPart = useCallback((part: string) => {
     setEditBodyParts((prev) =>
@@ -264,19 +259,6 @@ export function ExerciseVideoLibrary({ onUploadClick: _onUploadClick }: Exercise
     }
   };
 
-  // Bulk selection handlers
-  const toggleSelectVideo = useCallback((id: string) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  }, []);
-
   const toggleSelectAll = useCallback(() => {
     if (selectedIds.size === filteredVideos.length) {
       setSelectedIds(new Set());
@@ -285,10 +267,28 @@ export function ExerciseVideoLibrary({ onUploadClick: _onUploadClick }: Exercise
     }
   }, [selectedIds.size, filteredVideos]);
 
-  const exitBulkMode = useCallback(() => {
-    setIsBulkMode(false);
-    setSelectedIds(new Set());
-  }, []);
+  // Keyboard shortcuts - ESC to close modals
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showEdit) {
+          handleCloseEdit();
+        } else if (selectedVideo) {
+          setSelectedVideo(null);
+          setShowPlaylist(false);
+        } else if (deleteId) {
+          setDeleteId(null);
+        } else if (showUpload) {
+          setShowUpload(false);
+        } else if (isBulkMode) {
+          exitBulkMode();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showEdit, selectedVideo, deleteId, showUpload, handleCloseEdit, isBulkMode, exitBulkMode]);
 
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
