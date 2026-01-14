@@ -59,11 +59,10 @@ IMPORTANT: Always include a note that your recommendations should be validated b
       system: systemPrompt,
       prompt,
       temperature: 0.7,
-      maxTokens: 1500,
     });
 
     // Return the stream as AI SDK message stream response
-    return result.toAIStreamResponse();
+    return result.toTextStreamResponse();
   } catch (error) {
     console.error('[AI Insights API] Error:', error);
 

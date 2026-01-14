@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,24 +8,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
 import {
-  FileText, Plus, Download, Edit, Eye, Printer, Search, Filter,
-  Calendar as CalendarIcon, User, Activity, Clock, CheckCircle2,
-  Phone, Mail, Building2, FileText as FileIcon
+  FileText, Plus, Download, Edit, Eye, Filter, CheckCircle2, Save, Search
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, pdf, Font, Image as PDFImage } from '@react-pdf/renderer';
-import { format as formatCNPJ, format as formatCPF } from '@tinyent/valid-cnpj';
+import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Font } from '@react-pdf/renderer';
 
 // Registrar font para PDF
 Font.register({
@@ -695,6 +689,8 @@ function RelatorioEditor({
                       procedimentos: [],
                       cid: '',
                       codigos_tuss: [],
+                      sessao_atual: data.atendimentos.length + 1,
+                      numero_sessoes: 0
                     }
                   ]
                 });
