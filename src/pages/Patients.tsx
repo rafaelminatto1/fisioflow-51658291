@@ -297,7 +297,9 @@ const Patients = () => {
         </Card>
 
         {/* Patients List */}
-        {filteredPatients.length === 0 ? (
+        {loading ? (
+          <LoadingSkeleton type="list" rows={8} />
+        ) : filteredPatients.length === 0 ? (
           <EmptyState
             icon={Users}
             title={searchTerm ? 'Nenhum paciente encontrado' : 'Nenhum paciente cadastrado'}
