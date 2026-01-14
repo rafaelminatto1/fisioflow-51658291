@@ -10,8 +10,8 @@
  * - Sends via WhatsApp and/or Email using integrated services
  */
 
-import { inngest, retryConfig } from '@/lib/inngest/client';
-import { Events, BirthdayMessagePayload } from '@/lib/inngest/types';
+import { inngest, retryConfig } from '../../lib/inngest/client';
+import { Events, BirthdayMessagePayload, InngestStep } from '../../lib/inngest/types';
 import { createClient } from '@supabase/supabase-js';
 
 export const birthdayMessagesWorkflow = inngest.createFunction(
@@ -24,16 +24,16 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
     event: Events.CRON_BIRTHDAY_MESSAGES,
     cron: '0 9 * * *', // 9:00 AM daily
   },
-  async ({ step }: { event: { data: BirthdayMessagePayload }; step: {
-    run: (name: string, fn: () => Promise<unknown>) => Promise<unknown>;
-  } }) => {
+  async ({ step }: {
+    event: { data: BirthdayMessagePayload }; step: InngestStep
+  }) => {
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
     // Step 1: Find all patients with birthdays today
-    const patients = await step.run('find-birthdays-today', async () => {
+    const patients = await step.run('find-birthdays-today', async (): Promise<any[]> => {
       const today = new Date();
       const month = String(today.getMonth() + 1).padStart(2, '0');
       const day = String(today.getDate()).padStart(2, '0');
@@ -62,7 +62,7 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
     }
 
     // Step 2: Get organization settings for all patients
-    const patientsWithOrg = await step.run('get-organization-settings', async () => {
+    const patientsWithOrg = await step.run('get-organization-settings', async (): Promise<any[]> => {
       const orgIds = [...new Set(patients.map((p: { organization_id: string }) => p.organization_id))];
 
       const { data: organizations } = await supabase
@@ -89,7 +89,7 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
     });
 
     // Step 3: Queue birthday messages via Inngest events
-    const results = await step.run('queue-birthday-messages', async () => {
+    const results = await step.run('queue-birthday-messages', async (): Promise<{ totalQueued: number; patientsProcessed: number }> => {
       const events: Array<{ name: string; data: Record<string, unknown> }> = [];
 
       for (const patient of patientsWithOrg) {
