@@ -67,13 +67,14 @@ export const PatientDashboard360 = ({
     surgeries = [],
     onAction
 }: PatientDashboardProps) => {
-    if (!patient) return null;
-
     const alerts = patient?.alerts || [];
     const nextAppointment = appointments?.find(a => new Date(a.date) > new Date());
 
     const [insightResult, setInsightResult] = useState<string | null>(null);
     const { mutate: generateInsight, isPending: isGeneratingInsight } = usePatientInsight();
+
+    // Early return after hooks
+    if (!patient) return null;
 
     const handleGenerateInsight = () => {
         const patientData = {

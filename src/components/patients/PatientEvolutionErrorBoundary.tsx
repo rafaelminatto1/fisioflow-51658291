@@ -215,7 +215,7 @@ export class PatientEvolutionErrorBoundary extends Component<Props, State> {
       .filter(line => line.includes('src/') || line.includes('webpack'))
       .slice(0, MAX_STACK_LINES)
       .map(line => {
-        const match = line.match(/(?:src\/|webpack:\/\/[^\/]+\/)([^\s]+)/);
+        const match = line.match(/(src\/|webpack:\/\/[^/]+\/)([^\s]+)/);
         return match ? match[1] : line.trim();
       });
   }

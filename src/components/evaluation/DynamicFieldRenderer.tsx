@@ -90,7 +90,7 @@ function renderField(
             );
 
         case 'escala':
-        case 'scale':
+        case 'scale': {
             const scaleValue = (value as number) ?? field.min ?? 0;
             const min = field.min ?? 0;
             const max = field.max ?? 10;
@@ -123,6 +123,7 @@ function renderField(
                     </div>
                 </div>
             );
+        }
 
         case 'opcao_unica':
         case 'radio':
@@ -181,7 +182,7 @@ function renderField(
             );
 
         case 'lista':
-        case 'multiselect':
+        case 'multiselect': {
             const selectedValues = (value as string[]) || [];
             return (
                 <div className="grid grid-cols-2 gap-2">
@@ -206,6 +207,7 @@ function renderField(
                     ))}
                 </div>
             );
+        }
 
         case 'data':
         case 'date':

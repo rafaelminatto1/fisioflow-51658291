@@ -52,18 +52,6 @@ export function ExercisePlayer({ prescription, onComplete, onExit }: ExercisePla
     const [isTimerRunning, setIsTimerRunning] = useState(false);
 
     const currentExercise = prescription.exercises[currentIndex];
-    // Fallback for null/undefined exercise
-    if (!currentExercise) {
-        return (
-            <div className="flex flex-col items-center justify-center p-8 text-center h-[400px]">
-                <AlertCircle className="h-12 w-12 text-destructive mb-4" />
-                <h3 className="text-lg font-semibold">Erro ao carregar exercício</h3>
-                <p className="text-muted-foreground mb-6">Não foi possível encontrar os dados deste exercício.</p>
-                <Button onClick={onExit}>Voltar</Button>
-            </div>
-        );
-    }
-
     const isLastExercise = currentIndex === prescription.exercises.length - 1;
 
     useEffect(() => {
@@ -73,7 +61,7 @@ export function ExercisePlayer({ prescription, onComplete, onExit }: ExercisePla
         setFeedback('');
         setDifficulty(0);
 
-        if (currentExercise.duration_seconds) {
+        if (currentExercise?.duration_seconds) {
             setTimeLeft(currentExercise.duration_seconds);
         }
     }, [currentIndex, currentExercise]);
@@ -92,13 +80,25 @@ export function ExercisePlayer({ prescription, onComplete, onExit }: ExercisePla
                     return prev - 1;
                 });
                 // Update progress bar based on time
-                if (currentExercise.duration_seconds) {
+                if (currentExercise?.duration_seconds) {
                     setProgress(((currentExercise.duration_seconds - timeLeft) / currentExercise.duration_seconds) * 100);
                 }
             }, 1000);
         }
         return () => clearInterval(interval);
-    }, [isTimerRunning, timeLeft, currentExercise.duration_seconds]);
+    }, [isTimerRunning, timeLeft, currentExercise?.duration_seconds]);
+
+    // Fallback for null/undefined exercise
+    if (!currentExercise) {
+        return (
+            <div className="flex flex-col items-center justify-center p-8 text-center h-[400px]">
+                <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+                <h3 className="text-lg font-semibold">Erro ao carregar exercício</h3>
+                <p className="text-muted-foreground mb-6">Não foi possível encontrar os dados deste exercício.</p>
+                <Button onClick={onExit}>Voltar</Button>
+            </div>
+        );
+    }
 
 
     const togglePlay = () => {
