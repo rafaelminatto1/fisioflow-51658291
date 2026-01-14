@@ -75,6 +75,7 @@ import {
   EvolutionKeyboardShortcuts,
   useEvolutionShortcuts
 } from '@/components/evolution/EvolutionKeyboardShortcuts';
+import { CommandPalette, useCommandPalette } from '@/components/ui/CommandPalette';
 // Tipo para escala de dor
 export interface PainScaleData {
   level: number;
@@ -101,6 +102,9 @@ const PatientEvolution = () => {
   const { appointmentId } = useParams<{ appointmentId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Command Palette hook - handles Ctrl+K globally
+  const { CommandPaletteComponent } = useCommandPalette();
 
   // Validação inicial do appointmentId
   if (!appointmentId) {
@@ -617,7 +621,7 @@ const PatientEvolution = () => {
 
   return (
     <PatientEvolutionErrorBoundary appointmentId={appointmentId} patientId={patientId || undefined}>
-      <MainLayout maxWidth="2xl">
+      <MainLayout maxWidth="7xl">
         <div className="space-y-4 animate-fade-in pb-8">
           {/* Compact Modern Header - Otimizado para mobile/tablet */}
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-border/50 backdrop-blur-sm">
@@ -1142,7 +1146,17 @@ const PatientEvolution = () => {
 
             <TabsContent value="ai" className="mt-6">
               <Suspense fallback={<LoadingSkeleton type="card" />}>
-                <LazyTreatmentAssistant patientId={patientId!} patientName={PatientHelpers.getName(patient)} />
+                <LazyTreatmentAssistant
+                  patientId={patientId!}
+                  patientName={PatientHelpers.getName(patient)}
+                  onApplyToSoap={(field, content) => {
+                    // Apply the AI suggestion to the specified SOAP field
+                    if (field === 'subjective') setSubjective(prev => prev + content);
+                    if (field === 'objective') setObjective(prev => prev + content);
+                    if (field === 'assessment') setAssessment(prev => prev + content);
+                    if (field === 'plan') setPlan(prev => prev + content);
+                  }}
+                />
               </Suspense>
             </TabsContent>
 
@@ -1175,6 +1189,9 @@ const PatientEvolution = () => {
           open={showKeyboardHelp}
           onOpenChange={setShowKeyboardHelp}
         />
+
+        {/* Command Palette - Busca Rápida Ctrl+K */}
+        <CommandPaletteComponent />
       </MainLayout>
     </PatientEvolutionErrorBoundary>
   );
