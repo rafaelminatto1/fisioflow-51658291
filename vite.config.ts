@@ -33,7 +33,7 @@ export default defineConfig(({ mode }) => {
       host: "::",
       port: 8080,
       headers: {
-        "Cross-Origin-Embedder-Policy": "require-corp",
+        "Cross-Origin-Embedder-Policy": "credentialless",
         "Cross-Origin-Opener-Policy": "same-origin",
       },
       // Aumentar timeout do HMR para evitar desconexões em projetos grandes

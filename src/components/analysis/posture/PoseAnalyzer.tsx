@@ -139,8 +139,16 @@ const PoseAnalyzer: React.FC<PoseAnalyzerProps> = ({ videoSrc, onAnalysisUpdate:
         // Async IIFE to handle dynamic import
         (async () => {
             // Dynamically import the @mediapipe/pose module
-            const mediapipePose = await import('@mediapipe/pose');
-            const PoseClass = mediapipePose.Pose as unknown as PoseConstructor;
+            await import('@mediapipe/pose');
+
+            // The module attaches Pose to the global window object
+            // We cast window to any to avoid TS errors with custom properties
+            const PoseClass = (window as any).Pose as PoseConstructor;
+
+            if (!PoseClass) {
+                console.error('MediaPipe Pose not found on window object');
+                return;
+            }
 
             // 1. Initialize Pose
             const pose = new PoseClass({

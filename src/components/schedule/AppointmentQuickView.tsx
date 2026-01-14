@@ -28,6 +28,8 @@ import { WaitlistQuickAdd } from './WaitlistQuickAdd';
 import type { Appointment, AppointmentStatus } from '@/types/appointment';
 import { cn } from '@/lib/utils';
 
+import { STATUS_CONFIG } from '@/lib/config/agenda';
+
 interface AppointmentQuickViewProps {
   appointment: Appointment;
   children: React.ReactNode;
@@ -36,40 +38,6 @@ interface AppointmentQuickViewProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
-
-const statusLabels: Record<AppointmentStatus, string> = {
-  agendado: 'Agendado',
-  avaliacao: 'Avaliação',
-  confirmado: 'Confirmado',
-  aguardando_confirmacao: 'Aguardando',
-  em_andamento: 'Em Andamento',
-  em_espera: 'Em Espera',
-  atrasado: 'Atrasado',
-  concluido: 'Concluído',
-  remarcado: 'Remarcado',
-  cancelado: 'Cancelado',
-  falta: 'Falta',
-  faltou: 'Faltou',
-  reagendado: 'Reagendado',
-  atendido: 'Atendido',
-};
-
-const statusColors: Record<AppointmentStatus, string> = {
-  agendado: 'bg-blue-500',
-  avaliacao: 'bg-violet-500',
-  confirmado: 'bg-emerald-500',
-  aguardando_confirmacao: 'bg-amber-500',
-  em_andamento: 'bg-yellow-500',
-  em_espera: 'bg-indigo-500',
-  atrasado: 'bg-yellow-500',
-  concluido: 'bg-purple-500',
-  remarcado: 'bg-orange-500',
-  cancelado: 'bg-red-500',
-  falta: 'bg-rose-500',
-  faltou: 'bg-rose-600',
-  reagendado: 'bg-orange-600',
-  atendido: 'bg-green-600',
-};
 
 export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   appointment,
@@ -225,20 +193,20 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
             disabled={isUpdatingStatus}
             aria-label="Mudar status do agendamento"
           >
-            <SelectTrigger className="h-9 w-[155px]" aria-label={`Status atual: ${statusLabels[appointment.status]}`}>
+            <SelectTrigger className="h-9 w-[155px]" aria-label={`Status atual: ${STATUS_CONFIG[appointment.status]?.label}`}>
               <SelectValue>
                 <div className="flex items-center gap-2">
-                  <div className={cn("w-2.5 h-2.5 rounded-full", statusColors[appointment.status])} aria-hidden="true" />
-                  <span className="text-xs">{statusLabels[appointment.status]}</span>
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: STATUS_CONFIG[appointment.status]?.color }} aria-hidden="true" />
+                  <span className="text-xs">{STATUS_CONFIG[appointment.status]?.label}</span>
                 </div>
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {Object.entries(statusLabels).map(([value, label]) => (
+              {Object.entries(STATUS_CONFIG).map(([value, config]) => (
                 <SelectItem key={value} value={value}>
                   <div className="flex items-center gap-2">
-                    <div className={cn("w-2 h-2 rounded-full", statusColors[value as AppointmentStatus])} aria-hidden="true" />
-                    <span>{label}</span>
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: config.color }} aria-hidden="true" />
+                    <span>{config.label}</span>
                   </div>
                 </SelectItem>
               ))}

@@ -1,5 +1,7 @@
+import type { AppointmentStatus } from './appointment';
+
 // Agenda System Types
-export type SessionStatus = 'scheduled' | 'completed' | 'missed' | 'cancelled' | 'rescheduled';
+export type SessionStatus = AppointmentStatus;
 export type PaymentStatus = 'pending' | 'paid' | 'partial';
 export type SessionType = 'individual' | 'group';
 export type PaymentType = 'session' | 'package';
@@ -20,7 +22,7 @@ export interface Appointment {
   notes: string;
   created_at: string;
   updated_at: string;
-  
+
   // Relacionamentos (populated via joins)
   patient?: Patient;
   therapist?: User;
@@ -70,6 +72,10 @@ export interface StatusConfig {
   color: string;
   bgColor: string;
   borderColor: string;
+  twBg: string;
+  twBorder: string;
+  twText: string;
+  icon?: any; // Lucide icon type
   allowedActions: string[];
 }
 
