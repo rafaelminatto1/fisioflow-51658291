@@ -7,7 +7,7 @@ import { AppointmentListView } from '@/components/schedule/AppointmentListView';
 import { AppointmentSearch } from '@/components/schedule/AppointmentSearch';
 import { WaitlistQuickAdd } from '@/components/schedule/WaitlistQuickAdd';
 import { WaitlistQuickViewModal } from '@/components/schedule/WaitlistQuickViewModal';
-import { WaitlistSidebar } from '@/components/schedule/WaitlistSidebar';
+import { WaitlistHorizontal } from '@/components/schedule/WaitlistHorizontal';
 import { ScheduleHeader } from '@/components/schedule/ScheduleHeader';
 import { KeyboardShortcuts } from '@/components/schedule/KeyboardShortcuts';
 import { useAppointments, useRescheduleAppointment } from '@/hooks/useAppointments';
@@ -112,7 +112,6 @@ const Schedule = () => {
   const [waitlistQuickAdd, setWaitlistQuickAdd] = useState<{ date: Date; time: string } | null>(null);
   const [scheduleFromWaitlist, setScheduleFromWaitlist] = useState<{ patientId: string; patientName: string } | null>(null);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Toggle for Waitlist Sidebar
 
   // ===================================================================
   // HOOKS
@@ -344,7 +343,7 @@ const Schedule = () => {
 
   return (
     <MainLayout fullWidth showBreadcrumbs={false}>
-      <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden bg-slate-50 dark:bg-slate-950">
+      <div className="flex flex-col min-h-[calc(100vh-64px)] bg-slate-50 dark:bg-slate-950">
 
         {/* Offline Cache Indicator */}
         <OfflineIndicator
@@ -388,10 +387,7 @@ const Schedule = () => {
               <Button size="sm" variant={viewType === 'month' ? 'white' : 'ghost'} onClick={() => setViewType('month')} className="h-7 text-xs px-3 shadow-none">Mês</Button>
             </div>
 
-            <Button variant="outline" size="sm" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={cn("gap-2", isSidebarOpen && "bg-slate-100 dark:bg-slate-800")}>
-              <Users className="w-4 h-4" />
-              <span className="hidden sm:inline">Espera</span>
-            </Button>
+
 
             <Button onClick={handleCreateAppointment} className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm">
               <Plus className="w-4 h-4" />
@@ -401,10 +397,17 @@ const Schedule = () => {
         </div>
 
         {/* Main Workspace */}
-        <div className="flex flex-1 overflow-hidden relative">
+        <div className="flex flex-col flex-1 relative min-h-0">
+
+          {/* Horizontal Waitlist */}
+          <WaitlistHorizontal
+            onSchedulePatient={handleScheduleFromWaitlist}
+            className="flex-shrink-0 z-20"
+          />
+
           {/* Calendar Area */}
-          <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950 overflow-hidden p-6">
-            <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950 overflow-hidden relative">
+          <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950 p-6 pt-4">
+            <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950 relative min-h-[600px]">
               <Suspense fallback={<LoadingSkeleton type="card" rows={3} className="h-full w-full" />}>
                 <CalendarView
                   appointments={appointments}
@@ -421,14 +424,6 @@ const Schedule = () => {
               </Suspense>
             </div>
           </div>
-
-          {/* Waitlist Sidebar */}
-          {isSidebarOpen && (
-            <WaitlistSidebar
-              onSchedulePatient={handleScheduleFromWaitlist}
-              className="flex-shrink-0 animate-fade-in border-l border-slate-200 dark:border-slate-800"
-            />
-          )}
         </div>
 
         {/* Modals Layer */}

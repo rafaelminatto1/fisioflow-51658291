@@ -186,7 +186,7 @@ export const CalendarWeekView = memo(({
 
     return (
         <TooltipProvider>
-            <div className="flex flex-col h-full bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden text-slate-900 dark:text-slate-100 font-display">
+            <div className="flex flex-col bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-slate-900 dark:text-slate-100 font-display">
                 {/* Header Row */}
                 <div className="grid grid-cols-[60px_repeat(7,1fr)] bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 shadow-sm">
                     {/* Time icon */}
@@ -228,7 +228,7 @@ export const CalendarWeekView = memo(({
                 </div>
 
                 {/* Scrollable Grid Area */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar relative bg-white dark:bg-slate-950" id="calendar-grid">
+                <div className="relative bg-white dark:bg-slate-950" id="calendar-grid">
                     <div className="grid grid-cols-[60px_repeat(7,1fr)] relative min-h-0" style={{
                         gridTemplateRows: `repeat(${timeSlots.length}, ${SLOT_HEIGHT}px)`
                     }}>
