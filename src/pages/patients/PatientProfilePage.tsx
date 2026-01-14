@@ -7,6 +7,7 @@ import { PatientHelpers } from '@/types';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -765,16 +766,7 @@ export const PatientProfilePage = () => {
     if (isLoading) {
         return (
             <MainLayout>
-                <div className="space-y-6">
-                    <div className="flex items-center gap-4">
-                        <Skeleton className="h-10 w-10 rounded-full" />
-                        <div className="space-y-2">
-                            <Skeleton className="h-6 w-48" />
-                            <Skeleton className="h-4 w-32" />
-                        </div>
-                    </div>
-                    <Skeleton className="h-[200px] w-full rounded-lg" />
-                </div>
+                <LoadingSkeleton type="card" rows={4} />
             </MainLayout>
         );
     }
