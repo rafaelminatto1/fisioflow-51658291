@@ -78,24 +78,31 @@ export interface ExperimentConfig {
 // STATSIG INITIALIZATION
 // ============================================================================
 
+// DISABLED: Statsig SDK is disabled to prevent runtime errors
+// Set to false to always use default values without calling the SDK
 let isInitialized = false;
+const STATSIG_DISABLED = true; // Master switch to disable all Statsig SDK calls
 
 /**
  * Initialize Statsig SDK
- * Should be called once at app startup
- * Note: In statsig-react v2, initialization is handled by StatsigProvider
- * This function just validates the key and sets up the state
+ * DISABLED: Always returns false to prevent SDK calls
  */
 export async function initStatsig(
-  sdkKey?: string,
+  _sdkKey?: string,
   _user?: Statsig.StatsigUser
 ): Promise<boolean> {
+  // Statsig is disabled - always return false
+  if (STATSIG_DISABLED) {
+    console.info('[Statsig] SDK is disabled. Using default values for all feature flags.');
+    return false;
+  }
+
   if (isInitialized) {
     console.warn('Statsig already initialized');
     return true;
   }
 
-  const key = sdkKey || import.meta.env.VITE_STATSIG_CLIENT_KEY || import.meta.env.NEXT_PUBLIC_STATSIG_CLIENT_KEY;
+  const key = _sdkKey || import.meta.env.VITE_STATSIG_CLIENT_KEY || import.meta.env.NEXT_PUBLIC_STATSIG_CLIENT_KEY;
 
   if (!key) {
     console.warn('Statsig SDK key not found. Feature flags disabled.');
@@ -135,8 +142,8 @@ export function isFeatureEnabled(
   _user?: Statsig.StatsigUser,
   _options?: Statsig.StatsigOptions
 ): boolean {
-  if (!isInitialized) {
-    // Return default value when not initialized - this is normal behavior
+  // Always return default value when Statsig is disabled
+  if (STATSIG_DISABLED || !isInitialized) {
     return getDefaultFlagValue(flagName);
   }
 
@@ -203,7 +210,8 @@ export function getDynamicConfig<T = DynamicConfigValue>(
   configName: DynamicConfigName,
   _user?: Statsig.StatsigUser
 ): T | null {
-  if (!isInitialized) {
+  // Always return default value when Statsig is disabled
+  if (STATSIG_DISABLED || !isInitialized) {
     return getDefaultConfigValue<T>(configName);
   }
 
@@ -246,7 +254,8 @@ export function getExperiment<T = string>(
   experimentName: string,
   _user?: Statsig.StatsigUser
 ): { value: T; name: string } | null {
-  if (!isInitialized) {
+  // Always return null when Statsig is disabled
+  if (STATSIG_DISABLED || !isInitialized) {
     return null;
   }
 
@@ -270,7 +279,8 @@ export function logExperimentExposure(
   experimentName: string,
   _user?: Statsig.StatsigUser
 ): void {
-  if (!isInitialized) return;
+  // Skip when Statsig is disabled
+  if (STATSIG_DISABLED || !isInitialized) return;
 
   try {
     // In statsig-js, experiment exposure is logged automatically when getExperiment is called
@@ -293,8 +303,9 @@ export function logEvent(
   value?: number,
   metadata?: Record<string, string | number | boolean | null>
 ): void {
-  if (!isInitialized) {
-    console.debug(`[Statsig] Would log event: ${eventName}`, { value, metadata });
+  // Skip when Statsig is disabled
+  if (STATSIG_DISABLED || !isInitialized) {
+    // Silent skip - no need to log debug messages in production
     return;
   }
 
@@ -349,7 +360,8 @@ export const Analytics = {
  * Update current user
  */
 export function updateUser(user: Statsig.StatsigUser): void {
-  if (!isInitialized) return;
+  // Skip when Statsig is disabled
+  if (STATSIG_DISABLED || !isInitialized) return;
 
   try {
     Statsig.updateUser(user);
@@ -362,7 +374,8 @@ export function updateUser(user: Statsig.StatsigUser): void {
  * Log user out
  */
 export function logUserOut(): void {
-  if (!isInitialized) return;
+  // Skip when Statsig is disabled
+  if (STATSIG_DISABLED || !isInitialized) return;
 
   try {
     Statsig.shutdown();
@@ -457,28 +470,11 @@ export function createFeatureFlagHook(flagName: FeatureFlagName) {
     _user?: Statsig.StatsigUser,
     _options?: Statsig.StatsigOptions
   ): { enabled: boolean; isLoading: boolean; error: Error | null } {
-    const [enabled, setEnabled] = React.useState(() => isFeatureEnabled(flagName));
-    const [isLoading, setIsLoading] = React.useState(!isInitialized);
+    // Always use default values when Statsig is disabled
+    const [enabled] = React.useState(() => getDefaultFlagValue(flagName));
+    const [isLoading] = React.useState(false);
 
-    React.useEffect(() => {
-      if (!isInitialized) {
-        setIsLoading(false);
-        return;
-      }
-
-      // Check gate value
-      try {
-        // Note: statsig-js checkGate signature is (gateName, ignoreOverrides?)
-        const value = Statsig.checkGate(flagName);
-        setEnabled(value);
-      } catch {
-        setEnabled(getDefaultFlagValue(flagName));
-      }
-      setIsLoading(false);
-      // statsig-react v2 doesn't have subscribeToGateChanges
-      // Values are reactive through the StatsigProvider
-    }, [flagName]);
-
+    // No need for useEffect - Statsig is disabled, just return defaults
     return { enabled, isLoading, error: null };
   };
 }
@@ -491,21 +487,11 @@ export function createDynamicConfigHook<T = DynamicConfigValue>(configName: Dyna
   return function useDynamicConfig(
     _user?: Statsig.StatsigUser
   ): { config: T | null; isLoading: boolean; error: Error | null } {
-    const [config, setConfig] = React.useState<T | null>(() => getDynamicConfig<T>(configName));
-    const [isLoading, setIsLoading] = React.useState(!isInitialized);
+    // Always use default values when Statsig is disabled
+    const [config] = React.useState<T | null>(() => getDefaultConfigValue<T>(configName));
+    const [isLoading] = React.useState(false);
 
-    React.useEffect(() => {
-      if (!isInitialized) {
-        setIsLoading(false);
-        return;
-      }
-
-      setConfig(getDynamicConfig<T>(configName));
-      setIsLoading(false);
-      // statsig-react v2 doesn't have subscribeToConfigChanges
-      // Values are reactive through the StatsigProvider
-    }, [configName]);
-
+    // No need for useEffect - Statsig is disabled, just return defaults
     return { config, isLoading, error: null };
   };
 }

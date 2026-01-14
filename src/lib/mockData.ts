@@ -455,11 +455,11 @@ export const mockEventos = [
 export const mockStats = {
   totalPatients: mockPatients.length,
   activePatients: mockPatients.filter(p => p.status === 'Em Tratamento').length,
-  totalAppointments: mockAppointments.length,
-  todayAppointments: mockAppointments.filter(apt => {
+  totalAppointments: Array.isArray(mockAppointments) ? mockAppointments.length : 0,
+  todayAppointments: Array.isArray(mockAppointments) ? mockAppointments.filter(apt => {
     const today = new Date();
-    return apt.date.toDateString() === today.toDateString();
-  }).length,
-  confirmedAppointments: mockAppointments.filter(apt => apt.status === 'confirmado').length,
-  completedAppointments: mockAppointments.filter(apt => apt.status === 'concluido').length
+    return apt.date?.toDateString() === today.toDateString();
+  }).length : 0,
+  confirmedAppointments: Array.isArray(mockAppointments) ? mockAppointments.filter(apt => apt.status === 'confirmado').length : 0,
+  completedAppointments: Array.isArray(mockAppointments) ? mockAppointments.filter(apt => apt.status === 'concluido').length : 0
 };
