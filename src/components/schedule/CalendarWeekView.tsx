@@ -186,7 +186,9 @@ export const CalendarWeekView = memo(({
                         if (dayDist === -1) return null;
 
                         // Calculate Row and Span
-                        const startTime = apt.time || '00:00';
+                        // Normalize time to HH:mm format (handles "08:00:00" -> "08:00")
+                        const rawTime = apt.time || '00:00';
+                        const startTime = rawTime.substring(0, 5);
                         const startRowIndex = timeSlots.findIndex(t => t === startTime);
                         if (startRowIndex === -1) return null; // Time not in grid
 
@@ -228,10 +230,10 @@ export const CalendarWeekView = memo(({
                                 >
                                     <div className="w-full h-full">
                                         <p className="text-xs font-bold text-white truncate shadow-black/50 drop-shadow-sm">
-                                            {apt.therapistId || 'Dr. Desconhecido'}
+                                            {apt.patientName || 'Paciente'}
                                         </p>
                                         <p className="text-[10px] text-gray-200 truncate font-medium">
-                                            {apt.patientName}
+                                            {apt.therapistId || 'Dr. Desconhecido'}
                                         </p>
                                         <div className="flex gap-1 items-center mt-0.5">
                                             <span className="text-[10px] text-gray-300 truncate opacity-90">{apt.type}</span>

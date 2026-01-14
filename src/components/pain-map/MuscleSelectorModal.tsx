@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Muscle, getMusclesByRegion } from '@/lib/data/bodyMuscles';
-import { Check, Search } from 'lucide-react';
+import { Check, Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -27,6 +27,15 @@ export function MuscleSelectorModal({
 }: MuscleSelectorModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMuscle, setSelectedMuscle] = useState<Muscle | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsVisible(true);
+    } else {
+      setIsVisible(false);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
