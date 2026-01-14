@@ -95,16 +95,6 @@ const frontPaths: Partial<Record<BodyRegion, { path: string; centerX: number; ce
 
   // Hips
   quadril_direito: {
-    path: "M42,95 L50,95 L50,118 L40,118 C38,114 40,110 44,108 L42,95 Z", // Merged lumbar/hip area for front? Or keep separate?
-    // Original had lumbar separate. But lumbar is back.
-    // Let's assume generic "pelvis/hip" area.
-    // Original lombar path: "M42,95 L58,95 L56,108 L44,108 Z" (Center Y 102)
-    // Original quadril_direito: "M44,108 L50,108 L50,118 ..."
-    // Effectively, Front doesn't have "Lumbar". It has "Lower Abdomen" or "Pelvis".
-    // For now, let's map the "Lumbar" area to "Hip/Pelvis" in Front view or simply extend Abdomen?
-    // Let's keep a "Lower Abdomen/Pelvis" area using the space of 'lombar' + 'quadril'.
-    // Or just Map "quadril_direito" to cover that lower side area.
-    // Let's use the space from Y=95 to Y=118 for Hips/Pelvis on front.
     path: "M42,95 L50,95 L50,118 L40,118 C38,114 40,110 42,95 Z",
     centerX: 45, centerY: 106
   },
@@ -435,8 +425,8 @@ export function PainMapCanvas({ painPoints, onPainPointsChange, readOnly = false
               <button
                 onClick={() => setView('front')}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${view === 'front'
-                    ? 'bg-background shadow-sm text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-background shadow-sm text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
                   }`}
               >
                 Frente
@@ -444,8 +434,8 @@ export function PainMapCanvas({ painPoints, onPainPointsChange, readOnly = false
               <button
                 onClick={() => setView('back')}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${view === 'back'
-                    ? 'bg-background shadow-sm text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
+                  ? 'bg-background shadow-sm text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
                   }`}
               >
                 Costas
