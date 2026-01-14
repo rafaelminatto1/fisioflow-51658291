@@ -77,6 +77,7 @@ DROP POLICY IF EXISTS "Only admins can manage roles" ON public.user_roles;
 ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 
 -- Política para SELECT: usuário vê próprio role OU é admin
+DROP POLICY IF EXISTS "user_roles_select_policy" ON public.user_roles;
 CREATE POLICY "user_roles_select_policy" ON public.user_roles
 FOR SELECT TO authenticated
 USING (
@@ -85,6 +86,7 @@ USING (
 );
 
 -- Política para INSERT/UPDATE/DELETE: apenas admins
+DROP POLICY IF EXISTS "user_roles_manage_policy" ON public.user_roles;
 CREATE POLICY "user_roles_manage_policy" ON public.user_roles
 FOR ALL TO authenticated
 USING (
@@ -115,6 +117,7 @@ DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 -- Política para SELECT: próprio perfil OU é admin/fisioterapeuta
+DROP POLICY IF EXISTS "profiles_select_policy" ON public.profiles;
 CREATE POLICY "profiles_select_policy" ON public.profiles
 FOR SELECT TO authenticated
 USING (
@@ -128,6 +131,7 @@ USING (
 );
 
 -- Política para UPDATE: próprio perfil OU é admin
+DROP POLICY IF EXISTS "profiles_update_policy" ON public.profiles;
 CREATE POLICY "profiles_update_policy" ON public.profiles
 FOR UPDATE TO authenticated
 USING (
@@ -140,6 +144,7 @@ WITH CHECK (
 );
 
 -- Política para INSERT: apenas próprio perfil
+DROP POLICY IF EXISTS "profiles_insert_policy" ON public.profiles;
 CREATE POLICY "profiles_insert_policy" ON public.profiles
 FOR INSERT TO authenticated
 WITH CHECK (
@@ -160,6 +165,7 @@ DROP POLICY IF EXISTS "appointments_delete_admin" ON public.appointments;
 ALTER TABLE public.appointments ENABLE ROW LEVEL SECURITY;
 
 -- Política para SELECT: admin tem acesso total, outros veem da organização
+DROP POLICY IF EXISTS "appointments_select_policy" ON public.appointments;
 CREATE POLICY "appointments_select_policy" ON public.appointments
 FOR SELECT TO authenticated
 USING (
@@ -174,6 +180,7 @@ USING (
 );
 
 -- Política para INSERT: admins e fisioterapeutas
+DROP POLICY IF EXISTS "appointments_insert_policy" ON public.appointments;
 CREATE POLICY "appointments_insert_policy" ON public.appointments
 FOR INSERT TO authenticated
 WITH CHECK (
@@ -186,6 +193,7 @@ WITH CHECK (
 );
 
 -- Política para UPDATE: admins e fisioterapeutas
+DROP POLICY IF EXISTS "appointments_update_policy" ON public.appointments;
 CREATE POLICY "appointments_update_policy" ON public.appointments
 FOR UPDATE TO authenticated
 USING (
@@ -206,6 +214,7 @@ WITH CHECK (
 );
 
 -- Política para DELETE: apenas admins
+DROP POLICY IF EXISTS "appointments_delete_policy" ON public.appointments;
 CREATE POLICY "appointments_delete_policy" ON public.appointments
 FOR DELETE TO authenticated
 USING (
