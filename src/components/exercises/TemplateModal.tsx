@@ -26,6 +26,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
 import { useExerciseTemplates, type ExerciseTemplate } from '@/hooks/useExerciseTemplates';
 
 const templateSchema = z.object({
@@ -34,6 +40,11 @@ const templateSchema = z.object({
   category: z.enum(['patologia', 'pos_operatorio']),
   condition_name: z.string().min(2, 'Condição obrigatória'),
   template_variant: z.string().optional(),
+  clinical_notes: z.string().optional(),
+  contraindications: z.string().optional(),
+  precautions: z.string().optional(),
+  progression_notes: z.string().optional(),
+  evidence_level: z.enum(['A', 'B', 'C', 'D']).optional().or(z.literal('')),
 });
 
 type TemplateFormData = z.infer<typeof templateSchema>;
@@ -100,6 +111,11 @@ export function TemplateModal({
         category: template.category,
         condition_name: template.condition_name,
         template_variant: template.template_variant || '',
+        clinical_notes: template.clinical_notes || '',
+        contraindications: template.contraindications || '',
+        precautions: template.precautions || '',
+        progression_notes: template.progression_notes || '',
+        evidence_level: (template.evidence_level as any) || '',
       });
     } else {
       form.reset({
@@ -108,6 +124,11 @@ export function TemplateModal({
         category: defaultCategory,
         condition_name: '',
         template_variant: '',
+        clinical_notes: '',
+        contraindications: '',
+        precautions: '',
+        progression_notes: '',
+        evidence_level: '',
       });
     }
   }, [template, defaultCategory, form]);
@@ -119,8 +140,13 @@ export function TemplateModal({
       category: data.category,
       condition_name: data.condition_name,
       template_variant: data.template_variant,
+      clinical_notes: data.clinical_notes,
+      contraindications: data.contraindications,
+      precautions: data.precautions,
+      progression_notes: data.progression_notes,
+      evidence_level: data.evidence_level || null,
     };
-    
+
     if (template) {
       updateTemplate({ id: template.id, ...payload });
     } else {
@@ -251,6 +277,110 @@ export function TemplateModal({
                 </FormItem>
               )}
             />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="evidence_level"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nível de Evidência</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="A">Nível A (Alta)</SelectItem>
+                        <SelectItem value="B">Nível B (Moderada)</SelectItem>
+                        <SelectItem value="C">Nível C (Baixa)</SelectItem>
+                        <SelectItem value="D">Nível D (Consenso)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="space-y-4 border-t pt-4 mt-4">
+              <h3 className="font-semibold text-sm text-gray-900">Informações Clínicas</h3>
+
+              <FormField
+                control={form.control}
+                name="clinical_notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Observações Clínicas</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Notas importantes para o fisioterapeuta..."
+                        {...field}
+                        rows={2}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="contraindications"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contraindicações</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Quando não utilizar este protocolo..."
+                        {...field}
+                        rows={2}
+                        className="border-red-200 focus-visible:ring-red-500"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="precautions"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Precauções</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Cuidados a serem tomados..."
+                        {...field}
+                        rows={2}
+                        className="border-yellow-200 focus-visible:ring-yellow-500"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="progression_notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Critérios de Progressão</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Quando avançar para a próxima fase..."
+                        {...field}
+                        rows={2}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="flex gap-3 justify-end pt-4">
               <Button
