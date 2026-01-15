@@ -595,8 +595,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
       <section aria-label="Agendamentos e ações rápidas">
         <div className="grid gap-4 md:gap-5 md:grid-cols-2 lg:grid-cols-7">
           {/* Agendamentos Próximos */}
-          <AnimatedCard delay={650}>
-            <Card className="lg:col-span-4 rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-200 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+          <AnimatedCard delay={650} className="lg:col-span-4">
+            <Card className="rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-200 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
               <CardHeader className="pb-3 px-4 sm:px-5 lg:px-6 pt-4 sm:pt-5 lg:pt-6">
                 <CardTitle className="flex items-center gap-2.5 sm:gap-3 text-base sm:text-lg font-medium">
                   <div className="p-2 bg-primary/10 rounded-lg">
@@ -670,8 +670,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
           </AnimatedCard>
 
           {/* Ações Rápidas */}
-          <AnimatedCard delay={700}>
-            <Card className="lg:col-span-3 rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-200 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+          <AnimatedCard delay={700} className="lg:col-span-3">
+            <Card className="rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-200 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
               <CardHeader className="pb-3 px-4 sm:px-5 lg:px-6 pt-4 sm:pt-5 lg:pt-6">
                 <CardTitle className="text-base sm:text-lg font-medium">Ações Rápidas</CardTitle>
               </CardHeader>

@@ -11,10 +11,10 @@ export interface GridItem {
     id: string;
     content: React.ReactNode;
     defaultLayout: {
-        w: number;
-        h: number;
-        x: number;
-        y: number;
+        w: number; // width in grid columns
+        h: number; // height in grid rows
+        x: number; // horizontal position
+        y: number; // vertical position
         minW?: number;
         minH?: number;
     };
@@ -23,22 +23,28 @@ export interface GridItem {
 interface DraggableGridProps {
     items: GridItem[];
     onLayoutChange?: (layout: Layout) => void;
-    savedLayout?: Layout;
     className?: string;
     rowHeight?: number;
     cols?: { lg: number; md: number; sm: number; xs: number; xxs: number };
     isEditable?: boolean;
-    forceReset?: boolean; // New prop to force layout reset
 }
 
-const DEFAULT_COLS = { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 } as const;
-const BREAKPOINTS = { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 } as const;
-const GRID_MARGIN = [20, 20] as const; // Increased margin to prevent overlap
+// Configuration constants for the responsive grid layout
+const GRID_CONFIG = {
+    cols: { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 } as const,
+    breakpoints: { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 } as const,
+    margin: [20, 20] as const, // [horizontal, vertical] margin between items
+    rowHeight: 50, // default height of each grid row in pixels
+    compactType: null, // disable auto-compaction to preserve layout
+} as const;
 
-// Custom hook to measure container width
-const useWidth = () => {
+/**
+ * Custom hook to measure and track the container width
+ * This ensures the responsive grid calculates item sizes correctly
+ */
+const useContainerWidth = () => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const [width, setWidth] = useState(1200);
+    const [width, setWidth] = useState(1200); // Default to desktop width
 
     useEffect(() => {
         const element = containerRef.current;
@@ -52,7 +58,7 @@ const useWidth = () => {
             }
         });
 
-        // Initial measure
+        // Initial measurement
         if (element.offsetWidth > 0) {
             setWidth(element.offsetWidth);
         }
@@ -65,28 +71,44 @@ const useWidth = () => {
     return { containerRef, width };
 };
 
+/**
+ * DraggableGrid - A responsive, draggable grid layout component
+ *
+ * Uses react-grid-layout with data-grid attributes for positioning.
+ * Items with the same Y position will appear on the same row.
+ *
+ * @example
+ * <DraggableGrid
+ *   items={[
+ *     { id: '1', content: <div>Widget 1</div>, defaultLayout: { w: 6, h: 5, x: 0, y: 0 } },
+ *     { id: '2', content: <div>Widget 2</div>, defaultLayout: { w: 6, h: 5, x: 6, y: 0 } }
+ *   ]}
+ *   isEditable={true}
+ * />
+ */
 export const DraggableGrid = memo(function DraggableGrid({
     items,
     onLayoutChange,
     className,
-    rowHeight = 60,
-    cols = DEFAULT_COLS,
+    rowHeight = GRID_CONFIG.rowHeight,
+    cols = GRID_CONFIG.cols,
     isEditable = false,
-}: Omit<DraggableGridProps, 'savedLayout' | 'forceReset'>) {
+}: DraggableGridProps) {
     const [isMounted, setIsMounted] = useState(false);
-    const { containerRef, width } = useWidth();
+    const { containerRef, width } = useContainerWidth();
 
+    // Wait for mount to ensure container dimensions are measured
     useEffect(() => {
         setIsMounted(true);
     }, []);
 
-    // Handle layout changes - don't store internal layout state
-    const handleLayoutChange = useCallback((currentLayout: Layout, _allLayouts: Partial<Record<string, Layout>>) => {
+    const handleLayoutChange = useCallback((currentLayout: Layout) => {
         if (onLayoutChange) {
             onLayoutChange(currentLayout);
         }
     }, [onLayoutChange]);
 
+    // Don't render until mounted to prevent layout shifts
     if (!isMounted) {
         return null;
     }
@@ -95,8 +117,7 @@ export const DraggableGrid = memo(function DraggableGrid({
         <div ref={containerRef} className={className} style={{ position: 'relative' }}>
             <Responsive
                 className="layout"
-                // Don't pass layouts at all - let data-grid control everything
-                breakpoints={BREAKPOINTS}
+                breakpoints={GRID_CONFIG.breakpoints}
                 cols={cols}
                 rowHeight={rowHeight}
                 width={width}
@@ -104,9 +125,9 @@ export const DraggableGrid = memo(function DraggableGrid({
                 isDraggable={isEditable}
                 isResizable={isEditable}
                 onLayoutChange={handleLayoutChange}
-                margin={GRID_MARGIN}
+                margin={GRID_CONFIG.margin}
                 useCSSTransforms={true}
-                compactType={null}
+                compactType={GRID_CONFIG.compactType}
                 preventCollision={false}
             >
                 {items.map((item) => (
@@ -129,4 +150,5 @@ export const DraggableGrid = memo(function DraggableGrid({
         </div>
     );
 });
+
 DraggableGrid.displayName = 'DraggableGrid';
