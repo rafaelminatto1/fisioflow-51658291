@@ -5,6 +5,7 @@
  */
 
 import { logger } from './errors/logger';
+import { track } from '@vercel/analytics';
 
 export interface MetricData {
   value: number;
@@ -29,13 +30,10 @@ export const trackMetric = (metric: string, data: number | MetricData) => {
   const value = typeof data === 'number' ? data : data.value;
   const metadata = typeof data === 'object' ? data.metadata : undefined;
 
-  // Vercel Analytics - use track method with correct API signature
-  // Note: We no longer use window.va directly as @vercel/analytics handles this
-  // This is kept for backward compatibility but shouldn't cause errors
+  // Vercel Analytics - use official track() function
   try {
-    if (typeof window !== 'undefined' && window.va) {
-      // Vercel Analytics track API: va('event', { name: string, properties?: object })
-      window.va('event', { name: metric, data: { value, ...metadata } });
+    if (import.meta.env.PROD) {
+      track(metric, { value, ...metadata });
     }
   } catch {
     // Silently ignore analytics errors to prevent app crashes
@@ -222,9 +220,3 @@ export const initMonitoring = () => {
   };
 };
 
-// TypeScript declaration for window.va
-declare global {
-  interface Window {
-    va?: (event: string, data?: Record<string, unknown>) => void;
-  }
-}
