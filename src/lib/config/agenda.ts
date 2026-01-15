@@ -4,217 +4,229 @@ import type { StatusConfig, RolePermissions, UserRole, SessionStatus } from "@/t
 import { CheckCircle, Clock, AlertCircle, XCircle } from 'lucide-react';
 
 // Status configuration for visual representation and allowed actions
+// Default status config (for reset functionality)
+export const DEFAULT_STATUS_COLORS: Record<string, { color: string; bgColor: string; borderColor: string }> = {};
+
 export const STATUS_CONFIG: Record<SessionStatus, StatusConfig> = {
-  // Positive/Completed States
+  // Positive/Completed States - Vivid Green
   realizado: {
     label: "Realizado",
-    color: "#16A34A",
-    bgColor: "#DCFCE7",
-    borderColor: "#16A34A",
-    twBg: "bg-green-100",
-    twBorder: "border-green-600",
-    twText: "text-green-800",
+    color: "#00C875",
+    bgColor: "#00C875",
+    borderColor: "#00C875",
+    twBg: "bg-[#00C875]",
+    twBorder: "border-[#00C875]",
+    twText: "text-white",
     icon: CheckCircle,
     allowedActions: ["view", "payment", "evolution"]
   },
   completed: { // Legacy/Duplicate mapping
     label: "Concluído",
-    color: "#16A34A",
-    bgColor: "#DCFCE7",
-    borderColor: "#16A34A",
-    twBg: "bg-green-100",
-    twBorder: "border-green-600",
-    twText: "text-green-800",
+    color: "#00C875",
+    bgColor: "#00C875",
+    borderColor: "#00C875",
+    twBg: "bg-[#00C875]",
+    twBorder: "border-[#00C875]",
+    twText: "text-white",
     icon: CheckCircle,
     allowedActions: ["view", "payment", "evolution"]
   },
   concluido: {
     label: "Concluído",
-    color: "#16A34A",
-    bgColor: "#DCFCE7",
-    borderColor: "#16A34A",
-    twBg: "bg-green-100",
-    twBorder: "border-green-600",
-    twText: "text-green-800",
+    color: "#00C875",
+    bgColor: "#00C875",
+    borderColor: "#00C875",
+    twBg: "bg-[#00C875]",
+    twBorder: "border-[#00C875]",
+    twText: "text-white",
     icon: CheckCircle,
     allowedActions: ["view", "payment", "evolution"]
   },
   atendido: {
     label: "Atendido",
-    color: "#16A34A",
-    bgColor: "#DCFCE7",
-    borderColor: "#16A34A",
-    twBg: "bg-green-100",
-    twBorder: "border-green-600",
-    twText: "text-green-800",
+    color: "#00C875",
+    bgColor: "#00C875",
+    borderColor: "#00C875",
+    twBg: "bg-[#00C875]",
+    twBorder: "border-[#00C875]",
+    twText: "text-white",
     icon: CheckCircle,
     allowedActions: ["view", "payment", "evolution"]
   },
 
-  // Confirmed States
+  // Confirmed States - Vivid Teal
   confirmado: {
     label: "Confirmado",
-    color: "#059669",
-    bgColor: "#D1FAE5",
-    borderColor: "#059669",
-    twBg: "bg-emerald-100",
-    twBorder: "border-emerald-600",
-    twText: "text-emerald-800",
+    color: "#0CA678",
+    bgColor: "#0CA678",
+    borderColor: "#0CA678",
+    twBg: "bg-[#0CA678]",
+    twBorder: "border-[#0CA678]",
+    twText: "text-white",
     icon: CheckCircle,
     allowedActions: ["complete", "miss", "cancel", "reschedule", "edit", "payment"]
   },
   confirmed: { // Legacy
     label: "Confirmado",
-    color: "#059669",
-    bgColor: "#D1FAE5",
-    borderColor: "#059669",
-    twBg: "bg-emerald-100",
-    twBorder: "border-emerald-600",
-    twText: "text-emerald-800",
+    color: "#0CA678",
+    bgColor: "#0CA678",
+    borderColor: "#0CA678",
+    twBg: "bg-[#0CA678]",
+    twBorder: "border-[#0CA678]",
+    twText: "text-white",
     icon: CheckCircle,
     allowedActions: ["complete", "miss", "cancel", "reschedule", "edit", "payment"]
   },
 
-  // Scheduled States
+  // Scheduled States - Vivid Blue
   agendado: {
     label: "Agendado",
-    color: "#2563EB",
-    bgColor: "#DBEAFE",
-    borderColor: "#2563EB",
-    twBg: "bg-blue-100",
-    twBorder: "border-blue-600",
-    twText: "text-blue-800",
+    color: "#0073EA",
+    bgColor: "#0073EA",
+    borderColor: "#0073EA",
+    twBg: "bg-[#0073EA]",
+    twBorder: "border-[#0073EA]",
+    twText: "text-white",
     icon: Clock,
     allowedActions: ["confirm", "cancel", "reschedule", "edit"]
   },
   scheduled: { // Legacy
     label: "Agendado",
-    color: "#2563EB",
-    bgColor: "#DBEAFE",
-    borderColor: "#2563EB",
-    twBg: "bg-blue-100",
-    twBorder: "border-blue-600",
-    twText: "text-blue-800",
+    color: "#0073EA",
+    bgColor: "#0073EA",
+    borderColor: "#0073EA",
+    twBg: "bg-[#0073EA]",
+    twBorder: "border-[#0073EA]",
+    twText: "text-white",
     icon: Clock,
     allowedActions: ["confirm", "cancel", "reschedule", "edit"]
   },
 
-  // Evaluation - The Specific Fix request
+  // Evaluation - Vivid Purple
   avaliacao: {
     label: "Avaliação",
-    color: "#7C3AED",
-    bgColor: "#EDE9FE",
-    borderColor: "#7C3AED",
-    twBg: "bg-violet-100",
-    twBorder: "border-violet-600",
-    twText: "text-violet-800",
+    color: "#A25DDC",
+    bgColor: "#A25DDC",
+    borderColor: "#A25DDC",
+    twBg: "bg-[#A25DDC]",
+    twBorder: "border-[#A25DDC]",
+    twText: "text-white",
     icon: Clock,
     allowedActions: ["confirm", "cancel", "reschedule", "edit"]
   },
 
-  // Pending/Waiting States
+  // Pending/Waiting States - Vivid Yellow/Gold
   aguardando_confirmacao: {
     label: "Aguardando",
-    color: "#D97706",
-    bgColor: "#FEF3C7",
-    borderColor: "#D97706",
-    twBg: "bg-amber-100",
-    twBorder: "border-amber-600",
-    twText: "text-amber-800",
+    color: "#FDAB3D",
+    bgColor: "#FDAB3D",
+    borderColor: "#FDAB3D",
+    twBg: "bg-[#FDAB3D]",
+    twBorder: "border-[#FDAB3D]",
+    twText: "text-white",
     icon: Clock,
     allowedActions: ["confirm", "cancel", "reschedule", "edit"]
   },
   em_espera: {
     label: "Em Espera",
-    color: "#4F46E5",
-    bgColor: "#E0E7FF",
-    borderColor: "#4F46E5",
-    twBg: "bg-indigo-100",
-    twBorder: "border-indigo-600",
-    twText: "text-indigo-800",
+    color: "#579BFC",
+    bgColor: "#579BFC",
+    borderColor: "#579BFC",
+    twBg: "bg-[#579BFC]",
+    twBorder: "border-[#579BFC]",
+    twText: "text-white",
     icon: Clock,
     allowedActions: ["start", "cancel", "reschedule"]
   },
 
-  // Negative States
+  // Negative States - Vivid Red/Pink
   cancelado: {
     label: "Cancelado",
-    color: "#DC2626",
-    bgColor: "#FEE2E2",
-    borderColor: "#DC2626",
-    twBg: "bg-red-100",
-    twBorder: "border-red-600",
-    twText: "text-red-800",
+    color: "#DF2F4A",
+    bgColor: "#DF2F4A",
+    borderColor: "#DF2F4A",
+    twBg: "bg-[#DF2F4A]",
+    twBorder: "border-[#DF2F4A]",
+    twText: "text-white",
     icon: XCircle,
     allowedActions: ["view", "reschedule"]
   },
   falta: {
     label: "Falta",
-    color: "#E11D48",
-    bgColor: "#FFE4E6",
-    borderColor: "#E11D48",
-    twBg: "bg-rose-100",
-    twBorder: "border-rose-600",
-    twText: "text-rose-800",
+    color: "#FF158A",
+    bgColor: "#FF158A",
+    borderColor: "#FF158A",
+    twBg: "bg-[#FF158A]",
+    twBorder: "border-[#FF158A]",
+    twText: "text-white",
     icon: AlertCircle,
     allowedActions: ["view", "reschedule", "payment"]
   },
   faltou: {
     label: "Faltou",
-    color: "#E11D48",
-    bgColor: "#FFE4E6",
-    borderColor: "#E11D48",
-    twBg: "bg-rose-100",
-    twBorder: "border-rose-600",
-    twText: "text-rose-800",
+    color: "#FF158A",
+    bgColor: "#FF158A",
+    borderColor: "#FF158A",
+    twBg: "bg-[#FF158A]",
+    twBorder: "border-[#FF158A]",
+    twText: "text-white",
     icon: AlertCircle,
     allowedActions: ["view", "reschedule", "payment"]
   },
 
-  // Rescheduled/Delayed
+  // Rescheduled/Delayed - Vivid Cyan/Teal/Orange
   remarcado: {
     label: "Remarcado",
-    color: "#0891B2",
-    bgColor: "#CFFAFE",
-    borderColor: "#0891B2",
-    twBg: "bg-cyan-100",
-    twBorder: "border-cyan-600",
-    twText: "text-cyan-800",
+    color: "#66CCFF",
+    bgColor: "#66CCFF",
+    borderColor: "#66CCFF",
+    twBg: "bg-[#66CCFF]",
+    twBorder: "border-[#66CCFF]",
+    twText: "text-white",
     allowedActions: ["view"]
   },
   reagendado: {
     label: "Reagendado",
-    color: "#0D9488",
-    bgColor: "#CCFBF1",
-    borderColor: "#0D9488",
-    twBg: "bg-teal-100",
-    twBorder: "border-teal-600",
-    twText: "text-teal-800",
+    color: "#9CD326",
+    bgColor: "#9CD326",
+    borderColor: "#9CD326",
+    twBg: "bg-[#9CD326]",
+    twBorder: "border-[#9CD326]",
+    twText: "text-white",
     allowedActions: ["view"]
   },
   atrasado: {
     label: "Atrasado",
-    color: "#EA580C",
-    bgColor: "#FFEDD5",
-    borderColor: "#EA580C",
-    twBg: "bg-orange-100",
-    twBorder: "border-orange-600",
-    twText: "text-orange-800",
+    color: "#FF7575",
+    bgColor: "#FF7575",
+    borderColor: "#FF7575",
+    twBg: "bg-[#FF7575]",
+    twBorder: "border-[#FF7575]",
+    twText: "text-white",
     allowedActions: ["start", "cancel", "reschedule"]
   },
 
-  // Handling 'em_andamento'
+  // Handling 'em_andamento' - Vivid Yellow/Gold
   em_andamento: {
     label: "Em Andamento",
-    color: "#CA8A04",
-    bgColor: "#FEF9C3",
-    borderColor: "#CA8A04",
-    twBg: "bg-yellow-100",
-    twBorder: "border-yellow-600",
-    twText: "text-yellow-800",
+    color: "#FFCB00",
+    bgColor: "#FFCB00",
+    borderColor: "#FFCB00",
+    twBg: "bg-[#FFCB00]",
+    twBorder: "border-[#FFCB00]",
+    twText: "text-slate-900",
     allowedActions: ["complete", "cancel"]
   }
 };
+
+// Initialize DEFAULT_STATUS_COLORS for reset functionality
+Object.entries(STATUS_CONFIG).forEach(([key, value]) => {
+  DEFAULT_STATUS_COLORS[key] = {
+    color: value.color,
+    bgColor: value.bgColor,
+    borderColor: value.borderColor
+  };
+});
 
 // Role-based permissions configuration
 export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
