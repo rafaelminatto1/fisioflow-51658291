@@ -820,7 +820,7 @@ export function useBatchAnalyticsExport() {
           .from('appointments')
           .select('*', { count: 'exact', head: true })
           .eq('patient_id', patientId)
-          .in('status', ['completed', 'confirmed']);
+          .in('status', ['atendido', 'confirmado']);
 
         // Fetch risk score
         const { data: riskScore } = await supabase
