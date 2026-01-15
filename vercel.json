@@ -58,7 +58,7 @@
       ]
     },
     {
-      "source": "/workbox-.*.js",
+      "source": "/workbox-:path(.*).js",
       "headers": [
         {
           "key": "Cache-Control",
@@ -93,7 +93,7 @@
       ]
     },
     {
-      "source": "/(.*)-[a-z0-9]{8,10}\\.js",
+      "source": "/:path(.*)-:hash([a-z0-9]{8,10}).js",
       "headers": [
         {
           "key": "Cache-Control",
@@ -102,7 +102,7 @@
       ]
     },
     {
-      "source": "/(.*)-[a-z0-9]{8,10}\\.css",
+      "source": "/:path(.*)-:hash([a-z0-9]{8,10}).css",
       "headers": [
         {
           "key": "Cache-Control",
