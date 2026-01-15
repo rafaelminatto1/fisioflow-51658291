@@ -1314,6 +1314,12 @@ All colors MUST be HSL.
     will-change: transform;
   }
 
+  /* Fix margin issues - ensure proper spacing */
+  .react-grid-layout > .react-grid-item {
+    /* Ensure items don't overflow their calculated width */
+    box-sizing: border-box;
+  }
+
   /* Drag handle enhancements */
   .drag-handle {
     cursor: grab;
@@ -1352,6 +1358,7 @@ All colors MUST be HSL.
     border: 2px dashed hsl(var(--primary) / 0.5) !important;
     border-radius: 0.5rem;
     transition: all 150ms ease-out;
+    box-sizing: border-box !important;
   }
 
   /* Resize handle styles */
@@ -1362,6 +1369,7 @@ All colors MUST be HSL.
     background: hsl(var(--primary) / 0.2);
     border-radius: 4px;
     transition: background 150ms ease-out;
+    z-index: 10;
   }
 
   .react-resizable-handle:hover {
