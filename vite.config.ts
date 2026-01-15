@@ -347,7 +347,7 @@ export default defineConfig(({ mode }) => {
           },
           // Perfis modernos para melhor performance
           // Aumentado para reduzir uso de memória durante build e número de chunks
-          experimentalMinChunkSize: 50000,
+          experimentalMinChunkSize: 100000,
         },
         // Preservar nomes dos módulos para melhor debugging
         preserveEntrySignatures: 'strict',
@@ -355,8 +355,8 @@ export default defineConfig(({ mode }) => {
       chunkSizeWarningLimit: 2000,
       // Report de tamanho dos chunks
       reportCompressedSize: false,
-      // Soucemaps em produção para debugging
-      sourcemap: true,
+      // Soucemaps em produção para debugging - desabilitado para reduzir memória no build
+      sourcemap: false,
     },
     optimizeDeps: {
       // Evita re-otimizações contínuas que causam erro 504

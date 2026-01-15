@@ -12,9 +12,9 @@ export interface PatientEvolutionData {
     therapist: string;
     duration: number;
   }[];
-  currentPainLevel: number;
   initialPainLevel: number;
   totalSessions: number;
+  prescribedSessions?: number;
   averageImprovement: number;
   measurementEvolution: {
     name: string;
@@ -56,12 +56,24 @@ export const usePatientEvolutionReport = (patientId: string) => {
 
       if (measError) throw measError;
 
+      // Buscar sessões prescritas (pacotes)
+      const { data: packageData } = await supabase
+        .from("session_packages")
+        .select("total_sessions")
+        .eq("patient_id", patientId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const prescribedSessions = packageData?.total_sessions || 0;
+
       if ((!soapRecords || soapRecords.length === 0) && (!measurements || measurements.length === 0)) {
         return {
           sessions: [],
           currentPainLevel: 0,
           initialPainLevel: 0,
           totalSessions: 0,
+          prescribedSessions,
           averageImprovement: 0,
           measurementEvolution: [],
         };
@@ -172,6 +184,7 @@ export const usePatientEvolutionReport = (patientId: string) => {
         currentPainLevel,
         initialPainLevel,
         totalSessions,
+        prescribedSessions,
         averageImprovement,
         measurementEvolution,
       };
