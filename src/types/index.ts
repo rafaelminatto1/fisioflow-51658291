@@ -364,6 +364,15 @@ export const PatientHelpers = {
   getId(patient: Patient | { id: string } | null | undefined): string {
     if (!patient) return '';
     return patient.id;
+  },
+
+  getInitials(patient: Patient | { name?: string; full_name?: string } | null | undefined): string {
+    const name = this.getName(patient);
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
   }
 };
 
