@@ -23,6 +23,7 @@ import {
   Brain,
 } from 'lucide-react';
 
+import { EvolutionDebugInfo } from '@/components/evolution/EvolutionDebugInfo';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -636,41 +637,14 @@ const PatientEvolution = () => {
             )}
 
             {/* Debug info para desenvolvimento */}
-            {import.meta.env.DEV && (
-              <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-left">
-                <p className="text-xs font-semibold text-amber-800 mb-2">INFO DEV (Debug):</p>
-                <div className="text-[10px] font-mono text-amber-900 space-y-1">
-                  <div className="flex gap-2">
-                    <span className="text-amber-600">appointmentId:</span>
-                    <span className="font-mono">{appointmentId || 'undefined'}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="text-amber-600">appointment:</span>
-                    <span>{appointment ? 'found' : 'NOT found'}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="text-amber-600">patient:</span>
-                    <span>{patient ? 'found' : 'NOT found'}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="text-amber-600">patientId:</span>
-                    <span className="font-mono">{patientId || 'undefined'}</span>
-                  </div>
-                  {appointmentError && (
-                    <div className="mt-2 pt-2 border-t border-amber-300">
-                      <span className="text-amber-600">appointmentError:</span>
-                      <p className="text-red-700 truncate">{appointmentError.message}</p>
-                    </div>
-                  )}
-                  {patientError && (
-                    <div className="mt-2 pt-2 border-t border-amber-300">
-                      <span className="text-amber-600">patientError:</span>
-                      <p className="text-red-700 truncate">{patientError.message}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+            <EvolutionDebugInfo
+              patientId={patientId || undefined}
+              patient={patient}
+              appointmentId={appointmentId}
+              appointment={appointment}
+              appointmentError={appointmentError as Error}
+              patientError={patientError as Error}
+            />
 
             <div className="flex gap-2 justify-center mt-4">
               <Button onClick={() => navigate('/schedule')} variant="outline">
