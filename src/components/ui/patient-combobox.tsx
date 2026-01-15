@@ -9,7 +9,6 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
 } from "@/components/ui/command";
 import {
   Popover,
@@ -42,42 +41,29 @@ export function PatientCombobox({
   className,
 }: PatientComboboxProps) {
   const [open, setOpen] = React.useState(false);
-  const [searchTerm, setSearchTerm] = React.useState("");
+  const inputRef = React.useRef<HTMLInputElement>(null);
 
   const selectedPatient = patients.find((patient) => patient.id === value);
-
-  // Normalization function to remove accents
-  const normalize = (str: string) => {
-    return str
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
-  };
-
-  const filteredPatients = React.useMemo(() => {
-    if (!searchTerm) return patients;
-
-    const normalizedSearch = normalize(searchTerm);
-
-    return patients.filter((patient) =>
-      normalize(patient.name).includes(normalizedSearch)
-    );
-  }, [patients, searchTerm]);
 
   const handleSelect = (currentValue: string) => {
     onValueChange(currentValue === value ? "" : currentValue);
     setOpen(false);
-    setSearchTerm("");
   };
 
   const handleCreateNew = () => {
+    const searchTerm = inputRef.current?.value || "";
     setOpen(false);
     onCreateNew(searchTerm);
-    setSearchTerm("");
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={(open) => {
+      setOpen(open);
+      // Clear input when closing popover
+      if (!open && inputRef.current) {
+        inputRef.current.value = "";
+      }
+    }}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -102,81 +88,62 @@ export function PatientCombobox({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
-        <Command shouldFilter={false}>
+        <Command>
           <CommandInput
+            ref={inputRef}
             placeholder="Buscar ou criar paciente..."
-            value={searchTerm}
-            onValueChange={setSearchTerm}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && searchTerm && filteredPatients.length === 0) {
+              if (e.key === 'Enter') {
                 e.preventDefault();
-                handleCreateNew();
+                const searchTerm = inputRef.current?.value || "";
+                if (searchTerm && !patients.find(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))) {
+                  handleCreateNew();
+                }
               }
             }}
           />
           <CommandList>
-            {filteredPatients.length === 0 && searchTerm ? (
-              <CommandEmpty>
-                <div className="py-6 text-center">
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Paciente "{searchTerm}" não encontrado
-                  </p>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleCreateNew}
-                    className="gap-2"
-                  >
-                    <UserPlus className="w-4 h-4" />
-                    Criar Novo Paciente
-                  </Button>
-                </div>
-              </CommandEmpty>
-            ) : (
-              <>
-                <CommandGroup heading="Pacientes">
-                  {filteredPatients.map((patient) => (
-                    <CommandItem
-                      key={patient.id}
-                      value={patient.id}
-                      keywords={[patient.name]}
-                      onSelect={() => handleSelect(patient.id)}
-                      className="cursor-pointer"
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          value === patient.id ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      <div className="flex items-center gap-2 flex-1">
-                        <span>{patient.name}</span>
-                        {patient.incomplete_registration && (
-                          <span className="text-xs px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-full">
-                            ⚠️ Cadastro incompleto
-                          </span>
-                        )}
-                      </div>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-                {searchTerm && filteredPatients.length > 0 && (
-                  <>
-                    <CommandSeparator />
-                    <CommandGroup>
-                      <CommandItem
-                        onSelect={handleCreateNew}
-                        className="cursor-pointer"
-                        value={`create-${searchTerm}`}
-                      >
-                        <UserPlus className="mr-2 h-4 w-4" />
-                        <span>Criar novo paciente "{searchTerm}"</span>
-                      </CommandItem>
-                    </CommandGroup>
-                  </>
-                )}
-              </>
-            )}
+            <CommandEmpty>
+              <div className="py-6 text-center">
+                <p className="text-sm text-muted-foreground mb-3">
+                  Paciente não encontrado
+                </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleCreateNew}
+                  className="gap-2"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Criar Novo Paciente
+                </Button>
+              </div>
+            </CommandEmpty>
+            <CommandGroup heading="Pacientes">
+              {patients.map((patient) => (
+                <CommandItem
+                  key={patient.id}
+                  value={patient.name}
+                  onSelect={() => handleSelect(patient.id)}
+                  className="cursor-pointer"
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      value === patient.id ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  <div className="flex items-center gap-2 flex-1">
+                    <span>{patient.name}</span>
+                    {patient.incomplete_registration && (
+                      <span className="text-xs px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-full">
+                        ⚠️ Cadastro incompleto
+                      </span>
+                    )}
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
           </CommandList>
         </Command>
       </PopoverContent>
