@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Responsive, WidthProvider, Layout } from 'react-grid-layout';
+import React, { useState, useEffect } from 'react';
+import { Layout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 
-// Create a responsive grid layout with automatic width detection
-const ResponsiveGridLayout = WidthProvider(Responsive);
+// Import the legacy ResponsiveReactGridLayout to support the old API with draggableHandle
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore - Using internal module
+import { ResponsiveReactGridLayout as Responsive } from 'react-grid-layout/dist/legacy';
 
 export interface GridItem {
     id: string;
@@ -20,8 +22,8 @@ export interface GridItem {
 
 interface DraggableGridProps {
     items: GridItem[];
-    onLayoutChange?: (layout: Layout[]) => void;
-    savedLayout?: Layout[];
+    onLayoutChange?: (layout: Layout) => void;
+    savedLayout?: Layout;
     className?: string;
     rowHeight?: number;
     cols?: { lg: number; md: number; sm: number; xs: number; xxs: number };
@@ -37,7 +39,7 @@ export const DraggableGrid = ({
     cols = { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 },
     isEditable = false,
 }: DraggableGridProps) => {
-    const [layouts, setLayouts] = useState<{ lg: Layout[] }>({ lg: [] });
+    const [layouts, setLayouts] = useState<Partial<Record<string, Layout>>>({});
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
@@ -55,7 +57,7 @@ export const DraggableGrid = ({
             return;
         }
 
-        const merged: Layout[] = defaultLayouts.map(def => {
+        const merged: Layout = defaultLayouts.map(def => {
             const saved = savedLayout.find(l => l.i === def.i);
             return saved ? { ...def, ...saved } : def;
         });
@@ -63,7 +65,7 @@ export const DraggableGrid = ({
         setLayouts({ lg: merged });
     }, [items, savedLayout]);
 
-    const handleLayoutChange = (currentLayout: Layout[], allLayouts: { [key: string]: Layout[] }) => {
+    const handleLayoutChange = (currentLayout: Layout, _allLayouts: Partial<Record<string, Layout>>) => {
         if (onLayoutChange) {
             onLayoutChange(currentLayout);
         }
@@ -75,7 +77,7 @@ export const DraggableGrid = ({
 
     return (
         <div className={className} style={{ position: 'relative' }}>
-            <ResponsiveGridLayout
+            <Responsive
                 className="layout"
                 layouts={layouts}
                 breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
@@ -92,7 +94,7 @@ export const DraggableGrid = ({
                         {item.content}
                     </div>
                 ))}
-            </ResponsiveGridLayout>
+            </Responsive>
         </div>
     );
 };
