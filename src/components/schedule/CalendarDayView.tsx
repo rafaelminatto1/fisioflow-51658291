@@ -1,50 +1,17 @@
 import React, { memo, useState } from 'react';
 import { format, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Clock, Ban, AlertTriangle, Calendar, GripVertical, Calendar as CalendarIcon } from 'lucide-react';
+import { Clock, Ban, Calendar, Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Appointment } from '@/types/appointment';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { AppointmentQuickView } from './AppointmentQuickView';
-
-// Função para obter a classe CSS baseada no status
-const getStatusClass = (status: string, therapistId?: string | null): string => {
-    const normalizedStatus = status?.toLowerCase().replace(/[^a-zà-ú0-9]/g, '') || '';
-
-    // Se tiver fisioterapeuta específico, usa a classe roxa
-    if (therapistId) {
-        return 'calendar-card-fisioterapeuta';
-    }
-
-    // Mapeamento de status para classes CSS
-    const statusMap: Record<string, string> = {
-        'agendado': 'calendar-card-agendado',
-        'confirmado': 'calendar-card-confirmado',
-        'realizado': 'calendar-card-realizado',
-        'concluido': 'calendar-card-concluido',
-        'atendido': 'calendar-card-atendido',
-        'completado': 'calendar-card-completado',
-        'cancelado': 'calendar-card-cancelado',
-        'avaliacao': 'calendar-card-avaliacao',
-        'avaliação': 'calendar-card-avaliação',
-        'emandamento': 'calendar-card-em_andamento',
-        'em_andamento': 'calendar-card-em_andamento',
-        'pendente': 'calendar-card-pendente',
-    };
-
-    return statusMap[normalizedStatus] || 'calendar-card-agendado';
-};
+import { CalendarAppointmentCard } from './CalendarAppointmentCard';
 
 interface CalendarDayViewProps {
     currentDate: Date;
     currentTime: Date;
     currentTimePosition: number;
-    appointments: Appointment[]; // This should now be passed ALREADY filtered or filter it inside? 
-    // Parent passes 'appointments' as the full list in CalendarView.tsx currently. 
-    // Let's stick to filtering inside for now to avoid changing parent logic drastically, 
-    // BUT we should use the helper if possible to be consistent with WeekView?
-    // Actually, for DayView, 'getAppointmentsForDate' is needed if we iterate.
-    // But here we only render ONE day. So we can just filter once.
+    // appointments, // We will use getAppointmentsForDate instead for consistency
     getAppointmentsForDate: (date: Date) => Appointment[];
 
     timeSlots: string[];
@@ -68,6 +35,10 @@ interface CalendarDayViewProps {
     isOverCapacity: (apt: Appointment) => boolean;
     openPopoverId: string | null;
     setOpenPopoverId: (id: string | null) => void;
+    // Selection props
+    selectionMode?: boolean;
+    selectedIds?: Set<string>;
+    onToggleSelection?: (id: string) => void;
 }
 
 const CalendarDayView = memo(({
@@ -91,17 +62,20 @@ const CalendarDayView = memo(({
     handleDrop,
     isTimeBlocked,
     getBlockReason,
-    _getStatusColor,
-    isOverCapacity,
+    // _getStatusColor, // Not used with CalendarAppointmentCard
+    // isOverCapacity, // Not used with CalendarAppointmentCard
     openPopoverId,
-    setOpenPopoverId
+    setOpenPopoverId,
+    selectionMode = false,
+    selectedIds = new Set(),
+    onToggleSelection
 }: CalendarDayViewProps) => {
 
     // Logic inconsistency fix: usage of helper passed from parent
     const dayAppointments = getAppointmentsForDate(currentDate);
 
-    // Local state for hover effects
-    const [hoveredAppointmentId, setHoveredAppointmentId] = useState<string | null>(null);
+    // Local state for hover effects (handled by Card now, but might be needed for other things? probably not)
+    // const [hoveredAppointmentId, setHoveredAppointmentId] = useState<string | null>(null);
 
     if (isDayClosed) {
         return (
@@ -115,6 +89,17 @@ const CalendarDayView = memo(({
 
     return (
         <div className="flex bg-gradient-to-br from-background to-muted/20 h-[calc(100vh-240px)] md:h-full overflow-hidden">
+            {/* Styles for responsive positioning */}
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                  @media (min-width: 768px) {
+                    [style*="--top-desktop"][style*="--height-desktop"] {
+                      top: var(--top-desktop) !important;
+                      height: var(--height-desktop) !important;
+                    }
+                  }
+                `}} />
+
             {/* Time column com design melhorado */}
             <div className="w-20 md:w-24 border-r bg-muted/30 backdrop-blur-sm flex-shrink-0" role="columnheader" aria-label="Horários">
                 <div className="h-16 md:h-20 border-b flex items-center justify-center sticky top-0 bg-muted/30 z-10 backdrop-blur-sm shadow-sm" aria-hidden="true">
@@ -262,108 +247,37 @@ const CalendarDayView = memo(({
                             const topDesktop = slotIndex * 80;
                             const isDraggable = !!onAppointmentReschedule;
                             const isDraggingThis = dragState.isDragging && dragState.appointment?.id === apt.id;
-                            const isHovered = hoveredAppointmentId === apt.id;
+
+                            // Responsive positioning style
+                            const style: React.CSSProperties = {
+                                top: `${topMobile}px`,
+                                height: `${heightMobile}px`,
+                                left: stackCount > 1 ? `${leftOffset}%` : '4px',
+                                right: stackCount > 1 ? 'auto' : '4px',
+                                width: stackCount > 1 ? `${widthPercent}%` : 'calc(100% - 8px)',
+                                zIndex: isDraggingThis ? 5 : (stackCount > 1 ? 20 : 1),
+                                ['--top-desktop' as string]: `${topDesktop}px`,
+                                ['--height-desktop' as string]: `${heightDesktop}px`,
+                                transform: isDraggingThis ? 'rotate(2deg)' : undefined,
+                            };
 
                             return (
-                                // Wrapper de posicionamento
-                                <div
+                                <CalendarAppointmentCard
                                     key={apt.id}
-                                    draggable={isDraggable}
-                                    onDragStart={(e) => handleDragStart(e, apt)}
+                                    appointment={apt}
+                                    style={style}
+                                    isDraggable={isDraggable}
+                                    isDragging={isDraggingThis}
+                                    onDragStart={handleDragStart}
                                     onDragEnd={handleDragEnd}
-                                    onMouseEnter={() => setHoveredAppointmentId(apt.id)}
-                                    onMouseLeave={() => setHoveredAppointmentId(null)}
-                                    className={cn(
-                                        "absolute transition-all duration-200 group/card",
-                                        // Base cursor
-                                        isDraggable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
-                                        // Hover effects
-                                        !isDraggingThis && "hover:shadow-lg hover:scale-[1.01] hover:z-20",
-                                        // Dragging state - enhanced visual feedback
-                                        isDraggingThis && cn(
-                                            "opacity-40 scale-95 shadow-xl rotate-1",
-                                            "cursor-grabbing"
-                                        ),
-                                        // Another appointment being dragged
-                                        !isDraggingThis && dragState.isDragging && "opacity-60 scale-[0.98]"
-                                    )}
-                                    style={{
-                                        top: `${topMobile}px`,
-                                        height: `${heightMobile}px`,
-                                        // Posicionamento dinâmico para appointments empilhados
-                                        left: stackCount > 1 ? `${leftOffset}%` : '4px',
-                                        right: stackCount > 1 ? 'auto' : '4px',
-                                        width: stackCount > 1 ? `${widthPercent}%` : 'calc(100% - 8px)',
-                                        zIndex: isDraggingThis ? 5 : (isHovered || stackCount > 1) ? 20 : 1,
-                                        ['--top-desktop' as string]: `${topDesktop}px`,
-                                        ['--height-desktop' as string]: `${heightDesktop}px`,
-                                        transform: isDraggingThis ? 'rotate(2deg)' : undefined,
-                                    } as React.CSSProperties}
-                                    onPointerDownCapture={(e) => e.stopPropagation()}
-                                >
-                                    <style dangerouslySetInnerHTML={{
-                                        __html: `
-                  @media (min-width: 768px) {
-                    [style*="--top-desktop"][style*="--height-desktop"] {
-                      top: var(--top-desktop) !important;
-                      height: var(--height-desktop) !important;
-                    }
-                  }
-                `}} />
-                                    <AppointmentQuickView
-                                        appointment={apt}
-                                        open={openPopoverId === apt.id}
-                                        onOpenChange={(open) => setOpenPopoverId(open ? apt.id : null)}
-                                        onEdit={onEditAppointment ? () => onEditAppointment(apt) : undefined}
-                                        onDelete={onDeleteAppointment ? () => onDeleteAppointment(apt) : undefined}
-                                    >
-                                        <div className={cn(
-                                            "calendar-appointment-card",
-                                            getStatusClass(apt.status, apt.therapistId),
-                                            isOverCapacity(apt) && "over-capacity"
-                                        )}>
-                                            {/* Content */}
-                                            <div className="calendar-appointment-card-content">
-                                                <div className="min-w-0">
-                                                    {/* Patient Name */}
-                                                    <div className="calendar-patient-name" title={apt.patientName}>
-                                                        {isOverCapacity(apt) && (
-                                                            <AlertTriangle className="h-3 w-3 inline mr-1 flex-shrink-0" aria-label="Excedente" />
-                                                        )}
-                                                        <span className="truncate">{apt.patientName}</span>
-                                                    </div>
-
-                                                    {/* Service Type */}
-                                                    <div className="calendar-appointment-type" title={apt.type}>
-                                                        <span className="truncate">{apt.type || 'Consulta'}</span>
-                                                    </div>
-                                                </div>
-
-                                                {/* Footer: Time & Room */}
-                                                <div className="calendar-appointment-footer">
-                                                    <div className="flex items-center gap-1">
-                                                        <Clock className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
-                                                        <span>{apt.time}</span>
-                                                    </div>
-                                                    {apt.room && (
-                                                        <span className="truncate" aria-label={`Sala ${apt.room}`}>
-                                                            {apt.room}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {/* Drag handle */}
-                                            {isDraggable && isHovered && !isDraggingThis && (
-                                                <div className="absolute top-2 left-2 z-10" aria-label="Arraste para reagendar">
-                                                    <div className="bg-white/90 dark:bg-slate-800/90 rounded-md p-1.5 shadow-md">
-                                                        <GripVertical className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </AppointmentQuickView>
-                                </div>
+                                    onEditAppointment={onEditAppointment}
+                                    onDeleteAppointment={onDeleteAppointment}
+                                    onOpenPopover={setOpenPopoverId}
+                                    isPopoverOpen={openPopoverId === apt.id}
+                                    selectionMode={selectionMode}
+                                    isSelected={selectedIds?.has(apt.id)}
+                                    onToggleSelection={onToggleSelection}
+                                />
                             );
                         });
                     })()}
