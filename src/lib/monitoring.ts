@@ -173,8 +173,8 @@ export const trackOfflineUsage = (action: string) => {
  * @returns Função de cleanup para remover todos os event listeners
  */
 export const initMonitoring = () => {
-  // Track page load
-  const cleanupPageLoad = trackPageLoad();
+  // Track page load - Disabled to prevent 400 errors in Vercel Analytics (Hobby Plan)
+  // const cleanupPageLoad = trackPageLoad();
 
   // Track unhandled errors
   const errorHandler = (event: ErrorEvent) => {
@@ -215,7 +215,7 @@ export const initMonitoring = () => {
 
   // Retornar função de cleanup
   return () => {
-    cleanupPageLoad?.();
+    // cleanupPageLoad?.();
     window.removeEventListener('error', errorHandler);
     window.removeEventListener('unhandledrejection', rejectionHandler);
     window.removeEventListener('appinstalled', appInstalledHandler);
