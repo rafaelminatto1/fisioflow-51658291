@@ -293,10 +293,11 @@ export class OfflineCacheManager {
         await supabase.from(table).insert(data);
         break;
 
-      case 'update':
+      case 'update': {
         const { id, ...updateData } = data;
         await supabase.from(table).update(updateData).eq('id', id);
         break;
+      }
 
       case 'delete':
         await supabase.from(table).delete().eq('id', data.id);
