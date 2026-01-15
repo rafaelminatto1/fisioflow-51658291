@@ -112,7 +112,7 @@ export const generateEvolutionPDF = (
     yPos += 8;
 
     const measTableData = metrics.measurementEvolution.map((m: any) => {
-      let diff = m.improvement;
+      const diff = m.improvement;
       const diffColor = parseFloat(diff) > 0 ? '↑' : parseFloat(diff) < 0 ? '↓' : '-';
 
       return [
