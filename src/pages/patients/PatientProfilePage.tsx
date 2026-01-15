@@ -59,20 +59,22 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const PersonalDataTab = ({ patient }: { patient: {
-    phone?: string;
-    email?: string;
-    emergency_contact?: string;
-    emergency_phone?: string;
-    address?: string;
-    city?: string;
-    state?: string;
-    zip_code?: string;
-    health_insurance?: string;
-    insurance_number?: string;
-    cpf?: string;
-    observations?: string;
-} }) => (
+const PersonalDataTab = ({ patient }: {
+    patient: {
+        phone?: string;
+        email?: string;
+        emergency_contact?: string;
+        emergency_phone?: string;
+        address?: string;
+        city?: string;
+        state?: string;
+        zip_code?: string;
+        health_insurance?: string;
+        insurance_number?: string;
+        cpf?: string;
+        observations?: string;
+    }
+}) => (
     <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
@@ -167,15 +169,17 @@ const PersonalDataTab = ({ patient }: { patient: {
     </div>
 );
 
-const OverviewTab = ({ patient }: { patient: {
-    id: string;
-    full_name?: string;
-    name?: string;
-    email?: string;
-    phone?: string;
-    status?: string;
-    created_at?: string;
-} }) => {
+const OverviewTab = ({ patient }: {
+    patient: {
+        id: string;
+        full_name?: string;
+        name?: string;
+        email?: string;
+        phone?: string;
+        status?: string;
+        created_at?: string;
+    }
+}) => {
     const { data: evolutionData } = usePatientEvolutionReport(patient.id);
 
     // Fetch next appointment
@@ -408,10 +412,9 @@ const FinancialTab = ({ patientId }: { patientId: string }) => {
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className={`
-                                            p-2 rounded-lg ${
-                                                tx.payment_status === 'paid_single' || tx.payment_status === 'paid_package'
-                                                    ? 'bg-green-100 text-green-600'
-                                                    : 'bg-amber-100 text-amber-600'
+                                            p-2 rounded-lg ${tx.payment_status === 'paid_single' || tx.payment_status === 'paid_package'
+                                                ? 'bg-green-100 text-green-600'
+                                                : 'bg-amber-100 text-amber-600'
                                             }
                                         `}>
                                             <CreditCard className="h-4 w-4" />
@@ -826,6 +829,10 @@ export const PatientProfilePage = () => {
                         </div>
 
                         <div className="flex gap-2 w-full md:w-auto">
+                            <Button onClick={() => navigate(`/patients/${id}/evolution/report`)} variant="outline" className="flex-1 md:flex-none gap-2 border-primary/20 hover:bg-primary/5">
+                                <FileText className="h-4 w-4 text-primary" />
+                                Relatório
+                            </Button>
                             <Button onClick={() => setEditingPatient(true)} variant="outline" className="flex-1 md:flex-none gap-2">
                                 <Edit className="h-4 w-4" />
                                 Editar

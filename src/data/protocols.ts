@@ -110,12 +110,27 @@ export const PROTOCOL_DETAILS: Record<string, {
 
 // Categorias de protocolos
 export const PROTOCOL_CATEGORIES = [
-    { id: 'all', label: 'Todos', icon: Grid3X3, color: 'bg-primary' },
-    { id: 'joelho', label: 'Joelho', icon: Activity, color: 'bg-blue-500' },
-    { id: 'ombro', label: 'Ombro', icon: Heart, color: 'bg-rose-500' },
-    { id: 'coluna', label: 'Coluna', icon: Layers, color: 'bg-purple-500' },
-    { id: 'tornozelo', label: 'Tornozelo', icon: Dumbbell, color: 'bg-emerald-500' },
-    { id: 'quadril', label: 'Quadril', icon: Target, color: 'bg-amber-500' },
+    { id: 'all', label: 'Todos', icon: Grid3X3, color: 'bg-primary', group: 'Geral' },
+    { id: 'ombro', label: 'Ombro', icon: Heart, color: 'bg-rose-500', group: 'Membros Superiores' },
+    { id: 'cotovelo', label: 'Cotovelo', icon: Activity, color: 'bg-orange-500', group: 'Membros Superiores' },
+    { id: 'punho_mao', label: 'Punho/Mão', icon: Layers, color: 'bg-yellow-500', group: 'Membros Superiores' },
+    { id: 'coluna', label: 'Coluna', icon: Layers, color: 'bg-purple-500', group: 'Coluna' },
+    { id: 'quadril', label: 'Quadril', icon: Target, color: 'bg-amber-500', group: 'Membros Inferiores' },
+    { id: 'joelho', label: 'Joelho', icon: Activity, color: 'bg-blue-500', group: 'Membros Inferiores' },
+    { id: 'tornozelo', label: 'Tornozelo/Pé', icon: Dumbbell, color: 'bg-emerald-500', group: 'Membros Inferiores' },
+];
+
+export const MUSCULATURE_FILTERS = [
+    { id: 'manguito', label: 'Manguito Rotador', group: 'Superior' },
+    { id: 'biceps', label: 'Bíceps', group: 'Superior' },
+    { id: 'triceps', label: 'Tríceps', group: 'Superior' },
+    { id: 'trapezio', label: 'Trapézio', group: 'Superior' },
+    { id: 'core', label: 'Core / Abdominais', group: 'Tronco' },
+    { id: 'paravertebrais', label: 'Paravertebrais', group: 'Tronco' },
+    { id: 'quadriceps', label: 'Quadríceps', group: 'Inferior' },
+    { id: 'isquiotibiais', label: 'Isquiotibiais', group: 'Inferior' },
+    { id: 'gluteos', label: 'Glúteos', group: 'Inferior' },
+    { id: 'panturrilha', label: 'Panturrilha', group: 'Inferior' },
 ];
 
 // Função para categorizar protocolos
@@ -123,9 +138,11 @@ export function getProtocolCategory(conditionName: string): string {
     const lower = conditionName.toLowerCase();
     if (lower.includes('joelho') || lower.includes('lca') || lower.includes('lcp') || lower.includes('menisco') || lower.includes('patelar')) return 'joelho';
     if (lower.includes('ombro') || lower.includes('manguito') || lower.includes('rotador') || lower.includes('glenoumeral')) return 'ombro';
+    if (lower.includes('cotovelo') || lower.includes('epicondilite')) return 'cotovelo';
+    if (lower.includes('punho') || lower.includes('mao') || lower.includes('carpo')) return 'punho_mao';
     if (lower.includes('coluna') || lower.includes('lombar') || lower.includes('cervical') || lower.includes('lombalgia') || lower.includes('cervicalgia')) return 'coluna';
-    if (lower.includes('tornozelo') || lower.includes('fascite') || lower.includes('plantar')) return 'tornozelo';
-    if (lower.includes('quadril') || lower.includes('prótese')) return 'quadril';
+    if (lower.includes('tornozelo') || lower.includes('fascite') || lower.includes('plantar') || lower.includes('pe')) return 'tornozelo';
+    if (lower.includes('quadril') || lower.includes('protese') || lower.includes('fetal')) return 'quadril';
     return 'all';
 }
 
