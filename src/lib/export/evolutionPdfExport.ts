@@ -23,6 +23,7 @@ interface EvolutionMetrics {
   currentPainLevel: number;
   initialPainLevel: number;
   totalSessions: number;
+  prescribedSessions?: number;
   averageImprovement: number;
   measurementEvolution?: any[];
 }
@@ -92,7 +93,11 @@ export const generateEvolutionPDF = (
     doc.text(value, x + 5, y + 20);
   };
 
-  drawCard(20, yPos, 55, 28, 'Total Sessões', metrics.totalSessions.toString(), '');
+  const sessionValue = metrics.prescribedSessions && metrics.prescribedSessions > 0
+    ? `${metrics.totalSessions} / ${metrics.prescribedSessions}`
+    : metrics.totalSessions.toString();
+
+  drawCard(20, yPos, 55, 28, 'Total Sessões', sessionValue, '');
   drawCard(80, yPos, 55, 28, 'Nível de Dor', `${metrics.initialPainLevel} → ${metrics.currentPainLevel}`, '');
   drawCard(140, yPos, 50, 28, 'Melhora Média', `${metrics.averageImprovement.toFixed(1)}%`, '');
 

@@ -23,6 +23,7 @@ interface PatientEvolutionDashboardProps {
   currentPainLevel: number;
   initialPainLevel: number;
   totalSessions: number;
+  prescribedSessions?: number;
   averageImprovement: number;
 }
 
@@ -32,6 +33,7 @@ export const PatientEvolutionDashboard = ({
   currentPainLevel,
   initialPainLevel,
   totalSessions,
+  prescribedSessions,
   averageImprovement,
 }: PatientEvolutionDashboardProps) => {
   // Preparar dados para gráficos
@@ -43,14 +45,16 @@ export const PatientEvolutionDashboard = ({
   }));
 
   const painReduction = initialPainLevel - currentPainLevel;
-  const improvementPercentage = initialPainLevel > 0 
-    ? ((painReduction / initialPainLevel) * 100).toFixed(1) 
+  const improvementPercentage = initialPainLevel > 0
+    ? ((painReduction / initialPainLevel) * 100).toFixed(1)
     : 0;
 
   const stats = [
     {
       label: "Sessões Realizadas",
-      value: totalSessions,
+      value: prescribedSessions && prescribedSessions > 0
+        ? `${totalSessions} / ${prescribedSessions}`
+        : totalSessions,
       icon: Calendar,
       color: "text-blue-600",
       bg: "bg-blue-500/10",
@@ -142,13 +146,13 @@ export const PatientEvolutionDashboard = ({
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis 
-                    dataKey="date" 
+                  <XAxis
+                    dataKey="date"
                     className="text-xs"
                     tick={{ fill: 'hsl(var(--muted-foreground))' }}
                   />
-                  <YAxis 
-                    domain={[0, 10]} 
+                  <YAxis
+                    domain={[0, 10]}
                     className="text-xs"
                     tick={{ fill: 'hsl(var(--muted-foreground))' }}
                   />
@@ -186,13 +190,13 @@ export const PatientEvolutionDashboard = ({
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis 
-                    dataKey="date" 
+                  <XAxis
+                    dataKey="date"
                     className="text-xs"
                     tick={{ fill: 'hsl(var(--muted-foreground))' }}
                   />
-                  <YAxis 
-                    domain={[0, 100]} 
+                  <YAxis
+                    domain={[0, 100]}
                     className="text-xs"
                     tick={{ fill: 'hsl(var(--muted-foreground))' }}
                   />
