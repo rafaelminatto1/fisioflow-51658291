@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { DraggableGrid, GridItem } from '@/components/ui/DraggableGrid';
+import { Layout } from 'react-grid-layout';
 import { GridWidget } from '@/components/ui/GridWidget';
 import { SmartTextarea } from '@/components/ui/SmartTextarea';
 import { Button } from '@/components/ui/button';
@@ -244,7 +245,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
     onCopyLastEvolution
 }) => {
     const [isEditable, setIsEditable] = useState(false);
-    const [savedLayout, setSavedLayout] = useState<any[]>([]);
+    const [savedLayout, setSavedLayout] = useState<Layout>([]);
     const [showPainDetails, setShowPainDetails] = useState(false);
 
     // Calculate Trend
@@ -265,7 +266,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
         }
     }, []);
 
-    const handleSaveLayout = (layout: any[]) => {
+    const handleSaveLayout = (layout: Layout) => {
         localStorage.setItem('evolution_layout_v1', JSON.stringify(layout));
         setSavedLayout(layout);
         setIsEditable(false);

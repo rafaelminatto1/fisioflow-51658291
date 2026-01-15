@@ -18,12 +18,13 @@ import { format, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Area, AreaChart } from 'recharts';
 import { DraggableGrid, GridItem } from '@/components/ui/DraggableGrid';
+import { Layout } from 'react-grid-layout';
 import { GridWidget } from '@/components/ui/GridWidget';
 import { toast } from 'sonner';
 
 export default function SmartDashboard() {
   const [isEditable, setIsEditable] = useState(false);
-  const [savedLayout, setSavedLayout] = useState<any[]>([]);
+  const [savedLayout, setSavedLayout] = useState<Layout>([]);
 
   // Load layout from localStorage on mount
   useEffect(() => {
@@ -37,7 +38,7 @@ export default function SmartDashboard() {
     }
   }, []);
 
-  const handleSaveLayout = (layout: any[]) => {
+  const handleSaveLayout = (layout: Layout) => {
     localStorage.setItem('dashboard_layout_v1', JSON.stringify(layout));
     setSavedLayout(layout);
     setIsEditable(false);
