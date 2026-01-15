@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/lib/errors/logger';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 interface UseRealtimeSubscriptionProps {
     table: string;
@@ -16,6 +17,9 @@ interface UseRealtimeSubscriptionProps {
 /**
  * Hook reutilizável para inscrições no Supabase Realtime.
  * Gerencia automaticamente o filtro por organização e invalidação de queries.
+ *
+ * FIX: Tracka o estado da subscription para evitar erros de WebSocket
+ * "WebSocket is closed before the connection is established"
  */
 export function useRealtimeSubscription({
     table,
@@ -28,6 +32,8 @@ export function useRealtimeSubscription({
     const queryClient = useQueryClient();
     const { profile } = useAuth();
     const organizationId = profile?.organization_id;
+    const channelRef = useRef<RealtimeChannel | null>(null);
+    const isSubscribedRef = useRef(false);
 
     useEffect(() => {
         // Só inscrever se estiver habilitado e tivermos o ID da organização (se necessário)
@@ -44,6 +50,9 @@ export function useRealtimeSubscription({
 
         const channelName = `${table}-changes-${organizationId || 'all'}`;
         logger.info(`Configurando Realtime para ${table}`, { channelName, filter: effectiveFilter }, 'useRealtimeSubscription');
+
+        // Reset subscription state
+        isSubscribedRef.current = false;
 
         const channel = supabase
             .channel(channelName)
@@ -70,6 +79,7 @@ export function useRealtimeSubscription({
             )
             .subscribe((status, error) => {
                 if (status === 'SUBSCRIBED') {
+                    isSubscribedRef.current = true;
                     logger.debug(`Realtime conectado: ${channelName}`, {}, 'useRealtimeSubscription');
                 }
                 if (status === 'CHANNEL_ERROR') {
@@ -79,13 +89,27 @@ export function useRealtimeSubscription({
                     logger.warn(`Timeout no canal Realtime: ${channelName}`, {}, 'useRealtimeSubscription');
                 }
                 if (status === 'CLOSED') {
+                    isSubscribedRef.current = false;
                     logger.debug(`Canal Realtime fechado: ${channelName}`, {}, 'useRealtimeSubscription');
                 }
             });
 
+        channelRef.current = channel;
+
         return () => {
-            logger.debug(`Removendo subscription ${channelName}`, {}, 'useRealtimeSubscription');
-            supabase.removeChannel(channel);
+            logger.debug(`Cleanup subscription ${channelName}`, { isSubscribed: isSubscribedRef.current }, 'useRealtimeSubscription');
+
+            // Só chama removeChannel se a subscription foi estabelecida
+            // Isso previne o erro "WebSocket is closed before the connection is established"
+            if (isSubscribedRef.current && channelRef.current) {
+                supabase.removeChannel(channelRef.current).catch((err) => {
+                    // Ignora erros de cleanup - o canal pode já ter sido fechado
+                    logger.debug(`Erro ao remover canal (ignorado): ${channelName}`, err, 'useRealtimeSubscription');
+                });
+            }
+
+            isSubscribedRef.current = false;
+            channelRef.current = null;
         };
     }, [table, schema, event, filter, enabled, queryClient, organizationId, queryKey]);
 }
