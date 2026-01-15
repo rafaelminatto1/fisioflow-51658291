@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo, useCallback } from 'react';
+import React, { useState, useEffect, memo, useCallback, useRef } from 'react';
 import { Layout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 
@@ -35,6 +35,36 @@ const DEFAULT_COLS = { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 } as const;
 const BREAKPOINTS = { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 } as const;
 const GRID_MARGIN = [16, 16] as const;
 
+// Custom hook to measure container width
+const useWidth = () => {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [width, setWidth] = useState(1200);
+
+    useEffect(() => {
+        const element = containerRef.current;
+        if (!element) return;
+
+        const resizeObserver = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                if (entry.contentRect.width > 0) {
+                    setWidth(entry.contentRect.width);
+                }
+            }
+        });
+
+        // Initial measure
+        if (element.offsetWidth > 0) {
+            setWidth(element.offsetWidth);
+        }
+
+        resizeObserver.observe(element);
+
+        return () => resizeObserver.disconnect();
+    }, []);
+
+    return { containerRef, width };
+};
+
 export const DraggableGrid = memo(function DraggableGrid({
     items,
     onLayoutChange,
@@ -47,6 +77,7 @@ export const DraggableGrid = memo(function DraggableGrid({
 }: DraggableGridProps) {
     const [layouts, setLayouts] = useState<Partial<Record<string, Layout>>>({});
     const [isMounted, setIsMounted] = useState(false);
+    const { containerRef, width } = useWidth();
 
     useEffect(() => {
         setIsMounted(true);
@@ -89,11 +120,13 @@ export const DraggableGrid = memo(function DraggableGrid({
             // Calculate position difference
             const yDiff = Math.abs((saved.y || 0) - def.y);
             const xDiff = Math.abs((saved.x || 0) - def.x);
+            const hDiff = Math.abs((saved.h || 0) - def.h); // Add hDiff check
 
             // If saved position is significantly different from default, use default
             // This handles cases like Pain Scale expansion where Y positions change
-            if (yDiff > 2 || xDiff > 1) {
-                console.log(`[DraggableGrid] Item ${def.i}: saved position (${saved.x},${saved.y}) too far from default (${def.x},${def.y}), using default`);
+            // Also handles cases where Height changes drastically (expand/collapse)
+            if (yDiff > 2 || xDiff > 1 || hDiff > 2) {
+                console.log(`[DraggableGrid] Item ${def.i}: saved state too far from default (yDiff:${yDiff}, xDiff:${xDiff}, hDiff:${hDiff}), using default`);
                 return def;
             }
 
@@ -119,13 +152,14 @@ export const DraggableGrid = memo(function DraggableGrid({
     }
 
     return (
-        <div className={className} style={{ position: 'relative' }}>
+        <div ref={containerRef} className={className} style={{ position: 'relative' }}>
             <Responsive
                 className="layout"
                 layouts={layouts}
                 breakpoints={BREAKPOINTS}
                 cols={cols}
                 rowHeight={rowHeight}
+                width={width} // Pass the measured width
                 draggableHandle=".drag-handle"
                 isDraggable={isEditable}
                 isResizable={isEditable}
@@ -142,5 +176,6 @@ export const DraggableGrid = memo(function DraggableGrid({
         </div>
     );
 });
+DraggableGrid.displayName = 'DraggableGrid';
 
 DraggableGrid.displayName = 'DraggableGrid';
