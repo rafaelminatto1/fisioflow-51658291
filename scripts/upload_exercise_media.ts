@@ -82,6 +82,28 @@ const images = [
     { id: '38d6a2e2-adc7-47cd-a7c9-550996f9a892', file: 'single_leg_arm_movement_1768479806910.png' }, // Single Leg Stance com Movimento
     { id: '437b9b5e-2cb7-4a8f-9f00-ea60a0879475', file: 'star_balance_test_1768479821423.png' }, // Star Excursion Balance Test
     { id: 'f8b620c0-a01f-4a3e-acc9-589105ad57a6', file: 'hip_abduction_standing_1768479852430.png' }, // Abdução de Quadril em Pé
+
+    // Phase 5 Images - Strengthening, Respiratory, Mobility
+    { id: '59069383-fa9c-4f8e-bb61-a1dc2601cb84', file: 'quadriceps_towel_stretch_1768502186712.png' }, // Alongamento Quadríceps Toalha
+    { id: '8216eda0-2151-468e-9cd7-8efafd8d6fbd', file: 'chair_squat_exercise_1768502201179.png' }, // Agachamento na Cadeira
+    { id: '580da2cd-47f3-4fd0-ba71-be29a76151a9', file: 'clamshell_exercise_1768502214650.png' }, // Clamshell
+    { id: '95e06cca-7996-4004-8fdc-044c6265aa2c', file: 'dead_bug_exercise_1768502229018.png' }, // Dead Bug
+    { id: '47df886c-41cd-476d-921b-e01e2881d27e', file: 'deadlift_dumbbell_1768502242765.png' }, // Deadlift Dumbbell
+    { id: 'f6b2cd85-5192-4d27-864d-e4c2a2422bbf', file: 'thoracic_expansion_unilateral_1768502269961.png' }, // Expansão Torácica Unilateral
+    { id: '1b6a7d2c-259d-4cd1-b1ef-43262d66fd4f', file: 'huff_cough_technique_1768502283893.png' }, // Huff Cough
+    { id: 'e00e0ee3-81e5-4334-b43d-23704f360c38', file: 'breathing_478_1768502298664.png' }, // Respiração 4-7-8
+    { id: '1b335a64-4349-4084-98ad-644ea7c7aded', file: 'pursed_lip_breathing_1768502312139.png' }, // Pursed Lip Breathing
+    { id: 'a0e1b23d-dca0-4fc5-8dbe-2c6b1949c67a', file: 'diaphragmatic_breathing_exercise_1768502326408.png' }, // Respiração Diafragmática
+    { id: 'd6e94b02-1f6c-4c08-8571-5e3d5c69054c', file: 'ankle_mobility_wall_1768502352240.png' }, // Mobilidade Tornozelo Parede
+    { id: 'a0d4e677-bc5d-4e5c-bd32-658a9a532229', file: 'hip_capsular_mobility_1768502367240.png' }, // Mobilização Quadril Capsular
+    { id: 'f696ced4-ad75-4b23-afe2-ecb3e4935625', file: 'ankle_dorsiflexion_mobilization_1768502382542.png' }, // Mobilização Tornozelo DF
+    { id: 'adcb6539-adfc-4bb6-b46e-381ac8be63a2', file: 'patellar_mobilization_1768502399484.png' }, // Mobilização Patelar
+    { id: '1d887410-7bf1-4193-b014-157b23c6f505', file: 'shoulder_rotation_towel_1768502415378.png' }, // Rotação Ombro Toalha
+    { id: 'b533a956-5d7c-4ceb-b4c6-71536c540adf', file: 'slr_nerve_glide_1768502445363.png' }, // SLR Nerve Glide
+    { id: '8e5c4a06-aa57-4f43-8114-b7da53c67509', file: 'thomas_test_stretch_1768502459002.png' }, // Thomas Test
+    { id: 'bd8440f5-991e-45c8-9b85-6d640417d0e1', file: 'wrist_radial_deviation_1768502472269.png' }, // Desvio Radial Punho
+    { id: 'e4657c8f-48b0-49c2-b200-5ade77ca86fc', file: 'jacobson_relaxation_1768502486314.png' }, // Jacobson Relaxation
+    { id: '639d526a-647c-44e8-9300-4327f2dff585', file: 'global_active_stretching_1768502500158.png' }, // SGA
 ];
 
 async function upload() {
