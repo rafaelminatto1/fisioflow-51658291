@@ -113,7 +113,7 @@ export function useDashboardKPIs(period: string = 'month') {
       const { data: payments } = await supabase
         .from('payments')
         .select('amount')
-        .eq('status', 'completed')
+        .eq('status', 'paid')
         .gte('paid_at', startDate)
         .lte('paid_at', endDate);
 
@@ -127,9 +127,9 @@ export function useDashboardKPIs(period: string = 'month') {
         .lte('start_time', endDate);
 
       const totalAppointments = appointments?.length || 0;
-      const completedAppointments = appointments?.filter(a => a.status === 'completed').length || 0;
-      const noShowAppointments = appointments?.filter(a => a.status === 'no_show').length || 0;
-      const confirmedAppointments = appointments?.filter(a => ['confirmed', 'completed'].includes(a.status)).length || 0;
+      const completedAppointments = appointments?.filter(a => a.status === 'atendido').length || 0;
+      const noShowAppointments = appointments?.filter(a => a.status === 'faltou').length || 0;
+      const confirmedAppointments = appointments?.filter(a => ['confirmado', 'atendido'].includes(a.status)).length || 0;
 
       const occupancyRate = totalAppointments > 0 ? (completedAppointments / totalAppointments) * 100 : 0;
       const noShowRate = totalAppointments > 0 ? (noShowAppointments / totalAppointments) * 100 : 0;
@@ -142,7 +142,7 @@ export function useDashboardKPIs(period: string = 'month') {
         .select('id', { count: 'exact' })
         .gte('start_time', `${today}T00:00:00`)
         .lt('start_time', `${today}T23:59:59`)
-        .neq('status', 'cancelled');
+        .neq('status', 'cancelado');
 
       // Gráfico de receita
       const revenueChart = await getRevenueChart(startDate, endDate);

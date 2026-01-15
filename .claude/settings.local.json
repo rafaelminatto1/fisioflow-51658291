@@ -155,7 +155,10 @@
       "Bash(npx vercel deployment ls:*)",
       "Bash(npx vercel:*)",
       "Bash(npx playwright install:*)",
-      "Bash(npx playwright screenshot:*)"
+      "Bash(npx playwright screenshot:*)",
+      "mcp__zread__get_repo_structure",
+      "Bash(netstat:*)",
+      "Bash(ss:*)"
     ],
     "deny": [],
     "ask": []
