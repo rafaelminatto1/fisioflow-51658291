@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Trash2, Dumbbell, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { v4 as uuidv4 } from 'uuid';
+// import { v4 as uuidv4 } from 'uuid'; // Removed to prevent production crash (ne is not a function)
 
 export interface SessionExercise {
     id: string; // unique for this session instance (uuid)
@@ -35,6 +35,14 @@ export const SessionExercisesPanel: React.FC<SessionExercisesPanelProps> = ({
     const [selectedExerciseId, setSelectedExerciseId] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
 
+    // Robust ID generator to replace uuidv4 and avoid crashes
+    const generateSessionId = () => {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+            return crypto.randomUUID();
+        }
+        return 'sess_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+    };
+
     const filteredExercises = availableExercises.filter(ex =>
         ex.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -44,7 +52,7 @@ export const SessionExercisesPanel: React.FC<SessionExercisesPanelProps> = ({
         if (!exercise) return;
 
         const newExercise: SessionExercise = {
-            id: uuidv4(),
+            id: generateSessionId(),
             exerciseId: exercise.id,
             name: exercise.name,
             sets: exercise.sets || 3,
