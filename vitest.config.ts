@@ -11,6 +11,20 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     css: true,
     reporters: ['verbose'],
+    // Mock de módulos problemáticos para Edge Functions
+    mock: {
+      'web-push': {
+        setVapidDetails: true,
+        sendNotification: true,
+        generateVAPIDKeys: true
+      }
+    },
+    // Configuração para suportar imports externos em Edge Functions
+    server: {
+      deps: {
+        external: ['web-push', '@supabase/functions']
+      }
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -22,6 +36,7 @@ export default defineConfig({
         '**/coverage/**',
         '**/*.test.{ts,tsx}',
         '**/mockData',
+        'supabase/functions/**' // Exclude Edge Functions from coverage
       ]
     }
   },

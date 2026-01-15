@@ -1,12 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-// Mock Supabase client
+// Mock Supabase client - cria um mock encadeado que suporta ambos os padrões
+function createMockChain() {
+  const mock = vi.fn()
+  mock.chain = vi.fn()
+  mock.single = vi.fn()
+  mock.eq = vi.fn(() => mock)
+  mock.select = vi.fn(() => mock)
+  mock.insert = vi.fn(() => mock)
+  mock.update = vi.fn(() => mock)
+  mock.gte = vi.fn(() => mock)
+  mock.lte = vi.fn(() => mock)
+  return mock
+}
+
 const mockSupabaseClient = {
-  from: vi.fn(() => ({
-    select: vi.fn().mockReturnThis(),
-    insert: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis()
-  })),
+  from: vi.fn(() => createMockChain()),
   rpc: vi.fn()
 }
 

@@ -2,6 +2,31 @@ import { beforeAll, afterEach, afterAll, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import '@testing-library/jest-dom'
 
+// Fix for "Right-hand side of 'instanceof' is not an object" error in React 18
+// This is caused by jsdom's implementation not being compatible with React 18's instanceof checks
+// We need to ensure that getActiveElementDeep doesn't throw on instanceof checks
+
+// Store original document functions
+const originalGetActiveElement = document.getActiveElement || (() => document.body)
+
+// Monkey patch to prevent instanceof errors
+if (typeof document !== 'undefined') {
+  // Ensure document.activeElement works properly
+  Object.defineProperty(document, 'activeElement', {
+    get: function() {
+      return document.body || null
+    },
+    configurable: true
+  })
+}
+
+// Mock web-push for Edge Function tests
+vi.mock('web-push', () => ({
+  setVapidDetails: vi.fn(),
+  sendNotification: vi.fn(),
+  generateVAPIDKeys: vi.fn()
+}))
+
 // Mock environment variables
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {

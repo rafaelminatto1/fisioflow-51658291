@@ -50,22 +50,48 @@ vi.mock('@/utils/appointmentValidation', () => ({
   checkAppointmentConflict: vi.fn(() => ({ hasConflict: false })),
 }));
 
+// Mock do AuthContext
+const mockAuthContextValue = {
+  user: { id: 'user-123', email: 'test@example.com' } as any,
+  profile: { id: 'profile-123', organization_id: 'org-123' } as any,
+  session: null,
+  loading: false,
+  initialized: true,
+  sessionCheckFailed: false,
+  signIn: vi.fn(),
+  signUp: vi.fn(),
+  signOut: vi.fn(),
+  resetPassword: vi.fn(),
+  updatePassword: vi.fn(),
+  updateProfile: vi.fn(),
+  refreshProfile: vi.fn(),
+};
+
+vi.mock('@/contexts/AuthContext', () => ({
+  AuthContext: {
+    Provider: ({ children }: { children: React.ReactNode }) => children,
+  },
+  useAuth: () => mockAuthContextValue,
+}));
+
 const createWrapper = () => {
   // Criar QueryClient isolado para cada teste para evitar estado compartilhado
   const queryClient = new QueryClient({
     defaultOptions: {
-      queries: { 
+      queries: {
         retry: false,
         gcTime: 0, // Desabilitar garbage collection para testes
       },
-      mutations: { 
+      mutations: {
         retry: false,
       },
     },
   });
 
   return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <AuthContext.Provider value={mockAuthContextValue as any}>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </AuthContext.Provider>
   );
 };
 
