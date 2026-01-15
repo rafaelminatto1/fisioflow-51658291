@@ -15,6 +15,7 @@ import {
   BarChart3,
   Activity,
   Clock,
+  Sparkles,
   RefreshCw,
   Timer,
   TrendingUp,
@@ -540,18 +541,14 @@ const PatientEvolution = () => {
       } else if (section === 'history') {
         setActiveTab('historico');
       } else if (section === 'ai') {
-        // O assistente agora está ao lado na aba evolucao, apenas scroll até ele
-        const assistantPanel = document.querySelector('[data-assistant-panel]');
-        assistantPanel?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        setActiveTab('assistente');
       }
     },
     () => setShowKeyboardHelp(true),
     () => setShowApplyTemplate(true),
     async () => {
       await handleSave();
-      // O assistente agora está ao lado na aba evolucao, apenas scroll até ele
-      const assistantPanel = document.querySelector('[data-assistant-panel]');
-      assistantPanel?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      setActiveTab('assistente');
     }
   );
 
@@ -845,11 +842,11 @@ const PatientEvolution = () => {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full pb-20">
             <TabsList className="inline-flex h-10 sm:h-11 items-center justify-start rounded-xl bg-muted/40 p-1 text-muted-foreground w-full lg:w-auto overflow-x-auto scrollbar-hide sticky top-0 z-40 backdrop-blur-sm">
               {[
-                { value: 'evolucao', label: 'Evolução', shortLabel: 'Evol', icon: FileText, description: 'SOAP + Dor + IA' },
+                { value: 'evolucao', label: 'Evolução', shortLabel: 'Evol', icon: FileText, description: 'SOAP + Dor' },
                 { value: 'avaliacao', label: 'Avaliação', shortLabel: 'Aval', icon: BarChart3, description: 'Medições + Testes' },
                 { value: 'tratamento', label: 'Tratamento', shortLabel: 'Trat', icon: Activity, description: 'Exercícios + Metas' },
                 { value: 'historico', label: 'Histórico', shortLabel: 'Hist', icon: Clock, description: 'Timeline + Relatórios' },
-                { value: 'assistente', label: 'WhatsApp', shortLabel: 'Zap', icon: Activity, description: 'WhatsApp + Gamificação' },
+                { value: 'assistente', label: 'Assistente', shortLabel: 'IA', icon: Sparkles, description: 'IA + WhatsApp' },
               ].map(tab => (
                 <TabsTrigger
                   key={tab.value}
@@ -863,77 +860,48 @@ const PatientEvolution = () => {
               ))}
             </TabsList>
 
-            {/* ABA 1: EVOLUÇÃO (SOAP + Dor + Fotos + ASSISTENTE ao lado) */}
-            <TabsContent value="evolucao" className="mt-4">
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-                {/* Coluna da Esquerda: Evolução SOAP (2/3 da largura em telas grandes) */}
-                <div className="xl:col-span-2 space-y-4">
-                  <EvolutionDraggableGrid
-                    soapData={soapData}
-                    onSoapChange={setSoapDataStable}
-                    painScaleData={painScale}
-                    onPainScaleChange={setPainScale}
-                    painHistory={painHistory}
-                    showPainTrend={true}
-                    onAISuggest={() => {
-                      // Scroll para o painel do assistente que está ao lado
-                      const assistantPanel = document.querySelector('[data-assistant-panel]');
-                      assistantPanel?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    }}
-                    onCopyLast={(section) => {
-                      if (previousEvolutions.length > 0) {
-                        const last = previousEvolutions[0];
-                        if (section === 'subjective') setSubjective(last.subjective || '');
-                        if (section === 'objective') setObjective(last.objective || '');
-                        if (section === 'assessment') setAssessment(last.assessment || '');
-                        if (section === 'plan') setPlan(last.plan || '');
-                        toast({
-                          title: 'Copiado',
-                          description: `Texto de ${section} copiado da última sessão.`
-                        });
-                      }
-                    }}
-                    patientId={patientId}
-                    patientPhone={patient?.phone}
-                    soapRecordId={currentSoapRecordId}
-                    requiredMeasurements={requiredMeasurements}
-                    exercises={sessionExercises}
-                    onExercisesChange={setSessionExercises}
-                    onSuggestExercises={() => {
-                      const suggestions = suggestExerciseChanges(sessionExercises, painScale.level, assessment || '');
-                      setSessionExercises(suggestions);
-                      toast({
-                        title: 'Sugestões Aplicadas',
-                        description: 'Os exercícios foram evoluídos com base no progresso do paciente.'
-                      });
-                    }}
-                    previousEvolutions={previousEvolutions}
-                    onCopyLastEvolution={(evolution) => {
-                      handleCopyPreviousEvolution(evolution);
-                    }}
-                  />
-                </div>
-
-                {/* Coluna da Direita: Assistente IA (1/3 da largura em telas grandes) */}
-                <div className="xl:col-span-1" data-assistant-panel>
-                  <Suspense fallback={<LoadingSkeleton type="card" />}>
-                    <LazyTreatmentAssistant
-                      patientId={patientId!}
-                      patientName={PatientHelpers.getName(patient)}
-                      onApplyToSoap={(field, content) => {
-                        if (field === 'subjective') setSubjective(prev => prev + content);
-                        if (field === 'objective') setObjective(prev => prev + content);
-                        if (field === 'assessment') setAssessment(prev => prev + content);
-                        if (field === 'plan') setPlan(prev => prev + content);
-                        toast({
-                          title: 'Sugestão aplicada',
-                          description: 'O texto foi adicionado ao campo SOAP.'
-                        });
-                      }}
-                    />
-                  </Suspense>
-                </div>
-              </div>
+            {/* ABA 1: EVOLUÇÃO (SOAP + Dor + Fotos) */}
+            <TabsContent value="evolucao" className="mt-4 space-y-4">
+              <EvolutionDraggableGrid
+                soapData={soapData}
+                onSoapChange={setSoapDataStable}
+                painScaleData={painScale}
+                onPainScaleChange={setPainScale}
+                painHistory={painHistory}
+                showPainTrend={true}
+                onAISuggest={() => setActiveTab('assistente')}
+                onCopyLast={(section) => {
+                  if (previousEvolutions.length > 0) {
+                    const last = previousEvolutions[0];
+                    if (section === 'subjective') setSubjective(last.subjective || '');
+                    if (section === 'objective') setObjective(last.objective || '');
+                    if (section === 'assessment') setAssessment(last.assessment || '');
+                    if (section === 'plan') setPlan(last.plan || '');
+                    toast({
+                      title: 'Copiado',
+                      description: `Texto de ${section} copiado da última sessão.`
+                    });
+                  }
+                }}
+                patientId={patientId}
+                patientPhone={patient?.phone}
+                soapRecordId={currentSoapRecordId}
+                requiredMeasurements={requiredMeasurements}
+                exercises={sessionExercises}
+                onExercisesChange={setSessionExercises}
+                onSuggestExercises={() => {
+                  const suggestions = suggestExerciseChanges(sessionExercises, painScale.level, assessment || '');
+                  setSessionExercises(suggestions);
+                  toast({
+                    title: 'Sugestões Aplicadas',
+                    description: 'Os exercícios foram evoluídos com base no progresso do paciente.'
+                  });
+                }}
+                previousEvolutions={previousEvolutions}
+                onCopyLastEvolution={(evolution) => {
+                  handleCopyPreviousEvolution(evolution);
+                }}
+              />
             </TabsContent>
 
             {/* ABA 2: AVALIAÇÃO (Medições + Mapa de Dor + Gráficos) */}
@@ -1020,8 +988,27 @@ const PatientEvolution = () => {
               />
             </TabsContent>
 
-            {/* ABA 5: WHATSAPP & GAMIFICAÇÃO (WhatsApp + Gamificação) */}
+            {/* ABA 5: ASSISTENTE (IA + WhatsApp + Gamificação) */}
             <TabsContent value="assistente" className="mt-4 space-y-4">
+              {/* Assistente de IA */}
+              <Suspense fallback={<LoadingSkeleton type="card" />}>
+                <LazyTreatmentAssistant
+                  patientId={patientId!}
+                  patientName={PatientHelpers.getName(patient)}
+                  onApplyToSoap={(field, content) => {
+                    if (field === 'subjective') setSubjective(prev => prev + content);
+                    if (field === 'objective') setObjective(prev => prev + content);
+                    if (field === 'assessment') setAssessment(prev => prev + content);
+                    if (field === 'plan') setPlan(prev => prev + content);
+                    setActiveTab('evolucao');
+                    toast({
+                      title: 'Sugestão aplicada',
+                      description: 'O texto foi adicionado ao campo SOAP.'
+                    });
+                  }}
+                />
+              </Suspense>
+
               {/* Integração WhatsApp */}
               <Suspense fallback={<LoadingSkeleton type="card" />}>
                 <LazyWhatsAppIntegration patientId={patientId!} patientPhone={patient.phone} />
