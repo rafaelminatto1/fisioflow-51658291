@@ -15,9 +15,9 @@ import { cleanCPF, cleanPhone } from '@/lib/validations';
  */
 export const formatCPF = (value: string | null | undefined): string => {
   if (!value || typeof value !== 'string') return '';
-  
+
   const cleaned = cleanCPF(value);
-  
+
   if (cleaned.length <= 3) {
     return cleaned;
   } else if (cleaned.length <= 6) {
@@ -40,9 +40,9 @@ export const formatCPF = (value: string | null | undefined): string => {
  */
 export const formatPhoneInput = (value: string | null | undefined): string => {
   if (!value || typeof value !== 'string') return '';
-  
+
   const cleaned = cleanPhone(value);
-  
+
   if (cleaned.length <= 2) {
     return cleaned.length > 0 ? `(${cleaned}` : '';
   } else if (cleaned.length <= 7) {
@@ -56,3 +56,24 @@ export const formatPhoneInput = (value: string | null | undefined): string => {
   }
 };
 
+/**
+ * Formata CEP com máscara: 00000-000
+ * @param value - Valor a ser formatado (aceita string, null ou undefined)
+ * @returns String formatada ou string vazia se input inválido
+ * @example
+ * formatCEP('01234567') // '01234-567'
+ * formatCEP('01234-567') // '01234-567'
+ * formatCEP('') // ''
+ */
+export const formatCEP = (value: string | null | undefined): string => {
+  if (!value || typeof value !== 'string') return '';
+
+  // Remove tudo que não é dígito
+  const cleaned = value.replace(/\D/g, '');
+
+  if (cleaned.length <= 5) {
+    return cleaned;
+  } else {
+    return `${cleaned.slice(0, 5)}-${cleaned.slice(5, 8)}`;
+  }
+};
