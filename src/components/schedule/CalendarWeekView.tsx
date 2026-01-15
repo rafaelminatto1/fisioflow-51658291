@@ -290,6 +290,17 @@ export const CalendarWeekView = memo(({
                             const style = getAppointmentStyle(apt);
                             if (!style) return null;
 
+                            const aptDate = parseAppointmentDate(apt.date);
+                            if (!aptDate) return null;
+
+                            const dayIndex = weekDays.findIndex(d => isSameDay(d, aptDate));
+                            if (dayIndex === -1) return null;
+
+                            const day = weekDays[dayIndex];
+                            const aptTime = normalizeTime(apt.time);
+                            const { blocked } = checkTimeBlocked(day, aptTime);
+                            const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === aptTime;
+
                             return (
                                 <CalendarAppointmentCard
                                     key={apt.id}
@@ -297,8 +308,21 @@ export const CalendarWeekView = memo(({
                                     style={style}
                                     isDraggable={isDraggable}
                                     isDragging={isDraggingThis(apt.id)}
+                                    isDropTarget={isDropTarget}
                                     onDragStart={handleDragStart}
                                     onDragEnd={handleDragEnd}
+                                    onDragOver={(e) => {
+                                        // Allow dropping on existing appointments to add multiple at same time
+                                        if (!isDraggingThis(apt.id) && !blocked) {
+                                            handleDragOver(e, day, aptTime);
+                                        }
+                                    }}
+                                    onDrop={(e) => {
+                                        // Allow dropping on existing appointments to add multiple at same time
+                                        if (!isDraggingThis(apt.id) && !blocked) {
+                                            handleDrop(e, day, aptTime);
+                                        }
+                                    }}
                                     onEditAppointment={onEditAppointment}
                                     onDeleteAppointment={onDeleteAppointment}
                                     onOpenPopover={setOpenPopoverId}
