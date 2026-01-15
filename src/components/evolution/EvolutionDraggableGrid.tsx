@@ -94,6 +94,108 @@ const SOAP_SECTIONS: Readonly<SOAPSection[]> = [
     },
 ];
 
+// ============================================================================================
+// MEMOIZED SOAP SECTION WIDGET - Performance optimized to only re-render when its value changes
+// ============================================================================================
+interface SOAPSectionWidgetProps {
+    section: SOAPSection;
+    value: string;
+    onChange: (key: keyof SOAPData, value: string) => void;
+    disabled: boolean;
+    isEditable: boolean;
+    onAISuggest?: (section: keyof SOAPData) => void;
+    onCopyLast?: (section: keyof SOAPData) => void;
+}
+
+const SOAPSectionWidget = React.memo(({
+    section,
+    value,
+    onChange,
+    disabled,
+    isEditable,
+    onAISuggest,
+    onCopyLast
+}: SOAPSectionWidgetProps) => {
+    // Stable callback that won't change between renders
+    const handleChange = React.useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        onChange(section.key, e.target.value);
+    }, [onChange, section.key]);
+
+    const wordCount = React.useMemo(() =>
+        value.split(/\s+/).filter(w => w.length > 0).length,
+        [value]
+    );
+
+    return (
+        <GridWidget
+            title={section.label}
+            icon={<section.icon className={cn("h-4 w-4", section.color)} />}
+            isDraggable={isEditable}
+            className={cn("h-full border-t-4", section.borderColor)}
+            headerClassName={section.bgColor}
+            extraHeaderContent={
+                <div className="flex gap-1" role="group" aria-label={`Ações para ${section.key}`}>
+                    {onAISuggest && (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 hover:bg-muted/50"
+                                    onClick={() => onAISuggest(section.key)}
+                                    disabled={disabled}
+                                    aria-label={`Sugerir com IA para ${section.key}`}
+                                >
+                                    <Sparkles className="h-3 w-3 text-purple-500" aria-hidden="true" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom">
+                                <p className="text-xs">Sugestão de IA</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    )}
+                    {onCopyLast && (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 hover:bg-muted/50"
+                                    onClick={() => onCopyLast(section.key)}
+                                    disabled={disabled}
+                                    aria-label={`Copiar última sessão para ${section.key}`}
+                                >
+                                    <Copy className="h-3 w-3" aria-hidden="true" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom">
+                                <p className="text-xs">Copiar da última sessão</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    )}
+                </div>
+            }
+        >
+            <div className="h-full flex flex-col p-0">
+                <SmartTextarea
+                    value={value}
+                    onChange={handleChange}
+                    placeholder={section.placeholder}
+                    disabled={disabled}
+                    className="flex-1 resize-none border-0 focus-visible:ring-0 p-5 min-h-[140px] text-sm leading-relaxed"
+                    containerClassName="flex-1 flex flex-col h-full"
+                />
+                <div className="px-5 py-2.5 bg-muted/30 border-t flex justify-between items-center text-xs text-muted-foreground shrink-0">
+                    <span className="font-semibold">{wordCount} palavras</span>
+                    <span className="text-[10px] uppercase tracking-wide opacity-60 font-medium">{section.shortLabel}</span>
+                </div>
+            </div>
+        </GridWidget>
+    );
+});
+
 interface EvolutionDraggableGridProps {
     soapData: SOAPData;
     onSoapChange: (data: SOAPData) => void;
@@ -176,9 +278,17 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
         window.location.reload();
     };
 
+    // ========== PERFORMANCE OPTIMIZATION ==========
+    // Keep a ref to soapData to avoid recreating handleSoapFieldChange on every keystroke
+    const soapDataRef = React.useRef(soapData);
+    React.useEffect(() => {
+        soapDataRef.current = soapData;
+    }, [soapData]);
+
+    // This callback is now STABLE - doesn't depend on soapData directly
     const handleSoapFieldChange = React.useCallback((key: keyof SOAPData, value: string) => {
-        onSoapChange({ ...soapData, [key]: value });
-    }, [onSoapChange, soapData]);
+        onSoapChange({ ...soapDataRef.current, [key]: value });
+    }, [onSoapChange]);
 
     const handlePainScaleChange = React.useCallback((data: PainScaleData) => {
         onPainScaleChange(data);
@@ -277,76 +387,20 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
             defaultLayout: { w: 8, h: 5, x: 4, y: 0, minW: 6, minH: 4 } // 70% da largura (8 de 12)
         },
 
-        // ===== LINHA 2: Formulário SOAP (4 campos em 2x2) =====
+        // ===== LINHA 2: Formulário SOAP (4 campos em 2x2) - Using memoized components =====
         ...SOAP_SECTIONS.map((section, index) => ({
             id: section.key,
             content: (
-                <GridWidget
-                    title={section.label}
-                    icon={<section.icon className={cn("h-4 w-4", section.color)} />}
-                    isDraggable={isEditable}
-                    className={cn("h-full border-t-4", section.borderColor)}
-                    headerClassName={section.bgColor}
-                    extraHeaderContent={
-                        <div className="flex gap-1" role="group" aria-label={`Ações para ${section.key}`}>
-                            {onAISuggest && (
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-7 w-7 hover:bg-muted/50"
-                                            onClick={() => onAISuggest(section.key)}
-                                            disabled={disabled}
-                                            aria-label={`Sugerir com IA para ${section.key}`}
-                                        >
-                                            <Sparkles className="h-3 w-3 text-purple-500" aria-hidden="true" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="bottom">
-                                        <p className="text-xs">Sugestão de IA</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            )}
-                            {onCopyLast && (
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-7 w-7 hover:bg-muted/50"
-                                            onClick={() => onCopyLast(section.key)}
-                                            disabled={disabled}
-                                            aria-label={`Copiar última sessão para ${section.key}`}
-                                        >
-                                            <Copy className="h-3 w-3" aria-hidden="true" />
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="bottom">
-                                        <p className="text-xs">Copiar da última sessão</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            )}
-                        </div>
-                    }
-                >
-                    <div className="h-full flex flex-col p-0">
-                        <SmartTextarea
-                            value={soapData[section.key]}
-                            onChange={(e) => handleSoapFieldChange(section.key, e.target.value)}
-                            placeholder={section.placeholder}
-                            disabled={disabled}
-                            className="flex-1 resize-none border-0 focus-visible:ring-0 p-5 min-h-[140px] text-sm leading-relaxed"
-                            containerClassName="flex-1 flex flex-col h-full"
-                        />
-                        <div className="px-5 py-2.5 bg-muted/30 border-t flex justify-between items-center text-xs text-muted-foreground shrink-0">
-                            <span className="font-semibold">{soapData[section.key].split(/\s+/).filter(w => w.length > 0).length} palavras</span>
-                            <span className="text-[10px] uppercase tracking-wide opacity-60 font-medium">{section.shortLabel}</span>
-                        </div>
-                    </div>
-                </GridWidget>
+                <SOAPSectionWidget
+                    key={section.key}
+                    section={section}
+                    value={soapData[section.key]}
+                    onChange={handleSoapFieldChange}
+                    disabled={disabled}
+                    isEditable={isEditable}
+                    onAISuggest={onAISuggest}
+                    onCopyLast={onCopyLast}
+                />
             ),
             defaultLayout: { w: 6, h: 7, x: (index % 2) * 6, y: (showPainDetails ? 16 : 5) + Math.floor(index / 2) * 7, minW: 4, minH: 5 }
         })),
@@ -551,16 +605,17 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
         trend,
         showPainDetails,
         painScaleData,
-        onPainScaleChange,
+        handlePainScaleChange,
         disabled,
         patientId,
         soapRecordId,
         requiredMeasurements,
         exercises,
-        onExercisesChange,
+        handleExercisesChange,
         onSuggestExercises,
         onAISuggest,
         onCopyLast,
+        // soapData is needed for SOAPSectionWidget props, but each widget is memoized
         soapData,
         handleSoapFieldChange,
         patientPhone,
@@ -573,44 +628,44 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
             <div className={cn("space-y-5", className)}>
                 {/* Header de Controle do Layout */}
                 <div className="flex justify-between items-center bg-muted/40 px-5 py-3.5 rounded-xl border">
-                <div className="flex items-center gap-2.5">
-                    <LayoutDashboard className="h-4.5 w-4.5 text-muted-foreground" />
-                    <span className="text-sm font-semibold text-foreground">Layout da Evolução</span>
+                    <div className="flex items-center gap-2.5">
+                        <LayoutDashboard className="h-4.5 w-4.5 text-muted-foreground" />
+                        <span className="text-sm font-semibold text-foreground">Layout da Evolução</span>
+                    </div>
+                    <div className="flex gap-2">
+                        {isEditable ? (
+                            <>
+                                <Button variant="ghost" size="sm" onClick={() => setIsEditable(false)} className="h-8.5 px-3">Cancelar</Button>
+                                <Button size="sm" onClick={() => handleSaveLayout(savedLayout)} className="h-8.5 px-3.5 gap-2">
+                                    <Save className="h-3.5 w-3.5" /> Salvar
+                                </Button>
+                                <Button variant="ghost" size="icon" onClick={handleResetLayout} title="Resetar" className="h-8.5 w-8.5">
+                                    <RotateCcw className="h-3.5 w-3.5" />
+                                </Button>
+                            </>
+                        ) : (
+                            <>
+                                <Button variant="outline" size="sm" onClick={handleResetLayout} className="h-8.5 px-3 gap-2">
+                                    <Undo className="h-3.5 w-3.5" /> Redefinir
+                                </Button>
+                                <Button variant="outline" size="sm" onClick={() => setIsEditable(true)} className="h-8.5 px-3 gap-2">
+                                    <LayoutDashboard className="h-3.5 w-3.5" /> Personalizar
+                                </Button>
+                            </>
+                        )}
+                    </div>
                 </div>
-                <div className="flex gap-2">
-                    {isEditable ? (
-                        <>
-                            <Button variant="ghost" size="sm" onClick={() => setIsEditable(false)} className="h-8.5 px-3">Cancelar</Button>
-                            <Button size="sm" onClick={() => handleSaveLayout(savedLayout)} className="h-8.5 px-3.5 gap-2">
-                                <Save className="h-3.5 w-3.5" /> Salvar
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={handleResetLayout} title="Resetar" className="h-8.5 w-8.5">
-                                <RotateCcw className="h-3.5 w-3.5" />
-                            </Button>
-                        </>
-                    ) : (
-                        <>
-                            <Button variant="outline" size="sm" onClick={handleResetLayout} className="h-8.5 px-3 gap-2">
-                                <Undo className="h-3.5 w-3.5" /> Redefinir
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={() => setIsEditable(true)} className="h-8.5 px-3 gap-2">
-                                <LayoutDashboard className="h-3.5 w-3.5" /> Personalizar
-                            </Button>
-                        </>
-                    )}
-                </div>
-            </div>
 
-            <DraggableGrid
-                items={gridItems}
-                onLayoutChange={(layout) => {
-                    if (isEditable) setSavedLayout(layout);
-                }}
-                savedLayout={savedLayout}
-                isEditable={isEditable}
-                rowHeight={50}
-            />
-        </div>
+                <DraggableGrid
+                    items={gridItems}
+                    onLayoutChange={(layout) => {
+                        if (isEditable) setSavedLayout(layout);
+                    }}
+                    savedLayout={savedLayout}
+                    isEditable={isEditable}
+                    rowHeight={50}
+                />
+            </div>
         </TooltipProvider>
     );
 };

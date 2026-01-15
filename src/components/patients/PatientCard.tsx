@@ -2,25 +2,36 @@ import { memo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Calendar } from 'lucide-react';
 import { cn, calculateAge } from '@/lib/utils';
 import { PatientDB } from '@/hooks/usePatientsQuery';
 import { PatientHelpers } from '@/types';
+import { PatientStats, formatFirstEvaluationDate } from '@/hooks/usePatientStats';
 
 interface PatientCardProps {
   patient: PatientDB;
   index: number;
   onClick: () => void;
+  stats?: PatientStats;
 }
 
 /**
  * Componente otimizado de card de paciente com React.memo
  * Evita re-renders desnecessários quando os props não mudam
  */
-export const PatientCard = memo(({ patient, index, onClick }: PatientCardProps) => {
+export const PatientCard = memo(({ patient, index, onClick, stats }: PatientCardProps) => {
   const patientName = PatientHelpers.getName(patient);
   const initials = patientName ? patientName.split(' ').map(n => n[0]).join('').substring(0, 2) : 'P';
   const contactInfo = patient.phone || patient.email || `${calculateAge(patient.birth_date)} anos`;
+
+  // Formatar informações de sessões
+  const sessionsInfo = stats
+    ? `${stats.sessionsCompleted} sessão${stats.sessionsCompleted !== 1 ? 'ões' : ''}`
+    : null;
+
+  const firstEvaluationInfo = stats?.firstEvaluationDate
+    ? `Primeira avaliação: ${formatFirstEvaluationDate(stats.firstEvaluationDate)}`
+    : null;
 
   // Definir cores baseado no status
   const statusColors = cn(
@@ -64,6 +75,21 @@ export const PatientCard = memo(({ patient, index, onClick }: PatientCardProps) 
           </Badge>
         </div>
         <p className="text-xs text-muted-foreground truncate mt-0.5">{contactInfo}</p>
+
+        {/* Informações adicionais de sessões e primeira avaliação */}
+        {(sessionsInfo || firstEvaluationInfo) && (
+          <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
+            {sessionsInfo && (
+              <span className="flex items-center gap-1">
+                <Calendar className="w-3 h-3" />
+                {sessionsInfo}
+              </span>
+            )}
+            {firstEvaluationInfo && (
+              <span className="truncate">{firstEvaluationInfo}</span>
+            )}
+          </div>
+        )}
       </div>
       <div className="shrink-0 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
         <ChevronRight className="w-5 h-5" />

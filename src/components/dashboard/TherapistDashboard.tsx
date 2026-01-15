@@ -280,24 +280,24 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
       {/* Schedule Section with Tabs */}
       <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
         <Tabs defaultValue="schedule" className="w-full">
-          <div className="border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
-            <TabsList className="inline-flex h-10 items-center justify-start p-0 bg-transparent w-full min-w-max">
+          <div className="border-b border-gray-200 dark:border-gray-700">
+            <TabsList className="inline-flex h-10 items-center justify-start p-0 bg-transparent w-full">
               <TabsTrigger
                 value="schedule"
-                className="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium text-gray-500 border-b-2 border-transparent data-[state=active]:text-blue-600 data-[state=active]:border-blue-600 rounded-none hover:text-gray-700 whitespace-nowrap focus-visible:outline-none focus-visible:ring-0"
+                className="flex-1 px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium text-gray-500 border-b-2 border-transparent data-[state=active]:text-blue-600 data-[state=active]:border-blue-600 rounded-none hover:text-gray-700 whitespace-nowrap focus-visible:outline-none focus-visible:ring-0 data-[state=active]:bg-transparent"
               >
                 Próximo Agendamento
               </TabsTrigger>
               <TabsTrigger
                 value="actions"
-                className="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium text-gray-500 border-b-2 border-transparent data-[state=active]:text-blue-600 data-[state=active]:border-blue-600 rounded-none hover:text-gray-700 whitespace-nowrap focus-visible:outline-none focus-visible:ring-0"
+                className="flex-1 px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium text-gray-500 border-b-2 border-transparent data-[state=active]:text-blue-600 data-[state=active]:border-blue-600 rounded-none hover:text-gray-700 whitespace-nowrap focus-visible:outline-none focus-visible:ring-0 data-[state=active]:bg-transparent"
               >
                 Ações Rápidas
               </TabsTrigger>
             </TabsList>
           </div>
 
-          <TabsContent value="schedule" className="p-3 sm:p-4 md:p-6 focus-visible:outline-none focus-visible:ring-0">
+          <TabsContent value="schedule" className="p-3 sm:p-4 md:p-6 focus-visible:outline-none focus-visible:ring-0 mt-0">
             {isLoading ? (
               <div className="animate-pulse space-y-3">
                 {[...Array(4)].map((_, i) => (
@@ -368,7 +368,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
             </div>
           </TabsContent>
 
-          <TabsContent value="actions" className="p-3 sm:p-4 md:p-6 focus-visible:outline-none focus-visible:ring-0">
+          <TabsContent value="actions" className="p-3 sm:p-4 md:p-6 focus-visible:outline-none focus-visible:ring-0 mt-0">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Button className="h-10 sm:h-auto py-2 px-3 sm:px-4 text-sm sm:text-base bg-blue-500 hover:bg-blue-600 text-white whitespace-nowrap">
                 <Plus className="w-4 h-4 mr-2 shrink-0" />
