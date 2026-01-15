@@ -7,3 +7,6 @@ export { PainMapCanvas } from './PainMapCanvas';
 export { PainEvolutionChart } from './PainEvolutionChart';
 export { PainMapHistory } from './PainMapHistory';
 export { PainMapManager } from './PainMapManager';
+export { FloatingActionBar } from './FloatingActionBar';
+export { SOAPAccordion, type SOAPData } from './SOAPAccordion';
+export { PainScaleWidget, type PainScaleData } from './PainScaleWidget';
