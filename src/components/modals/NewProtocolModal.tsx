@@ -184,255 +184,281 @@ export function NewProtocolModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0">
+      <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col p-0">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle>{protocol ? 'Editar Protocolo' : 'Novo Protocolo'}</DialogTitle>
         </DialogHeader>
 
         <ScrollArea className="flex-1 px-6">
           <Form {...form}>
-            <form id="protocol-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 pb-4">
+            <form id="protocol-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 pb-4 pt-4">
               {/* Basic Info */}
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="protocol_type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tipo*</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o tipo" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="pos_operatorio">Pós-Operatório</SelectItem>
-                          <SelectItem value="patologia">Patologia</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-3">
+                  <FormField
+                    control={form.control}
+                    name="protocol_type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tipo*</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="pos_operatorio">Pós-Operatório</SelectItem>
+                            <SelectItem value="patologia">Patologia</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-                <FormField
-                  control={form.control}
-                  name="weeks_total"
-                  render={({ field }) => (
+                <div className="col-span-2">
+                  <FormField
+                    control={form.control}
+                    name="weeks_total"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Duração (sem)</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} min={1} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="col-span-4">
+                  <FormField
+                    control={form.control}
+                    name="condition_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Condição/Patologia*</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {conditions.map((c) => (
+                              <SelectItem key={c} value={c}>{c}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="col-span-3">
+                  {conditionName === 'Outro' ? (
                     <FormItem>
-                      <FormLabel>Duração (semanas)</FormLabel>
+                      <FormLabel>Nome da Condição</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} min={1} />
+                        <Input
+                          value={customCondition}
+                          onChange={(e) => setCustomCondition(e.target.value)}
+                          placeholder="Digite o nome"
+                        />
                       </FormControl>
-                      <FormMessage />
                     </FormItem>
+                  ) : (
+                    <div className="h-full" /> /* Spacer if not 'Outro' */
                   )}
-                />
+                </div>
+
+                <div className="col-span-12">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nome do Protocolo*</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Ex: Protocolo Padrão - Fase 1 a 4" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
 
-              <FormField
-                control={form.control}
-                name="condition_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Condição/Patologia*</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione a condição" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {conditions.map((c) => (
-                          <SelectItem key={c} value={c}>{c}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Lists Grid */}
+              <div className="grid grid-cols-2 gap-6">
 
-              {conditionName === 'Outro' && (
-                <FormItem>
-                  <FormLabel>Nome da Condição</FormLabel>
-                  <FormControl>
-                    <Input
-                      value={customCondition}
-                      onChange={(e) => setCustomCondition(e.target.value)}
-                      placeholder="Digite o nome da condição"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nome do Protocolo*</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Ex: Protocolo Padrão - Fase 1 a 4" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Milestones Section */}
-              <Card className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <Milestone className="h-5 w-5 text-green-500" />
-                    <h4 className="font-semibold">Marcos de Progressão</h4>
+                {/* Milestones Section */}
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Milestone className="h-5 w-5 text-green-500" />
+                      <h4 className="font-semibold">Marcos de Progressão</h4>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => appendMilestone({ week: 1, description: '' })}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add
+                    </Button>
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => appendMilestone({ week: 1, description: '' })}
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Adicionar
-                  </Button>
+
+                  <Card className="p-0 border-0 shadow-none bg-transparent">
+                    <div className="space-y-3">
+                      {milestoneFields.length === 0 ? (
+                        <div className="text-sm text-muted-foreground text-center py-8 border rounded-lg border-dashed bg-muted/30">
+                          Nenhum marco definido
+                        </div>
+                      ) : (
+                        milestoneFields.map((field, index) => (
+                          <div key={field.id} className="flex gap-2 items-start bg-muted/50 p-3 rounded-lg border">
+                            <FormField
+                              control={form.control}
+                              name={`milestones.${index}.week`}
+                              render={({ field }) => (
+                                <FormItem className="w-20 shrink-0">
+                                  <FormLabel className="text-xs text-muted-foreground">Semana</FormLabel>
+                                  <FormControl>
+                                    <Input type="number" {...field} min={1} className="h-8 text-sm" />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name={`milestones.${index}.description`}
+                              render={({ field }) => (
+                                <FormItem className="flex-1">
+                                  <FormLabel className="text-xs text-muted-foreground">Descrição</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} placeholder="Descrição do marco" className="h-8 text-sm" />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 mt-5 shrink-0 hover:bg-destructive/10 hover:text-destructive"
+                              onClick={() => removeMilestone(index)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </Card>
                 </div>
 
-                <div className="space-y-3">
-                  {milestoneFields.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      Nenhum marco adicionado. Clique em "Adicionar" para criar um marco.
-                    </p>
-                  ) : (
-                    milestoneFields.map((field, index) => (
-                      <div key={field.id} className="flex gap-2 items-start bg-muted/50 p-3 rounded-lg">
-                        <FormField
-                          control={form.control}
-                          name={`milestones.${index}.week`}
-                          render={({ field }) => (
-                            <FormItem className="w-24">
-                              <FormLabel className="text-xs">Semana</FormLabel>
-                              <FormControl>
-                                <Input type="number" {...field} min={1} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name={`milestones.${index}.description`}
-                          render={({ field }) => (
-                            <FormItem className="flex-1">
-                              <FormLabel className="text-xs">Descrição</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="Ex: Carga parcial com muletas" />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="mt-6"
-                          onClick={() => removeMilestone(index)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </Card>
-
-              {/* Restrictions Section */}
-              <Card className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5 text-amber-500" />
-                    <h4 className="font-semibold">Restrições</h4>
+                {/* Restrictions Section */}
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5 text-amber-500" />
+                      <h4 className="font-semibold">Restrições</h4>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => appendRestriction({ week_start: 1, week_end: undefined, description: '' })}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add
+                    </Button>
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => appendRestriction({ week_start: 1, week_end: undefined, description: '' })}
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Adicionar
-                  </Button>
-                </div>
 
-                <div className="space-y-3">
-                  {restrictionFields.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      Nenhuma restrição adicionada. Clique em "Adicionar" para criar uma restrição.
-                    </p>
-                  ) : (
-                    restrictionFields.map((field, index) => (
-                      <div key={field.id} className="flex gap-2 items-start bg-amber-500/5 p-3 rounded-lg border border-amber-500/20">
-                        <FormField
-                          control={form.control}
-                          name={`restrictions.${index}.week_start`}
-                          render={({ field }) => (
-                            <FormItem className="w-20">
-                              <FormLabel className="text-xs">De</FormLabel>
-                              <FormControl>
-                                <Input type="number" {...field} min={1} />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name={`restrictions.${index}.week_end`}
-                          render={({ field }) => (
-                            <FormItem className="w-20">
-                              <FormLabel className="text-xs">Até</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  {...field}
-                                  value={field.value || ''}
-                                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                                  placeholder="-"
+                  <Card className="p-0 border-0 shadow-none bg-transparent">
+                    <div className="space-y-3">
+                      {restrictionFields.length === 0 ? (
+                        <div className="text-sm text-muted-foreground text-center py-8 border rounded-lg border-dashed bg-muted/30">
+                          Nenhuma restrição definida
+                        </div>
+                      ) : (
+                        restrictionFields.map((field, index) => (
+                          <div key={field.id} className="flex gap-2 items-start bg-amber-500/5 p-3 rounded-lg border border-amber-500/20">
+                            <div className="flex flex-col gap-1 shrink-0 w-32">
+                              <div className="flex items-center gap-1">
+                                <FormField
+                                  control={form.control}
+                                  name={`restrictions.${index}.week_start`}
+                                  render={({ field }) => (
+                                    <FormItem className="flex-1">
+                                      <FormControl>
+                                        <Input type="number" {...field} min={1} placeholder="Início" className="h-8 text-sm bg-white" />
+                                      </FormControl>
+                                    </FormItem>
+                                  )}
                                 />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name={`restrictions.${index}.description`}
-                          render={({ field }) => (
-                            <FormItem className="flex-1">
-                              <FormLabel className="text-xs">Descrição</FormLabel>
-                              <FormControl>
-                                <Input {...field} placeholder="Ex: Não fazer flexão além de 90°" />
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="mt-6"
-                          onClick={() => removeRestriction(index)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    ))
-                  )}
+                                <span className="text-muted-foreground text-xs">-</span>
+                                <FormField
+                                  control={form.control}
+                                  name={`restrictions.${index}.week_end`}
+                                  render={({ field }) => (
+                                    <FormItem className="flex-1">
+                                      <FormControl>
+                                        <Input
+                                          type="number"
+                                          {...field}
+                                          value={field.value || ''}
+                                          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                                          placeholder="Fim"
+                                          className="h-8 text-sm bg-white"
+                                        />
+                                      </FormControl>
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                              <span className="text-[10px] text-muted-foreground text-center">Semanas (Início - Fim)</span>
+                            </div>
+
+                            <FormField
+                              control={form.control}
+                              name={`restrictions.${index}.description`}
+                              render={({ field }) => (
+                                <FormItem className="flex-1">
+                                  <FormControl>
+                                    <Input {...field} placeholder="Descrição da restrição" className="h-[38px] text-sm bg-white" style={{ marginTop: 0 }} />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 mt-1 shrink-0 hover:bg-destructive/10 hover:text-destructive"
+                              onClick={() => removeRestriction(index)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </Card>
                 </div>
-              </Card>
+
+              </div>
             </form>
           </Form>
         </ScrollArea>
 
-        <div className="flex justify-end gap-2 p-6 pt-4 border-t shrink-0">
+        <div className="flex justify-end gap-2 p-6 pt-4 border-t shrink-0 bg-background/50 backdrop-blur-sm">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
