@@ -241,7 +241,9 @@ export const CalendarWeekViewRefactored = memo(({
                                 }}
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    onAppointmentClick && onAppointmentClick(apt);
+                                    if (onAppointmentClick) {
+                                        onAppointmentClick(apt);
+                                    }
                                 }}
                             >
                                 <AppointmentQuickView
