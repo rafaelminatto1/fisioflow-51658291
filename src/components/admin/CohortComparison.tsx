@@ -482,7 +482,7 @@ export function CohortComparison({
             .from('appointments')
             .select('id')
             .eq('patient_id', p.id)
-            .in('status', ['completed', 'confirmed']);
+            .in('status', ['atendido', 'confirmado']);
 
           // Get latest risk score
           const { data: riskScore } = await supabase
