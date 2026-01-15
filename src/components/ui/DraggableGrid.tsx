@@ -170,7 +170,9 @@ export const DraggableGrid = memo(function DraggableGrid({
         <div ref={containerRef} className={className} style={{ position: 'relative' }}>
             <Responsive
                 className="layout"
-                layouts={layouts}
+                // Use layouts prop only if we have a valid saved layout that matches current state
+                // Otherwise, let data-grid control the positioning
+                layouts={(savedLayout && savedLayout.length === items.length) ? layouts : undefined}
                 breakpoints={BREAKPOINTS}
                 cols={cols}
                 rowHeight={rowHeight}
@@ -181,9 +183,22 @@ export const DraggableGrid = memo(function DraggableGrid({
                 onLayoutChange={handleLayoutChange}
                 margin={GRID_MARGIN}
                 useCSSTransforms={true}
+                compactType={null} // Disable auto-compaction which can cause items to move
+                preventCollision={false} // Allow items to move vertically
             >
                 {items.map((item) => (
-                    <div key={item.id}>
+                    <div
+                        key={item.id}
+                        data-grid={{
+                            i: item.id,
+                            w: item.defaultLayout.w,
+                            h: item.defaultLayout.h,
+                            x: item.defaultLayout.x,
+                            y: item.defaultLayout.y,
+                            minW: item.defaultLayout.minW,
+                            minH: item.defaultLayout.minH,
+                        }}
+                    >
                         {item.content}
                     </div>
                 ))}
@@ -191,6 +206,4 @@ export const DraggableGrid = memo(function DraggableGrid({
         </div>
     );
 });
-DraggableGrid.displayName = 'DraggableGrid';
-
 DraggableGrid.displayName = 'DraggableGrid';
