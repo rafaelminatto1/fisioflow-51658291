@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DraggableGrid, GridItem } from '@/components/ui/DraggableGrid';
 import { GridWidget } from '@/components/ui/GridWidget';
 import { SmartTextarea } from '@/components/ui/SmartTextarea';
@@ -460,7 +460,9 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Enter' || e.key === ' ') {
                                                     e.preventDefault();
-                                                    onCopyLastEvolution && onCopyLastEvolution(evolution);
+                                                    if (onCopyLastEvolution) {
+                                                        onCopyLastEvolution(evolution);
+                                                    }
                                                 }
                                             }}
                                             aria-label={`Sessão ${sessionNumber} de ${date.toLocaleDateString('pt-BR')}. Clique para copiar.`}
