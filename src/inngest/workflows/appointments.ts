@@ -58,7 +58,7 @@ export const appointmentReminderWorkflow = inngest.createFunction(
           patient:patients(id, name, email, phone, notification_preferences),
           organization:organizations(id, name, settings)
         `)
-        .eq('status', 'scheduled')
+        .eq('status', 'agendado')
         .gte('date', tomorrow.toISOString())
         .lt('date', dayAfter.toISOString());
 

@@ -190,7 +190,7 @@ const OverviewTab = ({ patient }: {
                 .from('appointments')
                 .select('id, appointment_date, appointment_time, type, status')
                 .eq('patient_id', patient.id)
-                .in('status', ['Confirmado', 'Pendente', 'agendado', 'confirmado'])
+                .in('status', ['agendado', 'confirmado'])
                 .gte('appointment_date', new Date().toISOString().split('T')[0])
                 .order('appointment_date', { ascending: true })
                 .order('appointment_time', { ascending: true })
