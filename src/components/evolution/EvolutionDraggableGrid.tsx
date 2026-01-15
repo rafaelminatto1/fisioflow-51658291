@@ -722,8 +722,6 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     onLayoutChange={(layout) => {
                         if (isEditable) setSavedLayout(layout);
                     }}
-                    // Pass compatible layout that respects the current showPainDetails state
-                    savedLayout={compatibleLayout}
                     isEditable={isEditable}
                     rowHeight={50}
                 />
