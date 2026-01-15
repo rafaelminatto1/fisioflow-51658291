@@ -104,6 +104,9 @@ const images = [
     { id: 'bd8440f5-991e-45c8-9b85-6d640417d0e1', file: 'wrist_radial_deviation_1768502472269.png' }, // Desvio Radial Punho
     { id: 'e4657c8f-48b0-49c2-b200-5ade77ca86fc', file: 'jacobson_relaxation_1768502486314.png' }, // Jacobson Relaxation
     { id: '639d526a-647c-44e8-9300-4327f2dff585', file: 'global_active_stretching_1768502500158.png' }, // SGA
+
+    // Phase 6 Images - Single generated before quota limit
+    { id: 'f570b5e5-dfba-407d-9a7b-ff60219ec683', file: 'calf_raise_step_1768502754354.png' }, // Elevação de Panturrilha em Degrau
 ];
 
 async function upload() {
