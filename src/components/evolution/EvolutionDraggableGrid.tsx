@@ -658,6 +658,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                 </div>
 
                 <DraggableGrid
+                    key={`grid-${showPainDetails ? 'expanded' : 'collapsed'}`}
                     items={gridItems}
                     onLayoutChange={(layout) => {
                         if (isEditable) setSavedLayout(layout);

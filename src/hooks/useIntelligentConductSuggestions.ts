@@ -22,7 +22,7 @@ export const useIntelligentConductSuggestions = (patientId: string) => {
         .from('patient_pathologies')
         .select('pathology_name, status')
         .eq('patient_id', patientId)
-        .eq('status', 'active');
+        .eq('status', 'em_tratamento');
 
       if (pathError) throw pathError;
 
