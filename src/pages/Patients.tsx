@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -16,12 +16,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { NewPatientModal } from '@/components/modals/NewPatientModal';
-import { EditPatientModal } from '@/components/modals/EditPatientModal';
-import { ViewPatientModal } from '@/components/modals/ViewPatientModal';
-import { DeletePatientDialog } from '@/components/modals/DeletePatientDialog';
-import { usePatientsQuery, useDeletePatient, PatientDB } from '@/hooks/usePatientsQuery';
-import { usePagination } from '@/hooks/performance/useOptimizedList';
+import { LazyComponent } from '@/components/common/LazyComponent';
+import {
+  PatientCreateModal,
+  PatientActions,
+  PatientAdvancedFilters,
+  PatientAnalytics,
+  countActiveFilters,
+  matchesFilters,
+  type PatientFilters
+} from '@/components/patients';
+import { usePatients, useDeletePatient } from '@/hooks/usePatientCrud';
+import { useMultiplePatientStats, formatFirstEvaluationDate } from '@/hooks/usePatientStats';
 import { PatientHelpers } from '@/types';
 import {
   Plus,
@@ -30,7 +36,9 @@ import {
   Filter,
   Download,
   ChevronRight,
-  ChevronLeft
+  Calendar,
+  Activity,
+  AlertCircle,
 } from 'lucide-react';
 import { cn, calculateAge, exportToCSV } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -39,12 +47,18 @@ const Patients = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [conditionFilter, setConditionFilter] = useState<string>('all');
-  const [editingPatient, setEditingPatient] = useState<string | null>(null);
-  const [viewingPatient, setViewingPatient] = useState<string | null>(null);
-  const [deletingPatient, setDeletingPatient] = useState<PatientDB | null>(null);
   const [isNewPatientModalOpen, setIsNewPatientModalOpen] = useState(false);
-  const { data: patients = [], isLoading: loading } = usePatientsQuery();
-  const deletePatient = useDeletePatient();
+  const [advancedFilters, setAdvancedFilters] = useState<PatientFilters>({});
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [deletingPatientId, setDeletingPatientId] = useState<string | null>(null);
+
+  const { data: patients = [], isLoading: loading } = usePatients();
+  const deleteMutation = useDeletePatient();
+
+  // Buscar estatísticas de múltiplos pacientes
+  const patientIds = useMemo(() => patients.map(p => p.id), [patients]);
+  const { data: statsMap = {}, isLoading: statsLoading } = useMultiplePatientStats(patientIds);
+
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -66,35 +80,91 @@ const Patients = () => {
       const matchesStatus = statusFilter === 'all' || patient.status === statusFilter;
       const matchesCondition = conditionFilter === 'all' || patient.main_condition === conditionFilter;
 
-      return matchesSearch && matchesStatus && matchesCondition;
+      // Aplicar filtros avançados
+      const matchesAdvancedFilters = matchesFilters(patient.id, advancedFilters, statsMap);
+
+      return matchesSearch && matchesStatus && matchesCondition && matchesAdvancedFilters;
     });
-  }, [patients, searchTerm, statusFilter, conditionFilter]);
+  }, [patients, searchTerm, statusFilter, conditionFilter, advancedFilters, statsMap]);
 
-  // Use pagination hook
-  const {
-    items: paginatedPatients,
-    currentPage,
-    totalPages,
-    nextPage,
-    prevPage,
-    goToPage
-  } = usePagination(filteredPatients, 10);
+  // Calcular contagem de filtros ativos
+  const activeAdvancedFiltersCount = countActiveFilters(advancedFilters);
 
-  // Reset pagination when filters change
-  useEffect(() => {
-    goToPage(0);
-  }, [searchTerm, statusFilter, conditionFilter, goToPage]);
+  // Estatísticas dos pacientes filtrados
+  const filteredStats = useMemo(() => {
+    const stats = {
+      total: filteredPatients.length,
+      active: 0,
+      inactive7: 0,
+      inactive30: 0,
+      inactive60: 0,
+      noShowRisk: 0,
+      hasUnpaid: 0,
+      newPatients: 0,
+      completed: 0
+    };
+
+    filteredPatients.forEach(p => {
+      const patientStats = statsMap[p.id];
+      if (!patientStats) return;
+
+      switch (patientStats.classification) {
+        case 'active':
+          stats.active++;
+          break;
+        case 'inactive_7':
+          stats.inactive7++;
+          break;
+        case 'inactive_30':
+          stats.inactive30++;
+          break;
+        case 'inactive_custom':
+          stats.inactive60++;
+          break;
+        case 'no_show_risk':
+          stats.noShowRisk++;
+          break;
+        case 'has_unpaid':
+          stats.hasUnpaid++;
+          break;
+        case 'new_patient':
+          stats.newPatients++;
+          break;
+      }
+
+      if (p.status === 'Concluído') {
+        stats.completed++;
+      }
+    });
+
+    return stats;
+  }, [filteredPatients, statsMap]);
+
+  const handleFilterChange = (filters: PatientFilters) => {
+    setAdvancedFilters(filters);
+  };
+
+  const handleClearFilters = () => {
+    setAdvancedFilters({});
+  };
+
+  const handleClearAllFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setConditionFilter('all');
+    setAdvancedFilters({});
+  };
 
   const handleDeletePatient = () => {
-    if (!deletingPatient) return;
-    deletePatient.mutate(deletingPatient.id, {
-      onSuccess: () => setDeletingPatient(null),
-    });
+    if (!deletingPatientId) return;
+    deleteMutation.mutate(deletingPatientId);
+    setDeletingPatientId(null);
   };
 
   const exportPatients = () => {
     const data = filteredPatients.map(patient => {
       const patientName = PatientHelpers.getName(patient);
+      const patientStats = statsMap[patient.id];
       return {
         name: patientName || 'Sem nome',
         email: patient.email || '',
@@ -103,11 +173,13 @@ const Patients = () => {
         gender: patient.gender || '',
         condition: patient.main_condition || '',
         status: patient.status || '',
-        progress: patient.progress || 0
+        progress: patient.progress || 0,
+        sessions: patientStats?.sessionsCompleted || 0,
+        firstEvaluation: patientStats?.firstEvaluationDate || '',
       };
     });
 
-    const headers = ['Nome', 'Email', 'Telefone', 'Idade', 'Gênero', 'Condição Principal', 'Status', 'Progresso'];
+    const headers = ['Nome', 'Email', 'Telefone', 'Idade', 'Gênero', 'Condição Principal', 'Status', 'Progresso', 'Sessões', 'Primeira Avaliação'];
 
     const success = exportToCSV(data, 'pacientes.csv', headers);
 
@@ -149,6 +221,15 @@ const Patients = () => {
               </p>
             </div>
             <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAnalytics(!showAnalytics)}
+                className="hidden sm:flex shadow-md hover:shadow-lg transition-all"
+              >
+                <Activity className="w-4 h-4 mr-2" />
+                {showAnalytics ? 'Esconder' : 'Análises'}
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -234,6 +315,69 @@ const Patients = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* Additional Classification Stats Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <Card className="hover:shadow-md transition-all">
+              <CardContent className="p-3">
+                <div className="flex flex-col">
+                  <span className="text-2xl">⚠️</span>
+                  <span className="text-xl font-bold mt-1">{filteredStats.inactive7}</span>
+                  <span className="text-[10px] text-muted-foreground">Inativos 7d</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-all">
+              <CardContent className="p-3">
+                <div className="flex flex-col">
+                  <span className="text-2xl">🔴</span>
+                  <span className="text-xl font-bold mt-1">{filteredStats.inactive30}</span>
+                  <span className="text-[10px] text-muted-foreground">Inativos 30d</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-all">
+              <CardContent className="p-3">
+                <div className="flex flex-col">
+                  <span className="text-2xl">🚫</span>
+                  <span className="text-xl font-bold mt-1">{filteredStats.noShowRisk}</span>
+                  <span className="text-[10px] text-muted-foreground">Risco No-Show</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-all">
+              <CardContent className="p-3">
+                <div className="flex flex-col">
+                  <span className="text-2xl">💰</span>
+                  <span className="text-xl font-bold mt-1">{filteredStats.hasUnpaid}</span>
+                  <span className="text-[10px] text-muted-foreground">Com Pendências</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-all">
+              <CardContent className="p-3">
+                <div className="flex flex-col">
+                  <span className="text-2xl">🆕</span>
+                  <span className="text-xl font-bold mt-1">{filteredStats.newPatients}</span>
+                  <span className="text-[10px] text-muted-foreground">Novos Pacientes</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-md transition-all">
+              <CardContent className="p-3">
+                <div className="flex flex-col">
+                  <span className="text-2xl">⭕</span>
+                  <span className="text-xl font-bold mt-1">{filteredStats.inactive60}</span>
+                  <span className="text-[10px] text-muted-foreground">Inativos 60d+</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Alerta de cadastros incompletos */}
@@ -291,18 +435,14 @@ const Patients = () => {
               </div>
 
               {/* Indicador de filtros ativos */}
-              {(statusFilter !== 'all' || conditionFilter !== 'all' || searchTerm) && (
+              {(statusFilter !== 'all' || conditionFilter !== 'all' || searchTerm || activeAdvancedFiltersCount > 0) && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <span>{filteredPatients.length} paciente(s) encontrado(s)</span>
                   <Button
                     variant="ghost"
                     size="sm"
                     className="h-7 text-xs"
-                    onClick={() => {
-                      setSearchTerm('');
-                      setStatusFilter('all');
-                      setConditionFilter('all');
-                    }}
+                    onClick={handleClearAllFilters}
                   >
                     Limpar filtros
                   </Button>
@@ -311,6 +451,21 @@ const Patients = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Advanced Filters */}
+        <PatientAdvancedFilters
+          onFilterChange={handleFilterChange}
+          activeFiltersCount={activeAdvancedFiltersCount}
+          onClearFilters={handleClearFilters}
+        />
+
+        {/* Analytics Dashboard */}
+        {showAnalytics && (
+          <PatientAnalytics
+            totalPatients={patients.length}
+            classificationStats={filteredStats}
+          />
+        )}
 
         {/* Patients List */}
         {loading ? (
@@ -334,114 +489,119 @@ const Patients = () => {
             }
           />
         ) : (
-          <div className="space-y-4">
-            <div className="grid gap-4 animate-fade-in">
-              {paginatedPatients.map((patient, index) => (
-                <Card
-                  key={patient.id}
-                  className="group flex items-center gap-4 p-3 rounded-xl bg-card hover:bg-slate-50 dark:hover:bg-slate-800/50 active:bg-slate-100 dark:active:bg-slate-800 transition-colors cursor-pointer border border-transparent hover:border-border dark:hover:border-slate-700"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                  onClick={() => setViewingPatient(patient.id)}
-                >
-                  <div className="relative shrink-0">
-                    <Avatar className="h-12 w-12 ring-2 ring-border dark:ring-slate-700 shrink-0">
-                      <AvatarFallback className={cn(
-                        "text-sm font-bold",
-                        patient.status === 'Em Tratamento' ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400" :
-                          patient.status === 'Inicial' ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" :
-                            "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-                      )}>
-                        {(() => {
-                          const name = PatientHelpers.getName(patient);
-                          return name ? name.split(' ').map(n => n[0]).join('').substring(0, 2) : 'P';
-                        })()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                  <div className="flex flex-col flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{PatientHelpers.getName(patient) || 'Paciente sem nome'}</p>
-                      <Badge className={cn(
-                        "inline-flex items-center rounded-full border border-transparent text-[10px] font-semibold px-2 py-0.5",
-                        patient.status === 'Em Tratamento' ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" :
-                          patient.status === 'Inicial' ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400" :
-                            "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-                      )}>
-                        {patient.status || 'Inicial'}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground truncate mt-0.5">{patient.phone || patient.email || `${calculateAge(patient.birth_date)} anos`}</p>
-                  </div>
-                  <div className="shrink-0 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
-                    <ChevronRight className="w-5 h-5" />
-                  </div>
-                </Card>
-              ))}
-            </div>
+          <div className="grid gap-4 animate-fade-in">
+            {filteredPatients.map((patient, index) => {
+              const patientStats = statsMap[patient.id];
+              const sessionsInfo = patientStats
+                ? `${patientStats.sessionsCompleted} sessão${patientStats.sessionsCompleted !== 1 ? 'ões' : ''}`
+                : null;
+              const firstEvaluationInfo = patientStats?.firstEvaluationDate
+                ? `Prim. aval.: ${formatFirstEvaluationDate(patientStats.firstEvaluationDate)}`
+                : null;
 
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between py-2 border-t mt-4">
-                <div className="text-sm text-muted-foreground">
-                  Página {currentPage + 1} de {totalPages}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={prevPage}
-                    disabled={currentPage === 0}
-                    className="h-8 px-2"
+              return (
+                <LazyComponent
+                  key={patient.id}
+                  placeholder={<div className="h-[90px] w-full bg-muted/50 rounded-xl animate-pulse" />}
+                  rootMargin="200px"
+                >
+                  <Card
+                    className="group flex items-center gap-4 p-3 rounded-xl bg-card hover:bg-slate-50 dark:hover:bg-slate-800/50 active:bg-slate-100 dark:active:bg-slate-800 transition-colors border border-transparent hover:border-border dark:hover:border-slate-700"
+                    style={{ animationDelay: `${index * 50}ms` }}
                   >
-                    <ChevronLeft className="w-4 h-4 mr-1" />
-                    Anterior
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={nextPage}
-                    disabled={currentPage === totalPages - 1}
-                    className="h-8 px-2"
-                  >
-                    Próximo
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </Button>
-                </div>
-              </div>
-            )}
+                    <div
+                      className="flex-1 cursor-pointer"
+                      onClick={() => navigate(`/patients/${patient.id}`)}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="relative shrink-0">
+                          <Avatar className="h-12 w-12 ring-2 ring-border dark:ring-slate-700 shrink-0">
+                            <AvatarFallback className={cn(
+                              "text-sm font-bold",
+                              patient.status === 'Em Tratamento'
+                                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
+                                : patient.status === 'Inicial'
+                                  ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400"
+                                  : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                            )}>
+                              {(() => {
+                                const name = PatientHelpers.getName(patient);
+                                return name ? name.split(' ').map(n => n[0]).join('').substring(0, 2) : 'P';
+                              })()}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
+
+                        <div className="flex flex-col flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                              {PatientHelpers.getName(patient) || 'Paciente sem nome'}
+                            </p>
+                            <Badge className={cn(
+                              "inline-flex items-center rounded-full border border-transparent text-[10px] font-semibold px-2 py-0.5",
+                              patient.status === 'Em Tratamento'
+                                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
+                                : patient.status === 'Inicial'
+                                  ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400"
+                                  : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                            )}>
+                              {patient.status || 'Inicial'}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate mt-0.5">
+                            {patient.phone || patient.email || `${calculateAge(patient.birth_date)} anos`}
+                          </p>
+
+                          {/* Informações adicionais de sessões e primeira avaliação */}
+                          {(sessionsInfo || firstEvaluationInfo) && (
+                            <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
+                              {sessionsInfo && (
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="w-3 h-3" />
+                                  {sessionsInfo}
+                                </span>
+                              )}
+                              {firstEvaluationInfo && (
+                                <span className="truncate">{firstEvaluationInfo}</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="shrink-0 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors">
+                          <ChevronRight className="w-5 h-5" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="shrink-0">
+                      <PatientActions patient={patient} />
+                    </div>
+                  </Card>
+                </LazyComponent>
+              );
+            })}
           </div>
         )}
       </div>
 
       {/* Modals */}
-      <NewPatientModal
+      <PatientCreateModal
         open={isNewPatientModalOpen}
         onOpenChange={setIsNewPatientModalOpen}
       />
 
-      {editingPatient && (
-        <EditPatientModal
-          patientId={editingPatient}
-          open={true}
-          onOpenChange={() => setEditingPatient(null)}
+      {/* Delete Dialog */}
+      {deletingPatientId && (
+        <PatientDeleteDialog
+          open={!!deletingPatientId}
+          onOpenChange={(open) => {
+            if (!open) setDeletingPatientId(null);
+          }}
+          patientId={deletingPatientId}
         />
       )}
-
-      {viewingPatient && (
-        <ViewPatientModal
-          patientId={viewingPatient}
-          open={!!viewingPatient}
-          onOpenChange={() => setViewingPatient(null)}
-        />
-      )}
-
-      <DeletePatientDialog
-        open={!!deletingPatient}
-        onOpenChange={(open) => !open && setDeletingPatient(null)}
-        patientName={deletingPatient?.name}
-        onConfirm={handleDeletePatient}
-        isDeleting={deletePatient.isPending}
-      />
     </MainLayout>
   );
 };

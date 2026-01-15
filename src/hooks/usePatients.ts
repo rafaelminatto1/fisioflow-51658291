@@ -42,11 +42,14 @@ export const useActivePatients = () => {
   const queryClient = useQueryClient();
 
   // Setup realtime subscription
+  // FIX: Track subscription state to avoid WebSocket errors
   useEffect(() => {
     if (!organizationId) return;
 
-    const channel = supabase
-      .channel('patients-changes')
+    let isSubscribed = false;
+    const channel = supabase.channel('patients-changes');
+
+    (channel as any)
       .on(
         'postgres_changes',
         {
@@ -60,10 +63,18 @@ export const useActivePatients = () => {
           queryClient.invalidateQueries({ queryKey: ['patients', organizationId] });
         }
       )
-      .subscribe();
+      .subscribe((status: string) => {
+        if (status === 'SUBSCRIBED') {
+          isSubscribed = true;
+        }
+      });
 
     return () => {
-      supabase.removeChannel(channel);
+      if (isSubscribed) {
+        supabase.removeChannel(channel).catch(() => {
+          // Ignore cleanup errors
+        });
+      }
     };
   }, [organizationId, queryClient]);
 

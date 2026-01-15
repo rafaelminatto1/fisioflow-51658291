@@ -215,43 +215,43 @@ export const useUpdatePatient = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: PatientUpdateInput }): Promise<Patient> => {
+    mutationFn: async ({ id, data: inputData }: { id: string; data: PatientUpdateInput }): Promise<Patient> => {
       // Sanitize data
-      const sanitizedData: Record<string, any> = {
+      const sanitizedData: Record<string, string | number | boolean | null> = {
         updated_at: new Date().toISOString(),
       };
 
-      if (data.full_name !== undefined) sanitizedData.full_name = sanitizeString(data.full_name, 200);
-      if (data.email !== undefined) sanitizedData.email = data.email ? sanitizeEmail(data.email) : null;
-      if (data.phone !== undefined) sanitizedData.phone = data.phone ? cleanPhone(data.phone) : null;
-      if (data.cpf !== undefined) sanitizedData.cpf = data.cpf ? cleanCPF(data.cpf) : null;
-      if (data.birth_date !== undefined) sanitizedData.birth_date = data.birth_date;
-      if (data.gender !== undefined) sanitizedData.gender = data.gender;
-      if (data.address !== undefined) sanitizedData.address = data.address ? sanitizeString(data.address, 500) : null;
-      if (data.city !== undefined) sanitizedData.city = data.city ? sanitizeString(data.city, 100) : null;
-      if (data.state !== undefined) sanitizedData.state = data.state ? sanitizeString(data.state, 2) : null;
-      if (data.zip_code !== undefined) sanitizedData.zip_code = data.zip_code ? sanitizeString(data.zip_code, 10) : null;
-      if (data.emergency_contact !== undefined) sanitizedData.emergency_contact = data.emergency_contact ? sanitizeString(data.emergency_contact, 200) : null;
-      if (data.emergency_contact_relationship !== undefined) sanitizedData.emergency_contact_relationship = data.emergency_contact_relationship ? sanitizeString(data.emergency_contact_relationship, 100) : null;
-      if (data.emergency_phone !== undefined) sanitizedData.emergency_phone = data.emergency_phone ? cleanPhone(data.emergency_phone) : null;
-      if (data.medical_history !== undefined) sanitizedData.medical_history = data.medical_history ? sanitizeString(data.medical_history, 5000) : null;
-      if (data.main_condition !== undefined) sanitizedData.main_condition = sanitizeString(data.main_condition, 500);
-      if (data.health_insurance !== undefined) sanitizedData.health_insurance = data.health_insurance ? sanitizeString(data.health_insurance, 200) : null;
-      if (data.insurance_number !== undefined) sanitizedData.insurance_number = data.insurance_number ? sanitizeString(data.insurance_number, 100) : null;
-      if (data.allergies !== undefined) sanitizedData.allergies = data.allergies ? sanitizeString(data.allergies, 500) : null;
-      if (data.medications !== undefined) sanitizedData.medications = data.medications ? sanitizeString(data.medications, 500) : null;
-      if (data.weight_kg !== undefined) sanitizedData.weight_kg = data.weight_kg || null;
-      if (data.height_cm !== undefined) sanitizedData.height_cm = data.height_cm || null;
-      if (data.blood_type !== undefined) sanitizedData.blood_type = data.blood_type || null;
-      if (data.marital_status !== undefined) sanitizedData.marital_status = data.marital_status || null;
-      if (data.profession !== undefined) sanitizedData.profession = data.profession ? sanitizeString(data.profession, 200) : null;
-      if (data.education_level !== undefined) sanitizedData.education_level = data.education_level || null;
-      if (data.observations !== undefined) sanitizedData.observations = data.observations ? sanitizeString(data.observations, 5000) : null;
-      if (data.status !== undefined) sanitizedData.status = data.status;
-      if (data.progress !== undefined) sanitizedData.progress = data.progress;
-      if (data.consent_data !== undefined) sanitizedData.consent_data = data.consent_data;
-      if (data.consent_image !== undefined) sanitizedData.consent_image = data.consent_image;
-      if (data.incomplete_registration !== undefined) sanitizedData.incomplete_registration = data.incomplete_registration;
+      if (inputData.full_name !== undefined) sanitizedData.full_name = sanitizeString(inputData.full_name, 200);
+      if (inputData.email !== undefined) sanitizedData.email = inputData.email ? sanitizeEmail(inputData.email) : null;
+      if (inputData.phone !== undefined) sanitizedData.phone = inputData.phone ? cleanPhone(inputData.phone) : null;
+      if (inputData.cpf !== undefined) sanitizedData.cpf = inputData.cpf ? cleanCPF(inputData.cpf) : null;
+      if (inputData.birth_date !== undefined) sanitizedData.birth_date = inputData.birth_date;
+      if (inputData.gender !== undefined) sanitizedData.gender = inputData.gender;
+      if (inputData.address !== undefined) sanitizedData.address = inputData.address ? sanitizeString(inputData.address, 500) : null;
+      if (inputData.city !== undefined) sanitizedData.city = inputData.city ? sanitizeString(inputData.city, 100) : null;
+      if (inputData.state !== undefined) sanitizedData.state = inputData.state ? sanitizeString(inputData.state, 2) : null;
+      if (inputData.zip_code !== undefined) sanitizedData.zip_code = inputData.zip_code ? sanitizeString(inputData.zip_code, 10) : null;
+      if (inputData.emergency_contact !== undefined) sanitizedData.emergency_contact = inputData.emergency_contact ? sanitizeString(inputData.emergency_contact, 200) : null;
+      if (inputData.emergency_contact_relationship !== undefined) sanitizedData.emergency_contact_relationship = inputData.emergency_contact_relationship ? sanitizeString(inputData.emergency_contact_relationship, 100) : null;
+      if (inputData.emergency_phone !== undefined) sanitizedData.emergency_phone = inputData.emergency_phone ? cleanPhone(inputData.emergency_phone) : null;
+      if (inputData.medical_history !== undefined) sanitizedData.medical_history = inputData.medical_history ? sanitizeString(inputData.medical_history, 5000) : null;
+      if (inputData.main_condition !== undefined) sanitizedData.main_condition = sanitizeString(inputData.main_condition, 500);
+      if (inputData.health_insurance !== undefined) sanitizedData.health_insurance = inputData.health_insurance ? sanitizeString(inputData.health_insurance, 200) : null;
+      if (inputData.insurance_number !== undefined) sanitizedData.insurance_number = inputData.insurance_number ? sanitizeString(inputData.insurance_number, 100) : null;
+      if (inputData.allergies !== undefined) sanitizedData.allergies = inputData.allergies ? sanitizeString(inputData.allergies, 500) : null;
+      if (inputData.medications !== undefined) sanitizedData.medications = inputData.medications ? sanitizeString(inputData.medications, 500) : null;
+      if (inputData.weight_kg !== undefined) sanitizedData.weight_kg = inputData.weight_kg || null;
+      if (inputData.height_cm !== undefined) sanitizedData.height_cm = inputData.height_cm || null;
+      if (inputData.blood_type !== undefined) sanitizedData.blood_type = inputData.blood_type || null;
+      if (inputData.marital_status !== undefined) sanitizedData.marital_status = inputData.marital_status || null;
+      if (inputData.profession !== undefined) sanitizedData.profession = inputData.profession ? sanitizeString(inputData.profession, 200) : null;
+      if (inputData.education_level !== undefined) sanitizedData.education_level = inputData.education_level || null;
+      if (inputData.observations !== undefined) sanitizedData.observations = inputData.observations ? sanitizeString(inputData.observations, 5000) : null;
+      if (inputData.status !== undefined) sanitizedData.status = inputData.status;
+      if (inputData.progress !== undefined) sanitizedData.progress = inputData.progress;
+      if (inputData.consent_data !== undefined) sanitizedData.consent_data = inputData.consent_data;
+      if (inputData.consent_image !== undefined) sanitizedData.consent_image = inputData.consent_image;
+      if (inputData.incomplete_registration !== undefined) sanitizedData.incomplete_registration = inputData.incomplete_registration;
 
       const { data, error } = await supabase
         .from('patients')

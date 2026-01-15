@@ -27,8 +27,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { CalendarIcon, User, Phone, Mail, MapPin, Activity, FileText } from 'lucide-react';
-import { cn, sanitizeString, sanitizeEmail, cleanCPF, cleanPhone } from '@/lib/utils';
-import { emailSchema, phoneSchema, cpfSchema } from '@/lib/validations';
+import { cn } from '@/lib/utils';
+import { cleanCPF, emailSchema, phoneSchema, cpfSchema } from '@/lib/validations';
 import { formatCPF, formatPhoneInput, formatCEP } from '@/utils/formatInputs';
 import type { Patient, PatientCreateInput, PatientUpdateInput } from '@/hooks/usePatientCrud';
 
@@ -99,7 +99,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
   onSubmit,
   isLoading = false,
   submitLabel = 'Salvar',
-  organizationId,
+  organizationId: _organizationId,
 }) => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 

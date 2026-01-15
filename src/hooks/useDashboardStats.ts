@@ -170,10 +170,12 @@ export const useDashboardStats = () => {
   useEffect(() => {
     loadStats();
 
-    // Real-time subscriptions
-    const subscription = supabase
-      .channel('dashboard-stats')
-      .on('postgres_changes', 
+    // FIX: Track subscription state to avoid WebSocket errors
+    let isSubscribed = false;
+    const subscription = supabase.channel('dashboard-stats');
+
+    (subscription as any)
+      .on('postgres_changes',
         { event: '*', schema: 'public', table: 'appointments' },
         () => {
           loadStats().catch((err) => {
@@ -181,7 +183,7 @@ export const useDashboardStats = () => {
           });
         }
       )
-      .on('postgres_changes', 
+      .on('postgres_changes',
         { event: '*', schema: 'public', table: 'patients' },
         () => {
           loadStats().catch((err) => {
@@ -189,10 +191,18 @@ export const useDashboardStats = () => {
           });
         }
       )
-      .subscribe();
+      .subscribe((status: string) => {
+        if (status === 'SUBSCRIBED') {
+          isSubscribed = true;
+        }
+      });
 
     return () => {
-      supabase.removeChannel(subscription);
+      if (isSubscribed) {
+        supabase.removeChannel(subscription).catch(() => {
+          // Ignore cleanup errors
+        });
+      }
     };
   }, [loadStats]);
 

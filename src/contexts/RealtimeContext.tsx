@@ -199,6 +199,8 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   /**
    * Subscrever às mudanças na tabela de appointments via Supabase Realtime
    * Otimizado com filtros específicos para reduzir tráfego
+   *
+   * FIX: Tracka estado de subscription para evitar erros de WebSocket
    */
   const subscribeToAppointments = useCallback(() => {
     if (!organizationId) {
@@ -208,13 +210,16 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     logger.info('Realtime: Subscribing to appointments via Context', { organizationId }, 'RealtimeContext');
 
-    const channel = supabase
-      .channel(`appointments-realtime-${organizationId}`, {
+    let isSubscribed = false;
+    const channel = supabase.channel(`appointments-realtime-${organizationId}`, {
         config: {
           broadcast: { self: false },
           presence: { key: '' }
         }
-      })
+      });
+
+    // Type assertion para postgres_changes devido ao tipo Database genérico
+    (channel as any)
       .on(
         'postgres_changes',
         {
@@ -225,8 +230,9 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         },
         handleRealtimeChange
       )
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         if (status === 'SUBSCRIBED') {
+          isSubscribed = true;
           setIsSubscribed(true);
           logger.info('Realtime: Successfully subscribed', { organizationId }, 'RealtimeContext');
         } else if (status === 'CHANNEL_ERROR') {
@@ -236,8 +242,16 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       });
 
     return () => {
-      logger.info('Realtime: Unsubscribing from appointments channel', { organizationId }, 'RealtimeContext');
-      supabase.removeChannel(channel);
+      logger.info('Realtime: Unsubscribing from appointments channel', { organizationId, isSubscribed }, 'RealtimeContext');
+
+      // Só remove channel se foi inscrito com sucesso
+      // Isso previne "WebSocket is closed before the connection is established"
+      if (isSubscribed) {
+        supabase.removeChannel(channel).catch((err) => {
+          logger.debug('Erro ao remover canal (ignorado)', err, 'RealtimeContext');
+        });
+      }
+
       setIsSubscribed(false);
 
       // Limpar timeouts pendentes

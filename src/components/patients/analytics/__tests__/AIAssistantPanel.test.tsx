@@ -3,8 +3,9 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { AIAssistantPanel } from '../AIAssistantPanel';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { AIAssistantPanel, AIAssistantMini } from '../AIAssistantPanel';
+import * as useAIInsightsModule from '@/hooks/useAIInsights';
 
 // Mock dependencies
 vi.mock('@/hooks/usePatientAnalytics', () => ({
@@ -19,27 +20,8 @@ vi.mock('@/hooks/usePatientAnalytics', () => ({
   })),
 }));
 
-vi.mock('@/hooks/useAIInsights', () => ({
-  useAIPatientAssistant: vi.fn(() => ({
-    messages: [
-      {
-        id: '1',
-        role: 'assistant',
-        content: 'Olá! Como posso ajudar com a análise do paciente?',
-      },
-    ],
-    isLoading: false,
-    error: null,
-    append: vi.fn(),
-    reload: vi.fn(),
-    stop: vi.fn(),
-  })),
-  useAIInsights: vi.fn(() => ({
-    completion: null,
-    isGenerating: false,
-    generate: vi.fn(),
-  })),
-}));
+// Import mocked module
+vi.mocked(useAIInsightsModule);
 
 vi.mock('react-markdown', () => ({
   default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -48,6 +30,21 @@ vi.mock('react-markdown', () => ({
 describe('AIAssistantPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Set default mock return values
+    vi.mocked(useAIInsightsModule.useAIPatientAssistant).mockReturnValue({
+      messages: [
+        {
+          id: '1',
+          role: 'assistant' as const,
+          content: 'Olá! Como posso ajudar com a análise do paciente?',
+        },
+      ],
+      isLoading: false,
+      error: null,
+      append: vi.fn(),
+      reload: vi.fn(),
+      stop: vi.fn(),
+    });
   });
 
   it('should render the panel with patient context', () => {
@@ -105,24 +102,24 @@ describe('AIAssistantPanel', () => {
   });
 
   it('should display assistant messages', () => {
-    const { useAIPatientAssistant } = require('@/hooks/useAIInsights');
-
-    useAIPatientAssistant.mockReturnValue({
+    vi.mocked(useAIInsightsModule.useAIPatientAssistant).mockReturnValue({
       messages: [
         {
           id: '1',
-          role: 'assistant',
+          role: 'assistant' as const,
           content: 'Olá! Como posso ajudar com a análise do paciente?',
         },
         {
           id: '2',
-          role: 'user',
+          role: 'user' as const,
           content: 'Qual é o progresso do paciente?',
         },
       ],
       isLoading: false,
       error: null,
       append: vi.fn(),
+      reload: vi.fn(),
+      stop: vi.fn(),
     });
 
     render(<AIAssistantPanel patientId="patient-1" patientName="João Silva" />);
@@ -131,13 +128,13 @@ describe('AIAssistantPanel', () => {
   });
 
   it('should show loading indicator when chat is loading', () => {
-    const { useAIPatientAssistant } = require('@/hooks/useAIInsights');
-
-    useAIPatientAssistant.mockReturnValue({
+    vi.mocked(useAIInsightsModule.useAIPatientAssistant).mockReturnValue({
       messages: [],
       isLoading: true,
       error: null,
       append: vi.fn(),
+      reload: vi.fn(),
+      stop: vi.fn(),
     });
 
     render(<AIAssistantPanel patientId="patient-1" patientName="João Silva" />);
@@ -153,11 +150,17 @@ describe('AIAssistantPanel', () => {
 describe('AIAssistantMini', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(useAIInsightsModule.useAIPatientAssistant).mockReturnValue({
+      messages: [],
+      isLoading: false,
+      error: null,
+      append: vi.fn(),
+      reload: vi.fn(),
+      stop: vi.fn(),
+    });
   });
 
-  it('should render floating button when closed', async () => {
-    const { AIAssistantMini } = await import('../AIAssistantPanel');
-
+  it('should render floating button when closed', () => {
     render(<AIAssistantMini patientId="patient-1" patientName="João Silva" />);
 
     // Floating button should be present with sparkles icon

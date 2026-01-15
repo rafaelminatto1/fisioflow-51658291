@@ -13,6 +13,8 @@ export interface OnlineUser {
 /**
  * Hook para rastrear usuários online em tempo real
  * Usa Supabase Realtime Presence para sincronização
+ *
+ * FIX: Track subscription state to avoid WebSocket errors
  */
 export function useOnlineUsers(channelName: string = 'online-users') {
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
@@ -21,6 +23,7 @@ export function useOnlineUsers(channelName: string = 'online-users') {
   useEffect(() => {
     let mounted = true;
     let activeChannel: RealtimeChannel | null = null;
+    let isSubscribed = false;
 
     const setupPresence = async () => {
       try {
@@ -82,10 +85,11 @@ export function useOnlineUsers(channelName: string = 'online-users') {
         });
 
         // Subscrever ao channel
-        activeChannel.subscribe(async (status) => {
+        activeChannel.subscribe(async (status: string) => {
           if (!mounted) return;
 
           if (status === 'SUBSCRIBED') {
+            isSubscribed = true;
             logger.info('Conectado ao Presence channel', { channelName }, 'useOnlineUsers');
             setIsConnected(true);
 
@@ -116,9 +120,15 @@ export function useOnlineUsers(channelName: string = 'online-users') {
     return () => {
       mounted = false;
       if (activeChannel) {
-        logger.info('Removendo Presence channel', { channelName }, 'useOnlineUsers');
+        logger.info('Removendo Presence channel', { channelName, isSubscribed }, 'useOnlineUsers');
         activeChannel.untrack();
-        supabase.removeChannel(activeChannel);
+
+        // Só remove channel se foi inscrito com sucesso
+        if (isSubscribed) {
+          supabase.removeChannel(activeChannel).catch(() => {
+            // Ignore cleanup errors
+          });
+        }
       }
     };
   }, [channelName]);
