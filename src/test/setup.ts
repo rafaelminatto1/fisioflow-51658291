@@ -61,6 +61,44 @@ vi.mock('@/integrations/supabase/client', () => ({
   }
 }))
 
+// Mock AI hooks
+vi.mock('@/hooks/useAIInsights', () => ({
+  useAIPatientAssistant: vi.fn(() => ({
+    messages: [],
+    isLoading: false,
+    error: null,
+    append: vi.fn(),
+    reload: vi.fn(),
+    stop: vi.fn()
+  })),
+  useAIInsights: vi.fn(() => ({
+    completion: null,
+    isGenerating: false,
+    generate: vi.fn()
+  }))
+}))
+
+vi.mock('@/hooks/usePatientAnalytics', () => ({
+  usePatientAnalyticsDashboard: vi.fn(() => ({
+    data: {
+      progress_summary: {
+        total_sessions: 0,
+        overall_progress_percentage: 0
+      }
+    },
+    isLoading: false,
+    error: null
+  }))
+}))
+
+// Mock react-markdown
+vi.mock('react-markdown', () => ({
+  default: ({ children }: { children: React.ReactNode }) => {
+    const React = require('react')
+    return React.createElement('div', { className: 'mock-react-markdown' }, children)
+  }
+}))
+
 // Mock browser APIs
 const mockServiceWorkerRegistration = {
   pushManager: {
