@@ -117,14 +117,50 @@ const SOAPSectionWidget = React.memo(({
     onAISuggest,
     onCopyLast
 }: SOAPSectionWidgetProps) => {
-    // Stable callback that won't change between renders
+    // Local state for immediate UI feedback
+    const [localValue, setLocalValue] = useState(value);
+    const lastSentValue = React.useRef(value);
+    const debouncedUpdate = React.useRef<NodeJS.Timeout | null>(null);
+
+    // Sync local value when prop changes (handling external updates like AI or database load)
+    // We only update if the new value is different from what we have AND different from what we last sent.
+    // This prevents race conditions where a parent re-render with "stale" data (before our debounce fired)
+    // would overwrite the user's current typing.
+    React.useEffect(() => {
+        if (value !== localValue && value !== lastSentValue.current) {
+            setLocalValue(value);
+            lastSentValue.current = value;
+        }
+    }, [value]); // Intentionally not including localValue/lastSentValue to avoid loops
+
+    // Cleanup timeout on unmount
+    React.useEffect(() => {
+        return () => {
+            if (debouncedUpdate.current) {
+                clearTimeout(debouncedUpdate.current);
+            }
+        };
+    }, []);
+
     const handleChange = React.useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        onChange(section.key, e.target.value);
+        const newValue = e.target.value;
+        setLocalValue(newValue);
+
+        if (debouncedUpdate.current) {
+            clearTimeout(debouncedUpdate.current);
+        }
+
+        debouncedUpdate.current = setTimeout(() => {
+            if (newValue !== lastSentValue.current) {
+                lastSentValue.current = newValue;
+                onChange(section.key, newValue);
+            }
+        }, 300); // 300ms delay for performance
     }, [onChange, section.key]);
 
     const wordCount = React.useMemo(() =>
-        value.split(/\s+/).filter(w => w.length > 0).length,
-        [value]
+        localValue.split(/\s+/).filter(w => w.length > 0).length,
+        [localValue]
     );
 
     return (
@@ -181,7 +217,7 @@ const SOAPSectionWidget = React.memo(({
         >
             <div className="h-full flex flex-col p-0">
                 <SmartTextarea
-                    value={value}
+                    value={localValue}
                     onChange={handleChange}
                     placeholder={section.placeholder}
                     disabled={disabled}
