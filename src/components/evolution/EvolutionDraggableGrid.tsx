@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { DraggableGrid, GridItem } from '@/components/ui/DraggableGrid';
 import { GridWidget } from '@/components/ui/GridWidget';
 import { SmartTextarea } from '@/components/ui/SmartTextarea';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { User, Eye, Brain, ClipboardList, Sparkles, Copy, LayoutDashboard, Save, RotateCcw, Undo, Activity, TrendingDown, TrendingUp, Minus, ChevronUp, ChevronDown, ImageIcon, Dumbbell, House, History } from 'lucide-react';
 import { toast } from 'sonner';
@@ -33,7 +33,8 @@ interface SOAPSection {
     borderColor: string;
 }
 
-const SOAP_SECTIONS: SOAPSection[] = [
+// ===== CONSTANTS =====
+const SOAP_SECTIONS: Readonly<SOAPSection[]> = [
     {
         key: 'subjective',
         label: 'Subjetivo',
@@ -273,7 +274,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-muted/50" onClick={() => onAISuggest(section.key)} disabled={disabled}>
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-muted/50" onClick={() => onAISuggest(section.key)} disabled={disabled}>
                                                 <Sparkles className="h-3 w-3 text-purple-500" />
                                             </Button>
                                         </TooltipTrigger>
@@ -287,7 +288,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-muted/50" onClick={() => onCopyLast(section.key)} disabled={disabled}>
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-muted/50" onClick={() => onCopyLast(section.key)} disabled={disabled}>
                                                 <Copy className="h-3 w-3" />
                                             </Button>
                                         </TooltipTrigger>
@@ -306,12 +307,12 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                             onChange={(e) => handleSoapFieldChange(section.key, e.target.value)}
                             placeholder={section.placeholder}
                             disabled={disabled}
-                            className="flex-1 resize-none border-0 focus-visible:ring-0 p-4 min-h-[120px] text-sm leading-relaxed"
+                            className="flex-1 resize-none border-0 focus-visible:ring-0 p-5 min-h-[140px] text-sm leading-relaxed"
                             containerClassName="flex-1 flex flex-col h-full"
                         />
-                        <div className="px-4 py-2 bg-muted/30 border-t flex justify-between items-center text-xs text-muted-foreground shrink-0">
-                            <span className="font-medium">{soapData[section.key].split(/\s+/).filter(w => w.length > 0).length} palavras</span>
-                            <span className="text-[10px] uppercase tracking-wide opacity-60">{section.shortLabel}</span>
+                        <div className="px-5 py-2.5 bg-muted/30 border-t flex justify-between items-center text-xs text-muted-foreground shrink-0">
+                            <span className="font-semibold">{soapData[section.key].split(/\s+/).filter(w => w.length > 0).length} palavras</span>
+                            <span className="text-[10px] uppercase tracking-wide opacity-60 font-medium">{section.shortLabel}</span>
                         </div>
                     </div>
                 </GridWidget>
@@ -333,7 +334,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                 >
                     <div className="h-full overflow-auto p-0">
                         {patientId ? (
-                            <div className="p-3">
+                            <div className="p-4">
                                 <MeasurementForm
                                     patientId={patientId}
                                     soapRecordId={soapRecordId}
@@ -341,14 +342,14 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                                 />
                             </div>
                         ) : (
-                            <div className="flex items-center justify-center h-full text-muted-foreground text-sm p-4">
+                            <div className="flex items-center justify-center h-full text-muted-foreground text-sm p-5">
                                 Carregando formulário...
                             </div>
                         )}
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 6, h: 9, x: 0, y: 19, minW: 6, minH: 6 }
+            defaultLayout: { w: 6, h: 9, x: 0, y: (showPainDetails ? 30 : 19), minW: 6, minH: 6 }
         },
         // Home Care (direita)
         {
@@ -370,7 +371,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 6, h: 9, x: 6, y: 19, minW: 6, minH: 6 }
+            defaultLayout: { w: 6, h: 9, x: 6, y: (showPainDetails ? 30 : 19), minW: 6, minH: 6 }
         },
 
         // ===== LINHA 4: Sessões Anteriores | Anexos =====
@@ -462,7 +463,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 6, h: 10, x: 0, y: 28, minW: 6, minH: 6 }
+            defaultLayout: { w: 6, h: 10, x: 0, y: (showPainDetails ? 39 : 28), minW: 6, minH: 6 }
         },
         // Anexos (direita)
         {
@@ -492,7 +493,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 6, h: 10, x: 6, y: 28, minW: 6, minH: 6 }
+            defaultLayout: { w: 6, h: 10, x: 6, y: (showPainDetails ? 39 : 28), minW: 6, minH: 6 }
         },
     ], [
         isEditable,
