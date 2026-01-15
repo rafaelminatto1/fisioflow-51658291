@@ -34,7 +34,7 @@ DROP POLICY IF EXISTS "user_roles_update_policy" ON user_roles;
 CREATE POLICY "user_roles_select_own_or_admin" ON user_roles
 FOR SELECT TO authenticated
 USING (
-    user_id = (select auth.uid()) OR
+    user_id = auth.uid() OR
     private.is_admin_secure()
 );
 

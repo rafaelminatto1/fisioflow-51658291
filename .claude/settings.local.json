@@ -141,7 +141,8 @@
       "Bash(gh api:*)",
       "Read(//home/rafael/cursor/fisiolovable/fisioflow-51658291/**)",
       "Bash(npx vercel inspect:*)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "mcp__playwright__browser_network_requests"
     ],
     "deny": [],
     "ask": []

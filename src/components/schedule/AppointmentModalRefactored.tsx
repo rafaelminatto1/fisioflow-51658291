@@ -13,6 +13,9 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle
 } from '@/components/ui/dialog';
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle
+} from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
@@ -34,6 +37,7 @@ import {
 import { appointmentFormSchema } from '@/lib/validations/agenda';
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 import { QuickPatientModal } from '../modals/QuickPatientModal';
 import { DuplicateAppointmentDialog, type DuplicateConfig } from './DuplicateAppointmentDialog';
@@ -73,6 +77,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   mode: initialMode = 'create'
 }) => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isRecurringCalendarOpen, setIsRecurringCalendarOpen] = useState(false);
   const [conflictCheck, setConflictCheck] = useState<{ hasConflict: boolean; conflictingAppointment?: AppointmentBase; conflictCount?: number } | null>(null);
@@ -88,8 +93,8 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const [pendingFormData, setPendingFormData] = useState<AppointmentFormData | null>(null);
   const [waitlistQuickAddOpen, setWaitlistQuickAddOpen] = useState(false);
 
-  const { mutate: createAppointmentMutation, isPending: isCreating } = useCreateAppointment();
-  const { mutate: updateAppointmentMutation, isPending: isUpdating } = useUpdateAppointment();
+  const { mutateAsync: createAppointmentAsync, isPending: isCreating } = useCreateAppointment();
+  const { mutateAsync: updateAppointmentAsync, isPending: isUpdating } = useUpdateAppointment();
   const { mutate: deleteAppointmentMutation } = useDeleteAppointment();
   const { data: activePatients, isLoading: patientsLoading } = useActivePatients() as { data: Patient[] | undefined; isLoading: boolean };
   const { data: appointments = [] } = useAppointments();
@@ -116,8 +121,8 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       notes: appointment?.notes || '',
       therapist_id: appointment?.therapistId || '',
       room: appointment?.room || '',
-      payment_status: appointment?.payment_status || 'pending',
-      payment_amount: appointment?.payment_amount || 170,
+      payment_status: appointment.payment_status || 'pending',
+      payment_amount: appointment.payment_amount || 170,
       payment_method: '',
       installments: 1,
       is_recurring: appointment?.is_recurring || false,
@@ -269,27 +274,23 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
 
     try {
       if (appointment?.id) {
-        await updateAppointmentMutation({
+        await updateAppointmentAsync({
           appointmentId: appointment.id,
           updates: formattedData
         }, {
           onSuccess: () => {
-            toast.success('Agendamento atualizado com sucesso!');
+            // Toast é exibido pelo hook
             if (appointmentData.status === 'avaliacao') {
               const navPath = `/patients/${appointmentData.patient_id}/evaluations/new?appointmentId=${appointment.id}`;
               navigate(navPath);
             }
             onClose();
-          },
-          onError: (error) => {
-            toast.error('Erro ao atualizar agendamento');
-            console.error(error);
           }
         });
       } else {
-        await createAppointmentMutation(formattedData as unknown as AppointmentFormData, {
+        await createAppointmentAsync(formattedData as unknown as AppointmentFormData, {
           onSuccess: (newAppointment) => {
-            toast.success('Agendamento criado com sucesso!');
+            // Toast é exibido pelo hook
             if (appointmentData.status === 'avaliacao') {
               const createdId = (newAppointment as { id?: string })?.id;
               if (createdId) {
@@ -300,14 +301,17 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
             onClose();
           },
           onError: (error) => {
-            toast.error('Erro ao criar agendamento');
+            // Toast é exibido pelo hook, mas adicionamos log
             console.error('Erro ao criar agendamento:', error);
           }
         });
       }
     } catch (error: unknown) {
-      console.error('Erro ao salvar:', error);
-      toast.error('Ocorreu um erro inesperado.');
+      console.error('Erro ao salvar (catch):', error);
+      // O hook já deve ter exibido toast de erro, mas se foi erro síncrono antes da mutation:
+      if (error instanceof Error && !error.message.includes('permission') && !error.message.includes('fetch')) {
+         toast.error('Erro inesperado: ' + error.message);
+      }
     }
   };
 
@@ -338,7 +342,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         const endTime = new Date(new Date(`${newDate}T${newTime}`).getTime() + duration * 60000);
         const endTimeString = format(endTime, 'HH:mm');
 
-        createAppointmentMutation({
+        createAppointmentAsync({
           patient_id: appointment.patientId,
           therapist_id: appointment.therapistId || null,
           date: newDate,
@@ -398,28 +402,34 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         session_type: (pendingFormData.type === 'Fisioterapia' ? 'individual' : 'group') as 'individual' | 'group',
       };
 
-      createAppointmentMutation(formattedData as unknown as AppointmentFormData, {
+      createAppointmentAsync(formattedData as unknown as AppointmentFormData, {
         onSuccess: () => {
-          toast.success('Agendamento criado com sucesso!');
+          // Toast já exibido pelo hook
           setCapacityDialogOpen(false);
           setPendingFormData(null);
           onClose();
-        },
-        onError: () => {
-          toast.error('Erro ao criar agendamento');
         }
       });
     }
   };
 
+  const ModalComponent = isMobile ? Sheet : Dialog;
+  const ModalContent = isMobile ? SheetContent : DialogContent;
+  const ModalHeader = isMobile ? SheetHeader : DialogHeader;
+  const ModalTitle = isMobile ? SheetTitle : DialogTitle;
+
+  const contentProps = isMobile
+    ? { side: "bottom" as const, className: "h-[95vh] p-0 flex flex-col" }
+    : { className: "max-w-[95vw] sm:max-w-[600px] max-h-[95vh] h-auto flex flex-col p-0" };
+
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-[95vw] sm:max-w-[600px] max-h-[95vh] h-auto flex flex-col p-0">
-        <DialogHeader className="px-4 sm:px-6 py-4 border-b shrink-0">
-          <DialogTitle className="text-xl font-semibold">
+    <ModalComponent open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <ModalContent {...contentProps}>
+        <ModalHeader className="px-4 sm:px-6 py-4 border-b shrink-0">
+          <ModalTitle className="text-xl font-semibold text-left">
             {currentMode === 'view' ? 'Detalhes do Agendamento' : currentMode === 'edit' ? 'Editar Agendamento' : 'Novo Agendamento'}
-          </DialogTitle>
-        </DialogHeader>
+          </ModalTitle>
+        </ModalHeader>
 
         <FormProvider {...methods}>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
@@ -487,7 +497,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                     disabled={currentMode === 'view'}
                     watchPaymentStatus={watchPaymentStatus || 'pending'}
                     watchPaymentMethod={watchPaymentMethod || ''}
-                    watchpaymentAmount={watchPaymentAmount || 0}
+                    watchPaymentAmount={watchPaymentAmount || 0}
                   />
                 </TabsContent>
 
@@ -620,9 +630,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
             />
           )
         }
-      </DialogContent >
-    </Dialog >
+      </ModalContent >
+    </ModalComponent >
   );
 };
-
-export default AppointmentModalRefactored;

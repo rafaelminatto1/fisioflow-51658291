@@ -304,7 +304,7 @@ test.describe('Video Player Modal', () => {
 });
 
 test.describe('Video Edit Modal', () => {
-  beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
     await page.route('**/exercise-videos*', (route) => {
       route.fulfill({
         status: 200,
