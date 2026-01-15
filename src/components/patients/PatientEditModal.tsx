@@ -9,7 +9,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Edit, Loader2 } from 'lucide-react';
 import { PatientForm } from './PatientForm';
-import { useUpdatePatient, usePatient } from '@/hooks/usePatientCrud';
+import { useUpdatePatient, usePatient, type PatientUpdateInput } from '@/hooks/usePatientCrud';
 import { useOrganizations } from '@/hooks/useOrganizations';
 
 interface PatientEditModalProps {
@@ -27,7 +27,7 @@ export const PatientEditModal: React.FC<PatientEditModalProps> = ({
   const { data: patient, isLoading } = usePatient(patientId);
   const updateMutation = useUpdatePatient();
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: PatientUpdateInput) => {
     if (!currentOrganization?.id) {
       throw new Error('Organização não encontrada');
     }

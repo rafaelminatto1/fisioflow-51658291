@@ -19,3 +19,4 @@ export { AppointmentAvatar } from './AppointmentAvatar';
 export { MiniCalendar } from './MiniCalendar';
 export { AppointmentSearch } from './AppointmentSearch';
 export { AdvancedFilters } from './AdvancedFilters';
+export { GoogleCalendarButton, GoogleCalendarStatus, GoogleCalendarBadge } from './GoogleCalendarButton';
