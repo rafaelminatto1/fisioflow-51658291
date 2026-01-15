@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Responsive, Layout, useContainerWidth } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
-import 'react-resizable/css/styles.css';
 import { Button } from '@/components/ui/button';
 import { Lock, Unlock, RotateCcw } from 'lucide-react';
 
