@@ -254,17 +254,40 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
         return calculatePainTrend(painHistory, painScaleData.level);
     }, [painHistory, painScaleData.level]);
 
-    // Load layout
+    // Load layout on mount only
     useEffect(() => {
         const saved = localStorage.getItem('evolution_layout_v1');
         if (saved) {
             try {
-                setSavedLayout(JSON.parse(saved));
+                const parsedLayout = JSON.parse(saved);
+                setSavedLayout(parsedLayout);
             } catch (e) {
                 console.error('Failed to load evolution layout', e);
             }
         }
-    }, []);
+    }, []); // Run only on mount
+
+    // Create a compatible layout based on current showPainDetails state
+    // This ensures that when Pain Scale is toggled, incompatible saved positions are filtered out
+    const compatibleLayout = React.useMemo(() => {
+        if (!savedLayout || savedLayout.length === 0) return [];
+
+        // Check if the saved layout is compatible with current showPainDetails state
+        const painScaleItem = savedLayout.find((item: any) => item.i === 'pain-scale');
+        if (painScaleItem) {
+            const expectedHeight = showPainDetails ? 16 : 5;
+            const actualHeight = painScaleItem.h || 5;
+
+            // If the saved height doesn't match the current state, return empty array
+            // to force use of default layouts
+            if (Math.abs(actualHeight - expectedHeight) > 2) {
+                console.warn(`[EvolutionDraggableGrid] Saved layout incompatible (Pain Scale h:${actualHeight} vs expected h:${expectedHeight}), using defaults`);
+                return [];
+            }
+        }
+
+        return savedLayout;
+    }, [savedLayout, showPainDetails]);
 
     const handleSaveLayout = (layout: Layout) => {
         localStorage.setItem('evolution_layout_v1', JSON.stringify(layout));
@@ -663,7 +686,8 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     onLayoutChange={(layout) => {
                         if (isEditable) setSavedLayout(layout);
                     }}
-                    savedLayout={savedLayout}
+                    // Pass compatible layout that respects the current showPainDetails state
+                    savedLayout={compatibleLayout}
                     isEditable={isEditable}
                     rowHeight={50}
                 />
