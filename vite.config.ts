@@ -65,7 +65,9 @@ export default defineConfig(({ mode }) => {
       }),
       // VitePWA deve vir antes da compressão
       VitePWA({
-        registerType: 'autoUpdate',
+        // Usar 'prompt' para controle manual via hook useServiceWorkerUpdate
+        // Isso permite mostrar UI customizada e forçar atualização imediata
+        registerType: 'prompt',
         // Disable PWA in development to avoid manifest errors
         disable: !isProduction,
         // Versão dinâmica baseada no commit SHA ou timestamp para forçar atualização

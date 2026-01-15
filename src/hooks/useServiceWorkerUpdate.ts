@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { Workbox } from 'workbox-window';
 
@@ -27,25 +27,33 @@ export function useServiceWorkerUpdate() {
     offlineReady: false,
   });
 
+  // Usar ref para armazenar a instância do Workbox
+  const wbRef = useRef<Workbox | null>(null);
+  const updateCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   useEffect(() => {
     // Apenas executar em produção com SW suportado
     if (typeof window === 'undefined' || import.meta.env.DEV || !('serviceWorker' in navigator)) {
       return;
     }
 
-    let wb: Workbox | null = null;
-    let updateCheckInterval: ReturnType<typeof setInterval> | null = null;
+    let mounted = true;
 
     const registerSW = async () => {
       try {
-        // Usar workbox-window para registro com controle granular
-        wb = new Workbox('/sw.js', {
+        // Criar instância do Workbox
+        const wb = new Workbox('/sw.js', {
           type: 'classic'
         });
 
-        // Listener para quando o SW encontrar uma atualização
+        // Armazenar referência
+        wbRef.current = wb;
+
+        // Listener para quando o SW encontrar uma atualização e entrar em waiting
         wb.addEventListener('waiting', (event) => {
           console.log('[SW] Nova versão disponível (waiting)!');
+
+          if (!mounted) return;
 
           // Marcar que há atualização
           setState(prev => ({ ...prev, hasUpdate: true }));
@@ -62,14 +70,15 @@ export function useServiceWorkerUpdate() {
                 setState(prev => ({ ...prev, isUpdating: true }));
 
                 // Enviar mensagem para o SW pular a espera
-                if (wb) {
-                  wb.addEventListener('controlling', () => {
+                if (wbRef.current) {
+                  // Listener para quando o novo SW assumir o controle
+                  wbRef.current.addEventListener('controlling', () => {
                     console.log('[SW] Novo controller ativado, recarregando...');
                     window.location.reload();
                   }, { once: true });
 
                   // Enviar SKIP_WAITING para o SW
-                  wb.messageSkipWaiting();
+                  wbRef.current.messageSkipWaiting();
                 }
               }
             },
@@ -89,6 +98,8 @@ export function useServiceWorkerUpdate() {
         // Listener para quando o SW estiver ativo e controlando a página
         wb.addEventListener('activated', (event) => {
           console.log('[SW] Service Worker ativado:', event);
+
+          if (!mounted) return;
 
           // Verificar se é primeira instalação ou atualização
           if (event.isUpdate) {
@@ -116,10 +127,10 @@ export function useServiceWorkerUpdate() {
         console.log('[SW] Service Worker registrado com sucesso');
 
         // Verificar atualizações periodicamente (a cada 2 minutos)
-        updateCheckInterval = setInterval(() => {
-          if (wb) {
+        updateCheckIntervalRef.current = setInterval(() => {
+          if (wbRef.current) {
             console.log('[SW] Verificando atualizações...');
-            wb.update().catch(err => {
+            wbRef.current.update().catch(err => {
               console.debug('[SW] Nenhuma atualização disponível');
             });
           }
@@ -127,9 +138,11 @@ export function useServiceWorkerUpdate() {
 
       } catch (error) {
         console.error('[SW] Falha ao registrar Service Worker:', error);
-        toast.error('Erro ao registrar service worker', {
-          description: 'O app pode não funcionar offline.',
-        });
+        if (mounted) {
+          toast.error('Erro ao registrar service worker', {
+            description: 'O app pode não funcionar offline.',
+          });
+        }
       }
     };
 
@@ -137,8 +150,10 @@ export function useServiceWorkerUpdate() {
 
     // Cleanup
     return () => {
-      if (updateCheckInterval) {
-        clearInterval(updateCheckInterval);
+      mounted = false;
+      if (updateCheckIntervalRef.current) {
+        clearInterval(updateCheckIntervalRef.current);
+        updateCheckIntervalRef.current = null;
       }
     };
   }, []);

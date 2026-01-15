@@ -111,24 +111,16 @@ COMMENT ON COLUMN recurring_appointment_series.recurrence_interval IS 'Intervalo
 COMMENT ON COLUMN recurring_appointment_series.recurrence_days_of_week IS 'Dias da semana para recorrência weekly (0=dom, 1=seg, ..., 6=sáb)';
 COMMENT ON COLUMN recurring_appointment_series.recurrence_end_type IS 'Quando a série termina: never, date, occurrences';
 
--- Trigger para atualizar updated_at
-CREATE OR REPLACE FUNCTION update_recurring_series_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
+-- Trigger para atualizar updated_at usando função padrão
 CREATE TRIGGER recurring_series_updated_at
   BEFORE UPDATE ON recurring_appointment_series
   FOR EACH ROW
-  EXECUTE FUNCTION update_recurring_series_updated_at();
+  EXECUTE FUNCTION public.update_updated_at_column();
 
 CREATE TRIGGER recurring_occurrences_updated_at
   BEFORE UPDATE ON recurring_appointment_occurrences
   FOR EACH ROW
-  EXECUTE FUNCTION update_recurring_series_updated_at();
+  EXECUTE FUNCTION public.update_updated_at_column();
 
 -- =====================================================================
 -- RLS POLICIES

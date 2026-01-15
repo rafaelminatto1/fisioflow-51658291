@@ -86,15 +86,16 @@ CREATE INDEX IF NOT EXISTS idx_google_calendar_events_google_event_id ON google_
 -- Enable RLS
 ALTER TABLE google_calendar_events ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies based on appointment ownership
+-- RLS Policies based on appointment ownership via patient
 CREATE POLICY "Users can view Google events for their appointments"
   ON google_calendar_events
   FOR SELECT
   USING (
     EXISTS (
-      SELECT 1 FROM appointments
-      WHERE appointments.id = google_calendar_events.appointment_id
-      AND appointments.user_id = auth.uid()
+      SELECT 1 FROM appointments a
+      JOIN patients p ON p.id = a.patient_id
+      WHERE a.id = google_calendar_events.appointment_id
+      AND p.user_id = auth.uid()
     )
   );
 
@@ -103,9 +104,10 @@ CREATE POLICY "Users can insert Google events for their appointments"
   FOR INSERT
   WITH CHECK (
     EXISTS (
-      SELECT 1 FROM appointments
-      WHERE appointments.id = google_calendar_events.appointment_id
-      AND appointments.user_id = auth.uid()
+      SELECT 1 FROM appointments a
+      JOIN patients p ON p.id = a.patient_id
+      WHERE a.id = google_calendar_events.appointment_id
+      AND p.user_id = auth.uid()
     )
   );
 
@@ -114,9 +116,10 @@ CREATE POLICY "Users can update Google events for their appointments"
   FOR UPDATE
   USING (
     EXISTS (
-      SELECT 1 FROM appointments
-      WHERE appointments.id = google_calendar_events.appointment_id
-      AND appointments.user_id = auth.uid()
+      SELECT 1 FROM appointments a
+      JOIN patients p ON p.id = a.patient_id
+      WHERE a.id = google_calendar_events.appointment_id
+      AND p.user_id = auth.uid()
     )
   );
 
@@ -125,9 +128,10 @@ CREATE POLICY "Users can delete Google events for their appointments"
   FOR DELETE
   USING (
     EXISTS (
-      SELECT 1 FROM appointments
-      WHERE appointments.id = google_calendar_events.appointment_id
-      AND appointments.user_id = auth.uid()
+      SELECT 1 FROM appointments a
+      JOIN patients p ON p.id = a.patient_id
+      WHERE a.id = google_calendar_events.appointment_id
+      AND p.user_id = auth.uid()
     )
   );
 
