@@ -28,6 +28,7 @@ interface DraggableGridProps {
     rowHeight?: number;
     cols?: { lg: number; md: number; sm: number; xs: number; xxs: number };
     isEditable?: boolean;
+    forceReset?: boolean; // New prop to force layout reset
 }
 
 const DEFAULT_COLS = { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 } as const;
@@ -42,6 +43,7 @@ export const DraggableGrid = memo(function DraggableGrid({
     rowHeight = 60,
     cols = DEFAULT_COLS,
     isEditable = false,
+    forceReset = false,
 }: DraggableGridProps) {
     const [layouts, setLayouts] = useState<Partial<Record<string, Layout>>>({});
     const [isMounted, setIsMounted] = useState(false);
@@ -57,20 +59,54 @@ export const DraggableGrid = memo(function DraggableGrid({
             ...item.defaultLayout,
         }));
 
+        // If forceReset is true, ignore saved layout completely
+        if (forceReset) {
+            console.log('[DraggableGrid] Force reset - using default layouts');
+            setLayouts({ lg: defaultLayouts });
+            return;
+        }
+
         // If no saved layout exists, use default layouts
         if (!savedLayout || savedLayout.length === 0) {
             setLayouts({ lg: defaultLayouts });
             return;
         }
 
-        // Merge saved layouts with defaults (saved positions override defaults)
+        // Check if saved layout matches the expected number of items
+        // If not, it's an old/incompatible layout - ignore it
+        if (savedLayout.length !== items.length) {
+            console.warn('[DraggableGrid] Saved layout has different number of items, using defaults');
+            setLayouts({ lg: defaultLayouts });
+            return;
+        }
+
+        // IMPORTANT: When merging, ONLY use the saved width/height/x/y if they're close to defaults
+        // This prevents old layouts from breaking when default positions change
         const merged: Layout = defaultLayouts.map(def => {
             const saved = savedLayout.find(l => l.i === def.i);
-            return saved ? { ...def, ...saved } : def;
+            if (!saved) return def;
+
+            // Calculate position difference
+            const yDiff = Math.abs((saved.y || 0) - def.y);
+            const xDiff = Math.abs((saved.x || 0) - def.x);
+
+            // If saved position is significantly different from default, use default
+            // This handles cases like Pain Scale expansion where Y positions change
+            if (yDiff > 2 || xDiff > 1) {
+                console.log(`[DraggableGrid] Item ${def.i}: saved position (${saved.x},${saved.y}) too far from default (${def.x},${def.y}), using default`);
+                return def;
+            }
+
+            // Only use saved dimensions and close positions
+            return {
+                ...def,
+                w: saved.w || def.w,
+                h: saved.h || def.h,
+            };
         });
 
         setLayouts({ lg: merged });
-    }, [items, savedLayout]);
+    }, [items, savedLayout, forceReset]);
 
     const handleLayoutChange = useCallback((currentLayout: Layout, _allLayouts: Partial<Record<string, Layout>>) => {
         if (onLayoutChange) {

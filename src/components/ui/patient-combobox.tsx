@@ -16,7 +16,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { PatientHelpers } from "@/types";
+
 
 interface Patient {
   id: string;
@@ -46,11 +46,21 @@ export function PatientCombobox({
 
   const selectedPatient = patients.find((patient) => patient.id === value);
 
+  // Normalization function to remove accents
+  const normalize = (str: string) => {
+    return str
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  };
+
   const filteredPatients = React.useMemo(() => {
     if (!searchTerm) return patients;
 
+    const normalizedSearch = normalize(searchTerm);
+
     return patients.filter((patient) =>
-      PatientHelpers.getName(patient).toLowerCase().includes(searchTerm.toLowerCase())
+      normalize(patient.name).includes(normalizedSearch)
     );
   }, [patients, searchTerm]);
 
@@ -78,7 +88,7 @@ export function PatientCombobox({
         >
           {selectedPatient ? (
             <div className="flex items-center gap-2">
-              <span className="truncate">{PatientHelpers.getName(selectedPatient)}</span>
+              <span className="truncate">{selectedPatient.name}</span>
               {selectedPatient.incomplete_registration && (
                 <span className="text-xs px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-full">
                   ⚠️
@@ -93,8 +103,8 @@ export function PatientCombobox({
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
         <Command shouldFilter={false}>
-          <CommandInput 
-            placeholder="Buscar ou criar paciente..." 
+          <CommandInput
+            placeholder="Buscar ou criar paciente..."
             value={searchTerm}
             onValueChange={setSearchTerm}
             onKeyDown={(e) => {
@@ -129,6 +139,7 @@ export function PatientCombobox({
                     <CommandItem
                       key={patient.id}
                       value={patient.id}
+                      keywords={[patient.name]}
                       onSelect={() => handleSelect(patient.id)}
                       className="cursor-pointer"
                     >
@@ -139,7 +150,7 @@ export function PatientCombobox({
                         )}
                       />
                       <div className="flex items-center gap-2 flex-1">
-                        <span>{PatientHelpers.getName(patient)}</span>
+                        <span>{patient.name}</span>
                         {patient.incomplete_registration && (
                           <span className="text-xs px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-full">
                             ⚠️ Cadastro incompleto
@@ -156,6 +167,7 @@ export function PatientCombobox({
                       <CommandItem
                         onSelect={handleCreateNew}
                         className="cursor-pointer"
+                        value={`create-${searchTerm}`}
                       >
                         <UserPlus className="mr-2 h-4 w-4" />
                         <span>Criar novo paciente "{searchTerm}"</span>
