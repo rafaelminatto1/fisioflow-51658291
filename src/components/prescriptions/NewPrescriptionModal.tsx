@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { Dumbbell, GripVertical, Loader2, Plus, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+
 import {
   Dialog,
   DialogContent,
@@ -22,9 +25,9 @@ import {
 } from '@/components/ui/select';
 import { useExercises } from '@/hooks/useExercises';
 import { usePrescriptions, PrescriptionExercise } from '@/hooks/usePrescriptions';
-import { Plus, Trash2, Loader2, Dumbbell, GripVertical } from 'lucide-react';
-import { toast } from 'sonner';
-import { v4 as uuidv4 } from 'uuid';
+
+// Helper function to generate UUID - using crypto.randomUUID() to avoid "ne is not a function" error in production
+const uuidv4 = (): string => crypto.randomUUID();
 
 interface NewPrescriptionModalProps {
   open: boolean;
