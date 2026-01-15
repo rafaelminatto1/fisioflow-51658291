@@ -97,8 +97,6 @@ export default defineConfig(({ mode }) => {
             }
           ],
           categories: ['health', 'medical', 'productivity'],
-          // Use a simple version format for PWA manifest
-          version: '1.0.0',
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff2}'],
@@ -382,6 +380,9 @@ export default defineConfig(({ mode }) => {
         // Include konva for proper CJS/UMD interop
         'konva',
         'react-konva',
+        'react-grid-layout',
+        'react-draggable',
+        'react-resizable',
       ],
 
       // Excluir bibliotecas médicas/visuais complexas que causam timeouts
