@@ -128,6 +128,8 @@
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.24.10",
     "fuse.js": "^7.1.0",
+    "google-auth-library": "^10.5.0",
+    "googleapis": "^170.0.0",
     "ical-generator": "^10.0.0",
     "idb-keyval": "^6.2.2",
     "inngest": "^3.49.1",
