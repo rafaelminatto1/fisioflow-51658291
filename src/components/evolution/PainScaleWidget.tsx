@@ -194,10 +194,10 @@ const PainChart = memo<PainChartProps>(({ history }) => {
     const recentHistory = history.slice(0, 10).reverse();
 
     return (
-        <div className="space-y-3" role="region" aria-label="Gráfico de histórico de dor">
+        <div className="space-y-2.5 sm:space-y-3" role="region" aria-label="Gráfico de histórico de dor">
             <Label className="text-sm font-medium text-foreground">Histórico recente</Label>
             <div
-                className="flex items-end gap-1.5 h-20 w-full pt-2"
+                className="flex items-end gap-1 sm:gap-1.5 h-16 sm:h-20 w-full pt-2"
                 role="list"
                 aria-label="Barras representando níveis de dor históricos"
             >
@@ -404,13 +404,13 @@ export const PainScaleWidget: React.FC<PainScaleWidgetProps> = ({
                 )}
             >
                 {!hideHeader && (
-                    <CardHeader className="pb-4 px-5">
-                        <div className="flex items-center justify-between gap-4">
-                            <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
-                                <Activity className="h-5 w-5 text-primary" aria-hidden="true" />
-                                <span>Nível de Dor (EVA)</span>
+                    <CardHeader className="pb-3 sm:pb-4 px-4 sm:px-5">
+                        <div className="flex items-center justify-between gap-2 sm:gap-4">
+                            <CardTitle className="flex items-center gap-2 sm:gap-2.5 text-base font-semibold">
+                                <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-primary" aria-hidden="true" />
+                                <span className="truncate">Nível de Dor (EVA)</span>
                             </CardTitle>
-                            <div className="flex items-center gap-2 shrink-0">
+                            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                                 {showTrend && <PainTrendBadge trend={trend} />}
                                 <Button
                                     variant="ghost"
@@ -439,19 +439,21 @@ export const PainScaleWidget: React.FC<PainScaleWidgetProps> = ({
 
                         {/* Level Info & Controls */}
                         <div className="flex-1 space-y-2.5 sm:space-y-3 min-w-0">
-                            <div className="flex items-center gap-2.5">
+                            <div className="flex items-center gap-2 sm:gap-2.5">
                                 <motion.span
                                     key={currentLevelInfo.emoji}
                                     initial={{ scale: 0.5, rotate: -20 }}
                                     animate={{ scale: 1, rotate: 0 }}
-                                    className="text-2xl"
+                                    className="text-xl sm:text-2xl"
                                     aria-hidden="true"
                                 >
                                     {currentLevelInfo.emoji}
                                 </motion.span>
-                                <span className="font-semibold text-base leading-none">
-                                    {currentLevelInfo.label}
-                                </span>
+                                <div className="min-w-0">
+                                    <span className="font-semibold text-sm sm:text-base leading-none block truncate">
+                                        {currentLevelInfo.label}
+                                    </span>
+                                </div>
                             </div>
 
                             {/* Controls */}
