@@ -4,8 +4,11 @@ import { BusinessHoursManager } from '@/components/schedule/settings/BusinessHou
 import { CancellationRulesManager } from '@/components/schedule/settings/CancellationRulesManager';
 import { NotificationSettingsManager } from '@/components/schedule/settings/NotificationSettingsManager';
 import { BlockedTimesManager } from '@/components/schedule/settings/BlockedTimesManager';
+import { StatusColorManager } from '@/components/schedule/settings/StatusColorManager';
+import { StatusColorSettingsModal } from '@/components/schedule/settings/StatusColorSettingsModal';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Clock, Users, Bell, AlertTriangle, CalendarOff } from 'lucide-react';
+import { Settings, Clock, Users, Bell, AlertTriangle, CalendarOff, Palette } from 'lucide-react';
+import { useState } from 'react';
 
 export default function ScheduleSettings() {
   return (
@@ -22,41 +25,48 @@ export default function ScheduleSettings() {
         </div>
 
         <Tabs defaultValue="capacity" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto gap-2 bg-transparent p-0">
-            <TabsTrigger 
-              value="capacity" 
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 h-auto gap-2 bg-transparent p-0">
+            <TabsTrigger
+              value="capacity"
               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center gap-2"
             >
               <Users className="h-4 w-4" />
               <span className="hidden sm:inline">Capacidade</span>
             </TabsTrigger>
-            <TabsTrigger 
-              value="hours" 
+            <TabsTrigger
+              value="hours"
               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center gap-2"
             >
               <Clock className="h-4 w-4" />
               <span className="hidden sm:inline">Horários</span>
             </TabsTrigger>
-            <TabsTrigger 
-              value="cancellation" 
+            <TabsTrigger
+              value="cancellation"
               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center gap-2"
             >
               <AlertTriangle className="h-4 w-4" />
               <span className="hidden sm:inline">Cancelamento</span>
             </TabsTrigger>
-            <TabsTrigger 
-              value="notifications" 
+            <TabsTrigger
+              value="notifications"
               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center gap-2"
             >
               <Bell className="h-4 w-4" />
               <span className="hidden sm:inline">Notificações</span>
             </TabsTrigger>
-            <TabsTrigger 
-              value="blocked" 
+            <TabsTrigger
+              value="blocked"
               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center gap-2"
             >
               <CalendarOff className="h-4 w-4" />
               <span className="hidden sm:inline">Bloqueios</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="status"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center gap-2"
+            >
+              <Palette className="h-4 w-4" />
+              <span className="hidden sm:inline">Status</span>
             </TabsTrigger>
           </TabsList>
 
@@ -78,6 +88,10 @@ export default function ScheduleSettings() {
 
           <TabsContent value="blocked">
             <BlockedTimesManager />
+          </TabsContent>
+
+          <TabsContent value="status">
+            <StatusColorManager />
           </TabsContent>
         </Tabs>
       </div>

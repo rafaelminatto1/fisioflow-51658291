@@ -191,35 +191,35 @@ git push origin main
 |--------|--------|
 | Credenciais obtidas | ✅ |
 | Código implementado | ✅ |
-| Variáveis no Vercel | ❌ **PENDENTE** |
-| Testado localmente | ⏳ Após variáveis |
-| Deploy | ⏳ Após testes |
+| Variáveis no `.env.local` | ✅ |
+| Variáveis no Vercel | ⏳ Pendente deploy |
+| Testado localmente | ⏳ Após deploy |
 
 ### Edge Config / Feature Flags
 | Tarefa | Status |
 |--------|--------|
 | Código implementado | ✅ |
 | Alternativa ENV criada | ✅ |
-| Edge Config criado | ❌ **OPCIONAL** |
-| ENV variables configuradas | ❌ **PENDENTE** |
-| Feature flags em uso | ⏳ Após setup |
+| Edge Config criado | ⏳ Opcional |
+| ENV variables configuradas | ✅ |
+| Feature flags em uso | ✅ (12/13 habilitadas) |
 
 ### Supabase Vector (Busca Semântica)
 | Tarefa | Status |
 |--------|--------|
 | Migrations criadas | ✅ |
-| Migrations aplicadas | ❌ **PENDENTE** |
-| Embeddings gerados | ❌ **PENDENTE** |
-| OPENAI_API_KEY configurada | ❌ **PENDENTE** |
-| Busca semântica funcionando | ⏳ Após embeddings |
+| Migrations aplicadas | ✅ |
+| Embeddings gerados | ✅ (100 exercícios) |
+| GOOGLE_GENERATIVE_AI_API_KEY configurada | ✅ |
+| Busca semântica funcionando | ✅ Verificado |
 
 ### Supabase MFA
 | Tarefa | Status |
 |--------|--------|
 | Migrations criadas | ✅ |
-| Migrations aplicadas | ❌ **PENDENTE** |
+| Migrations aplicadas | ✅ |
 | Componentes React | ✅ |
-| Integrado na UI | ⏳ Após migrations |
+| Integrado na UI | ✅ Schema pronto |
 
 ### Cron Jobs
 | Tarefa | Status |
@@ -227,7 +227,7 @@ git push origin main
 | vercel.json configurado | ✅ |
 | Functions criadas | ✅ |
 | Node.js runtime | ✅ |
-| CRON_SECRET gerado | ❌ **PENDENTE** |
+| CRON_SECRET gerado | ✅ |
 | Testados | ⏳ Após deploy |
 
 ### Preview Deployments

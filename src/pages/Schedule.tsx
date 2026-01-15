@@ -24,7 +24,7 @@ import { Progress } from '@/components/ui/progress';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { formatDateToLocalISO, formatDateToBrazilian } from '@/utils/dateUtils';
@@ -387,7 +387,16 @@ const Schedule = () => {
               <Button size="sm" variant={viewType === 'month' ? 'white' : 'ghost'} onClick={() => setViewType('month')} className="h-7 text-xs px-3 shadow-none">Mês</Button>
             </div>
 
-
+            <Link to="/schedule/settings">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9"
+                title="Configurações da Agenda"
+              >
+                <SettingsIcon className="w-4 h-4" />
+              </Button>
+            </Link>
 
             <Button onClick={handleCreateAppointment} className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm">
               <Plus className="w-4 h-4" />
