@@ -16,7 +16,8 @@ import {
     Zap,
     Repeat,
     Bell,
-    Copy
+    Copy,
+    Wand2
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -60,7 +61,7 @@ export const PatientSelectionSection = ({
                 disabled={disabled || isLoading}
             />
             {errors.patient_id && (
-                <p className="text-xs text-destructive">{(errors.patient_id as any).message}</p>
+                <p className="text-xs text-destructive">{(errors.patient_id as { message?: string })?.message}</p>
             )}
         </div>
     );
@@ -72,14 +73,16 @@ export const DateTimeSection = ({
     isCalendarOpen,
     setIsCalendarOpen,
     getCapacityForTime,
-    conflictCount
+    conflictCount,
+    onAutoSchedule
 }: {
     disabled: boolean,
     timeSlots: string[],
     isCalendarOpen: boolean,
     setIsCalendarOpen: (open: boolean) => void,
     getCapacityForTime: (day: number, time: string) => number,
-    conflictCount: number
+    conflictCount: number,
+    onAutoSchedule?: () => void
 }) => {
     const { watch, setValue } = useFormContext<AppointmentFormData>();
     const watchedDateStr = watch('appointment_date');
@@ -128,8 +131,22 @@ export const DateTimeSection = ({
                     </Popover>
                 </div>
 
-                <div className="space-y-1.5 sm:space-y-2">
-                    <Label className="text-xs sm:text-sm font-medium">Horário *</Label>
+                <div className="space-y-1.5 sm:space-y-2 relative">
+                    <div className="flex items-center justify-between">
+                        <Label className="text-xs sm:text-sm font-medium">Horário *</Label>
+                        {onAutoSchedule && !disabled && (
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-5 w-5 -mt-1 -mr-1 text-primary hover:text-primary hover:bg-primary/10"
+                                onClick={onAutoSchedule}
+                                title="Sugerir melhor horário"
+                            >
+                                <Wand2 className="h-3 w-3" />
+                            </Button>
+                        )}
+                    </div>
                     <Select
                         value={watchedTime}
                         onValueChange={(value) => setValue('appointment_time', value)}
@@ -453,7 +470,7 @@ export const OptionsTab = ({
                             <CalendarIcon className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             {recurringUntil ? format(recurringUntil, 'dd/MM/yyyy', { locale: ptBR }) : "Selecione a data final"}
                         </Button>
-                        {errors.recurring_until && <p className="text-xs text-destructive">{(errors.recurring_until as any).message}</p>}
+                        {errors.recurring_until && <p className="text-xs text-destructive">{(errors.recurring_until as { message?: string })?.message}</p>}
                     </div>
                 )}
             </div>
