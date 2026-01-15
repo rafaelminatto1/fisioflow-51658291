@@ -93,7 +93,7 @@ export const useActivePatients = () => {
         let query = supabase
           .from('patients')
           .select('id, full_name, name, phone, email, cpf, birth_date, observations, status, incomplete_registration, created_at, updated_at, organization_id')
-          .in('status', ['active', 'Em Tratamento', 'Inicial']);
+          .in('status', ['active']);
 
         if (organizationId) {
           query = query.eq('organization_id', organizationId);
