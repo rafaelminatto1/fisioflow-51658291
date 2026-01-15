@@ -133,7 +133,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
           .from('appointments')
           .select('*', { count: 'exact', head: true })
           .eq('patient_id', currentPatientId)
-          .eq('status', 'Realizado');
+          .eq('status', 'atendido');
 
         const calculatedSessionNumber = (count || 0) + 1;
         setSessionNumber(calculatedSessionNumber);

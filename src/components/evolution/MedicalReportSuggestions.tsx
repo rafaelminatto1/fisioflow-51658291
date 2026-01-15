@@ -76,7 +76,7 @@ export const MedicalReportSuggestions: React.FC<MedicalReportSuggestionsProps> =
         .from('appointments')
         .select('*')
         .eq('patient_id', patientId)
-        .eq('status', 'Realizado')
+        .eq('status', 'atendido')
         .order('appointment_date', { ascending: true });
 
       // Fetch goals
