@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { ensureProfile } from '@/lib/database/profiles';
 
 // ===== TYPES =====
 
@@ -100,7 +101,7 @@ export const useSoapRecords = (patientId: string, limit = 10) => {
         .eq('patient_id', patientId)
         .order('record_date', { ascending: false })
         .limit(limit);
-      
+
       if (error) throw error;
       return data as SoapRecord[];
     },
@@ -118,7 +119,7 @@ export const useSoapRecord = (recordId: string) => {
         .select('*')
         .eq('id', recordId)
         .single();
-      
+
       if (error) throw error;
       return data as SoapRecord;
     },
@@ -136,9 +137,13 @@ export const useCreateSoapRecord = () => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('Usuário não autenticado');
 
+      const fullName = userData.user.user_metadata?.full_name || userData.user.user_metadata?.name;
+      const profileId = await ensureProfile(userData.user.id, userData.user.email, fullName);
+      if (!profileId) throw new Error('Não foi possível carregar o perfil do usuário');
+
       const recordData = {
         ...data,
-        created_by: userData.user.id,
+        created_by: profileId,
         record_date: data.record_date || new Date().toISOString().split('T')[0]
       };
 
@@ -147,7 +152,7 @@ export const useCreateSoapRecord = () => {
         .insert(recordData)
         .select()
         .single();
-      
+
       if (error) throw error;
       return record as SoapRecord;
     },
@@ -560,9 +565,13 @@ export const useAutoSaveSoapRecord = () => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('Usuário não autenticado');
 
+      const fullName = userData.user.user_metadata?.full_name || userData.user.user_metadata?.name;
+      const profileId = await ensureProfile(userData.user.id, userData.user.email, fullName);
+      if (!profileId) throw new Error('Não foi possível carregar o perfil do usuário');
+
       const recordData = {
         ...data,
-        created_by: userData.user.id,
+        created_by: profileId,
         status: data.status || 'draft',
         last_auto_save_at: new Date().toISOString(),
         record_date: data.record_date || new Date().toISOString().split('T')[0]
