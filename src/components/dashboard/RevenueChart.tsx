@@ -25,7 +25,7 @@ export function RevenueChart() {
       const { data: payments } = await (supabase as any)
         .from('payments')
         .select('amount, created_at')
-        .eq('status', 'completed')
+        .eq('status', 'paid')
         .gte('created_at', startDate.toISOString())
         .order('created_at', { ascending: true });
 

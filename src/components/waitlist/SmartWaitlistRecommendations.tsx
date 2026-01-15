@@ -173,7 +173,7 @@ function RecommendationCard({ recommendation, onSelectCandidate }: Recommendatio
               </CardTitle>
               <CardDescription className="flex items-center gap-2 mt-1">
                 <Users className="h-3 w-3" />
-                {totalCandidates} candidato{totalCandidates !== 1 ? 's' : ''} disponível{totalCandidates !== 1 ? 'is' : ''}
+                {totalCandidates} candidato{totalCandidates !== 1 ? 's disponíveis' : ' disponível'}
                 <span className={cn('text-xs px-2 py-0.5 rounded-full', urgency.color)}>
                   {urgency.label}
                 </span>
@@ -349,7 +349,7 @@ export function SmartWaitlistRecommendations({
           {hasRecommendations && (
             <Badge variant="secondary" className="gap-1">
               <Calendar className="h-3 w-3" />
-              {recommendations.length} vagas disponíveis
+              {recommendations.length} {recommendations.length !== 1 ? 'vagas disponíveis' : 'vaga disponível'}
             </Badge>
           )}
         </div>

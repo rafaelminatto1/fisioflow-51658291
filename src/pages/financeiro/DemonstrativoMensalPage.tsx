@@ -100,7 +100,7 @@ export default function DemonstrativoMensalPage() {
         .select('*', { count: 'exact', head: true })
         .gte('start_time', dataInicio)
         .lte('start_time', dataFim)
-        .eq('status', 'completed');
+        .eq('status', 'atendido');
 
       return {
         periodo: `${meses.find(m => m.value === mesSelecionado)?.label} de ${anoSelecionado}`,

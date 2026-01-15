@@ -167,7 +167,7 @@ export class SyncManager {
         .select('*, patients(*)')
         .gte('start_time', today.toISOString())
         .lt('start_time', tomorrow.toISOString())
-        .eq('status', 'scheduled');
+        .eq('status', 'agendado');
 
       if (appointments) {
         // Extrair pacientes únicos

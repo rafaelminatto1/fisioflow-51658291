@@ -117,7 +117,7 @@ export function useDashboardMetrics(options: DashboardMetricsOptions = {}) {
             .from('appointments')
             .select('date')
             .eq('patient_id', patientId)
-            .eq('status', 'completed')
+            .eq('status', 'atendido')
             .order('date', { ascending: false })
             .limit(1)
             .single();
