@@ -207,7 +207,7 @@ export const DateTimeSection = ({
                                 ? "Horário lotado!"
                                 : availableSlots === maxCapacity
                                     ? "Horário livre"
-                                    : `${availableSlots} vaga${availableSlots !== 1 ? 's' : ''} disponível`
+                                    : `${availableSlots} ${availableSlots !== 1 ? 'vagas disponíveis' : 'vaga disponível'}`
                             }
                         </span>
                     </div>

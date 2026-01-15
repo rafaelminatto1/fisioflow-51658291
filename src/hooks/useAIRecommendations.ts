@@ -188,7 +188,7 @@ export function useScheduleRecommendations(options: ScheduleRecommendationsOptio
         .from('appointments')
         .select('therapist_id')
         .eq('patient_id', options.patientId)
-        .eq('status', 'completed')
+        .eq('status', 'atendido')
         .order('date', { ascending: false })
         .limit(1)
         .single();
@@ -282,7 +282,7 @@ export function useNextAppointmentSuggestion(patientId: string) {
         .from('appointments')
         .select('date, time, therapist_id, duration, type')
         .eq('patient_id', patientId)
-        .eq('status', 'completed')
+        .eq('status', 'atendido')
         .order('date', { ascending: false })
         .limit(10);
 
