@@ -1,109 +1,91 @@
-import React, { useState, useMemo, useEffect, lazy, Suspense } from 'react';
+import React, { lazy, Suspense, useEffect, useMemo, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-
+import { format, formatDistanceToNow, differenceInDays, startOfDay } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import {
   AlertTriangle,
   ArrowLeft,
-  Clock,
-  Copy,
-  Save,
-  Calendar,
-  Phone,
-  Stethoscope,
   FileText,
-  CheckCircle2,
-  Activity,
-  TrendingUp,
-  Zap,
-  Sparkles,
   BarChart3,
-  Keyboard,
-  Eye,
-  EyeOff,
-  Target,
-  Cloud,
+  Activity,
+  Clock,
+  Sparkles,
   RefreshCw,
-  Minimize2,
-  Maximize2,
-  ImageIcon
 } from 'lucide-react';
-import { format, formatDistanceToNow, differenceInDays, startOfDay } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+
+import { MainLayout } from '@/components/layout/MainLayout';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useCommandPalette } from '@/components/ui/CommandPalette';
+
+// Hooks
 import {
   usePatientSurgeries,
   usePatientGoals,
   usePatientPathologies,
   useRequiredMeasurements,
-  useEvolutionMeasurements
+  useEvolutionMeasurements,
 } from '@/hooks/usePatientEvolution';
 import { useAppointmentData } from '@/hooks/useAppointmentData';
-import { useCreateSoapRecord, useSoapRecords, useAutoSaveSoapRecord } from '@/hooks/useSoapRecords';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useAutoSaveSoapRecord } from '@/hooks/useSoapRecords';
+import { useGamification } from '@/hooks/useGamification';
+import { useSessionExercises } from '@/hooks/useSessionExercises';
+import { useAutoSave } from '@/hooks/useAutoSave';
+import { useAppointmentActions } from '@/hooks/useAppointmentActions';
+
+// Componentes de Evolução
 import { MeasurementForm } from '@/components/evolution/MeasurementForm';
-import { SurgeryTimeline } from '@/components/evolution/SurgeryTimeline';
 import { GoalsTracker } from '@/components/evolution/GoalsTracker';
 import { PathologyStatus } from '@/components/evolution/PathologyStatus';
 import { MeasurementCharts } from '@/components/evolution/MeasurementCharts';
 import { PainMapManager } from '@/components/evolution/PainMapManager';
-import { TreatmentAssistant } from '@/components/ai/TreatmentAssistant';
 import { MandatoryTestAlert } from '@/components/session/MandatoryTestAlert';
-import { MedicalReportSuggestions } from '@/components/evolution/MedicalReportSuggestions';
 import { SessionExercisesPanel, type SessionExercise } from '@/components/evolution/SessionExercisesPanel';
-import { PatientGamification } from '@/components/gamification/PatientGamification';
-import { useGamification } from '@/hooks/useGamification';
-import { WhatsAppIntegration } from '@/components/whatsapp/WhatsAppIntegration';
-import { useSessionExercises } from '@/hooks/useSessionExercises';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { SessionTimer } from '@/components/evolution/SessionTimer';
-import { useAutoSave } from '@/hooks/useAutoSave';
-import { useAppointmentActions } from '@/hooks/useAppointmentActions';
-import { ApplyTemplateModal } from '@/components/exercises/ApplyTemplateModal';
-import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
-import { PatientHelpers } from '@/types';
-// Novos componentes
-import { SessionImageUpload } from '@/components/evolution/SessionImageUpload';
-import { EvolutionTimeline } from '@/components/evolution/EvolutionTimeline';
-import { FloatingActionBar } from '@/components/evolution/FloatingActionBar';
-import { SOAPAccordion } from '@/components/evolution/SOAPAccordion';
-import { PainScaleWidget } from '@/components/evolution/PainScaleWidget';
 import { EvolutionHeader } from '@/components/evolution/EvolutionHeader';
 import { EvolutionStats } from '@/components/evolution/EvolutionStats';
 import { EvolutionHistoryTab } from '@/components/evolution/EvolutionHistoryTab';
-
 import { EvolutionDraggableGrid } from '@/components/evolution/EvolutionDraggableGrid';
+import { FloatingActionBar } from '@/components/evolution/FloatingActionBar';
 import {
   EvolutionKeyboardShortcuts,
-  useEvolutionShortcuts
+  useEvolutionShortcuts,
 } from '@/components/evolution/EvolutionKeyboardShortcuts';
-import { useCommandPalette } from '@/components/ui/CommandPalette';
+import { PatientEvolutionErrorBoundary } from '@/components/patients/PatientEvolutionErrorBoundary';
+import { ApplyTemplateModal } from '@/components/exercises/ApplyTemplateModal';
+import { PatientHelpers } from '@/types';
+
+// Lazy loading para componentes pesados
+const LazyTreatmentAssistant = lazy(() => import('@/components/ai/TreatmentAssistant').then(m => ({ default: m.TreatmentAssistant })));
+const LazyWhatsAppIntegration = lazy(() => import('@/components/whatsapp/WhatsAppIntegration').then(m => ({ default: m.WhatsAppIntegration })));
+const LazyPatientGamification = lazy(() => import('@/components/gamification/PatientGamification').then(m => ({ default: m.PatientGamification })));
+const LazyMeasurementCharts = lazy(() => import('@/components/evolution/MeasurementCharts').then(m => ({ default: m.MeasurementCharts })));
+
 // Tipo para escala de dor
 export interface PainScaleData {
   level: number;
   location?: string;
   character?: string;
 }
-import { PatientEvolutionErrorBoundary } from '@/components/patients/PatientEvolutionErrorBoundary';
 
-// Lazy loading para componentes pesados
-const LazyMeasurementCharts = lazy(() =>
-  Promise.resolve({ default: MeasurementCharts })
-);
-const LazyTreatmentAssistant = lazy(() =>
-  Promise.resolve({ default: TreatmentAssistant })
-);
-const LazyPatientGamification = lazy(() =>
-  Promise.resolve({ default: PatientGamification })
-);
-const LazyWhatsAppIntegration = lazy(() =>
-  Promise.resolve({ default: WhatsAppIntegration })
-);
-
+/**
+ * Página de Evolução do Paciente
+ *
+ * Funcionalidades principais:
+ * - Registro SOAP (Subjetivo, Objetivo, Avaliação, Plano)
+ * - Escala de dor (EVA)
+ * - Medições e testes obrigatórios
+ * - Exercícios da sessão
+ * - Metas e patologias
+ * - Histórico de evoluções
+ * - Assistente de IA
+ * - Integração WhatsApp
+ * - Gamificação
+ */
 const PatientEvolution = () => {
   const { appointmentId } = useParams<{ appointmentId: string }>();
   const navigate = useNavigate();
@@ -112,51 +94,34 @@ const PatientEvolution = () => {
   // Command Palette hook - handles Ctrl+K globally
   const { CommandPaletteComponent } = useCommandPalette();
 
-
-
+  // ========== ESTADOS ==========
+  // Estados SOAP
   const [currentSoapRecordId, setCurrentSoapRecordId] = useState<string | undefined>();
+  const [subjective, setSubjective] = useState('');
+  const [objective, setObjective] = useState('');
+  const [assessment, setAssessment] = useState('');
+  const [plan, setPlan] = useState('');
+
+  // Estados de UI
   const [sessionStartTime] = useState(new Date());
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
   const [showApplyTemplate, setShowApplyTemplate] = useState(false);
   const [showInsights, setShowInsights] = useState(true);
   const [showComparison, setShowComparison] = useState(false);
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+  const [activeTab, setActiveTab] = useState('evolucao'); // evolucao, avaliacao, tratamento, historico, assistente
 
-  // Estados do formulário SOAP
-  const [subjective, setSubjective] = useState('');
-  const [objective, setObjective] = useState('');
-  const [assessment, setAssessment] = useState('');
-  const [plan, setPlan] = useState('');
-
-  const setSoapDataStable = React.useCallback((data: { subjective: string; objective: string; assessment: string; plan: string }) => {
-    setSubjective(data.subjective);
-    setObjective(data.objective);
-    setAssessment(data.assessment);
-    setPlan(data.plan);
-  }, []);
-
-  // Estado para escala de dor (EVA)
+  // Escala de dor
   const [painScale, setPainScale] = useState<PainScaleData>({ level: 0 });
 
-  // Estado para controle da aba ativa (para navegação por teclado)
-  // Novas abas consolidadas: evolucao, avaliacao, tratamento, historico, assistente
-  const [activeTab, setActiveTab] = useState('evolucao');
-
-  // Exercises state
+  // Exercícios da sessão
   const [sessionExercises, setSessionExercises] = useState<SessionExercise[]>([]);
 
-  const { lastSession, isLoadingLastSession, suggestExerciseChanges } = useSessionExercises(patientId || '');
-
-  // Load exercises from previous session if current session is empty
-  useEffect(() => {
-    if (lastSession?.exercises_performed && sessionExercises.length === 0 && !isLoadingLastSession) {
-      setSessionExercises(lastSession.exercises_performed as SessionExercise[]);
-    }
-  }, [lastSession, sessionExercises.length, isLoadingLastSession]);
-
+  // ========== HOOKS ==========
+  // Ações de agendamento (completar atendimento)
   const { completeAppointment, isCompleting } = useAppointmentActions();
 
-  // Use custom hook for data fetching
+  // Dados do agendamento e paciente - PRECISA ser chamado primeiro para obter patientId
   const {
     appointment,
     patient,
@@ -166,29 +131,55 @@ const PatientEvolution = () => {
     patientError
   } = useAppointmentData(appointmentId);
 
+  // Hooks que dependem de patientId - chamados APÓS useAppointmentData
+  const { lastSession, isLoadingLastSession, suggestExerciseChanges } = useSessionExercises(patientId || '');
   const { awardXp } = useGamification(patientId || '');
-
-  // Hooks de dados de evolução
   const { data: surgeries = [] } = usePatientSurgeries(patientId || '');
   const { data: goals = [] } = usePatientGoals(patientId || '');
   const { data: pathologies = [] } = usePatientPathologies(patientId || '');
   const { data: measurements = [] } = useEvolutionMeasurements(patientId || '');
+  const { data: previousEvolutions = [] } = useSoapRecords(patientId || '', 10);
 
-  // Buscar medições obrigatórias baseadas nas patologias ativas
-  const activePathologies = pathologies.filter(p => p.status === 'em_tratamento');
+  // Hook de auto-save
+  const autoSaveMutation = useAutoSaveSoapRecord();
+
+  // ========== CALLBACKS ==========
+  const setSoapDataStable = useCallback((data: { subjective: string; objective: string; assessment: string; plan: string }) => {
+    setSubjective(data.subjective);
+    setObjective(data.objective);
+    setAssessment(data.assessment);
+    setPlan(data.plan);
+  }, []);
+
+  // ========== EFFECTS ==========
+  // Carregar exercícios da sessão anterior se a sessão atual estiver vazia
+  useEffect(() => {
+    if (lastSession?.exercises_performed && sessionExercises.length === 0 && !isLoadingLastSession) {
+      setSessionExercises(lastSession.exercises_performed as SessionExercise[]);
+    }
+  }, [lastSession, sessionExercises.length, isLoadingLastSession]);
+
+  // ========== MEMOIZED VALUES ==========
+  // Patologias ativas para medições obrigatórias
+  const activePathologies = useMemo(() =>
+    pathologies.filter(p => p.status === 'em_tratamento'),
+    [pathologies]
+  );
+
+  // Medições obrigatórias baseadas nas patologias ativas
   const { data: requiredMeasurements = [] } = useRequiredMeasurements(
     activePathologies.map(p => p.pathology_name)
   );
 
-  // Buscar evoluções anteriores (SOAP records)
-  const { data: previousEvolutions = [] } = useSoapRecords(patientId || '', 10);
+  // Tempo de tratamento do paciente
+  const treatmentDuration = useMemo(() =>
+    patient?.created_at
+      ? formatDistanceToNow(new Date(patient.created_at), { locale: ptBR, addSuffix: true })
+      : 'N/A',
+    [patient?.created_at]
+  );
 
-  // Calcular tempo de tratamento
-  const treatmentDuration = patient?.created_at
-    ? formatDistanceToNow(new Date(patient.created_at), { locale: ptBR, addSuffix: true })
-    : 'N/A';
-
-  // Calcular estatísticas de evolução
+  // Estatísticas de evolução
   const evolutionStats = useMemo(() => {
     const totalEvolutions = previousEvolutions.length;
     const completedGoals = goals.filter(g => g.status === 'concluido').length;
@@ -219,48 +210,15 @@ const PatientEvolution = () => {
     };
   }, [previousEvolutions, goals, pathologies, measurements]);
 
-  // Atualizar contagem de palavras - memoizado para performance
-  const currentWordCount = useMemo(() => {
-    return {
-      subjective: subjective.split(/\s+/).filter(w => w.length > 0).length,
-      objective: objective.split(/\s+/).filter(w => w.length > 0).length,
-      assessment: assessment.split(/\s+/).filter(w => w.length > 0).length,
-      plan: plan.split(/\s+/).filter(w => w.length > 0).length
-    };
-  }, [subjective, objective, assessment, plan]);
+  // Contagem de palavras do SOAP
+  const currentWordCount = useMemo(() => ({
+    subjective: subjective.split(/\s+/).filter(w => w.length > 0).length,
+    objective: objective.split(/\s+/).filter(w => w.length > 0).length,
+    assessment: assessment.split(/\s+/).filter(w => w.length > 0).length,
+    plan: plan.split(/\s+/).filter(w => w.length > 0).length
+  }), [subjective, objective, assessment, plan]);
 
-  // Mutation para salvar evolução
-  const createSoapRecord = useCreateSoapRecord();
-  // Upsert hook that handles finding existing drafts
-  const autoSaveMutation = useAutoSaveSoapRecord();
-
-
-
-  // Auto-save SOAP data
-  const { lastSavedAt } = useAutoSave({
-    data: { subjective, objective, assessment, plan },
-    onSave: async (data) => {
-      if (!patientId || !appointmentId) return;
-      if (!data.subjective && !data.objective && !data.assessment && !data.plan) return;
-
-      // Use autoSaveMutation which handles upsert logic (find existing draft or create new)
-      const record = await autoSaveMutation.mutateAsync({
-        patient_id: patientId,
-        appointment_id: appointmentId,
-        recordId: currentSoapRecordId, // Pass current ID if we have it
-        ...data
-      });
-
-      // Update local state if we got a record ID (new or existing)
-      if (record?.id && record.id !== currentSoapRecordId) {
-        setCurrentSoapRecordId(record.id);
-      }
-    },
-    delay: 5000,
-    enabled: autoSaveEnabled && !autoSaveMutation.isPending
-  });
-
-  // Agrupar medições por tipo para gráficos
+  // Medições agrupadas por tipo para gráficos
   const measurementsByType = useMemo(() => {
     const grouped: Record<string, Array<{ date: string; value: number; fullDate: string }>> = {};
     measurements.forEach(m => {
@@ -276,7 +234,7 @@ const PatientEvolution = () => {
     return grouped;
   }, [measurements]);
 
-  // Verificar medições realizadas na sessão atual (hoje)
+  // Medições realizadas hoje
   const todayMeasurements = useMemo(() => {
     const today = startOfDay(new Date());
     return measurements.filter(m => {
@@ -285,7 +243,30 @@ const PatientEvolution = () => {
     });
   }, [measurements]);
 
-  const handleCopyPreviousEvolution = (evolution: {
+  // ========== AUTO-SAVE ==========
+  const { lastSavedAt } = useAutoSave({
+    data: { subjective, objective, assessment, plan },
+    onSave: async (data) => {
+      if (!patientId || !appointmentId) return;
+      if (!data.subjective && !data.objective && !data.assessment && !data.plan) return;
+
+      const record = await autoSaveMutation.mutateAsync({
+        patient_id: patientId,
+        appointment_id: appointmentId,
+        recordId: currentSoapRecordId,
+        ...data
+      });
+
+      if (record?.id && record.id !== currentSoapRecordId) {
+        setCurrentSoapRecordId(record.id);
+      }
+    },
+    delay: 5000,
+    enabled: autoSaveEnabled && !autoSaveMutation.isPending
+  });
+
+  // ========== HANDLERS ==========
+  const handleCopyPreviousEvolution = useCallback((evolution: {
     subjective?: string;
     objective?: string;
     assessment?: string;
@@ -298,7 +279,7 @@ const PatientEvolution = () => {
     setObjective(evolution.objective || '');
     setAssessment(evolution.assessment || '');
     setPlan(evolution.plan || '');
-    // Também copiar escala de dor se existir
+
     if (evolution.pain_level !== undefined) {
       setPainScale({
         level: evolution.pain_level,
@@ -306,16 +287,16 @@ const PatientEvolution = () => {
         character: evolution.pain_character
       });
     }
+
     toast({
       title: 'Evolução copiada',
       description: 'Os dados da evolução anterior foram copiados.'
     });
-  };
+  }, [toast]);
 
   const handleSave = async () => {
-    // Check for mandatory tests - FIXED: now checks if measurement was done TODAY
+    // Verificar testes obrigatórios pendentes (hoje)
     const pendingCriticalTests = requiredMeasurements.filter(req => {
-      // Check if this measurement exists in today's measurements
       const hasMeasurementToday = todayMeasurements.some(m => m.measurement_name === req.measurement_name);
       return req.alert_level === 'high' && !hasMeasurementToday;
     });
@@ -343,7 +324,7 @@ const PatientEvolution = () => {
     }
 
     try {
-      // Use useAutoSaveSoapRecord (upsert logic) instead of createSoapRecord
+      // Salvar registro SOAP
       const record = await autoSaveMutation.mutateAsync({
         patient_id: patientId,
         appointment_id: appointmentId,
@@ -361,10 +342,10 @@ const PatientEvolution = () => {
         setCurrentSoapRecordId(record.id);
       }
 
-      // Save to treatment_sessions (Exercises Performed) with improved error handling
+      // Salvar sessão de tratamento (exercícios realizados)
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        // Check for existing session linked to this appointment to upsert
+        // Verificar se já existe sessão para este agendamento
         let existingSessionId = null;
         if (appointmentId) {
           const { data: existingSession } = await supabase
@@ -462,16 +443,14 @@ const PatientEvolution = () => {
     }
   };
 
-  // Hook de atalhos de teclado - movido para depois das definições das funções
-  // para evitar referências a funções ainda não definidas
+  // Hook de atalhos de teclado
   useEvolutionShortcuts(
     handleSave,
     handleCompleteSession,
     (section) => {
       // Navegação entre seções
       if (section === 'subjective' || section === 'objective' || section === 'assessment' || section === 'plan') {
-        setActiveTab('soap');
-        // Scroll para a seção
+        setActiveTab('evolucao');
         setTimeout(() => {
           const element = document.getElementById(section);
           element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -487,12 +466,13 @@ const PatientEvolution = () => {
     },
     () => setShowKeyboardHelp(true),
     () => setShowApplyTemplate(true),
-    // Save + Analyze with AI
     async () => {
       await handleSave();
       setActiveTab('assistente');
     }
   );
+
+  // ========== RENDERIZAÇÃO ==========
 
   // Validação inicial do appointmentId
   if (!appointmentId) {
@@ -513,6 +493,7 @@ const PatientEvolution = () => {
     );
   }
 
+  // Loading state
   if (dataLoading) {
     return (
       <MainLayout>
@@ -536,6 +517,7 @@ const PatientEvolution = () => {
     (!appointment && !appointmentError && !dataLoading) ||
     (!patient && !patientError && !dataLoading && appointment);
 
+  // Error state
   if (!appointment || !patient) {
     return (
       <MainLayout>
@@ -571,7 +553,7 @@ const PatientEvolution = () => {
               </>
             )}
 
-            {/* Debug info for developers - apenas em desenvolvimento */}
+            {/* Debug info para desenvolvimento */}
             {import.meta.env.DEV && (
               <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-left">
                 <p className="text-xs font-semibold text-amber-800 mb-2">INFO DEV (Debug):</p>
@@ -626,11 +608,12 @@ const PatientEvolution = () => {
     );
   }
 
+  // Main content
   return (
     <PatientEvolutionErrorBoundary appointmentId={appointmentId} patientId={patientId || undefined}>
       <MainLayout maxWidth="7xl">
         <div className="space-y-4 animate-fade-in pb-8">
-          {/* Compact Modern Header - Otimizado para mobile/tablet */}
+          {/* Header Compacto Moderno */}
           <EvolutionHeader
             patient={patient}
             appointment={appointment}
@@ -639,7 +622,7 @@ const PatientEvolution = () => {
             sessionStartTime={sessionStartTime}
             onSave={handleSave}
             onComplete={handleCompleteSession}
-            isSaving={createSoapRecord.isPending}
+            isSaving={autoSaveMutation.isPending}
             isCompleting={isCompleting}
             autoSaveEnabled={autoSaveEnabled}
             toggleAutoSave={() => setAutoSaveEnabled(!autoSaveEnabled)}
@@ -650,16 +633,13 @@ const PatientEvolution = () => {
             onShowKeyboardHelp={() => setShowKeyboardHelp(true)}
           />
 
-          {/* Quick Stats Row - Glassmorphism Style - Responsive grid */}
-          {showInsights && (
-            <EvolutionStats stats={evolutionStats} />
-          )}
+          {/* Quick Stats Row */}
+          {showInsights && <EvolutionStats stats={evolutionStats} />}
 
-          {/* Mandatory Tests Alert - FIXED: now shows only pending tests for today */}
+          {/* Alerta de Testes Obrigatórios */}
           {requiredMeasurements.length > 0 && (
             <MandatoryTestAlert
               tests={requiredMeasurements.map(req => {
-                // Check if measurement was done today
                 const completedToday = todayMeasurements.some(m => m.measurement_name === req.measurement_name);
                 return {
                   id: req.id || req.measurement_name,
@@ -668,14 +648,11 @@ const PatientEvolution = () => {
                   completed: completedToday
                 };
               })}
-              onResolve={() => {
-                // navigate to measurement tab (now part of avaliacao)
-                setActiveTab('avaliacao');
-              }}
+              onResolve={() => setActiveTab('avaliacao')}
             />
           )}
 
-          {/* Modern Tab Navigation - Consolidated 5 Tabs */}
+          {/* Abas de Navegação */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full pb-20">
             <TabsList className="inline-flex h-10 sm:h-11 items-center justify-start rounded-xl bg-muted/40 p-1 text-muted-foreground w-full lg:w-auto overflow-x-auto scrollbar-hide sticky top-0 z-40 backdrop-blur-sm">
               {[
@@ -697,7 +674,7 @@ const PatientEvolution = () => {
               ))}
             </TabsList>
 
-            {/* ========== TAB 1: EVOLUÇÃO (SOAP + Pain Scale + Photos) ========== */}
+            {/* ABA 1: EVOLUÇÃO (SOAP + Dor + Fotos) */}
             <TabsContent value="evolucao" className="mt-4 space-y-4">
               <EvolutionDraggableGrid
                 soapData={{ subjective, objective, assessment, plan }}
@@ -708,9 +685,7 @@ const PatientEvolution = () => {
                   .filter(e => e.pain_level !== null && e.pain_level !== undefined)
                   .map(e => ({ date: e.created_at, level: e.pain_level || 0 }))}
                 showPainTrend={true}
-                onAISuggest={(section) => {
-                  setActiveTab('assistente');
-                }}
+                onAISuggest={() => setActiveTab('assistente')}
                 onCopyLast={(section) => {
                   if (previousEvolutions.length > 0) {
                     const last = previousEvolutions[0];
@@ -739,55 +714,54 @@ const PatientEvolution = () => {
                   });
                 }}
               />
-
             </TabsContent>
 
-            {/* ========== TAB 2: AVALIAÇÃO (Measurements + Pain Map + Charts) ========== */}
+            {/* ABA 2: AVALIAÇÃO (Medições + Mapa de Dor + Gráficos) */}
             <TabsContent value="avaliacao" className="mt-4 space-y-4">
-              {/* Pain Map */}
+              {/* Mapa de Dor */}
               <PainMapManager
                 patientId={patientId || ''}
                 appointmentId={appointmentId}
                 sessionId={currentSoapRecordId}
               />
 
-              {/* Mandatory Tests Alert */}
+              {/* Alerta de Medições Pendentes */}
               {requiredMeasurements.filter(req => {
                 const completedToday = todayMeasurements.some(m => m.measurement_name === req.measurement_name);
                 return !completedToday;
               }).length > 0 && (
-                  <Card className="border-destructive/30 shadow-sm">
-                    <CardHeader className="bg-destructive/5 py-2 px-3">
-                      <CardTitle className="flex items-center gap-2 text-destructive text-sm">
-                        <AlertTriangle className="h-3.5 w-3.5" />
-                        Medições Obrigatórias Pendentes
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2 pt-3 px-3 pb-3">
-                      {requiredMeasurements
-                        .filter(req => {
-                          const completedToday = todayMeasurements.some(m => m.measurement_name === req.measurement_name);
-                          return !completedToday;
-                        })
-                        .map((req) => (
-                          <Alert
-                            key={req.id}
-                            variant={req.alert_level === 'high' ? 'destructive' : 'default'}
-                            className="py-2"
-                          >
-                            <AlertTriangle className="h-3.5 w-3.5" />
-                            <AlertTitle className="text-xs font-semibold">{req.measurement_name}</AlertTitle>
-                            <AlertDescription className="text-[10px]">
-                              {req.instructions}
-                              {req.measurement_unit && ` (${req.measurement_unit})`}
-                            </AlertDescription>
-                          </Alert>
-                        ))}
-                    </CardContent>
-                  </Card>
-                )}
+                <Card className="border-destructive/30 shadow-sm">
+                  <CardHeader className="bg-destructive/5 py-2 px-3">
+                    <CardTitle className="flex items-center gap-2 text-destructive text-sm">
+                      <AlertTriangle className="h-3.5 w-3.5" />
+                      Medições Obrigatórias Pendentes
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 pt-3 px-3 pb-3">
+                    {requiredMeasurements
+                      .filter(req => {
+                        const completedToday = todayMeasurements.some(m => m.measurement_name === req.measurement_name);
+                        return !completedToday;
+                      })
+                      .map((req) => (
+                        <Alert
+                          key={req.id}
+                          variant={req.alert_level === 'high' ? 'destructive' : 'default'}
+                          className="py-2"
+                        >
+                          <AlertTriangle className="h-3.5 w-3.5" />
+                          <AlertTitle className="text-xs font-semibold">{req.measurement_name}</AlertTitle>
+                          <AlertDescription className="text-[10px]">
+                            {req.instructions}
+                            {req.measurement_unit && ` (${req.measurement_unit})`}
+                          </AlertDescription>
+                        </Alert>
+                      ))}
+                  </CardContent>
+                </Card>
+              )}
 
-              {/* Measurement Form */}
+              {/* Formulário de Medição */}
               {patientId && (
                 <MeasurementForm
                   patientId={patientId}
@@ -796,7 +770,7 @@ const PatientEvolution = () => {
                 />
               )}
 
-              {/* Measurement Charts */}
+              {/* Gráficos de Evolução */}
               {Object.keys(measurementsByType).length > 0 && (
                 <Suspense fallback={<LoadingSkeleton type="card" />}>
                   <LazyMeasurementCharts measurementsByType={measurementsByType} />
@@ -804,22 +778,17 @@ const PatientEvolution = () => {
               )}
             </TabsContent>
 
-            {/* ========== TAB 3: TRATAMENTO (Exercises + Goals) ========== */}
+            {/* ABA 3: TRATAMENTO (Exercícios + Metas) */}
             <TabsContent value="tratamento" className="mt-4 space-y-4">
-              {/* Exercises Panel */}
               <SessionExercisesPanel
                 exercises={sessionExercises}
                 onChange={setSessionExercises}
               />
-
-              {/* Goals Tracker */}
               <GoalsTracker goals={goals} />
-
-              {/* Pathologies Status */}
               <PathologyStatus pathologies={pathologies} />
             </TabsContent>
 
-            {/* ========== TAB 4: HISTÓRICO (Timeline + Previous Sessions + Surgeries) ========== */}
+            {/* ABA 4: HISTÓRICO (Timeline + Evoluções Anteriores) */}
             <TabsContent value="historico">
               <EvolutionHistoryTab
                 patientId={patientId || ''}
@@ -831,9 +800,9 @@ const PatientEvolution = () => {
               />
             </TabsContent>
 
-            {/* ========== TAB 5: ASSISTENTE (AI + WhatsApp + Gamification) ========== */}
+            {/* ABA 5: ASSISTENTE (IA + WhatsApp + Gamificação) */}
             <TabsContent value="assistente" className="mt-4 space-y-4">
-              {/* AI Treatment Assistant */}
+              {/* Assistente de IA */}
               <Suspense fallback={<LoadingSkeleton type="card" />}>
                 <LazyTreatmentAssistant
                   patientId={patientId!}
@@ -852,57 +821,51 @@ const PatientEvolution = () => {
                 />
               </Suspense>
 
-              {/* WhatsApp Integration */}
+              {/* Integração WhatsApp */}
               <Suspense fallback={<LoadingSkeleton type="card" />}>
                 <LazyWhatsAppIntegration patientId={patientId!} patientPhone={patient.phone} />
               </Suspense>
 
-              {/* Gamification */}
+              {/* Gamificação */}
               <Suspense fallback={<LoadingSkeleton type="card" />}>
                 <LazyPatientGamification patientId={patientId!} />
               </Suspense>
             </TabsContent>
-          </Tabs >
-        </div >
+          </Tabs>
 
-        {/* Floating Action Bar */}
-        <FloatingActionBar
-          onSave={handleSave}
-          onComplete={handleCompleteSession}
-          onShowKeyboardHelp={() => setShowKeyboardHelp(true)}
-          isSaving={createSoapRecord.isPending}
-          isCompleting={isCompleting}
-          autoSaveEnabled={autoSaveEnabled}
-          lastSavedAt={lastSavedAt}
-          sessionStartTime={sessionStartTime}
-        />
+          {/* Floating Action Bar */}
+          <FloatingActionBar
+            onSave={handleSave}
+            onComplete={handleCompleteSession}
+            onShowKeyboardHelp={() => setShowKeyboardHelp(true)}
+            isSaving={autoSaveMutation.isPending}
+            isCompleting={isCompleting}
+            autoSaveEnabled={autoSaveEnabled}
+            lastSavedAt={lastSavedAt}
+            sessionStartTime={sessionStartTime}
+          />
 
-        {/* Modal para aplicar template */}
-
-
-
-        {/* Modal para aplicar template */}
-        {
-          patientId && (
+          {/* Modal para aplicar template */}
+          {patientId && (
             <ApplyTemplateModal
               open={showApplyTemplate}
               onOpenChange={setShowApplyTemplate}
               patientId={patientId}
               patientName={PatientHelpers.getName(patient)}
             />
-          )
-        }
+          )}
 
-        {/* Modal de atalhos de teclado */}
-        <EvolutionKeyboardShortcuts
-          open={showKeyboardHelp}
-          onOpenChange={setShowKeyboardHelp}
-        />
+          {/* Modal de atalhos de teclado */}
+          <EvolutionKeyboardShortcuts
+            open={showKeyboardHelp}
+            onOpenChange={setShowKeyboardHelp}
+          />
 
-        {/* Command Palette - Busca Rápida Ctrl+K */}
-        <CommandPaletteComponent />
-      </MainLayout >
-    </PatientEvolutionErrorBoundary >
+          {/* Command Palette - Busca Rápida Ctrl+K */}
+          <CommandPaletteComponent />
+        </div>
+      </MainLayout>
+    </PatientEvolutionErrorBoundary>
   );
 };
 
