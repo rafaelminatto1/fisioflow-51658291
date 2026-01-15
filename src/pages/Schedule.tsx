@@ -7,9 +7,11 @@ import { WaitlistQuickAdd } from '@/components/schedule/WaitlistQuickAdd';
 import { WaitlistHorizontal } from '@/components/schedule/WaitlistHorizontal';
 import { KeyboardShortcuts } from '@/components/schedule/KeyboardShortcuts';
 import { AdvancedFilters } from '@/components/schedule/AdvancedFilters';
+import { BulkActionsBar } from '@/components/schedule/BulkActionsBar';
 import { useAppointments, useRescheduleAppointment } from '@/hooks/useAppointments';
+import { useBulkActions } from '@/hooks/useBulkActions';
 import { logger } from '@/lib/errors/logger';
-import { AlertTriangle, Plus, Settings as SettingsIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { AlertTriangle, Plus, Settings as SettingsIcon, ChevronLeft, ChevronRight, CheckSquare } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { EmptyState } from '@/components/ui';
@@ -111,6 +113,16 @@ const Schedule = () => {
 
   const { data: appointments = [], isLoading: loading, error, refetch, isFromCache, cacheTimestamp } = useAppointments();
   const { mutateAsync: rescheduleAppointment } = useRescheduleAppointment();
+  
+  const { 
+    selectedIds, 
+    isSelectionMode, 
+    toggleSelectionMode, 
+    toggleSelection, 
+    clearSelection, 
+    deleteSelected, 
+    updateStatusSelected 
+  } = useBulkActions();
 
   const {
     isOnline,
@@ -178,11 +190,15 @@ const Schedule = () => {
   }, []);
 
   const handleTimeSlotClick = useCallback((date: Date, time: string) => {
+    // If in selection mode, maybe we want to ignore slot clicks or allow creating?
+    // For now, let's keep it as is, or disable if selection mode?
+    if (isSelectionMode) return;
+    
     setSelectedAppointment(null);
     setModalDefaultDate(date);
     setModalDefaultTime(time);
     setIsModalOpen(true);
-  }, []);
+  }, [isSelectionMode]);
 
   const handleViewTypeChange = useCallback((type: CalendarViewType) => {
     setViewType(type);
@@ -406,6 +422,16 @@ const Schedule = () => {
               <Button size="sm" variant={viewType === 'month' ? 'white' : 'ghost'} onClick={() => setViewType('month')} className="h-7 text-xs px-3 shadow-none">Mês</Button>
             </div>
 
+            <Button
+              variant={isSelectionMode ? "default" : "outline"}
+              size="icon"
+              className="h-9 w-9"
+              onClick={toggleSelectionMode}
+              title="Modo de Seleção"
+            >
+              <CheckSquare className="w-4 h-4" />
+            </Button>
+
             <AdvancedFilters
               filters={filters}
               onChange={setFilters}
@@ -454,11 +480,21 @@ const Schedule = () => {
                   onAppointmentReschedule={handleAppointmentReschedule}
                   onEditAppointment={handleEditAppointment}
                   onDeleteAppointment={handleDeleteAppointment}
+                  selectionMode={isSelectionMode}
+                  selectedIds={selectedIds}
+                  onToggleSelection={toggleSelection}
                 />
               </Suspense>
             </div>
           </div>
         </div>
+
+        <BulkActionsBar
+          selectedCount={selectedIds.size}
+          onClearSelection={clearSelection}
+          onDeleteSelected={deleteSelected}
+          onUpdateStatusSelected={updateStatusSelected}
+        />
 
         {/* Modals Layer */}
         <AppointmentQuickEditModal
