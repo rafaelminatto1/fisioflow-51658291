@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { usePermissions } from '../usePermissions';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -11,6 +12,21 @@ vi.mock('@/integrations/supabase/client', () => ({
     from: vi.fn(),
   },
 }));
+
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, gcTime: 0 },
+      mutations: { retry: false },
+    },
+    logger: { log: console.log, warn: console.warn, error: () => {} },
+  });
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+  );
+};
 
 describe('usePermissions', () => {
   beforeEach(() => {
@@ -35,7 +51,7 @@ describe('usePermissions', () => {
       }),
     } as any);
 
-    const { result } = renderHook(() => usePermissions());
+    const { result } = renderHook(() => usePermissions(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.isAdmin).toBe(true);
@@ -60,7 +76,7 @@ describe('usePermissions', () => {
       }),
     } as any);
 
-    const { result } = renderHook(() => usePermissions());
+    const { result } = renderHook(() => usePermissions(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.canWrite('eventos')).toBe(true);
@@ -85,7 +101,7 @@ describe('usePermissions', () => {
       }),
     } as any);
 
-    const { result } = renderHook(() => usePermissions());
+    const { result } = renderHook(() => usePermissions(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.canDelete('eventos')).toBe(false);

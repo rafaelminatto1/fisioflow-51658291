@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAppointmentActions } from '../useAppointmentActions';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -23,13 +24,28 @@ vi.mock('@/hooks/use-toast', () => ({
   }),
 }));
 
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, gcTime: 0 },
+      mutations: { retry: false },
+    },
+    logger: { log: console.log, warn: console.warn, error: () => {} },
+  });
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+  );
+};
+
 describe('useAppointmentActions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('deve ter função de confirmar agendamento', async () => {
-    const { result } = renderHook(() => useAppointmentActions());
+    const { result } = renderHook(() => useAppointmentActions(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.confirmAppointment).toBeDefined();
@@ -38,7 +54,7 @@ describe('useAppointmentActions', () => {
   });
 
   it('deve cancelar agendamento', async () => {
-    const { result } = renderHook(() => useAppointmentActions());
+    const { result } = renderHook(() => useAppointmentActions(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.cancelAppointment).toBeDefined();
@@ -46,7 +62,7 @@ describe('useAppointmentActions', () => {
   });
 
   it('deve concluir agendamento', async () => {
-    const { result } = renderHook(() => useAppointmentActions());
+    const { result } = renderHook(() => useAppointmentActions(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.completeAppointment).toBeDefined();

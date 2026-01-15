@@ -142,7 +142,9 @@
       "Read(//home/rafael/cursor/fisiolovable/fisioflow-51658291/**)",
       "Bash(npx vercel inspect:*)",
       "Read(//tmp/**)",
-      "mcp__playwright__browser_network_requests"
+      "mcp__playwright__browser_network_requests",
+      "Bash(git check-ignore:*)",
+      "mcp__playwright__browser_tabs"
     ],
     "deny": [],
     "ask": []

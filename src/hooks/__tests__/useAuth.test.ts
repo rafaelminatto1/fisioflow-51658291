@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuth } from '../useAuth';
 
 // Mock do Supabase
@@ -21,6 +22,21 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, gcTime: 0 },
+      mutations: { retry: false },
+    },
+    logger: { log: console.log, warn: console.warn, error: () => {} },
+  });
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+  );
+};
+
 describe('useAuth', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -28,13 +44,13 @@ describe('useAuth', () => {
 
   it('deve retornar usuário null quando não autenticado', async () => {
     const { supabase } = await import('@/integrations/supabase/client');
-    
+
     vi.mocked(supabase.auth.getUser).mockResolvedValue({
       data: { user: null },
       error: null,
     } as any);
 
-    const { result } = renderHook(() => useAuth());
+    const { result } = renderHook(() => useAuth(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.user).toBeNull();
@@ -54,7 +70,7 @@ describe('useAuth', () => {
       error: null,
     } as any);
 
-    const { result } = renderHook(() => useAuth());
+    const { result } = renderHook(() => useAuth(), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.user).toEqual(mockUser);
@@ -62,7 +78,7 @@ describe('useAuth', () => {
   });
 
   it('deve ter função signOut disponível', () => {
-    const { result } = renderHook(() => useAuth());
+    const { result } = renderHook(() => useAuth(), { wrapper: createWrapper() });
     
     expect(typeof result.current.signOut).toBe('function');
   });

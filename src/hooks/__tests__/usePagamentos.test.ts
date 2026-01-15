@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { usePagamentos } from '../usePagamentos';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -28,13 +29,28 @@ vi.mock('@/integrations/supabase/client', () => ({
   }
 }));
 
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, gcTime: 0 },
+      mutations: { retry: false },
+    },
+    logger: { log: console.log, warn: console.warn, error: () => {} },
+  });
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>
+      {children}
+    </QueryClientProvider>
+  );
+};
+
 describe('usePagamentos', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('deve carregar pagamentos de um evento', async () => {
-    const { result } = renderHook(() => usePagamentos('evento-1'));
+    const { result } = renderHook(() => usePagamentos('evento-1'), { wrapper: createWrapper() });
 
     await waitFor(() => {
       expect(result.current.data).toHaveLength(1);
@@ -43,7 +59,7 @@ describe('usePagamentos', () => {
   });
 
   it('deve calcular total de pagamentos', async () => {
-    const { result } = renderHook(() => usePagamentos('evento-1'));
+    const { result } = renderHook(() => usePagamentos('evento-1'), { wrapper: createWrapper() });
 
     await waitFor(() => {
       const pagamentos = result.current.data || [];
@@ -53,12 +69,12 @@ describe('usePagamentos', () => {
   });
 
   it('deve ter query desabilitada quando evento_id é vazio', () => {
-    const { result } = renderHook(() => usePagamentos(''));
+    const { result } = renderHook(() => usePagamentos(''), { wrapper: createWrapper() });
     expect(result.current.data).toBeUndefined();
   });
 
   it('deve agrupar pagamentos por tipo', async () => {
-    const { result } = renderHook(() => usePagamentos('evento-1'));
+    const { result } = renderHook(() => usePagamentos('evento-1'), { wrapper: createWrapper() });
 
     await waitFor(() => {
       const pagamentos = result.current.data || [];

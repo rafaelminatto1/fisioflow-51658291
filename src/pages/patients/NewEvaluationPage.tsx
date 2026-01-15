@@ -1,29 +1,28 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { MainLayout } from '@/components/layout/MainLayout';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Save, LayoutDashboard, FileText, Activity, Map, Plus, BookmarkPlus } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { v4 as uuidv4 } from 'uuid';
+import { ArrowLeft, BookmarkPlus, LayoutDashboard, FileText, Activity, Map, Plus, Save } from 'lucide-react';
 
-// Components
+import { MainLayout } from '@/components/layout/MainLayout';
 import { PatientDashboard360 } from '@/components/patient/dashboard/PatientDashboard360';
 import { PhysicalExamForm } from '@/components/patient/forms/PhysicalExamForm';
 import { PainMapManager } from '@/components/evolution/PainMapManager';
-import { Skeleton } from '@/components/ui/skeleton';
-import { PatientHelpers } from '@/types';
-
-// New Evaluation Components
 import {
-    EvaluationTemplateSelector,
-    DynamicFieldRenderer,
-    AddCustomFieldDialog,
-    SaveAsTemplateDialog,
+  EvaluationTemplateSelector,
+  DynamicFieldRenderer,
+  AddCustomFieldDialog,
+  SaveAsTemplateDialog,
 } from '@/components/evaluation';
 import type { EvaluationTemplate, TemplateField } from '@/components/evaluation';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { PatientHelpers } from '@/types';
+
+// Helper function to generate UUID - using crypto.randomUUID() to avoid "ne is not a function" error in production
+const uuidv4 = (): string => crypto.randomUUID();
 
 export default function NewEvaluationPage() {
     const { patientId } = useParams();

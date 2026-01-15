@@ -1,35 +1,28 @@
-import { memo, useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { CalendarViewType } from '@/components/schedule/CalendarView';
 import { AppointmentModalRefactored as AppointmentModal } from '@/components/schedule/AppointmentModalRefactored';
 import { AppointmentQuickEditModal } from '@/components/schedule/AppointmentQuickEditModal';
-import { AppointmentListView } from '@/components/schedule/AppointmentListView';
-import { AppointmentSearch } from '@/components/schedule/AppointmentSearch';
 import { WaitlistQuickAdd } from '@/components/schedule/WaitlistQuickAdd';
-import { WaitlistQuickViewModal } from '@/components/schedule/WaitlistQuickViewModal';
 import { WaitlistHorizontal } from '@/components/schedule/WaitlistHorizontal';
-import { ScheduleHeader } from '@/components/schedule/ScheduleHeader';
 import { KeyboardShortcuts } from '@/components/schedule/KeyboardShortcuts';
+import { AdvancedFilters } from '@/components/schedule/AdvancedFilters';
 import { useAppointments, useRescheduleAppointment } from '@/hooks/useAppointments';
-import { useWaitlistMatch } from '@/hooks/useWaitlistMatch';
 import { logger } from '@/lib/errors/logger';
-import { AlertTriangle, Users, Plus, Settings as SettingsIcon, RefreshCw, Keyboard, Calendar, TrendingUp, Clock, CheckCircle2, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import { AlertTriangle, Plus, Settings as SettingsIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { EmptyState } from '@/components/ui';
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
-import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { formatDateToLocalISO, formatDateToBrazilian } from '@/utils/dateUtils';
-import { format, startOfDay, endOfDay, parseISO, differenceInMinutes, addDays } from 'date-fns';
+import { format, parseISO, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Lazy load CalendarView for better initial load performance
 const CalendarView = lazy(() =>
@@ -61,18 +54,6 @@ const KEYBOARD_SHORTCUTS = {
 // UTILITY FUNCTIONS
 // =====================================================================
 
-const safeParseDate = (date: string | Date): Date | null => {
-  try {
-    return typeof date === 'string' ? parseISO(date) : date;
-  } catch {
-    return null;
-  }
-};
-
-const isDateInRange = (date: Date, start: Date, end: Date): boolean => {
-  return date >= start && date <= end;
-};
-
 const roundToNextSlot = (date: Date): string => {
   const minutes = date.getMinutes();
   const roundedMinutes = minutes < BUSINESS_HOURS.defaultRound ? BUSINESS_HOURS.defaultRound : 0;
@@ -96,6 +77,7 @@ const Schedule = () => {
   // STATE
   // ===================================================================
 
+  const isMobile = useIsMobile();
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [quickEditAppointment, setQuickEditAppointment] = useState<Appointment | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -105,8 +87,18 @@ const Schedule = () => {
 
   // Detect mobile and default to day view on mobile
   const [viewType, setViewType] = useState<CalendarViewType | 'list'>(() => {
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
     return isMobile ? 'day' : 'week';
+  });
+
+  // Filters state
+  const [filters, setFilters] = useState<{
+    status: string[];
+    types: string[];
+    therapists: string[];
+  }>({
+    status: [],
+    types: [],
+    therapists: []
   });
 
   const [waitlistQuickAdd, setWaitlistQuickAdd] = useState<{ date: Date; time: string } | null>(null);
@@ -147,6 +139,26 @@ const Schedule = () => {
     const month = format(currentDate, "MMMM 'de' yyyy", { locale: ptBR });
     return month.charAt(0).toUpperCase() + month.slice(1);
   }, [currentDate]);
+
+  const filteredAppointments = useMemo(() => {
+    return appointments.filter(apt => {
+      // Filter by status
+      if (filters.status.length > 0 && !filters.status.includes(apt.status)) {
+        return false;
+      }
+      // Filter by type
+      if (filters.types.length > 0 && !filters.types.includes(apt.type)) {
+        return false;
+      }
+      // Filter by therapist (assuming we have therapist info in apt, if not skip)
+      // Note: Current Appointment type might not have therapistId or Name fully populated for filtering
+      // Adding basic check if field exists
+      if (filters.therapists.length > 0 && apt.therapistId && !filters.therapists.includes(apt.therapistId)) {
+        return false;
+      }
+      return true;
+    });
+  }, [appointments, filters]);
 
   // ===================================================================
   // HANDLERS
@@ -255,6 +267,13 @@ const Schedule = () => {
       viewType
     }, 'Schedule');
   }, [appointments.length, loading, viewType]);
+
+  // Force day view on mobile
+  useEffect(() => {
+    if (isMobile) {
+      setViewType('day');
+    }
+  }, [isMobile]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -387,6 +406,12 @@ const Schedule = () => {
               <Button size="sm" variant={viewType === 'month' ? 'white' : 'ghost'} onClick={() => setViewType('month')} className="h-7 text-xs px-3 shadow-none">Mês</Button>
             </div>
 
+            <AdvancedFilters
+              filters={filters}
+              onChange={setFilters}
+              onClear={() => setFilters({ status: [], types: [], therapists: [] })}
+            />
+
             <Link to="/schedule/settings">
               <Button
                 variant="outline"
@@ -400,7 +425,7 @@ const Schedule = () => {
 
             <Button onClick={handleCreateAppointment} className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm">
               <Plus className="w-4 h-4" />
-              Novo Agendamento
+              {isMobile ? 'Novo' : 'Novo Agendamento'}
             </Button>
           </div>
         </div>
@@ -419,7 +444,7 @@ const Schedule = () => {
             <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950 relative min-h-[600px]">
               <Suspense fallback={<LoadingSkeleton type="card" rows={3} className="h-full w-full" />}>
                 <CalendarView
-                  appointments={appointments}
+                  appointments={filteredAppointments}
                   currentDate={currentDate}
                   onDateChange={setCurrentDate}
                   viewType={viewType as CalendarViewType}
