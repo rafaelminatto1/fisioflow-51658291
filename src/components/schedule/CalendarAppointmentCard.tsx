@@ -21,8 +21,11 @@ interface CalendarAppointmentCardProps {
     onDeleteAppointment?: (appointment: Appointment) => void;
     onOpenPopover: (id: string | null) => void;
     isPopoverOpen: boolean;
+    // Allow dropping on this card to add multiple appointments at same time
     onDragOver?: (e: React.DragEvent) => void;
     onDrop?: (e: React.DragEvent) => void;
+    // Visual feedback when this card is a drop target
+    isDropTarget?: boolean;
     // Selection props
     selectionMode?: boolean;
     isSelected?: boolean;
@@ -47,6 +50,7 @@ export const CalendarAppointmentCard = memo(({
     isPopoverOpen,
     onDragOver,
     onDrop,
+    isDropTarget = false,
     selectionMode = false,
     isSelected = false,
     onToggleSelection
@@ -80,12 +84,15 @@ export const CalendarAppointmentCard = memo(({
             onDragStart={(e) => draggable && onDragStart(e, appointment)}
             onDragEnd={onDragEnd}
             onDragOver={(e) => {
-                if (!isDragging && onDragOver && !selectionMode) {
+                // Always call onDragOver if provided to allow drop feedback
+                // Important: call preventDefault to allow dropping
+                if (onDragOver && !selectionMode) {
                     onDragOver(e);
                 }
             }}
             onDrop={(e) => {
-                if (!isDragging && onDrop && !selectionMode) {
+                // Always call onDrop if provided to handle dropping on existing appointments
+                if (onDrop && !selectionMode) {
                     onDrop(e);
                 }
             }}
@@ -97,6 +104,8 @@ export const CalendarAppointmentCard = memo(({
                 draggable && "cursor-grab active:cursor-grabbing",
                 isDragging && "opacity-50 scale-95 z-50 ring-2 ring-blue-400",
                 !isDragging && isHovered && !selectionMode && "z-30 ring-1 ring-black/5 dark:ring-white/10",
+                // Drop target visual feedback
+                isDropTarget && !isDragging && "ring-2 ring-primary/60 ring-offset-1 shadow-lg scale-[1.02] z-25",
                 appointment.status === 'cancelado' && "opacity-80 grayscale-[0.5]",
                 // Selection styles
                 selectionMode && "hover:opacity-90",
