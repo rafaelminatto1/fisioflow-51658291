@@ -4,10 +4,9 @@ import '@testing-library/jest-dom'
 
 // Fix for "Right-hand side of 'instanceof' is not an object" error in React 18
 // This is caused by jsdom's implementation not being compatible with React 18's instanceof checks
-// We need to ensure that getActiveElementDeep doesn't throw on instanceof checks
 
-// Store original document functions
-const originalGetActiveElement = document.getActiveElement || (() => document.body)
+// Store original Node class
+const OriginalNode = global.Node
 
 // Monkey patch to prevent instanceof errors
 if (typeof document !== 'undefined') {
@@ -18,6 +17,15 @@ if (typeof document !== 'undefined') {
     },
     configurable: true
   })
+
+  // Fix instanceof checks by ensuring Node is properly defined
+  if (!global.Node) {
+    global.Node = class Node {
+      static ELEMENT_NODE = 1
+      static TEXT_NODE = 3
+      static DOCUMENT_NODE = 9
+    }
+  }
 }
 
 // Mock web-push for Edge Function tests
@@ -122,8 +130,9 @@ beforeAll(() => {
   // Setup any global test configuration
 })
 
-afterEach(() => {
-  cleanup()
+afterEach(async () => {
+  // Ensure all React updates are flushed before cleanup
+  await cleanup()
   vi.clearAllMocks()
 })
 
