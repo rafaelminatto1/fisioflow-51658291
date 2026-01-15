@@ -121,12 +121,12 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       notes: appointment?.notes || '',
       therapist_id: appointment?.therapistId || '',
       room: appointment?.room || '',
-      payment_status: appointment.payment_status || 'pending',
-      payment_amount: appointment.payment_amount || 170,
+      payment_status: appointment?.payment_status || 'pending',
+      payment_amount: appointment?.payment_amount || 170,
       payment_method: '',
       installments: 1,
       is_recurring: appointment?.is_recurring || false,
-      recurring_until: appointment?.recurring_until ? format(new Date(appointment.recurring_until), 'yyyy-MM-dd') : '',
+      recurring_until: appointment?.recurring_until ? format(new Date(appointment?.recurring_until || ''), 'yyyy-MM-dd') : '',
     },
   });
 
@@ -145,12 +145,12 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         notes: appointment.notes || '',
         therapist_id: appointment.therapistId || '',
         room: appointment.room || '',
-        payment_status: appointment.payment_status || 'pending',
-        payment_amount: appointment.payment_amount || 170,
-        payment_method: appointment.payment_method || '',
-        installments: appointment.installments || 1,
-        is_recurring: appointment.is_recurring || false,
-        recurring_until: appointment.recurring_until ? format(new Date(appointment.recurring_until), 'yyyy-MM-dd') : '',
+        payment_status: appointment?.payment_status || 'pending',
+        payment_amount: appointment?.payment_amount || 170,
+        payment_method: appointment?.payment_method || '',
+        installments: appointment?.installments || 1,
+        is_recurring: appointment?.is_recurring || false,
+        recurring_until: appointment?.recurring_until ? format(new Date(appointment?.recurring_until || ''), 'yyyy-MM-dd') : '',
       });
     } else if (isOpen) {
       // Para novos agendamentos, define o status padrão como 'agendado'
