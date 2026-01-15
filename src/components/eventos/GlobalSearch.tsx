@@ -10,7 +10,7 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { Search, Calendar, Users, Briefcase } from 'lucide-react';
-import { useDebounce } from '@/hooks/useDebounce';
+import { useDebounce } from '@/hooks/performance/useDebounce';
 
 interface SearchResult {
   id: string;
