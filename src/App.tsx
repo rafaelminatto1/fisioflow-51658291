@@ -26,9 +26,7 @@ import { SkipLink, FocusVisibleHandler } from "@/components/accessibility";
 const Analytics = import.meta.env.PROD
   ? lazy(() => import("@vercel/analytics/react").then(m => ({ default: m.Analytics })))
   : null;
-const SpeedInsights = import.meta.env.PROD
-  ? lazy(() => import("@vercel/speed-insights/react").then(m => ({ default: m.SpeedInsights })))
-  : null;
+
 
 // Create a client with performance optimizations
 const queryClient = new QueryClient({
@@ -173,11 +171,7 @@ const App = () => {
                         <Analytics />
                       </ErrorBoundary>
                     )}
-                    {SpeedInsights && (
-                      <ErrorBoundary fallback={null}>
-                        <SpeedInsights />
-                      </ErrorBoundary>
-                    )}
+
                     <WebVitalsIndicator />
 
                   </Suspense>
