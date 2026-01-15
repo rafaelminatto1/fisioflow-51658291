@@ -403,7 +403,7 @@ test.describe('Video Edit Modal', () => {
 });
 
 test.describe('Delete Confirmation', () => {
-  beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
     await page.route('**/exercise-videos*', (route) => {
       route.fulfill({
         status: 200,
@@ -529,7 +529,7 @@ test.describe('Loading States', () => {
 });
 
 test.describe('Keyboard Navigation', () => {
-  beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
     await page.route('**/exercise-videos*', (route) => {
       route.fulfill({
         status: 200,

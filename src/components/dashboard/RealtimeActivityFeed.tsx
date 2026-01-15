@@ -149,6 +149,7 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
   /**
    * Setup realtime subscriptions com cleanup adequado
    * Usa canais únicos para evitar duplicação com RealtimeContext
+   * Com tratamento de erros melhorado para falhas de WebSocket
    */
   useEffect(() => {
     // AbortController para cancelar operações pendentes
@@ -157,7 +158,12 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
 
     // Channel único com nome específico
     const appointmentsChannel = supabase
-      .channel('activity-feed-appointments')
+      .channel('activity-feed-appointments', {
+        config: {
+          broadcast: { self: false },
+          presence: { key: '' }
+        }
+      })
       .on(
         'postgres_changes',
         {
@@ -195,10 +201,19 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.warn('RealtimeActivityFeed: Channel error or timeout, will retry');
+        }
+      });
 
     const patientsChannel = supabase
-      .channel('activity-feed-patients')
+      .channel('activity-feed-patients', {
+        config: {
+          broadcast: { self: false },
+          presence: { key: '' }
+        }
+      })
       .on(
         'postgres_changes',
         {
@@ -222,7 +237,11 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
           setActivities(prev => [newActivity, ...prev].slice(0, MAX_ACTIVITIES));
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.warn('RealtimeActivityFeed: Channel error or timeout, will retry');
+        }
+      });
 
     // Cleanup - remove canais e cancela operações pendentes
     return () => {
