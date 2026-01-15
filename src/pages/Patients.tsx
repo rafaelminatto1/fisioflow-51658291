@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -18,34 +18,35 @@ import {
 } from '@/components/ui/select';
 import { NewPatientModal } from '@/components/modals/NewPatientModal';
 import { EditPatientModal } from '@/components/modals/EditPatientModal';
+import { ViewPatientModal } from '@/components/modals/ViewPatientModal';
 import { DeletePatientDialog } from '@/components/modals/DeletePatientDialog';
 import { usePatientsQuery, useDeletePatient, PatientDB } from '@/hooks/usePatientsQuery';
+import { usePagination } from '@/hooks/performance/useOptimizedList';
+import { PatientHelpers } from '@/types';
 import {
   Plus,
   Search,
   Users,
   Filter,
   Download,
-  ChevronRight
+  ChevronRight,
+  ChevronLeft
 } from 'lucide-react';
 import { cn, calculateAge, exportToCSV } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { LazyComponent } from '@/components/common/LazyComponent';
-import { PatientHelpers } from '@/types';
 
 const Patients = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [conditionFilter, setConditionFilter] = useState<string>('all');
   const [editingPatient, setEditingPatient] = useState<string | null>(null);
+  const [viewingPatient, setViewingPatient] = useState<string | null>(null);
   const [deletingPatient, setDeletingPatient] = useState<PatientDB | null>(null);
   const [isNewPatientModalOpen, setIsNewPatientModalOpen] = useState(false);
   const { data: patients = [], isLoading: loading } = usePatientsQuery();
   const deletePatient = useDeletePatient();
   const { toast } = useToast();
   const navigate = useNavigate();
-
-
 
   // Get unique conditions and statuses for filters
   const uniqueConditions = useMemo(() => {
@@ -68,6 +69,21 @@ const Patients = () => {
       return matchesSearch && matchesStatus && matchesCondition;
     });
   }, [patients, searchTerm, statusFilter, conditionFilter]);
+
+  // Use pagination hook
+  const {
+    items: paginatedPatients,
+    currentPage,
+    totalPages,
+    nextPage,
+    prevPage,
+    goToPage
+  } = usePagination(filteredPatients, 10);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    goToPage(0);
+  }, [searchTerm, statusFilter, conditionFilter, goToPage]);
 
   const handleDeletePatient = () => {
     if (!deletingPatient) return;
@@ -318,17 +334,14 @@ const Patients = () => {
             }
           />
         ) : (
-          <div className="grid gap-4 animate-fade-in">
-            {filteredPatients.map((patient, index) => (
-              <LazyComponent
-                key={patient.id}
-                placeholder={<div className="h-[74px] w-full bg-muted/50 rounded-xl animate-pulse" />}
-                rootMargin="200px" // Load items 200px before they appear
-              >
+          <div className="space-y-4">
+            <div className="grid gap-4 animate-fade-in">
+              {paginatedPatients.map((patient, index) => (
                 <Card
+                  key={patient.id}
                   className="group flex items-center gap-4 p-3 rounded-xl bg-card hover:bg-slate-50 dark:hover:bg-slate-800/50 active:bg-slate-100 dark:active:bg-slate-800 transition-colors cursor-pointer border border-transparent hover:border-border dark:hover:border-slate-700"
                   style={{ animationDelay: `${index * 50}ms` }}
-                  onClick={() => navigate(`/patients/${patient.id}`)}
+                  onClick={() => setViewingPatient(patient.id)}
                 >
                   <div className="relative shrink-0">
                     <Avatar className="h-12 w-12 ring-2 ring-border dark:ring-slate-700 shrink-0">
@@ -363,8 +376,39 @@ const Patients = () => {
                     <ChevronRight className="w-5 h-5" />
                   </div>
                 </Card>
-              </LazyComponent>
-            ))}
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between py-2 border-t mt-4">
+                <div className="text-sm text-muted-foreground">
+                  Página {currentPage + 1} de {totalPages}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={prevPage}
+                    disabled={currentPage === 0}
+                    className="h-8 px-2"
+                  >
+                    <ChevronLeft className="w-4 h-4 mr-1" />
+                    Anterior
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={nextPage}
+                    disabled={currentPage === totalPages - 1}
+                    className="h-8 px-2"
+                  >
+                    Próximo
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -383,7 +427,13 @@ const Patients = () => {
         />
       )}
 
-
+      {viewingPatient && (
+        <ViewPatientModal
+          patientId={viewingPatient}
+          open={!!viewingPatient}
+          onOpenChange={() => setViewingPatient(null)}
+        />
+      )}
 
       <DeletePatientDialog
         open={!!deletingPatient}
