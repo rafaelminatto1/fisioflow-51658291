@@ -170,9 +170,9 @@ export const DraggableGrid = memo(function DraggableGrid({
         <div ref={containerRef} className={className} style={{ position: 'relative' }}>
             <Responsive
                 className="layout"
-                // Use layouts prop only if we have a valid saved layout that matches current state
-                // Otherwise, let data-grid control the positioning
-                layouts={(savedLayout && savedLayout.length === items.length) ? layouts : undefined}
+                // DON'T use layouts prop - let data-grid control everything
+                // This ensures widgets with same Y position appear on same row
+                layouts={undefined}
                 breakpoints={BREAKPOINTS}
                 cols={cols}
                 rowHeight={rowHeight}
@@ -197,6 +197,7 @@ export const DraggableGrid = memo(function DraggableGrid({
                             y: item.defaultLayout.y,
                             minW: item.defaultLayout.minW,
                             minH: item.defaultLayout.minH,
+                            static: !isEditable, // Make items static when not in edit mode
                         }}
                     >
                         {item.content}
