@@ -259,12 +259,12 @@ export const PaymentTab = ({
     disabled,
     watchPaymentStatus,
     watchPaymentMethod,
-    watchpaymentAmount
+    watchPaymentAmount
 }: {
     disabled: boolean,
     watchPaymentStatus: string,
     watchPaymentMethod: string,
-    watchpaymentAmount: number
+    watchPaymentAmount: number
 }) => {
     const { register, setValue, watch } = useFormContext<AppointmentFormData>();
 
