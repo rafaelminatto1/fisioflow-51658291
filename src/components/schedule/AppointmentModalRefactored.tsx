@@ -476,6 +476,78 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                     setIsCalendarOpen={setIsCalendarOpen}
                     getCapacityForTime={getCapacityForTime}
                     conflictCount={conflictCheck?.conflictCount || 0}
+                    onAutoSchedule={() => {
+                      if (!watchedDate) {
+                        toast.error('Selecione uma data primeiro');
+                        return;
+                      }
+
+                      // 1. Analyze Patient History
+                      let preferredPeriod: 'morning' | 'afternoon' | 'evening' | null = null;
+                      
+                      if (watchedPatientId) {
+                        const patientHistory = appointments.filter(a => 
+                          a.patientId === watchedPatientId && 
+                          a.status !== 'cancelado'
+                        );
+
+                        if (patientHistory.length > 0) {
+                          let morning = 0;
+                          let afternoon = 0;
+                          let evening = 0;
+
+                          patientHistory.forEach(apt => {
+                            const hour = parseInt(apt.time.split(':')[0]);
+                            if (hour < 12) morning++;
+                            else if (hour < 18) afternoon++;
+                            else evening++;
+                          });
+
+                          if (morning > afternoon && morning > evening) preferredPeriod = 'morning';
+                          else if (afternoon > morning && afternoon > evening) preferredPeriod = 'afternoon';
+                          else if (evening > morning && evening > afternoon) preferredPeriod = 'evening';
+                        }
+                      }
+
+                      // 2. Sort slots based on preference
+                      const sortedSlots = [...slotInfo].sort((a, b) => {
+                        if (!preferredPeriod) return 0; // Keep original order (chronological)
+
+                        const getPeriod = (time: string) => {
+                          const h = parseInt(time.split(':')[0]);
+                          if (h < 12) return 'morning';
+                          if (h < 18) return 'afternoon';
+                          return 'evening';
+                        };
+
+                        const periodA = getPeriod(a.time);
+                        const periodB = getPeriod(b.time);
+
+                        if (periodA === preferredPeriod && periodB !== preferredPeriod) return -1;
+                        if (periodA !== preferredPeriod && periodB === preferredPeriod) return 1;
+                        return 0; // Maintain chronological order within same period
+                      });
+                      
+                      const day = watchedDate.getDay();
+                      const bestSlot = sortedSlots.find(slot => {
+                        if (!slot.isAvailable) return false;
+                        // const capacity = getCapacityForTime(day, slot.time);
+                        return true; 
+                      });
+
+                      if (bestSlot) {
+                        setValue('appointment_time', bestSlot.time);
+                        
+                        let reason = "";
+                        if (preferredPeriod === 'morning') reason = " (Preferência: Manhã)";
+                        else if (preferredPeriod === 'afternoon') reason = " (Preferência: Tarde)";
+                        else if (preferredPeriod === 'evening') reason = " (Preferência: Noite)";
+
+                        toast.success(`Horário sugerido: ${bestSlot.time}${reason}`);
+                      } else {
+                        toast.error('Nenhum horário livre encontrado para esta data');
+                      }
+                    }}
                   />
 
                   <TypeAndStatusSection disabled={currentMode === 'view'} />
