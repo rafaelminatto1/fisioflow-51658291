@@ -137,7 +137,9 @@
       "mcp__github__search_repositories",
       "Bash(command -v:*)",
       "Bash(gh run list:*)",
-      "Bash(gh run view:*)"
+      "Bash(gh run view:*)",
+      "Bash(gh api:*)",
+      "Read(//home/rafael/cursor/fisiolovable/fisioflow-51658291/**)"
     ],
     "deny": [],
     "ask": []

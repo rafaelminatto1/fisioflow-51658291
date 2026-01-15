@@ -212,7 +212,7 @@ test.describe('Exercise Video Library', () => {
     await page.getByRole('button', { name: /cancelar/i }).click();
 
     // Should exit bulk mode
-    await expect(page.getByRole('button', { name: /selecionar todos/i }).not.toBeVisible();
+    await expect(page.getByRole('button', { name: /selecionar todos/i })).not.toBeVisible();
   });
 });
 
