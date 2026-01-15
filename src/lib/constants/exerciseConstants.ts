@@ -64,9 +64,12 @@ export type Category = typeof CATEGORIES[number]['value'];
 // EQUIPMENT (Equipamentos)
 // Including home-friendly options for patients
 // ============================================
+
+export const NO_EQUIPMENT_GROUP_ID = 'no_equipment_group';
+
 export const EQUIPMENT = [
     // Sem equipamento
-    { value: 'peso_corporal', label: 'Peso Corporal', category: 'none', homeFrequency: 'always' },
+    { value: 'peso_corporal', label: 'Sem Equipamento (Peso Corporal)', category: 'none', homeFrequency: 'always' },
 
     // Doméstico (home-friendly) - Para exercícios em casa
     { value: 'toalha', label: 'Toalha', category: 'home', homeFrequency: 'always' },
@@ -111,6 +114,23 @@ export const EQUIPMENT = [
 ] as const;
 
 export type Equipment = typeof EQUIPMENT[number]['value'];
+
+// Group definitions
+export const HOME_EQUIPMENT_GROUP = [
+    'peso_corporal',
+    'toalha',
+    'vassoura_cabo',
+    'cadeira',
+    'parede',
+    'garrafa_agua',
+    'travesseiro',
+    'escada_degrau',
+    'tapete',
+    'porta',
+    'mesa',
+    'lata_conserva',
+    'mochila_peso'
+];
 
 // Helper to get home-friendly equipment only
 export const getHomeEquipment = () =>
