@@ -3,7 +3,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/lib/errors/logger';
-import type { RealtimeChannel } from '@supabase/supabase-js';
 
 interface UseRealtimeSubscriptionProps {
     table: string;
@@ -32,7 +31,7 @@ export function useRealtimeSubscription({
     const queryClient = useQueryClient();
     const { profile } = useAuth();
     const organizationId = profile?.organization_id;
-    const channelRef = useRef<RealtimeChannel | null>(null);
+    const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
     const isSubscribedRef = useRef(false);
 
     useEffect(() => {
@@ -54,8 +53,11 @@ export function useRealtimeSubscription({
         // Reset subscription state
         isSubscribedRef.current = false;
 
-        const channel = supabase
-            .channel(channelName)
+        const channel = supabase.channel(channelName);
+
+        // Type assertion para evitar erro de TypeScript com postgres_changes
+        // O tipo Database genérico não reconhece as tabelas específicas
+        (channel as any)
             .on(
                 'postgres_changes',
                 {
@@ -64,8 +66,8 @@ export function useRealtimeSubscription({
                     table,
                     filter: effectiveFilter
                 },
-                (payload) => {
-                    logger.info(`Realtime event: ${table} ${payload.eventType}`, {}, 'useRealtimeSubscription');
+                () => {
+                    logger.info(`Realtime event: ${table}`, {}, 'useRealtimeSubscription');
 
                     // Invalidar queries se queryKey for fornecida
                     if (queryKey) {
@@ -77,13 +79,13 @@ export function useRealtimeSubscription({
                     // Futuramente pode aceitar um callback 'onEvent' para customização
                 }
             )
-            .subscribe((status, error) => {
+            .subscribe((status) => {
                 if (status === 'SUBSCRIBED') {
                     isSubscribedRef.current = true;
                     logger.debug(`Realtime conectado: ${channelName}`, {}, 'useRealtimeSubscription');
                 }
                 if (status === 'CHANNEL_ERROR') {
-                    logger.error(`Erro no canal Realtime: ${channelName}`, error, 'useRealtimeSubscription');
+                    logger.error(`Erro no canal Realtime: ${channelName}`, {}, 'useRealtimeSubscription');
                 }
                 if (status === 'TIMED_OUT') {
                     logger.warn(`Timeout no canal Realtime: ${channelName}`, {}, 'useRealtimeSubscription');
