@@ -144,7 +144,10 @@
       "Read(//tmp/**)",
       "mcp__playwright__browser_network_requests",
       "Bash(git check-ignore:*)",
-      "mcp__playwright__browser_tabs"
+      "mcp__playwright__browser_tabs",
+      "mcp__github__list_issues",
+      "Bash(git fetch:*)",
+      "Bash(git stash:*)"
     ],
     "deny": [],
     "ask": []
