@@ -1,5 +1,11 @@
 import { useState, useCallback } from 'react';
+import { List, Save, Trash2 } from 'lucide-react';
+
 import { BodyMap, PainPoint } from './BodyMap';
+import { PainGauge } from './PainGauge';
+import { EvaScaleBar } from './EvaScaleBar';
+import { PainPointsBottomSheet } from './PainPointsBottomSheet';
+import { PainPointModal } from './PainPointModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -7,12 +13,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Save, Trash2, List } from 'lucide-react';
-import { v4 as uuidv4 } from 'uuid';
-import { PainGauge } from './PainGauge';
-import { EvaScaleBar } from './EvaScaleBar';
-import { PainPointsBottomSheet } from './PainPointsBottomSheet';
-import { PainPointModal } from './PainPointModal';
+
+// Helper function to generate UUID - using crypto.randomUUID() to avoid "ne is not a function" error in production
+const uuidv4 = (): string => crypto.randomUUID();
 
 interface PainMapEditorProps {
   sessionId: string;
