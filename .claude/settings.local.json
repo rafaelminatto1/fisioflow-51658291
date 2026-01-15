@@ -149,7 +149,11 @@
       "Bash(git fetch:*)",
       "Bash(git stash:*)",
       "Bash(npm info:*)",
-      "Bash(awk:*)"
+      "Bash(awk:*)",
+      "Bash(npx vercel list:*)",
+      "Bash(npx vercel logs:*)",
+      "Bash(npx vercel deployment ls:*)",
+      "Bash(npx vercel:*)"
     ],
     "deny": [],
     "ask": []
