@@ -44,6 +44,7 @@ const PatientEvolutionReport = () => {
           currentPainLevel: evolutionData.currentPainLevel,
           initialPainLevel: evolutionData.initialPainLevel,
           totalSessions: evolutionData.totalSessions,
+          prescribedSessions: evolutionData.prescribedSessions,
           averageImprovement: evolutionData.averageImprovement,
           measurementEvolution: evolutionData.measurementEvolution,
         }
@@ -172,8 +173,8 @@ const PatientEvolutionReport = () => {
                         </td>
                         <td className="px-6 py-4">
                           <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${parseFloat(m.improvement.toString()) >= 0
-                              ? 'bg-green-50 text-green-700 border border-green-100'
-                              : 'bg-red-50 text-red-700 border border-red-100'
+                            ? 'bg-green-50 text-green-700 border border-green-100'
+                            : 'bg-red-50 text-red-700 border border-red-100'
                             }`}>
                             {m.improvement}% {parseFloat(m.improvement.toString()) >= 0 ? '↑' : '↓'}
                           </div>
@@ -195,6 +196,7 @@ const PatientEvolutionReport = () => {
           currentPainLevel={evolutionData.currentPainLevel}
           initialPainLevel={evolutionData.initialPainLevel}
           totalSessions={evolutionData.totalSessions}
+          prescribedSessions={evolutionData.prescribedSessions}
           averageImprovement={evolutionData.averageImprovement}
         />
 

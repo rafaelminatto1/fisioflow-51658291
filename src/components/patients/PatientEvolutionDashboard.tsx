@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Activity, Calendar, TrendingDown, TrendingUp, Clock, Target } from "lucide-react";
+import { Activity, Calendar, TrendingDown, TrendingUp, Clock, Target, CheckCircle2 } from "lucide-react";
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -58,6 +58,7 @@ export const PatientEvolutionDashboard = ({
       icon: Calendar,
       color: "text-blue-600",
       bg: "bg-blue-500/10",
+      progressPercent: prescribedSessions && prescribedSessions > 0 ? Math.min(100, (totalSessions / prescribedSessions) * 100) : undefined,
     },
     {
       label: "Dor Atual",
@@ -113,6 +114,24 @@ export const PatientEvolutionDashboard = ({
                         <span className="text-sm text-muted-foreground">{stat.subtitle}</span>
                       )}
                     </div>
+                    {/* Progress Bar for Session Tracking */}
+                    {stat.progressPercent !== undefined && stat.progressPercent > 0 && (
+                      <div className="mt-2">
+                        <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${stat.progressPercent >= 100 ? 'bg-green-500' : 'bg-blue-500'
+                              }`}
+                            style={{ width: `${stat.progressPercent}%` }}
+                          />
+                        </div>
+                        {stat.progressPercent >= 100 && (
+                          <div className="flex items-center gap-1 mt-1 text-[10px] font-medium text-green-600">
+                            <CheckCircle2 className="h-3 w-3" />
+                            <span>Tratamento concluído!</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className={`p-3 rounded-lg ${stat.bg}`}>
                     <Icon className={`h-6 w-6 ${stat.color}`} />

@@ -119,7 +119,9 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
     exercises = [],
     onExercisesChange,
     onSuggestExercises,
-    patientPhone
+    patientPhone,
+    previousEvolutions = [],
+    onCopyLastEvolution
 }) => {
     const [isEditable, setIsEditable] = useState(false);
     const [savedLayout, setSavedLayout] = useState<any[]>([]);
@@ -169,7 +171,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
     }, [onExercisesChange]);
 
     const gridItems: GridItem[] = React.useMemo(() => [
-        // ===== LINHA 1: Nível de Dor | Exercícios =====
+        // ===== LINHA 1: Nível de Dor (30%) | Exercícios (70%) =====
         {
             id: 'pain-scale',
             content: (
@@ -216,7 +218,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                         </div>
                     }
                 >
-                    <div className="p-3 h-full overflow-auto">
+                    <div className="p-3 h-full overflow-visible">
                         <PainScaleWidget
                             value={painScaleData}
                             onChange={handlePainScaleChange}
@@ -229,9 +231,9 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 6, h: 5, x: 0, y: 0, minW: 6, minH: 4 }
+            defaultLayout: { w: 4, h: showPainDetails ? 16 : 5, x: 0, y: 0, minW: 3, minH: 4 } // 30% da largura (4 de 12)
         },
-        // Exercícios da Sessão (direita)
+        // Exercícios da Sessão (70% da largura)
         {
             id: 'exercises-block',
             content: (
@@ -252,7 +254,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 6, h: 5, x: 6, y: 0, minW: 6, minH: 4 }
+            defaultLayout: { w: 8, h: 5, x: 4, y: 0, minW: 6, minH: 4 } // 70% da largura (8 de 12)
         },
 
         // ===== LINHA 2: Formulário SOAP (4 campos em 2x2) =====
@@ -314,33 +316,11 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 6, h: 7, x: (index % 2) * 6, y: 5 + Math.floor(index / 2) * 7, minW: 4, minH: 5 }
+            defaultLayout: { w: 6, h: 7, x: (index % 2) * 6, y: (showPainDetails ? 16 : 5) + Math.floor(index / 2) * 7, minW: 4, minH: 5 }
         })),
 
-        // ===== LINHA 3: Home Care | Medições =====
-        // Home Care (esquerda)
-        {
-            id: 'home-care-block',
-            content: (
-                <GridWidget
-                    title="Home Care"
-                    icon={<House className="h-4 w-4 text-green-600" />}
-                    isDraggable={isEditable}
-                    className="h-full border-t-4 border-green-500/30"
-                    headerClassName="bg-green-500/10"
-                >
-                    <div className="h-full overflow-hidden">
-                        <HomeCareWidget
-                            patientId={patientId || ''}
-                            patientPhone={patientPhone}
-                            disabled={disabled}
-                        />
-                    </div>
-                </GridWidget>
-            ),
-            defaultLayout: { w: 6, h: 9, x: 0, y: 19, minW: 6, minH: 6 }
-        },
-        // Registro de Medições (direita)
+        // ===== LINHA 3: Registro de Medições | Home Care =====
+        // Registro de Medições (esquerda)
         {
             id: 'measurements',
             content: (
@@ -368,10 +348,123 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
+            defaultLayout: { w: 6, h: 9, x: 0, y: 19, minW: 6, minH: 6 }
+        },
+        // Home Care (direita)
+        {
+            id: 'home-care-block',
+            content: (
+                <GridWidget
+                    title="Home Care"
+                    icon={<House className="h-4 w-4 text-green-600" />}
+                    isDraggable={isEditable}
+                    className="h-full border-t-4 border-green-500/30"
+                    headerClassName="bg-green-500/10"
+                >
+                    <div className="h-full overflow-hidden">
+                        <HomeCareWidget
+                            patientId={patientId || ''}
+                            patientPhone={patientPhone}
+                            disabled={disabled}
+                        />
+                    </div>
+                </GridWidget>
+            ),
             defaultLayout: { w: 6, h: 9, x: 6, y: 19, minW: 6, minH: 6 }
         },
 
-        // ===== LINHA 4: Anexos =====
+        // ===== LINHA 4: Sessões Anteriores | Anexos =====
+        // Sessões Anteriores (esquerda)
+        {
+            id: 'previous-sessions',
+            content: (
+                <GridWidget
+                    title="Sessões Anteriores"
+                    icon={<History className="h-4 w-4 text-amber-600" />}
+                    isDraggable={isEditable}
+                    className="h-full border-t-4 border-amber-500/30"
+                    headerClassName="bg-amber-500/10"
+                    extraHeaderContent={
+                        previousEvolutions.length > 0 && onCopyLastEvolution ? (
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="default"
+                                            size="sm"
+                                            className="h-7 px-3 text-xs"
+                                            onClick={() => {
+                                                const lastEvolution = previousEvolutions[0];
+                                                if (lastEvolution) {
+                                                    onCopyLastEvolution(lastEvolution);
+                                                }
+                                            }}
+                                            disabled={disabled}
+                                        >
+                                            <Copy className="h-3 w-3 mr-1" />
+                                            Replicar Última
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="bottom">
+                                        <p className="text-xs">Copiar toda a última sessão para os campos atuais</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        ) : null
+                    }
+                >
+                    <div className="h-full overflow-auto p-3">
+                        {previousEvolutions.length > 0 ? (
+                            <div className="space-y-2">
+                                {previousEvolutions.slice(0, 5).map((evolution: any, index: number) => (
+                                    <div
+                                        key={evolution.id}
+                                        className="group border rounded-lg p-3 hover:bg-muted/50 transition-all cursor-pointer"
+                                        onClick={() => onCopyLastEvolution && onCopyLastEvolution(evolution)}
+                                    >
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xs font-bold">
+                                                    {previousEvolutions.length - index}
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-semibold">
+                                                        {new Date(evolution.created_at || evolution.record_date).toLocaleDateString('pt-BR')}
+                                                    </p>
+                                                    <p className="text-[10px] text-muted-foreground">
+                                                        {evolution.pain_level !== undefined && `Dor: ${evolution.pain_level}/10`}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <Copy className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        </div>
+                                        {(evolution.subjective || evolution.objective) && (
+                                            <div className="text-xs text-muted-foreground line-clamp-2">
+                                                {evolution.subjective?.substring(0, 80) || evolution.objective?.substring(0, 80)}
+                                                {(evolution.subjective?.length > 80 || evolution.objective?.length > 80) && '...'}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                                {previousEvolutions.length > 5 && (
+                                    <div className="text-center text-xs text-muted-foreground pt-2">
+                                        + {previousEvolutions.length - 5} sessões anteriores
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+                                <History className="h-8 w-8 mb-2 opacity-50" />
+                                <p className="text-sm">Nenhuma sessão anterior</p>
+                                <p className="text-xs">As sessões registradas aparecerão aqui</p>
+                            </div>
+                        )}
+                    </div>
+                </GridWidget>
+            ),
+            defaultLayout: { w: 6, h: 10, x: 0, y: 28, minW: 6, minH: 6 }
+        },
+        // Anexos (direita)
         {
             id: 'photos',
             content: (
@@ -399,7 +492,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 12, h: 8, x: 0, y: 28, minW: 6, minH: 6 }
+            defaultLayout: { w: 6, h: 10, x: 6, y: 28, minW: 6, minH: 6 }
         },
     ], [
         isEditable,
@@ -419,33 +512,35 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
         onCopyLast,
         soapData,
         handleSoapFieldChange,
-        patientPhone
+        patientPhone,
+        previousEvolutions,
+        onCopyLastEvolution
     ]);
 
     return (
-        <div className={cn("space-y-4", className)}>
-            <div className="flex justify-between items-center bg-muted/30 p-2 rounded-lg border">
-                <div className="flex items-center gap-2">
-                    <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium text-muted-foreground">Layout da Evolução</span>
+        <div className={cn("space-y-5", className)}>
+            <div className="flex justify-between items-center bg-muted/40 px-4 py-3 rounded-xl border">
+                <div className="flex items-center gap-2.5">
+                    <LayoutDashboard className="h-4.5 w-4.5 text-muted-foreground" />
+                    <span className="text-sm font-semibold text-foreground">Layout da Evolução</span>
                 </div>
                 <div className="flex gap-2">
                     {isEditable ? (
                         <>
-                            <Button variant="ghost" size="sm" onClick={() => setIsEditable(false)}>Cancelar</Button>
-                            <Button size="sm" onClick={() => handleSaveLayout(savedLayout)} className="gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => setIsEditable(false)} className="h-8.5 px-3">Cancelar</Button>
+                            <Button size="sm" onClick={() => handleSaveLayout(savedLayout)} className="h-8.5 px-3.5 gap-2">
                                 <Save className="h-3.5 w-3.5" /> Salvar
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={handleResetLayout} title="Resetar">
+                            <Button variant="ghost" size="icon" onClick={handleResetLayout} title="Resetar" className="h-8.5 w-8.5">
                                 <RotateCcw className="h-3.5 w-3.5" />
                             </Button>
                         </>
                     ) : (
                         <>
-                            <Button variant="outline" size="sm" onClick={handleResetLayout} className="gap-2">
+                            <Button variant="outline" size="sm" onClick={handleResetLayout} className="h-8.5 px-3 gap-2">
                                 <Undo className="h-3.5 w-3.5" /> Redefinir
                             </Button>
-                            <Button variant="outline" size="sm" onClick={() => setIsEditable(true)} className="gap-2">
+                            <Button variant="outline" size="sm" onClick={() => setIsEditable(true)} className="h-8.5 px-3 gap-2">
                                 <LayoutDashboard className="h-3.5 w-3.5" /> Personalizar
                             </Button>
                         </>
