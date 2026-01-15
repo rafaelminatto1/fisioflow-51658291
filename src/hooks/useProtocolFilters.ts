@@ -27,19 +27,21 @@ export function useProtocolFilters(protocols: ExerciseProtocol[]) {
                     case 'Tratamento Conservador':
                         if (p.protocol_type !== 'patologia') return false;
                         break;
-                    case 'Reabilitação Esportiva':
+                    case 'Reabilitação Esportiva': {
                         const isSports = includesTerm(p.condition_name, 'esport') ||
                             includesTerm(p.name, 'esport') ||
                             includesTerm(p.name, 'atleta');
                         if (!isSports) return false;
                         break;
-                    case 'Idosos e Geriatria':
+                    }
+                    case 'Idosos e Geriatria': {
                         const isElderly = includesTerm(p.condition_name, 'idoso') ||
                             includesTerm(p.name, 'idoso') ||
                             includesTerm(p.condition_name, 'geriatria') ||
                             includesTerm(p.name, 'geriatria');
                         if (!isElderly) return false;
                         break;
+                    }
                 }
             }
 
