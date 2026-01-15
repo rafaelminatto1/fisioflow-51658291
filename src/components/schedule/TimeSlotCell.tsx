@@ -62,19 +62,6 @@ export const TimeSlotCell = memo(({
             )}
         </div>
     );
-}, (prev, next) => {
-    // Custom comparison for performance if needed, but default shallow compare should work
-    // provided props are stable.
-    return (
-        prev.time === next.time &&
-        prev.rowIndex === next.rowIndex &&
-        prev.colIndex === next.colIndex &&
-        prev.isClosed === next.isClosed &&
-        prev.isBlocked === next.isBlocked &&
-        prev.isDropTarget === next.isDropTarget &&
-        prev.day.getTime() === next.day.getTime()
-        // handlers should be stable refs ideally
-    );
 });
 
 TimeSlotCell.displayName = 'TimeSlotCell';

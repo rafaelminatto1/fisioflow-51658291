@@ -38,7 +38,27 @@ const images = [
     { id: 'ce0f4293-94cb-4f30-9bb0-f323ba8c1f28', file: 'free_squat_exercise_1768428598080.png', name: 'Agachamento Livre' },
     { id: '9fc590c6-49c7-47da-a1fa-b454fdbd43f4', file: 'free_squat_exercise_1768428598080.png', name: 'Agachamento Livre' },
     { id: 'c59164bc-13a1-41af-89c0-a4d13efc489e', file: 'lunge_exercise_1768428610424.png', name: 'Afundo Frontal (Lunge)' },
-    { id: '9ddf66b7-69ca-47db-b004-0b9c7cf47382', file: 'lunge_exercise_1768428610424.png', name: 'Afundo' }
+    { id: '9ddf66b7-69ca-47db-b004-0b9c7cf47382', file: 'lunge_exercise_1768428610424.png', name: 'Afundo' },
+    // Phase 3 Images
+    { id: '53d5f00e-a5c8-4e15-b118-9326774206db', file: 'four_point_kneeling_1768440771038.png' }, // 4 Apoios
+    { id: '24d7105d-6222-4cac-b022-af486c670d07', file: 'crunch_exercise_1768440786714.png' }, // Abdominal Crupeado
+    { id: 'e27d4256-c834-4e2c-845b-1dfb767c3cb2', file: 'oblique_crunch_1768440799968.png' }, // Abdominal Oblíquo
+    { id: '4204a561-e640-4176-bdce-cd68ddb7b0f7', file: 'step_up_exercise_1768440814015.png' }, // Step Up
+    { id: 'e15a7a53-ce3d-4811-bf69-28760da0e857', file: 'step_down_exercise_1768440829150.png' }, // Step Down
+    { id: 'c9640a9f-4448-4573-8852-7e085d2cfcad', file: 'side_plank_exercise_1768440858852.png' }, // Side Plank
+    { id: 'bf5122ab-fd57-47d3-b6ed-e2f081e71918', file: 'hamstring_stretch_1768440871853.png' }, // Alongamento Isquiotibiais
+    { id: 'acfc8fa4-6d28-4748-bf52-5d66b787803f', file: 'hamstring_stretch_1768440871853.png' }, // Alongamento Isquiotibiais em Pé
+    { id: 'd8d9d4b8-1941-4c9f-9d2d-8d9d4b8194a', file: 'bird_dog_exercise_1768440884296.png' }, // Perdigueiro (if ID valid)
+    { id: 'd7548baf-4209-4c11-8bb9-c144325e7d5b', file: 'sit_to_stand_1768440897918.png' }, // Sit-to-Stand
+    { id: 'e1007b01-eb24-43e4-893d-e17c2f9b565e', file: 'foam_rolling_1768440911208.png' }, // Rolling com Foam Roller
+    { id: '36fba17a-19c0-425c-a1ae-8c71ca9d6f0e', file: 'adductor_stretch_1768440940033.png' }, // Alongamento de Adutores
+    { id: '39f8e6d7-4df2-40c1-bf70-c999cca555bb', file: 'psoas_stretch_1768440952223.png' }, // Alongamento de Psoas
+    { id: '539ed598-43b1-4b66-846f-ae3eaf89d4ee', file: 'pectoral_stretch_1768440964346.png' }, // Alongamento de Peitoral
+    { id: '21787493-4e7e-42db-9ba9-d5ebf3d61c61', file: 'calf_stretch_1768440979828.png' }, // Alongamento de Panturrilha
+    { id: 'b92906fa-740d-4797-b7aa-5f0fad5803ac', file: 'external_rotation_1768440992167.png' }, // Rotação Externa de Ombro
+    { id: 'c391fb48-73f8-4bdc-935c-09fce60fd525', file: 'external_rotation_1768440992167.png' }, // Rotação Externa com Faixa
+    { id: '668869ad-e594-4478-954f-1ef95cd9c9f5', file: 'single_leg_stance_1768441041444.png' }, // Apoio Unipodal
+    { id: '68a79743-9985-40a5-bd88-585927eebafc', file: 'tandem_walk_1768441056605.png' }, // Tandem Walk
 ];
 
 async function upload() {
