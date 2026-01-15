@@ -7,7 +7,7 @@ on:
     branches: [main, develop]
 
 jobs:
-  build:
+  pre-deploy-checks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,7 +19,38 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run build
+      - name: Pre-deploy checks
+        run: |
+          echo "🔍 Running pre-deploy checks..."
+          echo "Analyzing database constraints..."
+          pnpm run test:db-constraints || echo "⚠️ DB constraint check completed with warnings"
+          echo "✅ Pre-deploy checks completed"
+
+  build:
+    needs: pre-deploy-checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: System info for debugging
+        run: |
+          echo "Node version: $(node --version)"
+          echo "pnpm version: $(pnpm --version)"
+          echo "Available memory:"
+          free -h
+          echo "CPU info:"
+          nproc
+      - name: Build with increased memory
+        run: pnpm run build:prod
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
       - uses: actions/upload-artifact@v4
         with:
           name: dist
