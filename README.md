@@ -128,6 +128,35 @@ npm run dev
 
 ## 🧪 Testes e Qualidade
 
+### Checklist Pre-Deploy
+
+**Antes de fazer deploy para produção, execute:**
+
+```bash
+# OU use o script completo que faz tudo:
+npm run test:pre-deploy
+
+# OU execute manualmente:
+npm run test:race 100          # Testar race conditions
+npm run test:db-constraints    # Verificar constraints
+npm run lint                   # Verificar código
+npm run build                  # Build de produção
+```
+
+### Testes Disponíveis
+
+| Script NPM | Descrição | Uso |
+|------------|-----------|-----|
+| `npm run test:pre-deploy` | **Executa todos os testes pre-deploy** | `npm run test:pre-deploy` |
+| `npm run test:race` | Detecta race conditions em inserts | `npm run test:race 100` |
+| `npm run test:db-constraints` | Analisa constraints e patterns perigosos | `npm run test:db-constraints` |
+| `npm run test:e2e` | Testes end-to-end | `npm run test:e2e` |
+| `npm run test:coverage` | Cobertura de testes | `npm run test:coverage` |
+
+> 📚 **Documentação completa**: Veja [DATABASE_PATTERNS.md](./DATABASE_PATTERNS.md) para aprender sobre padrões seguros de banco de dados.
+
+### Build e Deploy
+
 ```bash
 # Lint
 npm run lint
