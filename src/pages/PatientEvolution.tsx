@@ -1,6 +1,12 @@
-import React, { lazy, Suspense, useEffect, useMemo, useState, useCallback } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { format, formatDistanceToNow, differenceInDays, differenceInMinutes, startOfDay } from 'date-fns';
+import {
+  format,
+  formatDistanceToNow,
+  differenceInDays,
+  differenceInMinutes as diffInMinutes,
+  startOfDay
+} from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
   AlertTriangle,
@@ -215,14 +221,6 @@ const PatientEvolution = () => {
     };
   }, [previousEvolutions, goals, pathologies, measurements]);
 
-  // Contagem de palavras do SOAP
-  const currentWordCount = useMemo(() => ({
-    subjective: subjective.split(/\s+/).filter(w => w.length > 0).length,
-    objective: objective.split(/\s+/).filter(w => w.length > 0).length,
-    assessment: assessment.split(/\s+/).filter(w => w.length > 0).length,
-    plan: plan.split(/\s+/).filter(w => w.length > 0).length
-  }), [subjective, objective, assessment, plan]);
-
   // Medições agrupadas por tipo para gráficos
   const measurementsByType = useMemo(() => {
     const grouped: Record<string, Array<{ date: string; value: number; fullDate: string }>> = {};
@@ -294,18 +292,9 @@ const PatientEvolution = () => {
     return 'stable'; // Estável
   }, [previousEvolutions]);
 
-  // Testes críticos pendentes hoje
-  const criticalTestsPending = useMemo(() =>
-    requiredMeasurements.filter(req => {
-      const hasMeasurementToday = todayMeasurements.some(m => m.measurement_name === req.measurement_name);
-      return req.alert_level === 'high' && !hasMeasurementToday;
-    }),
-    [requiredMeasurements, todayMeasurements]
-  );
-
   // Duração da sessão em minutos
   const sessionDurationMinutes = useMemo(() =>
-    differenceInMinutes(new Date(), sessionStartTime),
+    diffInMinutes(new Date(), sessionStartTime),
     [sessionStartTime]
   );
 
@@ -445,7 +434,7 @@ const PatientEvolution = () => {
           created_by: user.id
         };
 
-        let sessionError;
+        let sessionError: { message: string } | null = null;
         if (existingSessionId) {
           const { error } = await supabase
             .from('treatment_sessions')
