@@ -34,9 +34,10 @@ interface DraggableGridProps {
 const GRID_CONFIG = {
     cols: { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 } as const,
     breakpoints: { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 } as const,
-    margin: [20, 20] as const, // [horizontal, vertical] margin between items
+    margin: [16, 16] as const, // [horizontal, vertical] margin between items - reduced for better spacing
     rowHeight: 50, // default height of each grid row in pixels
     compactType: null, // disable auto-compaction to preserve layout
+    containerPadding: [0, 0] as const, // No extra padding at container edges
     // Enhanced UX: Animation and transition settings
     transitionDuration: 200, // ms - smooth animation for layout changes
     dragThreshold: 4, // pixels - minimum movement before drag starts (prevents accidental drags)
@@ -130,11 +131,14 @@ export const DraggableGrid = memo(function DraggableGrid({
                 isResizable={isEditable}
                 onLayoutChange={handleLayoutChange}
                 margin={GRID_CONFIG.margin}
+                containerPadding={GRID_CONFIG.containerPadding}
                 useCSSTransforms={true}
                 compactType={GRID_CONFIG.compactType}
                 preventCollision={false}
                 // Enhanced UX: Smooth animations
                 transformScale={1}
+                // Allow items to be dragged more freely
+                autoSize={true}
             >
                 {items.map((item) => (
                     <div
@@ -147,6 +151,7 @@ export const DraggableGrid = memo(function DraggableGrid({
                             y: item.defaultLayout.y,
                             minW: item.defaultLayout.minW,
                             minH: item.defaultLayout.minH,
+                            maxW: item.defaultLayout.w ? item.defaultLayout.w + 4 : undefined, // Allow slight expansion
                         }}
                     >
                         {item.content}
