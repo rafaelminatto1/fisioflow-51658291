@@ -148,6 +148,16 @@ export function EvolutionHeader({
                             </span>
                         )}
                         <Button
+                            onClick={() => navigate(`/patients/${patient.id}/evolution/report`)}
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 px-2 sm:px-3 hover:bg-primary/10 touch-target flex-shrink-0"
+                            title="Gerar Relatório de Evolução"
+                        >
+                            <FileText className="h-4 w-4" />
+                            <span className="hidden sm:inline ml-1 text-[10px] xs:text-xs">Relatório</span>
+                        </Button>
+                        <Button
                             onClick={onShowKeyboardHelp}
                             size="sm"
                             variant="ghost"

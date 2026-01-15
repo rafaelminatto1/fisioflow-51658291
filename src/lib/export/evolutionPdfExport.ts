@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface PatientData {
   name: string;
@@ -23,6 +24,7 @@ interface EvolutionMetrics {
   initialPainLevel: number;
   totalSessions: number;
   averageImprovement: number;
+  measurementEvolution?: any[];
 }
 
 export const generateEvolutionPDF = (
@@ -31,194 +33,171 @@ export const generateEvolutionPDF = (
   metrics: EvolutionMetrics
 ) => {
   const doc = new jsPDF();
-  let yPosition = 20;
+  const primaryColor: [number, number, number] = [0, 121, 107]; // Teal 700
+  const secondaryColor: [number, number, number] = [240, 253, 250]; // Teal 50
+  const textColor: [number, number, number] = [30, 41, 59]; // Slate 800
+  const lightTextColor: [number, number, number] = [100, 116, 139]; // Slate 500
 
-  // Configurações de estilo
-  const primaryColor: [number, number, number] = [91, 79, 232]; // #5B4FE8
+  const addHeader = () => {
+    // Top Bar with Gradient-like effect
+    doc.setFillColor(...primaryColor);
+    doc.rect(0, 0, 210, 40, 'F');
 
-  // Header com logo e título
-  doc.setFillColor(...primaryColor);
-  doc.rect(0, 0, 210, 35, 'F');
-  
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(24);
-  doc.setFont('helvetica', 'bold');
-  doc.text('FisioFlow', 20, 20);
-  
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Relatório de Evolução do Paciente', 20, 28);
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(28);
+    doc.setFont('helvetica', 'bold');
+    doc.text('FisioFlow', 20, 22);
 
-  // Data de geração
-  doc.setFontSize(9);
-  const today = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
-  doc.text(`Gerado em: ${today}`, 150, 28);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    const today = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+    doc.text(`Relatório de Evolução Clínica • ${today}`, 20, 30);
 
-  yPosition = 45;
+    // Aesthetic accent
+    doc.setFillColor(255, 255, 255, 0.2);
+    doc.circle(180, 20, 30, 'F');
+  };
 
-  // Seção: Dados do Paciente
+  addHeader();
+
+  let yPos = 55;
+
+  // --- Patient Info Block ---
   doc.setTextColor(...textColor);
-  doc.setFillColor(245, 245, 245);
-  doc.rect(15, yPosition, 180, 8, 'F');
-  
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text('📋 Dados do Paciente', 20, yPosition + 5);
-  
-  yPosition += 15;
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-
-  const patientName = patient.name;
-  doc.text(`Nome: ${patientName}`, 20, yPosition);
-  yPosition += 6;
-  
-  if (patient.phone) {
-    doc.text(`Telefone: ${patient.phone}`, 20, yPosition);
-    yPosition += 6;
-  }
-  
-  if (patient.email) {
-    doc.text(`E-mail: ${patient.email}`, 20, yPosition);
-    yPosition += 6;
-  }
-  
-  const age = new Date().getFullYear() - new Date(patient.birthDate).getFullYear();
-  doc.text(`Idade: ${age} anos`, 20, yPosition);
-  
-  yPosition += 12;
-
-  // Seção: Resumo da Evolução
-  doc.setFillColor(245, 245, 245);
-  doc.rect(15, yPosition, 180, 8, 'F');
-  
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text('📊 Resumo da Evolução', 20, yPosition + 5);
-  
-  yPosition += 15;
-
-  // Cards de métricas
-  const cardWidth = 85;
-  const cardHeight = 25;
-  const cardSpacing = 10;
-
-  // Card 1: Total de Sessões
-  doc.setDrawColor(...primaryColor);
-  doc.setLineWidth(0.5);
-  doc.roundedRect(20, yPosition, cardWidth, cardHeight, 3, 3, 'S');
-  
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Total de Sessões', 25, yPosition + 8);
-  
-  doc.setFontSize(20);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...primaryColor);
-  doc.text(metrics.totalSessions.toString(), 25, yPosition + 18);
-
-  // Card 2: Dor Inicial vs Atual
-  doc.setTextColor(...textColor);
-  doc.roundedRect(20 + cardWidth + cardSpacing, yPosition, cardWidth, cardHeight, 3, 3, 'S');
-  
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Nível de Dor', 25 + cardWidth + cardSpacing, yPosition + 8);
-  
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  const painReduction = metrics.initialPainLevel - metrics.currentPainLevel;
-  const painColor: [number, number, number] = painReduction > 0 ? [16, 185, 129] : [239, 68, 68];
-  doc.setTextColor(...painColor);
-  doc.text(
-    `${metrics.initialPainLevel.toFixed(1)} → ${metrics.currentPainLevel.toFixed(1)}`,
-    25 + cardWidth + cardSpacing,
-    yPosition + 18
-  );
-
-  yPosition += cardHeight + 15;
-
-  // Card 3: Melhora Média
-  doc.setTextColor(...textColor);
-  doc.roundedRect(20, yPosition, cardWidth, cardHeight, 3, 3, 'S');
-  
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Melhora Média por Sessão', 25, yPosition + 8);
-  
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(16, 185, 129);
-  doc.text(`${metrics.averageImprovement.toFixed(1)}%`, 25, yPosition + 18);
+  doc.text(patient.name, 20, yPos);
 
-  yPosition += cardHeight + 15;
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...lightTextColor);
+  const age = patient.birthDate ? new Date().getFullYear() - new Date(patient.birthDate).getFullYear() : 'N/A';
+  doc.text(`Idade: ${age} anos | Tel: ${patient.phone || 'N/A'} | Email: ${patient.email || 'N/A'}`, 20, yPos + 6);
 
-  // Seção: Histórico de Sessões
+  yPos += 20;
+
+  // --- Summary Cards ---
+  const drawCard = (x: number, y: number, w: number, h: number, title: string, value: string, icon: string) => {
+    doc.setFillColor(252, 252, 252);
+    doc.setDrawColor(230, 230, 230);
+    doc.roundedRect(x, y, w, h, 3, 3, 'FD');
+
+    doc.setTextColor(...lightTextColor);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text(title.toUpperCase(), x + 5, y + 8);
+
+    doc.setTextColor(...primaryColor);
+    doc.setFontSize(18);
+    doc.text(value, x + 5, y + 20);
+  };
+
+  drawCard(20, yPos, 55, 28, 'Total Sessões', metrics.totalSessions.toString(), '');
+  drawCard(80, yPos, 55, 28, 'Nível de Dor', `${metrics.initialPainLevel} → ${metrics.currentPainLevel}`, '');
+  drawCard(140, yPos, 50, 28, 'Melhora Média', `${metrics.averageImprovement.toFixed(1)}%`, '');
+
+  yPos += 45;
+
+  // --- Measurements Evolution Table ---
+  if (metrics.measurementEvolution && metrics.measurementEvolution.length > 0) {
+    doc.setTextColor(...textColor);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('📈 Evolução das Medições (Antes vs Depois)', 20, yPos);
+    yPos += 8;
+
+    const measTableData = metrics.measurementEvolution.map((m: any) => {
+      let diff = m.improvement;
+      const diffColor = parseFloat(diff) > 0 ? '↑' : parseFloat(diff) < 0 ? '↓' : '-';
+
+      return [
+        m.name,
+        `${m.initial.value} ${m.initial.unit || ''}`,
+        `${m.current.value} ${m.current.unit || ''}`,
+        `${diff}% ${diffColor}`
+      ];
+    });
+
+    autoTable(doc, {
+      startY: yPos,
+      head: [['Parâmetro', 'Admissão', 'Atual', 'Evolução']],
+      body: measTableData,
+      theme: 'striped',
+      headStyles: { fillColor: primaryColor, textColor: 255, fontSize: 10 },
+      styles: { fontSize: 9, cellPadding: 4 },
+      margin: { left: 20, right: 20 },
+    });
+
+    yPos = (doc as any).lastAutoTable.finalY + 15;
+  }
+
+  // --- Sessions History Table ---
+  if (yPos > 240) { doc.addPage(); addHeader(); yPos = 55; }
+
   doc.setTextColor(...textColor);
-  doc.setFillColor(245, 245, 245);
-  doc.rect(15, yPosition, 180, 8, 'F');
-  
-  doc.setFontSize(12);
+  doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
-  doc.text('📅 Histórico de Sessões', 20, yPosition + 5);
-  
-  yPosition += 12;
+  doc.text('📅 Histórico de Sessões', 20, yPos);
+  yPos += 8;
 
-  // Tabela de sessões
-  const tableData = sessions.map((session, index) => [
-    `#${sessions.length - index}`,
-    format(new Date(session.date), 'dd/MM/yyyy', { locale: ptBR }),
-    session.painLevel.toFixed(1),
-    `${session.mobilityScore}%`,
-    session.therapist,
-    session.observations.substring(0, 50) + (session.observations.length > 50 ? '...' : '')
+  const sessionTableData = sessions.map((s, i) => [
+    `#${sessions.length - i}`,
+    format(new Date(s.date), 'dd/MM/yyyy'),
+    s.painLevel.toString(),
+    `${s.mobilityScore}%`,
+    s.observations.length > 80 ? s.observations.substring(0, 80) + '...' : s.observations
   ]);
 
   autoTable(doc, {
-    startY: yPosition,
-    head: [['#', 'Data', 'Dor', 'Mobilidade', 'Terapeuta', 'Observações']],
-    body: tableData,
+    startY: yPos,
+    head: [['Nº', 'Data', 'Dor', 'Mobilidade', 'Conduta/Observações']],
+    body: sessionTableData,
     theme: 'grid',
-    headStyles: {
-      fillColor: primaryColor,
-      textColor: [255, 255, 255],
-      fontSize: 9,
-      fontStyle: 'bold',
-      halign: 'center'
-    },
-    styles: {
-      fontSize: 8,
-      textColor: textColor
-    },
+    headStyles: { fillColor: primaryColor, textColor: 255, fontSize: 10 },
+    styles: { fontSize: 8, cellPadding: 3 },
     columnStyles: {
-      0: { halign: 'center', cellWidth: 15 },
-      1: { halign: 'center', cellWidth: 25 },
-      2: { halign: 'center', cellWidth: 15 },
-      3: { halign: 'center', cellWidth: 25 },
-      4: { cellWidth: 30 },
-      5: { cellWidth: 70 }
+      0: { cellWidth: 10 },
+      1: { cellWidth: 25 },
+      2: { cellWidth: 15 },
+      3: { cellWidth: 25 },
+      4: { cellWidth: 'auto' }
     },
-    margin: { left: 15, right: 15 }
+    margin: { left: 20, right: 20 },
   });
 
-  // Footer
-  const pageCount = doc.getNumberOfPages();
+  yPos = (doc as any).lastAutoTable.finalY + 20;
+
+  // --- Scientific References ---
+  if (yPos > 240) { doc.addPage(); addHeader(); yPos = 55; }
+
+  doc.setFillColor(...secondaryColor);
+  doc.roundedRect(20, yPos, 170, 45, 3, 3, 'F');
+
+  doc.setTextColor(...primaryColor);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text('📚 Referências e Escalas Utilizadas:', 25, yPos + 10);
+
+  doc.setTextColor(...lightTextColor);
   doc.setFontSize(8);
-  doc.setTextColor(150, 150, 150);
-  
+  doc.setFont('helvetica', 'italic');
+  const refs = [
+    '• EVA: Escala Visual Analógica de Dor (Huskisson, 1974).',
+    '• Goniometria: Measurement of Joint Motion (Norkin & White, 2016).',
+    '• Testes Funcionais: Baseados em protocolos da American Physical Therapy Association (APTA).',
+    '• Sinais Vitais: Parâmetros da Sociedade Brasileira de Cardiologia (SBC).',
+  ];
+  refs.forEach((ref, i) => {
+    doc.text(ref, 25, yPos + 18 + (i * 5));
+  });
+
+  // Footer on all pages
+  const pageCount = doc.getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
-    doc.text(
-      `Página ${i} de ${pageCount}`,
-      doc.internal.pageSize.width / 2,
-      doc.internal.pageSize.height - 10,
-      { align: 'center' }
-    );
-    doc.text(
-      'FisioFlow - Sistema de Gestão de Fisioterapia',
-      20,
-      doc.internal.pageSize.height - 10
-    );
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text(`FisioFlow - Gerenciamento de Fisioterapia de Alta Performance | Página ${i} de ${pageCount}`, 105, 285, { align: 'center' });
   }
 
   return doc;

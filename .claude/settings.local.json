@@ -127,7 +127,14 @@
       "mcp__playwright__browser_close",
       "mcp__playwright__browser_fill_form",
       "Bash(pnpm dlx shadcn:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "mcp__github__get_file_contents",
+      "mcp__github__search_issues",
+      "mcp__github__list_commits",
+      "mcp__github__list_pull_requests",
+      "Bash(pnpm:*)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" pnpm run build:*)",
+      "mcp__github__search_repositories"
     ],
     "deny": [],
     "ask": []
