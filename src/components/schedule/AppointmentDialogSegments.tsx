@@ -369,7 +369,7 @@ export const PaymentTab = ({
                                 <SelectContent>
                                     {[1, 2, 3, 4, 5, 6].map((num) => (
                                         <SelectItem key={num} value={num.toString()}>
-                                            {num}x de R$ {(watchpaymentAmount / num).toFixed(2)}
+                                            {num}x de R$ {(watchPaymentAmount / num).toFixed(2)}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>

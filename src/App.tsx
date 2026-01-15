@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { DataProvider } from "@/contexts/DataContext";
+import { RealtimeProvider } from "@/contexts/RealtimeContext";
 import { AuthContextProvider } from "@/contexts/AuthContextProvider";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
@@ -152,7 +153,8 @@ const App = () => {
         <TooltipProvider>
           <AuthContextProvider>
             <StatsigProviderWrapper>
-              <DataProvider>
+              <RealtimeProvider>
+                <DataProvider>
                 <Toaster />
                 <Sonner />
                 {/* <PWAInstallPrompt /> */}
@@ -179,6 +181,7 @@ const App = () => {
                   </Suspense>
                 </BrowserRouter>
               </DataProvider>
+              </RealtimeProvider>
             </StatsigProviderWrapper>
           </AuthContextProvider>
         </TooltipProvider>
