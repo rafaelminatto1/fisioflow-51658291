@@ -170,9 +170,8 @@ export const DraggableGrid = memo(function DraggableGrid({
         <div ref={containerRef} className={className} style={{ position: 'relative' }}>
             <Responsive
                 className="layout"
-                // DON'T use layouts prop - let data-grid control everything
-                // This ensures widgets with same Y position appear on same row
-                layouts={undefined}
+                // Use empty layouts object to force data-grid to control positioning
+                layouts={{}}
                 breakpoints={BREAKPOINTS}
                 cols={cols}
                 rowHeight={rowHeight}
@@ -183,8 +182,8 @@ export const DraggableGrid = memo(function DraggableGrid({
                 onLayoutChange={handleLayoutChange}
                 margin={GRID_MARGIN}
                 useCSSTransforms={true}
-                compactType={null} // Disable auto-compaction which can cause items to move
-                preventCollision={false} // Allow items to move vertically
+                compactType={null} // Disable auto-compaction
+                preventCollision={false}
             >
                 {items.map((item) => (
                     <div
@@ -197,7 +196,6 @@ export const DraggableGrid = memo(function DraggableGrid({
                             y: item.defaultLayout.y,
                             minW: item.defaultLayout.minW,
                             minH: item.defaultLayout.minH,
-                            static: !isEditable, // Make items static when not in edit mode
                         }}
                     >
                         {item.content}
