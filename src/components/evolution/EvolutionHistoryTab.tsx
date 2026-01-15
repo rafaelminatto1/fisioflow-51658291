@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { EvolutionTimeline } from '@/components/evolution/EvolutionTimeline';
 import { SurgeryTimeline } from '@/components/evolution/SurgeryTimeline';
-import { MedicalReportSuggestions } from '@/components/evolution/medical-report/MedicalReportSuggestions';
+import { MedicalReportSuggestions } from '@/components/evolution/MedicalReportSuggestions';
 
 interface EvolutionHistoryTabProps {
     patientId: string;
