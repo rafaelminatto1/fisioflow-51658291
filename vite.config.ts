@@ -63,12 +63,7 @@ export default defineConfig(({ mode }) => {
         gzipSize: true,
         brotliSize: true,
       }),
-      // Gzip compression para assets
-      viteCompression({
-        algorithm: 'gzip',
-        ext: '.gz',
-        threshold: 10240, // Apenas arquivos > 10KB
-      }),
+      // VitePWA deve vir antes da compressão
       VitePWA({
         registerType: 'autoUpdate',
         // Disable PWA in development to avoid manifest errors
@@ -166,7 +161,13 @@ export default defineConfig(({ mode }) => {
         devOptions: {
           enabled: false,
         },
-      })
+      }),
+      // Gzip compression para assets (depois do VitePWA)
+      viteCompression({
+        algorithm: 'gzip',
+        ext: '.gz',
+        threshold: 10240, // Apenas arquivos > 10KB
+      }),
     ].filter(Boolean),
     resolve: {
       alias: {
