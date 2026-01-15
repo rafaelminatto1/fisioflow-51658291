@@ -23,7 +23,18 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run build
+      - name: System info for debugging
+        run: |
+          echo "Node version: $(node --version)"
+          echo "pnpm version: $(pnpm --version)"
+          echo "Available memory:"
+          free -h
+          echo "CPU info:"
+          nproc
+      - name: Build with increased memory
+        run: pnpm run build:prod
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
       - uses: actions/upload-artifact@v4
         with:
           name: dist
