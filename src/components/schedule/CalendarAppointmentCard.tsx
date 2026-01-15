@@ -21,6 +21,8 @@ interface CalendarAppointmentCardProps {
     onDeleteAppointment?: (appointment: Appointment) => void;
     onOpenPopover: (id: string | null) => void;
     isPopoverOpen: boolean;
+    onDragOver?: (e: React.DragEvent) => void;
+    onDrop?: (e: React.DragEvent) => void;
 }
 
 const normalizeTime = (time: string | null | undefined): string => {
@@ -38,7 +40,9 @@ export const CalendarAppointmentCard = memo(({
     onEditAppointment,
     onDeleteAppointment,
     onOpenPopover,
-    isPopoverOpen
+    isPopoverOpen,
+    onDragOver,
+    onDrop
 }: CalendarAppointmentCardProps) => {
     const [isHovered, setIsHovered] = useState(false);
 
@@ -58,6 +62,16 @@ export const CalendarAppointmentCard = memo(({
             draggable={isDraggable}
             onDragStart={(e) => onDragStart(e, appointment)}
             onDragEnd={onDragEnd}
+            onDragOver={(e) => {
+                if (!isDragging && onDragOver) {
+                    onDragOver(e);
+                }
+            }}
+            onDrop={(e) => {
+                if (!isDragging && onDrop) {
+                    onDrop(e);
+                }
+            }}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             className={cn(

@@ -245,6 +245,18 @@ export const DayColumn = memo(({
                                 draggable={isDraggable}
                                 onDragStart={(e) => handleDragStart(e, apt)}
                                 onDragEnd={handleDragEnd}
+                                onDragOver={(e) => {
+                                    if (apt.date && apt.time) {
+                                        const aptDate = typeof apt.date === 'string' ? parseISO(apt.date) : apt.date;
+                                        handleDragOver(e, aptDate, apt.time);
+                                    }
+                                }}
+                                onDrop={(e) => {
+                                    if (apt.date && apt.time) {
+                                        const aptDate = typeof apt.date === 'string' ? parseISO(apt.date) : apt.date;
+                                        handleDrop(e, aptDate, apt.time);
+                                    }
+                                }}
                                 className={cn(
                                     "appointment-card absolute transition-all duration-200 group/card z-10",
                                     dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-50 scale-95 dragging-ghost",

@@ -606,16 +606,48 @@ export function ExerciseLibrary({ onSelectExercise: _onSelectExercise, onEditExe
             />
           </div>
         </div>
+      </div>
 
-        {/* Exercise Grid/List */}
-        {filteredExercises.length === 0 ? (
-          // ... (existing EmptyState)
-          <EmptyState icon={Dumbbell} title="Nenhum exercício" />
-        ) : viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {filteredExercises.map((exercise) => (
-              <div key={exercise.id} className="relative group">
-                <ExerciseCard
+      {/* Exercise Grid/List */}
+      {filteredExercises.length === 0 ? (
+        // ... (existing EmptyState)
+        <EmptyState icon={Dumbbell} title="Nenhum exercício" />
+      ) : viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {filteredExercises.map((exercise) => (
+            <div key={exercise.id} className="relative group">
+              <ExerciseCard
+                exercise={exercise}
+                isFavorite={isFavorite(exercise.id)}
+                onToggleFavorite={() => toggleFavorite(exercise.id)}
+                onView={() => setViewExercise(exercise)}
+                onEdit={() => onEditExercise(exercise)}
+                onDelete={() => setDeleteId(exercise.id)}
+              />
+              {isSelectionMode && (
+                <div className="absolute top-2 right-2 z-20">
+                  <Checkbox
+                    checked={selectedExercises.includes(exercise.id)}
+                    onCheckedChange={() => toggleSelection(exercise.id)}
+                    className="h-6 w-6 border-2 bg-background data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                  />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filteredExercises.map((exercise) => (
+            <div key={exercise.id} className="relative flex items-center gap-2">
+              {isSelectionMode && (
+                <Checkbox
+                  checked={selectedExercises.includes(exercise.id)}
+                  onCheckedChange={() => toggleSelection(exercise.id)}
+                />
+              )}
+              <div className="flex-1">
+                <ExerciseListItem
                   exercise={exercise}
                   isFavorite={isFavorite(exercise.id)}
                   onToggleFavorite={() => toggleFavorite(exercise.id)}
@@ -623,141 +655,110 @@ export function ExerciseLibrary({ onSelectExercise: _onSelectExercise, onEditExe
                   onEdit={() => onEditExercise(exercise)}
                   onDelete={() => setDeleteId(exercise.id)}
                 />
-                {isSelectionMode && (
-                  <div className="absolute top-2 right-2 z-20">
-                    <Checkbox
-                      checked={selectedExercises.includes(exercise.id)}
-                      onCheckedChange={() => toggleSelection(exercise.id)}
-                      className="h-6 w-6 border-2 bg-background data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                    />
-                  </div>
-                )}
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {filteredExercises.map((exercise) => (
-              <div key={exercise.id} className="relative flex items-center gap-2">
-                {isSelectionMode && (
-                  <Checkbox
-                    checked={selectedExercises.includes(exercise.id)}
-                    onCheckedChange={() => toggleSelection(exercise.id)}
-                  />
-                )}
-                <div className="flex-1">
-                  <ExerciseListItem
-                    exercise={exercise}
-                    isFavorite={isFavorite(exercise.id)}
-                    onToggleFavorite={() => toggleFavorite(exercise.id)}
-                    onView={() => setViewExercise(exercise)}
-                    onEdit={() => onEditExercise(exercise)}
-                    onDelete={() => setDeleteId(exercise.id)}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+            </div>
+          ))}
+        </div>
+      )}
 
-        {/* Floating Action Bar */}
-        {isSelectionMode && selectedExercises.length > 0 && (
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-foreground text-background px-6 py-3 rounded-full shadow-2xl z-50 flex items-center gap-4 animate-in slide-in-from-bottom-10 fade-in duration-300">
-            <span className="font-medium">{selectedExercises.length} selecionados</span>
-            <div className="h-4 w-px bg-background/20" />
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => setShowCreateTemplateModal(true)}
-            >
-              Criar Template
-            </Button>
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => {
-                selectedExercises.forEach(id => {
-                  if (!isFavorite(id)) toggleFavorite(id);
-                });
-                setIsSelectionMode(false);
-                setSelectedExercises([]);
-              }}
-            >
-              Favoritar Todos
-            </Button>
-            {selectedExercises.length >= 2 && (
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => setShowMergeModal(true)}
-                className="gap-1"
-              >
-                <Merge className="h-3 w-3" />
-                Unir Exercícios
-              </Button>
-            )}
-          </div>
-        )}
-
-        {/* Delete Dialog */}
-        <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Esta ação não pode ser desfeita. Isso excluirá permanentemente o exercício
-                da sua biblioteca.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDelete}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {isDeleting ? 'Excluindo...' : 'Excluir'}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-
-        {/* View Modal */}
-        {viewExercise && (
-          <ExerciseViewModal
-            exercise={viewExercise}
-            open={!!viewExercise}
-            onOpenChange={(open) => !open && setViewExercise(null)}
-            onEdit={() => {
-              setViewExercise(null);
-              onEditExercise(viewExercise);
+      {/* Floating Action Bar */}
+      {isSelectionMode && selectedExercises.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-foreground text-background px-6 py-3 rounded-full shadow-2xl z-50 flex items-center gap-4 animate-in slide-in-from-bottom-10 fade-in duration-300">
+          <span className="font-medium">{selectedExercises.length} selecionados</span>
+          <div className="h-4 w-px bg-background/20" />
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => setShowCreateTemplateModal(true)}
+          >
+            Criar Template
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => {
+              selectedExercises.forEach(id => {
+                if (!isFavorite(id)) toggleFavorite(id);
+              });
+              setIsSelectionMode(false);
+              setSelectedExercises([]);
             }}
-          />
-        )}
+          >
+            Favoritar Todos
+          </Button>
+          {selectedExercises.length >= 2 && (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => setShowMergeModal(true)}
+              className="gap-1"
+            >
+              <Merge className="h-3 w-3" />
+              Unir Exercícios
+            </Button>
+          )}
+        </div>
+      )}
 
-        {/* Create Template Modal */}
-        <CreateTemplateFromSelectionModal
-          open={showCreateTemplateModal}
-          onOpenChange={setShowCreateTemplateModal}
-          selectedExerciseIds={selectedExercises}
-          onSuccess={() => {
-            setShowCreateTemplateModal(false);
-            setIsSelectionMode(false);
-            setSelectedExercises([]);
+      {/* Delete Dialog */}
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. Isso excluirá permanentemente o exercício
+              da sua biblioteca.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* View Modal */}
+      {viewExercise && (
+        <ExerciseViewModal
+          exercise={viewExercise}
+          open={!!viewExercise}
+          onOpenChange={(open) => !open && setViewExercise(null)}
+          onEdit={() => {
+            setViewExercise(null);
+            onEditExercise(viewExercise);
           }}
         />
+      )}
 
-        {/* Merge Exercises Modal */}
-        <MergeExercisesModal
-          open={showMergeModal}
-          onOpenChange={setShowMergeModal}
-          exercises={exercises.filter(e => selectedExercises.includes(e.id))}
-          onMerge={async (keepId, mergeIds) => {
-            await mergeExercises(keepId, mergeIds);
-            setShowMergeModal(false);
-            setIsSelectionMode(false);
-            setSelectedExercises([]);
-          }}
-        />
-      </div>
-      );
+      {/* Create Template Modal */}
+      <CreateTemplateFromSelectionModal
+        open={showCreateTemplateModal}
+        onOpenChange={setShowCreateTemplateModal}
+        selectedExerciseIds={selectedExercises}
+        onSuccess={() => {
+          setShowCreateTemplateModal(false);
+          setIsSelectionMode(false);
+          setSelectedExercises([]);
+        }}
+      />
+
+      {/* Merge Exercises Modal */}
+      <MergeExercisesModal
+        open={showMergeModal}
+        onOpenChange={setShowMergeModal}
+        exercises={exercises.filter(e => selectedExercises.includes(e.id))}
+        onMerge={async (keepId, mergeIds) => {
+          await mergeExercises(keepId, mergeIds);
+          setShowMergeModal(false);
+          setIsSelectionMode(false);
+          setSelectedExercises([]);
+        }}
+      />
+    </div>
+  );
 }
