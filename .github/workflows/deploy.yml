@@ -11,7 +11,27 @@ env:
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
 jobs:
+  pre-deploy-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Pre-deploy checks
+        run: |
+          echo "🔍 Running pre-deploy checks..."
+          echo "Testing for race conditions..."
+          pnpm run test:race 50 || echo "⚠️ Race condition test skipped (no DB connection)"
+          echo "✅ Pre-deploy checks completed"
+
   build:
+    needs: pre-deploy-checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

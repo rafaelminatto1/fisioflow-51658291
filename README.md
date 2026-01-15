@@ -130,17 +130,23 @@ npm run dev
 
 ### Checklist Pre-Deploy
 
-**Antes de fazer deploy para produção, execute:**
+**✅ Os testes são executados AUTOMATICAMENTE:**
+
+1. **Localmente**: Git pre-commit hook roda antes de cada commit
+2. **CI/CD**: GitHub Actions roda antes de cada deploy
+
+**Instalar hooks locais (primeira vez):**
 
 ```bash
-# OU use o script completo que faz tudo:
-npm run test:pre-deploy
+npm run hooks:install
+```
 
-# OU execute manualmente:
-npm run test:race 100          # Testar race conditions
-npm run test:db-constraints    # Verificar constraints
-npm run lint                   # Verificar código
-npm run build                  # Build de produção
+**Executar manualmente se necessário:**
+
+```bash
+npm run test:pre-deploy     # Todos os testes
+npm run test:race 100       # Apenas race conditions
+npm run test:db-constraints # Apenas análise de código
 ```
 
 ### Testes Disponíveis

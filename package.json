@@ -34,6 +34,8 @@
     "test:race": "node test-race-condition.mjs",
     "test:db-constraints": "node test-db-constraints.mjs",
     "test:pre-deploy": "npm run test:race 100 && npm run lint && npm run build",
+    "hooks:install": "node scripts/pre-commit.mjs --install",
+    "hooks:uninstall": "node scripts/pre-commit.mjs --uninstall",
     "cap:ios": "npx cap add ios",
     "cap:sync": "npm run build && npx cap sync",
     "cap:run:ios": "npx cap run ios",
