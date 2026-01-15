@@ -150,20 +150,27 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
    * Setup realtime subscriptions com cleanup adequado
    * Usa canais únicos para evitar duplicação com RealtimeContext
    * Com tratamento de erros melhorado para falhas de WebSocket
+   *
+   * FIX: Track subscription state to avoid WebSocket errors
    */
   useEffect(() => {
     // AbortController para cancelar operações pendentes
     const abortController = new AbortController();
     const signal = abortController.signal;
 
+    // FIX: Track subscription states
+    let appointmentsSubscribed = false;
+    let patientsSubscribed = false;
+
     // Channel único com nome específico
-    const appointmentsChannel = supabase
-      .channel('activity-feed-appointments', {
+    const appointmentsChannel = supabase.channel('activity-feed-appointments', {
         config: {
           broadcast: { self: false },
           presence: { key: '' }
         }
-      })
+      });
+
+    (appointmentsChannel as any)
       .on(
         'postgres_changes',
         {
@@ -201,19 +208,22 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
           }
         }
       )
-      .subscribe((status) => {
-        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+      .subscribe((status: string) => {
+        if (status === 'SUBSCRIBED') {
+          appointmentsSubscribed = true;
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           console.warn('RealtimeActivityFeed: Channel error or timeout, will retry');
         }
       });
 
-    const patientsChannel = supabase
-      .channel('activity-feed-patients', {
+    const patientsChannel = supabase.channel('activity-feed-patients', {
         config: {
           broadcast: { self: false },
           presence: { key: '' }
         }
-      })
+      });
+
+    (patientsChannel as any)
       .on(
         'postgres_changes',
         {
@@ -237,8 +247,10 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
           setActivities(prev => [newActivity, ...prev].slice(0, MAX_ACTIVITIES));
         }
       )
-      .subscribe((status) => {
-        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+      .subscribe((status: string) => {
+        if (status === 'SUBSCRIBED') {
+          patientsSubscribed = true;
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           console.warn('RealtimeActivityFeed: Channel error or timeout, will retry');
         }
       });
@@ -246,8 +258,19 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
     // Cleanup - remove canais e cancela operações pendentes
     return () => {
       abortController.abort();
-      supabase.removeChannel(appointmentsChannel);
-      supabase.removeChannel(patientsChannel);
+
+      // Só remove canais se foram inscritos com sucesso
+      if (appointmentsSubscribed) {
+        supabase.removeChannel(appointmentsChannel).catch(() => {
+          // Ignore cleanup errors
+        });
+      }
+
+      if (patientsSubscribed) {
+        supabase.removeChannel(patientsChannel).catch(() => {
+          // Ignore cleanup errors
+        });
+      }
     };
   }, []);
 

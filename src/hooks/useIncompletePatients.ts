@@ -43,9 +43,11 @@ export const useIncompletePatients = () => {
 
     fetchIncompletePatients();
 
-    // Subscribe to realtime updates
-    const channel = supabase
-      .channel('incomplete-patients-updates')
+    // FIX: Track subscription state to avoid WebSocket errors
+    let isSubscribed = false;
+    const channel = supabase.channel('incomplete-patients-updates');
+
+    (channel as any)
       .on(
         'postgres_changes',
         {
@@ -58,10 +60,18 @@ export const useIncompletePatients = () => {
           fetchIncompletePatients();
         }
       )
-      .subscribe();
+      .subscribe((status: string) => {
+        if (status === 'SUBSCRIBED') {
+          isSubscribed = true;
+        }
+      });
 
     return () => {
-      supabase.removeChannel(channel);
+      if (isSubscribed) {
+        supabase.removeChannel(channel).catch(() => {
+          // Ignore cleanup errors
+        });
+      }
     };
   }, []);
 

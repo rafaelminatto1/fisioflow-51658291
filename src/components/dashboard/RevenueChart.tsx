@@ -55,9 +55,11 @@ export function RevenueChart() {
   useEffect(() => {
     loadRevenueData();
 
-    // Subscription para mudanças em pagamentos
-    const channel = supabase
-      .channel('revenue-chart')
+    // FIX: Track subscription state to avoid WebSocket errors
+    let isSubscribed = false;
+    const channel = supabase.channel('revenue-chart');
+
+    (channel as any)
       .on(
         'postgres_changes',
         {
@@ -70,10 +72,18 @@ export function RevenueChart() {
           loadRevenueData();
         }
       )
-      .subscribe();
+      .subscribe((status: string) => {
+        if (status === 'SUBSCRIBED') {
+          isSubscribed = true;
+        }
+      });
 
     return () => {
-      supabase.removeChannel(channel);
+      if (isSubscribed) {
+        supabase.removeChannel(channel).catch(() => {
+          // Ignore cleanup errors
+        });
+      }
     };
   }, [loadRevenueData]);
 
