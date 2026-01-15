@@ -4,13 +4,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/lib/errors/logger';
 
+/**
+ * Hook para inscrições Realtime na tabela eventos
+ * FIX: Track subscription state to avoid WebSocket errors
+ */
 export function useRealtimeEventos() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   useEffect(() => {
-    const channel = supabase
-      .channel('eventos-changes')
+    // FIX: Track subscription state to avoid WebSocket errors
+    let isSubscribed = false;
+    const channel = supabase.channel('eventos-changes');
+
+    (channel as any)
       .on(
         'postgres_changes',
         {
@@ -22,7 +29,7 @@ export function useRealtimeEventos() {
           logger.info('Novo evento criado', { eventId: payload.new.id, nome: payload.new.nome }, 'useRealtimeEventos');
           queryClient.invalidateQueries({ queryKey: ['eventos'] });
           queryClient.invalidateQueries({ queryKey: ['eventos-stats'] });
-          
+
           toast({
             title: '🎉 Novo evento criado',
             description: `${payload.new.nome} foi adicionado`,
@@ -54,7 +61,7 @@ export function useRealtimeEventos() {
           logger.info('Evento deletado', { eventId: payload.old.id }, 'useRealtimeEventos');
           queryClient.invalidateQueries({ queryKey: ['eventos'] });
           queryClient.invalidateQueries({ queryKey: ['eventos-stats'] });
-          
+
           toast({
             title: 'Evento removido',
             description: 'Um evento foi excluído',
@@ -62,10 +69,18 @@ export function useRealtimeEventos() {
           });
         }
       )
-      .subscribe();
+      .subscribe((status: string) => {
+        if (status === 'SUBSCRIBED') {
+          isSubscribed = true;
+        }
+      });
 
     return () => {
-      supabase.removeChannel(channel);
+      if (isSubscribed) {
+        supabase.removeChannel(channel).catch(() => {
+          // Ignore cleanup errors
+        });
+      }
     };
   }, [queryClient, toast]);
 }
