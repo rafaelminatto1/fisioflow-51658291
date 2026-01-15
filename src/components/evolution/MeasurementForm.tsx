@@ -20,7 +20,12 @@ import {
   Target,
   Sparkles,
   ArrowRight,
-  Activity as VitalIcon
+  Activity as VitalIcon,
+  Heart,
+  Thermometer,
+  Wind,
+  Stethoscope,
+  Droplets
 } from 'lucide-react';
 import { useCreateMeasurement, type EvolutionMeasurement } from '@/hooks/usePatientEvolution';
 import { ClinicalTestCombobox, type ClinicalTest } from '@/components/ui/clinical-test-combobox';
@@ -56,11 +61,11 @@ interface MeasurementInput {
 }
 
 const VITAL_SIGNS_FIELDS = [
-  { id: 'bp', label: 'PA', fullLabel: 'Pressão Arterial', unit: 'mmHg', type: 'text', placeholder: '120/80' },
-  { id: 'hr', label: 'FC', fullLabel: 'Freq. Cardíaca', unit: 'bpm', type: 'number', placeholder: '70' },
-  { id: 'spo2', label: 'SpO2', fullLabel: 'Saturação', unit: '%', type: 'number', placeholder: '98' },
-  { id: 'rr', label: 'FR', fullLabel: 'Freq. Respiratória', unit: 'rpm', type: 'number', placeholder: '16' },
-  { id: 'temp', label: 'Temp', fullLabel: 'Temperatura', unit: '°C', type: 'number', placeholder: '36.5' },
+  { id: 'bp', label: 'PA', fullLabel: 'Pressão Arterial', unit: 'mmHg', type: 'text', placeholder: '120/80', icon: Stethoscope, color: 'text-blue-600', bg: 'bg-blue-50' },
+  { id: 'hr', label: 'FC', fullLabel: 'Freq. Cardíaca', unit: 'bpm', type: 'number', placeholder: '70', icon: Heart, color: 'text-red-600', bg: 'bg-red-50' },
+  { id: 'spo2', label: 'SpO2', fullLabel: 'Saturação', unit: '%', type: 'number', placeholder: '98', icon: Droplets, color: 'text-teal-600', bg: 'bg-teal-50' },
+  { id: 'rr', label: 'FR', fullLabel: 'Freq. Respiratória', unit: 'rpm', type: 'number', placeholder: '16', icon: Wind, color: 'text-slate-600', bg: 'bg-slate-50' },
+  { id: 'temp', label: 'Temp', fullLabel: 'Temperatura', unit: '°C', type: 'number', placeholder: '36.5', icon: Thermometer, color: 'text-orange-600', bg: 'bg-orange-50' },
 ];
 
 export const MeasurementForm: React.FC<MeasurementFormProps> = ({
@@ -486,40 +491,82 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
                             })}
                           </AnimatePresence>
                         </>
+                      ) : measurement.measurement_type === 'Sinais Vitais' ? (
+                        <div className="col-span-2 grid grid-cols-2 lg:grid-cols-5 gap-3">
+                          {VITAL_SIGNS_FIELDS.map((field) => {
+                            const Icon = field.icon;
+                            return (
+                              <div key={field.id} className="space-y-1.5 p-3 rounded-xl bg-slate-50 border border-slate-100/50 hover:border-teal-200 hover:bg-white transition-all cursor-text group/field">
+                                <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center justify-between gap-1">
+                                  <span className="flex items-center gap-1">
+                                    <Icon className={cn("h-3 w-3", field.color)} />
+                                    {field.label}
+                                  </span>
+                                  <span className="text-[9px] lowercase opacity-60 font-medium">({field.unit})</span>
+                                </Label>
+                                <Input
+                                  type={field.type === 'number' ? 'number' : 'text'}
+                                  value={measurement.custom_data[field.id] || ''}
+                                  onChange={(e) => handleUpdateCustomData(index, field.id, e.target.value)}
+                                  placeholder={field.placeholder}
+                                  className="h-9 bg-white border-slate-200 font-bold text-slate-700 focus:border-teal-400 focus:ring-teal-100 transition-all px-2 shadow-sm"
+                                />
+                              </div>
+                            );
+                          })}
+                          <div className="col-span-full space-y-2 mt-1">
+                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">Notas Clínicas (Sinais Vitais)</Label>
+                            <Textarea
+                              value={measurement.notes}
+                              onChange={(e) => handleUpdateMeasurement(index, 'notes', e.target.value)}
+                              placeholder="Observações sobre o estado geral do paciente durante a medição..."
+                              className="bg-white border-slate-200 font-medium min-h-[60px]"
+                              rows={2}
+                            />
+                          </div>
+                        </div>
                       ) : (
                         <>
-                        </div>
-                    </>
-                    ) : measurement.measurement_type === 'Sinais Vitais' ? (
-                    <div className="col-span-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                      {VITAL_SIGNS_FIELDS.map((field) => (
-                        <div key={field.id} className="space-y-1.5">
-                          <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                            {field.label}
-                            <span className="text-teal-600 lowercase tracking-normal bg-teal-50 px-1 rounded">({field.unit})</span>
-                          </Label>
-                          <Input
-                            type={field.type === 'number' ? 'number' : 'text'}
-                            value={measurement.custom_data[field.id] || ''}
-                            onChange={(e) => handleUpdateCustomData(index, field.id, e.target.value)}
-                            placeholder={field.placeholder}
-                            className="h-10 bg-white border-slate-200 font-bold text-slate-700 focus:border-teal-400 focus:ring-teal-100 transition-all"
-                          />
-                        </div>
-                      ))}
-                      <div className="col-span-full space-y-2 mt-2">
-                        <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Observações dos Sinais</Label>
-                        <Textarea
-                          value={measurement.notes}
-                          onChange={(e) => handleUpdateMeasurement(index, 'notes', e.target.value)}
-                          placeholder="Alguma alteração importante nos sinais vitais?"
-                          className="bg-white border-slate-200 font-medium"
-                          rows={1}
-                        />
-                      </div>
-                    </div>
-                    ) : (
-                    <>
+                          <div className="space-y-2 group/val">
+                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pl-1">
+                              <Zap className="h-3 w-3 text-orange-500" />
+                              Valor
+                            </Label>
+                            <Input
+                              type="number"
+                              step="0.1"
+                              value={measurement.value}
+                              onChange={(e) => handleUpdateMeasurement(index, 'value', e.target.value)}
+                              placeholder="0.0"
+                              className="h-11 bg-white border-slate-200 font-bold text-slate-700 focus:border-orange-400 focus:ring-orange-100 transition-all shadow-sm"
+                            />
+                          </div>
+                          <div className="space-y-2 group/unit">
+                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pl-1">
+                              <Target className="h-3 w-3 text-blue-500" />
+                              Unidade
+                            </Label>
+                            <Input
+                              value={measurement.unit}
+                              onChange={(e) => handleUpdateMeasurement(index, 'unit', e.target.value)}
+                              placeholder="Ex: cm, graus, etc"
+                              className="h-11 bg-white border-slate-200 font-medium text-slate-600 focus:border-blue-400 focus:ring-blue-100 transition-all shadow-sm"
+                            />
+                          </div>
+                          <div className="col-span-2 space-y-2 group/notes">
+                            <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 pl-1">
+                              <FileText className="h-3 w-3 text-slate-400" />
+                              Anotações
+                            </Label>
+                            <Textarea
+                              value={measurement.notes}
+                              onChange={(e) => handleUpdateMeasurement(index, 'notes', e.target.value)}
+                              placeholder="Observações importantes sobre esta medição..."
+                              className="bg-white border-slate-200 font-medium focus:border-teal-400 focus:ring-teal-100 transition-all shadow-sm"
+                              rows={2}
+                            />
+                          </div>
+                        </>
                       )}
                     </div>
                   </div>

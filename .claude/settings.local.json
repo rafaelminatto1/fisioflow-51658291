@@ -134,7 +134,8 @@
       "mcp__github__list_pull_requests",
       "Bash(pnpm:*)",
       "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" pnpm run build:*)",
-      "mcp__github__search_repositories"
+      "mcp__github__search_repositories",
+      "Bash(command -v:*)"
     ],
     "deny": [],
     "ask": []
