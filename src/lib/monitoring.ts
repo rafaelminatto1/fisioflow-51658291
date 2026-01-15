@@ -27,7 +27,7 @@ export const METRICS = {
  * Track a metric with Vercel Analytics or custom analytics
  */
 export const trackMetric = (metric: string, data: number | MetricData) => {
-  const value = typeof data === 'number' ? data : data.value;
+  const value = typeof data === 'number' ? Math.round(data) : Math.round(data.value);
   const metadata = typeof data === 'object' ? data.metadata : undefined;
 
   // Vercel Analytics - use official track() function
@@ -79,19 +79,23 @@ export const trackPageLoad = () => {
   if (typeof window === 'undefined') return;
 
   const loadHandler = () => {
-    // Performance metrics
-    const perfData = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+    // Ensure all timing data is available
+    setTimeout(() => {
+      const perfData = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
 
-    if (perfData) {
-      trackMetric(METRICS.PAGE_LOAD, {
-        value: perfData.loadEventEnd - perfData.fetchStart,
-        metadata: {
-          domContentLoaded: perfData.domContentLoadedEventEnd - perfData.fetchStart,
-          domInteractive: perfData.domInteractive - perfData.fetchStart,
-          transferSize: perfData.transferSize,
-        },
-      });
-    }
+      if (perfData && perfData.loadEventEnd > 0) {
+        const duration = perfData.loadEventEnd - perfData.fetchStart;
+
+        // Sanitize value to avoid negative numbers
+        const safeDuration = Math.max(0, Math.round(duration));
+
+        // Limit properties to avoid 400 errors (Vercel Hobby limit: 2 properties)
+        trackMetric(METRICS.PAGE_LOAD, {
+          value: safeDuration
+          // Removed extra metadata to comply with Vercel limits
+        });
+      }
+    }, 0);
   };
 
   window.addEventListener('load', loadHandler);
