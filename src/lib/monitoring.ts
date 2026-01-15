@@ -29,9 +29,16 @@ export const trackMetric = (metric: string, data: number | MetricData) => {
   const value = typeof data === 'number' ? data : data.value;
   const metadata = typeof data === 'object' ? data.metadata : undefined;
 
-  // Vercel Analytics
-  if (window.va) {
-    window.va('track', metric, { value, ...metadata });
+  // Vercel Analytics - use track method with correct API signature
+  // Note: We no longer use window.va directly as @vercel/analytics handles this
+  // This is kept for backward compatibility but shouldn't cause errors
+  try {
+    if (typeof window !== 'undefined' && window.va) {
+      // Vercel Analytics track API: va('event', { name: string, properties?: object })
+      window.va('event', { name: metric, data: { value, ...metadata } });
+    }
+  } catch {
+    // Silently ignore analytics errors to prevent app crashes
   }
 
   // Log in development
@@ -218,6 +225,6 @@ export const initMonitoring = () => {
 // TypeScript declaration for window.va
 declare global {
   interface Window {
-    va?: (event: string, name: string, data: Record<string, unknown>) => void;
+    va?: (event: string, data?: Record<string, unknown>) => void;
   }
 }
