@@ -83,7 +83,7 @@ export const useGamification = (patientId: string) => {
         .from('appointments')
         .select('*', { count: 'exact', head: true })
         .eq('patient_id', patientId)
-        .eq('status', 'completed');
+        .eq('status', 'atendido');
 
       if (sessionsError) {
         console.error("Error fetching total sessions", sessionsError);
