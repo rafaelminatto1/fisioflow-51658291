@@ -41,6 +41,8 @@ import { Responsive, Layout, WidthProvider } from 'react-grid-layout/legacy';
 
 // I will import from 'react-grid-layout/legacy'.
 
+import { Responsive, Layout, WidthProvider } from 'react-grid-layout';
+
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
 export interface GridItem {
@@ -103,7 +105,7 @@ export const DraggableGrid = ({
         setLayouts({ lg: merged });
     }, [items, savedLayout]);
 
-    const handleLayoutChange = (layout: Layout[], allLayouts: any) => {
+    const handleLayoutChange = (layout: Layout, layouts: Partial<Record<string, Layout[]>>) => {
         if (onLayoutChange) {
             onLayoutChange(layout);
         }
