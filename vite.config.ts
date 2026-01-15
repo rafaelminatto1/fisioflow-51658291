@@ -190,6 +190,32 @@ export default defineConfig(({ mode }) => {
           drop_console: isProduction,
           drop_debugger: isProduction,
           pure_funcs: isProduction ? ['console.log', 'console.info', 'console.debug'] : [],
+          // Prevenir problemas com funções do date-fns
+          sequences: true,
+          properties: true,
+          dead_code: true,
+          conditionals: true,
+          comparisons: true,
+          evaluate: true,
+          booleans: true,
+          loops: true,
+          unused: true,
+          hoist_funs: true,
+          keep_fargs: false,
+          hoist_vars: false,
+          if_return: true,
+          join_vars: true,
+          collapse_vars: true,
+          reduce_vars: true,
+          switches: true,
+        },
+        mangle: {
+          // Prevenir renomeação agressiva que pode causar problemas
+          reserved: ['differenceInMinutes', 'differenceInDays', 'formatDistanceToNow'],
+        },
+        format: {
+          // Preserver comentarios para debug
+          comments: false,
         },
       },
       commonjsOptions: {
