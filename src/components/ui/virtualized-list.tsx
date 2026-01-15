@@ -14,6 +14,7 @@
 
 import { useMemo, useRef, useCallback, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useDebouncedCallback } from '@/hooks/performance/useDebounce';
 
 /**
  * Throttle otimizado para scroll usando requestAnimationFrame
@@ -47,25 +48,6 @@ function useScrollThrottle(callback: (scrollTop: number) => void, delay: number 
         rafRef.current = undefined;
       });
     }
-  }, [callback, delay]);
-}
-
-/**
- * Debounce para onEndReached evitar chamadas múltiplas
- */
-function useDebounce<T extends (...args: unknown[]) => unknown>(
-  callback: T,
-  delay: number
-): (...args: Parameters<T>) => void {
-  const timeoutRef = useRef<NodeJS.Timeout>();
-
-  return useCallback((...args: Parameters<T>) => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    timeoutRef.current = setTimeout(() => {
-      callback(...args);
-    }, delay);
   }, [callback, delay]);
 }
 
@@ -199,7 +181,7 @@ export function VirtualizedList<T>({
   const throttledSetScrollTop = useScrollThrottle(setScrollTop, 16); // ~60fps
 
   const noop = useCallback(() => { }, []);
-  const debouncedOnEndReached = useDebounce(onEndReached || noop, 300);
+  const debouncedOnEndReached = useDebouncedCallback(onEndReached || noop, 300);
 
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const currentScrollTop = e.currentTarget.scrollTop;
