@@ -142,7 +142,7 @@ CREATE POLICY "Users can view recurring series in their org"
   ON recurring_appointment_series FOR SELECT
   USING (
     organization_id IN (
-      SELECT organization_id FROM user_organization_roles
+      SELECT organization_id FROM organization_members
       WHERE user_id = auth.uid()
     )
   );
@@ -151,7 +151,7 @@ CREATE POLICY "Users can create recurring series in their org"
   ON recurring_appointment_series FOR INSERT
   WITH CHECK (
     organization_id IN (
-      SELECT organization_id FROM user_organization_roles
+      SELECT organization_id FROM organization_members
       WHERE user_id = auth.uid()
     )
   );
@@ -160,7 +160,7 @@ CREATE POLICY "Users can update recurring series in their org"
   ON recurring_appointment_series FOR UPDATE
   USING (
     organization_id IN (
-      SELECT organization_id FROM user_organization_roles
+      SELECT organization_id FROM organization_members
       WHERE user_id = auth.uid()
     )
   );
@@ -169,7 +169,7 @@ CREATE POLICY "Users can delete recurring series in their org"
   ON recurring_appointment_series FOR DELETE
   USING (
     organization_id IN (
-      SELECT organization_id FROM user_organization_roles
+      SELECT organization_id FROM organization_members
       WHERE user_id = auth.uid()
     )
   );
@@ -181,7 +181,7 @@ CREATE POLICY "Users can view occurrences of their series"
     series_id IN (
       SELECT id FROM recurring_appointment_series
       WHERE organization_id IN (
-        SELECT organization_id FROM user_organization_roles
+        SELECT organization_id FROM organization_members
         WHERE user_id = auth.uid()
       )
     )
@@ -193,7 +193,7 @@ CREATE POLICY "Users can manage occurrences of their series"
     series_id IN (
       SELECT id FROM recurring_appointment_series
       WHERE organization_id IN (
-        SELECT organization_id FROM user_organization_roles
+        SELECT organization_id FROM organization_members
         WHERE user_id = auth.uid()
       )
     )
@@ -300,22 +300,22 @@ $$ LANGUAGE plpgsql;
 
 -- Função auxiliar para calcular próxima data de ocorrência
 CREATE OR REPLACE FUNCTION calculate_next_occurrence_date(
-  current_date DATE,
+  base_date DATE,
   recurrence_type TEXT,
   recurrence_interval INTEGER
 ) RETURNS DATE AS $$
 BEGIN
   CASE recurrence_type
     WHEN 'daily' THEN
-      RETURN current_date + (recurrence_interval || ' days')::INTERVAL;
+      RETURN base_date + (recurrence_interval || ' days')::INTERVAL;
     WHEN 'weekly' THEN
-      RETURN current_date + (recurrence_interval || ' weeks')::INTERVAL;
+      RETURN base_date + (recurrence_interval || ' weeks')::INTERVAL;
     WHEN 'monthly' THEN
-      RETURN current_date + (recurrence_interval || ' months')::INTERVAL;
+      RETURN base_date + (recurrence_interval || ' months')::INTERVAL;
     WHEN 'yearly' THEN
-      RETURN current_date + (recurrence_interval || ' years')::INTERVAL;
+      RETURN base_date + (recurrence_interval || ' years')::INTERVAL;
     ELSE
-      RETURN current_date + INTERVAL '1 day';
+      RETURN base_date + INTERVAL '1 day';
   END CASE;
 END;
 $$ LANGUAGE plpgsql;
