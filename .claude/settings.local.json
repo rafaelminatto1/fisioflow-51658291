@@ -136,7 +136,8 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" pnpm run build:*)",
       "mcp__github__search_repositories",
       "Bash(command -v:*)",
-      "Bash(gh run list:*)"
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)"
     ],
     "deny": [],
     "ask": []
