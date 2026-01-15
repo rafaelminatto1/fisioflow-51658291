@@ -1,6 +1,4 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { StatCard } from './StatCard';
-import { AppointmentWidget } from './AppointmentWidget';
 import { ChartWidget } from './ChartWidget';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -8,20 +6,19 @@ import { Profile } from '@/types/auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-  Users,
   Calendar,
   Activity,
-  Star,
-  CheckCircle,
-  Target,
-  Brain,
-  MessageSquare
+  MessageSquare,
+  TrendingUp,
+  AlertTriangle,
+  Clock,
+  Plus
 } from 'lucide-react';
-import { format, isSameDay } from 'date-fns';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { format, isSameDay, differenceInDays } from 'date-fns';
 import { useAppointments } from '@/hooks/useAppointments';
-import { PatientHelpers } from '@/types';
 
 interface TherapistDashboardProps {
   lastUpdate: Date;
@@ -36,11 +33,12 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
     todayAppointments: 0,
     myPatients: 0,
     completedSessions: 0,
-    avgSatisfaction: 0
+    avgSatisfaction: 0,
+    occupancyRate: 0,
+    avgSessionsPerPatient: 0,
+    patientsAtRisk: 0
   });
-  const [myPatients, setMyPatients] = useState([]);
   const [progressData, setProgressData] = useState([]);
-  const [tasks, setTasks] = useState([]);
 
   // Calculate today's appointments for this therapist derived from hook data
   const todayAppointments = useMemo(() => {
@@ -88,6 +86,55 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
 
       if (sessionsError) throw sessionsError;
 
+      // Calculate occupancy rate (assuming 8 hour workday = 480 minutes)
+      // Each appointment is typically 60 minutes
+      const totalCapacityMinutes = 480; // 8 hours
+      const bookedMinutes = todayAppointments.length * 60;
+      const occupancyRate = totalCapacityMinutes > 0
+        ? Math.round((bookedMinutes / totalCapacityMinutes) * 100)
+        : 0;
+
+      // Calculate average sessions per patient (last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const recentSessions = sessions?.filter(s => {
+        const sessionDate = new Date(s.session_date);
+        return sessionDate >= thirtyDaysAgo;
+      }) || [];
+
+      const avgSessionsPerPatient = patients && patients.length > 0
+        ? (recentSessions.length / patients.length).toFixed(1)
+        : '0';
+
+      // Identify patients at risk (no appointment in last 30 days)
+      const patientsAtRisk = [];
+      if (patients) {
+        for (const patient of patients) {
+          // Get last appointment for this patient
+          const { data: lastAppointment } = await supabase
+            .from('appointments')
+            .select('appointment_date')
+            .eq('patient_id', patient.id)
+            .order('appointment_date', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (lastAppointment) {
+            const daysSinceLastVisit = differenceInDays(
+              new Date(),
+              new Date(lastAppointment.appointment_date)
+            );
+            if (daysSinceLastVisit > 30) {
+              patientsAtRisk.push({
+                ...patient,
+                daysSinceLastVisit
+              });
+            }
+          }
+        }
+      }
+
       // Generate progress data for the last 30 days
       const progressChartData = [];
       for (let i = 6; i >= 0; i--) {
@@ -105,18 +152,13 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
         todayAppointments: todayAppointments.length,
         myPatients: patients?.length || 0,
         completedSessions: sessions?.length || 0,
-        avgSatisfaction: 4.8 // Mock data
+        avgSatisfaction: 4.8, // Mock data
+        occupancyRate,
+        avgSessionsPerPatient: parseFloat(avgSessionsPerPatient),
+        patientsAtRisk: patientsAtRisk.length
       });
 
-      setMyPatients(patients || []);
       setProgressData(progressChartData);
-
-      // Mock tasks
-      setTasks([
-        { id: '1', title: 'Revisar plano de exercícios - João Silva', priority: 'high', due: 'Hoje' },
-        { id: '2', title: 'Acompanhar evolução - Maria Santos', priority: 'medium', due: 'Amanhã' },
-        { id: '3', title: 'Preparar relatório mensal', priority: 'low', due: 'Esta semana' }
-      ]);
 
     } catch (error) {
       console.error('Erro ao carregar dados do dashboard:', error);
@@ -132,9 +174,16 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
 
   // Update stats when appointments change
   useEffect(() => {
+    const totalCapacityMinutes = 480;
+    const bookedMinutes = todayAppointments.length * 60;
+    const occupancyRate = totalCapacityMinutes > 0
+      ? Math.round((bookedMinutes / totalCapacityMinutes) * 100)
+      : 0;
+
     setStats(prev => ({
       ...prev,
-      todayAppointments: todayAppointments.length
+      todayAppointments: todayAppointments.length,
+      occupancyRate
     }));
   }, [todayAppointments.length]);
 
@@ -144,201 +193,257 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
     // keeping it for other entities if needed, but appointments are handled by hook
   }, [lastUpdate, loadDashboardData]);
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400';
-      case 'low':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
-    }
+  const getOccupancyLevel = (rate: number) => {
+    if (rate < 30) return { label: 'Baixa ocupação', color: 'text-amber-600' };
+    if (rate < 70) return { label: 'Ocupação moderada', color: 'text-blue-600' };
+    return { label: 'Alta ocupação', color: 'text-green-600' };
   };
 
   const isLoading = loading || appointmentsLoading;
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Welcome Section */}
-      <div className="bg-gradient-primary rounded-xl p-6 text-primary-foreground shadow-medical">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold mb-2">
-              Olá, Dr(a). {profile.full_name?.split(' ')[0]}!
-            </h1>
-            <p className="text-primary-foreground/90">
-              Aqui está o resumo do seu dia e evolução dos seus pacientes
+      {/* Welcome Section - Simplificado conforme imagem */}
+      <div className="hidden sm:block">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          Olá, Dr(a). {profile.full_name?.split(' ')[0]}!
+        </h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          Aqui está o resumo do seu dia
+        </p>
+      </div>
+
+      {/* Stats Cards - Layout com 3 cards principais */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+        {/* Taxa de Ocupação */}
+        <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm font-medium">Taxa de Ocupação</h3>
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
+            </div>
+            <div className="mb-2">
+              <span className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                {stats.occupancyRate}%
+              </span>
+            </div>
+            <p className="text-gray-500 dark:text-gray-400 text-xs mb-3">da capacidade</p>
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+              <div
+                className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                style={{ width: `${stats.occupancyRate}%` }}
+              />
+            </div>
+            <p className={`text-xs mt-2 ${getOccupancyLevel(stats.occupancyRate).color}`}>
+              {getOccupancyLevel(stats.occupancyRate).label}
             </p>
-          </div>
-          <div className="hidden md:block">
-            <Activity className="w-16 h-16 text-primary-foreground/80" />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
+
+        {/* Média Sessões/Paciente */}
+        <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm font-medium">Média Sessões/Paciente</h3>
+              <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
+            </div>
+            <div className="mb-2">
+              <span className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                {stats.avgSessionsPerPatient}
+              </span>
+            </div>
+            <p className="text-gray-500 dark:text-gray-400 text-xs">
+              Média de sessões por paciente nos últimos 30 dias
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Pacientes em Risco */}
+        <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm font-medium">Pacientes em Risco</h3>
+              <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
+            </div>
+            <div className="mb-2">
+              <span className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                {stats.patientsAtRisk}
+              </span>
+            </div>
+            <p className="text-gray-500 dark:text-gray-400 text-xs">
+              Pacientes sem consulta há mais de 30 dias
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Personal Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-        <StatCard
-          title="Consultas Hoje"
-          value={stats.todayAppointments}
-          change={stats.todayAppointments > 0 ? 'Agenda ativa' : 'Sem consultas'}
-          changeType={stats.todayAppointments > 0 ? 'positive' : 'neutral'}
-          icon={<Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />}
-          gradient
-          loading={isLoading}
-        />
-        <StatCard
-          title="Meus Pacientes"
-          value={stats.myPatients}
-          change="Em acompanhamento"
-          changeType="positive"
-          icon={<Users className="w-4 h-4 sm:w-5 sm:h-5 text-secondary" />}
-          loading={isLoading}
-        />
-        <StatCard
-          title="Sessões Realizadas"
-          value={stats.completedSessions}
-          change="Este mês"
-          changeType="positive"
-          icon={<CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />}
-          loading={isLoading}
-        />
-        <StatCard
-          title="Satisfação Média"
-          value={`${stats.avgSatisfaction}⭐`}
-          change="Avaliação dos pacientes"
-          changeType="positive"
-          icon={<Star className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />}
-          loading={isLoading}
-        />
-      </div>
+      {/* Schedule Section with Tabs */}
+      <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+        <Tabs defaultValue="schedule" className="w-full">
+          <div className="border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+            <TabsList className="inline-flex h-10 items-center justify-start p-0 bg-transparent w-full min-w-max">
+              <TabsTrigger
+                value="schedule"
+                className="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium text-gray-500 border-b-2 border-transparent data-[state=active]:text-blue-600 data-[state=active]:border-blue-600 rounded-none hover:text-gray-700 whitespace-nowrap focus-visible:outline-none focus-visible:ring-0"
+              >
+                Próximo Agendamento
+              </TabsTrigger>
+              <TabsTrigger
+                value="actions"
+                className="px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium text-gray-500 border-b-2 border-transparent data-[state=active]:text-blue-600 data-[state=active]:border-blue-600 rounded-none hover:text-gray-700 whitespace-nowrap focus-visible:outline-none focus-visible:ring-0"
+              >
+                Ações Rápidas
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-      {/* Today's Schedule and Progress */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <AppointmentWidget
-          title="Agenda de Hoje"
-          appointments={todayAppointments}
-          loading={isLoading}
-          showActions={false}
-        />
+          <TabsContent value="schedule" className="p-3 sm:p-4 md:p-6 focus-visible:outline-none focus-visible:ring-0">
+            {isLoading ? (
+              <div className="animate-pulse space-y-3">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+                      <div>
+                        <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-32 mb-1"></div>
+                        <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-24"></div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : todayAppointments.length === 0 ? (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <Calendar className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Nenhum agendamento para hoje</p>
+              </div>
+            ) : (
+              <div className="space-y-0">
+                {todayAppointments.slice(0, 5).map((apt, index) => (
+                  <div
+                    key={apt.id}
+                    className={`flex items-center justify-between py-2 sm:py-3 gap-2 ${
+                      index < todayAppointments.slice(0, 5).length - 1
+                        ? 'border-b border-gray-100 dark:border-gray-700'
+                        : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0 flex-1">
+                      <div className="text-blue-500 shrink-0">
+                        <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white truncate">
+                          {apt.appointment_time}
+                        </div>
+                        <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
+                          {apt.patient_name}
+                        </div>
+                      </div>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className={`text-[10px] sm:text-xs shrink-0 ${
+                        apt.status === 'concluido'
+                          ? 'bg-green-100 text-green-700 border-green-200'
+                          : apt.status === 'cancelado'
+                          ? 'bg-red-100 text-red-700 border-red-200'
+                          : 'bg-blue-100 text-blue-700 border-blue-200'
+                      }`}
+                    >
+                      {apt.status === 'concluido'
+                        ? 'Concluído'
+                        : apt.status === 'cancelado'
+                        ? 'Cancelado'
+                        : 'Agendado'}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="mt-3 sm:mt-4">
+              <button className="text-blue-600 text-sm hover:underline font-medium">
+                Ver Todos os Agendamentos
+              </button>
+            </div>
+          </TabsContent>
 
-        <div className="lg:col-span-2">
+          <TabsContent value="actions" className="p-3 sm:p-4 md:p-6 focus-visible:outline-none focus-visible:ring-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Button className="h-10 sm:h-auto py-2 px-3 sm:px-4 text-sm sm:text-base bg-blue-500 hover:bg-blue-600 text-white whitespace-nowrap">
+                <Plus className="w-4 h-4 mr-2 shrink-0" />
+                <span className="truncate">Novo Paciente</span>
+              </Button>
+              <Button variant="outline" className="h-10 sm:h-auto py-2 px-3 sm:px-4 text-sm sm:text-base border-gray-300 whitespace-nowrap">
+                <Calendar className="w-4 h-4 mr-2 shrink-0" />
+                <span className="truncate">Agendar Eventos</span>
+              </Button>
+              <Button variant="outline" className="h-10 sm:h-auto py-2 px-3 sm:px-4 text-sm sm:text-base border-gray-300 whitespace-nowrap">
+                <TrendingUp className="w-4 h-4 mr-2 shrink-0" />
+                <span className="truncate">Relatório Financeiro</span>
+              </Button>
+              <Button variant="outline" className="h-10 sm:h-auto py-2 px-3 sm:px-4 text-sm sm:text-base border-gray-300 whitespace-nowrap">
+                <MessageSquare className="w-4 h-4 mr-2 shrink-0" />
+                <span className="truncate">Mensagens</span>
+              </Button>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </Card>
+
+      {/* Alerts Section */}
+      {stats.patientsAtRisk > 0 && (
+        <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-500" />
+              Alertas e Notificações
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Alert className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
+              <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              <AlertDescription className="text-amber-900 dark:text-amber-100">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="font-medium text-sm">
+                      {stats.patientsAtRisk} paciente{stats.patientsAtRisk !== 1 ? 's' : ''} sem consulta há mais de 30 dias
+                    </p>
+                    <p className="text-xs mt-1 text-amber-700 dark:text-amber-300">
+                      Considere entrar em contato para reativação
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => window.location.href = '/patients'}
+                    className="text-blue-600 text-xs hover:underline whitespace-nowrap font-medium"
+                  >
+                    Ver Pacientes
+                  </button>
+                </div>
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Patient Progress Section */}
+      <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+            <Activity className="w-5 h-5 text-primary" />
+            Evolução dos Pacientes em Tratamento
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
           <ChartWidget
-            title="Evolução dos Pacientes em Tratamento"
+            title=""
             data={progressData}
             type="line"
             loading={isLoading}
-            height={300}
+            height={250}
           />
-        </div>
-      </div>
-
-      {/* Bottom Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Patient Progress */}
-        <Card className="bg-gradient-card border-border">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg text-foreground flex items-center gap-2">
-              <Users className="w-5 h-5 text-primary" />
-              Pacientes em Destaque
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {isLoading ? (
-              [...Array(3)].map((_, i) => (
-                <div key={i} className="animate-pulse">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-muted rounded-full"></div>
-                    <div className="flex-1">
-                      <div className="h-4 bg-muted rounded w-3/4 mb-1"></div>
-                      <div className="h-3 bg-muted rounded w-1/2"></div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : myPatients.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Nenhum paciente encontrado</p>
-              </div>
-            ) : (
-              myPatients.slice(0, 4).map((patient) => (
-                <div key={patient.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                  <Avatar className="w-10 h-10">
-                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                      {(() => {
-                        const name = PatientHelpers.getName(patient);
-                        return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'PA';
-                      })()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-foreground">{PatientHelpers.getName(patient)}</h4>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline" className="text-xs">
-                        {patient.status}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {patient.main_condition}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-medium text-green-600">
-                      {Math.floor(Math.random() * 40) + 40}%
-                    </div>
-                    <div className="text-xs text-muted-foreground">Progresso</div>
-                  </div>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Tasks and Reminders */}
-        <Card className="bg-gradient-card border-border">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg text-foreground flex items-center gap-2">
-              <Target className="w-5 h-5 text-secondary" />
-              Tarefas e Lembretes
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {tasks.map((task) => (
-              <div key={task.id} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                <div className="flex-1">
-                  <h4 className="text-sm font-medium text-foreground">{task.title}</h4>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge
-                      variant="outline"
-                      className={`text-xs ${getPriorityColor(task.priority)}`}
-                    >
-                      {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Média' : 'Baixa'}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">{task.due}</span>
-                  </div>
-                </div>
-                <Button size="sm" variant="outline" className="h-8">
-                  <CheckCircle className="w-3 h-3" />
-                </Button>
-              </div>
-            ))}
-
-            <div className="grid grid-cols-2 gap-3 mt-4">
-              <Button variant="outline" size="sm" className="h-8">
-                <Brain className="w-3 h-3 mr-1" />
-                Planos IA
-              </Button>
-              <Button variant="outline" size="sm" className="h-8">
-                <MessageSquare className="w-3 h-3 mr-1" />
-                Mensagens
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
