@@ -21,12 +21,11 @@ import {
     Activity, Check, RotateCcw
 } from 'lucide-react';
 import {
-    BODY_PARTS,
-    DIFFICULTY_LEVELS,
-    CATEGORIES,
     EQUIPMENT,
     getHomeEquipment,
     FILTER_PRESETS,
+    HOME_EQUIPMENT_GROUP,
+    NO_EQUIPMENT_GROUP_ID,
 } from '@/lib/constants/exerciseConstants';
 
 export interface ExerciseFiltersState {
@@ -146,9 +145,21 @@ export function ExerciseFiltersPanel({
 }: ExerciseFiltersPanelProps) {
     const bodyPartsOptions = BODY_PARTS.map((b) => ({ value: b.label, label: b.label }));
     const categoryOptions = CATEGORIES.map((c) => ({ value: c.value, label: c.label }));
-    const equipmentOptions = filters.homeOnly
-        ? getHomeEquipment().map((e) => ({ value: e.label, label: e.label }))
-        : EQUIPMENT.map((e) => ({ value: e.label, label: e.label }));
+    // Filter out individual home equipment items from the main list
+    // and add the special group option
+    const equipmentOptions = React.useMemo(() => {
+        const baseOptions = filters.homeOnly
+            ? getHomeEquipment().map((e) => ({ value: e.label, label: e.label }))
+            : EQUIPMENT
+                .filter(e => !HOME_EQUIPMENT_GROUP.includes(e.value)) // Exclude individual items
+                .map((e) => ({ value: e.label, label: e.label }));
+
+        // Add the group option at the top
+        return [
+            { label: 'Sem Equipamento / Adaptado', value: NO_EQUIPMENT_GROUP_ID },
+            ...baseOptions
+        ];
+    }, [filters.homeOnly]);
 
     const hasActiveFilters =
         filters.bodyParts.length > 0 ||
