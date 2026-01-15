@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main, develop]
 
+# Concurrency group to cancel outdated runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   pre-deploy-checks:
     runs-on: ubuntu-latest
@@ -38,6 +43,20 @@ jobs:
         with:
           node-version: '20'
           cache: 'pnpm'
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            .pnpm-store
+          key: ${{ runner.os }}-node-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Cache build
+        uses: actions/cache@v4
+        with:
+          path: dist
+          key: ${{ runner.os }}-build-${{ github.sha }}
       - run: pnpm install --frozen-lockfile
       - name: System info for debugging
         run: |
@@ -56,10 +75,13 @@ jobs:
           name: dist
           path: dist/
           retention-days: 1
+          compression-level: 6
 
   unit-tests:
     needs: build
     runs-on: ubuntu-latest
+    # Fail fast if unit tests fail - no need to run E2E
+    continue-on-error: false
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -69,111 +91,119 @@ jobs:
         with:
           node-version: '20'
           cache: 'pnpm'
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            .pnpm-store
+          key: ${{ runner.os }}-node-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Cache vitest
+        uses: actions/cache@v4
+        with:
+          path: .vitest
+          key: ${{ runner.os }}-vitest-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-vitest-
       - run: pnpm install --frozen-lockfile
-      - name: Run unit tests (excluding Edge Functions)
-        run: pnpm run test:unit -- --coverage
+      - name: Run unit tests with coverage
+        run: pnpm run test:unit -- --coverage --reporter=verbose
         env:
           NODE_OPTIONS: --max-old-space-size=4096
-      - uses: codecov/codecov-action@v3
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: always()
         with:
           files: ./coverage/coverage-final.json
           flags: unittests
-
-  e2e-tests:
-    needs: build
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9.15.0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-playwright-
-      - run: pnpm exec playwright install --with-deps chromium
-      - name: Start HTTP server
-        run: |
-          npx -y http-server dist -p 8080 &
-          sleep 5
-      - run: pnpm run test:e2e --project=chromium
-      - uses: actions/upload-artifact@v4
+          name: codecov-umbrella
+          fail_ci_if_error: false
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playwright-report
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+  # Run E2E, accessibility and performance tests in parallel matrix
+  e2e-matrix:
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        test_suite:
+          - name: e2e
+            spec: ""
+          - name: accessibility
+            spec: "accessibility.spec.ts"
+          - name: performance
+            spec: "performance.spec.ts"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            .pnpm-store
+          key: ${{ runner.os }}-node-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Start HTTP server
+        run: |
+          npx -y http-server dist -p 8080 &
+          sleep 5
+      - name: Run ${{ matrix.test_suite.name }} tests
+        run: |
+          if [ -n "${{ matrix.test_suite.spec }}" ]; then
+            pnpm run test:e2e --project=chromium ${{ matrix.test_suite.spec }}
+          else
+            pnpm run test:e2e --project=chromium
+          fi
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-${{ matrix.test_suite.name }}
           path: playwright-report/
           retention-days: 30
+          compression-level: 6
 
-  accessibility:
-    needs: build
+  # Summary job that runs after all tests complete
+  test-summary:
+    needs: [unit-tests, e2e-matrix]
+    if: always()
     runs-on: ubuntu-latest
-    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9.15.0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-playwright-
-      - run: pnpm exec playwright install --with-deps chromium
-      - name: Start HTTP server
+      - name: Check test results
         run: |
-          npx -y http-server dist -p 8080 &
-          sleep 5
-      - run: pnpm run test:e2e --project=chromium accessibility.spec.ts
-
-  performance:
-    needs: build
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9.15.0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-playwright-
-      - run: pnpm exec playwright install --with-deps chromium
-      - name: Start HTTP server
-        run: |
-          npx -y http-server dist -p 8080 &
-          sleep 5
-      - run: pnpm run test:e2e --project=chromium performance.spec.ts
+          if [ "${{ needs.unit-tests.result }}" != "success" ] || [ "${{ needs.e2e-matrix.result }}" != "success" ]; then
+            echo "❌ Some tests failed"
+            exit 1
+          fi
+          echo "✅ All tests passed"
