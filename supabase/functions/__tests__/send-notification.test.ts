@@ -3,17 +3,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // Mock Supabase client
 const mockSupabaseClient = {
   from: vi.fn(() => ({
-    select: vi.fn(() => ({
-      eq: vi.fn(() => ({
-        single: vi.fn(),
-        gte: vi.fn(() => ({
-          lte: vi.fn()
-        })),
-        lte: vi.fn()
-      })),
-      insert: vi.fn()
-    })),
-    insert: vi.fn()
+    select: vi.fn().mockReturnThis(),
+    insert: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis()
   })),
   rpc: vi.fn()
 }

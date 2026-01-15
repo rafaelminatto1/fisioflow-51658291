@@ -1,23 +1,35 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Mock Supabase client
+const mockSelect = vi.fn()
+const mockEq = vi.fn()
+const mockSingle = vi.fn()
+const mockInsert = vi.fn()
+const mockUpdate = vi.fn()
+const mockGte = vi.fn()
+const mockLte = vi.fn()
+
+mockEq.mockReturnValue({
+  single: mockSingle,
+  gte: mockGte,
+  lte: mockLte
+})
+
+mockSelect.mockReturnValue({
+  eq: mockEq,
+  gte: mockGte,
+  lte: mockLte
+})
+
+mockGte.mockReturnValue({
+  lte: mockLte
+})
+
 const mockSupabaseClient = {
   from: vi.fn(() => ({
-    select: vi.fn(() => ({
-      eq: vi.fn(() => ({
-        gte: vi.fn(() => ({
-          lte: vi.fn()
-        })),
-        lte: vi.fn()
-      })),
-      gte: vi.fn(() => ({
-        lte: vi.fn()
-      })),
-      lte: vi.fn()
-    })),
-    insert: vi.fn(),
-    update: vi.fn(),
-    single: vi.fn()
+    select: mockSelect,
+    insert: mockInsert,
+    update: mockUpdate
   })),
   rpc: vi.fn()
 }
