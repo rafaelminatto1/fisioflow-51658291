@@ -104,18 +104,33 @@ export const useCalendarDrag = ({ onAppointmentReschedule }: UseCalendarDragProp
         e.preventDefault();
         e.stopPropagation();
 
+        let appointmentToMove = dragState.appointment;
+
+        // Fallback: Tentar recuperar do dataTransfer se o state estiver vazio
+        if (!appointmentToMove) {
+            try {
+                const data = e.dataTransfer.getData('application/json');
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    // Apenas logar aviso se precisarmos usar o fallback
+                    console.debug('[useCalendarDrag] Using dataTransfer fallback', parsed);
+                }
+            } catch (err) {
+                // Silently fail or minimal log
+                console.warn('[useCalendarDrag] Failed to parse dataTransfer');
+            }
+        }
+
         // Validar que existe appointment para fazer drag
-        if (!dragState.appointment?.date) {
-            logger.warn('[useCalendarDrag] Tentativa de drop sem appointment válido', {}, 'useCalendarDrag');
+        if (!appointmentToMove || !appointmentToMove.date) {
             handleDragEnd();
             return;
         }
 
         // Normalizar a data antiga do appointment para comparação
-        const oldDate = normalizeDate(dragState.appointment.date);
+        const oldDate = normalizeDate(appointmentToMove.date);
 
         // Criar uma nova data local a partir dos componentes da targetDate
-        // Isso garante que não há offset de timezone
         const newDate = createLocalDate(
             targetDate.getFullYear(),
             targetDate.getMonth(),
@@ -123,19 +138,23 @@ export const useCalendarDrag = ({ onAppointmentReschedule }: UseCalendarDragProp
         );
 
         // Verificar se é o mesmo horário (sem mudança real)
-        if (isSameDay(oldDate, newDate) && dragState.appointment.time === time) {
+        if (isSameDay(oldDate, newDate) && appointmentToMove.time === time) {
             handleDragEnd();
             return;
         }
 
         // Abrir diálogo de confirmação com a data correta
         setPendingReschedule({
-            appointment: dragState.appointment,
+            appointment: appointmentToMove,
             newDate: newDate,
             newTime: time
         });
+
+        // Limpar o estado de drag visualmente antes de abrir o modal para evitar conflitos de sobreposição (z-index)
+        setDragState({ appointment: null, isDragging: false });
+        setDropTarget(null);
+
         setShowConfirmDialog(true);
-        handleDragEnd();
     }, [dragState.appointment, handleDragEnd]);
 
     const handleConfirmReschedule = useCallback(async () => {

@@ -47,10 +47,22 @@ export const TimeSlotCell = memo(({
                 isDropTarget && "bg-blue-50 dark:bg-blue-900/20 shadow-inner"
             )}
             style={{ gridRow: rowIndex + 1, gridColumn: colIndex + 2 }}
-            onClick={() => !isBlocked && !isClosed && onTimeSlotClick(day, time)}
-            onDragOver={(e) => !isBlocked && !isClosed && handleDragOver(e, day, time)}
+            onClick={() => {
+                if (!isBlocked && !isClosed) onTimeSlotClick(day, time);
+            }}
+            onDragOver={(e) => {
+                if (!isBlocked && !isClosed) {
+                    // Important: preventing default is crucial for allowing drop
+                    // The handler passed from parent should do this, but we ensure delegation works
+                    handleDragOver(e, day, time);
+                }
+            }}
             onDragLeave={handleDragLeave}
-            onDrop={(e) => !isBlocked && !isClosed && handleDrop(e, day, time)}
+            onDrop={(e) => {
+                if (!isBlocked && !isClosed) {
+                    handleDrop(e, day, time);
+                }
+            }}
         >
             {/* Add button on hover - subtle */}
             {!isBlocked && !isClosed && (

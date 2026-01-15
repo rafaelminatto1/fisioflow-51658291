@@ -1,6 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Exercise } from "@/types";
+import { EQUIPMENT, HOME_EQUIPMENT_GROUP, NO_EQUIPMENT_GROUP_ID } from '@/lib/constants/exerciseConstants';
 
 export interface ExerciseFilters {
     category?: string;
@@ -42,7 +42,35 @@ export const exerciseService = {
         }
 
         if (filters?.equipment && filters.equipment.length > 0) {
-            query = query.overlaps('equipment', filters.equipment);
+            let equipmentFilters = [...filters.equipment];
+
+            // Check if group ID is present
+            if (equipmentFilters.includes(NO_EQUIPMENT_GROUP_ID)) {
+                // Remove the group ID
+                equipmentFilters = equipmentFilters.filter(e => e !== NO_EQUIPMENT_GROUP_ID);
+
+                // Add all labels from the group
+                const homeGroupLabels = EQUIPMENT
+                    .filter(e => HOME_EQUIPMENT_GROUP.includes(e.value))
+                    .map(e => e.label);
+
+                // Add unique labels
+                homeGroupLabels.forEach(label => {
+                    if (!equipmentFilters.includes(label)) {
+                        equipmentFilters.push(label);
+                    }
+                });
+            }
+
+            // Since we expanded the list, we might have added many items.
+            // overlaps works if ANY of the items match.
+            // If the user selected "Sem Equipamento", we want to find exercises that have ANY of the home equipment.
+            // That matches "overlaps" logic.
+            // "overlaps" means "records where column array && filter array has any intersection".
+
+            if (equipmentFilters.length > 0) {
+                query = query.overlaps('equipment', equipmentFilters);
+            }
         }
 
         const { data, error } = await query;
