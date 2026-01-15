@@ -1,5 +1,5 @@
 {
-  "buildCommand": "NODE_OPTIONS='--max-old-space-size=4096' pnpm run build",
+  "buildCommand": "NODE_OPTIONS='--max-old-space-size=8192' pnpm run build",
   "installCommand": "pnpm install --frozen-lockfile",
   "devCommand": "pnpm dev",
   "framework": "vite",
@@ -31,17 +31,7 @@
     }
   ],
   "env": {
-    "NODE_OPTIONS": "--max-old-space-size=4096",
-    "VITE_SUPABASE_URL": "https://ycvbtjfrchcyvmkvuocu.supabase.co",
-    "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljdmJ0amZyY2hjeXZta3Z1b2N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTA5OTQsImV4cCI6MjA3NTE2Njk5NH0.L5maWG2hc3LVHEUMOzfTRTjYwIAJFXx3zan3G-Y1zAA",
-    "VITE_SUPABASE_PROJECT_ID": "ycvbtjfrchcyvmkvuocu",
-    "VITE_APP_ENV": "production",
-    "VITE_APP_VERSION": "1.0.0",
-    "VITE_ENABLE_ANALYTICS": "true",
-    "VITE_ENABLE_MONITORING": "true",
-    "VITE_ENABLE_ERROR_TRACKING": "true",
-    "VITE_ENABLE_LAZY_LOADING": "true",
-    "VITE_ENABLE_PRELOAD": "true"
+    "NODE_OPTIONS": "--max-old-space-size=8192"
   },
   "rewrites": [
     {
@@ -54,6 +44,15 @@
     }
   ],
   "headers": [
+    {
+      "source": "/index.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [
@@ -68,6 +67,54 @@
         {
           "key": "X-XSS-Protection",
           "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(self), microphone=(self), geolocation=(self)"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*).js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*).css",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
         }
       ]
     }
