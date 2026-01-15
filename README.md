@@ -197,11 +197,26 @@ Veja o [roadmap completo](./docs2026/13-roadmap.md) com:
 
 ## 🤝 Contribuição
 
+Leia o [CONTRIBUTING.md](./CONTRIBUTING.md) para detalhes sobre como contribuir.
+
+### Quick Start
 1. Fork o projeto
 2. Crie uma branch (`git checkout -b feature/nova-funcionalidade`)
-3. Commit suas mudanças (`git commit -am 'Add nova funcionalidade'`)
+3. Commit suas mudanças (`git commit -m 'feat: add nova funcionalidade'`)
 4. Push para a branch (`git push origin feature/nova-funcionalidade`)
 5. Abra um Pull Request
+
+## 🔐 Segurança
+
+⚠️ **IMPORTANTE**: Leia [SECURITY.md](./SECURITY.md) para políticas de segurança.
+
+- ✅ Autenticação segura com Supabase
+- ✅ Row Level Security (RLS) ativado
+- ✅ Criptografia de dados sensíveis
+- ✅ Conformidade com LGPD
+- ✅ Headers de segurança configurados
+- ✅ Assinaturas digitais para documentos
+- ✅ Auditoria completa de operações
 
 ## 📄 Licença
 
