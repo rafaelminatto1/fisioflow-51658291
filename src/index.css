@@ -1298,4 +1298,261 @@ All colors MUST be HSL.
   .has-dragging {
     @apply opacity-70;
   }
+
+  /* ========================================
+     ENHANCED DRAGGABLE GRID STYLES
+     ======================================== */
+
+  /* Base styles for react-grid-layout items */
+  .react-grid-layout {
+    position: relative;
+  }
+
+  .react-grid-item {
+    transition: all 200ms ease-out;
+    transition-property: transform, box-shadow;
+    will-change: transform;
+  }
+
+  /* Drag handle enhancements */
+  .drag-handle {
+    cursor: grab;
+    transition: all 150ms ease-out;
+    /* Touch-friendly sizing (minimum 44x44px for touch targets) */
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .drag-handle:hover {
+    transform: scale(1.1);
+    background: hsl(var(--muted) / 0.8);
+  }
+
+  .drag-handle:active,
+  .react-grid-item.dragging .drag-handle {
+    cursor: grabbing;
+    transform: scale(0.95);
+    background: hsl(var(--primary) / 0.2);
+  }
+
+  /* Dragging state - provides visual feedback */
+  .react-grid-item.dragging {
+    opacity: 0.6;
+    transform: scale(1.02);
+    box-shadow: 0 20px 40px -8px hsl(var(--primary) / 0.3);
+    z-index: 100;
+  }
+
+  /* Placeholder shows where item will land */
+  .react-grid-placeholder {
+    background: hsl(var(--primary) / 0.1) !important;
+    border: 2px dashed hsl(var(--primary) / 0.5) !important;
+    border-radius: 0.5rem;
+    transition: all 150ms ease-out;
+  }
+
+  /* Resize handle styles */
+  .react-resizable-handle {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: hsl(var(--primary) / 0.2);
+    border-radius: 4px;
+    transition: background 150ms ease-out;
+  }
+
+  .react-resizable-handle:hover {
+    background: hsl(var(--primary) / 0.4);
+  }
+
+  /* Position resize handles */
+  .react-resizable-handle.handle-se {
+    bottom: 0;
+    right: 0;
+    cursor: se-resize;
+  }
+
+  .react-resizable-handle.handle-sw {
+    bottom: 0;
+    left: 0;
+    cursor: sw-resize;
+  }
+
+  .react-resizable-handle.handle-ne {
+    top: 0;
+    right: 0;
+    cursor: ne-resize;
+  }
+
+  .react-resizable-handle.handle-nw {
+    top: 0;
+    left: 0;
+    cursor: nw-resize;
+  }
+
+  .react-resizable-handle.handle-e {
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    cursor: e-resize;
+  }
+
+  .react-resizable-handle.handle-s {
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: s-resize;
+  }
+
+  /* Focus states for accessibility */
+  .react-grid-item:focus-within {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: 0.5rem;
+  }
+
+  /* Hover state for grid items when editable */
+  .react-grid-layout.editable .react-grid-item:hover {
+    box-shadow: 0 8px 24px -8px hsl(var(--primary) / 0.2);
+  }
+
+  /* Snap animation - when item drops into place */
+  @keyframes snap-in {
+    0% {
+      transform: scale(1.02);
+    }
+    50% {
+      transform: scale(0.98);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  .react-grid-item.snap-animation {
+    animation: snap-in 200ms ease-out;
+  }
+
+  /* Mobile-specific enhancements */
+  @media (max-width: 768px) {
+    .drag-handle {
+      /* Larger touch targets on mobile */
+      min-width: 48px;
+      min-height: 48px;
+    }
+
+    .react-resizable-handle {
+      /* Larger resize handles on mobile */
+      width: 24px;
+      height: 24px;
+    }
+
+    /* Reduce animation intensity on mobile for better performance */
+    .react-grid-item {
+      transition-duration: 150ms;
+    }
+  }
+
+  /* Dark mode adjustments */
+  .dark .drag-handle:hover {
+    background: hsl(var(--muted) / 0.5);
+  }
+
+  .dark .react-grid-item.dragging {
+    box-shadow: 0 20px 40px -8px hsl(0 0% 0% / 0.5);
+  }
+
+  .dark .react-grid-placeholder {
+    background: hsl(var(--primary) / 0.15) !important;
+    border-color: hsl(var(--primary) / 0.6) !important;
+  }
+
+  /* Performance: Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    .react-grid-item,
+    .drag-handle,
+    .react-resizable-handle {
+      transition: none;
+      animation: none;
+    }
+  }
+
+  /* ========================================
+     GRID LAYOUT ANIMATIONS
+     ======================================== */
+
+  /* Smooth layout reorganization */
+  @keyframes layout-shift {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .react-grid-item.layout-shifting {
+    animation: layout-shift 200ms ease-out;
+  }
+
+  /* Success feedback after successful drop */
+  @keyframes drop-success {
+    0% {
+      box-shadow: 0 0 0 0 hsl(var(--success) / 0.7);
+    }
+    70% {
+      box-shadow: 0 0 0 10px hsl(var(--success) / 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 hsl(var(--success) / 0);
+    }
+  }
+
+  .react-grid-item.drop-success {
+    animation: drop-success 600ms ease-out;
+  }
+
+  /* ========================================
+     WIDGET SPECIFIC ENHANCEMENTS
+     ======================================== */
+
+  /* Widget cards */
+  .widget-card {
+    @apply relative h-full flex flex-col;
+    @apply shadow-sm hover:shadow-md;
+    @apply transition-all duration-200 ease-out;
+    @apply overflow-hidden select-none;
+    @apply border-2 border-border;
+  }
+
+  /* Widget header with drag handle */
+  .widget-header {
+    @apply p-3 pb-2 flex-row items-center justify-between;
+    @apply space-y-0 shrink-0 border-b border-border/40;
+    @apply transition-colors duration-150;
+  }
+
+  .widget-header:hover {
+    @apply bg-muted/30;
+  }
+
+  /* Widget content area */
+  .widget-content {
+    @apply p-0 flex-1 overflow-auto flex flex-col;
+  }
+
+  /* Grab state feedback */
+  .widget-card.is-grabbed {
+    @apply shadow-lg ring-2 ring-primary/20 scale-[1.01];
+    @apply transition-all duration-150;
+  }
+
+  .widget-card.is-grabbed .widget-header {
+    @apply bg-muted/50;
+  }
 }
