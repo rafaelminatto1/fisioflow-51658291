@@ -69,12 +69,6 @@ export default defineConfig(({ mode }) => {
         ext: '.gz',
         threshold: 10240, // Apenas arquivos > 10KB
       }),
-      // Brotli compression (melhor que gzip)
-      viteCompression({
-        algorithm: 'brotliCompress',
-        ext: '.br',
-        threshold: 10240,
-      }),
       VitePWA({
         registerType: 'autoUpdate',
         // Disable PWA in development to avoid manifest errors
@@ -116,8 +110,8 @@ export default defineConfig(({ mode }) => {
           ],
           // Don't cache cornerstone chunks to avoid 404s when hash changes
           navigateFallback: null,
-          // NÃO usar skipWaiting automático - deixar o app controlar
-          skipWaiting: false,
+          // Ativar SW imediatamente quando houver atualização
+          skipWaiting: true,
           clientsClaim: true,
           cleanupOutdatedCaches: true,
           // Cache ID dinâmico para forçar invalidação
@@ -381,7 +375,7 @@ export default defineConfig(({ mode }) => {
         'recharts',
         'lucide-react',
         'lodash',
-        'lodash-es',
+
         // Include konva for proper CJS/UMD interop
         'konva',
         'react-konva',

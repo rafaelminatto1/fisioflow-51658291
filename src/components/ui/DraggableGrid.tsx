@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Responsive, Layout, useContainerWidth } from 'react-grid-layout';
+import { Responsive, Layout, WidthProvider as RGLWidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import { Button } from '@/components/ui/button';
 import { Lock, Unlock, RotateCcw } from 'lucide-react';
+
+const ResponsiveGridLayout = RGLWidthProvider(Responsive);
 
 export interface GridItem {
     id: string;
@@ -36,8 +38,12 @@ export const DraggableGrid = ({
     cols = { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 },
     isEditable = false,
 }: DraggableGridProps) => {
-    const { width, containerRef, mounted } = useContainerWidth();
+    const [mounted, setMounted] = useState(false);
     const [currentLayout, setCurrentLayout] = useState<Layout[]>([]);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Merge default layouts with any saved layout positions
     const getInitialLayouts = useCallback(() => {
@@ -76,7 +82,7 @@ export const DraggableGrid = ({
     }
 
     return (
-        <div ref={containerRef} className={className} style={{ position: 'relative' }}>
+        <div className={className} style={{ position: 'relative' }}>
             {isEditable && (
                 <div
                     className="absolute inset-0 pointer-events-none z-0"
@@ -87,8 +93,7 @@ export const DraggableGrid = ({
                     }}
                 />
             )}
-            <Responsive
-                width={width}
+            <ResponsiveGridLayout
                 className="layout"
                 layouts={layouts}
                 breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
@@ -106,7 +111,7 @@ export const DraggableGrid = ({
                         {item.content}
                     </div>
                 ))}
-            </Responsive>
+            </ResponsiveGridLayout>
         </div>
     );
 };
