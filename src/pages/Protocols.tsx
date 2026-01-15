@@ -27,7 +27,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { NewProtocolModal } from '@/components/modals/NewProtocolModal';
-import { PROTOCOL_CATEGORIES, QUICK_TEMPLATES, getProtocolCategory } from '@/data/protocols';
+import { PROTOCOL_CATEGORIES, MUSCULATURE_FILTERS, QUICK_TEMPLATES, getProtocolCategory } from '@/data/protocols';
 import { ProtocolCardEnhanced } from '@/components/protocols/ProtocolCardEnhanced';
 import { ProtocolDetailView } from '@/components/protocols/ProtocolDetailView';
 import { useToast } from '@/hooks/use-toast';
@@ -37,6 +37,7 @@ export default function Protocols() {
   const [activeTab, setActiveTab] = useState<'patologia' | 'pos_operatorio'>('pos_operatorio');
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [muscleFilter, setMuscleFilter] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedProtocol, setSelectedProtocol] = useState<ExerciseProtocol | null>(null);
   const [showNewProtocolModal, setShowNewProtocolModal] = useState(false);
@@ -64,9 +65,20 @@ export default function Protocols() {
         const category = getProtocolCategory(p.condition_name);
         if (category !== categoryFilter) return false;
       }
+
+      // Filter by musculature
+      if (muscleFilter !== 'all') {
+        const muscleMatch =
+          p.name.toLowerCase().includes(muscleFilter) ||
+          p.condition_name.toLowerCase().includes(muscleFilter) ||
+          JSON.stringify(p.milestones).toLowerCase().includes(muscleFilter); // Also search in milestones content
+
+        if (!muscleMatch) return false;
+      }
+
       return true;
     });
-  }, [protocols, search, activeTab, categoryFilter]);
+  }, [protocols, search, activeTab, categoryFilter, muscleFilter]);
 
   const handleFavorite = (id: string) => {
     setFavorites(prev =>
@@ -255,11 +267,6 @@ export default function Protocols() {
                   <DropdownMenuItem>Mais Utilizados</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-
-              <Button variant="outline" size="sm" className="gap-2">
-                <Filter className="h-4 w-4" />
-                Filtros
-              </Button>
             </div>
           </div>
 
@@ -296,23 +303,64 @@ export default function Protocols() {
               </TabsList>
             </ScrollArea>
 
-            {/* Categories Pills */}
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-              {PROTOCOL_CATEGORIES.map(cat => (
-                <Button
-                  key={cat.id}
-                  variant={categoryFilter === cat.id ? 'default' : 'outline'}
-                  size="sm"
-                  className={cn(
-                    "rounded-full whitespace-nowrap gap-2",
-                    categoryFilter === cat.id ? "" : "hover:border-primary/50 text-muted-foreground"
-                  )}
-                  onClick={() => setCategoryFilter(cat.id)}
-                >
-                  <cat.icon className="h-3.5 w-3.5" />
-                  {cat.label}
-                </Button>
-              ))}
+            {/* Categories & Muscle Filters Container */}
+            <div className="space-y-4">
+              {/* Main Categories (Joints/Regions) */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium text-muted-foreground">Região / Articulação</span>
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                  {PROTOCOL_CATEGORIES.map(cat => (
+                    <Button
+                      key={cat.id}
+                      variant={categoryFilter === cat.id ? 'default' : 'outline'}
+                      size="sm"
+                      className={cn(
+                        "rounded-full whitespace-nowrap gap-2",
+                        categoryFilter === cat.id ? "" : "hover:border-primary/50 text-muted-foreground"
+                      )}
+                      onClick={() => setCategoryFilter(cat.id === categoryFilter ? 'all' : cat.id)}
+                    >
+                      <cat.icon className="h-3.5 w-3.5" />
+                      {cat.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Musculature Filters */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <Target className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium text-muted-foreground">Musculatura Alvo</span>
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                  <Button
+                    variant={muscleFilter === 'all' ? 'secondary' : 'outline'}
+                    size="sm"
+                    className="rounded-full whitespace-nowrap text-xs h-8"
+                    onClick={() => setMuscleFilter('all')}
+                  >
+                    Todas
+                  </Button>
+                  {MUSCULATURE_FILTERS.map(muscle => (
+                    <Button
+                      key={muscle.id}
+                      variant={muscleFilter === muscle.id ? 'default' : 'outline'}
+                      size="sm"
+                      className={cn(
+                        "rounded-full whitespace-nowrap text-xs h-8",
+                        muscleFilter === muscle.id ? "" : "hover:border-primary/50 text-muted-foreground"
+                      )}
+                      onClick={() => setMuscleFilter(muscle.id === muscleFilter ? 'all' : muscle.id)}
+                    >
+                      {muscle.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <TabsContent value={activeTab} className="mt-0">
@@ -345,7 +393,7 @@ export default function Protocols() {
                     Não encontramos protocolos com os filtros atuais.
                     <br />Tente buscar por outro termo ou limpe os filtros.
                   </p>
-                  <Button onClick={() => { setSearch(''); setCategoryFilter('all'); }}>
+                  <Button onClick={() => { setSearch(''); setCategoryFilter('all'); setMuscleFilter('all'); }}>
                     Limpar Filtros
                   </Button>
                 </div>

@@ -16,6 +16,15 @@ export interface PatientEvolutionData {
   initialPainLevel: number;
   totalSessions: number;
   averageImprovement: number;
+  measurementEvolution: {
+    name: string;
+    type: string;
+    initial: { value: number | string; unit: string; date: string };
+    current: { value: number | string; unit: string; date: string };
+    improvement: number | string;
+    isVitalSign?: boolean;
+    vitalSigns?: Record<string, any>;
+  }[];
 }
 
 export const usePatientEvolutionReport = (patientId: string) => {
@@ -23,7 +32,7 @@ export const usePatientEvolutionReport = (patientId: string) => {
     queryKey: ["patient-evolution-report", patientId],
     queryFn: async (): Promise<PatientEvolutionData> => {
       // Buscar registros SOAP do paciente
-      const { data: soapRecords, error } = await supabase
+      const { data: soapRecords, error: soapError } = await supabase
         .from("soap_records")
         .select(`
           id,
@@ -36,24 +45,62 @@ export const usePatientEvolutionReport = (patientId: string) => {
         .eq("patient_id", patientId)
         .order("record_date", { ascending: true });
 
-      if (error) {
-        console.error("Erro ao buscar evolução:", error);
-        toast.error("Erro ao carregar dados de evolução");
-        throw error;
-      }
+      if (soapError) throw soapError;
 
-      if (!soapRecords || soapRecords.length === 0) {
+      // Buscar medições de evolução
+      const { data: measurements, error: measError } = await supabase
+        .from("evolution_measurements")
+        .select("*")
+        .eq("patient_id", patientId)
+        .order("measured_at", { ascending: true });
+
+      if (measError) throw measError;
+
+      if ((!soapRecords || soapRecords.length === 0) && (!measurements || measurements.length === 0)) {
         return {
           sessions: [],
           currentPainLevel: 0,
           initialPainLevel: 0,
           totalSessions: 0,
           averageImprovement: 0,
+          measurementEvolution: [],
         };
       }
 
+      // Processar medições para pegar inicial vs atual
+      const evolutionMap = new Map<string, any[]>();
+      measurements?.forEach(m => {
+        const key = `${m.measurement_type}-${m.measurement_name}`;
+        if (!evolutionMap.has(key)) evolutionMap.set(key, []);
+        evolutionMap.get(key)?.push(m);
+      });
+
+      const measurementEvolution = Array.from(evolutionMap.entries()).map(([key, history]) => {
+        const first = history[0];
+        const last = history[history.length - 1];
+
+        let improvement: number | string = 0;
+        if (typeof first.value === 'number' && typeof last.value === 'number') {
+          improvement = first.value !== 0
+            ? ((last.value - first.value) / Math.abs(first.value)) * 100
+            : last.value - first.value;
+        } else {
+          improvement = "N/A";
+        }
+
+        return {
+          name: last.measurement_name,
+          type: last.measurement_type,
+          initial: { value: first.value, unit: first.unit, date: first.measured_at },
+          current: { value: last.value, unit: last.unit, date: last.measured_at },
+          improvement: typeof improvement === 'number' ? improvement.toFixed(1) : improvement,
+          isVitalSign: last.measurement_type === 'Sinais Vitais',
+          vitalSigns: last.measurement_type === 'Sinais Vitais' ? last.custom_data : undefined,
+        };
+      });
+
       // Buscar mapas de dor associados às sessões
-      const soapIds = soapRecords.map(r => r.id);
+      const soapIds = soapRecords?.map(r => r.id) || [];
 
       let painMaps: Array<{ id: string; pain_points?: unknown }> | null = [];
       if (soapIds.length > 0) {
@@ -126,6 +173,7 @@ export const usePatientEvolutionReport = (patientId: string) => {
         initialPainLevel,
         totalSessions,
         averageImprovement,
+        measurementEvolution,
       };
     },
     enabled: !!patientId,
