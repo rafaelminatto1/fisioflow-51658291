@@ -1,79 +1,88 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 
-    <!-- Versão da aplicação para controle de cache -->
-    <meta name="app-version" content="%APP_VERSION%" />
-    <meta name="build-time" content="%BUILD_TIME%" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 
-    <!-- Cache Control - Previne cache agressivo do navegador -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
+  <!-- Versão da aplicação para controle de cache -->
+  <meta name="app-version" content="%APP_VERSION%" />
+  <meta name="build-time" content="%BUILD_TIME%" />
 
-    <title>FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia</title>
-    <meta name="description" content="Sistema completo de gestão para clínicas de fisioterapia com dashboard, agendamentos, pacientes e relatórios" />
-    <meta name="author" content="FisioFlow" />
-    <meta name="keywords" content="fisioterapia, clínica, gestão, agendamento, pacientes, sistema médico" />
+  <!-- Cache Control - Previne cache agressivo do navegador -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+  <title>FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia</title>
+  <meta name="description"
+    content="Sistema completo de gestão para clínicas de fisioterapia com dashboard, agendamentos, pacientes e relatórios" />
+  <meta name="author" content="FisioFlow" />
+  <meta name="keywords" content="fisioterapia, clínica, gestão, agendamento, pacientes, sistema médico" />
 
-    <!-- PWA Configuration -->
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#0ea5e9" />
-    <meta name="background-color" content="#ffffff" />
-    <meta name="display" content="standalone" />
-    <meta name="orientation" content="portrait" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+    rel="stylesheet">
 
-    <!-- PWA Configuration for Mobile -->
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="FisioFlow" />
-    <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
+  <!-- PWA Configuration -->
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0ea5e9" />
+  <meta name="background-color" content="#ffffff" />
+  <meta name="display" content="standalone" />
+  <meta name="orientation" content="portrait" />
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" sizes="32x32" href="/icons/favicon-32x32.svg" />
-    <link rel="icon" type="image/svg+xml" sizes="16x16" href="/icons/favicon-16x16.svg" />
-    <link rel="shortcut icon" href="/favicon.ico" />
+  <!-- PWA Configuration for Mobile -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="FisioFlow" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
-    <meta property="og:title" content="FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia" />
-    <meta property="og:description" content="Sistema completo de gestão para clínicas de fisioterapia com dashboard, agendamentos, pacientes e relatórios" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+  <!-- Favicon (SVG for modern browsers, PNG fallback for older) -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <link rel="manifest" href="/site.webmanifest" />
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-  </head>
+  <meta property="og:title" content="FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia" />
+  <meta property="og:description"
+    content="Sistema completo de gestão para clínicas de fisioterapia com dashboard, agendamentos, pacientes e relatórios" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
-  <body>
-    <div id="root"></div>
-    <!-- Expor versão globalmente para cache busting -->
-    <script>
-      window.__APP_VERSION__ = "%APP_VERSION%";
-      window.__BUILD_TIME__ = "%BUILD_TIME%";
-      window.__CACHE_BUSTER__ = window.__BUILD_TIME__ || Date.now().toString();
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@lovable_dev" />
+  <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+</head>
 
-      // Limpar storage se a versão mudar drasticamente (ex: após 24h)
-      const lastVersion = localStorage.getItem('app_version');
-      const currentVersion = window.__APP_VERSION__;
+<body>
+  <div id="root"></div>
+  <!-- Expor versão globalmente para cache busting -->
+  <script>
+    window.__APP_VERSION__ = "%APP_VERSION%";
+    window.__BUILD_TIME__ = "%BUILD_TIME%";
+    window.__CACHE_BUSTER__ = window.__BUILD_TIME__ || Date.now().toString();
 
-      if (lastVersion && lastVersion !== currentVersion) {
-        console.log('[Cache] Versão alterada, limpando caches...');
-        // Limpar caches que podem causar problemas
-        sessionStorage.clear();
-        // Não limpar localStorage completamente para preservar preferências
-      }
+    // Limpar storage se a versão mudar drasticamente (ex: após 24h)
+    const lastVersion = localStorage.getItem('app_version');
+    const currentVersion = window.__APP_VERSION__;
 
-      localStorage.setItem('app_version', currentVersion);
-      localStorage.setItem('last_build_time', window.__BUILD_TIME__);
-    </script>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+    if (lastVersion && lastVersion !== currentVersion) {
+      console.log('[Cache] Versão alterada, limpando caches...');
+      // Limpar caches que podem causar problemas
+      sessionStorage.clear();
+      // Não limpar localStorage completamente para preservar preferências
+    }
+
+    localStorage.setItem('app_version', currentVersion);
+    localStorage.setItem('last_build_time', window.__BUILD_TIME__);
+  </script>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>

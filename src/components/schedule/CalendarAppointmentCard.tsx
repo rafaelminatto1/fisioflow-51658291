@@ -8,6 +8,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 import { AppointmentQuickView } from './AppointmentQuickView';
 import { Badge } from '@/components/ui/badge';
 import { Clock } from 'lucide-react';
+import { getOptimalTextColor, isLightColor } from '@/utils/colorContrast';
 
 interface CalendarAppointmentCardProps {
     appointment: Appointment;
@@ -45,6 +46,10 @@ export const CalendarAppointmentCard = memo(({
     const StatusIcon = config.icon;
     const isSmall = (appointment.duration || 60) <= 30;
 
+    // Calculate optimal text color based on background color
+    const textColor = getOptimalTextColor(config.bgColor);
+    const isLight = isLightColor(config.bgColor);
+
     const handleMouseEnter = () => setIsHovered(true);
     const handleMouseLeave = () => setIsHovered(false);
 
@@ -57,51 +62,56 @@ export const CalendarAppointmentCard = memo(({
             onMouseLeave={handleMouseLeave}
             className={cn(
                 "absolute rounded-md flex flex-col border-l-[3px] transition-all shadow-sm cursor-pointer overflow-hidden group hover:shadow-md",
-                config.twBg,
-                config.twBorder,
-                "dark:bg-slate-800 dark:border-l-[3px]",
                 isDraggable && "cursor-grab active:cursor-grabbing",
                 isDragging && "opacity-50 scale-95 z-50 ring-2 ring-blue-400",
                 !isDragging && isHovered && "z-30 ring-1 ring-black/5 dark:ring-white/10",
                 appointment.status === 'cancelado' && "opacity-80 grayscale-[0.5]"
             )}
-            style={style}
+            style={{
+                ...style,
+                backgroundColor: config.bgColor,
+                borderLeftColor: config.borderColor,
+            }}
         >
             <div className="p-1.5 flex flex-col h-full relative">
                 {/* Header Line (Time + Status) */}
                 <div className="flex items-center justify-between mb-0.5">
-                    <span className={cn(
-                        "text-[9px] font-bold uppercase tracking-wide leading-none",
-                        config.twText?.replace('text-', 'text-opacity-80 text-') || ""
-                    )}>
-                        {normalizeTime(appointment.time)} - {normalizeTime(addDays(parseISO(`2000-01-01T${appointment.time}`), 0).toISOString().split('T')[1]?.substring(0, 5))}
-                        {appointment.duration &&
-                            (() => {
-                                const [h, m] = (appointment.time || "00:00").split(':').map(Number);
-                                const end = new Date(); end.setHours(h, m + appointment.duration);
-                                return format(end, 'HH:mm');
-                            })()
-                        }
+                    <span
+                        className="text-[11px] font-bold uppercase tracking-wide leading-none opacity-90"
+                        style={{ color: textColor }}
+                    >
+                        {normalizeTime(appointment.time)}
+                        {appointment.duration && (() => {
+                            const [h, m] = (appointment.time || "00:00").split(':').map(Number);
+                            const end = new Date();
+                            end.setHours(h, m + appointment.duration);
+                            return ` - ${format(end, 'HH:mm')}`;
+                        })()}
                     </span>
                     {StatusIcon && !isSmall && (
-                        <StatusIcon className={cn("w-3 h-3 opacity-70", config.twText)} />
+                        <StatusIcon className="w-3.5 h-3.5 opacity-70" style={{ color: textColor }} />
                     )}
                 </div>
 
                 {/* Patient Name */}
                 <div className="flex items-start gap-1">
-                    <span className={cn(
-                        "text-[11px] font-bold truncate leading-tight",
-                        "text-slate-800 dark:text-slate-100",
-                        appointment.status === 'cancelado' && "line-through decoration-red-500/50"
-                    )}>
+                    <span
+                        className={cn(
+                            "text-[13px] font-bold truncate leading-tight",
+                            appointment.status === 'cancelado' && "line-through decoration-red-500/50"
+                        )}
+                        style={{ color: textColor }}
+                    >
                         {appointment.patientName || 'Paciente'}
                     </span>
                 </div>
 
                 {/* Type/Treatment */}
                 {!isSmall && (
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5 leading-tight">
+                    <span
+                        className="text-[11px] truncate mt-0.5 leading-tight opacity-80"
+                        style={{ color: textColor }}
+                    >
                         {appointment.type || 'Consulta'}
                     </span>
                 )}
@@ -109,13 +119,16 @@ export const CalendarAppointmentCard = memo(({
                 {/* Actions / Drag Handle Popup */}
                 {isHovered && isDraggable && !isDragging && (
                     <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity delay-75">
-                        <div className="bg-white/80 dark:bg-black/50 rounded p-0.5 hover:bg-white dark:hover:bg-black shadow-sm"
+                        <div className={cn(
+                            "rounded p-0.5 shadow-sm",
+                            isLight ? "bg-black/10 hover:bg-black/20" : "bg-white/20 hover:bg-white/30"
+                        )}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onEditAppointment?.(appointment);
                             }}
                         >
-                            <MoreVertical className="w-3 h-3 text-slate-500" />
+                            <MoreVertical className="w-3 h-3" style={{ color: textColor }} />
                         </div>
                     </div>
                 )}
@@ -123,7 +136,7 @@ export const CalendarAppointmentCard = memo(({
                 {/* Drag Handle (Visible on hover) */}
                 {isHovered && isDraggable && (
                     <div className="absolute bottom-1 right-1 opacity-20 group-hover:opacity-100 cursor-grab">
-                        <GripVertical className="w-3 h-3 text-slate-400" />
+                        <GripVertical className="w-3 h-3" style={{ color: textColor }} />
                     </div>
                 )}
             </div>
