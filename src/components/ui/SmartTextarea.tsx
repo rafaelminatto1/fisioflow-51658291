@@ -12,10 +12,11 @@ import {
 
 interface SmartTextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
     label?: string;
+    containerClassName?: string;
 }
 
-export const SmartTextarea = React.forwardRef<HTMLTextAreaElement, SmartTextareaProps>(
-    ({ className, value, onChange, ...props }, ref) => {
+const MemoizedSmartTextarea = React.memo(React.forwardRef<HTMLTextAreaElement, SmartTextareaProps>(
+    ({ className, value, onChange, containerClassName, ...props }, ref) => {
         const [isFullScreen, setIsFullScreen] = React.useState(false);
         const internalRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -140,7 +141,8 @@ export const SmartTextarea = React.forwardRef<HTMLTextAreaElement, SmartTextarea
             <div className={cn(
                 "relative group border rounded-lg shadow-sm bg-background/50 backdrop-blur-sm transition-all focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50",
                 isFullScreen && "fixed inset-0 z-50 rounded-none bg-background flex flex-col h-screen",
-                !isFullScreen && "relative"
+                !isFullScreen && "relative flex flex-col", // Added flex flex-col
+                containerClassName
             )}>
                 <div className="flex items-center gap-0.5 p-1 border-b bg-muted/30 rounded-t-lg">
                     <ToolbarButton
@@ -206,7 +208,7 @@ export const SmartTextarea = React.forwardRef<HTMLTextAreaElement, SmartTextarea
                         onKeyDown={handleKeyDown}
                         className={cn(
                             "min-h-[120px] resize-y border-0 focus-visible:ring-0 rounded-t-none bg-transparent p-3 text-sm sm:text-base leading-relaxed placeholder:text-muted-foreground/50",
-                            isFullScreen && "flex-1 resize-none h-full text-lg p-8 max-w-4xl mx-auto",
+                            isFullScreen ? "flex-1 resize-none h-full text-lg p-8 max-w-4xl mx-auto" : "flex-1 resize-none h-full",
                             className
                         )}
                         {...props}
@@ -224,6 +226,8 @@ export const SmartTextarea = React.forwardRef<HTMLTextAreaElement, SmartTextarea
             </div>
         );
     }
-);
+));
 
-SmartTextarea.displayName = 'SmartTextarea';
+MemoizedSmartTextarea.displayName = 'SmartTextarea';
+
+export const SmartTextarea = MemoizedSmartTextarea;
