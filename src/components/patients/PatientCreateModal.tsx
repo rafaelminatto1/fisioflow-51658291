@@ -9,7 +9,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { UserPlus } from 'lucide-react';
 import { PatientForm } from './PatientForm';
-import { useCreatePatient } from '@/hooks/usePatientCrud';
+import { useCreatePatient, type PatientCreateInput } from '@/hooks/usePatientCrud';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { Loader2 } from 'lucide-react';
 
@@ -25,7 +25,7 @@ export const PatientCreateModal: React.FC<PatientCreateModalProps> = ({
   const { currentOrganization } = useOrganizations();
   const createMutation = useCreatePatient();
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: PatientCreateInput) => {
     if (!currentOrganization?.id) {
       throw new Error('Organização não encontrada');
     }

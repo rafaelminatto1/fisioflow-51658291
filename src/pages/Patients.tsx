@@ -26,7 +26,7 @@ import {
   matchesFilters,
   type PatientFilters
 } from '@/components/patients';
-import { usePatients, useDeletePatient } from '@/hooks/usePatientCrud';
+import { usePatients } from '@/hooks/usePatientCrud';
 import { useMultiplePatientStats, formatFirstEvaluationDate } from '@/hooks/usePatientStats';
 import { PatientHelpers } from '@/types';
 import {
@@ -38,10 +38,9 @@ import {
   ChevronRight,
   Calendar,
   Activity,
-  AlertCircle,
 } from 'lucide-react';
 import { cn, calculateAge, exportToCSV } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 const Patients = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -50,16 +49,13 @@ const Patients = () => {
   const [isNewPatientModalOpen, setIsNewPatientModalOpen] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState<PatientFilters>({});
   const [showAnalytics, setShowAnalytics] = useState(false);
-  const [deletingPatientId, setDeletingPatientId] = useState<string | null>(null);
 
   const { data: patients = [], isLoading: loading } = usePatients();
-  const deleteMutation = useDeletePatient();
 
   // Buscar estatísticas de múltiplos pacientes
   const patientIds = useMemo(() => patients.map(p => p.id), [patients]);
-  const { data: statsMap = {}, isLoading: statsLoading } = useMultiplePatientStats(patientIds);
+  const { data: statsMap = {} } = useMultiplePatientStats(patientIds);
 
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   // Get unique conditions and statuses for filters
@@ -153,12 +149,6 @@ const Patients = () => {
     setStatusFilter('all');
     setConditionFilter('all');
     setAdvancedFilters({});
-  };
-
-  const handleDeletePatient = () => {
-    if (!deletingPatientId) return;
-    deleteMutation.mutate(deletingPatientId);
-    setDeletingPatientId(null);
   };
 
   const exportPatients = () => {
@@ -591,17 +581,6 @@ const Patients = () => {
         open={isNewPatientModalOpen}
         onOpenChange={setIsNewPatientModalOpen}
       />
-
-      {/* Delete Dialog */}
-      {deletingPatientId && (
-        <PatientDeleteDialog
-          open={!!deletingPatientId}
-          onOpenChange={(open) => {
-            if (!open) setDeletingPatientId(null);
-          }}
-          patientId={deletingPatientId}
-        />
-      )}
     </MainLayout>
   );
 };

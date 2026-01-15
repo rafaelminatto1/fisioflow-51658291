@@ -10,8 +10,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { AlertTriangle, Loader2 } from 'lucide-react';
-import { useDeletePatient } from '@/hooks/usePatientCrud';
-import { usePatient } from '@/hooks/usePatientCrud';
+import { useDeletePatient, usePatient } from '@/hooks/usePatientCrud';
 import { PatientHelpers } from '@/types';
 
 interface PatientDeleteDialogProps {

@@ -258,8 +258,11 @@ export function useAppointments() {
   useEffect(() => {
     if (!organizationId) return;
 
-    const channel = supabase
-      .channel(channelName)
+    // FIX: Track subscription state to avoid WebSocket errors
+    let isSubscribed = false;
+    const channel = supabase.channel(channelName);
+
+    (channel as any)
       .on(
         'postgres_changes',
         {
@@ -293,23 +296,29 @@ export function useAppointments() {
           }
         }
       )
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         if (status === 'SUBSCRIBED') {
+          isSubscribed = true;
           logger.debug(`Realtime conectado: ${channelName}`, {}, 'useAppointments');
         }
         if (status === 'CHANNEL_ERROR') {
           logger.error(`Erro no canal Realtime: ${channelName}`, {}, 'useAppointments');
         }
         if (status === 'CLOSED') {
+          isSubscribed = false;
           logger.debug(`Canal Realtime fechado: ${channelName}`, {}, 'useAppointments');
         }
       });
 
     return () => {
-      logger.debug(`Removendo subscription ${channelName}`, {}, 'useAppointments');
-      supabase.removeChannel(channel);
+      logger.debug(`Cleanup subscription ${channelName}`, { isSubscribed }, 'useAppointments');
+      if (isSubscribed) {
+        supabase.removeChannel(channel).catch(() => {
+          // Ignore cleanup errors
+        });
+      }
     };
-  }, [toast, organizationId]);
+  }, [toast, organizationId, queryClient]);
 
   const query = useQuery({
     queryKey: ['appointments', organizationId], // Include organizationId in query key

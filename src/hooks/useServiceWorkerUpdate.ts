@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { Workbox } from 'workbox-window';
 
 /**
  * Hook para gerenciar atualizações do Service Worker
@@ -16,134 +17,126 @@ import { toast } from 'sonner';
 interface UpdateState {
   hasUpdate: boolean;
   isUpdating: boolean;
+  offlineReady: boolean;
 }
-
-
 
 export function useServiceWorkerUpdate() {
   const [state, setState] = useState<UpdateState>({
     hasUpdate: false,
     isUpdating: false,
+    offlineReady: false,
   });
 
   useEffect(() => {
     // Apenas executar em produção com SW suportado
-    if (typeof window === 'undefined' ||
-      !('serviceWorker' in navigator) ||
-      import.meta.env.DEV) {
+    if (typeof window === 'undefined' || import.meta.env.DEV || !('serviceWorker' in navigator)) {
       return;
     }
 
-    let registration: ServiceWorkerRegistration | null = null;
+    let wb: Workbox | null = null;
     let updateCheckInterval: ReturnType<typeof setInterval> | null = null;
 
     const registerSW = async () => {
       try {
-        registration = await navigator.serviceWorker.register('/sw.js', {
+        // Usar workbox-window para registro com controle granular
+        wb = new Workbox('/sw.js', {
           type: 'classic'
         });
 
-        console.log('[SW] Service Worker registrado:', registration.scope);
+        // Listener para quando o SW encontrar uma atualização
+        wb.addEventListener('waiting', (event) => {
+          console.log('[SW] Nova versão disponível (waiting)!');
+
+          // Marcar que há atualização
+          setState(prev => ({ ...prev, hasUpdate: true }));
+
+          // Mostrar toast com opção de atualizar
+          toast.info('Nova versão disponível!', {
+            description: 'Uma atualização está pronta. Clique para atualizar.',
+            duration: Infinity,
+            id: 'sw-update',
+            action: {
+              label: 'Atualizar agora',
+              onClick: () => {
+                console.log('[SW] Usuário clicou em atualizar');
+                setState(prev => ({ ...prev, isUpdating: true }));
+
+                // Enviar mensagem para o SW pular a espera
+                if (wb) {
+                  wb.addEventListener('controlling', () => {
+                    console.log('[SW] Novo controller ativado, recarregando...');
+                    window.location.reload();
+                  }, { once: true });
+
+                  // Enviar SKIP_WAITING para o SW
+                  wb.messageSkipWaiting();
+                }
+              }
+            },
+            cancel: {
+              label: 'Depois',
+              onClick: () => {
+                console.log('[SW] Usuário optou por atualizar depois');
+                toast.dismiss('sw-update');
+              }
+            }
+          });
+
+          // Notificar via window event para outros componentes
+          window.dispatchEvent(new CustomEvent('sw-update-available'));
+        });
+
+        // Listener para quando o SW estiver ativo e controlando a página
+        wb.addEventListener('activated', (event) => {
+          console.log('[SW] Service Worker ativado:', event);
+
+          // Verificar se é primeira instalação ou atualização
+          if (event.isUpdate) {
+            console.log('[SW] Atualização aplicada com sucesso');
+          } else {
+            console.log('[SW] Service Worker instalado pela primeira vez');
+            setState(prev => ({ ...prev, offlineReady: true }));
+
+            toast.success('Aplicativo pronto para uso offline', {
+              description: 'O app agora funciona sem internet.',
+              duration: 5000,
+              id: 'sw-offline-ready',
+            });
+          }
+        });
+
+        // Listener para quando o SW começar a controlar a página
+        wb.addEventListener('controlling', () => {
+          console.log('[SW] Service Worker agora está controlando a página');
+        });
+
+        // Registrar o SW
+        await wb.register();
+
+        console.log('[SW] Service Worker registrado com sucesso');
 
         // Verificar atualizações periodicamente (a cada 2 minutos)
         updateCheckInterval = setInterval(() => {
-          if (registration) {
-            registration.update().catch(err => {
-              console.warn('[SW] Falha ao verificar atualização:', err);
+          if (wb) {
+            console.log('[SW] Verificando atualizações...');
+            wb.update().catch(err => {
+              console.debug('[SW] Nenhuma atualização disponível');
             });
           }
         }, 2 * 60 * 1000);
 
-        // Ouvir por novas versões do SW
-        registration.addEventListener('updatefound', handleUpdateFound);
-
-        // Verificar se já há um SW esperando ativação
-        if (registration.waiting) {
-          handleUpdateWaiting();
-        }
-
       } catch (error) {
         console.error('[SW] Falha ao registrar Service Worker:', error);
+        toast.error('Erro ao registrar service worker', {
+          description: 'O app pode não funcionar offline.',
+        });
       }
     };
 
-    const handleUpdateFound = () => {
-      if (!registration) return;
-
-      const newWorker = registration.installing;
-      if (!newWorker) return;
-
-      console.log('[SW] Nova versão encontrada, baixando...');
-
-      newWorker.addEventListener('statechange', () => {
-        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-          console.log('[SW] Nova versão instalada, aguardando ativação');
-          handleUpdateWaiting();
-        }
-      });
-    };
-
-    const handleUpdateWaiting = () => {
-      setState(prev => ({ ...prev, hasUpdate: true }));
-
-      // Mostrar toast com opção de atualizar
-      toast.info('Nova versão disponível!', {
-        description: 'Uma atualização está pronta. Clique para atualizar.',
-        duration: Infinity,
-        id: 'sw-update',
-        action: {
-          label: 'Atualizar agora',
-          onClick: () => {
-            applyUpdate();
-          }
-        },
-        cancel: {
-          label: 'Depois',
-          onClick: () => {
-            // Usuário optou por atualizar depois
-            console.log('[SW] Usuário optou por atualizar depois');
-          }
-        }
-      });
-
-      // Notificar via window event para outros componentes
-      window.dispatchEvent(new CustomEvent('sw-update-available'));
-    };
-
-    const applyUpdate = () => {
-      if (!registration?.waiting) {
-        console.warn('[SW] Nenhum SW esperando para ativar');
-        return;
-      }
-
-      setState(prev => ({ ...prev, isUpdating: true }));
-
-      // Enviar mensagem para o SW pular espera e ativar
-      registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-
-      // Quando o SW se tornar controller, recarregar a página
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.log('[SW] Novo controller ativado, recarregando...');
-        window.location.reload();
-      }, { once: true });
-
-      // Fallback: recarregar após 2 segundos se controllerchange não disparar
-      setTimeout(() => {
-        console.log('[SW] Recarregando página (fallback)');
-        window.location.reload();
-      }, 2000);
-    };
-
-    // Registrar quando a página carregar
-    if (navigator.serviceWorker) {
-      registerSW();
-    }
+    registerSW();
 
     // Cleanup
     return () => {
-      if (registration) {
-        registration.removeEventListener('updatefound', handleUpdateFound);
-      }
       if (updateCheckInterval) {
         clearInterval(updateCheckInterval);
       }
@@ -152,6 +145,7 @@ export function useServiceWorkerUpdate() {
 
   // Função para atualização manual (pode ser chamada de outros componentes)
   const forceUpdate = () => {
+    console.log('[SW] Forçando atualização manual');
     setState(prev => ({ ...prev, isUpdating: true }));
     window.location.reload();
   };
@@ -159,6 +153,7 @@ export function useServiceWorkerUpdate() {
   return {
     hasUpdate: state.hasUpdate,
     isUpdating: state.isUpdating,
+    offlineReady: state.offlineReady,
     forceUpdate
   };
 }
@@ -180,23 +175,4 @@ export function onServiceWorkerUpdate(callback: () => void): () => void {
   const handler = () => callback();
   window.addEventListener('sw-update-available', handler);
   return () => window.removeEventListener('sw-update-available', handler);
-}
-
-/**
- * Verifica manualmente por atualizações do SW
- */
-export async function checkForUpdate(): Promise<boolean> {
-  if (!('serviceWorker' in navigator)) {
-    return false;
-  }
-
-  try {
-    const registration = await navigator.serviceWorker.getRegistration();
-    if (!registration) return false;
-
-    await registration.update();
-    return true;
-  } catch {
-    return false;
-  }
 }

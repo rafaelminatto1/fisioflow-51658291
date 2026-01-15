@@ -21,7 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import { PatientEditModal } from './PatientEditModal';
 import { PatientDeleteDialog } from './PatientDeleteDialog';
 import { useUpdatePatientStatus } from '@/hooks/usePatientCrud';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import type { Patient } from '@/hooks/usePatientCrud';
 
 interface PatientActionsProps {
@@ -37,7 +37,6 @@ const statusOptions = [
 
 export const PatientActions: React.FC<PatientActionsProps> = ({ patient }) => {
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);

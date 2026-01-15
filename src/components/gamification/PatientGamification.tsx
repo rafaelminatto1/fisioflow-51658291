@@ -15,13 +15,15 @@ import {
   Lock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useGamification } from '@/hooks/useGamification';
+import { useGamification, type Achievement } from '@/hooks/useGamification';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 import * as Icons from 'lucide-react';
 import { JourneyMap } from './JourneyMap';
 import { DailyQuests } from './DailyQuests';
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface PatientGamificationProps {
   patientId: string;
@@ -66,6 +68,60 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
     } finally {
       setIsGivingXp(false);
     }
+  };
+
+  const renderAchievementCard = (achievement: Achievement) => {
+    const unlocked = unlockedAchievements.find(ua => ua.achievement_id === achievement.id);
+    const Icon = getIcon(achievement.icon, Star);
+
+    return (
+      <Card
+        key={achievement.id}
+        className={cn(
+          "transition-all duration-300 hover:scale-[1.02]",
+          unlocked
+            ? "border-primary/40 bg-gradient-to-br from-primary/5 to-transparent shadow-md"
+            : "border-border/60 bg-muted/20 opacity-80"
+        )}
+      >
+        <CardContent className="p-4 flex items-start gap-4">
+          <div className={cn(
+            "p-3 rounded-xl shadow-sm transition-colors",
+            unlocked
+              ? "bg-gradient-to-br from-primary/20 to-primary/10 text-primary ring-1 ring-primary/20"
+              : "bg-muted text-muted-foreground grayscale"
+          )}>
+            <Icon className="h-6 w-6" />
+          </div>
+          <div className="flex-1 space-y-1">
+            <div className="flex items-center justify-between">
+              <h4 className={cn("font-semibold", !unlocked && "text-muted-foreground")}>
+                {achievement.title}
+              </h4>
+              {unlocked ? (
+                <Badge variant="secondary" className="bg-green-500/15 text-green-600 dark:text-green-400 hover:bg-green-500/25 border-green-500/20 text-[10px] px-2">
+                  Completo
+                </Badge>
+              ) : (
+                <div className="flex items-center text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                  <Lock className="h-3 w-3 mr-1" />
+                  {achievement.xp_reward} XP
+                </div>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground leading-snug">
+              {achievement.description}
+            </p>
+            {unlocked && (
+              <p className="text-[10px] text-muted-foreground pt-1 flex items-center">
+                <Icons.CheckCheck className="h-3 w-3 mr-1 text-primary" />
+                Desbloqueado {unlocked.unlocked_at && formatDistanceToNow(new Date(unlocked.unlocked_at), { addSuffix: true, locale: ptBR })}
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
   };
 
   if (isLoading) {
@@ -192,61 +248,44 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
           <Award className="h-5 w-5 text-primary" />
           Conquistas
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {allAchievements.map((achievement) => {
-            const unlocked = unlockedAchievements.find(ua => ua.achievement_id === achievement.id);
-            const Icon = getIcon(achievement.icon, Star);
+        
+        <Tabs defaultValue="all" className="w-full">
+          <TabsList className="w-full justify-start overflow-x-auto h-auto p-1 bg-muted/50">
+            <TabsTrigger value="all" className="rounded-full px-4 text-xs sm:text-sm">Todas</TabsTrigger>
+            <TabsTrigger value="streak" className="rounded-full px-4 text-xs sm:text-sm">Consistência</TabsTrigger>
+            <TabsTrigger value="milestone" className="rounded-full px-4 text-xs sm:text-sm">Marcos</TabsTrigger>
+            <TabsTrigger value="timing" className="rounded-full px-4 text-xs sm:text-sm">Horários</TabsTrigger>
+            <TabsTrigger value="recovery" className="rounded-full px-4 text-xs sm:text-sm">Saúde</TabsTrigger>
+            <TabsTrigger value="level" className="rounded-full px-4 text-xs sm:text-sm">Níveis</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="all" className="mt-4 animate-in fade-in-50 duration-500 slide-in-from-bottom-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {allAchievements.map(renderAchievementCard)}
+              {allAchievements.length === 0 && (
+                <div className="col-span-full text-center py-8 text-muted-foreground text-sm">
+                   Nenhuma conquista disponível.
+                </div>
+              )}
+            </div>
+          </TabsContent>
 
-            return (
-              <Card
-                key={achievement.id}
-                className={cn(
-                  "transition-all duration-300 hover:scale-[1.02]",
-                  unlocked
-                    ? "border-primary/40 bg-gradient-to-br from-primary/5 to-transparent shadow-md"
-                    : "border-border/60 bg-muted/20 opacity-80"
-                )}
-              >
-                <CardContent className="p-4 flex items-start gap-4">
-                  <div className={cn(
-                    "p-3 rounded-xl shadow-sm transition-colors",
-                    unlocked
-                      ? "bg-gradient-to-br from-primary/20 to-primary/10 text-primary ring-1 ring-primary/20"
-                      : "bg-muted text-muted-foreground grayscale"
-                  )}>
-                    <Icon className="h-6 w-6" />
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <h4 className={cn("font-semibold", !unlocked && "text-muted-foreground")}>
-                        {achievement.title}
-                      </h4>
-                      {unlocked ? (
-                        <Badge variant="secondary" className="bg-green-500/15 text-green-600 dark:text-green-400 hover:bg-green-500/25 border-green-500/20 text-[10px] px-2">
-                          Completo
-                        </Badge>
-                      ) : (
-                        <div className="flex items-center text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                          <Lock className="h-3 w-3 mr-1" />
-                          {achievement.xp_reward} XP
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground leading-snug">
-                      {achievement.description}
-                    </p>
-                    {unlocked && (
-                      <p className="text-[10px] text-muted-foreground pt-1 flex items-center">
-                        <Icons.CheckCheck className="h-3 w-3 mr-1 text-primary" />
-                        Desbloqueado {unlocked.unlocked_at && formatDistanceToNow(new Date(unlocked.unlocked_at), { addSuffix: true, locale: ptBR })}
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
+          {['streak', 'milestone', 'timing', 'recovery', 'level'].map(tab => {
+             const filtered = allAchievements.filter(a => a.category === tab);
+             return (
+              <TabsContent key={tab} value={tab} className="mt-4 animate-in fade-in-50 duration-500 slide-in-from-bottom-2">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   {filtered.map(renderAchievementCard)}
+                   {filtered.length === 0 && (
+                      <div className="col-span-full text-center py-8 text-muted-foreground text-sm border border-dashed rounded-lg">
+                          Nenhuma conquista nesta categoria ainda.
+                      </div>
+                   )}
+                 </div>
+              </TabsContent>
+             );
           })}
-        </div>
+        </Tabs>
       </div>
 
       {/* Recent Rewards / History */}

@@ -9,7 +9,7 @@ export { PatientAdvancedFilters } from './PatientAdvancedFilters';
 export { PatientAnalytics } from './PatientAnalytics';
 
 // Utilities
-export { countActiveFilters, matchesFilters } from './PatientAdvancedFilters';
+export { countActiveFilters, matchesFilters, type PatientFilters } from './patientFiltersUtils';
 
 // Types
-export type { PatientFilters, PatientAdvancedFiltersProps } from './PatientAdvancedFilters';
+export type { PatientAdvancedFiltersProps } from './PatientAdvancedFilters';

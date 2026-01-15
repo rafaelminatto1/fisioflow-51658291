@@ -80,10 +80,13 @@ export const useNotifications = (limit = 10) => {
   });
 
   // Real-time subscription
+  // FIX: Track subscription state to avoid WebSocket errors
   useEffect(() => {
-    let isSubscribed = true;
-    const channel = supabase
-      .channel('notifications-realtime')
+    let mounted = true;
+    let isSubscribed = false;
+    const channel = supabase.channel('notifications-realtime');
+
+    (channel as any)
       .on(
         'postgres_changes',
         {
@@ -92,7 +95,7 @@ export const useNotifications = (limit = 10) => {
           table: 'notifications',
         },
         (payload) => {
-          if (!isSubscribed) return;
+          if (!mounted) return;
           const newNotification = payload.new as Notification;
 
           // Show toast for new notification
@@ -104,21 +107,19 @@ export const useNotifications = (limit = 10) => {
           queryClient.invalidateQueries({ queryKey: ['notifications'] });
         }
       )
-      .subscribe();
-
-    return () => {
-      isSubscribed = false;
-      // Properly cleanup: unsubscribe first, then remove channel
-      channel.unsubscribe().then(() => {
-        supabase.removeChannel(channel);
-      }).catch(() => {
-        // Ignore cleanup errors - channel may already be closed
-        try {
-          supabase.removeChannel(channel);
-        } catch {
-          // Ignore
+      .subscribe((status: string) => {
+        if (status === 'SUBSCRIBED') {
+          isSubscribed = true;
         }
       });
+
+    return () => {
+      mounted = false;
+      if (isSubscribed) {
+        supabase.removeChannel(channel).catch(() => {
+          // Ignore cleanup errors
+        });
+      }
     };
   }, [queryClient]);
 

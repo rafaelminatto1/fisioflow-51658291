@@ -6,7 +6,7 @@ import { Database } from '@/integrations/supabase/types';
 // Deriving types from Database definition
 type PatientGamification = Database['public']['Tables']['patient_gamification']['Row'];
 type XPTransaction = Database['public']['Tables']['xp_transactions']['Row'];
-type Achievement = Database['public']['Tables']['achievements']['Row'];
+export type Achievement = Database['public']['Tables']['achievements']['Row'];
 type UnlockedAchievement = Database['public']['Tables']['achievements_log']['Row'];
 
 export type GamificationProfile = PatientGamification;
@@ -245,6 +245,87 @@ export const useGamification = (patientId: string) => {
       }
     }
   });
+
+  // Check and Unlock Achievements (Effect)
+  // We define it as a function inside useEffect or separate to avoid circular deps in definition,
+  // but we need it to trigger on profile/sessions change.
+  // We use a separate useEffect for this.
+
+  useEffect(() => {
+    const checkAchievements = async () => {
+      if (!profile || !allAchievements.length || isLoadingProfile) return;
+
+      const newUnlocks: Achievement[] = [];
+
+      for (const achievement of allAchievements) {
+        // Skip if already unlocked
+        const isUnlocked = unlockedAchievements.some(ua => ua.achievement_id === achievement.id);
+        if (isUnlocked) continue;
+
+        let requirements: any = achievement.requirements;
+        // Normalize JSONB
+        if (typeof requirements === 'string') {
+          try { 
+            requirements = JSON.parse(requirements); 
+          } catch {
+            // Ignore parsing error
+          }
+        }
+        if (!requirements) continue;
+
+        let unlocked = false;
+
+        // Check conditions
+        if (requirements.type === 'streak') {
+           const target = Number(requirements.count || 0);
+           if ((profile.longest_streak || 0) >= target) unlocked = true;
+           if ((profile.current_streak || 0) >= target) unlocked = true;
+        } else if (requirements.type === 'sessions') {
+           const target = Number(requirements.count || 0);
+           if ((totalSessions || 0) >= target) unlocked = true;
+        } else if (requirements.type === 'level') {
+           const target = Number(requirements.count || 0);
+           if ((profile.level || 1) >= target) unlocked = true;
+        }
+
+        if (unlocked) {
+          // Perform unlock
+          const { error } = await supabase.from('achievements_log').insert({
+            patient_id: patientId,
+            achievement_id: achievement.id,
+            achievement_title: achievement.title,
+            xp_reward: achievement.xp_reward,
+            unlocked_at: new Date().toISOString()
+          });
+
+          if (!error) {
+            newUnlocks.push(achievement);
+            // Award XP (Note: this triggers another profile update, which triggers this effect again.
+            // But since we just inserted into achievements_log, next run 'isUnlocked' will be true, stopping the loop.)
+            await awardXp.mutateAsync({
+                amount: achievement.xp_reward || 0,
+                reason: 'achievement_unlocked',
+                description: `Conquista: ${achievement.title}`
+            });
+          }
+        }
+      }
+
+      if (newUnlocks.length > 0) {
+        queryClient.invalidateQueries({ queryKey: ['unlocked-achievements', patientId] });
+        newUnlocks.forEach(a => {
+          toast({
+            title: "Conquista Desbloqueada! 🏆",
+            description: a.title,
+            className: "bg-yellow-500 text-white border-none shadow-xl"
+          });
+        });
+      }
+    };
+
+    checkAchievements();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile, totalSessions, allAchievements, unlockedAchievements.length]); // key on unlocked count to avoid rapid firing, or just profile
 
   const completeQuest = useMutation({
     mutationFn: async ({ questId }: { questId: string }) => {

@@ -30,39 +30,17 @@ window.addEventListener('unhandledrejection', (event) => {
 });
 
 // ============================================================================
-// SERVICE WORKER UPDATE HANDLER
+// SERVICE WORKER MESSAGE HANDLER
 // ============================================================================
 
 // Configurar handler para mensagens do Service Worker
+// O VitePWA envia mensagens quando há atualizações
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('message', (event) => {
     if (event.data?.type === 'SKIP_WAITING') {
       // SW solicitou ativação imediata
       console.log('[SW] Skip waiting recebido, recarregando...');
       window.location.reload();
-    }
-  });
-
-  // Limpar caches antigos ao iniciar
-  window.addEventListener('load', async () => {
-    try {
-      // Aguardar um momento para o SW estar pronto
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const registrations = await navigator.serviceWorker.getRegistrations();
-
-      for (const registration of registrations) {
-        // Verificar se há um SW esperando ativação (de deploy anterior)
-        if (registration.waiting) {
-          console.log('[SW] SW waiting detectado, ativando...');
-          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-          // Recarregar após ativar
-          setTimeout(() => window.location.reload(), 1000);
-          return;
-        }
-      }
-    } catch (error) {
-      console.warn('[SW] Erro ao verificar SWs existentes:', error);
     }
   });
 }
