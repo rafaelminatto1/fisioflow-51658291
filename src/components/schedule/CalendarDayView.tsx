@@ -208,7 +208,7 @@ const CalendarDayView = memo(({
 
                     {/* Appointments overlay - with stacking support */}
                     {(() => {
-                        // Agrupar appointments por horário para calcular offset horizontal
+                        // Group appointments by time for horizontal offset calculation
                         const appointmentsByTime: Record<string, Appointment[]> = {};
                         dayAppointments.forEach(apt => {
                             // Safety check for time - handle null, undefined, or empty string
@@ -230,16 +230,20 @@ const CalendarDayView = memo(({
 
                             if (slotIndex === -1) return null;
 
-                            // Calcular offset horizontal para appointments empilhados
+                            // Check if this appointment's time slot is blocked
+                            const isTimeSlotBlocked = isTimeBlocked(aptTime);
+                            const isDropTarget = dropTarget && isSameDay(dropTarget.date, currentDate) && dropTarget.time === aptTime;
+
+                            // Calculate horizontal offset for stacked appointments
                             const sameTimeAppointments = appointmentsByTime[aptTime] || [];
                             const stackIndex = sameTimeAppointments.findIndex(a => a.id === apt.id);
                             const stackCount = sameTimeAppointments.length;
 
-                            // Calcular largura e offset baseado em quantos appointments estão empilhados
+                            // Calculate width and offset based on how many appointments are stacked
                             const widthPercent = stackCount > 1 ? (100 / stackCount) - 2 : 100;
                             const leftOffset = stackCount > 1 ? (stackIndex * (100 / stackCount)) + 1 : 0;
 
-                            // Calcular altura baseada na duração (cada slot = 80px desktop, 64px mobile, cada slot = 30min)
+                            // Calculate height based on duration (each slot = 80px desktop, 64px mobile, each slot = 30min)
                             const duration = apt.duration || 60;
                             const heightMobile = (duration / 30) * 64;
                             const heightDesktop = (duration / 30) * 80;
@@ -255,7 +259,7 @@ const CalendarDayView = memo(({
                                 left: stackCount > 1 ? `${leftOffset}%` : '4px',
                                 right: stackCount > 1 ? 'auto' : '4px',
                                 width: stackCount > 1 ? `${widthPercent}%` : 'calc(100% - 8px)',
-                                zIndex: isDraggingThis ? 5 : (stackCount > 1 ? 20 : 1),
+                                zIndex: isDraggingThis ? 5 : (isDropTarget ? 25 : (stackCount > 1 ? 20 : 1)),
                                 ['--top-desktop' as string]: `${topDesktop}px`,
                                 ['--height-desktop' as string]: `${heightDesktop}px`,
                                 transform: isDraggingThis ? 'rotate(2deg)' : undefined,
@@ -268,8 +272,21 @@ const CalendarDayView = memo(({
                                     style={style}
                                     isDraggable={isDraggable}
                                     isDragging={isDraggingThis}
+                                    isDropTarget={isDropTarget}
                                     onDragStart={handleDragStart}
                                     onDragEnd={handleDragEnd}
+                                    onDragOver={(e) => {
+                                        // Allow dropping on existing appointments to add multiple at same time
+                                        if (!isDraggingThis && !isTimeSlotBlocked) {
+                                            handleDragOver(e, currentDate, aptTime);
+                                        }
+                                    }}
+                                    onDrop={(e) => {
+                                        // Allow dropping on existing appointments to add multiple at same time
+                                        if (!isDraggingThis && !isTimeSlotBlocked) {
+                                            handleDrop(e, currentDate, aptTime);
+                                        }
+                                    }}
                                     onEditAppointment={onEditAppointment}
                                     onDeleteAppointment={onDeleteAppointment}
                                     onOpenPopover={setOpenPopoverId}
