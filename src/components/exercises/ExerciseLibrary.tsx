@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   Play, Search, Edit, Trash2, Heart, Dumbbell,
   Video, Clock, Repeat, LayoutGrid, List, VideoOff,
-  Eye, MoreVertical
+  Eye, MoreVertical, Merge, Filter
 } from 'lucide-react';
 import { useExercises, type Exercise } from '@/hooks/useExercises';
 import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';
@@ -29,8 +29,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { ExerciseViewModal } from './ExerciseViewModal';
 import { EmptyState } from '@/components/ui/empty-state';
+import { ExerciseFiltersPanel, type ExerciseFiltersState } from './ExerciseFiltersPanel';
+import { MergeExercisesModal } from './MergeExercisesModal';
 
 interface ExerciseLibraryProps {
   onSelectExercise?: (exercise: Exercise) => void;
@@ -349,7 +356,15 @@ import { CreateTemplateFromSelectionModal } from './CreateTemplateFromSelectionM
 
 export function ExerciseLibrary({ onSelectExercise: _onSelectExercise, onEditExercise }: ExerciseLibraryProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  // ... (existing state)
+  // Filter panel state
+  const [showFilters, setShowFilters] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState<ExerciseFiltersState>({
+    bodyParts: [],
+    difficulty: [],
+    categories: [],
+    equipment: [],
+    homeOnly: false,
+  });
   const [activeFilter, setActiveFilter] = useState<'all' | 'favorites' | 'no-video'>('all');
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [viewExercise, setViewExercise] = useState<Exercise | null>(null);
@@ -358,25 +373,69 @@ export function ExerciseLibrary({ onSelectExercise: _onSelectExercise, onEditExe
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedExercises, setSelectedExercises] = useState<string[]>([]);
   const [showCreateTemplateModal, setShowCreateTemplateModal] = useState(false);
+  const [showMergeModal, setShowMergeModal] = useState(false);
 
-  const { exercises, loading, deleteExercise, isDeleting } = useExercises();
+  const { exercises, loading, deleteExercise, mergeExercises, isDeleting, isMerging } = useExercises();
   const { isFavorite, toggleFavorite } = useExerciseFavorites();
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const filteredExercises = useMemo(() => {
     return exercises.filter(exercise => {
+      // Text search
       const matchesSearch = (exercise.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
         (exercise.description?.toLowerCase() || '').includes(searchTerm.toLowerCase());
 
       if (!matchesSearch) return false;
 
+      // Quick filters
       if (activeFilter === 'favorites') return isFavorite(exercise.id);
       if (activeFilter === 'no-video') return !exercise.video_url;
 
+      // Advanced filters - Body Parts
+      if (advancedFilters.bodyParts.length > 0) {
+        const exerciseBodyParts = exercise.body_parts || [];
+        const hasMatchingBodyPart = advancedFilters.bodyParts.some(bp =>
+          exerciseBodyParts.some(ebp => ebp.toLowerCase().includes(bp.toLowerCase()))
+        );
+        if (!hasMatchingBodyPart) return false;
+      }
+
+      // Advanced filters - Difficulty
+      if (advancedFilters.difficulty.length > 0) {
+        if (!exercise.difficulty || !advancedFilters.difficulty.includes(exercise.difficulty)) {
+          return false;
+        }
+      }
+
+      // Advanced filters - Categories
+      if (advancedFilters.categories.length > 0) {
+        if (!exercise.category || !advancedFilters.categories.includes(exercise.category)) {
+          return false;
+        }
+      }
+
+      // Advanced filters - Equipment
+      if (advancedFilters.equipment.length > 0) {
+        const exerciseEquipment = exercise.equipment || [];
+        const hasMatchingEquipment = advancedFilters.equipment.some(eq =>
+          exerciseEquipment.some(eeq => eeq.toLowerCase().includes(eq.toLowerCase()))
+        );
+        if (!hasMatchingEquipment) return false;
+      }
+
+      // Home-only filter
+      if (advancedFilters.homeOnly) {
+        const homeEquipment = ['Peso Corporal', 'Toalha', 'Cadeira', 'Parede', 'Garrafa de Água', 'Travesseiro', 'Tapete/Esteira', 'Vassoura/Cabo de Madeira'];
+        const exerciseEquipment = exercise.equipment || [];
+        const isHomeExercise = exerciseEquipment.length === 0 ||
+          exerciseEquipment.every(eq => homeEquipment.some(he => eq.toLowerCase().includes(he.toLowerCase())));
+        if (!isHomeExercise) return false;
+      }
+
       return true;
     });
-  }, [exercises, searchTerm, activeFilter, isFavorite]);
+  }, [exercises, searchTerm, activeFilter, isFavorite, advancedFilters]);
 
   const handleDelete = async () => {
     if (deleteId) {
@@ -483,6 +542,25 @@ export function ExerciseLibrary({ onSelectExercise: _onSelectExercise, onEditExe
             >
               {isSelectionMode ? 'Cancelar Seleção' : 'Selecionar Vários'}
             </Button>
+            <div className="h-4 w-px bg-border" />
+            <Button
+              variant={showFilters ? 'secondary' : 'outline'}
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className="h-8 gap-2"
+            >
+              <Filter className="h-3 w-3" />
+              Mais Filtros
+              {(advancedFilters.bodyParts.length + advancedFilters.difficulty.length +
+                advancedFilters.categories.length + advancedFilters.equipment.length +
+                (advancedFilters.homeOnly ? 1 : 0)) > 0 && (
+                  <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                    {advancedFilters.bodyParts.length + advancedFilters.difficulty.length +
+                      advancedFilters.categories.length + advancedFilters.equipment.length +
+                      (advancedFilters.homeOnly ? 1 : 0)}
+                  </Badge>
+                )}
+            </Button>
           </div>
 
           <div className="flex items-center gap-2">
@@ -503,6 +581,20 @@ export function ExerciseLibrary({ onSelectExercise: _onSelectExercise, onEditExe
             {/* ... (existing view mode toggle) */}
           </div>
         </div>
+
+        {/* Advanced Filters Panel */}
+        <Collapsible open={showFilters} onOpenChange={setShowFilters}>
+          <CollapsibleContent className="animate-in slide-in-from-top-2 duration-200">
+            <div className="border rounded-lg p-4 bg-muted/30">
+              <ExerciseFiltersPanel
+                filters={advancedFilters}
+                onFiltersChange={setAdvancedFilters}
+                totalCount={exercises.length}
+                filteredCount={filteredExercises.length}
+              />
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
 
       {/* Exercise Grid/List */}
@@ -583,6 +675,17 @@ export function ExerciseLibrary({ onSelectExercise: _onSelectExercise, onEditExe
           >
             Favoritar Todos
           </Button>
+          {selectedExercises.length >= 2 && (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => setShowMergeModal(true)}
+              className="gap-1"
+            >
+              <Merge className="h-3 w-3" />
+              Unir Exercícios
+            </Button>
+          )}
         </div>
       )}
 
@@ -628,6 +731,19 @@ export function ExerciseLibrary({ onSelectExercise: _onSelectExercise, onEditExe
         selectedExerciseIds={selectedExercises}
         onSuccess={() => {
           setShowCreateTemplateModal(false);
+          setIsSelectionMode(false);
+          setSelectedExercises([]);
+        }}
+      />
+
+      {/* Merge Exercises Modal */}
+      <MergeExercisesModal
+        open={showMergeModal}
+        onOpenChange={setShowMergeModal}
+        exercises={exercises.filter(e => selectedExercises.includes(e.id))}
+        onMerge={async (keepId, mergeIds) => {
+          await mergeExercises(keepId, mergeIds);
+          setShowMergeModal(false);
           setIsSelectionMode(false);
           setSelectedExercises([]);
         }}

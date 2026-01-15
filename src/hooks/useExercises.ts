@@ -64,6 +64,19 @@ export const useExercises = (filters?: ExerciseFilters) => {
     },
   });
 
+  const mergeMutation = useMutation({
+    mutationFn: ({ keepId, mergeIds }: { keepId: string; mergeIds: string[] }) =>
+      exerciseService.mergeExercises(keepId, mergeIds),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['exercises'] });
+      toast.success(`${data.deletedCount} exercício(s) unido(s) com sucesso`);
+    },
+    onError: (error: Error) => {
+      logger.error('Erro ao unir exercícios', error, 'useExercises');
+      toast.error('Erro ao unir exercícios: ' + error.message);
+    },
+  });
+
   return {
     exercises,
     loading: isLoading,
@@ -71,8 +84,11 @@ export const useExercises = (filters?: ExerciseFilters) => {
     createExercise: createMutation.mutate,
     updateExercise: updateMutation.mutate,
     deleteExercise: deleteMutation.mutate,
+    mergeExercises: (keepId: string, mergeIds: string[]) =>
+      mergeMutation.mutateAsync({ keepId, mergeIds }),
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
+    isMerging: mergeMutation.isPending,
   };
 };

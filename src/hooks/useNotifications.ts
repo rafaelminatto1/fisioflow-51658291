@@ -51,7 +51,7 @@ export const useNotifications = (limit = 10) => {
         .from('notifications')
         .update({ is_read: true })
         .eq('id', notificationId);
-      
+
       if (error) throw error;
     },
     onSuccess: () => {
@@ -70,7 +70,7 @@ export const useNotifications = (limit = 10) => {
         .update({ is_read: true })
         .eq('user_id', user.id)
         .eq('is_read', false);
-      
+
       if (error) throw error;
     },
     onSuccess: () => {
@@ -81,6 +81,7 @@ export const useNotifications = (limit = 10) => {
 
   // Real-time subscription
   useEffect(() => {
+    let isSubscribed = true;
     const channel = supabase
       .channel('notifications-realtime')
       .on(
@@ -91,13 +92,14 @@ export const useNotifications = (limit = 10) => {
           table: 'notifications',
         },
         (payload) => {
+          if (!isSubscribed) return;
           const newNotification = payload.new as Notification;
-          
+
           // Show toast for new notification
           toast(newNotification.title, {
             description: newNotification.message,
           });
-          
+
           // Refetch notifications
           queryClient.invalidateQueries({ queryKey: ['notifications'] });
         }
@@ -105,7 +107,18 @@ export const useNotifications = (limit = 10) => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      isSubscribed = false;
+      // Properly cleanup: unsubscribe first, then remove channel
+      channel.unsubscribe().then(() => {
+        supabase.removeChannel(channel);
+      }).catch(() => {
+        // Ignore cleanup errors - channel may already be closed
+        try {
+          supabase.removeChannel(channel);
+        } catch {
+          // Ignore
+        }
+      });
     };
   }, [queryClient]);
 

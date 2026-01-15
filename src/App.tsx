@@ -167,9 +167,17 @@ const App = () => {
                   <Suspense fallback={<PageLoadingFallback />}>
                     <AppRoutes />
                     <VersionManager />
-                    {/* Vercel Analytics - Only in production */}
-                    {Analytics && <Analytics />}
-                    {SpeedInsights && <SpeedInsights />}
+                    {/* Vercel Analytics - Only in production, isolated with ErrorBoundary */}
+                    {Analytics && (
+                      <ErrorBoundary fallback={null}>
+                        <Analytics />
+                      </ErrorBoundary>
+                    )}
+                    {SpeedInsights && (
+                      <ErrorBoundary fallback={null}>
+                        <SpeedInsights />
+                      </ErrorBoundary>
+                    )}
                     <WebVitalsIndicator />
 
                   </Suspense>
