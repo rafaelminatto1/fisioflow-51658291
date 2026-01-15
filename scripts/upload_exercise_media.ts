@@ -59,6 +59,29 @@ const images = [
     { id: 'c391fb48-73f8-4bdc-935c-09fce60fd525', file: 'external_rotation_1768440992167.png' }, // Rotação Externa com Faixa
     { id: '668869ad-e594-4478-954f-1ef95cd9c9f5', file: 'single_leg_stance_1768441041444.png' }, // Apoio Unipodal
     { id: '68a79743-9985-40a5-bd88-585927eebafc', file: 'tandem_walk_1768441056605.png' }, // Tandem Walk
+    // Phase 4 Images - Unique exercise images
+    { id: '7db917f8-3898-461f-a055-5d55b20ca8c7', file: 'cat_cow_stretch_1768479503593.png' }, // Gato-Vaca
+    { id: '239e1bc5-a8f7-45c9-bd60-61b5d56f349b', file: 'wall_biceps_stretch_1768479517784.png' }, // Alongamento Bíceps Parede
+    { id: '224db92d-6e32-4721-8c3c-753668b57090', file: 'supine_glute_stretch_1768479533430.png' }, // Alongamento Glúteo Supino
+    { id: 'c6c42235-1dba-48bc-8505-6a55783956ea', file: 'quadriceps_standing_stretch_1768479546584.png' }, // Alongamento Quadríceps em Pé
+    { id: '09a61106-323b-4716-bc12-c7bbd931ba0b', file: 'triceps_behind_stretch_1768479560106.png' }, // Alongamento Tríceps
+    { id: '21aba699-3698-49d9-a98f-d7b0d58b55d2', file: 'seated_calf_stretch_1768479586314.png' }, // Alongamento Panturrilha Sentado
+    { id: '7a03c9f5-99dc-405a-88ba-b4893fd0b793', file: 'rhomboid_wall_stretch_1768479601594.png' }, // Alongamento Rombóides
+    { id: '53782b5c-1f5c-4fb5-9b41-f89c531a6b2d', file: 'abdominal_plank_1768479617534.png' }, // Prancha Abdominal
+    { id: '575d07c7-bc3d-429c-9f04-7fdc752fb230', file: 'abdominal_plank_1768479617534.png' }, // Prancha Abdominal (duplicate)
+    { id: 'b7262ed6-7e26-492e-a14c-59c7ad0e69f4', file: 'finger_coordination_1768479631705.png' }, // Coordenação Digital
+    { id: '6d684cbf-b694-4dc5-98a5-9e861c4c4126', file: 'eye_hand_coordination_1768479644385.png' }, // Coordenação Óculo-Manual
+    { id: 'b636b2ba-2580-4425-bd36-621bb765d94b', file: 'cross_pattern_gait_1768479672539.png' }, // Marcha Padrões Cruzados
+    { id: 'f2b4628e-d77a-4914-8b8c-17e254bc0134', file: 'texture_floor_walk_1768479686632.png' }, // Tapete Pisos Diferentes
+    { id: 'df9c5648-6627-49af-8a84-8fd3f0b2f9bc', file: 'unstable_disc_squat_1768479698765.png' }, // Agachamento Disco Instável
+    { id: '9058e05e-b006-4b1c-bd7e-9b285b94aaba', file: 'bosu_ball_squat_1768479713156.png' }, // BOSU Ball Squat
+    { id: '763de08e-c8a2-4cfa-be64-4913c77b0317', file: 'balance_disc_standing_1768479726533.png' }, // Equilíbrio Disco Instável
+    { id: 'c89ba4e7-0394-47ac-a11a-bb359cac5422', file: 'unipodal_balance_1768479763859.png' }, // Equilíbrio Unipodal Solo
+    { id: 'b1ac6203-b1f7-4965-aec6-ccd3e7391501', file: 'mini_landing_protocol_1768479778340.png' }, // Mini-Landing Protocol
+    { id: '825b7a90-c599-40fe-8bcf-839fc1655255', file: 'proprioception_disc_1768479793104.png' }, // Propriocepção em Disco
+    { id: '38d6a2e2-adc7-47cd-a7c9-550996f9a892', file: 'single_leg_arm_movement_1768479806910.png' }, // Single Leg Stance com Movimento
+    { id: '437b9b5e-2cb7-4a8f-9f00-ea60a0879475', file: 'star_balance_test_1768479821423.png' }, // Star Excursion Balance Test
+    { id: 'f8b620c0-a01f-4a3e-acc9-589105ad57a6', file: 'hip_abduction_standing_1768479852430.png' }, // Abdução de Quadril em Pé
 ];
 
 async function upload() {
