@@ -50,7 +50,10 @@ export function useUsers() {
     mutationFn: async ({ userId, role }: { userId: string; role: AppRole }) => {
       const { error } = await supabase
         .from('user_roles')
-        .insert({ user_id: userId, role });
+        .upsert(
+          { user_id: userId, role },
+          { onConflict: 'user_id,role', ignoreDuplicates: true }
+        );
 
       if (error) throw error;
     },
@@ -58,12 +61,21 @@ export function useUsers() {
       queryClient.invalidateQueries({ queryKey: ['users-with-roles'] });
       toast({ title: 'Função adicionada com sucesso' });
     },
-    onError: (error: Error) => {
-      toast({
-        title: 'Erro ao adicionar função',
-        description: error.message,
-        variant: 'destructive',
-      });
+    onError: (error: any) => {
+      // If error is about duplicate, show a more friendly message
+      if (error?.code === '23505' || error?.message?.includes('unique')) {
+        toast({
+          title: 'Função já existe',
+          description: 'Este usuário já possui esta função.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Erro ao adicionar função',
+          description: error.message,
+          variant: 'destructive',
+        });
+      }
     },
   });
 

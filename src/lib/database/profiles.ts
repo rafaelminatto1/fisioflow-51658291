@@ -51,28 +51,19 @@ export const ensureProfile = async (userId: string, email?: string, fullName?: s
         }
 
         // 2. Ensure default role exists in user_roles
-        const { data: role, error: roleFetchError } = await supabase
+        // Use upsert with on_conflict to handle race conditions gracefully
+        const { error: roleInsertError } = await supabase
             .from('user_roles')
-            .select('role')
-            .eq('user_id', userId)
-            .maybeSingle();
+            .upsert({
+                user_id: userId,
+                role: 'paciente'
+            }, {
+                onConflict: 'user_id,role',
+                ignoreDuplicates: true
+            });
 
-        if (roleFetchError) {
-            logger.error('Error fetching role in ensureProfile', roleFetchError, 'profiles-util');
-        }
-
-        if (!role) {
-            console.log('Role not found in ensureProfile, creating for:', userId);
-            const { error: roleInsertError } = await supabase
-                .from('user_roles')
-                .insert({
-                    user_id: userId,
-                    role: 'paciente'
-                });
-
-            if (roleInsertError && roleInsertError.code !== '23505') {
-                logger.error('Error inserting role in ensureProfile', roleInsertError, 'profiles-util');
-            }
+        if (roleInsertError && roleInsertError.code !== '23505') {
+            logger.error('Error inserting role in ensureProfile', roleInsertError, 'profiles-util');
         }
 
         return profileId || null;
