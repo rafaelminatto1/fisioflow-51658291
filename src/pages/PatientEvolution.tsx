@@ -45,7 +45,7 @@ import {
   useEvolutionMeasurements
 } from '@/hooks/usePatientEvolution';
 import { useAppointmentData } from '@/hooks/useAppointmentData';
-import { useCreateSoapRecord, useSoapRecords } from '@/hooks/useSoapRecords';
+import { useCreateSoapRecord, useSoapRecords, useAutoSaveSoapRecord } from '@/hooks/useSoapRecords';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { MeasurementForm } from '@/components/evolution/MeasurementForm';
@@ -212,6 +212,8 @@ const PatientEvolution = () => {
 
   // Mutation para salvar evolução
   const createSoapRecord = useCreateSoapRecord();
+  // Upsert hook that handles finding existing drafts
+  const autoSaveMutation = useAutoSaveSoapRecord();
 
 
 
@@ -222,14 +224,21 @@ const PatientEvolution = () => {
       if (!patientId || !appointmentId) return;
       if (!data.subjective && !data.objective && !data.assessment && !data.plan) return;
 
-      await createSoapRecord.mutateAsync({
+      // Use autoSaveMutation which handles upsert logic (find existing draft or create new)
+      const record = await autoSaveMutation.mutateAsync({
         patient_id: patientId,
         appointment_id: appointmentId,
+        recordId: currentSoapRecordId, // Pass current ID if we have it
         ...data
       });
+
+      // Update local state if we got a record ID (new or existing)
+      if (record?.id && record.id !== currentSoapRecordId) {
+        setCurrentSoapRecordId(record.id);
+      }
     },
     delay: 5000,
-    enabled: autoSaveEnabled && !createSoapRecord.isPending
+    enabled: autoSaveEnabled && !autoSaveMutation.isPending
   });
 
   // Agrupar medições por tipo para gráficos
@@ -315,9 +324,11 @@ const PatientEvolution = () => {
     }
 
     try {
-      const record = await createSoapRecord.mutateAsync({
+      // Use useAutoSaveSoapRecord (upsert logic) instead of createSoapRecord
+      const record = await autoSaveMutation.mutateAsync({
         patient_id: patientId,
         appointment_id: appointmentId,
+        recordId: currentSoapRecordId,
         subjective,
         objective,
         assessment,
@@ -327,7 +338,9 @@ const PatientEvolution = () => {
         pain_character: painScale.character
       });
 
-      setCurrentSoapRecordId(record.id);
+      if (record?.id) {
+        setCurrentSoapRecordId(record.id);
+      }
 
       // Save to treatment_sessions (Exercises Performed) with improved error handling
       const { data: { user } } = await supabase.auth.getUser();
