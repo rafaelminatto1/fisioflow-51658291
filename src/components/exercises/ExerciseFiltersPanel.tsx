@@ -26,6 +26,9 @@ import {
     FILTER_PRESETS,
     HOME_EQUIPMENT_GROUP,
     NO_EQUIPMENT_GROUP_ID,
+    BODY_PARTS,
+    CATEGORIES,
+    DIFFICULTY_LEVELS,
 } from '@/lib/constants/exerciseConstants';
 
 export interface ExerciseFiltersState {

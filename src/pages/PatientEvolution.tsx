@@ -58,6 +58,7 @@ import { SessionExercisesPanel, type SessionExercise } from '@/components/evolut
 import { PatientGamification } from '@/components/gamification/PatientGamification';
 import { useGamification } from '@/hooks/useGamification';
 import { WhatsAppIntegration } from '@/components/whatsapp/WhatsAppIntegration';
+import { useSessionExercises } from '@/hooks/useSessionExercises';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SessionTimer } from '@/components/evolution/SessionTimer';
 import { useAutoSave } from '@/hooks/useAutoSave';
@@ -75,6 +76,7 @@ import { EvolutionHeader } from '@/components/evolution/EvolutionHeader';
 import { EvolutionStats } from '@/components/evolution/EvolutionStats';
 import { EvolutionHistoryTab } from '@/components/evolution/EvolutionHistoryTab';
 
+import { EvolutionDraggableGrid } from '@/components/evolution/EvolutionDraggableGrid';
 import {
   EvolutionKeyboardShortcuts,
   useEvolutionShortcuts
@@ -119,13 +121,19 @@ const PatientEvolution = () => {
   const [showInsights, setShowInsights] = useState(true);
   const [showComparison, setShowComparison] = useState(false);
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
-  const [wordCount, setWordCount] = useState({ subjective: 0, objective: 0, assessment: 0, plan: 0 });
 
   // Estados do formulário SOAP
   const [subjective, setSubjective] = useState('');
   const [objective, setObjective] = useState('');
   const [assessment, setAssessment] = useState('');
   const [plan, setPlan] = useState('');
+
+  const setSoapDataStable = React.useCallback((data: { subjective: string; objective: string; assessment: string; plan: string }) => {
+    setSubjective(data.subjective);
+    setObjective(data.objective);
+    setAssessment(data.assessment);
+    setPlan(data.plan);
+  }, []);
 
   // Estado para escala de dor (EVA)
   const [painScale, setPainScale] = useState<PainScaleData>({ level: 0 });
@@ -136,6 +144,15 @@ const PatientEvolution = () => {
 
   // Exercises state
   const [sessionExercises, setSessionExercises] = useState<SessionExercise[]>([]);
+
+  const { lastSession, isLoadingLastSession, suggestExerciseChanges } = useSessionExercises(patientId || '');
+
+  // Load exercises from previous session if current session is empty
+  useEffect(() => {
+    if (lastSession?.exercises_performed && sessionExercises.length === 0 && !isLoadingLastSession) {
+      setSessionExercises(lastSession.exercises_performed as SessionExercise[]);
+    }
+  }, [lastSession, sessionExercises.length, isLoadingLastSession]);
 
   const { completeAppointment, isCompleting } = useAppointmentActions();
 
@@ -203,13 +220,13 @@ const PatientEvolution = () => {
   }, [previousEvolutions, goals, pathologies, measurements]);
 
   // Atualizar contagem de palavras - memoizado para performance
-  useEffect(() => {
-    setWordCount({
+  const currentWordCount = useMemo(() => {
+    return {
       subjective: subjective.split(/\s+/).filter(w => w.length > 0).length,
       objective: objective.split(/\s+/).filter(w => w.length > 0).length,
       assessment: assessment.split(/\s+/).filter(w => w.length > 0).length,
       plan: plan.split(/\s+/).filter(w => w.length > 0).length
-    });
+    };
   }, [subjective, objective, assessment, plan]);
 
   // Mutation para salvar evolução
@@ -682,25 +699,15 @@ const PatientEvolution = () => {
 
             {/* ========== TAB 1: EVOLUÇÃO (SOAP + Pain Scale + Photos) ========== */}
             <TabsContent value="evolucao" className="mt-4 space-y-4">
-              {/* Pain Scale Widget - Prominent */}
-              <PainScaleWidget
-                value={painScale}
-                onChange={setPainScale}
-                history={previousEvolutions
+              <EvolutionDraggableGrid
+                soapData={{ subjective, objective, assessment, plan }}
+                onSoapChange={setSoapDataStable}
+                painScaleData={painScale}
+                onPainScaleChange={setPainScale}
+                painHistory={previousEvolutions
                   .filter(e => e.pain_level !== null && e.pain_level !== undefined)
                   .map(e => ({ date: e.created_at, level: e.pain_level || 0 }))}
-                showTrend
-              />
-
-              {/* SOAP Accordion */}
-              <SOAPAccordion
-                data={{ subjective, objective, assessment, plan }}
-                onChange={(data) => {
-                  setSubjective(data.subjective);
-                  setObjective(data.objective);
-                  setAssessment(data.assessment);
-                  setPlan(data.plan);
-                }}
+                showPainTrend={true}
                 onAISuggest={(section) => {
                   setActiveTab('assistente');
                 }}
@@ -717,26 +724,22 @@ const PatientEvolution = () => {
                     });
                   }
                 }}
+                patientId={patientId}
+                patientPhone={patient?.phone}
+                soapRecordId={currentSoapRecordId}
+                requiredMeasurements={requiredMeasurements}
+                exercises={sessionExercises}
+                onExercisesChange={setSessionExercises}
+                onSuggestExercises={() => {
+                  const suggestions = suggestExerciseChanges(sessionExercises, painScale.level, assessment || '');
+                  setSessionExercises(suggestions);
+                  toast({
+                    title: 'Sugestões Aplicadas',
+                    description: 'Os exercícios foram evoluídos com base no progresso do paciente.'
+                  });
+                }}
               />
 
-              {/* Session Photos */}
-              {patientId && (
-                <Card className="border-border/50 shadow-sm">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <ImageIcon className="h-5 w-5 text-primary" />
-                      Fotos e Anexos
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <SessionImageUpload
-                      patientId={patientId}
-                      soapRecordId={currentSoapRecordId}
-                      maxFiles={5}
-                    />
-                  </CardContent>
-                </Card>
-              )}
             </TabsContent>
 
             {/* ========== TAB 2: AVALIAÇÃO (Measurements + Pain Map + Charts) ========== */}
