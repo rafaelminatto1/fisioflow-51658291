@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { DraggableGrid, GridItem } from '@/components/ui/DraggableGrid';
 import { GridWidget } from '@/components/ui/GridWidget';
 import { SmartTextarea } from '@/components/ui/SmartTextarea';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { User, Eye, Brain, ClipboardList, Sparkles, Copy, LayoutDashboard, Save, RotateCcw, Undo, Activity, TrendingDown, TrendingUp, Minus, ChevronUp, ChevronDown, ImageIcon, Dumbbell, House, History } from 'lucide-react';
 import { toast } from 'sonner';
@@ -15,11 +15,26 @@ import { HomeCareWidget } from '@/components/evolution/HomeCareWidget';
 import { SessionExercise } from '@/components/evolution/SessionExercisesPanel';
 import { SessionImageUpload } from '@/components/evolution/SessionImageUpload';
 
+// ============================================================================================
+// TYPES & INTERFACES
+// ============================================================================================
+
 export interface SOAPData {
     subjective: string;
     objective: string;
     assessment: string;
     plan: string;
+}
+
+export interface PreviousEvolution {
+    id: string;
+    created_at?: string;
+    record_date?: string;
+    pain_level?: number;
+    subjective?: string;
+    objective?: string;
+    assessment?: string;
+    plan?: string;
 }
 
 interface SOAPSection {
@@ -33,7 +48,9 @@ interface SOAPSection {
     borderColor: string;
 }
 
-// ===== CONSTANTS =====
+// ============================================================================================
+// CONSTANTS
+// ============================================================================================
 const SOAP_SECTIONS: Readonly<SOAPSection[]> = [
     {
         key: 'subjective',
@@ -99,8 +116,8 @@ interface EvolutionDraggableGridProps {
     // Home Care
     patientPhone?: string;
     // Previous Sessions
-    previousEvolutions?: any[];
-    onCopyLastEvolution?: (evolution: any) => void;
+    previousEvolutions?: PreviousEvolution[];
+    onCopyLastEvolution?: (evolution: PreviousEvolution) => void;
 }
 
 export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
@@ -185,36 +202,38 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     extraHeaderContent={
                         <div className="flex items-center gap-2">
                             {showPainTrend && trend && (
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Badge
-                                                variant="outline"
-                                                className={cn(
-                                                    'text-xs cursor-help transition-colors',
-                                                    trend.direction === 'down' && 'border-green-500/50 bg-green-50 text-green-700 dark:bg-green-950/20',
-                                                    trend.direction === 'up' && 'border-red-500/50 bg-red-50 text-red-700 dark:bg-red-950/20'
-                                                )}
-                                            >
-                                                {trend.direction === 'down' ? <TrendingDown className="h-3.5 w-3.5 text-green-600" /> :
-                                                    trend.direction === 'up' ? <TrendingUp className="h-3.5 w-3.5 text-red-600" /> :
-                                                        <Minus className="h-3.5 w-3.5 text-muted-foreground" />}
-                                                <span className="ml-1">{trend.label}</span>
-                                            </Badge>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="bottom">
-                                            <p className="text-xs">Comparado à última sessão</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Badge
+                                            variant="outline"
+                                            className={cn(
+                                                'text-xs cursor-help transition-colors',
+                                                trend.direction === 'down' && 'border-green-500/50 bg-green-50 text-green-700 dark:bg-green-950/20',
+                                                trend.direction === 'up' && 'border-red-500/50 bg-red-50 text-red-700 dark:bg-red-950/20'
+                                            )}
+                                            aria-label={`Tendência de dor: ${trend.label}`}
+                                        >
+                                            {trend.direction === 'down' ? <TrendingDown className="h-3.5 w-3.5 text-green-600" aria-hidden="true" /> :
+                                                trend.direction === 'up' ? <TrendingUp className="h-3.5 w-3.5 text-red-600" aria-hidden="true" /> :
+                                                    <Minus className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />}
+                                            <span className="ml-1">{trend.label}</span>
+                                        </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="bottom">
+                                        <p className="text-xs">Comparado à última sessão</p>
+                                    </TooltipContent>
+                                </Tooltip>
                             )}
                             <Button
+                                type="button"
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setShowPainDetails(!showPainDetails)}
                                 className="h-7 px-2 hover:bg-muted/50"
+                                aria-label={showPainDetails ? 'Recolher detalhes da dor' : 'Expandir detalhes da dor'}
+                                aria-expanded={showPainDetails}
                             >
-                                {showPainDetails ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                {showPainDetails ? <ChevronUp className="h-4 w-4" aria-hidden="true" /> : <ChevronDown className="h-4 w-4" aria-hidden="true" />}
                             </Button>
                         </div>
                     }
@@ -269,34 +288,46 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     className={cn("h-full border-t-4", section.borderColor)}
                     headerClassName={section.bgColor}
                     extraHeaderContent={
-                        <div className="flex gap-1">
+                        <div className="flex gap-1" role="group" aria-label={`Ações para ${section.key}`}>
                             {onAISuggest && (
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-muted/50" onClick={() => onAISuggest(section.key)} disabled={disabled}>
-                                                <Sparkles className="h-3 w-3 text-purple-500" />
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="bottom">
-                                            <p className="text-xs">Sugestão de IA</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7 hover:bg-muted/50"
+                                            onClick={() => onAISuggest(section.key)}
+                                            disabled={disabled}
+                                            aria-label={`Sugerir com IA para ${section.key}`}
+                                        >
+                                            <Sparkles className="h-3 w-3 text-purple-500" aria-hidden="true" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="bottom">
+                                        <p className="text-xs">Sugestão de IA</p>
+                                    </TooltipContent>
+                                </Tooltip>
                             )}
                             {onCopyLast && (
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-muted/50" onClick={() => onCopyLast(section.key)} disabled={disabled}>
-                                                <Copy className="h-3 w-3" />
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="bottom">
-                                            <p className="text-xs">Copiar da última sessão</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7 hover:bg-muted/50"
+                                            onClick={() => onCopyLast(section.key)}
+                                            disabled={disabled}
+                                            aria-label={`Copiar última sessão para ${section.key}`}
+                                        >
+                                            <Copy className="h-3 w-3" aria-hidden="true" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="bottom">
+                                        <p className="text-xs">Copiar da última sessão</p>
+                                    </TooltipContent>
+                                </Tooltip>
                             )}
                         </div>
                     }
@@ -387,76 +418,93 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     headerClassName="bg-amber-500/10"
                     extraHeaderContent={
                         previousEvolutions.length > 0 && onCopyLastEvolution ? (
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            variant="default"
-                                            size="sm"
-                                            className="h-7 px-3 text-xs"
-                                            onClick={() => {
-                                                const lastEvolution = previousEvolutions[0];
-                                                if (lastEvolution) {
-                                                    onCopyLastEvolution(lastEvolution);
-                                                }
-                                            }}
-                                            disabled={disabled}
-                                        >
-                                            <Copy className="h-3 w-3 mr-1" />
-                                            Replicar Última
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="bottom">
-                                        <p className="text-xs">Copiar toda a última sessão para os campos atuais</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        type="button"
+                                        variant="default"
+                                        size="sm"
+                                        className="h-8 px-3 text-xs font-medium"
+                                        onClick={() => {
+                                            const lastEvolution = previousEvolutions[0];
+                                            if (lastEvolution) {
+                                                onCopyLastEvolution(lastEvolution);
+                                            }
+                                        }}
+                                        disabled={disabled}
+                                    >
+                                        <Copy className="h-3 w-3 mr-1.5" aria-hidden="true" />
+                                        Replicar Última
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom">
+                                    <p className="text-xs">Copiar toda a última sessão para os campos atuais</p>
+                                </TooltipContent>
+                            </Tooltip>
                         ) : null
                     }
                 >
-                    <div className="h-full overflow-auto p-3">
+                    <div className="h-full overflow-auto p-4">
                         {previousEvolutions.length > 0 ? (
-                            <div className="space-y-2">
-                                {previousEvolutions.slice(0, 5).map((evolution: any, index: number) => (
-                                    <div
-                                        key={evolution.id}
-                                        className="group border rounded-lg p-3 hover:bg-muted/50 transition-all cursor-pointer"
-                                        onClick={() => onCopyLastEvolution && onCopyLastEvolution(evolution)}
-                                    >
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xs font-bold">
-                                                    {previousEvolutions.length - index}
+                            <div className="space-y-3">
+                                {previousEvolutions.slice(0, 5).map((evolution, index: number) => {
+                                    const sessionNumber = previousEvolutions.length - index;
+                                    const date = new Date(evolution.created_at || evolution.record_date);
+                                    return (
+                                        <div
+                                            key={evolution.id}
+                                            role="button"
+                                            tabIndex={0}
+                                            className="group border rounded-lg p-3.5 hover:bg-muted/50 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                            onClick={() => onCopyLastEvolution && onCopyLastEvolution(evolution)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                    e.preventDefault();
+                                                    onCopyLastEvolution && onCopyLastEvolution(evolution);
+                                                }
+                                            }}
+                                            aria-label={`Sessão ${sessionNumber} de ${date.toLocaleDateString('pt-BR')}. Clique para copiar.`}
+                                        >
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="flex items-center gap-2.5">
+                                                    <div
+                                                        className="w-7 h-7 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xs font-bold"
+                                                        aria-hidden="true"
+                                                    >
+                                                        {sessionNumber}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-semibold">
+                                                            {date.toLocaleDateString('pt-BR')}
+                                                        </p>
+                                                        {evolution.pain_level !== undefined && (
+                                                            <p className="text-[10px] text-muted-foreground">
+                                                                Dor: {evolution.pain_level}/10
+                                                            </p>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <p className="text-xs font-semibold">
-                                                        {new Date(evolution.created_at || evolution.record_date).toLocaleDateString('pt-BR')}
-                                                    </p>
-                                                    <p className="text-[10px] text-muted-foreground">
-                                                        {evolution.pain_level !== undefined && `Dor: ${evolution.pain_level}/10`}
-                                                    </p>
-                                                </div>
+                                                <Copy className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true" />
                                             </div>
-                                            <Copy className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            {(evolution.subjective || evolution.objective) && (
+                                                <div className="text-xs text-muted-foreground line-clamp-2" aria-hidden="true">
+                                                    {evolution.subjective?.substring(0, 80) || evolution.objective?.substring(0, 80)}
+                                                    {(evolution.subjective?.length > 80 || evolution.objective?.length > 80) && '...'}
+                                                </div>
+                                            )}
                                         </div>
-                                        {(evolution.subjective || evolution.objective) && (
-                                            <div className="text-xs text-muted-foreground line-clamp-2">
-                                                {evolution.subjective?.substring(0, 80) || evolution.objective?.substring(0, 80)}
-                                                {(evolution.subjective?.length > 80 || evolution.objective?.length > 80) && '...'}
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
+                                    );
+                                })}
                                 {previousEvolutions.length > 5 && (
-                                    <div className="text-center text-xs text-muted-foreground pt-2">
+                                    <div className="text-center text-xs text-muted-foreground pt-2 font-medium">
                                         + {previousEvolutions.length - 5} sessões anteriores
                                     </div>
                                 )}
                             </div>
                         ) : (
-                            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
-                                <History className="h-8 w-8 mb-2 opacity-50" />
-                                <p className="text-sm">Nenhuma sessão anterior</p>
+                            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground gap-2">
+                                <History className="h-10 w-10 opacity-40" aria-hidden="true" />
+                                <p className="text-sm font-medium">Nenhuma sessão anterior</p>
                                 <p className="text-xs">As sessões registradas aparecerão aqui</p>
                             </div>
                         )}
@@ -478,7 +526,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                 >
                     <div className="h-full overflow-auto p-0">
                         {patientId ? (
-                            <div className="p-3">
+                            <div className="p-4">
                                 <SessionImageUpload
                                     patientId={patientId}
                                     soapRecordId={soapRecordId}
@@ -486,7 +534,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                                 />
                             </div>
                         ) : (
-                            <div className="flex items-center justify-center h-full text-muted-foreground text-sm p-4">
+                            <div className="flex items-center justify-center h-full text-muted-foreground text-sm p-5">
                                 Carregando galeria...
                             </div>
                         )}
@@ -519,8 +567,10 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
     ]);
 
     return (
-        <div className={cn("space-y-5", className)}>
-            <div className="flex justify-between items-center bg-muted/40 px-4 py-3 rounded-xl border">
+        <TooltipProvider>
+            <div className={cn("space-y-5", className)}>
+                {/* Header de Controle do Layout */}
+                <div className="flex justify-between items-center bg-muted/40 px-5 py-3.5 rounded-xl border">
                 <div className="flex items-center gap-2.5">
                     <LayoutDashboard className="h-4.5 w-4.5 text-muted-foreground" />
                     <span className="text-sm font-semibold text-foreground">Layout da Evolução</span>
@@ -559,5 +609,6 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                 rowHeight={50}
             />
         </div>
+        </TooltipProvider>
     );
 };
