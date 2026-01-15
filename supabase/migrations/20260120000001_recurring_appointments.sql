@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS recurring_appointment_series (
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
   therapist_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
-  service_id UUID REFERENCES services(id) ON DELETE SET NULL,
-  room_id UUID REFERENCES rooms(id) ON DELETE SET NULL,
+  -- service_id UUID REFERENCES services(id) ON DELETE SET NULL,
+  -- room_id UUID REFERENCES rooms(id) ON DELETE SET NULL,
 
   -- Configuração de recorrência
   recurrence_type TEXT NOT NULL CHECK (recurrence_type IN ('daily', 'weekly', 'monthly', 'yearly')),
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS recurring_appointment_occurrences (
   modified_duration INTEGER,
   modified_notes TEXT,
   modified_time TEXT,
-  modified_room_id UUID REFERENCES rooms(id),
+  -- modified_room_id UUID REFERENCES rooms(id),
 
   -- Metadados
   created_at TIMESTAMPTZ DEFAULT NOW(),

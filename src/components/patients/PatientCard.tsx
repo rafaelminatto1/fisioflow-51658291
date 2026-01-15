@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { ChevronRight, Calendar } from 'lucide-react';
+import { ChevronRight, Calendar, Phone, Mail } from 'lucide-react';
 import { cn, calculateAge } from '@/lib/utils';
 import { PatientDB } from '@/hooks/usePatientsQuery';
 import { PatientHelpers } from '@/types';
@@ -18,11 +18,24 @@ interface PatientCardProps {
 /**
  * Componente otimizado de card de paciente com React.memo
  * Evita re-renders desnecessários quando os props não mudam
+ * Inclui melhorias de acessibilidade com ARIA labels e navegação por teclado
  */
 export const PatientCard = memo(({ patient, index, onClick, stats }: PatientCardProps) => {
   const patientName = PatientHelpers.getName(patient);
   const initials = patientName ? patientName.split(' ').map(n => n[0]).join('').substring(0, 2) : 'P';
-  const contactInfo = patient.phone || patient.email || `${calculateAge(patient.birth_date)} anos`;
+
+  // Determinar informação de contato prioritária para exibição
+  const getContactDisplay = () => {
+    if (patient.phone) {
+      return { icon: Phone, text: patient.phone };
+    }
+    if (patient.email) {
+      return { icon: Mail, text: patient.email };
+    }
+    return { icon: null, text: `${calculateAge(patient.birth_date)} anos` };
+  };
+
+  const contactDisplay = getContactDisplay();
 
   // Formatar informações de sessões
   const sessionsInfo = stats
@@ -52,11 +65,23 @@ export const PatientCard = memo(({ patient, index, onClick, stats }: PatientCard
         : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
   );
 
+  // Handler para teclado
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
   return (
     <Card
-      className="group flex items-center gap-4 p-3 rounded-xl bg-card hover:bg-slate-50 dark:hover:bg-slate-800/50 active:bg-slate-100 dark:active:bg-slate-800 transition-colors cursor-pointer border border-transparent hover:border-border dark:hover:border-slate-700"
+      role="button"
+      tabIndex={0}
+      aria-label={`Paciente: ${patientName || 'Sem nome'}, Status: ${patient.status || 'Inicial'}`}
+      className="group flex items-center gap-4 p-3 rounded-xl bg-card hover:bg-slate-50 dark:hover:bg-slate-800/50 active:bg-slate-100 dark:active:bg-slate-800 transition-colors cursor-pointer border border-transparent hover:border-border dark:hover:border-slate-700 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}
       onClick={onClick}
+      onKeyDown={handleKeyDown}
     >
       <div className="relative shrink-0">
         <Avatar className="h-12 w-12 ring-2 ring-border dark:ring-slate-700 shrink-0">
@@ -74,7 +99,10 @@ export const PatientCard = memo(({ patient, index, onClick, stats }: PatientCard
             {patient.status || 'Inicial'}
           </Badge>
         </div>
-        <p className="text-xs text-muted-foreground truncate mt-0.5">{contactInfo}</p>
+        <p className="text-xs text-muted-foreground truncate mt-0.5 flex items-center gap-1">
+          {contactDisplay.icon && <contactDisplay.icon className="w-3 h-3 flex-shrink-0" />}
+          <span className="truncate">{contactDisplay.text}</span>
+        </p>
 
         {/* Informações adicionais de sessões e primeira avaliação */}
         {(sessionsInfo || firstEvaluationInfo) && (
