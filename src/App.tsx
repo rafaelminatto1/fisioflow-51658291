@@ -23,9 +23,10 @@ import { useServiceWorkerUpdate } from "@/hooks/useServiceWorkerUpdate";
 import { SkipLink, FocusVisibleHandler } from "@/components/accessibility";
 
 // Lazy load Vercel Analytics only in production
-const Analytics = import.meta.env.PROD
-  ? lazy(() => import("@vercel/analytics/react").then(m => ({ default: m.Analytics })))
-  : null;
+// Analytics disabled to prevent 400 errors (Hobby Plan limits/Configuration)
+// const Analytics = import.meta.env.PROD
+//   ? lazy(() => import("@vercel/analytics/react").then(m => ({ default: m.Analytics })))
+//   : null;
 
 
 // Create a client with performance optimizations
@@ -165,12 +166,13 @@ const App = () => {
                   <Suspense fallback={<PageLoadingFallback />}>
                     <AppRoutes />
                     <VersionManager />
-                    {/* Vercel Analytics - Only in production, isolated with ErrorBoundary */}
+                    {/* Vercel Analytics - Disabled to prevent 400 errors
                     {Analytics && (
                       <ErrorBoundary fallback={null}>
                         <Analytics />
                       </ErrorBoundary>
                     )}
+                    */}
 
                     <WebVitalsIndicator />
 
