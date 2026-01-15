@@ -224,9 +224,9 @@ export const PainScaleWidget: React.FC<PainScaleWidgetProps> = ({
         <TooltipProvider>
             <Card className={cn('border-border/50 shadow-sm overflow-hidden bg-card', className, hideHeader && "border-0 shadow-none bg-transparent")}>
                 {!hideHeader && (
-                    <CardHeader className="pb-2">
+                    <CardHeader className="pb-4 px-5">
                         <div className="flex items-center justify-between">
-                            <CardTitle className="flex items-center gap-2 text-base">
+                            <CardTitle className="flex items-center gap-2.5 text-base font-semibold">
                                 <Activity className="h-5 w-5 text-primary" />
                                 Nível de Dor (EVA)
                             </CardTitle>
@@ -236,7 +236,7 @@ export const PainScaleWidget: React.FC<PainScaleWidgetProps> = ({
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => handleToggleDetails(!showDetails)}
-                                    className="h-7 w-7 p-0"
+                                    className="h-8 w-8 p-0 hover:bg-muted/50"
                                     aria-label={showDetails ? "Ocultar detalhes" : "Mostrar detalhes"}
                                 >
                                     {showDetails ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -246,14 +246,14 @@ export const PainScaleWidget: React.FC<PainScaleWidgetProps> = ({
                     </CardHeader>
                 )}
 
-                <CardContent className="space-y-3">
+                <CardContent className="px-5 space-y-5">
                     {/* Main Pain Display */}
-                    <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="flex items-center gap-4 sm:gap-5">
                         <PainLevelIndicator level={value.level} />
 
                         {/* Level Info & Controls */}
-                        <div className="flex-1 space-y-2">
-                            <div className="flex items-center gap-2">
+                        <div className="flex-1 space-y-3">
+                            <div className="flex items-center gap-2.5">
                                 <motion.span
                                     key={currentLevelInfo.emoji}
                                     initial={{ scale: 0.5, rotate: -20 }}
@@ -262,61 +262,92 @@ export const PainScaleWidget: React.FC<PainScaleWidgetProps> = ({
                                 >
                                     {currentLevelInfo.emoji}
                                 </motion.span>
-                                <span className="font-medium text-base leading-none">{currentLevelInfo.label}</span>
+                                <span className="font-semibold text-base leading-none">{currentLevelInfo.label}</span>
                             </div>
 
                             {/* Controls */}
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-2.5">
                                 <Button
                                     variant="outline"
                                     size="icon"
                                     onClick={() => handleLevelChange(value.level - 1)}
                                     disabled={disabled || value.level === 0}
-                                    className="h-8 w-8 shrink-0"
-                                    aria-label="Diminuir dor"
+                                    className="h-10 w-10 shrink-0 hover:bg-rose-50 hover:border-rose-200 dark:hover:bg-rose-950/20 transition-all"
+                                    aria-label="Diminuir nível de dor"
                                 >
-                                    <Minus className="h-3.5 w-3.5" />
+                                    <Minus className="h-4 w-4" />
                                 </Button>
-                                <Input
-                                    type="number"
-                                    min={0}
-                                    max={10}
-                                    value={value.level}
-                                    onChange={(e) => handleLevelChange(parseInt(e.target.value) || 0)}
-                                    disabled={disabled}
-                                    className="w-12 text-center font-bold text-base h-8"
-                                    aria-label="Nível de dor numérico"
-                                />
+                                <div className="relative flex-1">
+                                    <Input
+                                        type="number"
+                                        min={0}
+                                        max={10}
+                                        step={1}
+                                        value={value.level}
+                                        onChange={(e) => {
+                                            const val = parseInt(e.target.value);
+                                            if (!isNaN(val) && val >= 0 && val <= 10) {
+                                                handleLevelChange(val);
+                                            } else if (e.target.value === '') {
+                                                handleLevelChange(0);
+                                            }
+                                        }}
+                                        onFocus={(e) => e.target.select()}
+                                        disabled={disabled}
+                                        className="w-full text-center font-bold text-lg h-10 [appearance:_textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                        aria-label="Nível de dor (0-10)"
+                                        aria-valuemin={0}
+                                        aria-valuemax={10}
+                                        aria-valuenow={value.level}
+                                    />
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">/10</span>
+                                </div>
                                 <Button
                                     variant="outline"
                                     size="icon"
                                     onClick={() => handleLevelChange(value.level + 1)}
                                     disabled={disabled || value.level === 10}
-                                    className="h-8 w-8 shrink-0"
-                                    aria-label="Aumentar dor"
+                                    className="h-10 w-10 shrink-0 hover:bg-rose-50 hover:border-rose-200 dark:hover:bg-rose-950/20 transition-all"
+                                    aria-label="Aumentar nível de dor"
                                 >
-                                    <span className="text-base font-medium">+</span>
+                                    <span className="text-lg font-medium">+</span>
                                 </Button>
                             </div>
                         </div>
                     </div>
 
                     {/* Color Scale Bar */}
-                    <div className="space-y-1.5" aria-hidden="true">
-                        <div className="flex rounded-full overflow-hidden h-3 bg-muted">
+                    <div className="space-y-3">
+                        <div className="flex rounded-full overflow-hidden h-5 bg-muted shadow-inner" role="group" aria-label="Escala visual de dor">
                             {PAIN_LEVELS.map((level) => (
-                                <motion.button
-                                    key={level.level}
-                                    whileHover={{ scaleY: 1.5 }}
-                                    onClick={() => handleLevelChange(level.level)}
-                                    disabled={disabled}
-                                    className={cn(
-                                        'flex-1 transition-all',
-                                        level.color,
-                                        value.level === level.level && 'ring-2 ring-white ring-offset-2 ring-offset-background z-10 scale-y-125'
-                                    )}
-                                    title={`${level.level} - ${level.label}`}
-                                />
+                                <TooltipProvider key={level.level}>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <motion.button
+                                                whileHover={{ scale: 1.15 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={() => handleLevelChange(level.level)}
+                                                disabled={disabled}
+                                                className={cn(
+                                                    'flex-1 transition-all duration-200 relative first:rounded-l-full last:rounded-r-full',
+                                                    level.color,
+                                                    value.level === level.level && 'ring-2 ring-white ring-offset-1 ring-offset-background z-10 shadow-md brightness-110',
+                                                    value.level > level.level && 'opacity-70',
+                                                    disabled && 'opacity-50 cursor-not-allowed'
+                                                )}
+                                                aria-label={`${level.level} - ${level.label}`}
+                                                aria-pressed={value.level === level.level}
+                                            />
+                                        </TooltipTrigger>
+                                        <TooltipContent side="bottom">
+                                            <div className="text-center">
+                                                <p className="font-bold text-lg">{level.level}</p>
+                                                <p className="text-xs">{level.label}</p>
+                                                <p className="text-lg mt-1">{level.emoji}</p>
+                                            </div>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
                             ))}
                         </div>
                         <div className="flex justify-between text-[10px] uppercase tracking-wider text-muted-foreground font-medium px-1">
