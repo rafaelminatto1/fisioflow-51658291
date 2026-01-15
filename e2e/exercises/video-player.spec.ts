@@ -274,7 +274,7 @@ test.describe('Exercise Video Player', () => {
 });
 
 test.describe('Video Player Accessibility', () => {
-  beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
       window.HTMLVideoElement.prototype.play = () => Promise.resolve();
       window.HTMLVideoElement.prototype.pause = () => {};
