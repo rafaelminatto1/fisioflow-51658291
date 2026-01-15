@@ -1,12 +1,14 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 import {
-  Play, Heart, Share2, ExternalLink, Edit,
+  Heart, Share2, ExternalLink, Edit,
   Clock, Repeat, Dumbbell, FileText, Video, Image as ImageIcon,
-  AlertTriangle, Printer
+  AlertTriangle, Printer, X, CheckCircle2, ChevronRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';
@@ -20,12 +22,12 @@ interface ExerciseViewModalProps {
 }
 
 const difficultyColors: Record<string, string> = {
-  'Fácil': 'bg-green-500/10 text-green-600 border-green-500/30',
-  'Iniciante': 'bg-green-500/10 text-green-600 border-green-500/30',
-  'Médio': 'bg-yellow-500/10 text-yellow-600 border-yellow-500/30',
-  'Intermediário': 'bg-yellow-500/10 text-yellow-600 border-yellow-500/30',
-  'Difícil': 'bg-red-500/10 text-red-600 border-red-500/30',
-  'Avançado': 'bg-red-500/10 text-red-600 border-red-500/30',
+  'Fácil': 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 ring-emerald-500/20',
+  'Iniciante': 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 ring-emerald-500/20',
+  'Médio': 'bg-amber-500/10 text-amber-600 border-amber-500/20 ring-amber-500/20',
+  'Intermediário': 'bg-amber-500/10 text-amber-600 border-amber-500/20 ring-amber-500/20',
+  'Difícil': 'bg-rose-500/10 text-rose-600 border-rose-500/20 ring-rose-500/20',
+  'Avançado': 'bg-rose-500/10 text-rose-600 border-rose-500/20 ring-rose-500/20',
 };
 
 function getEmbedUrl(url: string): string | null {
@@ -66,7 +68,7 @@ export function ExerciseViewModal({
   const hasVideo = !!exercise.video_url;
   const hasImage = !!exercise.image_url;
 
-  const defaultTab = hasVideo ? 'video' : hasImage ? 'image' : 'info';
+  const defaultTab = hasVideo ? 'video' : 'image';
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -82,241 +84,265 @@ export function ExerciseViewModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="pb-2">
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-2">
-              <DialogTitle className="text-2xl pr-8">{exercise.name}</DialogTitle>
-              <div className="flex gap-2 flex-wrap">
-                {exercise.category && (
-                  <Badge variant="secondary">{exercise.category}</Badge>
-                )}
-                {exercise.difficulty && (
-                  <Badge
-                    variant="outline"
-                    className={cn(difficultyColors[exercise.difficulty])}
-                  >
-                    {exercise.difficulty}
-                  </Badge>
-                )}
-                {!hasVideo && (
-                  <Badge variant="outline" className="bg-orange-500/10 text-orange-600 border-orange-500/30">
-                    <AlertTriangle className="h-3 w-3 mr-1" />
-                    Sem vídeo
-                  </Badge>
-                )}
-              </div>
-            </div>
-          </div>
-        </DialogHeader>
+      <DialogContent className="max-w-5xl h-[90vh] p-0 gap-0 overflow-hidden flex flex-col bg-background/95 backdrop-blur-xl border-border/50 shadow-2xl">
 
-        <div className="space-y-6">
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(isFavorite(exercise.id) && "text-red-500")}
-              onClick={() => toggleFavorite(exercise.id)}
-            >
-              <Heart className={cn("h-4 w-4 mr-2", isFavorite(exercise.id) && "fill-current")} />
-              {isFavorite(exercise.id) ? 'Favoritado' : 'Favoritar'}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleShare}>
-              <Share2 className="h-4 w-4 mr-2" />
-              Compartilhar
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => window.print()}>
-              <Printer className="h-4 w-4 mr-2" />
-              Imprimir
-            </Button>
-            {onEdit && (
-              <Button variant="ghost" size="sm" onClick={() => {
-                onOpenChange(false);
-                onEdit(exercise);
-              }}>
-                <Edit className="h-4 w-4 mr-2" />
-                Editar
-              </Button>
-            )}
-          </div>
-
-          {/* Exercise Parameters */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="p-3 bg-muted/50 rounded-lg text-center">
-              <Repeat className="h-4 w-4 mx-auto mb-1 text-primary" />
-              <p className="text-xs text-muted-foreground">Séries</p>
-              <p className="text-xl font-bold">{exercise.sets || '-'}</p>
-            </div>
-            <div className="p-3 bg-muted/50 rounded-lg text-center">
-              <Dumbbell className="h-4 w-4 mx-auto mb-1 text-primary" />
-              <p className="text-xs text-muted-foreground">Repetições</p>
-              <p className="text-xl font-bold">{exercise.repetitions || '-'}</p>
-            </div>
-            <div className="p-3 bg-muted/50 rounded-lg text-center">
-              <Clock className="h-4 w-4 mx-auto mb-1 text-primary" />
-              <p className="text-xs text-muted-foreground">Duração</p>
-              <p className="text-xl font-bold">{exercise.duration ? `${exercise.duration}s` : '-'}</p>
-            </div>
-          </div>
-
-          {/* Content Tabs */}
-          <Tabs defaultValue={defaultTab}>
-            <TabsList className="w-full grid grid-cols-3">
-              <TabsTrigger value="video" disabled={!hasVideo}>
-                <Video className="h-4 w-4 mr-2" />
-                Vídeo
-              </TabsTrigger>
-              <TabsTrigger value="image" disabled={!hasImage}>
-                <ImageIcon className="h-4 w-4 mr-2" />
-                Imagem
-              </TabsTrigger>
-              <TabsTrigger value="info">
-                <FileText className="h-4 w-4 mr-2" />
-                Informações
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="video" className="mt-4">
-              {hasVideo ? (
-                <div className="space-y-2">
-                  <div className="aspect-video bg-muted rounded-lg overflow-hidden">
-                    {embedUrl ? (
-                      isDirectVideo ? (
-                        <video
-                          controls
-                          className="w-full h-full"
-                          src={embedUrl}
-                        >
-                          Seu navegador não suporta vídeos.
-                        </video>
-                      ) : (
-                        <iframe
-                          src={embedUrl}
-                          className="w-full h-full"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                        />
-                      )
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center gap-4">
-                        <Play className="w-16 h-16 text-muted-foreground/50" />
-                        <p className="text-muted-foreground">Formato de vídeo não suportado</p>
-                        <Button
-                          variant="outline"
-                          onClick={() => window.open(exercise.video_url, '_blank')}
-                        >
-                          <ExternalLink className="h-4 w-4 mr-2" />
-                          Abrir link externo
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                  <Button
-                    variant="link"
-                    className="p-0 h-auto text-xs"
-                    onClick={() => window.open(exercise.video_url, '_blank')}
-                  >
-                    <ExternalLink className="h-3 w-3 mr-1" />
-                    Abrir em nova aba
-                  </Button>
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Video className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Nenhum vídeo disponível para este exercício</p>
-                  {onEdit && (
-                    <Button
-                      variant="link"
-                      className="mt-2"
-                      onClick={() => {
-                        onOpenChange(false);
-                        onEdit(exercise);
-                      }}
-                    >
-                      Adicionar vídeo
-                    </Button>
-                  )}
-                </div>
+        {/* Header */}
+        <div className="flex-none p-6 border-b bg-background/50 backdrop-blur-sm z-10 flex items-start justify-between gap-4">
+          <div className="space-y-1.5 pt-1">
+            <h2 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+              {exercise.name}
+            </h2>
+            <div className="flex items-center gap-2 flex-wrap">
+              {exercise.category && (
+                <Badge variant="secondary" className="bg-primary/5 text-primary hover:bg-primary/10 border-primary/10 transition-colors">
+                  {exercise.category}
+                </Badge>
               )}
-            </TabsContent>
+              {exercise.difficulty && (
+                <Badge
+                  variant="outline"
+                  className={cn("border bg-background/50", difficultyColors[exercise.difficulty])}
+                >
+                  {exercise.difficulty}
+                </Badge>
+              )}
+            </div>
+          </div>
 
-            <TabsContent value="image" className="mt-4">
-              {hasImage ? (
-                <div className="rounded-lg overflow-hidden bg-muted">
-                  <img
-                    src={exercise.image_url!}
-                    alt={exercise.name}
-                    className="w-full max-h-[400px] object-contain"
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg border border-border/50">
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "h-8 w-8 rounded-md transition-all",
+                  isFavorite(exercise.id)
+                    ? "bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 hover:text-rose-600"
+                    : "text-muted-foreground hover:text-rose-500"
+                )}
+                onClick={() => toggleFavorite(exercise.id)}
+                title={isFavorite(exercise.id) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+              >
+                <Heart className={cn("h-4 w-4", isFavorite(exercise.id) && "fill-current")} />
+              </Button>
+
+              <Separator orientation="vertical" className="h-4" />
+
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={handleShare} title="Compartilhar">
+                <Share2 className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => window.print()} title="Imprimir">
+                <Printer className="h-4 w-4" />
+              </Button>
+
+              {onEdit && (
+                <>
+                  <Separator orientation="vertical" className="h-4" />
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary" onClick={() => {
+                    onOpenChange(false);
+                    onEdit(exercise);
+                  }} title="Editar">
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
+            </div>
+            <DialogClose asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-muted ml-2">
+                <X className="h-5 w-5" />
+              </Button>
+            </DialogClose>
+          </div>
+        </div>
+
+        {/* Content - Scrollable */}
+        <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-12 h-full">
+
+          {/* Left Column - Media (7 cols) */}
+          <div className="lg:col-span-7 bg-muted/10 h-full flex flex-col border-r border-border/50 overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-background via-muted/20 to-muted/40 pointer-events-none" />
+
+            <Tabs defaultValue={defaultTab} className="flex-1 flex flex-col relative z-0">
+              <div className="px-6 pt-4 flex-none z-10">
+                <TabsList className="bg-background/80 backdrop-blur border w-auto inline-flex shadow-sm">
+                  <TabsTrigger value="video" disabled={!hasVideo} className="gap-2 px-4">
+                    <Video className="h-4 w-4" /> Vídeo
+                  </TabsTrigger>
+                  <TabsTrigger value="image" disabled={!hasImage} className="gap-2 px-4">
+                    <ImageIcon className="h-4 w-4" /> Imagem
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              <div className="flex-1 p-6 flex items-center justify-center min-h-0">
+                <TabsContent value="video" className="w-full h-full mt-0 data-[state=active]:flex data-[state=active]:items-center data-[state=active]:justify-center">
+                  {hasVideo ? (
+                    <div className="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-white/10 ring-1 ring-black/5 relative group">
+                      {embedUrl ? (
+                        isDirectVideo ? (
+                          <video controls className="w-full h-full" src={embedUrl}>
+                            Seu navegador não suporta vídeos.
+                          </video>
+                        ) : (
+                          <iframe
+                            src={embedUrl}
+                            className="w-full h-full"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        )
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-4">
+                          <AlertTriangle className="h-12 w-12 opacity-50" />
+                          <p>Erro ao carregar vídeo</p>
+                          <Button variant="outline" size="sm" onClick={() => window.open(exercise.video_url, '_blank')}>
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            Abrir externo
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center p-12 rounded-xl bg-muted/30 border border-dashed border-muted-foreground/20">
+                      <VideoOffState />
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="image" className="w-full h-full mt-0 data-[state=active]:flex data-[state=active]:items-center data-[state=active]:justify-center">
+                  {hasImage ? (
+                    <div className="relative w-full h-full flex items-center justify-center bg-white/5 rounded-xl overflow-hidden shadow-lg border border-border/50">
+                      <img
+                        src={exercise.image_url!}
+                        alt={exercise.name}
+                        className="max-w-full max-h-full object-contain"
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-center p-12 rounded-xl bg-muted/30 border border-dashed border-muted-foreground/20">
+                      <ImageIcon className="h-12 w-12 mx-auto mb-4 text-muted-foreground/30" />
+                      <p className="text-muted-foreground">Sem imagem</p>
+                    </div>
+                  )}
+                </TabsContent>
+              </div>
+            </Tabs>
+          </div>
+
+          {/* Right Column - Information (5 cols) */}
+          <div className="lg:col-span-5 h-full bg-background flex flex-col min-h-0">
+            <ScrollArea className="flex-1 h-full">
+              <div className="p-6 space-y-8">
+
+                {/* Metrics / Parameters */}
+                <div className="grid grid-cols-3 gap-4">
+                  <MetricCard
+                    icon={Repeat}
+                    label="Séries"
+                    value={exercise.sets}
+                    subLabel={exercise.sets ? "séries" : undefined}
+                  />
+                  <MetricCard
+                    icon={Dumbbell}
+                    label="Repetições"
+                    value={exercise.repetitions}
+                    subLabel={exercise.repetitions ? "reps" : undefined}
+                  />
+                  <MetricCard
+                    icon={Clock}
+                    label="Duração"
+                    value={exercise.duration}
+                    subLabel={exercise.duration ? "segundos" : undefined}
                   />
                 </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <ImageIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Nenhuma imagem disponível para este exercício</p>
-                </div>
-              )}
-            </TabsContent>
 
-            <TabsContent value="info" className="mt-4 space-y-4">
-              {exercise.description && (
-                <div>
-                  <h4 className="font-semibold mb-2 flex items-center gap-2 text-sm">
-                    <FileText className="h-4 w-4" />
+                <Separator />
+
+                {/* Description */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-primary font-medium">
+                    <div className="p-1.5 rounded-md bg-primary/10">
+                      <FileText className="h-4 w-4" />
+                    </div>
                     Descrição
-                  </h4>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    {exercise.description}
-                  </p>
+                  </div>
+                  <div className="bg-muted/30 p-4 rounded-lg border border-border/40">
+                    {exercise.description ? (
+                      <p className="text-sm text-muted-foreground leading-relaxed text-pretty">
+                        {exercise.description}
+                      </p>
+                    ) : (
+                      <span className="text-sm text-muted-foreground/50 italic">Nenhuma descrição fornecida.</span>
+                    )}
+                  </div>
                 </div>
-              )}
 
-              {exercise.instructions && (
-                <div>
-                  <h4 className="font-semibold mb-2 flex items-center gap-2 text-sm">
-                    <FileText className="h-4 w-4" />
+                {/* Instructions */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-primary font-medium">
+                    <div className="p-1.5 rounded-md bg-primary/10">
+                      <CheckCircle2 className="h-4 w-4" />
+                    </div>
                     Instruções de Execução
-                  </h4>
-                  <p className="text-muted-foreground text-sm whitespace-pre-wrap leading-relaxed">
-                    {exercise.instructions}
-                  </p>
+                  </div>
+                  <div className="bg-muted/30  rounded-lg border border-border/40 overflow-hidden">
+                    {exercise.instructions ? (
+                      <div className="p-4 text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                        {exercise.instructions}
+                      </div>
+                    ) : (
+                      <div className="p-4 text-sm text-muted-foreground/50 italic">Nenhuma instrução adicional.</div>
+                    )}
+                  </div>
                 </div>
-              )}
 
-              {!exercise.description && !exercise.instructions && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Nenhuma informação adicional disponível</p>
-                  {onEdit && (
-                    <Button
-                      variant="link"
-                      className="mt-2"
-                      onClick={() => {
-                        onOpenChange(false);
-                        onEdit(exercise);
-                      }}
-                    >
-                      Adicionar informações
+                {/* Related (Optional - keeping simplified for now) */}
+                {exercise.category && (
+                  <div className="pt-4 mt-auto">
+                    <h4 className="text-xs font-semibold uppercase text-muted-foreground tracking-wider mb-3">Relacionados</h4>
+                    <Button variant="outline" className="w-full justify-between group h-auto py-3 border-dashed" disabled>
+                      <span className="text-muted-foreground group-hover:text-foreground transition-colors text-sm">Ver mais exercícios de {exercise.category}</span>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
                     </Button>
-                  )}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+                  </div>
+                )}
 
-          {/* Related Exercises (Simple Implementation) */}
-          {exercise.category && (
-            <div className="mt-8 pt-6 border-t">
-              <h4 className="font-semibold mb-4 text-sm">Exercícios Relacionados</h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 opacity-60 hover:opacity-100 transition-opacity">
-                <p className="col-span-full text-xs text-muted-foreground">
-                  Outros exercícios de {exercise.category} podem ser interessantes.
-                </p>
               </div>
-            </div>
-          )}
+            </ScrollArea>
+          </div>
         </div>
+
       </DialogContent>
     </Dialog>
   );
+}
+
+function MetricCard({ icon: Icon, label, value, subLabel }: { icon: any, label: string, value?: string | number | null, subLabel?: string }) {
+  return (
+    <div className="bg-muted/30 rounded-xl p-3 border border-border/50 flex flex-col items-center justify-center text-center gap-1 hover:bg-muted/50 transition-colors group">
+      <div className="p-2 rounded-full bg-background shadow-sm mb-1 group-hover:scale-110 transition-transform duration-300">
+        <Icon className="h-4 w-4 text-primary" />
+      </div>
+      <span className="text-[10px] items-center font-medium text-muted-foreground uppercase tracking-wider">{label}</span>
+      <div className="flex items-baseline gap-1">
+        <span className={cn("text-lg font-bold tracking-tight", !value && "text-muted-foreground/40")}>
+          {value || '-'}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function VideoOffState() {
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+        <Video className="h-8 w-8 text-muted-foreground/50" />
+      </div>
+      <div className="space-y-1">
+        <p className="font-medium text-muted-foreground">Sem vídeo disponível</p>
+        <p className="text-xs text-muted-foreground/60 max-w-[200px] mx-auto">Este exercício não possui uma demonstração em vídeo.</p>
+      </div>
+    </div>
+  )
 }

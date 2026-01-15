@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { logger } from '@/lib/errors/logger';
+import { ensureProfile } from '@/lib/database/profiles';
 
 export type UserRole = 'admin' | 'fisioterapeuta' | 'estagiario' | 'paciente';
 
@@ -28,15 +29,38 @@ export const useUserProfile = () => {
   const fetchProfile = async (userId: string): Promise<UserProfile | null> => {
     try {
       // Buscar perfil
-      const { data: profileData, error: profileError } = await supabase
+      let { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
         .single();
 
-      if (profileError) {
+      // Se não encontrou perfil, tenta garantir que ele exista (defensivo)
+      if (profileError || !profileData) {
+        const { data: { session } } = await supabase.auth.getSession();
+        const currentUser = session?.user;
+
+        if (currentUser && currentUser.id === userId) {
+          const fullName = currentUser.user_metadata?.full_name || currentUser.user_metadata?.name;
+          await ensureProfile(userId, currentUser.email, fullName);
+
+          // Tentar buscar novamente após garantir
+          const { data: retryData, error: retryError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+
+          if (!retryError) {
+            profileData = retryData;
+            profileError = null;
+          }
+        }
+      }
+
+      if (profileError || !profileData) {
         logger.error('Erro ao buscar perfil', profileError, 'useUserProfile');
-        setError(profileError.message);
+        setError(profileError?.message || 'Perfil não encontrado');
         return null;
       }
 
@@ -46,7 +70,7 @@ export const useUserProfile = () => {
         .select('role')
         .eq('user_id', userId)
         .limit(1)
-        .single();
+        .maybeSingle();
 
       const role = (roleData?.role as UserRole) || 'paciente';
 
@@ -62,8 +86,10 @@ export const useUserProfile = () => {
 
   const refreshProfile = async () => {
     if (user?.id) {
+      setLoading(true);
       const profileData = await fetchProfile(user.id);
       setProfile(profileData);
+      setLoading(false);
     }
   };
 
@@ -71,9 +97,13 @@ export const useUserProfile = () => {
     const initAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        
+
         if (session?.user) {
           setUser(session.user);
+          // Antes de buscar, garante que o perfil exista (especialmente para novos usuários ou dev environments)
+          const fullName = session.user.user_metadata?.full_name || session.user.user_metadata?.name;
+          await ensureProfile(session.user.id, session.user.email, fullName);
+
           const profileData = await fetchProfile(session.user.id);
           setProfile(profileData);
         }
@@ -90,6 +120,9 @@ export const useUserProfile = () => {
       async (event, session) => {
         if (session?.user) {
           setUser(session.user);
+          const fullName = session.user.user_metadata?.full_name || session.user.user_metadata?.name;
+          await ensureProfile(session.user.id, session.user.email, fullName);
+
           const profileData = await fetchProfile(session.user.id);
           setProfile(profileData);
         } else {

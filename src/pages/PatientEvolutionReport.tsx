@@ -45,6 +45,7 @@ const PatientEvolutionReport = () => {
           initialPainLevel: evolutionData.initialPainLevel,
           totalSessions: evolutionData.totalSessions,
           averageImprovement: evolutionData.averageImprovement,
+          measurementEvolution: evolutionData.measurementEvolution,
         }
       );
 
@@ -135,6 +136,56 @@ const PatientEvolutionReport = () => {
 
         {/* Análise de Progresso */}
         <ProgressAnalysisCard sessions={evolutionData.sessions} />
+
+        {/* Evolução de Medições */}
+        {evolutionData.measurementEvolution && evolutionData.measurementEvolution.length > 0 && (
+          <div className="grid grid-cols-1 gap-4">
+            <div className="rounded-2xl border bg-card text-card-foreground shadow-sm overflow-hidden">
+              <div className="p-6 bg-teal-50/50 border-b flex items-center gap-2">
+                <Activity className="h-5 w-5 text-teal-600" />
+                <h3 className="font-bold text-teal-900 uppercase tracking-wider text-sm">Evolução dos Marcadores Clínicos</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-slate-50/50 text-slate-500 font-bold uppercase tracking-widest text-[10px] border-b">
+                      <th className="px-6 py-4 text-left">Parâmetro</th>
+                      <th className="px-6 py-4 text-left">Inicial</th>
+                      <th className="px-6 py-4 text-left">Atual</th>
+                      <th className="px-6 py-4 text-left">Melhora</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {evolutionData.measurementEvolution.map((m, i) => (
+                      <tr key={i} className="hover:bg-slate-50/30 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="font-bold text-slate-800">{m.name}</div>
+                          <div className="text-[10px] text-slate-400 font-medium">{m.type}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="font-medium text-slate-600">{m.initial.value}</span>
+                          <span className="text-[10px] text-slate-400 ml-1 font-bold">{m.initial.unit}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="font-bold text-teal-700">{m.current.value}</span>
+                          <span className="text-[10px] text-slate-400 ml-1 font-bold">{m.current.unit}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${parseFloat(m.improvement.toString()) >= 0
+                              ? 'bg-green-50 text-green-700 border border-green-100'
+                              : 'bg-red-50 text-red-700 border border-red-100'
+                            }`}>
+                            {m.improvement}% {parseFloat(m.improvement.toString()) >= 0 ? '↑' : '↓'}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Dashboard Principal */}
         <PatientEvolutionDashboard
