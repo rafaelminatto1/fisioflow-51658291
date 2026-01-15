@@ -1,6 +1,7 @@
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
@@ -12,9 +13,11 @@ import {
   CheckCircle,
   AlertCircle,
   RefreshCw,
-  MoreVertical
+  MoreVertical,
+  Clock,
+  Trash2
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { usePatientsQuery } from '@/hooks/usePatientsQuery';
 import {
   useCommunications,
@@ -58,12 +61,15 @@ import {
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PatientHelpers } from '@/types';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 
 const Communications = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedChannel, setSelectedChannel] = useState<string>('all');
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  
+
   // Form state
   const [sendChannel, setSendChannel] = useState<'email' | 'whatsapp' | 'sms'>('email');
   const [selectedPatient, setSelectedPatient] = useState<{ id: string; name: string; email?: string | null; phone?: string | null } | null>(null);
@@ -81,7 +87,7 @@ const Communications = () => {
 
   const filteredPatients = useMemo(() => {
     if (!patientSearch) return patients.slice(0, 10);
-    return patients.filter(p => 
+    return patients.filter(p =>
       p.name.toLowerCase().includes(patientSearch.toLowerCase())
     ).slice(0, 10);
   }, [patients, patientSearch]);
@@ -128,9 +134,9 @@ const Communications = () => {
 
   const handleSendCommunication = async () => {
     if (!selectedPatient) return;
-    
-    const recipient = sendChannel === 'email' 
-      ? selectedPatient.email || '' 
+
+    const recipient = sendChannel === 'email'
+      ? selectedPatient.email || ''
       : selectedPatient.phone || '';
 
     await sendCommunication.mutateAsync({
@@ -140,7 +146,7 @@ const Communications = () => {
       subject: subject || undefined,
       body: message,
     });
-    
+
     setSelectedPatient(null);
     setSubject('');
     setMessage('');
@@ -324,7 +330,7 @@ const Communications = () => {
                                   </DropdownMenuItem>
                                 )}
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem 
+                                <DropdownMenuItem
                                   className="text-destructive focus:text-destructive"
                                   onClick={() => setDeleteId(comm.id)}
                                 >
@@ -353,10 +359,10 @@ const Communications = () => {
                   <label className="text-sm font-medium mb-2 block">Canal</label>
                   <div className="grid grid-cols-3 gap-2">
                     {(['email', 'whatsapp', 'sms'] as const).map((channel) => (
-                      <Button 
+                      <Button
                         key={channel}
-                        variant={sendChannel === channel ? 'default' : 'outline'} 
-                        size="sm" 
+                        variant={sendChannel === channel ? 'default' : 'outline'}
+                        size="sm"
                         className="flex-col p-3 h-auto"
                         onClick={() => setSendChannel(channel)}
                       >
@@ -379,8 +385,8 @@ const Communications = () => {
                     </PopoverTrigger>
                     <PopoverContent className="w-[300px] p-0" align="start">
                       <Command>
-                        <CommandInput 
-                          placeholder="Digite o nome..." 
+                        <CommandInput
+                          placeholder="Digite o nome..."
                           value={patientSearch}
                           onValueChange={setPatientSearch}
                         />
@@ -390,22 +396,22 @@ const Communications = () => {
                             {filteredPatients.map((patient) => {
                               const patientName = PatientHelpers.getName(patient);
                               return (
-                              <CommandItem
-                                key={patient.id}
-                                value={patientName}
-                                onSelect={() => {
-                                  setSelectedPatient({
-                                    id: patient.id,
-                                    name: patientName,
-                                    email: patient.email,
-                                    phone: patient.phone
-                                  });
-                                  setPatientPopoverOpen(false);
-                                  setPatientSearch('');
-                                }}
-                              >
-                                {patientName}
-                              </CommandItem>
+                                <CommandItem
+                                  key={patient.id}
+                                  value={patientName}
+                                  onSelect={() => {
+                                    setSelectedPatient({
+                                      id: patient.id,
+                                      name: patientName,
+                                      email: patient.email,
+                                      phone: patient.phone
+                                    });
+                                    setPatientPopoverOpen(false);
+                                    setPatientSearch('');
+                                  }}
+                                >
+                                  {patientName}
+                                </CommandItem>
                               );
                             })}
                           </CommandGroup>
@@ -418,8 +424,8 @@ const Communications = () => {
                 {sendChannel === 'email' && (
                   <div>
                     <label className="text-sm font-medium mb-2 block">Assunto</label>
-                    <Input 
-                      placeholder="Assunto da mensagem..." 
+                    <Input
+                      placeholder="Assunto da mensagem..."
                       value={subject}
                       onChange={(e) => setSubject(e.target.value)}
                     />
@@ -428,8 +434,8 @@ const Communications = () => {
 
                 <div>
                   <label className="text-sm font-medium mb-2 block">Mensagem</label>
-                  <Textarea 
-                    placeholder="Digite sua mensagem..." 
+                  <Textarea
+                    placeholder="Digite sua mensagem..."
                     rows={4}
                     className="resize-none"
                     value={message}
@@ -437,7 +443,7 @@ const Communications = () => {
                   />
                 </div>
 
-                <Button 
+                <Button
                   className="w-full"
                   onClick={handleSendCommunication}
                   disabled={sendCommunication.isPending || !selectedPatient || !message}
