@@ -183,6 +183,7 @@ export const STATUS_CONFIG: Record<SessionStatus, StatusConfig> = {
     twBg: "bg-[#66CCFF]",
     twBorder: "border-[#66CCFF]",
     twText: "text-white",
+    icon: Clock,
     allowedActions: ["view"]
   },
   reagendado: {
@@ -193,6 +194,7 @@ export const STATUS_CONFIG: Record<SessionStatus, StatusConfig> = {
     twBg: "bg-[#9CD326]",
     twBorder: "border-[#9CD326]",
     twText: "text-white",
+    icon: Clock,
     allowedActions: ["view"]
   },
   atrasado: {
@@ -203,6 +205,7 @@ export const STATUS_CONFIG: Record<SessionStatus, StatusConfig> = {
     twBg: "bg-[#FF7575]",
     twBorder: "border-[#FF7575]",
     twText: "text-white",
+    icon: AlertCircle,
     allowedActions: ["start", "cancel", "reschedule"]
   },
 
