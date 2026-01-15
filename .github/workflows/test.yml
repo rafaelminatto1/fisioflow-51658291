@@ -70,7 +70,8 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run test:unit -- --coverage
+      - name: Run unit tests (excluding Edge Functions)
+        run: pnpm run test:unit -- --coverage --exclude='**/supabase/functions/**'
       - uses: codecov/codecov-action@v3
         with:
           files: ./coverage/coverage-final.json

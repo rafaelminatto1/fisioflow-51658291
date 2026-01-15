@@ -1,36 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-// Mock Supabase client
-const mockSelect = vi.fn()
-const mockEq = vi.fn()
-const mockSingle = vi.fn()
-const mockInsert = vi.fn()
-const mockUpdate = vi.fn()
-const mockGte = vi.fn()
-const mockLte = vi.fn()
-
-mockEq.mockReturnValue({
-  single: mockSingle,
-  gte: mockGte,
-  lte: mockLte
-})
-
-mockSelect.mockReturnValue({
-  eq: mockEq,
-  gte: mockGte,
-  lte: mockLte
-})
-
-mockGte.mockReturnValue({
-  lte: mockLte
-})
+// Mock Supabase client - cria um mock encadeado que suporta ambos os padrões
+function createMockChain() {
+  const mock = vi.fn()
+  mock.single = vi.fn()
+  mock.eq = vi.fn(() => mock)
+  mock.select = vi.fn(() => mock)
+  mock.insert = vi.fn(() => mock)
+  mock.update = vi.fn(() => mock)
+  mock.gte = vi.fn(() => mock)
+  mock.lte = vi.fn(() => mock)
+  return mock
+}
 
 const mockSupabaseClient = {
-  from: vi.fn(() => ({
-    select: mockSelect,
-    insert: mockInsert,
-    update: mockUpdate
-  })),
+  from: vi.fn(() => createMockChain()),
   rpc: vi.fn()
 }
 
