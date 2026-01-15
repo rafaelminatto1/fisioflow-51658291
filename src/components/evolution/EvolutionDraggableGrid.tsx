@@ -662,7 +662,21 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                         {isEditable ? (
                             <>
                                 <Button variant="ghost" size="sm" onClick={() => setIsEditable(false)} className="h-8.5 px-3">Cancelar</Button>
-                                <Button size="sm" onClick={() => handleSaveLayout(savedLayout)} className="h-8.5 px-3.5 gap-2">
+                                <Button size="sm" onClick={() => {
+                                    // Trigger layout save by calling onLayoutChange which saves to localStorage
+                                    if (onLayoutChange) {
+                                        const currentLayout = gridItems.map(item => ({
+                                            i: item.id,
+                                            w: item.defaultLayout.w,
+                                            h: item.defaultLayout.h,
+                                            x: item.defaultLayout.x,
+                                            y: item.defaultLayout.y,
+                                            minW: item.defaultLayout.minW,
+                                            minH: item.defaultLayout.minH,
+                                        }));
+                                        handleSaveLayout(currentLayout);
+                                    }
+                                }} className="h-8.5 px-3.5 gap-2">
                                     <Save className="h-3.5 w-3.5" /> Salvar
                                 </Button>
                                 <Button variant="ghost" size="icon" onClick={handleResetLayout} title="Resetar" className="h-8.5 w-8.5">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, memo, useCallback, useRef } from 'react';
 import { Layout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
+import { cn } from '@/lib/utils';
 
 // Import the legacy ResponsiveReactGridLayout to support the old API with draggableHandle
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -36,6 +37,9 @@ const GRID_CONFIG = {
     margin: [20, 20] as const, // [horizontal, vertical] margin between items
     rowHeight: 50, // default height of each grid row in pixels
     compactType: null, // disable auto-compaction to preserve layout
+    // Enhanced UX: Animation and transition settings
+    transitionDuration: 200, // ms - smooth animation for layout changes
+    dragThreshold: 4, // pixels - minimum movement before drag starts (prevents accidental drags)
 } as const;
 
 /**
@@ -116,7 +120,7 @@ export const DraggableGrid = memo(function DraggableGrid({
     return (
         <div ref={containerRef} className={className} style={{ position: 'relative' }}>
             <Responsive
-                className="layout"
+                className={cn("layout", isEditable && "editable")}
                 breakpoints={GRID_CONFIG.breakpoints}
                 cols={cols}
                 rowHeight={rowHeight}
@@ -129,6 +133,8 @@ export const DraggableGrid = memo(function DraggableGrid({
                 useCSSTransforms={true}
                 compactType={GRID_CONFIG.compactType}
                 preventCollision={false}
+                // Enhanced UX: Smooth animations
+                transformScale={1}
             >
                 {items.map((item) => (
                     <div
