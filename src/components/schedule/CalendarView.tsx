@@ -27,6 +27,10 @@ interface CalendarViewProps {
   onAppointmentReschedule?: (appointment: Appointment, newDate: Date, newTime: string) => Promise<void>;
   onEditAppointment?: (appointment: Appointment) => void;
   onDeleteAppointment?: (appointment: Appointment) => void;
+  // Selection props
+  selectionMode?: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelection?: (id: string) => void;
 }
 
 export const CalendarView = memo(({
@@ -39,6 +43,9 @@ export const CalendarView = memo(({
   onAppointmentReschedule,
   onEditAppointment,
   onDeleteAppointment,
+  selectionMode = false,
+  selectedIds = new Set(),
+  onToggleSelection,
 }: CalendarViewProps) => {
   // State for appointment quick view popover
   const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
@@ -417,6 +424,9 @@ export const CalendarView = memo(({
                 isOverCapacity={isOverCapacity}
                 openPopoverId={openPopoverId}
                 setOpenPopoverId={setOpenPopoverId}
+                selectionMode={selectionMode}
+                selectedIds={selectedIds}
+                onToggleSelection={onToggleSelection}
               />
             )}
 
@@ -441,6 +451,9 @@ export const CalendarView = memo(({
                 isOverCapacity={isOverCapacity}
                 openPopoverId={openPopoverId}
                 setOpenPopoverId={setOpenPopoverId}
+                selectionMode={selectionMode}
+                selectedIds={selectedIds}
+                onToggleSelection={onToggleSelection}
               />
             )}
 
@@ -456,6 +469,9 @@ export const CalendarView = memo(({
                 isOverCapacity={isOverCapacity}
                 openPopoverId={openPopoverId}
                 setOpenPopoverId={setOpenPopoverId}
+                selectionMode={selectionMode}
+                selectedIds={selectedIds}
+                onToggleSelection={onToggleSelection}
               />
             )}
           </div>

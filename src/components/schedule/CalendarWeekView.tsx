@@ -30,6 +30,10 @@ interface CalendarWeekViewProps {
     isDayClosedForDate: (date: Date) => boolean;
     openPopoverId: string | null;
     setOpenPopoverId: (id: string | null) => void;
+    // Selection props
+    selectionMode?: boolean;
+    selectedIds?: Set<string>;
+    onToggleSelection?: (id: string) => void;
 }
 
 // =====================================================================
@@ -76,7 +80,10 @@ export const CalendarWeekView = memo(({
     checkTimeBlocked,
     isDayClosedForDate,
     openPopoverId,
-    setOpenPopoverId
+    setOpenPopoverId,
+    selectionMode = false,
+    selectedIds = new Set(),
+    onToggleSelection
 }: CalendarWeekViewProps) => {
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
     const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -296,6 +303,9 @@ export const CalendarWeekView = memo(({
                                     onDeleteAppointment={onDeleteAppointment}
                                     onOpenPopover={setOpenPopoverId}
                                     isPopoverOpen={openPopoverId === apt.id}
+                                    selectionMode={selectionMode}
+                                    isSelected={selectedIds?.has(apt.id)}
+                                    onToggleSelection={onToggleSelection}
                                 />
                             );
                         })}

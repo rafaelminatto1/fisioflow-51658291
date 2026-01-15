@@ -3,7 +3,7 @@ import { format, addDays, parseISO } from 'date-fns';
 import { Appointment, AppointmentStatus } from '@/types/appointment';
 import { STATUS_CONFIG } from '@/lib/config/agenda';
 import { cn } from '@/lib/utils';
-import { MoreVertical, GripVertical } from 'lucide-react';
+import { MoreVertical, GripVertical, CheckCircle2, Circle } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { AppointmentQuickView } from './AppointmentQuickView';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +23,10 @@ interface CalendarAppointmentCardProps {
     isPopoverOpen: boolean;
     onDragOver?: (e: React.DragEvent) => void;
     onDrop?: (e: React.DragEvent) => void;
+    // Selection props
+    selectionMode?: boolean;
+    isSelected?: boolean;
+    onToggleSelection?: (id: string) => void;
 }
 
 const normalizeTime = (time: string | null | undefined): string => {
@@ -42,7 +46,10 @@ export const CalendarAppointmentCard = memo(({
     onOpenPopover,
     isPopoverOpen,
     onDragOver,
-    onDrop
+    onDrop,
+    selectionMode = false,
+    isSelected = false,
+    onToggleSelection
 }: CalendarAppointmentCardProps) => {
     const [isHovered, setIsHovered] = useState(false);
 
@@ -57,29 +64,43 @@ export const CalendarAppointmentCard = memo(({
     const handleMouseEnter = () => setIsHovered(true);
     const handleMouseLeave = () => setIsHovered(false);
 
+    // Disable dragging in selection mode
+    const draggable = isDraggable && !selectionMode;
+
+    const handleClick = (e: React.MouseEvent) => {
+        if (selectionMode && onToggleSelection) {
+            e.stopPropagation();
+            onToggleSelection(appointment.id);
+        }
+    };
+
     const cardContent = (
         <div
-            draggable={isDraggable}
-            onDragStart={(e) => onDragStart(e, appointment)}
+            draggable={draggable}
+            onDragStart={(e) => draggable && onDragStart(e, appointment)}
             onDragEnd={onDragEnd}
             onDragOver={(e) => {
-                if (!isDragging && onDragOver) {
+                if (!isDragging && onDragOver && !selectionMode) {
                     onDragOver(e);
                 }
             }}
             onDrop={(e) => {
-                if (!isDragging && onDrop) {
+                if (!isDragging && onDrop && !selectionMode) {
                     onDrop(e);
                 }
             }}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
+            onClick={handleClick}
             className={cn(
                 "absolute rounded-md flex flex-col border-l-[3px] transition-all shadow-sm cursor-pointer overflow-hidden group hover:shadow-md",
-                isDraggable && "cursor-grab active:cursor-grabbing",
+                draggable && "cursor-grab active:cursor-grabbing",
                 isDragging && "opacity-50 scale-95 z-50 ring-2 ring-blue-400",
-                !isDragging && isHovered && "z-30 ring-1 ring-black/5 dark:ring-white/10",
-                appointment.status === 'cancelado' && "opacity-80 grayscale-[0.5]"
+                !isDragging && isHovered && !selectionMode && "z-30 ring-1 ring-black/5 dark:ring-white/10",
+                appointment.status === 'cancelado' && "opacity-80 grayscale-[0.5]",
+                // Selection styles
+                selectionMode && "hover:opacity-90",
+                isSelected && "ring-2 ring-primary ring-offset-1 z-40"
             )}
             style={{
                 ...style,
@@ -102,8 +123,20 @@ export const CalendarAppointmentCard = memo(({
                             return ` - ${format(end, 'HH:mm')}`;
                         })()}
                     </span>
-                    {StatusIcon && !isSmall && (
-                        <StatusIcon className="w-3.5 h-3.5 opacity-70" style={{ color: textColor }} />
+                    
+                    {/* Selection Indicator or Status Icon */}
+                    {selectionMode ? (
+                        <div className="flex-shrink-0">
+                            {isSelected ? (
+                                <CheckCircle2 className="w-4 h-4 text-primary fill-background" />
+                            ) : (
+                                <Circle className="w-4 h-4 opacity-50" style={{ color: textColor }} />
+                            )}
+                        </div>
+                    ) : (
+                        StatusIcon && !isSmall && (
+                            <StatusIcon className="w-3.5 h-3.5 opacity-70" style={{ color: textColor }} />
+                        )
                     )}
                 </div>
 
@@ -131,7 +164,7 @@ export const CalendarAppointmentCard = memo(({
                 )}
 
                 {/* Actions / Drag Handle Popup */}
-                {isHovered && isDraggable && !isDragging && (
+                {isHovered && draggable && !isDragging && !selectionMode && (
                     <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity delay-75">
                         <div className={cn(
                             "rounded p-0.5 shadow-sm",
@@ -148,7 +181,7 @@ export const CalendarAppointmentCard = memo(({
                 )}
 
                 {/* Drag Handle (Visible on hover) */}
-                {isHovered && isDraggable && (
+                {isHovered && draggable && !selectionMode && (
                     <div className="absolute bottom-1 right-1 opacity-20 group-hover:opacity-100 cursor-grab">
                         <GripVertical className="w-3 h-3" style={{ color: textColor }} />
                     </div>
@@ -156,6 +189,11 @@ export const CalendarAppointmentCard = memo(({
             </div>
         </div>
     );
+
+    // If in selection mode, don't use Tooltip/Popover to allow easy clicking
+    if (selectionMode) {
+        return cardContent;
+    }
 
     return (
         <Tooltip>

@@ -380,6 +380,8 @@ export default defineConfig(({ mode }) => {
         'framer-motion',
         'recharts',
         'lucide-react',
+        'lodash',
+        'lodash-es',
         // Include konva for proper CJS/UMD interop
         'konva',
         'react-konva',
