@@ -18,7 +18,8 @@ import {
   Activity,
   Filter,
   Plus,
-  BarChart3
+  BarChart3,
+  Search
 } from 'lucide-react';
 import {
   ResponsiveContainer,

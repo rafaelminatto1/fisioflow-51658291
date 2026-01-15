@@ -343,6 +343,12 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
           </div>
         </div>
       )}
+
+      <LevelUpModal 
+        isOpen={showLevelUp} 
+        onClose={() => setShowLevelUp(false)} 
+        level={currentLevel} 
+      />
     </div>
   );
 }

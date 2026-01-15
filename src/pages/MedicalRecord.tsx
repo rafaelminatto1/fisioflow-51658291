@@ -25,7 +25,8 @@ import {
   FileStack,
   Microscope,
   LayoutDashboard,
-  Settings
+  Settings,
+  Search
 } from 'lucide-react';
 import { MedicalRequestsTab } from '@/components/patient/MedicalRequestsTab';
 import { PatientExamsTab } from '@/components/patient/PatientExamsTab';

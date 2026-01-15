@@ -33,7 +33,10 @@ const TemplateCard = memo(({
   onEdit: (t: ExerciseTemplate) => void;
   onDelete: (id: string) => void;
 }) => (
-  <Card className="p-4 hover:shadow-md transition-shadow">
+  <Card
+    className="p-4 hover:shadow-md transition-shadow cursor-pointer relative group"
+    onClick={() => onView(template)}
+  >
     <div className="flex items-start justify-between mb-2">
       <div className="flex-1">
         <h4 className="font-medium">{template.name}</h4>
@@ -55,7 +58,11 @@ const TemplateCard = memo(({
       <Button
         variant="outline"
         size="sm"
-        onClick={() => onView(template)}
+        className="pointer-events-auto"
+        onClick={(e) => {
+          e.stopPropagation();
+          onView(template);
+        }}
       >
         <FileText className="h-3 w-3 mr-1" />
         Ver
@@ -63,14 +70,22 @@ const TemplateCard = memo(({
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => onEdit(template)}
+        className="pointer-events-auto"
+        onClick={(e) => {
+          e.stopPropagation();
+          onEdit(template);
+        }}
       >
         <Edit className="h-3 w-3" />
       </Button>
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => onDelete(template.id)}
+        className="pointer-events-auto hover:text-red-500 hover:bg-red-50"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete(template.id);
+        }}
       >
         <Trash2 className="h-3 w-3" />
       </Button>
@@ -282,6 +297,7 @@ export function TemplateManager() {
           open={!!viewTemplate}
           onOpenChange={(open) => !open && setViewTemplate(null)}
           template={viewTemplate}
+          onEdit={setEditTemplate}
         />
       )}
 

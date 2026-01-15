@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Search, AlertTriangle, Info, BookOpen, AlertCircle, X } from 'lucide-react';
+import { Plus, Search, AlertTriangle, Info, BookOpen, AlertCircle, X, Edit } from 'lucide-react';
 import { useTemplateItems, type ExerciseTemplate } from '@/hooks/useExerciseTemplates';
 import { useExercises } from '@/hooks/useExercises';
 import {
@@ -31,13 +31,16 @@ interface TemplateDetailsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   template: ExerciseTemplate;
+  onEdit?: (template: ExerciseTemplate) => void;
 }
 
 export function TemplateDetailsModal({
   open,
   onOpenChange,
   template,
+  onEdit,
 }: TemplateDetailsModalProps) {
+  // ...
   const { items, addItem, removeItem, loading } = useTemplateItems(template.id);
   const { exercises } = useExercises();
   const [showAddExercise, setShowAddExercise] = useState(false);
@@ -161,6 +164,20 @@ export function TemplateDetailsModal({
                   <Badge>{template.template_variant}</Badge>
                 )}
                 {template.evidence_level && renderEvidenceBadge(template.evidence_level)}
+
+                {onEdit && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="ml-2 h-8 w-8 hover:bg-slate-100"
+                    onClick={() => {
+                      onOpenChange(false);
+                      onEdit(template);
+                    }}
+                  >
+                    <Edit className="h-4 w-4 text-slate-500" />
+                  </Button>
+                )}
               </DialogTitle>
               {template.description && (
                 <p className="text-sm text-muted-foreground mt-2">{template.description}</p>

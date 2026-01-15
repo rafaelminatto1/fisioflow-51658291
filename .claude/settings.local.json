@@ -147,7 +147,9 @@
       "mcp__playwright__browser_tabs",
       "mcp__github__list_issues",
       "Bash(git fetch:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(npm info:*)",
+      "Bash(awk:*)"
     ],
     "deny": [],
     "ask": []

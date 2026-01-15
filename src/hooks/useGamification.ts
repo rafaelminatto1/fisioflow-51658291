@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Database } from '@/integrations/supabase/types';
+import { differenceInCalendarDays, parseISO } from 'date-fns';
 
 // Deriving types from Database definition
 type PatientGamification = Database['public']['Tables']['patient_gamification']['Row'];
@@ -24,7 +26,7 @@ export const useGamification = (patientId: string) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch Gamification Profile
+  // Fetch Gamification Profile with Streak Logic
   const { data: profile, isLoading: isLoadingProfile } = useQuery({
     queryKey: ['gamification-profile', patientId],
     queryFn: async () => {
@@ -47,6 +49,25 @@ export const useGamification = (patientId: string) => {
           total_points: 0,
           last_activity_date: null
         } as GamificationProfile;
+      }
+
+      // Check Streak Logic
+      if (data.last_activity_date) {
+        const lastActivity = parseISO(data.last_activity_date);
+        const today = new Date();
+        const daysDiff = differenceInCalendarDays(today, lastActivity);
+
+        if (daysDiff > 1) {
+          // Streak broken
+          const { data: updated } = await supabase
+            .from('patient_gamification')
+            .update({ current_streak: 0 })
+            .eq('id', data.id)
+            .select()
+            .single();
+          
+          if (updated) return updated as GamificationProfile;
+        }
       }
 
       return data as GamificationProfile;
@@ -198,11 +219,32 @@ export const useGamification = (patientId: string) => {
       const oldXp = current?.current_xp || 0;
       const oldTotal = current?.total_points || 0;
       const oldLevel = current?.level || 1;
+      const oldStreak = current?.current_streak || 0;
+      const oldLongest = current?.longest_streak || 0;
+      const lastDate = current?.last_activity_date ? parseISO(current.last_activity_date) : null;
 
       let newXp = oldXp + amount;
       const newTotal = oldTotal + amount;
       let newLevel = oldLevel;
+      let newStreak = oldStreak;
+      
+      // Streak Calculation
+      const today = new Date();
+      if (!lastDate) {
+        newStreak = 1;
+      } else {
+        const daysDiff = differenceInCalendarDays(today, lastDate);
+        if (daysDiff === 1) {
+          newStreak += 1;
+        } else if (daysDiff > 1) {
+          newStreak = 1; // Reset if missed a day
+        }
+        // If daysDiff === 0, streak stays same (already active today)
+      }
 
+      const newLongest = Math.max(newStreak, oldLongest);
+
+      // Level Up Logic
       if (newXp >= xpPerLevel) {
         const levelsGained = Math.floor(newXp / xpPerLevel);
         newLevel += levelsGained;
@@ -218,16 +260,18 @@ export const useGamification = (patientId: string) => {
           current_xp: newXp,
           level: newLevel,
           total_points: newTotal,
+          current_streak: newStreak,
+          longest_streak: newLongest,
           last_activity_date: new Date().toISOString(),
-          ...(current?.id ? { id: current.id, current_streak: current.current_streak, longest_streak: current.longest_streak } : {})
+          ...(current?.id ? { id: current.id } : {})
         })
         .select()
         .single();
 
       if (error) throw error;
-      return { data, leveledUp: newLevel > oldLevel, newLevel };
+      return { data, leveledUp: newLevel > oldLevel, newLevel, streakExtended: newStreak > oldStreak };
     },
-    onSuccess: ({ leveledUp, newLevel }) => {
+    onSuccess: ({ leveledUp, newLevel, streakExtended }) => {
       queryClient.invalidateQueries({ queryKey: ['gamification-profile', patientId] });
       queryClient.invalidateQueries({ queryKey: ['xp-transactions', patientId] });
 
@@ -236,7 +280,16 @@ export const useGamification = (patientId: string) => {
         description: "Progresso atualizado.",
       });
 
+      if (streakExtended) {
+         toast({
+          title: "🔥 Streak Aumentado!",
+          description: "Continue assim!",
+          className: "bg-orange-500 text-white border-none shadow-xl"
+        });
+      }
+
       if (leveledUp) {
+        // We can trigger a modal here via state or context in the UI
         toast({
           title: "SUBIU DE NÍVEL! 🎉",
           description: `Novo nível alcançado: ${newLevel}`,

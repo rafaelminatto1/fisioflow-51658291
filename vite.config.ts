@@ -165,6 +165,8 @@ export default defineConfig(({ mode }) => {
       alias: {
         "@": path.resolve(__dirname, "./src"),
         "lodash": "lodash-es",
+        // Allow importing legacy module from react-grid-layout
+        "react-grid-layout/dist/legacy": path.resolve(__dirname, "./node_modules/react-grid-layout/dist/legacy.mjs"),
       },
     },
     build: {
