@@ -148,14 +148,14 @@ export function EvolutionHeader({
                             </span>
                         )}
                         <Button
-                            onClick={() => navigate(`/patients/${patient.id}/evolution/report`)}
+                            onClick={() => navigate(`/patients/${patient.id}`)}
                             size="sm"
                             variant="ghost"
                             className="h-8 px-2 sm:px-3 hover:bg-primary/10 touch-target flex-shrink-0"
-                            title="Gerar Relatório de Evolução"
+                            title="Ver perfil completo do paciente"
                         >
-                            <FileText className="h-4 w-4" />
-                            <span className="hidden sm:inline ml-1 text-[10px] xs:text-xs">Relatório</span>
+                            <Eye className="h-4 w-4" />
+                            <span className="hidden sm:inline ml-1 text-[10px] xs:text-xs">Ver Paciente</span>
                         </Button>
                         <Button
                             onClick={onShowKeyboardHelp}
