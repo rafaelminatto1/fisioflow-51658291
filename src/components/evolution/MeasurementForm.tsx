@@ -25,7 +25,8 @@ import {
   Thermometer,
   Wind,
   Stethoscope,
-  Droplets
+  Droplets,
+  FileText
 } from 'lucide-react';
 import { useCreateMeasurement, type EvolutionMeasurement } from '@/hooks/usePatientEvolution';
 import { ClinicalTestCombobox, type ClinicalTest } from '@/components/ui/clinical-test-combobox';
