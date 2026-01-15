@@ -104,7 +104,7 @@ export const useCalendarDrag = ({ onAppointmentReschedule }: UseCalendarDragProp
         e.preventDefault();
         e.stopPropagation();
 
-        let appointmentToMove = dragState.appointment;
+        const appointmentToMove = dragState.appointment;
 
         // Fallback: Tentar recuperar do dataTransfer se o state estiver vazio
         if (!appointmentToMove) {
