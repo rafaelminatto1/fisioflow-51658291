@@ -908,6 +908,10 @@ const PatientEvolution = () => {
                     description: 'Os exercícios foram evoluídos com base no progresso do paciente.'
                   });
                 }}
+                previousEvolutions={previousEvolutions}
+                onCopyLastEvolution={(evolution) => {
+                  handleCopyPreviousEvolution(evolution);
+                }}
               />
             </TabsContent>
 
