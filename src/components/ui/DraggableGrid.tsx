@@ -111,8 +111,12 @@ export const DraggableGrid = memo(function DraggableGrid({
             return;
         }
 
-        // IMPORTANT: When merging, ONLY use the saved width/height/x/y if they're close to defaults
-        // This prevents old layouts from breaking when default positions change
+        // IMPORTANT: Check if the overall layout structure has changed significantly
+        // This catches cases like Pain Scale expand/collapse where Y positions shift dramatically
+        let totalYDiff = 0;
+        let totalHDiff = 0;
+        let itemsWithSignificantDiff = 0;
+
         const merged: Layout = defaultLayouts.map(def => {
             const saved = savedLayout.find(l => l.i === def.i);
             if (!saved) return def;
@@ -120,12 +124,15 @@ export const DraggableGrid = memo(function DraggableGrid({
             // Calculate position difference
             const yDiff = Math.abs((saved.y || 0) - def.y);
             const xDiff = Math.abs((saved.x || 0) - def.x);
-            const hDiff = Math.abs((saved.h || 0) - def.h); // Add hDiff check
+            const hDiff = Math.abs((saved.h || 0) - def.h);
+
+            totalYDiff += yDiff;
+            totalHDiff += hDiff;
 
             // If saved position is significantly different from default, use default
-            // This handles cases like Pain Scale expansion where Y positions change
-            // Also handles cases where Height changes drastically (expand/collapse)
-            if (yDiff > 2 || xDiff > 1 || hDiff > 2) {
+            // Threshold increased to handle Pain Scale expansion (height change from 5 to 16)
+            if (yDiff > 5 || xDiff > 1 || hDiff > 5) {
+                itemsWithSignificantDiff++;
                 console.log(`[DraggableGrid] Item ${def.i}: saved state too far from default (yDiff:${yDiff}, xDiff:${xDiff}, hDiff:${hDiff}), using default`);
                 return def;
             }
@@ -137,6 +144,14 @@ export const DraggableGrid = memo(function DraggableGrid({
                 h: saved.h || def.h,
             };
         });
+
+        // If more than 25% of items have significant differences, the entire layout structure has changed
+        // (e.g., Pain Scale expanded/collapsed). Use all defaults in this case.
+        if (itemsWithSignificantDiff > items.length * 0.25) {
+            console.warn(`[DraggableGrid] Layout structure has changed significantly (${itemsWithSignificantDiff}/${items.length} items differ), using all defaults`);
+            setLayouts({ lg: defaultLayouts });
+            return;
+        }
 
         setLayouts({ lg: merged });
     }, [items, savedLayout, forceReset]);
