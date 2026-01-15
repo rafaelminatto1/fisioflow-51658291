@@ -393,7 +393,9 @@ export const CalendarWeekViewFinal = memo(({
                                             }}
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                onAppointmentClick && onAppointmentClick(apt);
+                                                if (onAppointmentClick) {
+                                                    onAppointmentClick(apt);
+                                                }
                                             }}
                                         >
                                             {/* Patient conflict indicator */}

@@ -139,7 +139,9 @@
       "Bash(gh run list:*)",
       "Bash(gh run view:*)",
       "Bash(gh api:*)",
-      "Read(//home/rafael/cursor/fisiolovable/fisioflow-51658291/**)"
+      "Read(//home/rafael/cursor/fisiolovable/fisioflow-51658291/**)",
+      "Bash(npx vercel inspect:*)",
+      "Read(//tmp/**)"
     ],
     "deny": [],
     "ask": []
