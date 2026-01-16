@@ -42,6 +42,7 @@ import { PhysicalExamForm } from '@/components/patient/forms/PhysicalExamForm';
 import { EvaluationTemplateManager } from '@/components/admin/EvaluationTemplateManager';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { PatientHelpers } from '@/types';
+import { saveSurgeries, saveGoals, savePathologies } from '@/utils/medicalRecordHelpers';
 
 interface VitalSigns {
   bloodPressure: string;
@@ -69,6 +70,11 @@ interface RecordFormData {
   specialTests: Array<{ name: string; result?: string; side?: string }>;
   rangeOfMotion: Record<string, unknown>;
   muscleStrength: Record<string, unknown>;
+  medications?: string;
+  allergies?: string;
+  newSurgeries?: Array<{ name: string; date: string; surgeon: string; hospital: string; notes?: string }>;
+  newGoals?: Array<{ description: string; targetDate: string }>;
+  newPathologies?: Array<{ name: string; status: 'active' | 'treated'; diagnosedAt: string }>;
 }
 
 interface MedicalRecordItem {
@@ -104,7 +110,12 @@ const initialFormState: RecordFormData = {
   },
   specialTests: [],
   rangeOfMotion: {},
-  muscleStrength: {}
+  muscleStrength: {},
+  medications: '',
+  allergies: '',
+  newSurgeries: [],
+  newGoals: [],
+  newPathologies: []
 };
 
 const recordTypes = [
@@ -383,7 +394,11 @@ const MedicalRecord = () => {
         treatment_plan: treatmentPlanData,
         physical_exam: physicalExamData,
         diagnosis: data.diagnosis || null,
+        medications: data.medications || null,
+        allergies: data.allergies || null,
       };
+
+      let recordId = editingRecord?.id;
 
       if (editingRecord?.id) {
         // Updating existing record
@@ -394,10 +409,26 @@ const MedicalRecord = () => {
         if (error) throw error;
       } else {
         // Creating new record
-        const { error } = await supabase
+        const { data: newRecord, error } = await supabase
           .from('medical_records')
-          .insert(recordData);
+          .insert(recordData)
+          .select()
+          .single();
         if (error) throw error;
+        recordId = newRecord.id;
+      }
+
+      // Handle Surgeries, Goals, and Pathologies using helpers
+      if (recordId) {
+        if (data.newSurgeries && data.newSurgeries.length > 0) {
+          await saveSurgeries(supabase, recordId, data.newSurgeries);
+        }
+        if (data.newGoals && data.newGoals.length > 0) {
+          await saveGoals(supabase, recordId, data.newGoals);
+        }
+        if (data.newPathologies && data.newPathologies.length > 0) {
+          await savePathologies(supabase, recordId, data.newPathologies);
+        }
       }
     },
     onSuccess: () => {
@@ -482,6 +513,26 @@ const MedicalRecord = () => {
       specialTests: physExam.specialTests || [],
       rangeOfMotion: physExam.rangeOfMotion || {},
       muscleStrength: physExam.muscleStrength || {},
+      medications: raw.medications || '',
+      allergies: raw.allergies || '',
+      // Map existing surgeries/goals to form if needed/possible
+      newSurgeries: record.surgeries?.map((s: any) => ({
+        name: s.name,
+        date: s.surgery_date,
+        surgeon: s.surgeon,
+        hospital: s.hospital,
+        notes: s.notes
+      })) || [],
+      // For goals, we might want to show active ones?
+      newGoals: record.goals?.map((g: any) => ({
+        description: g.description,
+        targetDate: g.target_date
+      })) || [],
+      newPathologies: record.pathologies?.map((p: any) => ({
+        name: p.name,
+        status: p.status,
+        diagnosedAt: p.diagnosed_at
+      })) || []
     });
     setActiveTab(raw.record_type || 'anamnesis');
   };

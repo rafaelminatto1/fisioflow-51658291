@@ -582,7 +582,7 @@ const ScheduleRefactored = () => {
           defaultDate={modalDefaultDate}
           defaultTime={modalDefaultTime}
           defaultPatientId={scheduleFromWaitlist?.patientId}
-          mode={selectedAppointment ? 'view' : 'create'}
+          mode={selectedAppointment ? 'edit' : 'create'}
         />
 
         {waitlistQuickAdd && (

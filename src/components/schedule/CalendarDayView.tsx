@@ -107,7 +107,7 @@ const CalendarDayView = memo(({
                 </div>
                 <div className="flex-1 overflow-hidden">
                     {timeSlots.map(time => (
-                        <div key={time} className="h-16 md:h-20 border-b border-border/50 p-2 md:p-3 text-sm font-medium text-muted-foreground flex items-center" role="listitem">
+                        <div key={time} className="h-12 md:h-[50px] border-b border-border/50 p-2 md:p-3 text-sm font-medium text-muted-foreground flex items-center" role="listitem">
                             {time}
                         </div>
                     ))}
@@ -243,12 +243,12 @@ const CalendarDayView = memo(({
                             const widthPercent = stackCount > 1 ? (100 / stackCount) - 2 : 100;
                             const leftOffset = stackCount > 1 ? (stackIndex * (100 / stackCount)) + 1 : 0;
 
-                            // Calculate height based on duration (each slot = 80px desktop, 64px mobile, each slot = 30min)
+                            // Calculate height based on duration (each slot = 50px desktop, 48px mobile, each slot = 30min)
                             const duration = apt.duration || 60;
-                            const heightMobile = (duration / 30) * 64;
-                            const heightDesktop = (duration / 30) * 80;
-                            const topMobile = slotIndex * 64;
-                            const topDesktop = slotIndex * 80;
+                            const heightMobile = (duration / 30) * 48;
+                            const heightDesktop = (duration / 30) * 50;
+                            const topMobile = slotIndex * 48;
+                            const topDesktop = slotIndex * 50;
                             const isDraggable = !!onAppointmentReschedule;
                             const isDraggingThis = dragState.isDragging && dragState.appointment?.id === apt.id;
 

@@ -2,10 +2,11 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Pathology, PathologyFormData } from '@/types/evolution';
 
 export class PathologyService {
+  // Optimized: Select only required columns instead of *
   static async getPathologiesByPatientId(patientId: string): Promise<Pathology[]> {
     const { data, error } = await supabase
       .from('patient_pathologies')
-      .select('*')
+      .select('id, patient_id, diagnosis, status, notes, created_at, updated_at')
       .eq('patient_id', patientId)
       .order('created_at', { ascending: false });
 
@@ -13,10 +14,11 @@ export class PathologyService {
     return (data || []) as Pathology[];
   }
 
+  // Optimized: Select only required columns instead of *
   static async getActivePathologies(patientId: string): Promise<Pathology[]> {
     const { data, error } = await supabase
       .from('patient_pathologies')
-      .select('*')
+      .select('id, patient_id, diagnosis, status, notes, created_at, updated_at')
       .eq('patient_id', patientId)
       .eq('status', 'em_tratamento')
       .order('created_at', { ascending: false });
@@ -25,10 +27,11 @@ export class PathologyService {
     return (data || []) as Pathology[];
   }
 
+  // Optimized: Select only required columns instead of *
   static async getResolvedPathologies(patientId: string): Promise<Pathology[]> {
     const { data, error } = await supabase
       .from('patient_pathologies')
-      .select('*')
+      .select('id, patient_id, diagnosis, status, notes, created_at, updated_at')
       .eq('patient_id', patientId)
       .in('status', ['tratada', 'cronica'])
       .order('created_at', { ascending: false });
@@ -37,47 +40,51 @@ export class PathologyService {
     return (data || []) as Pathology[];
   }
 
+  // Optimized: Select only required columns
   static async addPathology(data: PathologyFormData): Promise<Pathology> {
     const { data: pathology, error } = await supabase
       .from('patient_pathologies')
       .insert(data)
-      .select()
+      .select('id, patient_id, diagnosis, status, notes, created_at, updated_at')
       .single();
 
     if (error) throw error;
     return pathology as Pathology;
   }
 
+  // Optimized: Select only required columns
   static async updatePathology(pathologyId: string, data: Partial<PathologyFormData>): Promise<Pathology> {
     const { data: pathology, error } = await supabase
       .from('patient_pathologies')
       .update(data)
       .eq('id', pathologyId)
-      .select()
+      .select('id, patient_id, diagnosis, status, notes, created_at, updated_at')
       .single();
 
     if (error) throw error;
     return pathology as Pathology;
   }
 
+  // Optimized: Select only required columns
   static async markAsResolved(pathologyId: string): Promise<Pathology> {
     const { data, error } = await supabase
       .from('patient_pathologies')
       .update({ status: 'tratada' })
       .eq('id', pathologyId)
-      .select()
+      .select('id, patient_id, diagnosis, status, notes, created_at, updated_at')
       .single();
 
     if (error) throw error;
     return data as Pathology;
   }
 
+  // Optimized: Select only required columns
   static async markAsActive(pathologyId: string): Promise<Pathology> {
     const { data, error } = await supabase
       .from('patient_pathologies')
       .update({ status: 'em_tratamento' })
       .eq('id', pathologyId)
-      .select()
+      .select('id, patient_id, diagnosis, status, notes, created_at, updated_at')
       .single();
 
     if (error) throw error;

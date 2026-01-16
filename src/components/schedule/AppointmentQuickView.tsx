@@ -202,14 +202,27 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {Object.entries(STATUS_CONFIG).map(([value, config]) => (
-                <SelectItem key={value} value={value}>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: config.color }} aria-hidden="true" />
-                    <span>{config.label}</span>
-                  </div>
-                </SelectItem>
-              ))}
+              {Object.entries(STATUS_CONFIG)
+                .filter(([key]) => [
+                  'agendado',
+                  'confirmado',
+                  'em_andamento',
+                  'realizado',
+                  'cancelado',
+                  'falta',
+                  'remarcado',
+                  'aguardando_confirmacao',
+                  'em_espera',
+                  'avaliacao'
+                ].includes(key))
+                .map(([value, config]) => (
+                  <SelectItem key={value} value={value}>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: config.color }} aria-hidden="true" />
+                      <span>{config.label}</span>
+                    </div>
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>
@@ -220,24 +233,6 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
       {/* Actions */}
       <div className="p-3.5 space-y-2.5 bg-muted/20">
         <div className="flex items-center gap-2">
-          {canStartAttendance && (
-            <Button
-              onClick={handleStartAttendance}
-              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
-              size="sm"
-              aria-label={appointment.status === 'avaliacao' ? 'Iniciar avaliação' : 'Iniciar atendimento'}
-            >
-              <span className="flex items-center gap-1.5">
-                {appointment.status === 'avaliacao' ? (
-                  <FileText className="h-4 w-4" />
-                ) : (
-                  <Play className="h-4 w-4" />
-                )}
-                {appointment.status === 'avaliacao' ? 'Iniciar Avaliação' : 'Iniciar atendimento'}
-              </span>
-            </Button>
-          )}
-
           {onEdit && (
             <Button
               variant="outline"
@@ -259,6 +254,24 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
               aria-label="Excluir agendamento"
             >
               <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+
+          {canStartAttendance && (
+            <Button
+              onClick={handleStartAttendance}
+              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+              size="sm"
+              aria-label={appointment.status === 'avaliacao' ? 'Iniciar avaliação' : 'Iniciar atendimento'}
+            >
+              <span className="flex items-center gap-1.5">
+                {appointment.status === 'avaliacao' ? (
+                  <FileText className="h-4 w-4" />
+                ) : (
+                  <Play className="h-4 w-4" />
+                )}
+                {appointment.status === 'avaliacao' ? 'Iniciar Avaliação' : 'Iniciar atendimento'}
+              </span>
             </Button>
           )}
         </div>

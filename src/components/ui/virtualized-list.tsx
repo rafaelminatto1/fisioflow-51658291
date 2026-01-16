@@ -132,7 +132,7 @@ export function VirtualizedList<T>({
   }, [items, itemHeight]);
 
   // Calcular itens visíveis
-  const { visibleItems, _startIndex, _endIndex } = useMemo(() => {
+  const { visibleItems, startIndex, endIndex } = useMemo(() => {
     const getItemHeightLocal = (index: number) => itemHeights[index] || 50;
 
     let startNode = 0;
@@ -172,8 +172,8 @@ export function VirtualizedList<T>({
 
     return {
       visibleItems: visible,
-      startIndex: _startIndex,
-      endIndex: _endIndex,
+      startIndex: startNode,
+      endIndex: endNode,
     };
   }, [items, itemHeights, scrollTop, containerHeight, overscan, getItemOffset]);
 

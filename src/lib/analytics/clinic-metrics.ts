@@ -11,6 +11,7 @@ import {
   startOfMonth,
   endOfMonth,
   differenceInDays,
+  subDays,
   format,
   parseISO,
 } from 'date-fns';
@@ -38,6 +39,7 @@ export interface RevenueMetrics {
   overdue: number;
   averagePerAppointment: number;
   growthRate: number;
+  previousPeriodTotal?: number; // Total do período anterior para contexto
 }
 
 export interface PatientMetrics {
@@ -192,8 +194,27 @@ export function calculateRevenueMetrics(
   const appointmentCount = new Set(filtered.filter(p => p.appointment_id).map(p => p.appointment_id)).size;
   const averagePerAppointment = appointmentCount > 0 ? total / appointmentCount : 0;
 
-  // TODO: Calculate growth rate by comparing with previous period
-  const growthRate = 0;
+  // Calculate growth rate by comparing with previous period
+  // Previous period is the same duration immediately before startDate
+  const periodDuration = differenceInDays(endDate, startDate) + 1;
+  const previousPeriodStart = subDays(startDate, periodDuration);
+  const previousPeriodEnd = subDays(startDate, 1);
+
+  const previousPeriodPayments = payments.filter(p => {
+    const payDate = parseISO(p.date);
+    return payDate >= startOfDay(previousPeriodStart) && payDate <= endOfDay(previousPeriodEnd);
+  });
+
+  const previousPeriodTotal = previousPeriodPayments.reduce((sum, p) => sum + p.amount, 0);
+
+  // Calculate growth rate as percentage
+  let growthRate = 0;
+  if (previousPeriodTotal > 0) {
+    growthRate = ((total - previousPeriodTotal) / previousPeriodTotal) * 100;
+  } else if (total > 0) {
+    // If previous period was 0 and current is positive, it's infinite growth (represented as 100%)
+    growthRate = 100;
+  }
 
   return {
     total: Math.round(total * 100) / 100,
@@ -202,6 +223,7 @@ export function calculateRevenueMetrics(
     overdue: Math.round(overdue * 100) / 100,
     averagePerAppointment: Math.round(averagePerAppointment * 100) / 100,
     growthRate: Math.round(growthRate * 10) / 10,
+    previousPeriodTotal: Math.round(previousPeriodTotal * 100) / 100, // Include for transparency
   };
 }
 

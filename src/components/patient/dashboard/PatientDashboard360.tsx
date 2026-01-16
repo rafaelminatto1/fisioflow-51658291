@@ -199,7 +199,7 @@ export const PatientDashboard360 = ({
                 </div>
 
                 {/* AI Insight Section */}
-                <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 border-indigo-100 dark:border-indigo-900/50">
+                <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 border-indigo-100 dark:border-indigo-900/50 shadow-[0_0_15px_rgba(79,70,229,0.1)] dark:shadow-[0_0_20px_rgba(129,140,248,0.1)] transition-all hover:shadow-[0_0_25px_rgba(79,70,229,0.15)] ring-1 ring-indigo-500/10">
                     <CardContent className="p-6">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="font-semibold flex items-center gap-2 text-indigo-700 dark:text-indigo-400">

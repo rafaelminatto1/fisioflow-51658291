@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trash2, House, Search, Send, Library, CheckCircle2 } from 'lucide-react';
+import { Trash2, House, Search, Send, Library, CheckCircle2, Dumbbell, Circle } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ExerciseLibraryModal } from '../exercises/ExerciseLibraryModal';
+import { Card } from '@/components/ui/card';
 
 interface HomeCareWidgetProps {
     patientId: string;
@@ -207,84 +208,117 @@ export const HomeCareWidget: React.FC<HomeCareWidgetProps> = ({
                 </div>
 
                 <ScrollArea className="flex-1">
-                    <div className="p-3 space-y-3">
+                    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
                         {isLoading ? (
-                            <div className="space-y-3">
-                                {[1, 2].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />)}
+                            <div className="col-span-full space-y-3">
+                                {[1, 2, 3].map(i => <div key={i} className="h-40 bg-muted animate-pulse rounded-xl" />)}
                             </div>
                         ) : prescriptions?.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-10 border rounded-lg border-dashed text-muted-foreground">
-                                <House className="h-8 w-8 mb-2 opacity-20" />
-                                <p className="text-xs">Nenhum exercício domiciliar</p>
-                                <p className="text-[10px] mt-1">Use a biblioteca ou busca acima para prescrever</p>
+                            <div className="col-span-full flex flex-col items-center justify-center py-12 border-2 border-dashed rounded-xl text-muted-foreground bg-muted/20">
+                                <House className="h-10 w-10 mb-3 opacity-20" />
+                                <p className="text-sm font-medium">Nenhum exercício domiciliar</p>
+                                <p className="text-xs mt-1">Use a biblioteca ou busca acima para prescrever</p>
                             </div>
                         ) : (
                             prescriptions?.map((p, index) => (
-                                <div key={p.id} className="group border rounded-lg p-2.5 space-y-2.5 bg-card hover:border-green-500/30 transition-colors relative">
-                                    <div className="flex items-start justify-between gap-2">
-                                        <div className="flex items-center gap-2 font-medium text-sm">
-                                            <span className="flex items-center justify-center h-5 w-5 rounded-full bg-green-100 text-green-600 text-[10px]">
-                                                {index + 1}
-                                            </span>
-                                            <span className="truncate max-w-[180px]" title={p.exercise?.name}>
+                                <Card
+                                    key={p.id}
+                                    className="group flex flex-col overflow-hidden transition-all duration-300 hover:shadow-md hover:border-green-500/50 relative border-2 border-border/50 bg-card"
+                                >
+                                    {/* Header / Thumbnail Area */}
+                                    <div className="relative aspect-video w-full bg-muted overflow-hidden shrink-0">
+                                        {p.exercise?.image_url ? (
+                                            <img
+                                                src={p.exercise.image_url}
+                                                alt={p.exercise.name}
+                                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                            />
+                                        ) : (
+                                            <div className="h-full w-full flex items-center justify-center text-muted-foreground/30">
+                                                <Dumbbell className="h-10 w-10" />
+                                            </div>
+                                        )}
+
+                                        {/* Overlay with index and remove button */}
+                                        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-2">
+                                            <div className="flex justify-between items-start">
+                                                <span className="flex items-center justify-center h-6 w-6 rounded-full bg-green-500 text-white text-[10px] font-bold">
+                                                    {index + 1}
+                                                </span>
+                                                <Button
+                                                    variant="destructive"
+                                                    size="icon"
+                                                    className="h-7 w-7 rounded-full shadow-lg"
+                                                    onClick={() => removePrescription.mutate(p.id)}
+                                                    disabled={disabled}
+                                                >
+                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                </Button>
+                                            </div>
+                                        </div>
+
+                                        <div className="absolute bottom-2 left-2">
+                                            <Badge className="bg-white/90 text-green-700 hover:bg-white text-[9px] font-bold border-none shadow-sm">
+                                                HOME CARE
+                                            </Badge>
+                                        </div>
+                                    </div>
+
+                                    {/* Content Area */}
+                                    <div className="p-3 space-y-3 flex-1 flex flex-col">
+                                        <div className="min-w-0">
+                                            <h4 className="font-bold text-sm leading-tight line-clamp-2 min-h-[2.5rem]" title={p.exercise?.name}>
                                                 {p.exercise?.name}
-                                            </span>
+                                            </h4>
                                         </div>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-6 w-6 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                                            onClick={() => removePrescription.mutate(p.id)}
-                                            disabled={disabled}
-                                        >
-                                            <Trash2 className="h-3.5 w-3.5" />
-                                        </Button>
-                                    </div>
 
-                                    <div className="grid grid-cols-3 gap-2">
-                                        <div className="space-y-1">
-                                            <Label className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">Séries</Label>
-                                            <Input
-                                                type="number"
-                                                value={p.sets}
-                                                onChange={(e) => updatePrescription.mutate({ id: p.id, sets: parseInt(e.target.value) || 0 })}
-                                                className="h-7 text-xs px-2"
-                                                disabled={disabled}
-                                            />
+                                        {/* Inputs Grid */}
+                                        <div className="grid grid-cols-3 gap-2">
+                                            <div className="space-y-1">
+                                                <Label className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">Séries</Label>
+                                                <Input
+                                                    type="number"
+                                                    value={p.sets}
+                                                    onChange={(e) => updatePrescription.mutate({ id: p.id, sets: parseInt(e.target.value) || 0 })}
+                                                    className="h-7 text-xs px-2 font-bold bg-muted/30 focus:bg-background border-none ring-1 ring-border/50"
+                                                    disabled={disabled}
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">Reps</Label>
+                                                <Input
+                                                    type="number"
+                                                    value={p.reps}
+                                                    onChange={(e) => updatePrescription.mutate({ id: p.id, reps: parseInt(e.target.value) || 0 })}
+                                                    className="h-7 text-xs px-2 font-bold bg-muted/30 focus:bg-background border-none ring-1 ring-border/50"
+                                                    disabled={disabled}
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">Freq</Label>
+                                                <Input
+                                                    value={p.frequency || ''}
+                                                    onChange={(e) => updatePrescription.mutate({ id: p.id, frequency: e.target.value })}
+                                                    placeholder="1x/dia"
+                                                    className="h-7 text-xs px-2 font-bold bg-muted/30 focus:bg-background border-none ring-1 ring-border/50"
+                                                    disabled={disabled}
+                                                />
+                                            </div>
                                         </div>
-                                        <div className="space-y-1">
-                                            <Label className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">Reps</Label>
-                                            <Input
-                                                type="number"
-                                                value={p.reps}
-                                                onChange={(e) => updatePrescription.mutate({ id: p.id, reps: parseInt(e.target.value) || 0 })}
-                                                className="h-7 text-xs px-2"
-                                                disabled={disabled}
-                                            />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <Label className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">Frequência</Label>
-                                            <Input
-                                                value={p.frequency || ''}
-                                                onChange={(e) => updatePrescription.mutate({ id: p.id, frequency: e.target.value })}
-                                                placeholder="Ex: 2x/dia"
-                                                className="h-7 text-xs px-2"
-                                                disabled={disabled}
-                                            />
-                                        </div>
-                                    </div>
 
-                                    <div className="space-y-1">
-                                        <Label className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">Notas para o Paciente</Label>
-                                        <Input
-                                            value={p.notes || ''}
-                                            onChange={(e) => updatePrescription.mutate({ id: p.id, notes: e.target.value })}
-                                            placeholder="Orientações de execução..."
-                                            className="h-7 text-xs px-2 italic"
-                                            disabled={disabled}
-                                        />
+                                        {/* Notes */}
+                                        <div className="space-y-1 mt-auto pt-2 border-t border-dashed">
+                                            <Label className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">Orientações</Label>
+                                            <textarea
+                                                value={p.notes || ''}
+                                                onChange={(e) => updatePrescription.mutate({ id: p.id, notes: e.target.value })}
+                                                placeholder="Orientações para o paciente..."
+                                                className="w-full text-[10px] p-2 rounded bg-muted/30 focus:bg-background border-none ring-1 ring-border/50 outline-none min-h-[40px] resize-none italic"
+                                                disabled={disabled}
+                                            />
+                                        </div>
                                     </div>
-                                </div>
+                                </Card>
                             ))
                         )}
                     </div>

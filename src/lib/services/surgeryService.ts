@@ -3,10 +3,11 @@ import type { Surgery, SurgeryFormData } from '@/types/evolution';
 import { differenceInDays, differenceInMonths, differenceInYears } from 'date-fns';
 
 export class SurgeryService {
+  // Optimized: Select only required columns instead of *
   static async getSurgeriesByPatientId(patientId: string): Promise<Surgery[]> {
     const { data, error } = await supabase
       .from('patient_surgeries')
-      .select('*')
+      .select('id, patient_id, surgery_type, surgery_date, hospital, surgeon, notes, complications, created_at, updated_at')
       .eq('patient_id', patientId)
       .order('surgery_date', { ascending: false });
 
@@ -14,23 +15,25 @@ export class SurgeryService {
     return (data || []) as Surgery[];
   }
 
+  // Optimized: Select only required columns
   static async addSurgery(data: SurgeryFormData): Promise<Surgery> {
     const { data: surgery, error } = await supabase
       .from('patient_surgeries')
       .insert(data)
-      .select()
+      .select('id, patient_id, surgery_type, surgery_date, hospital, surgeon, notes, complications, created_at, updated_at')
       .single();
 
     if (error) throw error;
     return surgery as Surgery;
   }
 
+  // Optimized: Select only required columns
   static async updateSurgery(surgeryId: string, data: Partial<SurgeryFormData>): Promise<Surgery> {
     const { data: surgery, error } = await supabase
       .from('patient_surgeries')
       .update(data)
       .eq('id', surgeryId)
-      .select()
+      .select('id, patient_id, surgery_type, surgery_date, hospital, surgeon, notes, complications, created_at, updated_at')
       .single();
 
     if (error) throw error;

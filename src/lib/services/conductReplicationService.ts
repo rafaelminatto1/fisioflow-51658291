@@ -10,11 +10,12 @@ export interface ConductData {
 }
 
 export class ConductReplicationService {
+  // Optimized: Select only required columns instead of *
   static async getSavedConducts(patientId: string): Promise<ConductTemplate[]> {
     // For now, we'll get recent SOAP records as conduct templates
     const { data, error } = await supabase
       .from('soap_records')
-      .select('*')
+      .select('id, patient_id, record_date, plan, assessment, created_by, created_at')
       .eq('patient_id', patientId)
       .not('plan', 'is', null)
       .order('record_date', { ascending: false })

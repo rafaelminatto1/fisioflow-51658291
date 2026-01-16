@@ -51,6 +51,15 @@ export interface WaitlistAnalytics {
   };
 }
 
+export interface TherapistAvailability {
+  therapist_id: string;
+  therapist_name: string;
+  available_slots: Array<{
+    date: string;
+    time: string;
+  }>;
+}
+
 // =====================================================================
 // CONSTANTS
 // =====================================================================
@@ -63,6 +72,7 @@ const PRIORITY_WEIGHTS = {
 
 const WAITING_TIME_WEIGHT = 2; // points per day
 const REFUSAL_PENALTY = 20; // points per refusal
+const PREFERRED_THERAPIST_BONUS = 35; // points for matching preferred therapist
 
 const PERIODS = {
   morning: { start: 7, end: 12 },
@@ -140,7 +150,8 @@ export function generateAvailableSlots(
  */
 export function calculateCandidateScore(
   entry: WaitlistEntry,
-  slot: TimeSlot
+  slot: TimeSlot,
+  therapistAvailability?: TherapistAvailability[]
 ): SlotCandidate {
   const matchReasons: string[] = [];
   let score = 0;
@@ -176,7 +187,22 @@ export function calculateCandidateScore(
   }
 
   // Verificar terapeuta preferencial (se houver vaga disponível)
-  // TODO: Implementar verificação de disponibilidade de terapeuta
+  if (entry.preferred_therapist_id && therapistAvailability) {
+    const preferredTherapist = therapistAvailability.find(
+      t => t.therapist_id === entry.preferred_therapist_id
+    );
+
+    if (preferredTherapist) {
+      const isTherapistAvailable = preferredTherapist.available_slots.some(
+        availableSlot => availableSlot.date === slot.dateString && availableSlot.time === slot.time
+      );
+
+      if (isTherapistAvailable) {
+        score += PREFERRED_THERAPIST_BONUS;
+        matchReasons.push(`Terapeuta preferencial disponível: ${preferredTherapist.therapist_name}`);
+      }
+    }
+  }
 
   return {
     entry,
@@ -193,7 +219,8 @@ export function calculateCandidateScore(
 export function findCandidatesForSlot(
   waitlist: WaitlistEntry[],
   slot: TimeSlot,
-  limit: number = 5
+  limit: number = 5,
+  therapistAvailability?: TherapistAvailability[]
 ): SlotCandidate[] {
   const candidates = waitlist
     .filter(entry => {
@@ -206,7 +233,7 @@ export function findCandidatesForSlot(
 
       return dayMatch || periodMatch;
     })
-    .map(entry => calculateCandidateScore(entry, slot))
+    .map(entry => calculateCandidateScore(entry, slot, therapistAvailability))
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
 
@@ -223,12 +250,13 @@ export function findCandidatesForSlot(
 export function generateWaitlistRecommendations(
   waitlist: WaitlistEntry[],
   availableSlots: TimeSlot[],
-  candidatesPerSlot: number = 3
+  candidatesPerSlot: number = 3,
+  therapistAvailability?: TherapistAvailability[]
 ): WaitlistRecommendation[] {
   const recommendations: WaitlistRecommendation[] = [];
 
   for (const slot of availableSlots) {
-    const candidates = findCandidatesForSlot(waitlist, slot, candidatesPerSlot);
+    const candidates = findCandidatesForSlot(waitlist, slot, candidatesPerSlot, therapistAvailability);
 
     if (candidates.length > 0) {
       // Calculate urgency level based on top candidate
@@ -451,4 +479,13 @@ export default {
   generateWaitlistAnalytics,
   detectWaitlistAnomalies,
   optimizeSlotAllocation,
+};
+
+// Export types for external use
+export type {
+  TimeSlot,
+  SlotCandidate,
+  WaitlistRecommendation,
+  WaitlistAnalytics,
+  TherapistAvailability,
 };

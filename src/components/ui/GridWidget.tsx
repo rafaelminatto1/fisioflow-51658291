@@ -14,6 +14,7 @@ interface GridWidgetProps extends React.HTMLAttributes<HTMLDivElement> {
     headerActions?: React.ReactNode;
     extraHeaderContent?: React.ReactNode;
     headerClassName?: string;
+    contentClassName?: string;
     className?: string;
     // Props injected by react-grid-layout
     style?: React.CSSProperties;
@@ -44,6 +45,7 @@ export const GridWidget = forwardRef<HTMLDivElement, GridWidgetProps>(
             headerActions,
             extraHeaderContent,
             headerClassName,
+            contentClassName,
             className,
             style,
             className_rgl,
@@ -84,9 +86,10 @@ export const GridWidget = forwardRef<HTMLDivElement, GridWidgetProps>(
                 {...props}
             >
                 <Card className={cn(
-                    "h-full flex flex-col shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden select-none",
-                    "border-2", // Increased border for better visibility
-                    isDraggable && isGrabbed && "shadow-lg ring-2 ring-primary/20 scale-[1.01]" // Grab state feedback
+                    "h-full flex flex-col shadow-sm transition-all duration-200 overflow-hidden select-none",
+                    "border-2 border-border/60",
+                    isDraggable && "hover:border-primary/30",
+                    isDraggable && isGrabbed && "shadow-xl ring-4 ring-primary/10 scale-[1.02] border-primary/50 z-50" // Enhanced grab state
                 )}>
                     {(title || icon || isDraggable || extraHeaderContent || headerActions) && (
                         <CardHeader className={cn(
@@ -148,8 +151,8 @@ export const GridWidget = forwardRef<HTMLDivElement, GridWidgetProps>(
                             </div>
                         </CardHeader>
                     )}
-                    <CardContent className="p-0 flex-1 overflow-auto flex flex-col">
-                        <div className="h-full w-full">{children}</div>
+                    <CardContent className={cn("p-0 flex-1 overflow-hidden flex flex-col", contentClassName)}>
+                        {children}
                     </CardContent>
                 </Card>
             </div>

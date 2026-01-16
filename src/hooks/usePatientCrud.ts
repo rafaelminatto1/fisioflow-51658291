@@ -3,6 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { logger } from '@/lib/errors/logger';
 import { sanitizeString, sanitizeEmail, cleanCPF, cleanPhone } from '@/lib/validations';
+import { useState } from 'react';
+import {
+  PATIENT_SELECT,
+  PATIENT_QUERY_CONFIG,
+  devValidate,
+  type PatientDBStandard
+} from '@/lib/constants/patient-queries';
 
 // ============================================================================================
 // TYPES
@@ -86,30 +93,59 @@ export interface PatientUpdateInput extends Partial<Omit<PatientCreateInput, 'or
   incomplete_registration?: boolean;
 }
 
+export interface PatientsQueryParams {
+  organizationId?: string | null;
+  status?: string | null;
+  searchTerm?: string;
+  pageSize?: number;
+  currentPage?: number;
+}
+
+export interface PatientsPaginatedResult {
+  data: Patient[];
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  isLoading: boolean;
+  error: Error | null;
+  nextPage: () => void;
+  previousPage: () => void;
+  goToPage: (page: number) => void;
+  refetch: () => void;
+}
+
 // ============================================================================================
 // HOOKS
 // ============================================================================================
 
 /**
  * Fetch all patients for the current organization
+ * Uses centralized query constants for consistency
  */
 export const usePatients = () => {
   return useQuery({
     queryKey: ['patients'],
     queryFn: async (): Promise<Patient[]> => {
+      devValidate(PATIENT_SELECT.standard);
+
       const { data, error } = await supabase
         .from('patients')
-        .select('*')
+        .select<PatientDBStandard>(PATIENT_SELECT.standard)
         .order('full_name', { ascending: true });
 
       if (error) throw error;
-      return data as Patient[];
+      return (data as Patient[]) ?? [];
     },
+    staleTime: PATIENT_QUERY_CONFIG.staleTime,
+    gcTime: PATIENT_QUERY_CONFIG.staleTime * 2,
   });
 };
 
 /**
  * Fetch a single patient by ID
+ * Uses centralized query constants for consistency
  */
 export const usePatient = (id: string | undefined) => {
   return useQuery({
@@ -117,9 +153,11 @@ export const usePatient = (id: string | undefined) => {
     queryFn: async (): Promise<Patient | null> => {
       if (!id) return null;
 
+      devValidate(PATIENT_SELECT.standard);
+
       const { data, error } = await supabase
         .from('patients')
-        .select('*')
+        .select<PatientDBStandard>(PATIENT_SELECT.standard)
         .eq('id', id)
         .single();
 
@@ -127,6 +165,8 @@ export const usePatient = (id: string | undefined) => {
       return data as Patient;
     },
     enabled: !!id,
+    staleTime: PATIENT_QUERY_CONFIG.staleTimeLong,
+    gcTime: PATIENT_QUERY_CONFIG.staleTimeLong * 3,
   });
 };
 
@@ -174,10 +214,11 @@ export const useCreatePatient = () => {
         organization_id: input.organization_id,
       };
 
+      // Optimized: Use centralized query constants
       const { data, error } = await supabase
         .from('patients')
         .insert([sanitizedData])
-        .select()
+        .select<PatientDBStandard>(PATIENT_SELECT.standard)
         .single();
 
       if (error) throw error;
@@ -253,11 +294,12 @@ export const useUpdatePatient = () => {
       if (inputData.consent_image !== undefined) sanitizedData.consent_image = inputData.consent_image;
       if (inputData.incomplete_registration !== undefined) sanitizedData.incomplete_registration = inputData.incomplete_registration;
 
+      // Optimized: Use centralized query constants
       const { data, error } = await supabase
         .from('patients')
         .update(sanitizedData)
         .eq('id', id)
-        .select()
+        .select<PatientDBStandard>(PATIENT_SELECT.standard)
         .single();
 
       if (error) throw error;
@@ -326,6 +368,7 @@ export const useUpdatePatientStatus = () => {
 
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: 'Inicial' | 'Em Tratamento' | 'Recuperação' | 'Concluído' }): Promise<Patient> => {
+      // Optimized: Use centralized query constants
       const { data, error } = await supabase
         .from('patients')
         .update({
@@ -333,7 +376,7 @@ export const useUpdatePatientStatus = () => {
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)
-        .select()
+        .select<PatientDBStandard>(PATIENT_SELECT.standard)
         .single();
 
       if (error) throw error;
@@ -355,4 +398,105 @@ export const useUpdatePatientStatus = () => {
       });
     },
   });
+};
+
+/**
+ * Fetch patients with server-side pagination and filtering
+ * @param params Query parameters including organizationId, status, searchTerm, pageSize, currentPage
+ * @returns Paginated result with data and pagination controls
+ */
+export const usePatientsPaginated = (params: PatientsQueryParams = {}): PatientsPaginatedResult => {
+  const {
+    organizationId,
+    status,
+    searchTerm,
+    pageSize = 20,
+    currentPage: initialPage = 1,
+  } = params;
+
+  const [currentPage, setCurrentPage] = useState(initialPage);
+
+  const queryResult = useQuery({
+    queryKey: ['patients', 'paginated', organizationId, status, searchTerm, currentPage, pageSize],
+    queryFn: async (): Promise<{ data: Patient[]; count: number }> => {
+      // Build the query with filters - use dev-only validation
+      devValidate(PATIENT_SELECT.standard);
+
+      let query = supabase
+        .from('patients')
+        .select<PatientDBStandard>(PATIENT_SELECT.standard, { count: 'exact' });
+
+      // Apply organization filter
+      if (organizationId) {
+        query = query.eq('organization_id', organizationId);
+      }
+
+      // Apply status filter
+      if (status && status !== 'all') {
+        query = query.eq('status', status);
+      }
+
+      // Apply search filter (searches in name, email, phone)
+      if (searchTerm && searchTerm.trim()) {
+        const searchLower = searchTerm.trim().toLowerCase();
+        query = query.or(`full_name.ilike.%${searchLower}%,email.ilike.%${searchLower}%,phone.ilike.%${searchLower}%`);
+      }
+
+      // Calculate range for pagination
+      const from = (currentPage - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      // Apply pagination and ordering
+      query = query
+        .order('full_name', { ascending: true })
+        .range(from, to);
+
+      const { data, error, count } = await query;
+
+      if (error) throw error;
+
+      return {
+        data: (data as Patient[]) || [],
+        count: count || 0,
+      };
+    },
+    enabled: true,
+    staleTime: 1000 * 60 * 2, // 2 minutes
+  });
+
+  const totalCount = queryResult.data?.count || 0;
+  const data = queryResult.data?.data || [];
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  const nextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(p => p + 1);
+    }
+  };
+
+  const previousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(p => p - 1);
+    }
+  };
+
+  const goToPage = (page: number) => {
+    const validPage = Math.max(1, Math.min(page, totalPages));
+    setCurrentPage(validPage);
+  };
+
+  return {
+    data,
+    totalCount,
+    currentPage,
+    totalPages,
+    hasNextPage: currentPage < totalPages,
+    hasPreviousPage: currentPage > 1,
+    isLoading: queryResult.isLoading,
+    error: queryResult.error || null,
+    nextPage,
+    previousPage,
+    goToPage,
+    refetch: queryResult.refetch,
+  };
 };

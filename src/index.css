@@ -1066,7 +1066,7 @@ All colors MUST be HSL.
      ======================================== */
 
   .calendar-time-slot {
-    @apply relative w-full h-12 sm:h-[60px] border-b border-border;
+    @apply relative w-full h-12 sm:h-[50px] border-b border-border;
     @apply transition-colors duration-150;
   }
 

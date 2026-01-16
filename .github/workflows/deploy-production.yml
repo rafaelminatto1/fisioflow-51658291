@@ -6,6 +6,15 @@ on:
     tags:
       - 'v*'
 
+# Disable email notifications
+permissions:
+  contents: read
+
+# Cancel in-progress runs for the same workflow and branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   NODE_VERSION: '20'
   PNPM_VERSION: '9'

@@ -8,10 +8,11 @@ import type {
 } from '@/types/painMap';
 
 export class PainMapService {
+  // Optimized: Select only required columns instead of *
   static async getPainMapsByPatientId(patientId: string): Promise<PainMapRecord[]> {
     const { data, error } = await supabase
       .from('pain_maps')
-      .select('*')
+      .select('id, patient_id, global_pain_level, pain_points, recorded_at, created_at, updated_at')
       .eq('patient_id', patientId)
       .order('recorded_at', { ascending: false });
 
@@ -19,10 +20,11 @@ export class PainMapService {
     return (data as unknown) as PainMapRecord[] || [];
   }
 
+  // Optimized: Select only required columns instead of *
   static async getPainMapById(id: string): Promise<PainMapRecord> {
     const { data, error } = await supabase
       .from('pain_maps')
-      .select('*')
+      .select('id, patient_id, global_pain_level, pain_points, recorded_at, created_at, updated_at')
       .eq('id', id)
       .single();
 
@@ -34,7 +36,7 @@ export class PainMapService {
     const { data, error } = await supabase
       .from('pain_maps')
       .insert(painMap)
-      .select()
+      .select('id, patient_id, global_pain_level, pain_points, recorded_at, created_at, updated_at')
       .single();
 
     if (error) throw error;
@@ -46,7 +48,7 @@ export class PainMapService {
       .from('pain_maps')
       .update(painMap)
       .eq('id', id)
-      .select()
+      .select('id, patient_id, global_pain_level, pain_points, recorded_at, created_at, updated_at')
       .single();
 
     if (error) throw error;
@@ -62,10 +64,11 @@ export class PainMapService {
     if (error) throw error;
   }
 
+  // Optimized: Select only required columns instead of *
   static async getPainEvolution(patientId: string, startDate?: string, endDate?: string): Promise<PainEvolutionData[]> {
     let query = supabase
       .from('pain_maps')
-      .select('*')
+      .select('id, patient_id, global_pain_level, pain_points, recorded_at, created_at, updated_at')
       .eq('patient_id', patientId)
       .order('recorded_at', { ascending: true });
 

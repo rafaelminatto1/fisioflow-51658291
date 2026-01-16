@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import { LazyComponent } from '@/components/common/LazyComponent';
 import {
   PatientCreateModal,
@@ -26,9 +35,10 @@ import {
   matchesFilters,
   type PatientFilters
 } from '@/components/patients';
-import { usePatients } from '@/hooks/usePatientCrud';
+import { usePatientsPaginated } from '@/hooks/usePatientCrud';
 import { useMultiplePatientStats, formatFirstEvaluationDate } from '@/hooks/usePatientStats';
 import { PatientHelpers } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Plus,
   Search,
@@ -43,14 +53,43 @@ import { cn, calculateAge, exportToCSV } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 
 const Patients = () => {
+  const { profile } = useAuth();
+  const organizationId = profile?.organization_id;
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [conditionFilter, setConditionFilter] = useState<string>('all');
   const [isNewPatientModalOpen, setIsNewPatientModalOpen] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState<PatientFilters>({});
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  const { data: patients = [], isLoading: loading } = usePatients();
+  // Debounce search to avoid excessive API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Use paginated query with server-side filtering
+  const {
+    data: patients = [],
+    totalCount,
+    currentPage,
+    totalPages,
+    hasNextPage,
+    hasPreviousPage,
+    nextPage,
+    previousPage,
+    goToPage,
+    isLoading: loading,
+  } = usePatientsPaginated({
+    organizationId,
+    status: statusFilter,
+    searchTerm: debouncedSearch,
+    pageSize: 20,
+  });
 
   // Buscar estatísticas de múltiplos pacientes
   const patientIds = useMemo(() => patients.map(p => p.id), [patients]);
@@ -58,38 +97,34 @@ const Patients = () => {
 
   const navigate = useNavigate();
 
-  // Get unique conditions and statuses for filters
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    goToPage(1);
+  }, [statusFilter, debouncedSearch, conditionFilter]);
+
+  // Get unique conditions and statuses for filters (from current page)
   const uniqueConditions = useMemo(() => {
     const conditions = [...new Set(patients.map(p => p.main_condition).filter(Boolean))];
     return conditions.sort();
   }, [patients]);
 
+  // Apply client-side filters for condition (not supported server-side yet)
   const filteredPatients = useMemo(() => {
     return patients.filter(patient => {
-      const patientName = PatientHelpers.getName(patient);
-      const matchesSearch =
-        patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (patient.main_condition || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (patient.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (patient.phone || '').toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchesStatus = statusFilter === 'all' || patient.status === statusFilter;
       const matchesCondition = conditionFilter === 'all' || patient.main_condition === conditionFilter;
-
-      // Aplicar filtros avançados
+      // Advanced filters still apply on current page results
       const matchesAdvancedFilters = matchesFilters(patient.id, advancedFilters, statsMap);
-
-      return matchesSearch && matchesStatus && matchesCondition && matchesAdvancedFilters;
+      return matchesCondition && matchesAdvancedFilters;
     });
-  }, [patients, searchTerm, statusFilter, conditionFilter, advancedFilters, statsMap]);
+  }, [patients, conditionFilter, advancedFilters, statsMap]);
 
   // Calcular contagem de filtros ativos
   const activeAdvancedFiltersCount = countActiveFilters(advancedFilters);
 
-  // Estatísticas dos pacientes filtrados
+  // Estatísticas dos pacientes na página atual filtrada
   const filteredStats = useMemo(() => {
     const stats = {
-      total: filteredPatients.length,
+      total: totalCount, // Total from server (respecting server-side filters)
       active: 0,
       inactive7: 0,
       inactive30: 0,
@@ -100,6 +135,7 @@ const Patients = () => {
       completed: 0
     };
 
+    // Only count visible patients on current page
     filteredPatients.forEach(p => {
       const patientStats = statsMap[p.id];
       if (!patientStats) return;
@@ -134,7 +170,7 @@ const Patients = () => {
     });
 
     return stats;
-  }, [filteredPatients, statsMap]);
+  }, [filteredPatients, statsMap, totalCount]);
 
   const handleFilterChange = (filters: PatientFilters) => {
     setAdvancedFilters(filters);
@@ -250,8 +286,10 @@ const Patients = () => {
                     <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-lg sm:text-2xl font-bold">{patients.length}</p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Total</p>
+                    <p className="text-lg sm:text-2xl font-bold">{totalCount}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                      {totalPages > 1 ? `Pág ${currentPage}/${totalPages}` : 'Total'}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -267,7 +305,7 @@ const Patients = () => {
                     <p className="text-lg sm:text-2xl font-bold">
                       {patients.filter(p => p.status === 'Em Tratamento').length}
                     </p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Ativos</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Ativos (página)</p>
                   </div>
                 </div>
               </CardContent>
@@ -283,7 +321,7 @@ const Patients = () => {
                     <p className="text-lg sm:text-2xl font-bold">
                       {patients.filter(p => p.status === 'Inicial').length}
                     </p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Novos</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Novos (página)</p>
                   </div>
                 </div>
               </CardContent>
@@ -299,7 +337,7 @@ const Patients = () => {
                     <p className="text-lg sm:text-2xl font-bold">
                       {patients.filter(p => p.status === 'Concluído').length}
                     </p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Concluídos</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Concluídos (página)</p>
                   </div>
                 </div>
               </CardContent>
@@ -426,8 +464,8 @@ const Patients = () => {
 
               {/* Indicador de filtros ativos */}
               {(statusFilter !== 'all' || conditionFilter !== 'all' || searchTerm || activeAdvancedFiltersCount > 0) && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span>{filteredPatients.length} paciente(s) encontrado(s)</span>
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <span>{totalCount} paciente(s) encontrado(s) no total</span>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -479,8 +517,9 @@ const Patients = () => {
             }
           />
         ) : (
-          <div className="grid gap-4 animate-fade-in">
-            {filteredPatients.map((patient, index) => {
+          <>
+            <div className="grid gap-4 animate-fade-in">
+              {filteredPatients.map((patient, index) => {
               const patientStats = statsMap[patient.id];
               const sessionsInfo = patientStats
                 ? `${patientStats.sessionsCompleted} sessão${patientStats.sessionsCompleted !== 1 ? 'ões' : ''}`
@@ -573,10 +612,70 @@ const Patients = () => {
               );
             })}
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-6" role="navigation" aria-label="Navegação de páginas de pacientes">
+              <Pagination>
+                <PaginationContent aria-label={`Página ${currentPage} de ${totalPages}`}>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => previousPage()}
+                      className={!hasPreviousPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      aria-label="Ir para página anterior"
+                      aria-disabled={!hasPreviousPage}
+                    />
+                  </PaginationItem>
+
+                  {/* Page numbers */}
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+
+                    return (
+                      <PaginationItem key={pageNum}>
+                        <PaginationLink
+                          onClick={() => goToPage(pageNum)}
+                          isActive={currentPage === pageNum}
+                          className="cursor-pointer"
+                          aria-label={`Ir para página ${pageNum}`}
+                          aria-current={currentPage === pageNum ? 'page' : undefined}
+                        >
+                          {pageNum}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  })}
+
+                  {totalPages > 5 && currentPage < totalPages - 2 && (
+                    <PaginationItem aria-hidden="true">
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  )}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => nextPage()}
+                      className={!hasNextPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      aria-label="Ir para próxima página"
+                      aria-disabled={!hasNextPage}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
+        </>
         )}
       </div>
-
-      {/* Modals */}
       <PatientCreateModal
         open={isNewPatientModalOpen}
         onOpenChange={setIsNewPatientModalOpen}

@@ -48,6 +48,7 @@ export interface Profile {
   timezone?: string;
   is_active: boolean;
   emergency_contact?: EmergencyContact;
+  preferences?: Record<string, any>;
   created_at: string;
   updated_at: string;
 }
