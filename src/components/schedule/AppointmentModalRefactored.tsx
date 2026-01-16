@@ -310,7 +310,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       console.error('Erro ao salvar (catch):', error);
       // O hook já deve ter exibido toast de erro, mas se foi erro síncrono antes da mutation:
       if (error instanceof Error && !error.message.includes('permission') && !error.message.includes('fetch')) {
-         toast.error('Erro inesperado: ' + error.message);
+        toast.error('Erro inesperado: ' + error.message);
       }
     }
   };
@@ -420,7 +420,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
 
   const contentProps = isMobile
     ? { side: "bottom" as const, className: "h-[95vh] p-0 flex flex-col" }
-    : { className: "max-w-[95vw] sm:max-w-[600px] max-h-[95vh] h-auto flex flex-col p-0" };
+    : { className: "fixed left-[50%] top-[50%] z-50 transform !-translate-x-1/2 !-translate-y-1/2 w-full max-w-[95vw] sm:max-w-[600px] max-h-[80vh] h-auto flex flex-col p-0 shadow-2xl rounded-xl border border-border/40 bg-background/95 backdrop-blur-xl" };
 
   return (
     <ModalComponent open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -484,10 +484,10 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
 
                       // 1. Analyze Patient History
                       let preferredPeriod: 'morning' | 'afternoon' | 'evening' | null = null;
-                      
+
                       if (watchedPatientId) {
-                        const patientHistory = appointments.filter(a => 
-                          a.patientId === watchedPatientId && 
+                        const patientHistory = appointments.filter(a =>
+                          a.patientId === watchedPatientId &&
                           a.status !== 'cancelado'
                         );
 
@@ -527,17 +527,17 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                         if (periodA !== preferredPeriod && periodB === preferredPeriod) return 1;
                         return 0; // Maintain chronological order within same period
                       });
-                      
+
                       const day = watchedDate.getDay();
                       const bestSlot = sortedSlots.find(slot => {
                         if (!slot.isAvailable) return false;
                         // const capacity = getCapacityForTime(day, slot.time);
-                        return true; 
+                        return true;
                       });
 
                       if (bestSlot) {
                         setValue('appointment_time', bestSlot.time);
-                        
+
                         let reason = "";
                         if (preferredPeriod === 'morning') reason = " (Preferência: Manhã)";
                         else if (preferredPeriod === 'afternoon') reason = " (Preferência: Tarde)";

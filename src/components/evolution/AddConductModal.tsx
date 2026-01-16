@@ -93,7 +93,7 @@ export function AddConductModal({ open, onOpenChange, conduct }: AddConductModal
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="fixed left-[50%] top-[50%] z-50 transform !-translate-x-1/2 !-translate-y-1/2 w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl rounded-xl border border-border/40 bg-background/95 backdrop-blur-xl">
         <DialogHeader>
           <DialogTitle>{conduct ? 'Editar Conduta' : 'Nova Conduta'}</DialogTitle>
         </DialogHeader>

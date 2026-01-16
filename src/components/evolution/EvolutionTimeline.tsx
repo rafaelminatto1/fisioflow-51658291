@@ -52,6 +52,10 @@ import {
 import { format, formatDistanceToNow, isSameDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
+  useGamification,
+  type UnlockedAchievement
+} from '@/hooks/useGamification';
+import {
   useSoapRecords,
   type SoapRecord
 } from '@/hooks/useSoapRecords';
@@ -90,6 +94,7 @@ interface EvolutionTimelineProps {
   patientId: string;
   limit?: number;
   showFilters?: boolean;
+  showGamification?: boolean;
   onCopyEvolution?: (evolution: SoapRecord) => void;
 }
 
@@ -709,8 +714,10 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
   patientId,
   limit = 50,
   showFilters = true,
+  showGamification = true,
   onCopyEvolution
 }) => {
+  const { data: unlockedAchievements = [], isLoading: isLoadingGamification } = useGamification(patientId);
   const [filterType, setFilterType] = useState<TimelineEventType | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'timeline' | 'list'>('timeline');
@@ -935,6 +942,11 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5" />
               Linha do Tempo
+              {showGamification && !isLoadingGamification && (
+                <Badge variant="secondary" className="ml-2 gap-0.5 px-2 py-0.5">
+                  🏆 {unlockedAchievements.length}
+                </Badge>
+              )}
             </CardTitle>
 
             {showFilters && (
@@ -1013,7 +1025,37 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
               <ImageIcon className="h-3 w-3" />
               <span className="font-medium">{stats.attachments} anexos</span>
             </Badge>
-          </div>
+
+          {/* Gamification Panel */}
+          {showGamification && !isLoadingGamification && unlockedAchievements.length > 0 && (
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">🏆</span>
+                <h3 className="font-semibold text-sm">Conquistas Recentes</h3>
+                <Badge variant="outline" className="h-5 px-1.5 text-xs">
+                  {unlockedAchievements.length} novas
+                </Badge>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {unlockedAchievements.slice(0, 6).map((achievement) => (
+                  <div
+                    key={achievement.id}
+                    className="flex items-center gap-1 px-2 py-1 bg-background rounded-lg border border-amber-200 dark:border-amber-700 cursor-pointer hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
+                  >
+                    <span className="text-xs">🎯</span>
+                    <span className="text-xs font-medium line-clamp-1 min-w-0">
+                      {achievement.achievement_title}
+                    </span>
+                  </div>
+                ))}
+                {unlockedAchievements.length > 6 && (
+                  <div className="flex items-center px-2 py-1 bg-muted rounded-lg text-muted-foreground text-xs">
+                    +{unlockedAchievements.length - 6} mais
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </CardHeader>
 
         <CardContent>

@@ -44,7 +44,7 @@ export const ExerciseLibraryModal: React.FC<ExerciseLibraryModalProps> = ({
 
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
-            <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="fixed left-[50%] top-[50%] z-50 transform !-translate-x-1/2 !-translate-y-1/2 w-full max-w-7xl max-h-[85vh] overflow-y-auto shadow-2xl rounded-xl border border-border/40 bg-background/95 backdrop-blur-xl">
                 <DialogHeader>
                     <DialogTitle>Biblioteca de Exercícios</DialogTitle>
                 </DialogHeader>

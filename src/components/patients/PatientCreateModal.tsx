@@ -37,7 +37,7 @@ export const PatientCreateModal: React.FC<PatientCreateModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+      <DialogContent className="fixed left-[50%] top-[50%] z-50 transform !-translate-x-1/2 !-translate-y-1/2 w-full max-w-4xl max-h-[85vh] p-0 shadow-2xl rounded-xl border border-border/40 bg-background/95 backdrop-blur-xl">
         <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="w-5 h-5" />
