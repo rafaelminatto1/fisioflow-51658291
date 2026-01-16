@@ -2,105 +2,123 @@ import { lazy } from 'react';
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
-// Lazy load pages for better performance
-const Welcome = lazy(() => import("./pages/Welcome"));
-const Auth = lazy(() => import("./pages/Auth"));
+// Lazy load pages for better performance with webpack chunk names for better debugging
+const Welcome = lazy(() => import(/* webpackChunkName: "auth-welcome" */ "./pages/Welcome"));
+const Auth = lazy(() => import(/* webpackChunkName: "auth" */ "./pages/Auth"));
 
-const Index = lazy(() => import("./pages/Index"));
-const Patients = lazy(() => import("./pages/Patients"));
-const Schedule = lazy(() => import("./pages/Schedule"));
-const ScheduleSettings = lazy(() => import("./pages/ScheduleSettings"));
-const Exercises = lazy(() => import("./pages/Exercises"));
-const Financial = lazy(() => import("./pages/Financial"));
-const Reports = lazy(() => import("./pages/Reports"));
-const Settings = lazy(() => import("./pages/Settings"));
-const Profile = lazy(() => import("./pages/Profile").then(module => ({ default: module.Profile })));
-const MedicalRecord = lazy(() => import("./pages/MedicalRecord"));
-const SmartAI = lazy(() => import("./pages/SmartAI"));
-const PhysiotherapyHub = lazy(() => import("./pages/PhysiotherapyHub"));
-const Telemedicine = lazy(() => import("./pages/Telemedicine"));
-const ExerciseLibraryExpanded = lazy(() => import("./pages/ExerciseLibraryExpanded"));
-const Biofeedback = lazy(() => import("./pages/Biofeedback"));
-const PatientEvolution = lazy(() => import("./pages/PatientEvolution"));
-const PatientEvolutionReport = lazy(() => import("./pages/PatientEvolutionReport"));
-const Communications = lazy(() => import("./pages/Communications"));
-const Partner = lazy(() => import("./pages/Partner"));
-const Vouchers = lazy(() => import("./pages/Vouchers"));
-const Install = lazy(() => import("./pages/Install"));
-const Eventos = lazy(() => import("./pages/Eventos"));
-const EventoDetalhes = lazy(() => import("./pages/EventoDetalhes"));
-const EventosAnalytics = lazy(() => import("./pages/EventosAnalytics"));
-const FileUploadTest = lazy(() => import("./pages/FileUploadTest"));
-const UserManagement = lazy(() => import("./pages/UserManagement"));
-const Waitlist = lazy(() => import("./pages/Waitlist"));
-const Surveys = lazy(() => import("./pages/Surveys"));
-const AuditLogs = lazy(() => import("./pages/AuditLogs"));
-const InvitationManagement = lazy(() => import("./pages/InvitationManagement"));
-const SecurityMonitoring = lazy(() => import("./pages/SecurityMonitoring"));
-const SecuritySettings = lazy(() => import("./pages/SecuritySettings"));
-const AdvancedAnalytics = lazy(() => import("./pages/AdvancedAnalytics"));
-const AdminCRUD = lazy(() => import("./pages/AdminCRUD"));
-const OrganizationSettings = lazy(() => import("./pages/OrganizationSettings"));
-const Tarefas = lazy(() => import("./pages/Tarefas"));
-const MedicalChatbot = lazy(() => import("./components/chatbot/MedicalChatbot"));
-const ComputerVisionExercise = lazy(() => import("./components/computer-vision/ComputerVisionExercise"));
-const IntelligentReports = lazy(() => import("./components/reports/IntelligentReports"));
-const AugmentedRealityExercise = lazy(() => import("./components/ar/AugmentedRealityExercise"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const ProtocolsPage = lazy(() => import("./pages/Protocols"));
-const SmartDashboard = lazy(() => import("./pages/SmartDashboard"));
-const Inventory = lazy(() => import("./pages/Inventory"));
-const PatientGamificationPage = lazy(() => import("./pages/PatientGamificationPage"));
-const AdminGamificationPage = lazy(() => import("./pages/admin/gamification/AdminGamificationPage"));
-const NewEvaluationPage = lazy(() => import("./pages/patients/NewEvaluationPage"));
-const PainMapHistoryPage = lazy(() => import("./pages/patients/PainMapHistoryPage"));
-const SessionEvolutionPage = lazy(() => import("./pages/SessionEvolutionPage"));
-const ApiDocs = lazy(() => import("./pages/ApiDocs"));
-const Admin = lazy(() => import("./pages/Admin"));
-const CohortAnalysis = lazy(() => import("./pages/CohortAnalysis"));
+// Core pages - High priority chunks
+const Index = lazy(() => import(/* webpackChunkName: "dashboard" */ "./pages/Index"));
+const Patients = lazy(() => import(/* webpackChunkName: "patients" */ "./pages/Patients"));
+const Schedule = lazy(() => import(/* webpackChunkName: "schedule" */ "./pages/Schedule"));
+const Exercises = lazy(() => import(/* webpackChunkName: "exercises" */ "./pages/Exercises"));
+const Financial = lazy(() => import(/* webpackChunkName: "financial" */ "./pages/Financial"));
+const Reports = lazy(() => import(/* webpackChunkName: "reports" */ "./pages/Reports"));
+const Settings = lazy(() => import(/* webpackChunkName: "settings" */ "./pages/Settings"));
+const Profile = lazy(() => import(/* webpackChunkName: "profile" */ "./pages/Profile").then(module => ({ default: module.Profile })));
+const MedicalRecord = lazy(() => import(/* webpackChunkName: "medical-record" */ "./pages/MedicalRecord"));
 
-// Fase 2: Cadastros Gerais
-const ServicosPage = lazy(() => import("./pages/cadastros/ServicosPage"));
-const FornecedoresPage = lazy(() => import("./pages/cadastros/FornecedoresPage"));
-const FeriadosPage = lazy(() => import("./pages/cadastros/FeriadosPage"));
-const AtestadosPage = lazy(() => import("./pages/cadastros/AtestadosPage"));
-const ContratosPage = lazy(() => import("./pages/cadastros/ContratosPage"));
+// Feature pages - Medium priority chunks
+const SmartDashboard = lazy(() => import(/* webpackChunkName: "smart-dashboard" */ "./pages/SmartDashboard"));
+const SmartAI = lazy(() => import(/* webpackChunkName: "ai-smart" */ "./pages/SmartAI"));
+const PhysiotherapyHub = lazy(() => import(/* webpackChunkName: "physiotherapy" */ "./pages/PhysiotherapyHub"));
+const Telemedicine = lazy(() => import(/* webpackChunkName: "telemedicine" */ "./pages/Telemedicine"));
+const TelemedicineRoom = lazy(() => import(/* webpackChunkName: "telemedicine-room" */ "./pages/TelemedicineRoom"));
+const ExerciseLibraryExpanded = lazy(() => import(/* webpackChunkName: "exercises-library" */ "./pages/ExerciseLibraryExpanded"));
+const Biofeedback = lazy(() => import(/* webpackChunkName: "biofeedback" */ "./pages/Biofeedback"));
+const PatientEvolution = lazy(() => import(/* webpackChunkName: "patient-evolution" */ "./pages/PatientEvolution"));
+const PatientEvolutionReport = lazy(() => import(/* webpackChunkName: "patient-evolution-report" */ "./pages/PatientEvolutionReport"));
+const SessionEvolutionPage = lazy(() => import(/* webpackChunkName: "session-evolution" */ "./pages/SessionEvolutionPage"));
+const PainMapHistoryPage = lazy(() => import(/* webpackChunkName: "pain-maps" */ "./pages/patients/PainMapHistoryPage"));
+const NewEvaluationPage = lazy(() => import(/* webpackChunkName: "evaluation-new" */ "./pages/patients/NewEvaluationPage"));
+const PatientProfilePage = lazy(() => import(/* webpackChunkName: "patient-profile" */ "./pages/patients/PatientProfilePage"));
+const Communications = lazy(() => import(/* webpackChunkName: "communications" */ "./pages/Communications"));
 
-// Fase 3: Cadastros Clínicos
-const EvolutionTemplatesPage = lazy(() => import("./pages/cadastros/EvolutionTemplatesPage"));
-const EvaluationFormsPage = lazy(() => import("./pages/cadastros/EvaluationFormsPage"));
-const PatientObjectivesPage = lazy(() => import("./pages/cadastros/PatientObjectivesPage"));
-const EvaluationFormBuilderPage = lazy(() => import("./pages/cadastros/EvaluationFormBuilderPage"));
+// Settings & configuration pages
+const ScheduleSettings = lazy(() => import(/* webpackChunkName: "settings-schedule" */ "./pages/ScheduleSettings"));
+const CalendarSettings = lazy(() => import(/* webpackChunkName: "settings-calendar" */ "./pages/configuracoes/CalendarSettings"));
 
-// Fase 4: Financeiro Avançado
-const ContasFinanceirasPage = lazy(() => import("./pages/financeiro/ContasFinanceirasPage"));
-const FluxoCaixaPage = lazy(() => import("./pages/financeiro/FluxoCaixaPage"));
+// Registration pages (Cadastros)
+const ServicosPage = lazy(() => import(/* webpackChunkName: "cadastros-services" */ "./pages/cadastros/ServicosPage"));
+const FornecedoresPage = lazy(() => import(/* webpackChunkName: "cadastros-suppliers" */ "./pages/cadastros/FornecedoresPage"));
+const FeriadosPage = lazy(() => import(/* webpackChunkName: "cadastros-holidays" */ "./pages/cadastros/FeriadosPage"));
+const AtestadosPage = lazy(() => import(/* webpackChunkName: "cadastros-certificates" */ "./pages/cadastros/AtestadosPage"));
+const ContratosPage = lazy(() => import(/* webpackChunkName: "cadastros-contracts" */ "./pages/cadastros/ContratosPage"));
+const EvolutionTemplatesPage = lazy(() => import(/* webpackChunkName: "cadastros-templates" */ "./pages/cadastros/EvolutionTemplatesPage"));
+const EvaluationFormsPage = lazy(() => import(/* webpackChunkName: "cadastros-forms" */ "./pages/cadastros/EvaluationFormsPage"));
+const EvaluationFormBuilderPage = lazy(() => import(/* webpackChunkName: "cadastros-form-builder" */ "./pages/cadastros/EvaluationFormBuilderPage"));
+const PatientObjectivesPage = lazy(() => import(/* webpackChunkName: "cadastros-objectives" */ "./pages/cadastros/PatientObjectivesPage"));
 
-// Fase 5: Relatórios
-const AniversariantesPage = lazy(() => import("./pages/relatorios/AniversariantesPage"));
-const AttendanceReport = lazy(() => import("./pages/relatorios/AttendanceReport"));
-const TeamPerformance = lazy(() => import("./pages/relatorios/TeamPerformance"));
+// Financial pages
+const ContasFinanceirasPage = lazy(() => import(/* webpackChunkName: "financial-accounts" */ "./pages/financeiro/ContasFinanceirasPage"));
+const FluxoCaixaPage = lazy(() => import(/* webpackChunkName: "financial-cashflow" */ "./pages/financeiro/FluxoCaixaPage"));
 
-const LeadsPage = lazy(() => import("./pages/crm/LeadsPage"));
-const CRMDashboard = lazy(() => import("./pages/crm/CRMDashboard"));
-const PatientPortal = lazy(() => import("./pages/PatientPortal"));
+// Reports pages
+const AniversariantesPage = lazy(() => import(/* webpackChunkName: "reports-birthdays" */ "./pages/relatorios/AniversariantesPage"));
+const AttendanceReport = lazy(() => import(/* webpackChunkName: "reports-attendance" */ "./pages/relatorios/AttendanceReport"));
+const TeamPerformance = lazy(() => import(/* webpackChunkName: "reports-team" */ "./pages/relatorios/TeamPerformance"));
 
-// Novas páginas - Fase Final
-const PreCadastro = lazy(() => import("./pages/PreCadastro"));
-const PreCadastroAdmin = lazy(() => import("./pages/PreCadastroAdmin"));
-const TelemedicineRoom = lazy(() => import("./pages/TelemedicineRoom"));
-const Notifications = lazy(() => import("./pages/Notifications"));
-const TherapistOccupancy = lazy(() => import("./pages/TherapistOccupancy"));
-const CalendarSettings = lazy(() => import("./pages/configuracoes/CalendarSettings"));
-const PublicPrescriptionPage = lazy(() => import("./pages/prescricoes/PublicPrescriptionPage"));
-const ImageAnalysisDashboard = lazy(() => import("./components/analysis/dashboard/ImageAnalysisDashboard"));
-const DynamicCompareDetailsPage = lazy(() => import("./pages/dashboard/dinamica/DynamicCompareDetailsPage"));
-const PatientProfilePage = lazy(() => import("./pages/patients/PatientProfilePage"));
+// Advanced features - Lower priority chunks
+const Partner = lazy(() => import(/* webpackChunkName: "vouchers-partners" */ "./pages/Partner"));
+const Vouchers = lazy(() => import(/* webpackChunkName: "vouchers" */ "./pages/Vouchers"));
+const Install = lazy(() => import(/* webpackChunkName: "install" */ "./pages/Install"));
+const Waitlist = lazy(() => import(/* webpackChunkName: "waitlist" */ "./pages/Waitlist"));
+const Surveys = lazy(() => import(/* webpackChunkName: "surveys" */ "./pages/Surveys"));
+const Tarefas = lazy(() => import(/* webpackChunkName: "tasks" */ "./pages/Tarefas"));
+const Inventory = lazy(() => import(/* webpackChunkName: "inventory" */ "./pages/Inventory"));
+const ProtocolsPage = lazy(() => import(/* webpackChunkName: "protocols" */ "./pages/Protocols"));
 
-// Goals Admin
-const GoalProfileListPage = lazy(() => import("./pages/admin/goals/GoalProfileListPage"));
-const GoalProfileEditorPage = lazy(() => import("./pages/admin/goals/GoalProfileEditorPage"));
-const ClinicalTestsLibrary = lazy(() => import("./pages/ClinicalTestsLibrary"));
+// Events & Campaigns
+const Eventos = lazy(() => import(/* webpackChunkName: "events" */ "./pages/Eventos"));
+const EventoDetalhes = lazy(() => import(/* webpackChunkName: "events-detail" */ "./pages/EventoDetalhes"));
+const EventosAnalytics = lazy(() => import(/* webpackChunkName: "events-analytics" */ "./pages/EventosAnalytics"));
+
+// Admin & Security
+const UserManagement = lazy(() => import(/* webpackChunkName: "admin-users" */ "./pages/UserManagement"));
+const AuditLogs = lazy(() => import(/* webpackChunkName: "admin-audit" */ "./pages/AuditLogs"));
+const InvitationManagement = lazy(() => import(/* webpackChunkName: "admin-invitations" */ "./pages/InvitationManagement"));
+const SecurityMonitoring = lazy(() => import(/* webpackChunkName: "admin-security" */ "./pages/SecurityMonitoring"));
+const SecuritySettings = lazy(() => import(/* webpackChunkName: "settings-security" */ "./pages/SecuritySettings"));
+const AdminCRUD = lazy(() => import(/* webpackChunkName: "admin-crud" */ "./pages/AdminCRUD"));
+const OrganizationSettings = lazy(() => import(/* webpackChunkName: "admin-organization" */ "./pages/OrganizationSettings"));
+const Admin = lazy(() => import(/* webpackChunkName: "admin-analytics" */ "./pages/Admin"));
+const AdvancedAnalytics = lazy(() => import(/* webpackChunkName: "analytics-advanced" */ "./pages/AdvancedAnalytics"));
+const CohortAnalysis = lazy(() => import(/* webpackChunkName: "analytics-cohorts" */ "./pages/CohortAnalysis"));
+const ApiDocs = lazy(() => import(/* webpackChunkName: "api-docs" */ "./pages/ApiDocs"));
+
+// Gamification
+const PatientGamificationPage = lazy(() => import(/* webpackChunkName: "gamification-patient" */ "./pages/PatientGamificationPage"));
+const AdminGamificationPage = lazy(() => import(/* webpackChunkName: "gamification-admin" */ "./pages/admin/gamification/AdminGamificationPage"));
+
+// Goals
+const GoalProfileListPage = lazy(() => import(/* webpackChunkName: "goals-list" */ "./pages/admin/goals/GoalProfileListPage"));
+const GoalProfileEditorPage = lazy(() => import(/* webpackChunkName: "goals-editor" */ "./pages/admin/goals/GoalProfileEditorPage"));
+
+// AI & Advanced Features
+const MedicalChatbot = lazy(() => import(/* webpackChunkName: "ai-chatbot" */ "./components/chatbot/MedicalChatbot"));
+const ComputerVisionExercise = lazy(() => import(/* webpackChunkName: "ai-computer-vision" */ "./components/computer-vision/ComputerVisionExercise"));
+const IntelligentReports = lazy(() => import(/* webpackChunkName: "ai-intelligent-reports" */ "./components/reports/IntelligentReports"));
+const AugmentedRealityExercise = lazy(() => import(/* webpackChunkName: "ai-ar" */ "./components/ar/AugmentedRealityExercise"));
+
+// Image Analysis (NeuroPose)
+const ImageAnalysisDashboard = lazy(() => import(/* webpackChunkName: "analysis-images" */ "./components/analysis/dashboard/ImageAnalysisDashboard"));
+const DynamicCompareDetailsPage = lazy(() => import(/* webpackChunkName: "analysis-dynamic" */ "./pages/dashboard/dinamica/DynamicCompareDetailsPage"));
+
+// CRM & Portal
+const LeadsPage = lazy(() => import(/* webpackChunkName: "crm-leads" */ "./pages/crm/LeadsPage"));
+const CRMDashboard = lazy(() => import(/* webpackChunkName: "crm-dashboard" */ "./pages/crm/CRMDashboard"));
+const PatientPortal = lazy(() => import(/* webpackChunkName: "portal-patient" */ "./pages/PatientPortal"));
+
+// Pre-cadastro
+const PreCadastro = lazy(() => import(/* webpackChunkName: "pre-cadastro" */ "./pages/PreCadastro"));
+const PreCadastroAdmin = lazy(() => import(/* webpackChunkName: "pre-cadastro-admin" */ "./pages/PreCadastroAdmin"));
+
+// Misc
+const Notifications = lazy(() => import(/* webpackChunkName: "notifications" */ "./pages/Notifications"));
+const TherapistOccupancy = lazy(() => import(/* webpackChunkName: "occupancy" */ "./pages/TherapistOccupancy"));
+const PublicPrescriptionPage = lazy(() => import(/* webpackChunkName: "prescription-public" */ "./pages/prescricoes/PublicPrescriptionPage"));
+const FileUploadTest = lazy(() => import(/* webpackChunkName: "test-upload" */ "./pages/FileUploadTest"));
+const ClinicalTestsLibrary = lazy(() => import(/* webpackChunkName: "clinical-tests" */ "./pages/ClinicalTestsLibrary"));
+const NotFound = lazy(() => import(/* webpackChunkName: "not-found" */ "./pages/NotFound"));
 
 export function AppRoutes() {
     return (

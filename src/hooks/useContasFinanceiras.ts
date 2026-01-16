@@ -25,13 +25,16 @@ export function useContasFinanceiras(tipo?: 'receber' | 'pagar', status?: string
   return useQuery({
     queryKey: ['contas-financeiras', tipo, status],
     queryFn: async () => {
-      let query = supabase.from('contas_financeiras').select('*').order('data_vencimento', { ascending: true });
+      // Optimized: Select only required columns instead of *
+      let query = supabase.from('contas_financeiras').select('id, descricao, valor, data_vencimento, data_pagamento, tipo, status, fornecedor_id, observacoes, created_at').order('data_vencimento', { ascending: true });
       if (tipo) query = query.eq('tipo', tipo);
       if (status) query = query.eq('status', status);
       const { data, error } = await query;
       if (error) throw error;
       return data as ContaFinanceira[];
     },
+    staleTime: 1000 * 60 * 2, // 2 minutos
+    gcTime: 1000 * 60 * 5, // 5 minutos
   });
 }
 
@@ -39,15 +42,39 @@ export function useCreateContaFinanceira() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (conta: Omit<ContaFinanceira, 'id' | 'created_at'>) => {
-      const { data, error } = await supabase.from('contas_financeiras').insert(conta).select().single();
+      // Optimized: Select only required columns
+      const { data, error } = await supabase.from('contas_financeiras').insert(conta).select('id, descricao, valor, data_vencimento, data_pagamento, tipo, status, fornecedor_id, observacoes, created_at').single();
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contas-financeiras'] });
+    // Optimistic update - adiciona conta à lista antes da resposta do servidor
+    onMutate: async (newConta) => {
+      await queryClient.cancelQueries({ queryKey: ['contas-financeiras'] });
+
+      const previousContas = queryClient.getQueryData<ContaFinanceira[]>(['contas-financeiras']);
+
+      const optimisticConta: ContaFinanceira = {
+        ...newConta,
+        id: `temp-${Date.now()}`,
+        created_at: new Date().toISOString(),
+      };
+
+      queryClient.setQueryData<ContaFinanceira[]>(['contas-financeiras'], (old) => {
+        const newData = [...(old || []), optimisticConta];
+        return newData.sort((a, b) =>
+          new Date(a.data_vencimento).getTime() - new Date(b.data_vencimento).getTime()
+        );
+      });
+
+      return { previousContas };
+    },
+    onError: (err, variables, context) => {
+      queryClient.setQueryData(['contas-financeiras'], context?.previousContas);
+      toast.error('Erro ao criar conta.');
+    },
+    onSuccess: (data) => {
       toast.success('Conta criada com sucesso.');
     },
-    onError: () => toast.error('Erro ao criar conta.'),
   });
 }
 
@@ -55,15 +82,36 @@ export function useUpdateContaFinanceira() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...conta }: Partial<ContaFinanceira> & { id: string }) => {
-      const { data, error } = await supabase.from('contas_financeiras').update(conta).eq('id', id).select().single();
+      // Optimized: Select only required columns
+      const { data, error } = await supabase.from('contas_financeiras').update(conta).eq('id', id).select('id, descricao, valor, data_vencimento, data_pagamento, tipo, status, fornecedor_id, observacoes, created_at').single();
       if (error) throw error;
       return data;
     },
+    // Optimistic update - atualiza conta na lista antes da resposta do servidor
+    onMutate: async ({ id, ...conta }) => {
+      await queryClient.cancelQueries({ queryKey: ['contas-financeiras'] });
+
+      const previousContas = queryClient.getQueryData<ContaFinanceira[]>(['contas-financeiras']);
+
+      queryClient.setQueryData<ContaFinanceira[]>(['contas-financeiras'], (old) =>
+        (old || []).map((c) =>
+          c.id === id
+            ? { ...c, ...conta }
+            : c
+        ).sort((a, b) =>
+          new Date(a.data_vencimento).getTime() - new Date(b.data_vencimento).getTime()
+        )
+      );
+
+      return { previousContas };
+    },
+    onError: (err, variables, context) => {
+      queryClient.setQueryData(['contas-financeiras'], context?.previousContas);
+      toast.error('Erro ao atualizar conta.');
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contas-financeiras'] });
       toast.success('Conta atualizada.');
     },
-    onError: () => toast.error('Erro ao atualizar conta.'),
   });
 }
 
@@ -74,20 +122,35 @@ export function useDeleteContaFinanceira() {
       const { error } = await supabase.from('contas_financeiras').delete().eq('id', id);
       if (error) throw error;
     },
+    // Optimistic update - remove conta da lista visualmente
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['contas-financeiras'] });
+
+      const previousContas = queryClient.getQueryData<ContaFinanceira[]>(['contas-financeiras']);
+
+      queryClient.setQueryData<ContaFinanceira[]>(['contas-financeiras'], (old) =>
+        (old || []).filter((c) => c.id !== id)
+      );
+
+      return { previousContas };
+    },
+    onError: (err, id, context) => {
+      queryClient.setQueryData(['contas-financeiras'], context?.previousContas);
+      toast.error('Erro ao excluir conta.');
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contas-financeiras'] });
       toast.success('Conta excluída.');
     },
-    onError: () => toast.error('Erro ao excluir conta.'),
   });
 }
 
-// Resumo financeiro
+// Resumo financeiro - otimizado com colunas específicas
 export function useResumoFinanceiro() {
   return useQuery({
     queryKey: ['resumo-financeiro'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('contas_financeiras').select('*');
+      // Otimizado: Select apenas colunas necessárias para o resumo
+      const { data, error } = await supabase.from('contas_financeiras').select('tipo, status, valor, data_vencimento');
       if (error) throw error;
       
       const hoje = new Date().toISOString().split('T')[0];
@@ -105,5 +168,7 @@ export function useResumoFinanceiro() {
         pagarHoje: pagar.filter(c => c.data_vencimento === hoje && c.status === 'pendente').length,
       };
     },
+    staleTime: 1000 * 60 * 1, // 1 minuto - resumo financeiro precisa ser mais fresco
+    gcTime: 1000 * 60 * 3, // 3 minutos
   });
 }

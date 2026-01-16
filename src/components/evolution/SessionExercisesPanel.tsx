@@ -104,8 +104,8 @@ export const SessionExercisesPanel: React.FC<SessionExercisesPanelProps> = ({
                 </TooltipProvider>
             </div>
 
-            <ScrollArea className="h-full max-h-[600px] pr-4 -mr-4">
-                <div className="grid gap-3">
+            <ScrollArea className="flex-1">
+                <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4" role="list">
                     {exercises.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-16 border-2 border-dashed rounded-2xl bg-muted/10 text-muted-foreground gap-3">
                             <div className="p-4 rounded-full bg-muted/20">

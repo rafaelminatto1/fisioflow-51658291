@@ -158,7 +158,17 @@
       "Bash(npx playwright screenshot:*)",
       "mcp__zread__get_repo_structure",
       "Bash(netstat:*)",
-      "Bash(ss:*)"
+      "Bash(ss:*)",
+      "Bash(npx vite build:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(npm test:*)",
+      "Bash(ANON_KEY=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljdmJ0amZyY2hjeXZta3Z1b2N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTA5OTQsImV4cCI6MjA3NTE2Njk5NH0.L5maWG2hc3LVHEUMOzfTRTjYwIAJFXx3zan3G-Y1zAA\")",
+      "Bash(__NEW_LINE_6df21b4fa5848017__ curl -s \"https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id,full_name,phone,email,cpf,birth_date,observations,status,incomplete_registration,created_at,updated_at,organization_id&status=in.\\(active\\)&organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02&order=created_at.desc&limit=3\" -H \"apikey: $ANON_KEY\" -H \"Authorization: Bearer $ANON_KEY\" -H \"Content-Type: application/json\")",
+      "Bash(__NEW_LINE_e7e38cafb421dafe__ curl -s \"https://ycvbtjfrchcyvmkvuocu.supabase.co/rest/v1/patients?select=id,full_name,phone,email,cpf,birth_date,observations,status,incomplete_registration,created_at,updated_at,organization_id&status=in.\\(active\\)&organization_id=eq.ebe5dd27-f4e4-48b4-bd81-1b45b0bd3c02&order=created_at.desc&limit=3\" -H \"apikey: $ANON_KEY\" -H \"Authorization: Bearer $ANON_KEY\" -w \"\\\\nHTTP Status: %{http_code}\\\\n\")",
+      "Bash(__NEW_LINE_8bfebeaa56d537b8__ echo \"=== TESTE 1: Query CORRETA \\(sem coluna ''name'' que não existe\\) ===\")",
+      "Bash(__NEW_LINE_8bfebeaa56d537b8__ echo \"=== TESTE 2: Query INCORRETA \\(com coluna ''name'' que NÃO existe na tabela\\) ===\")",
+      "Bash(__NEW_LINE_9a21685000f249af__ echo \"=== TESTE FINAL: Verificando query com constantes centralizadas ===\")",
+      "Bash(__NEW_LINE_f995867e1d99c709__ echo \"=== TESTE FINAL ===\")"
     ],
     "deny": [],
     "ask": []
