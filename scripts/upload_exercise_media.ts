@@ -125,7 +125,30 @@ const images = [
     { id: '765bf678-24b4-4d5d-876d-3c569e923a5d', file: 'bicep_curl_standing_1768568459328.png' },
     { id: 'eb3aef63-c24a-402d-9209-e340129869ac', file: 'shoulder_internal_rotation_resistance_1768568325535.png' },
     { id: 'c391fb48-73f8-4bdc-935c-09fce60fd525', file: 'shoulder_external_rotation_resistance_1768568309334.png' },
-    { id: '0a4b1e70-34ee-4718-a2fc-c8e2597e1c15', file: 'bird_dog_exercise_1768440884296.png' }
+    { id: '0a4b1e70-34ee-4718-a2fc-c8e2597e1c15', file: 'bird_dog_exercise_1768440884296.png' },
+    // Phase 11-12 New Additions (Batches 16-18)
+    { id: '5d90cfeb-ea29-4c87-bbf2-3c282e502b8e', file: 'prone_ytw_1768593356210.png' },
+    { id: '5818c63c-a41c-46e5-8ef2-5ae68119831e', file: 'burpee_modified_1768593372303.png' },
+    { id: 'f60ff519-6a7e-453b-b469-f25136633988', file: 'farmer_walk_1768593385373.png' },
+    { id: '7abed066-3b08-43d7-950e-716ea0a16508', file: 'quadriceps_stretch_standing_1768593397346.png' },
+    { id: 'c683c59e-ba03-4ebe-9a90-cf61768f856b', file: 'wall_shoulder_exercise_1768593410983.png' },
+    { id: 'a9a77512-1615-4f84-889e-71a0481dadd1', file: 'tricep_extension_1768593424557.png' },
+    { id: 'fa2f5230-895c-4bca-8217-8d9bebe70435', file: 'tricep_extension_1768593424557.png' },
+    { id: '2b45df0c-3657-400b-8230-d959f2a60dcb', file: 'finger_extension_1768593437369.png' },
+    { id: 'c13843f6-32b7-4ecc-9a19-a98d165f9130', file: 'knee_extension_open_chain_1768593450247.png' },
+    { id: '04a5f252-82e5-416e-b3fe-4bbbf1be7370', file: 'face_pull_1768593463104.png' },
+    { id: 'ce3a7786-7b0f-4db6-8e67-a1238b668f19', file: 'leg_press_45_1768593476676.png' },
+    { id: '3e36c518-0672-41ac-acd6-e043b40ddd6a', file: 'push_up_plus_1768593514718.png' },
+    { id: 'c5c17d48-60d7-4bc8-ae76-1661923717df', file: 'romanian_deadlift_1768593527691.png' },
+    { id: '1b53aae1-8248-4c2c-ad97-10b71d6d2a27', file: 'barbell_row_1768593542209.png' },
+    { id: '61bcc16f-b1c4-491e-898a-e6d0be2a0aed', file: 'rowing_band_1768593554859.png' },
+    { id: 'caab385c-60aa-4509-8e5e-5af795beaa36', file: 'ball_squeeze_1768593567123.png' },
+    { id: 'fb959553-cc44-47d9-9217-392c3d29af92', file: 'box_jump_1768593580095.png' },
+    { id: 'f5eb147e-c269-4b00-9e15-ea3c428dcbae', file: 'lateral_carry_1768593592770.png' },
+    { id: 'aabcf71c-9234-426e-bef9-759e1286c47f', file: 'stair_descent_1768593606337.png' },
+    { id: 'caca8746-0545-4876-a060-101dc614d5ba', file: 'gait_obstacles_1768593617798.png' },
+    { id: 'cd66cb4b-9e85-44f1-84d9-0ca60b9462cb', file: 'lunge_rotation_1768593629842.png' },
+    { id: 'd6046fa7-8a3a-4cf4-98f5-d4dc8edf7d20', file: 'squat_jump_1768593670074.png' }
 ];
 
 async function upload() {
