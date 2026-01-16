@@ -230,13 +230,13 @@ export const DayColumn = memo(({
                         const widthPercent = stackCount > 1 ? (100 / stackCount) - 2 : 100;
                         const leftPercent = stackCount > 1 ? (stackIndex * (100 / stackCount)) + 1 : 0;
 
-                        // Altura e posição baseada na duração: 64px/slot mobile, 80px/slot desktop (cada slot = 30min)
+                        // Altura e posição baseada na duração: 48px/slot mobile, 60px/slot desktop (cada slot = 30min)
                         const duration = apt.duration || 60;
                         const slots = duration / 30;
-                        const heightMobile = slots * 64; // h-16 = 64px
-                        const heightDesktop = slots * 80; // sm:h-20 = 80px
-                        const topMobile = slotIndex >= 0 ? slotIndex * 64 : 0;
-                        const topDesktop = slotIndex >= 0 ? slotIndex * 80 : 0;
+                        const heightMobile = slots * 48; // h-12 = 48px (reduzido de 64px)
+                        const heightDesktop = slots * 60; // sm:h-15 = 60px (reduzido de 80px)
+                        const topMobile = slotIndex >= 0 ? slotIndex * 48 : 0;
+                        const topDesktop = slotIndex >= 0 ? slotIndex * 60 : 0;
 
                         return (
                             // Wrapper de posicionamento
