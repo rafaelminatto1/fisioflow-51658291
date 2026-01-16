@@ -8,216 +8,216 @@ import { CheckCircle, Clock, AlertCircle, XCircle } from 'lucide-react';
 export const DEFAULT_STATUS_COLORS: Record<string, { color: string; bgColor: string; borderColor: string }> = {};
 
 export const STATUS_CONFIG: Record<SessionStatus, StatusConfig> = {
-  // Positive/Completed States - Vivid Green
+  // Positive/Completed States - Soft Gray/Neutral (mais profissional)
   realizado: {
     label: "Realizado",
-    color: "#00C875",
-    bgColor: "#00C875",
-    borderColor: "#00C875",
-    twBg: "bg-[#00C875]",
-    twBorder: "border-[#00C875]",
-    twText: "text-white",
+    color: "hsl(220 13% 85%)",
+    bgColor: "hsl(220 13% 85%)",
+    borderColor: "hsl(220 13% 75%)",
+    twBg: "bg-slate-300",
+    twBorder: "border-slate-400",
+    twText: "text-slate-800",
     icon: CheckCircle,
     allowedActions: ["view", "payment", "evolution"]
   },
   completed: { // Legacy/Duplicate mapping
     label: "Concluído",
-    color: "#00C875",
-    bgColor: "#00C875",
-    borderColor: "#00C875",
-    twBg: "bg-[#00C875]",
-    twBorder: "border-[#00C875]",
-    twText: "text-white",
+    color: "hsl(220 13% 85%)",
+    bgColor: "hsl(220 13% 85%)",
+    borderColor: "hsl(220 13% 75%)",
+    twBg: "bg-slate-300",
+    twBorder: "border-slate-400",
+    twText: "text-slate-800",
     icon: CheckCircle,
     allowedActions: ["view", "payment", "evolution"]
   },
   concluido: {
     label: "Concluído",
-    color: "#00C875",
-    bgColor: "#00C875",
-    borderColor: "#00C875",
-    twBg: "bg-[#00C875]",
-    twBorder: "border-[#00C875]",
-    twText: "text-white",
+    color: "hsl(220 13% 85%)",
+    bgColor: "hsl(220 13% 85%)",
+    borderColor: "hsl(220 13% 75%)",
+    twBg: "bg-slate-300",
+    twBorder: "border-slate-400",
+    twText: "text-slate-800",
     icon: CheckCircle,
     allowedActions: ["view", "payment", "evolution"]
   },
   atendido: {
     label: "Atendido",
-    color: "#00C875",
-    bgColor: "#00C875",
-    borderColor: "#00C875",
-    twBg: "bg-[#00C875]",
-    twBorder: "border-[#00C875]",
-    twText: "text-white",
+    color: "hsl(220 13% 85%)",
+    bgColor: "hsl(220 13% 85%)",
+    borderColor: "hsl(220 13% 75%)",
+    twBg: "bg-slate-300",
+    twBorder: "border-slate-400",
+    twText: "text-slate-800",
     icon: CheckCircle,
     allowedActions: ["view", "payment", "evolution"]
   },
 
-  // Confirmed States - Vivid Teal
+  // Confirmed States - Soft Emerald Green
   confirmado: {
     label: "Confirmado",
-    color: "#0CA678",
-    bgColor: "#0CA678",
-    borderColor: "#0CA678",
-    twBg: "bg-[#0CA678]",
-    twBorder: "border-[#0CA678]",
+    color: "hsl(158 58% 46%)",
+    bgColor: "hsl(158 58% 46%)",
+    borderColor: "hsl(158 58% 40%)",
+    twBg: "bg-emerald-600",
+    twBorder: "border-emerald-700",
     twText: "text-white",
     icon: CheckCircle,
     allowedActions: ["complete", "miss", "cancel", "reschedule", "edit", "payment"]
   },
   confirmed: { // Legacy
     label: "Confirmado",
-    color: "#0CA678",
-    bgColor: "#0CA678",
-    borderColor: "#0CA678",
-    twBg: "bg-[#0CA678]",
-    twBorder: "border-[#0CA678]",
+    color: "hsl(158 58% 46%)",
+    bgColor: "hsl(158 58% 46%)",
+    borderColor: "hsl(158 58% 40%)",
+    twBg: "bg-emerald-600",
+    twBorder: "border-emerald-700",
     twText: "text-white",
     icon: CheckCircle,
     allowedActions: ["complete", "miss", "cancel", "reschedule", "edit", "payment"]
   },
 
-  // Scheduled States - Vivid Blue
+  // Scheduled States - Soft Professional Blue
   agendado: {
     label: "Agendado",
-    color: "#0073EA",
-    bgColor: "#0073EA",
-    borderColor: "#0073EA",
-    twBg: "bg-[#0073EA]",
-    twBorder: "border-[#0073EA]",
+    color: "hsl(217 85% 55%)",
+    bgColor: "hsl(217 85% 55%)",
+    borderColor: "hsl(217 85% 48%)",
+    twBg: "bg-blue-600",
+    twBorder: "border-blue-700",
     twText: "text-white",
     icon: Clock,
     allowedActions: ["confirm", "cancel", "reschedule", "edit"]
   },
   scheduled: { // Legacy
     label: "Agendado",
-    color: "#0073EA",
-    bgColor: "#0073EA",
-    borderColor: "#0073EA",
-    twBg: "bg-[#0073EA]",
-    twBorder: "border-[#0073EA]",
+    color: "hsl(217 85% 55%)",
+    bgColor: "hsl(217 85% 55%)",
+    borderColor: "hsl(217 85% 48%)",
+    twBg: "bg-blue-600",
+    twBorder: "border-blue-700",
     twText: "text-white",
     icon: Clock,
     allowedActions: ["confirm", "cancel", "reschedule", "edit"]
   },
 
-  // Evaluation - Vivid Purple
+  // Evaluation - Soft Purple
   avaliacao: {
     label: "Avaliação",
-    color: "#A25DDC",
-    bgColor: "#A25DDC",
-    borderColor: "#A25DDC",
-    twBg: "bg-[#A25DDC]",
-    twBorder: "border-[#A25DDC]",
+    color: "hsl(275 60% 55%)",
+    bgColor: "hsl(275 60% 55%)",
+    borderColor: "hsl(275 60% 48%)",
+    twBg: "bg-purple-600",
+    twBorder: "border-purple-700",
     twText: "text-white",
     icon: Clock,
     allowedActions: ["confirm", "cancel", "reschedule", "edit"]
   },
 
-  // Pending/Waiting States - Vivid Yellow/Gold
+  // Pending/Waiting States - Soft Amber/Orange
   aguardando_confirmacao: {
     label: "Aguardando",
-    color: "#FDAB3D",
-    bgColor: "#FDAB3D",
-    borderColor: "#FDAB3D",
-    twBg: "bg-[#FDAB3D]",
-    twBorder: "border-[#FDAB3D]",
+    color: "hsl(38 92% 50%)",
+    bgColor: "hsl(38 92% 50%)",
+    borderColor: "hsl(38 92% 45%)",
+    twBg: "bg-amber-500",
+    twBorder: "border-amber-600",
     twText: "text-white",
     icon: Clock,
     allowedActions: ["confirm", "cancel", "reschedule", "edit"]
   },
   em_espera: {
     label: "Em Espera",
-    color: "#579BFC",
-    bgColor: "#579BFC",
-    borderColor: "#579BFC",
-    twBg: "bg-[#579BFC]",
-    twBorder: "border-[#579BFC]",
+    color: "hsl(217 85% 60%)",
+    bgColor: "hsl(217 85% 60%)",
+    borderColor: "hsl(217 85% 53%)",
+    twBg: "bg-blue-500",
+    twBorder: "border-blue-600",
     twText: "text-white",
     icon: Clock,
     allowedActions: ["start", "cancel", "reschedule"]
   },
 
-  // Negative States - Vivid Red/Pink
+  // Negative States - Soft Red
   cancelado: {
     label: "Cancelado",
-    color: "#DF2F4A",
-    bgColor: "#DF2F4A",
-    borderColor: "#DF2F4A",
-    twBg: "bg-[#DF2F4A]",
-    twBorder: "border-[#DF2F4A]",
+    color: "hsl(0 72% 51%)",
+    bgColor: "hsl(0 72% 51%)",
+    borderColor: "hsl(0 72% 45%)",
+    twBg: "bg-red-600",
+    twBorder: "border-red-700",
     twText: "text-white",
     icon: XCircle,
     allowedActions: ["view", "reschedule"]
   },
   falta: {
     label: "Falta",
-    color: "#FF158A",
-    bgColor: "#FF158A",
-    borderColor: "#FF158A",
-    twBg: "bg-[#FF158A]",
-    twBorder: "border-[#FF158A]",
+    color: "hsl(346 82% 55%)",
+    bgColor: "hsl(346 82% 55%)",
+    borderColor: "hsl(346 82% 48%)",
+    twBg: "bg-pink-600",
+    twBorder: "border-pink-700",
     twText: "text-white",
     icon: AlertCircle,
     allowedActions: ["view", "reschedule", "payment"]
   },
   faltou: {
     label: "Faltou",
-    color: "#FF158A",
-    bgColor: "#FF158A",
-    borderColor: "#FF158A",
-    twBg: "bg-[#FF158A]",
-    twBorder: "border-[#FF158A]",
+    color: "hsl(346 82% 55%)",
+    bgColor: "hsl(346 82% 55%)",
+    borderColor: "hsl(346 82% 48%)",
+    twBg: "bg-pink-600",
+    twBorder: "border-pink-700",
     twText: "text-white",
     icon: AlertCircle,
     allowedActions: ["view", "reschedule", "payment"]
   },
 
-  // Rescheduled/Delayed - Vivid Cyan/Teal/Orange
+  // Rescheduled/Delayed - Soft Cyan/Teal/Lime
   remarcado: {
     label: "Remarcado",
-    color: "#66CCFF",
-    bgColor: "#66CCFF",
-    borderColor: "#66CCFF",
-    twBg: "bg-[#66CCFF]",
-    twBorder: "border-[#66CCFF]",
+    color: "hsl(192 85% 55%)",
+    bgColor: "hsl(192 85% 55%)",
+    borderColor: "hsl(192 85% 48%)",
+    twBg: "bg-cyan-600",
+    twBorder: "border-cyan-700",
     twText: "text-white",
     icon: Clock,
     allowedActions: ["view"]
   },
   reagendado: {
     label: "Reagendado",
-    color: "#9CD326",
-    bgColor: "#9CD326",
-    borderColor: "#9CD326",
-    twBg: "bg-[#9CD326]",
-    twBorder: "border-[#9CD326]",
+    color: "hsl(142 62% 45%)",
+    bgColor: "hsl(142 62% 45%)",
+    borderColor: "hsl(142 62% 40%)",
+    twBg: "bg-lime-600",
+    twBorder: "border-lime-700",
     twText: "text-white",
     icon: Clock,
     allowedActions: ["view"]
   },
   atrasado: {
     label: "Atrasado",
-    color: "#FF7575",
-    bgColor: "#FF7575",
-    borderColor: "#FF7575",
-    twBg: "bg-[#FF7575]",
-    twBorder: "border-[#FF7575]",
+    color: "hsl(25 95% 53%)",
+    bgColor: "hsl(25 95% 53%)",
+    borderColor: "hsl(25 95% 48%)",
+    twBg: "bg-orange-600",
+    twBorder: "border-orange-700",
     twText: "text-white",
     icon: AlertCircle,
     allowedActions: ["start", "cancel", "reschedule"]
   },
 
-  // Handling 'em_andamento' - Vivid Yellow/Gold
+  // Handling 'em_andamento' - Soft Yellow/Orange
   em_andamento: {
     label: "Em Andamento",
-    color: "#FFCB00",
-    bgColor: "#FFCB00",
-    borderColor: "#FFCB00",
-    twBg: "bg-[#FFCB00]",
-    twBorder: "border-[#FFCB00]",
-    twText: "text-slate-900",
+    color: "hsl(43 96% 56%)",
+    bgColor: "hsl(43 96% 56%)",
+    borderColor: "hsl(43 96% 50%)",
+    twBg: "bg-amber-400",
+    twBorder: "border-amber-500",
+    twText: "text-amber-950",
     allowedActions: ["complete", "cancel"]
   }
 };

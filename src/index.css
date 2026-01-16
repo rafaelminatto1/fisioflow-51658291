@@ -842,11 +842,12 @@ All colors MUST be HSL.
     @apply shadow-lg scale-[1.01];
   }
 
-  /* Cores por status - Codificação visual */
+  /* Cores por status - Codificação visual (mais suaves/profissionais com gradiente) */
   /* 🔵 Azul: Agendado (aguardando confirmação) */
   .calendar-card-agendado {
-    @apply bg-blue-500 text-white;
-    @apply hover:bg-blue-600;
+    background: linear-gradient(180deg, hsl(217 85% 57%) 0%, hsl(217 85% 53%) 100%);
+    @apply text-white;
+    @apply hover:brightness-110;
   }
 
   .calendar-card-agendado .calendar-patient-name,
@@ -857,8 +858,9 @@ All colors MUST be HSL.
 
   /* 🟢 Verde: Confirmado */
   .calendar-card-confirmado {
-    @apply bg-emerald-500 text-white;
-    @apply hover:bg-emerald-600;
+    background: linear-gradient(180deg, hsl(158 58% 48%) 0%, hsl(158 58% 44%) 100%);
+    @apply text-white;
+    @apply hover:brightness-110;
   }
 
   .calendar-card-confirmado .calendar-patient-name,
@@ -867,13 +869,14 @@ All colors MUST be HSL.
     @apply text-white;
   }
 
-  /* ⚪ Cinza: Realizado */
+  /* ⚪ Cinza claro: Realizado (neutro para concluídos) */
   .calendar-card-realizado,
   .calendar-card-concluido,
   .calendar-card-atendido,
   .calendar-card-completado {
-    @apply bg-slate-400 text-white;
-    @apply hover:bg-slate-500;
+    background: linear-gradient(180deg, hsl(220 13% 87%) 0%, hsl(220 13% 83%) 100%);
+    @apply text-slate-800;
+    @apply hover:brightness-95;
   }
 
   .calendar-card-realizado .calendar-patient-name,
@@ -888,13 +891,14 @@ All colors MUST be HSL.
   .calendar-card-completado .calendar-patient-name,
   .calendar-card-completado .calendar-appointment-type,
   .calendar-card-completado .calendar-appointment-footer {
-    @apply text-white;
+    @apply text-slate-800;
   }
 
-  /* 🔴 Vermelho: Cancelado */
+  /* 🔴 Vermelho suave: Cancelado */
   .calendar-card-cancelado {
-    @apply bg-red-500 text-white;
-    @apply hover:bg-red-600;
+    background: linear-gradient(180deg, hsl(0 72% 53%) 0%, hsl(0 72% 49%) 100%);
+    @apply text-white;
+    @apply hover:brightness-110;
   }
 
   .calendar-card-cancelado .calendar-patient-name,
@@ -903,11 +907,12 @@ All colors MUST be HSL.
     @apply text-white;
   }
 
-  /* 🟡 Amarelo: Em avaliação */
+  /* 🟣 Roxo suave: Em avaliação */
   .calendar-card-avaliacao,
   .calendar-card-avaliação {
-    @apply bg-amber-400 text-amber-950;
-    @apply hover:bg-amber-500;
+    background: linear-gradient(180deg, hsl(275 60% 57%) 0%, hsl(275 60% 53%) 100%);
+    @apply text-white;
+    @apply hover:brightness-110;
   }
 
   .calendar-card-avaliacao .calendar-patient-name,
@@ -916,13 +921,14 @@ All colors MUST be HSL.
   .calendar-card-avaliação .calendar-patient-name,
   .calendar-card-avaliação .calendar-appointment-type,
   .calendar-card-avaliação .calendar-appointment-footer {
-    @apply text-amber-950;
+    @apply text-white;
   }
 
   /* 🟣 Roxo: Com fisioterapeuta específico atribuído */
   .calendar-card-fisioterapeuta {
-    @apply bg-violet-500 text-white;
-    @apply hover:bg-violet-600;
+    background: linear-gradient(180deg, hsl(275 60% 57%) 0%, hsl(275 60% 53%) 100%);
+    @apply text-white;
+    @apply hover:brightness-110;
   }
 
   .calendar-card-fisioterapeuta .calendar-patient-name,
@@ -931,11 +937,12 @@ All colors MUST be HSL.
     @apply text-white;
   }
 
-  /* 🟠 Laranja: Em andamento */
+  /* 🟠 Laranja/Amarelo: Em andamento */
   .calendar-card-em_andamento,
   .calendar-card-pendente {
-    @apply bg-orange-500 text-white;
-    @apply hover:bg-orange-600;
+    background: linear-gradient(180deg, hsl(43 96% 58%) 0%, hsl(43 96% 54%) 100%);
+    @apply text-amber-950;
+    @apply hover:brightness-105;
   }
 
   .calendar-card-em_andamento .calendar-patient-name,
@@ -944,7 +951,7 @@ All colors MUST be HSL.
   .calendar-card-pendente .calendar-patient-name,
   .calendar-card-pendente .calendar-appointment-type,
   .calendar-card-pendente .calendar-appointment-footer {
-    @apply text-white;
+    @apply text-amber-950;
   }
 
   /* Indicador de paciente com agendamento próximo (bolinha) */
@@ -978,6 +985,14 @@ All colors MUST be HSL.
   .calendar-patient-name {
     @apply text-sm font-bold truncate leading-tight;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Nome do paciente compacto com fonte proporcional (clamp para ajuste automático) */
+  .calendar-patient-name-compact {
+    @apply font-bold leading-snug line-clamp-2;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    /* Fonte se ajusta de 11px a 13px baseado no espaço disponível */
+    font-size: clamp(11px, 1.8em, 13px);
   }
 
   /* Tipo de atendimento */
@@ -1051,7 +1066,7 @@ All colors MUST be HSL.
      ======================================== */
 
   .calendar-time-slot {
-    @apply relative w-full h-16 sm:h-20 border-b border-border;
+    @apply relative w-full h-12 sm:h-[60px] border-b border-border;
     @apply transition-colors duration-150;
   }
 
