@@ -101,13 +101,13 @@ const CalendarDayView = memo(({
                 `}} />
 
             {/* Time column com design melhorado */}
-            <div className="w-20 md:w-24 border-r bg-muted/30 backdrop-blur-sm flex-shrink-0" role="columnheader" aria-label="Horários">
-                <div className="h-16 md:h-20 border-b flex items-center justify-center sticky top-0 bg-muted/30 z-10 backdrop-blur-sm shadow-sm" aria-hidden="true">
+            <div className="w-16 md:w-24 border-r bg-muted/30 backdrop-blur-sm flex-shrink-0" role="columnheader" aria-label="Horários">
+                <div className="h-14 md:h-20 border-b flex items-center justify-center sticky top-0 bg-muted/30 z-10 backdrop-blur-sm shadow-sm" aria-hidden="true">
                     <Clock className="h-4 md:h-5 w-4 md:w-5 text-muted-foreground" />
                 </div>
                 <div className="flex-1 overflow-hidden">
                     {timeSlots.map(time => (
-                        <div key={time} className="h-12 md:h-[50px] border-b border-border/50 p-2 md:p-3 text-sm font-medium text-muted-foreground flex items-center" role="listitem">
+                        <div key={time} className="h-12 md:h-[50px] border-b border-border/50 p-1 md:p-3 text-[11px] md:text-sm font-medium text-muted-foreground flex items-center justify-center md:justify-start" role="listitem">
                             {time}
                         </div>
                     ))}
