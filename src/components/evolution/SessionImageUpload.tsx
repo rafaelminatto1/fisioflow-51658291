@@ -86,7 +86,7 @@ export const SessionImageUpload: React.FC<SessionImageUploadProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const { data: attachments = [], refetch } = useSessionAttachments(soapRecordId, patientId);
+  const { data: attachments = [] } = useSessionAttachments(soapRecordId, patientId);
   const uploadMutation = useUploadSessionAttachment();
   const deleteMutation = useDeleteSessionAttachment();
 
@@ -129,6 +129,9 @@ export const SessionImageUpload: React.FC<SessionImageUploadProps> = ({
   const handleFiles = async (files: File[]) => {
     if (readonly || !canUploadMore) return;
 
+    let successCount = 0;
+    let errorCount = 0;
+
     for (const file of files) {
       // Validate file type
       if (!ACCEPTED_TYPES.includes(file.type)) {
@@ -137,6 +140,7 @@ export const SessionImageUpload: React.FC<SessionImageUploadProps> = ({
           description: `O arquivo "${file.name}" não é suportado. Use JPG, PNG, GIF, WebP ou PDF.`,
           variant: 'destructive'
         });
+        errorCount++;
         continue;
       }
 
@@ -147,6 +151,7 @@ export const SessionImageUpload: React.FC<SessionImageUploadProps> = ({
           description: `O arquivo "${file.name}" excede o limite de 10MB.`,
           variant: 'destructive'
         });
+        errorCount++;
         continue;
       }
 
@@ -162,12 +167,34 @@ export const SessionImageUpload: React.FC<SessionImageUploadProps> = ({
         });
 
         setUploadProgress(100);
-        refetch();
+        successCount++;
       } catch (error) {
         console.error('Upload error:', error);
+        errorCount++;
+        toast({
+          title: 'Erro no upload',
+          description: `Não foi possível fazer upload de "${file.name}". Tente novamente.`,
+          variant: 'destructive'
+        });
       } finally {
         setIsUploading(false);
         setUploadProgress(0);
+      }
+    }
+
+    // Show summary if multiple files were uploaded
+    if (files.length > 1) {
+      if (successCount > 0 && errorCount === 0) {
+        toast({
+          title: 'Upload concluído',
+          description: `${successCount} arquivo(s) enviado(s) com sucesso.`
+        });
+      } else if (successCount > 0 && errorCount > 0) {
+        toast({
+          title: 'Upload parcial',
+          description: `${successCount} arquivo(s) enviado(s), ${errorCount} com erro.`,
+          variant: 'default'
+        });
       }
     }
   };
@@ -183,9 +210,9 @@ export const SessionImageUpload: React.FC<SessionImageUploadProps> = ({
     try {
       await deleteMutation.mutateAsync({
         attachmentId: deleteConfirm.id,
-        patientId
+        patientId,
+        soapRecordId
       });
-      refetch();
     } catch (error) {
       console.error('Delete error:', error);
     } finally {
