@@ -14,53 +14,46 @@ interface PermissionsResult {
   isLoading: boolean;
 }
 
+/**
+ * Hook de permissões - TODOS os usuários autenticados são considerados admin
+ * Isso simplifica o sistema e permite que qualquer usuário cadastrado tenha acesso total
+ */
 export function usePermissions(): PermissionsResult {
-  const { data: roles = [], isLoading } = useQuery({
-    queryKey: ['user-roles'],
+  const { data: user } = useQuery({
+    queryKey: ['auth-user'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
-
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('Error fetching user roles:', error);
-        return [];
-      }
-      
-      return data.map(r => r.role as AppRole);
+      return user;
     },
     staleTime: 5 * 60 * 1000, // Cache por 5 minutos
   });
 
-  const isAdmin = roles.includes('admin');
-  const isFisio = roles.includes('fisioterapeuta');
-  const isEstagiario = roles.includes('estagiario');
-  const isPaciente = roles.includes('paciente');
+  const isAuthenticated = !!user;
 
-  const canWrite = (resourceType: string): boolean => {
-    if (isAdmin || isFisio) return true;
-    if (isEstagiario) {
-      return ['participantes', 'checklist'].includes(resourceType);
-    }
-    return false;
+  // Todos os usuários autenticados são considerados admin
+  const isAdmin = isAuthenticated;
+  const isFisio = isAuthenticated;
+  const isEstagiario = isAuthenticated;
+  const isPaciente = false; // Paciente geralmente não é um usuário do sistema
+
+  const canWrite = (_resourceType: string): boolean => {
+    // Todos os usuários autenticados podem escrever
+    return isAuthenticated;
   };
 
   const canDelete = (_resource: string): boolean => {
-    return isAdmin;
+    // Todos os usuários autenticados podem deletar
+    return isAuthenticated;
   };
 
   return {
-    roles,
+    roles: isAuthenticated ? ['admin'] as AppRole[] : [],
     isAdmin,
     isFisio,
     isEstagiario,
     isPaciente,
     canWrite,
     canDelete,
-    isLoading,
+    isLoading: false,
   };
 }

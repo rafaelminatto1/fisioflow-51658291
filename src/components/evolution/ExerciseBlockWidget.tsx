@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trash2, Dumbbell, Search, Sparkles, Filter, X, CheckCircle2, Circle, Loader2, Library, RotateCcw } from 'lucide-react';
+import { Trash2, Dumbbell, Search, Sparkles, Filter, X, CheckCircle2, Circle, Loader2, Library, RotateCcw, ImageOff } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SessionExercise } from './SessionExercisesPanel';
@@ -99,6 +99,22 @@ const generateSessionId = (): string => {
     return 'sess_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
 };
 
+/**
+ * Creates a SessionExercise from an Exercise, ensuring all required fields are present
+ * including the image_url for proper display in the exercise cards.
+ */
+const createSessionExercise = (exercise: Exercise): SessionExercise => ({
+    id: generateSessionId(),
+    exerciseId: exercise.id,
+    name: exercise.name,
+    sets: exercise.sets || 3,
+    repetitions: exercise.repetitions || 10,
+    completed: false,
+    observations: '',
+    weight: '',
+    image_url: exercise.image_url,
+});
+
 const formatExerciseSummary = (exercise: SessionExercise): string => {
     const parts = [`${exercise.sets}s`, `${exercise.repetitions}r`];
     if (exercise.weight) parts.push(exercise.weight);
@@ -108,6 +124,51 @@ const formatExerciseSummary = (exercise: SessionExercise): string => {
 // ============================================================================================
 // MEMOIZED SUB-COMPONENTS
 // ============================================================================================
+
+/**
+ * Exercise image component with error handling and fallback
+ */
+const ExerciseImage = memo(({ src, alt, className }: { src?: string; alt: string; className?: string }) => {
+    const [hasError, setHasError] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Reset error state when src changes
+    useEffect(() => {
+        setHasError(false);
+        setIsLoading(true);
+    }, [src]);
+
+    if (!src || hasError) {
+        return (
+            <div className={cn("flex items-center justify-center", className)}>
+                <div className="p-3 rounded-full bg-primary/5">
+                    <ImageOff className="h-8 w-8 text-muted-foreground/30" />
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <img
+            src={src}
+            alt={alt}
+            loading="lazy"
+            decoding="async"
+            className={cn(
+                "transition-opacity duration-300",
+                isLoading ? "opacity-0" : "opacity-100",
+                className
+            )}
+            onLoad={() => setIsLoading(false)}
+            onError={() => {
+                setHasError(true);
+                setIsLoading(false);
+            }}
+        />
+    );
+});
+
+ExerciseImage.displayName = 'ExerciseImage';
 
 const FilterPopoverContent: React.FC<FilterPopoverContentProps> = memo(({
     categories,
@@ -260,19 +321,11 @@ const ExerciseCard = memo<ExerciseCardProps>(({ exercise, index, disabled, onUpd
 
             {/* Header / Thumbnail Area */}
             <div className="relative aspect-video w-full bg-muted overflow-hidden shrink-0">
-                {exercise.image_url ? (
-                    <img
-                        src={exercise.image_url}
-                        alt={exercise.name}
-                        loading="lazy"
-                        decoding="async"
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                ) : (
-                    <div className="h-full w-full flex items-center justify-center text-muted-foreground/30">
-                        <Dumbbell className="h-10 w-10 animate-pulse-slow" />
-                    </div>
-                )}
+                <ExerciseImage
+                    src={exercise.image_url}
+                    alt={exercise.name}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
 
                 {/* Overlay with index and remove button */}
                 <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-2">
@@ -476,18 +529,7 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
         const exercise = availableExercises.find(e => e.id === exerciseId);
         if (!exercise) return;
 
-        const newExercise: SessionExercise = {
-            id: generateSessionId(),
-            exerciseId: exercise.id,
-            name: exercise.name,
-            sets: exercise.sets || 3,
-            repetitions: exercise.repetitions || 10,
-            completed: false,
-            observations: '',
-            weight: ''
-        };
-
-        onChange([...exercises, newExercise]);
+        onChange([...exercises, createSessionExercise(exercise)]);
         setSelectedExerciseId('');
     }, [availableExercises, exercises, onChange]);
 
@@ -510,18 +552,7 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
 
     // Handler to add exercise from the library modal
     const handleAddExerciseFromLibrary = useCallback((exercise: Exercise) => {
-        const newExercise: SessionExercise = {
-            id: generateSessionId(),
-            exerciseId: exercise.id,
-            name: exercise.name,
-            sets: exercise.sets || 3,
-            repetitions: exercise.repetitions || 10,
-            completed: false,
-            observations: '',
-            weight: '',
-            image_url: exercise.image_url
-        };
-        onChange([...exercises, newExercise]);
+        onChange([...exercises, createSessionExercise(exercise)]);
     }, [exercises, onChange]);
 
     // Handler para abrir o modal da biblioteca
@@ -540,7 +571,7 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
     }, [exercises]);
 
     return (
-        <>
+        <TooltipProvider>
             <div className={cn("flex flex-col h-full", className)}>
                 {/* Header: Busca, Filtros e Ações */}
                 <div className="p-2.5 border-b flex items-center justify-between gap-2 shrink-0 bg-muted/20">
@@ -647,72 +678,66 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
 
                         {/* Botão Repetir Sessão Anterior */}
                         {onRepeatLastSession && hasLastSession && (
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={onRepeatLastSession}
-                                            className="h-8 px-2.5 gap-1.5 text-sm font-medium border-dashed border-amber-300 hover:border-amber-400 hover:bg-amber-50 transition-all"
-                                            disabled={disabled}
-                                            aria-label="Repetir exercícios da sessão anterior"
-                                        >
-                                            <RotateCcw className="h-3.5 w-3.5 text-amber-600" />
-                                            <span className="hidden sm:inline">Repetir</span>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p className="text-sm">Repetir da sessão passada</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        )}
-
-                        {/* Botão Biblioteca */}
-                        <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={openLibraryModal}
-                                        className="h-8 px-2.5 gap-1.5 text-sm font-medium border-dashed border-purple-300 hover:border-purple-400 hover:bg-purple-50 transition-all"
+                                        onClick={onRepeatLastSession}
+                                        className="h-8 px-2.5 gap-1.5 text-sm font-medium border-dashed border-amber-300 hover:border-amber-400 hover:bg-amber-50 transition-all"
                                         disabled={disabled}
-                                        aria-label="Abrir biblioteca de exercícios"
+                                        aria-label="Repetir exercícios da sessão anterior"
                                     >
-                                        <Library className="h-3.5 w-3.5 text-purple-600" />
-                                        <span className="hidden sm:inline">Biblioteca</span>
+                                        <RotateCcw className="h-3.5 w-3.5 text-amber-600" />
+                                        <span className="hidden sm:inline">Repetir</span>
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    <p className="text-sm">Abrir biblioteca completa</p>
+                                    <p className="text-sm">Repetir da sessão passada</p>
                                 </TooltipContent>
                             </Tooltip>
-                        </TooltipProvider>
+                        )}
+
+                        {/* Botão Biblioteca */}
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={openLibraryModal}
+                                    className="h-8 px-2.5 gap-1.5 text-sm font-medium border-dashed border-purple-300 hover:border-purple-400 hover:bg-purple-50 transition-all"
+                                    disabled={disabled}
+                                    aria-label="Abrir biblioteca de exercícios"
+                                >
+                                    <Library className="h-3.5 w-3.5 text-purple-600" />
+                                    <span className="hidden sm:inline">Biblioteca</span>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p className="text-sm">Abrir biblioteca completa</p>
+                            </TooltipContent>
+                        </Tooltip>
 
                         {/* Botão Sugerir */}
                         {onSuggest && (
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={onSuggest}
-                                            className="h-8 px-3 gap-2 text-sm font-medium text-purple-700 border-purple-300 bg-purple-50 hover:bg-purple-100 hover:border-purple-400 transition-all"
-                                            disabled={disabled || exercises.length === 0}
-                                            aria-label={ARIA_LABELS.suggestExercises}
-                                        >
-                                            <Sparkles className="h-4 w-4" />
-                                            <span className="hidden sm:inline">Sugerir</span>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p className="text-sm">Sugerir exercícios baseados na evolução</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={onSuggest}
+                                        className="h-8 px-3 gap-2 text-sm font-medium text-purple-700 border-purple-300 bg-purple-50 hover:bg-purple-100 hover:border-purple-400 transition-all"
+                                        disabled={disabled || exercises.length === 0}
+                                        aria-label={ARIA_LABELS.suggestExercises}
+                                    >
+                                        <Sparkles className="h-4 w-4" />
+                                        <span className="hidden sm:inline">Sugerir</span>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p className="text-sm">Sugerir exercícios baseados na evolução</p>
+                                </TooltipContent>
+                            </Tooltip>
                         )}
                     </div>
                 </div>
@@ -765,14 +790,14 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
                 )}
             </div>
 
-            {/* Exercise Library Modal */}
+            {/* Exercise Library Modal - outside main div but inside TooltipProvider */}
             <ExerciseLibraryModal
                 open={isLibraryModalOpen}
                 onOpenChange={setIsLibraryModalOpen}
                 onSelectExercise={handleAddExerciseFromLibrary}
                 addedExerciseIds={exercises.map(e => e.exerciseId)}
             />
-        </>
+        </TooltipProvider>
     );
 });
 

@@ -159,8 +159,9 @@ export const useUserProfile = () => {
     refreshProfile,
     getDisplayName,
     getInitials,
-    isAdmin: profile?.role === 'admin',
-    isFisio: profile?.role === 'fisioterapeuta' || profile?.role === 'admin',
+    // Todos os usuários autenticados são considerados admin/fisio
+    isAdmin: !!user,
+    isFisio: !!user,
     isAuthenticated: !!user,
   };
 };
