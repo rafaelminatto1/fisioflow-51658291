@@ -135,13 +135,14 @@ export const DraggableGrid = memo(function DraggableGrid({
                 margin={GRID_CONFIG.margin}
                 containerPadding={GRID_CONFIG.containerPadding}
                 useCSSTransforms={true}
-                compactType={GRID_CONFIG.compactType}
+                compactType={null} // Explicitly null to prevent auto-packing during resize
                 preventCollision={false}
                 // Enhanced UX: Smooth animations
                 transformScale={1}
                 // Allow items to be dragged more freely
                 autoSize={true}
                 layouts={layouts}
+                resizeHandles={['se']} // Standard bottom-right resize handle
             >
                 {items.map((item) => (
                     <div
