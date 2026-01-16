@@ -106,7 +106,26 @@ const images = [
     { id: '639d526a-647c-44e8-9300-4327f2dff585', file: 'global_active_stretching_1768502500158.png' }, // SGA
 
     // Phase 6 Images - Single generated before quota limit
-    { id: 'f570b5e5-dfba-407d-9a7b-ff60219ec683', file: 'calf_raise_step_1768502754354.png' }, // Elevação de Panturrilha em Degrau
+    { id: '163d7788-b223-44da-92dc-188849b38342', file: 'calf_raise_step_1768502754354.png' },
+    // Phase 5-7 New Additions
+    { id: '0335b398-ac40-44ea-85fe-c1dfa2fc9a38', file: 'shoulder_raise_front_1768568174752.png' },
+    { id: '273d04a8-34f2-44c7-a73f-566c0cbe1494', file: 'shoulder_raise_lateral_1768568187072.png' },
+    { id: 'ff166d2a-3f96-48e7-aee2-d640130b09ba', file: 'wrist_extension_1768568213816.png' },
+    { id: 'e1b7dc68-c03b-4088-8564-d88755e8e670', file: 'wrist_flexion_1768568225748.png' },
+    { id: '3329d2c0-8d1e-46be-9490-c14b2e5fa280', file: 'glute_bridge_exercise_1768568240158.png' },
+    { id: '6cc08e4c-6cc7-46ff-9806-949556ac37ba', file: 'glute_bridge_exercise_1768568240158.png' },
+    { id: '21de4c3d-8fd8-4d76-9952-19b2d9238209', file: 'glute_bridge_unilateral_1768568506337.png' },
+    { id: '0ffb39fe-1cf7-4277-9cf2-e52efb748ace', file: 'glute_bridge_unilateral_1768568506337.png' },
+    { id: '3541df60-9b9e-4038-85d8-409c0d5304f5', file: 'calf_raise_standing_1768568432076.png' },
+    { id: '98ce538b-624c-4369-b5f1-59948d45b49b', file: 'calf_raise_standing_1768568432076.png' },
+    { id: '3c653228-db4f-46e7-bc61-d78457404571', file: 'calf_raise_seated_1768568446342.png' },
+    { id: '29950c95-1519-403f-ba61-3ea069750f40', file: 'monster_walk_1768568487884.png' },
+    { id: 'b65d5a99-7eff-45a9-9433-c5fb2abc6e8f', file: 'wall_plank_1768568520750.png' },
+    { id: 'f92afdb4-ef22-44c2-84d8-8334025c4915', file: 'prone_knee_flexion_1768568474732.png' },
+    { id: '765bf678-24b4-4d5d-876d-3c569e923a5d', file: 'bicep_curl_standing_1768568459328.png' },
+    { id: 'eb3aef63-c24a-402d-9209-e340129869ac', file: 'shoulder_internal_rotation_resistance_1768568325535.png' },
+    { id: 'c391fb48-73f8-4bdc-935c-09fce60fd525', file: 'shoulder_external_rotation_resistance_1768568309334.png' },
+    { id: '0a4b1e70-34ee-4718-a2fc-c8e2597e1c15', file: 'bird_dog_exercise_1768440884296.png' }
 ];
 
 async function upload() {
