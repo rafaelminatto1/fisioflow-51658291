@@ -1737,6 +1737,13 @@ All colors MUST be HSL.
   contain: layout style paint;
 }
 
+/* Fix for modals that exceed viewport height */
+[data-state="open"][role="dialog"] {
+  max-height: calc(100vh - 2rem);
+  max-width: calc(100vw - 2rem);
+  overflow: hidden;
+}
+
 /* Optimize animations */
 @keyframes fade-in-gpu {
   from {
