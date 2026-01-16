@@ -308,7 +308,6 @@ export const useGamification = (patientId: string): UseGamificationResult => {
         .eq('patient_id', patientId)
         .maybeSingle();
 
-      const oldXp = current?.current_xp || 0;
       const oldTotal = current?.total_points || 0;
       const oldLevel = current?.level || 1;
       const oldStreak = current?.current_streak || 0;

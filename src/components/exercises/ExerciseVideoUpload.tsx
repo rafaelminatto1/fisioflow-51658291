@@ -158,7 +158,7 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
   const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
     onDrop: handleVideoDrop,
     accept: {
-      'video/*': ALLOWED_VIDEO_EXTENSIONS.map((ext) => ext.replace('.', '')),
+      'video/*': ALLOWED_VIDEO_EXTENSIONS.map((ext) => ext),
     },
     multiple: false,
     disabled: isUploading,

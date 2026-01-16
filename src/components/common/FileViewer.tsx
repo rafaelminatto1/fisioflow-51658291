@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Eye, Download, FileText, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -83,6 +83,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ files, bucketName }) => 
 
             <Dialog open={selectedIndex !== null} onOpenChange={(open) => !open && setSelectedIndex(null)}>
                 <DialogContent className="max-w-4xl max-h-[90vh] p-0 bg-black/95 text-white border-none close-button-white overflow-hidden flex flex-col">
+                    <DialogTitle className="sr-only">Visualização de Arquivo</DialogTitle>
                     <div className="absolute top-4 right-4 z-50 flex gap-2">
                         <Button
                             variant="ghost"
