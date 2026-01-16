@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, memo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -1153,3 +1153,9 @@ function VideoListItem({
     </div>
   );
 }
+
+// Otimizado com React.memo para evitar re-renders desnecessários
+export const ExerciseVideoLibraryMemo = memo(ExerciseVideoLibrary, (prevProps, nextProps) => {
+  // Custom comparison para determinar quando re-renderizar
+  return prevProps.onUploadClick === nextProps.onUploadClick;
+});

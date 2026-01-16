@@ -65,3 +65,41 @@ export {
   createQueryKeys,
   QueryKeys,
 } from './useReactQueryOptimized';
+
+// Prefetching inteligente
+export {
+  usePrefetchOnHover,
+  usePrefetchRelated,
+  usePrefetchMultiple,
+  usePrefetchOnProximity,
+  usePrefetchPatientData,
+  usePrefetchUpcomingAppointments,
+  usePrefetchEvolutionTemplates,
+  PrefetchOnHover,
+} from './usePrefetch';
+
+// Queries com cancelamento automático
+export {
+  useCancellableQuery,
+  useDebouncedQuery,
+  useLazyQuery,
+} from './useCancellableQuery';
+
+// Deduplicação de queries
+export {
+  useDeduplicatedQuery,
+  useDeduplicatedPrefetch,
+  useBatchDeduplicatedQuery,
+  useInvalidateDeduplicatedCache,
+  useDeduplicationStats,
+} from './useQueryDeduplication';
+
+// Optimistic mutations
+export {
+  useOptimisticMutation,
+  useCreateMutation,
+  useUpdateMutation,
+  useDeleteMutation,
+  type OptimisticMutationContext,
+  type OptimisticMutationOptions,
+} from '../useOptimisticMutation';

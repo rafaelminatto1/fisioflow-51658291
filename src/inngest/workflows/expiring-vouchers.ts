@@ -8,6 +8,7 @@
 import { inngest, retryConfig } from '../../lib/inngest/client';
 import { Events, InngestStep } from '../../lib/inngest/types';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from '@/lib/errors/logger';
 
 type VoucherWithRelations = {
   id: string;
@@ -81,13 +82,13 @@ export const expiringVouchersWorkflow = inngest.createFunction(
             // Send email reminder
             if (voucher.patient?.email) {
               // TODO: Send via Resend
-              console.log(`Sending voucher expiration reminder to ${voucher.patient.email}`);
+              logger.info(`Sending voucher expiration reminder to patient`, { voucherId: voucher.id }, 'expiring-vouchers');
             }
 
             // Send WhatsApp reminder
             if (voucher.patient?.phone) {
               // TODO: Send via Evolution API
-              console.log(`Sending WhatsApp reminder to ${voucher.patient.phone}`);
+              logger.info(`Sending WhatsApp reminder to patient`, { voucherId: voucher.id }, 'expiring-vouchers');
             }
 
             return {

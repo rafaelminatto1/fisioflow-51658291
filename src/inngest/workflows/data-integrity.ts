@@ -8,6 +8,7 @@
 import { inngest, retryConfig } from '../../lib/inngest/client';
 import { Events, InngestStep } from '../../lib/inngest/types';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from '@/lib/errors/logger';
 
 export const dataIntegrityWorkflow = inngest.createFunction(
   {
@@ -67,7 +68,7 @@ export const dataIntegrityWorkflow = inngest.createFunction(
         .not('appointment_id', 'in', '(select id from appointments)');
 
       if (error) {
-        console.error('Failed to check orphaned payments:', error);
+        logger.error('Failed to check orphaned payments', error, 'data-integrity');
       } else if (data && data.length > 0) {
         issues.push(`Found ${data.length} payments with invalid appointments`);
       }
@@ -83,7 +84,7 @@ export const dataIntegrityWorkflow = inngest.createFunction(
         .not('organization_id', 'in', '(select id from organizations)');
 
       if (error) {
-        console.error('Failed to check orphaned patients:', error);
+        logger.error('Failed to check orphaned patients', error, 'data-integrity');
       } else if (data && data.length > 0) {
         issues.push(`Found ${data.length} patients with invalid organizations`);
       }

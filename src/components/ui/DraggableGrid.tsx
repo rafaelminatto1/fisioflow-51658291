@@ -28,6 +28,7 @@ interface DraggableGridProps {
     rowHeight?: number;
     cols?: { lg: number; md: number; sm: number; xs: number; xxs: number };
     isEditable?: boolean;
+    layouts?: ReactGridLayout.Layouts;
 }
 
 // Configuration constants for the responsive grid layout
@@ -98,6 +99,7 @@ export const DraggableGrid = memo(function DraggableGrid({
     rowHeight = GRID_CONFIG.rowHeight,
     cols = GRID_CONFIG.cols,
     isEditable = false,
+    layouts,
 }: DraggableGridProps) {
     const [isMounted, setIsMounted] = useState(false);
     const { containerRef, width } = useContainerWidth();
@@ -139,6 +141,7 @@ export const DraggableGrid = memo(function DraggableGrid({
                 transformScale={1}
                 // Allow items to be dragged more freely
                 autoSize={true}
+                layouts={layouts}
             >
                 {items.map((item) => (
                     <div

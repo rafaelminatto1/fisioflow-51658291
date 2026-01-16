@@ -6,6 +6,7 @@
  */
 
 import { Resend } from 'resend';
+import { logger } from '@/lib/errors/logger';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -311,13 +312,13 @@ export async function sendEmail(options: SendEmailOptions): Promise<{ success: b
     const { data, error } = await resend.emails.send(emailOptions);
 
     if (error) {
-      console.error('Resend error:', error);
+      logger.error('Resend error:', error, 'resend.ts');
       return { success: false, error: error.message };
     }
 
     return { success: true, messageId: data?.id };
   } catch (error) {
-    console.error('Email sending error:', error);
+    logger.error('Email sending error:', error, 'resend.ts');
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }

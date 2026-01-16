@@ -30,14 +30,17 @@ export function useFornecedores() {
   return useQuery({
     queryKey: ['fornecedores'],
     queryFn: async () => {
+      // Otimizado: Select apenas colunas necessárias
       const { data, error } = await supabase
         .from('fornecedores')
-        .select('*')
+        .select('id, organization_id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, email, telefone, categoria, ativo, created_at, updated_at')
         .order('razao_social');
 
       if (error) throw error;
       return data as Fornecedor[];
     },
+    staleTime: 1000 * 60 * 10, // 10 minutos
+    gcTime: 1000 * 60 * 20,
   });
 }
 
@@ -46,21 +49,42 @@ export function useCreateFornecedor() {
 
   return useMutation({
     mutationFn: async (fornecedor: FornecedorFormData) => {
+      // Otimizado: Select apenas colunas necessárias
       const { data, error } = await supabase
         .from('fornecedores')
         .insert(fornecedor)
-        .select()
+        .select('id, organization_id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, email, telefone, categoria, ativo, created_at, updated_at')
         .single();
 
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['fornecedores'] });
-      toast({ title: 'Fornecedor criado com sucesso' });
+    // Optimistic update - adiciona fornecedor antes da resposta do servidor
+    onMutate: async (newFornecedor) => {
+      await queryClient.cancelQueries({ queryKey: ['fornecedores'] });
+
+      const previousFornecedores = queryClient.getQueryData<Fornecedor[]>(['fornecedores']);
+
+      const optimisticFornecedor: Fornecedor = {
+        ...newFornecedor,
+        id: `temp-${Date.now()}`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      queryClient.setQueryData<Fornecedor[]>(['fornecedores'], (old) => {
+        const newData = [...(old || []), optimisticFornecedor];
+        return newData.sort((a, b) => a.razao_social.localeCompare(b.razao_social));
+      });
+
+      return { previousFornecedores };
     },
-    onError: (error: Error) => {
-      toast({ title: 'Erro ao criar fornecedor', description: error.message, variant: 'destructive' });
+    onError: (err, variables, context) => {
+      queryClient.setQueryData(['fornecedores'], context?.previousFornecedores);
+      toast({ title: 'Erro ao criar fornecedor', description: err instanceof Error ? err.message : 'Erro desconhecido', variant: 'destructive' });
+    },
+    onSuccess: () => {
+      toast({ title: 'Fornecedor criado com sucesso' });
     },
   });
 }
@@ -70,22 +94,39 @@ export function useUpdateFornecedor() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Fornecedor> & { id: string }) => {
+      // Otimizado: Select apenas colunas necessárias
       const { data, error } = await supabase
         .from('fornecedores')
         .update(updates)
         .eq('id', id)
-        .select()
+        .select('id, organization_id, tipo_pessoa, razao_social, nome_fantasia, cpf_cnpj, email, telefone, categoria, ativo, created_at, updated_at')
         .single();
 
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['fornecedores'] });
-      toast({ title: 'Fornecedor atualizado com sucesso' });
+    // Optimistic update - atualiza fornecedor antes da resposta do servidor
+    onMutate: async ({ id, ...updates }) => {
+      await queryClient.cancelQueries({ queryKey: ['fornecedores'] });
+
+      const previousFornecedores = queryClient.getQueryData<Fornecedor[]>(['fornecedores']);
+
+      queryClient.setQueryData<Fornecedor[]>(['fornecedores'], (old) =>
+        (old || []).map((f) =>
+          f.id === id
+            ? { ...f, ...updates, updated_at: new Date().toISOString() }
+            : f
+        )
+      );
+
+      return { previousFornecedores };
     },
-    onError: (error: Error) => {
-      toast({ title: 'Erro ao atualizar fornecedor', description: error.message, variant: 'destructive' });
+    onError: (err, variables, context) => {
+      queryClient.setQueryData(['fornecedores'], context?.previousFornecedores);
+      toast({ title: 'Erro ao atualizar fornecedor', description: err instanceof Error ? err.message : 'Erro desconhecido', variant: 'destructive' });
+    },
+    onSuccess: () => {
+      toast({ title: 'Fornecedor atualizado com sucesso' });
     },
   });
 }
@@ -102,12 +143,24 @@ export function useDeleteFornecedor() {
 
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['fornecedores'] });
-      toast({ title: 'Fornecedor removido com sucesso' });
+    // Optimistic update - remove fornecedor da lista visualmente
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['fornecedores'] });
+
+      const previousFornecedores = queryClient.getQueryData<Fornecedor[]>(['fornecedores']);
+
+      queryClient.setQueryData<Fornecedor[]>(['fornecedores'], (old) =>
+        (old || []).filter((f) => f.id !== id)
+      );
+
+      return { previousFornecedores };
     },
-    onError: (error: Error) => {
-      toast({ title: 'Erro ao remover fornecedor', description: error.message, variant: 'destructive' });
+    onError: (err, id, context) => {
+      queryClient.setQueryData(['fornecedores'], context?.previousFornecedores);
+      toast({ title: 'Erro ao remover fornecedor', description: err instanceof Error ? err.message : 'Erro desconhecido', variant: 'destructive' });
+    },
+    onSuccess: () => {
+      toast({ title: 'Fornecedor removido com sucesso' });
     },
   });
 }

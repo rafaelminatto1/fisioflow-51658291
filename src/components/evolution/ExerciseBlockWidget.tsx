@@ -14,6 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ExerciseFilters } from '@/services/exercises';
 import { ExerciseLibraryModal } from '../exercises/ExerciseLibraryModal';
 import { type Exercise } from '@/hooks/useExercises';
+import { Card } from '@/components/ui/card';
 
 // ============================================================================================
 // TYPES & INTERFACES
@@ -241,159 +242,129 @@ const ExerciseCard = memo<ExerciseCardProps>(({ exercise, index, disabled, onUpd
     }, [exercise.completed, handleUpdate]);
 
     const statusLabel = exercise.completed ? 'Marcar como pendente' : 'Marcar como concluído';
-    const statusIcon = exercise.completed ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />;
+    const statusIcon = exercise.completed ? <CheckCircle2 className="h-4 w-4" /> : <Circle className="h-4 w-4" />;
 
     return (
-        <div
-            className="group border rounded-lg p-3 space-y-3 bg-card hover:border-primary/30 transition-all relative"
+        <Card
+            className={cn(
+                "group flex flex-col overflow-hidden transition-all duration-300 hover:shadow-md hover:border-primary/50 relative border-2",
+                exercise.completed ? "border-green-500/30 bg-green-500/5 shadow-sm shadow-green-500/10" : "border-border/50"
+            )}
             role="listitem"
             aria-label={`Exercício ${index + 1}: ${exercise.name}`}
         >
-            {/* Header: Nome e ações */}
-            <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-2.5 min-w-0">
-                    <span
-                        className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0"
-                        aria-hidden="true"
-                    >
-                        {index + 1}
-                    </span>
-                    <div className="flex flex-col min-w-0">
-                        <span className="font-semibold text-sm truncate" title={exercise.name}>
-                            {exercise.name}
+            {/* Visual Indicator for completion */}
+            {exercise.completed && (
+                <div className="absolute top-0 left-0 w-1 h-full bg-green-500 z-10" />
+            )}
+
+            {/* Header / Thumbnail Area */}
+            <div className="relative aspect-video w-full bg-muted overflow-hidden shrink-0">
+                {exercise.image_url ? (
+                    <img
+                        src={exercise.image_url}
+                        alt={exercise.name}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                ) : (
+                    <div className="h-full w-full flex items-center justify-center text-muted-foreground/30">
+                        <Dumbbell className="h-10 w-10 animate-pulse-slow" />
+                    </div>
+                )}
+
+                {/* Overlay with index and remove button */}
+                <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-2">
+                    <div className="flex justify-between items-start">
+                        <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary text-white text-[10px] font-bold">
+                            {index + 1}
                         </span>
-                        <span className="text-[10px] text-muted-foreground" aria-label="Parâmetros do exercício">
-                            {formatExerciseSummary(exercise)}
-                        </span>
+                        <Button
+                            variant="destructive"
+                            size="icon"
+                            className="h-7 w-7 rounded-full shadow-lg"
+                            onClick={() => onRemove(exercise.id)}
+                            disabled={disabled}
+                        >
+                            <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
                     </div>
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                    {/* Toggle Concluído/Pendente */}
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className={cn(
-                                        "h-7 px-2 text-[10px] gap-1 transition-all font-medium",
-                                        exercise.completed
-                                            ? "text-green-700 bg-green-50 hover:bg-green-100 border border-green-200"
-                                            : "text-muted-foreground hover:bg-muted"
-                                    )}
-                                    onClick={toggleCompleted}
-                                    disabled={disabled}
-                                    aria-label={statusLabel}
-                                    aria-pressed={exercise.completed}
-                                >
-                                    {statusIcon}
-                                    <span className="hidden xs:inline">{exercise.completed ? 'Feito' : 'Pendente'}</span>
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>{statusLabel}</TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
 
-                    {/* Remover */}
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                                    onClick={() => onRemove(exercise.id)}
-                                    disabled={disabled}
-                                    aria-label={`${ARIA_LABELS.removeExercise} ${exercise.name}`}
-                                >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Remover exercício</TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                {/* Completion Status Badge over image */}
+                <div className="absolute bottom-2 right-2">
+                    <Button
+                        variant={exercise.completed ? "default" : "secondary"}
+                        size="sm"
+                        className={cn(
+                            "h-7 px-2.5 text-[10px] gap-1.5 font-bold shadow-lg transition-all",
+                            exercise.completed
+                                ? "bg-green-500 hover:bg-green-600 text-white border-none"
+                                : "bg-white/90 hover:bg-white text-foreground"
+                        )}
+                        onClick={toggleCompleted}
+                        disabled={disabled}
+                    >
+                        {statusIcon}
+                        <span>{exercise.completed ? 'CONCLUÍDO' : 'PENDENTE'}</span>
+                    </Button>
                 </div>
             </div>
 
-            {/* Campos de edição */}
-            <div className="grid grid-cols-3 gap-2">
-                <div className="space-y-1.5">
-                    <Label
-                        className="text-[10px] text-muted-foreground uppercase font-semibold tracking-tight"
-                        htmlFor={`sets-${exercise.id}`}
-                    >
-                        Séries
-                    </Label>
-                    <Input
-                        id={`sets-${exercise.id}`}
-                        type="number"
-                        min={0}
-                        max={99}
-                        value={exercise.sets}
-                        onChange={(e) => handleUpdate('sets', parseInt(e.target.value) || 0)}
-                        className="h-8 text-sm px-2 font-medium"
-                        disabled={disabled}
-                        aria-label={`${ARIA_LABELS.sets} de ${exercise.name}`}
-                    />
+            {/* Content Area */}
+            <div className="p-3 space-y-3 flex-1 flex flex-col">
+                <div className="min-w-0">
+                    <h4 className="font-bold text-sm leading-tight line-clamp-2 min-h-[2.5rem]" title={exercise.name}>
+                        {exercise.name}
+                    </h4>
                 </div>
-                <div className="space-y-1.5">
-                    <Label
-                        className="text-[10px] text-muted-foreground uppercase font-semibold tracking-tight"
-                        htmlFor={`reps-${exercise.id}`}
-                    >
-                        Reps
-                    </Label>
-                    <Input
-                        id={`reps-${exercise.id}`}
-                        type="number"
-                        min={0}
-                        max={999}
-                        value={exercise.repetitions}
-                        onChange={(e) => handleUpdate('repetitions', parseInt(e.target.value) || 0)}
-                        className="h-8 text-sm px-2 font-medium"
-                        disabled={disabled}
-                        aria-label={`${ARIA_LABELS.reps} de ${exercise.name}`}
-                    />
-                </div>
-                <div className="space-y-1.5">
-                    <Label
-                        className="text-[10px] text-muted-foreground uppercase font-semibold tracking-tight"
-                        htmlFor={`weight-${exercise.id}`}
-                    >
-                        Carga
-                    </Label>
-                    <Input
-                        id={`weight-${exercise.id}`}
-                        value={exercise.weight || ''}
-                        onChange={(e) => handleUpdate('weight', e.target.value)}
-                        placeholder="kg"
-                        className="h-8 text-sm px-2 placeholder:text-muted-foreground/50"
-                        disabled={disabled}
-                        aria-label={`${ARIA_LABELS.weight} de ${exercise.name}`}
-                        inputMode="decimal"
-                    />
-                </div>
-            </div>
 
-            {/* Observações */}
-            <div className="space-y-1.5">
-                <Label
-                    className="text-[10px] text-muted-foreground uppercase font-semibold tracking-tight"
-                    htmlFor={`obs-${exercise.id}`}
-                >
-                    Observações
-                </Label>
-                <Input
-                    id={`obs-${exercise.id}`}
-                    value={exercise.observations || ''}
-                    onChange={(e) => handleUpdate('observations', e.target.value)}
-                    placeholder="Como foi realizado? Ex: sem dor, boa amplitude..."
-                    className="h-8 text-sm px-2 placeholder:text-muted-foreground/50"
-                    disabled={disabled}
-                    aria-label={`${ARIA_LABELS.observations} de ${exercise.name}`}
-                />
+                {/* Inputs Grid */}
+                <div className="grid grid-cols-3 gap-2">
+                    <div className="space-y-1">
+                        <Label className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">Séries</Label>
+                        <Input
+                            type="number"
+                            value={exercise.sets}
+                            onChange={(e) => handleUpdate('sets', parseInt(e.target.value) || 0)}
+                            className="h-7 text-xs px-2 font-bold bg-muted/30 focus:bg-background border-none ring-1 ring-border/50"
+                            disabled={disabled}
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <Label className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">Reps</Label>
+                        <Input
+                            type="number"
+                            value={exercise.repetitions}
+                            onChange={(e) => handleUpdate('repetitions', parseInt(e.target.value) || 0)}
+                            className="h-7 text-xs px-2 font-bold bg-muted/30 focus:bg-background border-none ring-1 ring-border/50"
+                            disabled={disabled}
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <Label className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">Peso</Label>
+                        <Input
+                            value={exercise.weight || ''}
+                            onChange={(e) => handleUpdate('weight', e.target.value)}
+                            placeholder="kg"
+                            className="h-7 text-xs px-2 font-bold bg-muted/30 focus:bg-background border-none ring-1 ring-border/50"
+                            disabled={disabled}
+                        />
+                    </div>
+                </div>
+
+                {/* Observations */}
+                <div className="space-y-1 mt-auto pt-2 border-t border-dashed">
+                    <Label className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider">Observações</Label>
+                    <textarea
+                        value={exercise.observations || ''}
+                        onChange={(e) => handleUpdate('observations', e.target.value)}
+                        placeholder="Como foi a execução?"
+                        className="w-full text-[10px] p-2 rounded bg-muted/30 focus:bg-background border-none ring-1 ring-border/50 outline-none min-h-[40px] resize-none"
+                        disabled={disabled}
+                    />
+                </div>
             </div>
-        </div>
+        </Card>
     );
 });
 
@@ -738,7 +709,7 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
 
                 {/* Lista de exercícios */}
                 <ScrollArea className="flex-1">
-                    <div className="p-3 space-y-3" role="list">
+                    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4" role="list">
                         {exercises.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed rounded-lg text-muted-foreground bg-muted/20">
                                 <Dumbbell className="h-10 w-10 mb-3 opacity-30" />
