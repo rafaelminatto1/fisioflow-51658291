@@ -452,6 +452,39 @@ All colors MUST be HSL.
     user-select: none;
   }
 
+  /* Fix double-tap issue on iOS - prevent zoom and enable direct tap */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  /* Apply touch-action: manipulation to all interactive elements */
+  button,
+  a,
+  [role="button"],
+  [onclick],
+  input,
+  textarea,
+  select,
+  .btn,
+  .touch-target {
+    touch-action: manipulation;
+  }
+
+  /* Fix hover states interfering with touch on iOS */
+  @media (hover: none) and (pointer: coarse) {
+    /* Disable hover effects on touch devices */
+    .group:hover .group-hover\:opacity-100,
+    .group:hover .group-hover\:block,
+    .group:hover .group-hover\:flex {
+      opacity: 1;
+    }
+
+    /* Always show elements that are normally only visible on hover */
+    [class*="group-hover:opacity-0"] {
+      opacity: 1 !important;
+    }
+  }
+
   /* ========================================
      ACCESSIBILITY UTILITIES
      ======================================== */
@@ -1324,15 +1357,50 @@ All colors MUST be HSL.
   }
 
   .react-grid-item {
-    transition: all 200ms ease-out;
-    transition-property: transform, box-shadow;
+    /* Faster transitions for more responsive feel */
+    transition: transform 150ms ease-out, width 150ms ease-out, height 150ms ease-out;
     will-change: transform;
+    /* Allow shadows and tooltips to overflow */
+    overflow: visible;
   }
 
   /* Fix margin issues - ensure proper spacing */
   .react-grid-layout > .react-grid-item {
     /* Ensure items don't overflow their calculated width */
     box-sizing: border-box;
+    /* Base z-index for all items */
+    position: relative;
+    z-index: 1;
+  }
+
+  /* When dragging, ensure the item is on top */
+  .react-grid-item.dragging {
+    z-index: 1000 !important;
+    opacity: 0.9;
+    box-shadow: 0 25px 50px -12px hsl(var(--primary) / 0.4);
+  }
+
+  /* Ensure placeholder has proper z-index */
+  .react-grid-placeholder {
+    z-index: 0 !important;
+    pointer-events: none !important;
+  }
+
+  /* Static items during drag - ensure they stay below the dragged item */
+  .react-grid-layout.editable .react-grid-item:not(.dragging) {
+    z-index: 1;
+    /* Slight scale effect to show they're being rearranged */
+    transition: transform 150ms ease-out, width 150ms ease-out, height 150ms ease-out, box-shadow 150ms ease-out;
+  }
+
+  /* Prevent content clipping during transitions */
+  .react-grid-item > * {
+    overflow: hidden;
+  }
+
+  /* Smooth placeholder transitions */
+  .react-grid-placeholder {
+    transition: all 150ms ease-out !important;
   }
 
   /* Drag handle enhancements */
@@ -1359,14 +1427,6 @@ All colors MUST be HSL.
     background: hsl(var(--primary) / 0.2);
   }
 
-  /* Dragging state - provides visual feedback */
-  .react-grid-item.dragging {
-    opacity: 0.6;
-    transform: scale(1.02);
-    box-shadow: 0 20px 40px -8px hsl(var(--primary) / 0.3);
-    z-index: 100;
-  }
-
   /* Placeholder shows where item will land */
   .react-grid-placeholder {
     background: hsl(var(--primary) / 0.1) !important;
@@ -1374,6 +1434,7 @@ All colors MUST be HSL.
     border-radius: 0.5rem;
     transition: all 150ms ease-out;
     box-sizing: border-box !important;
+    pointer-events: none !important;
   }
 
   /* Resize handle styles */
@@ -1578,4 +1639,366 @@ All colors MUST be HSL.
   .widget-card.is-grabbed .widget-header {
     @apply bg-muted/50;
   }
+}
+
+/* ========================================
+   PERFORMANCE OPTIMIZATIONS
+   ======================================== */
+
+/* GPU acceleration for animated elements */
+@layer utilities {
+  /* Enable GPU layer promotion for smooth animations */
+  .will-change-transform {
+    will-change: transform;
+  }
+
+  .will-change-opacity {
+    will-change: opacity;
+  }
+
+  /* Optimize scroll containers */
+  .gpu-scroll {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  /* Optimize frequently updating elements */
+  .gpu-layer {
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  /* Optimize paint for complex animations */
+  .paint-optimized {
+    contain: paint style;
+  }
+
+  /* Optimize layout for scroll containers */
+  .layout-optimized {
+    contain: layout style paint;
+  }
+
+  /* Optimize content-visibility for off-screen elements */
+  .content-visibility-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 500px;
+  }
+}
+
+/* Optimize specific components */
+[data-radix-scroll-area-viewport] {
+  @apply gpu-scroll;
+}
+
+/* Dialog overlay optimizations */
+[data-state="open"][role="dialog"] {
+  @apply gpu-layer;
+}
+
+/* Smooth transitions with hardware acceleration */
+.transition-gpu {
+  transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+  will-change: transform, opacity;
+}
+
+/* Reduce paint for hover effects */
+.hover-paint-optimized {
+  @apply transition-all duration-150;
+  will-change: transform;
+}
+
+.hover-paint-optimized:hover {
+  @apply translate-y-[-1px] shadow-md;
+}
+
+/* Optimize grid layouts for better rendering */
+.grid-optimized {
+  @apply gpu-layer;
+  contain: layout style;
+}
+
+/* Optimize card hover effects */
+.card-hover-optimized {
+  @apply transition-all duration-200;
+  will-change: transform;
+}
+
+.card-hover-optimized:hover {
+  @apply -translate-y-0.5 shadow-lg;
+}
+
+/* Performance optimizations for modals */
+.modal-optimized {
+  @apply gpu-layer;
+  contain: layout style paint;
+}
+
+/* Optimize animations */
+@keyframes fade-in-gpu {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-fade-in-gpu {
+  animation: fade-in-gpu 0.2s ease-out forwards;
+  @apply gpu-layer;
+}
+
+/* Optimize list rendering */
+.list-item-optimized {
+  @apply content-visibility-auto;
+  contain: layout style;
+}
+
+/* Optimize button interactions */
+.button-optimized {
+  @apply transition-all duration-150;
+  will-change: transform;
+}
+
+.button-optimized:active {
+  @apply scale-95;
+}
+
+/* Optimize dropdown menus */
+.dropdown-optimized {
+  @apply gpu-layer;
+  contain: layout style;
+}
+
+/* Optimize tooltips */
+.tooltip-optimized {
+  @apply gpu-layer;
+  contain: layout style;
+  animation: fade-in-gpu 0.1s ease-out forwards;
+}
+
+/* Optimize search inputs */
+.search-input-optimized {
+  @apply transition-all duration-150;
+  will-change: border-color;
+}
+
+/* Optimize checkbox/radio interactions */
+.input-optimized {
+  @apply transition-all duration-150;
+  will-change: background-color;
+}
+
+/* Optimize progress bars */
+.progress-optimized {
+  will-change: width;
+  transform: translateZ(0);
+}
+
+/* Optimize skeleton loading */
+.skeleton-optimized {
+  @apply gpu-layer;
+  contain: layout style paint;
+}
+
+/* Optimize table rows */
+.table-row-optimized {
+  @apply content-visibility-auto;
+  contain: layout style;
+}
+
+/* Optimize accordion items */
+.accordion-item-optimized {
+  @apply content-visibility-auto;
+  contain: layout style;
+}
+
+/* Optimize tabs */
+.tab-trigger-optimized {
+  @apply transition-all duration-150;
+  will-change: background-color;
+}
+
+/* Optimize alerts */
+.alert-optimized {
+  @apply gpu-layer;
+  contain: layout style paint;
+}
+
+/* Optimize badges */
+.badge-optimized {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Optimize avatars */
+.avatar-optimized {
+  @apply gpu-layer;
+  contain: layout style;
+}
+
+/* Optimize carousel/slider */
+.carousel-optimized {
+  @apply gpu-scroll;
+  contain: layout style paint;
+}
+
+/* Optimize chart containers */
+.chart-optimized {
+  @apply gpu-layer;
+  contain: layout style paint;
+}
+
+/* Optimize calendar grid */
+.calendar-grid-optimized {
+  @apply gpu-layer;
+  contain: layout style;
+}
+
+/* Optimize drag and drop */
+.draggable-optimized {
+  will-change: transform;
+  @apply gpu-layer;
+}
+
+.draggable-optimized.dragging {
+  @apply scale-105 shadow-xl;
+}
+
+/* Optimize resizable elements */
+.resizable-optimized {
+  will-change: width will-change-height;
+  contain: layout style;
+}
+
+/* Optimize filters panel */
+.filters-optimized {
+  @apply content-visibility-auto;
+  contain: layout style;
+}
+
+/* Optimize sidebar */
+.sidebar-optimized {
+  @apply gpu-layer;
+  contain: layout style;
+}
+
+/* Optimize navigation */
+.nav-optimized {
+  @apply content-visibility-auto;
+  contain: layout style;
+}
+
+/* Optimize hero sections */
+.hero-optimized {
+  @apply gpu-layer;
+  contain: layout style paint;
+}
+
+/* Optimize feature cards */
+.feature-card-optimized {
+  @apply content-visibility-auto;
+  contain: layout style;
+}
+
+/* Optimize testimonials */
+.testimonial-optimized {
+  @apply content-visibility-auto;
+  contain: layout style;
+}
+
+/* Optimize pricing tables */
+.pricing-optimized {
+  @apply content-visibility-auto;
+  contain: layout style;
+}
+
+/* Optimize form inputs */
+.form-input-optimized {
+  @apply transition-all duration-150;
+  will-change: border-color will-change-box-shadow;
+}
+
+/* Optimize select dropdowns */
+.select-optimized {
+  @apply gpu-layer;
+  contain: layout style;
+}
+
+/* Optimize text areas */
+.textarea-optimized {
+  @apply transition-all duration-150;
+  will-change: height;
+}
+
+/* Optimize file inputs */
+.file-input-optimized {
+  @apply transition-all duration-150;
+  will-change: border-color;
+}
+
+/* Optimize range sliders */
+.range-slider-optimized {
+  will-change: width;
+  @apply gpu-layer;
+}
+
+/* Optimize color pickers */
+.color-picker-optimized {
+  @apply gpu-layer;
+  contain: layout style;
+}
+
+/* Optimize date pickers */
+.date-picker-optimized {
+  @apply gpu-layer;
+  contain: layout style paint;
+}
+
+/* Optimize time inputs */
+.time-input-optimized {
+  @apply transition-all duration-150;
+  will-change: border-color;
+}
+
+/* Optimize number inputs */
+.number-input-optimized {
+  @apply transition-all duration-150;
+  will-change: border-color;
+}
+
+/* Optimize email inputs */
+.email-input-optimized {
+  @apply transition-all duration-150;
+  will-change: border-color;
+}
+
+/* Optimize password inputs */
+.password-input-optimized {
+  @apply transition-all duration-150;
+  will-change: border-color;
+}
+
+/* Optimize search inputs */
+.search-input-optimized {
+  @apply transition-all duration-150;
+  will-change: border-color will-change-box-shadow;
+}
+
+/* Optimize URL inputs */
+.url-input-optimized {
+  @apply transition-all duration-150;
+  will-change: border-color;
+}
+
+/* Optimize telephone inputs */
+.tel-input-optimized {
+  @apply transition-all duration-150;
+  will-change: border-color;
 }

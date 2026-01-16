@@ -560,20 +560,21 @@ export function PatientAnalyticsDashboard({ patientId, patientName }: PatientAna
               <CardContent>
                 <ScrollArea className="h-[250px]">
                   <div className="space-y-2 pr-4">
-                    {lifecycle?.stage_history.map((stage, index) => (
-                      <LifecycleStage
-                        key={index}
-                        stage={stage.stage}
-                        date={stage.date}
-                        duration={stage.duration_days}
-                        isActive={index === lifecycle.stage_history.length - 1}
-                      />
-                    ))}
-                    {!lifecycle || lifecycle.stage_history.length === 0 ? (
+                    {!lifecycle || !lifecycle.stage_history || lifecycle.stage_history.length === 0 ? (
                       <p className="text-sm text-muted-foreground text-center py-4">
                         Nenhum evento de ciclo de vida registrado
                       </p>
-                    ) : null}
+                    ) : (
+                      lifecycle.stage_history.map((stage, index) => (
+                        <LifecycleStage
+                          key={index}
+                          stage={stage.stage}
+                          date={stage.date}
+                          duration={stage.duration_days}
+                          isActive={index === lifecycle.stage_history.length - 1}
+                        />
+                      ))
+                    )}
                   </div>
                 </ScrollArea>
               </CardContent>
