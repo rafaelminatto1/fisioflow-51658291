@@ -1737,11 +1737,31 @@ All colors MUST be HSL.
   contain: layout style paint;
 }
 
-/* Fix for modals that exceed viewport height */
-[data-state="open"][role="dialog"] {
-  max-height: calc(100vh - 2rem);
-  max-width: calc(100vw - 2rem);
-  overflow: hidden;
+/* Fix for modals that exceed viewport - ensure proper scrolling */
+[data-radix-dialog-content][data-state="open"] {
+  max-height: min(85vh, 800px);
+  max-width: min(95vw, 600px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Custom scrollbar for modal content */
+[data-radix-dialog-content][data-state="open"]::-webkit-scrollbar {
+  width: 6px;
+}
+
+[data-radix-dialog-content][data-state="open"]::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-radix-dialog-content][data-state="open"]::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 3px;
+}
+
+[data-radix-dialog-content][data-state="open"]::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
 }
 
 /* Optimize animations */
