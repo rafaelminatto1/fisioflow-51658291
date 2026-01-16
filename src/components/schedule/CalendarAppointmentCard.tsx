@@ -100,7 +100,7 @@ export const CalendarAppointmentCard = memo(({
             onMouseLeave={handleMouseLeave}
             onClick={handleClick}
             className={cn(
-                "absolute rounded-md flex flex-col border-l-[3px] transition-all shadow-sm cursor-pointer overflow-hidden group hover:shadow-md",
+                "absolute rounded-md flex flex-col border-l-[3px] transition-all shadow-sm cursor-pointer overflow-hidden group hover:shadow-md my-0.5",
                 draggable && "cursor-grab active:cursor-grabbing",
                 isDragging && "opacity-50 scale-95 z-50 ring-2 ring-blue-400",
                 !isDragging && isHovered && !selectionMode && "z-30 ring-1 ring-black/5 dark:ring-white/10",
@@ -117,11 +117,11 @@ export const CalendarAppointmentCard = memo(({
                 borderLeftColor: config.borderColor,
             }}
         >
-            <div className="p-1.5 flex flex-col h-full relative">
+            <div className="p-1 pl-1.5 pr-1 flex flex-col h-full relative">
                 {/* Header Line (Time + Status) */}
                 <div className="flex items-center justify-between mb-0.5">
                     <span
-                        className="text-[11px] font-bold uppercase tracking-wide leading-none opacity-90"
+                        className="text-[11px] font-semibold uppercase tracking-wide leading-none opacity-90"
                         style={{ color: textColor }}
                     >
                         {normalizeTime(appointment.time)}
@@ -149,11 +149,11 @@ export const CalendarAppointmentCard = memo(({
                     )}
                 </div>
 
-                {/* Patient Name */}
-                <div className="flex items-start gap-1">
+                {/* Patient Name - 2 linhas com fonte proporcional */}
+                <div className="flex items-start gap-1 min-h-[2em]">
                     <span
                         className={cn(
-                            "text-[13px] font-bold truncate leading-tight",
+                            "text-[13px] font-bold leading-snug line-clamp-2 calendar-patient-name-compact",
                             appointment.status === 'cancelado' && "line-through decoration-red-500/50"
                         )}
                         style={{ color: textColor }}
@@ -165,7 +165,7 @@ export const CalendarAppointmentCard = memo(({
                 {/* Type/Treatment */}
                 {!isSmall && (
                     <span
-                        className="text-[11px] truncate mt-0.5 leading-tight opacity-80"
+                        className="text-[11px] truncate mt-0 leading-tight opacity-80"
                         style={{ color: textColor }}
                     >
                         {appointment.type || 'Consulta'}
