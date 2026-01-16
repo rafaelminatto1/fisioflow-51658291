@@ -119,7 +119,7 @@ export const DraggableGrid = memo(function DraggableGrid({
     }
 
     return (
-        <div ref={containerRef} className={className} style={{ position: 'relative' }}>
+        <div ref={containerRef} className={cn("w-full", className)} style={{ position: 'relative' }}>
             <Responsive
                 className={cn("layout", isEditable && "editable")}
                 breakpoints={GRID_CONFIG.breakpoints}
