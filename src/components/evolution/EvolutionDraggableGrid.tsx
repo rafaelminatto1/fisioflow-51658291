@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { DraggableGrid, GridItem } from '@/components/ui/DraggableGrid';
 import { Layout } from 'react-grid-layout';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { GridWidget } from '@/components/ui/GridWidget';
 import { SmartTextarea } from '@/components/ui/SmartTextarea';
 import { Button } from '@/components/ui/button';
@@ -215,18 +217,25 @@ const SOAPSectionWidget = React.memo(({
                 </div>
             }
         >
-            <div className="h-full flex flex-col p-0">
+            <div className="flex-1 flex flex-col min-h-0 relative">
                 <SmartTextarea
                     value={localValue}
                     onChange={handleChange}
                     placeholder={section.placeholder}
                     disabled={disabled}
-                    className="flex-1 resize-none border-0 focus-visible:ring-0 p-5 min-h-[140px] text-sm leading-relaxed"
-                    containerClassName="flex-1 flex flex-col h-full"
+                    variant="ghost"
+                    className="flex-1 p-4 sm:p-5 text-sm leading-relaxed"
+                    containerClassName="flex-1 min-h-0"
+                    showStats={false}
+                    showToolbarOnFocus={true}
+                    compact={true}
                 />
-                <div className="px-5 py-2.5 bg-muted/30 border-t flex justify-between items-center text-xs text-muted-foreground shrink-0">
-                    <span className="font-semibold">{wordCount} palavras</span>
-                    <span className="text-[10px] uppercase tracking-wide opacity-60 font-medium">{section.shortLabel}</span>
+                <div className="px-5 py-2.5 bg-muted/20 border-t flex justify-between items-center text-[11px] text-muted-foreground shrink-0 select-none">
+                    <div className="flex items-center gap-1.5 font-medium">
+                        <span className="w-1 h-1 rounded-full bg-primary/40" />
+                        {wordCount} palavras
+                    </div>
+                    <span className="uppercase tracking-widest opacity-40 font-bold">{section.shortLabel}</span>
                 </div>
             </div>
         </GridWidget>
@@ -252,6 +261,8 @@ interface EvolutionDraggableGridProps {
     exercises?: SessionExercise[];
     onExercisesChange?: (exercises: SessionExercise[]) => void;
     onSuggestExercises?: () => void;
+    onRepeatLastSession?: () => void;
+    lastSessionExercises?: SessionExercise[];
     // Home Care
     patientPhone?: string;
     // Previous Sessions
@@ -276,12 +287,50 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
     exercises = [],
     onExercisesChange,
     onSuggestExercises,
+    onRepeatLastSession,
+    lastSessionExercises = [],
     patientPhone,
     previousEvolutions = [],
     onCopyLastEvolution
 }) => {
+    // State initialization with lazy loading for performance
     const [isEditable, setIsEditable] = useState(false);
     const [showPainDetails, setShowPainDetails] = useState(false);
+    const { user, profile } = useAuth();
+
+    // Priority: Saved storage > Profile preferences > undefined (default)
+    const [storedLayouts, setStoredLayouts] = useState<{ lg: Layout[] } | undefined>(() => {
+        if (typeof window === 'undefined') return undefined; // SSR safety
+
+        // 1. Try local storage first (fastest)
+        const saved = localStorage.getItem('evolution_layout_v1');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    return { lg: parsed };
+                }
+            } catch (e) {
+                console.error('Failed to parse saved layout', e);
+            }
+        }
+
+        // 2. Try profile preferences if available on mount
+        if (profile?.preferences?.evolution_layout) {
+            return { lg: profile.preferences.evolution_layout };
+        }
+
+        return undefined;
+    });
+
+    // Update stored layouts when profile loads (if not already set by localStorage)
+    useEffect(() => {
+        if (!storedLayouts && profile?.preferences?.evolution_layout) {
+            setStoredLayouts({ lg: profile.preferences.evolution_layout });
+            // Sync to local storage for faster subsequent loads
+            localStorage.setItem('evolution_layout_v1', JSON.stringify(profile.preferences.evolution_layout));
+        }
+    }, [profile, storedLayouts]);
 
     // Calculate Trend
     const trend = React.useMemo(() => {
@@ -289,19 +338,83 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
         return calculatePainTrend(painHistory, painScaleData.level);
     }, [painHistory, painScaleData.level]);
 
+    // Update stored layout when pain details are toggled
+    // We update the local state but NOT localStorage yet (unless user saves)
+    // Actually, we should probably just treat this as a temporary strict override for the view
+    useEffect(() => {
+        if (storedLayouts?.lg) {
+            const painItem = storedLayouts.lg.find(i => i.i === 'pain-scale');
+            const targetH = showPainDetails ? 16 : 5;
+
+            // Only update if height is different to avoid loops
+            if (painItem && painItem.h !== targetH) {
+                const newLayout = storedLayouts.lg.map(item => {
+                    if (item.i === 'pain-scale') {
+                        return { ...item, h: targetH };
+                    }
+                    return item;
+                });
+                setStoredLayouts({ ...storedLayouts, lg: newLayout });
+            }
+        }
+    }, [showPainDetails, storedLayouts]);
+
     // Layout management (save/reset)
-    const handleSaveLayout = (layout: Layout) => {
+    const handleSaveLayout = async (layout: Layout[]) => {
         // Only save when in edit mode (user clicked "Salvar")
         if (isEditable) {
+            // 1. Save to local storage (immediate feedback)
             localStorage.setItem('evolution_layout_v1', JSON.stringify(layout));
+            setStoredLayouts({ lg: layout });
             setIsEditable(false);
-            toast.success('Layout da evolução salvo!');
+            toast.success('Layout salvo!');
+
+            // 2. Persist to Supabase profile
+            if (user?.id) {
+                try {
+                    const currentPreferences = profile?.preferences || {};
+                    const { error } = await supabase
+                        .from('profiles')
+                        .update({
+                            preferences: {
+                                ...currentPreferences,
+                                evolution_layout: layout
+                            }
+                        })
+                        .eq('id', user.id);
+
+                    if (error) {
+                        console.error('Error saving layout preference:', error);
+                        // Optional: silent fail or toast error, better to just log as local storage works
+                    }
+                } catch (err) {
+                    console.error('Failed to save preferences:', err);
+                }
+            }
         }
     };
 
-    const handleResetLayout = () => {
+    const handleResetLayout = async () => {
+        // 1. Clear local
         localStorage.removeItem('evolution_layout_v1');
-        window.location.reload();
+        setStoredLayouts(undefined);
+        setIsEditable(false);
+        toast.success('Layout redefinido!');
+
+        // 2. Clear from Supabase
+        if (user?.id && profile?.preferences) {
+            try {
+                const { evolution_layout, ...restPreferences } = profile.preferences;
+                await supabase
+                    .from('profiles')
+                    .update({
+                        preferences: restPreferences
+                    })
+                    .eq('id', user.id);
+            } catch (err) {
+                console.error('Failed to reset preferences:', err);
+            }
+        }
     };
 
     // ========== PERFORMANCE OPTIMIZATION ==========
@@ -330,7 +443,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
             id: 'pain-scale',
             content: (
                 <GridWidget
-                    title="Nível de Dor"
+                    title="Nível de dor (EVA)"
                     icon={<Activity className="h-4 w-4 text-rose-600" />}
                     isDraggable={isEditable}
                     className="h-full border-t-4 border-rose-500/30"
@@ -405,6 +518,8 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                             exercises={exercises}
                             onChange={handleExercisesChange}
                             onSuggest={onSuggestExercises}
+                            onRepeatLastSession={onRepeatLastSession}
+                            hasLastSession={lastSessionExercises.length > 0}
                             disabled={disabled}
                         />
                     </div>
@@ -664,18 +779,17 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                                 <Button variant="ghost" size="sm" onClick={() => setIsEditable(false)} className="h-8.5 px-3">Cancelar</Button>
                                 <Button size="sm" onClick={() => {
                                     // Trigger layout save by calling onLayoutChange which saves to localStorage
-                                    if (onLayoutChange) {
-                                        const currentLayout = gridItems.map(item => ({
-                                            i: item.id,
-                                            w: item.defaultLayout.w,
-                                            h: item.defaultLayout.h,
-                                            x: item.defaultLayout.x,
-                                            y: item.defaultLayout.y,
-                                            minW: item.defaultLayout.minW,
-                                            minH: item.defaultLayout.minH,
-                                        }));
-                                        handleSaveLayout(currentLayout);
-                                    }
+                                    // Trigger layout save to localStorage
+                                    const currentLayout = gridItems.map(item => ({
+                                        i: item.id,
+                                        w: item.defaultLayout.w,
+                                        h: item.defaultLayout.h,
+                                        x: item.defaultLayout.x,
+                                        y: item.defaultLayout.y,
+                                        minW: item.defaultLayout.minW,
+                                        minH: item.defaultLayout.minH,
+                                    }));
+                                    handleSaveLayout(currentLayout);
                                 }} className="h-8.5 px-3.5 gap-2">
                                     <Save className="h-3.5 w-3.5" /> Salvar
                                 </Button>
@@ -697,11 +811,11 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                 </div>
 
                 <DraggableGrid
-                    key={`grid-${showPainDetails ? 'expanded' : 'collapsed'}`}
                     items={gridItems}
                     onLayoutChange={handleSaveLayout}
                     isEditable={isEditable}
                     rowHeight={50}
+                    layouts={storedLayouts}
                 />
             </div>
         </TooltipProvider>

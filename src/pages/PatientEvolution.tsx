@@ -143,6 +143,21 @@ const PatientEvolution = () => {
     patientError
   } = useAppointmentData(appointmentId);
 
+  // Timeout warning state
+  const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (dataLoading) {
+      timeout = setTimeout(() => {
+        setShowTimeoutWarning(true);
+      }, 10000); // 10 seconds
+    } else {
+      setShowTimeoutWarning(false);
+    }
+    return () => clearTimeout(timeout);
+  }, [dataLoading]);
+
   // Hooks que dependem de patientId - chamados APÓS useAppointmentData
   const { lastSession, isLoadingLastSession, suggestExerciseChanges } = useSessionExercises(patientId || '');
   const { awardXp } = useGamification(patientId || '');
@@ -581,6 +596,16 @@ const PatientEvolution = () => {
           <div className="text-center space-y-4">
             <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
             <p className="text-muted-foreground">Carregando dados do paciente...</p>
+
+            {showTimeoutWarning && (
+              <div className="mt-4 animate-fade-in">
+                <p className="text-sm text-amber-600 mb-4">O carregamento está demorando mais que o esperado.</p>
+                <Button onClick={() => window.location.reload()} variant="outline" size="sm">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Recarregar Página
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </MainLayout>
@@ -897,6 +922,16 @@ const PatientEvolution = () => {
                     description: 'Os exercícios foram evoluídos com base no progresso do paciente.'
                   });
                 }}
+                onRepeatLastSession={() => {
+                  if (lastSession?.exercises_performed) {
+                    setSessionExercises(lastSession.exercises_performed as SessionExercise[]);
+                    toast({
+                      title: 'Exercícios Repetidos',
+                      description: 'Os exercícios da sessão anterior foram carregados.'
+                    });
+                  }
+                }}
+                lastSessionExercises={lastSession?.exercises_performed as SessionExercise[] || []}
                 previousEvolutions={previousEvolutions}
                 onCopyLastEvolution={(evolution) => {
                   handleCopyPreviousEvolution(evolution);

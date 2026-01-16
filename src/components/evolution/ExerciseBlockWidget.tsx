@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trash2, Dumbbell, Search, Sparkles, Filter, X, CheckCircle2, Circle, Loader2 } from 'lucide-react';
+import { Trash2, Dumbbell, Search, Sparkles, Filter, X, CheckCircle2, Circle, Loader2, Library, RotateCcw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { SessionExercise } from './SessionExercisesPanel';
@@ -12,6 +12,8 @@ import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ExerciseFilters } from '@/services/exercises';
+import { ExerciseLibraryModal } from '../exercises/ExerciseLibraryModal';
+import { type Exercise } from '@/hooks/useExercises';
 
 // ============================================================================================
 // TYPES & INTERFACES
@@ -21,6 +23,8 @@ interface ExerciseBlockWidgetProps {
     exercises: SessionExercise[];
     onChange: (exercises: SessionExercise[]) => void;
     onSuggest?: () => void;
+    onRepeatLastSession?: () => void;
+    hasLastSession?: boolean;
     disabled?: boolean;
     className?: string;
 }
@@ -403,6 +407,8 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
     exercises,
     onChange,
     onSuggest,
+    onRepeatLastSession,
+    hasLastSession = false,
     disabled = false,
     className
 }) => {
@@ -412,6 +418,7 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
     const [selectedExerciseId, setSelectedExerciseId] = useState('');
     const [showFilters, setShowFilters] = useState(false);
     const [filters, setFilters] = useState<ExerciseFilters>({});
+    const [isLibraryModalOpen, setIsLibraryModalOpen] = useState(false);
 
     // Debounce da busca para melhorar performance
     useEffect(() => {
@@ -528,6 +535,22 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
         }
     }, [selectedExerciseId]);
 
+    // Handler to add exercise from the library modal
+    const handleAddExerciseFromLibrary = useCallback((exercise: Exercise) => {
+        const newExercise: SessionExercise = {
+            id: generateSessionId(),
+            exerciseId: exercise.id,
+            name: exercise.name,
+            sets: exercise.sets || 3,
+            repetitions: exercise.repetitions || 10,
+            completed: false,
+            observations: '',
+            weight: '',
+            image_url: exercise.image_url
+        };
+        onChange([...exercises, newExercise]);
+    }, [exercises, onChange]);
+
     // Estatísticas da sessão
     const sessionStats = useMemo(() => {
         const completedCount = exercises.filter(e => e.completed).length;
@@ -536,183 +559,239 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
     }, [exercises]);
 
     return (
-        <div className={cn("flex flex-col h-full", className)}>
-            {/* Header: Busca, Filtros e Ações */}
-            <div className="p-2.5 border-b flex items-center justify-between gap-2 shrink-0 bg-muted/20">
-                <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" aria-hidden="true" />
-                    <Input
-                        placeholder="Buscar exercícios..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="h-8 pl-10 text-sm"
-                        aria-label={ARIA_LABELS.search}
-                        disabled={isLoading}
-                    />
-                    {isLoading && (
-                        <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
-                    )}
-                </div>
+        <>
+            <div className={cn("flex flex-col h-full", className)}>
+                {/* Header: Busca, Filtros e Ações */}
+                <div className="p-2.5 border-b flex items-center justify-between gap-2 shrink-0 bg-muted/20">
+                    <div className="flex-1 relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" aria-hidden="true" />
+                        <Input
+                            placeholder="Buscar exercícios..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="h-8 pl-10 text-sm"
+                            aria-label={ARIA_LABELS.search}
+                            disabled={isLoading}
+                        />
+                        {isLoading && (
+                            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
+                        )}
+                    </div>
 
-                <div className="flex items-center gap-2">
-                    {/* Filtros */}
-                    <Popover open={showFilters} onOpenChange={setShowFilters}>
-                        <PopoverTrigger asChild>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className={cn(
-                                    "h-8 px-2.5 gap-1.5 text-sm font-medium relative transition-colors",
-                                    activeFiltersCount > 0 && "border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100"
-                                )}
-                                aria-label={ARIA_LABELS.filters}
-                                aria-expanded={showFilters}
-                            >
-                                <Filter className="h-3.5 w-3.5" />
-                                <span>Filtros</span>
-                                {activeFiltersCount > 0 && (
-                                    <Badge className="h-4 min-w-4 px-1 text-[10px] bg-purple-600 text-white" aria-label={`${activeFiltersCount} filtros ativos`}>
-                                        {activeFiltersCount}
-                                    </Badge>
-                                )}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-80 p-4" align="end">
-                            <FilterPopoverContent
-                                categories={categories}
-                                difficulties={DIFFICULTY_LEVELS}
-                                bodyParts={bodyParts}
-                                filters={filters}
-                                activeFiltersCount={activeFiltersCount}
-                                filteredCount={filteredExercises.length}
-                                onFilterChange={handleFilterChange}
-                                onToggleBodyPart={toggleBodyPart}
-                                onClearFilters={clearFilters}
-                            />
-                        </PopoverContent>
-                    </Popover>
+                    <div className="flex items-center gap-2">
+                        {/* Filtros */}
+                        <Popover open={showFilters} onOpenChange={setShowFilters}>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className={cn(
+                                        "h-8 px-2.5 gap-1.5 text-sm font-medium relative transition-colors",
+                                        activeFiltersCount > 0 && "border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100"
+                                    )}
+                                    aria-label={ARIA_LABELS.filters}
+                                    aria-expanded={showFilters}
+                                >
+                                    <Filter className="h-3.5 w-3.5" />
+                                    <span>Filtros</span>
+                                    {activeFiltersCount > 0 && (
+                                        <Badge className="h-4 min-w-4 px-1 text-[10px] bg-purple-600 text-white" aria-label={`${activeFiltersCount} filtros ativos`}>
+                                            {activeFiltersCount}
+                                        </Badge>
+                                    )}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80 p-4" align="end">
+                                <FilterPopoverContent
+                                    categories={categories}
+                                    difficulties={DIFFICULTY_LEVELS}
+                                    bodyParts={bodyParts}
+                                    filters={filters}
+                                    activeFiltersCount={activeFiltersCount}
+                                    filteredCount={filteredExercises.length}
+                                    onFilterChange={handleFilterChange}
+                                    onToggleBodyPart={toggleBodyPart}
+                                    onClearFilters={clearFilters}
+                                />
+                            </PopoverContent>
+                        </Popover>
 
-                    {/* Botão Adicionar */}
-                    <Select
-                        value={selectedExerciseId}
-                        onValueChange={handleAddExercise}
-                        disabled={disabled || filteredExercises.length === 0 || isLoading}
-                    >
-                        <SelectTrigger
-                            className="h-8 w-[140px] text-sm"
-                            aria-label={ARIA_LABELS.addExercise}
+                        {/* Botão Adicionar */}
+                        <Select
+                            value={selectedExerciseId}
+                            onValueChange={handleAddExercise}
+                            disabled={disabled || filteredExercises.length === 0 || isLoading}
                         >
-                            <SelectValue placeholder="Adicionar..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {isLoading ? (
-                                <div className="p-6 text-center text-sm text-muted-foreground">
-                                    <Loader2 className="h-6 w-6 mx-auto mb-2 animate-spin" />
-                                    <p>{EMPTY_STATE_MESSAGES.loading.title}</p>
-                                </div>
-                            ) : filteredExercises.length === 0 ? (
-                                <div className="p-6 text-center text-sm text-muted-foreground">
-                                    <Dumbbell className="h-6 w-6 mx-auto mb-2 opacity-30" />
-                                    <p>{EMPTY_STATE_MESSAGES.noResults.title}</p>
-                                    <p className="text-xs mt-1">{EMPTY_STATE_MESSAGES.noResults.description}</p>
-                                </div>
-                            ) : (
-                                <ScrollArea className="h-[220px]">
-                                    <div className="p-1.5" role="listbox">
-                                        {filteredExercises.map((exercise) => (
-                                            <SelectItem
-                                                key={exercise.id}
-                                                value={exercise.id}
-                                                className="text-sm cursor-pointer"
-                                                role="option"
-                                            >
-                                                <div className="flex items-center justify-between gap-3">
-                                                    <span className="font-medium">{exercise.name}</span>
-                                                    <span className="text-[10px] text-muted-foreground">
-                                                        {exercise.sets}s × {exercise.repetitions}r
-                                                    </span>
-                                                </div>
-                                            </SelectItem>
-                                        ))}
+                            <SelectTrigger
+                                className="h-8 w-[140px] text-sm"
+                                aria-label={ARIA_LABELS.addExercise}
+                            >
+                                <SelectValue placeholder="Adicionar..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {isLoading ? (
+                                    <div className="p-6 text-center text-sm text-muted-foreground">
+                                        <Loader2 className="h-6 w-6 mx-auto mb-2 animate-spin" />
+                                        <p>{EMPTY_STATE_MESSAGES.loading.title}</p>
                                     </div>
-                                </ScrollArea>
-                            )}
-                        </SelectContent>
-                    </Select>
+                                ) : filteredExercises.length === 0 ? (
+                                    <div className="p-6 text-center text-sm text-muted-foreground">
+                                        <Dumbbell className="h-6 w-6 mx-auto mb-2 opacity-30" />
+                                        <p>{EMPTY_STATE_MESSAGES.noResults.title}</p>
+                                        <p className="text-xs mt-1">{EMPTY_STATE_MESSAGES.noResults.description}</p>
+                                    </div>
+                                ) : (
+                                    <ScrollArea className="h-[220px]">
+                                        <div className="p-1.5" role="listbox">
+                                            {filteredExercises.map((exercise) => (
+                                                <SelectItem
+                                                    key={exercise.id}
+                                                    value={exercise.id}
+                                                    className="text-sm cursor-pointer"
+                                                    role="option"
+                                                >
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <span className="font-medium">{exercise.name}</span>
+                                                        <span className="text-[10px] text-muted-foreground">
+                                                            {exercise.sets}s × {exercise.repetitions}r
+                                                        </span>
+                                                    </div>
+                                                </SelectItem>
+                                            ))}
+                                        </div>
+                                    </ScrollArea>
+                                )}
+                            </SelectContent>
+                        </Select>
 
-                    {/* Botão Sugerir */}
-                    {onSuggest && (
+                        {/* Botão Repetir Sessão Anterior */}
+                        {onRepeatLastSession && hasLastSession && (
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={onRepeatLastSession}
+                                            className="h-8 px-2.5 gap-1.5 text-sm font-medium border-dashed border-amber-300 hover:border-amber-400 hover:bg-amber-50 transition-all"
+                                            disabled={disabled}
+                                            aria-label="Repetir exercícios da sessão anterior"
+                                        >
+                                            <RotateCcw className="h-3.5 w-3.5 text-amber-600" />
+                                            <span className="hidden sm:inline">Repetir</span>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p className="text-sm">Repetir da sessão passada</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        )}
+
+                        {/* Botão Biblioteca */}
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={onSuggest}
-                                        className="h-8 px-3 gap-2 text-sm font-medium text-purple-700 border-purple-300 bg-purple-50 hover:bg-purple-100 hover:border-purple-400 transition-all"
-                                        disabled={disabled || exercises.length === 0}
-                                        aria-label={ARIA_LABELS.suggestExercises}
+                                        onClick={() => setIsLibraryModalOpen(true)}
+                                        className="h-8 px-2.5 gap-1.5 text-sm font-medium border-dashed border-purple-300 hover:border-purple-400 hover:bg-purple-50 transition-all"
+                                        disabled={disabled}
+                                        aria-label="Abrir biblioteca de exercícios"
                                     >
-                                        <Sparkles className="h-4 w-4" />
-                                        <span className="hidden sm:inline">Sugerir</span>
+                                        <Library className="h-3.5 w-3.5 text-purple-600" />
+                                        <span className="hidden sm:inline">Biblioteca</span>
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    <p className="text-sm">Sugerir exercícios baseados na evolução</p>
+                                    <p className="text-sm">Abrir biblioteca completa</p>
                                 </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
-                    )}
+
+                        {/* Botão Sugerir */}
+                        {onSuggest && (
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={onSuggest}
+                                            className="h-8 px-3 gap-2 text-sm font-medium text-purple-700 border-purple-300 bg-purple-50 hover:bg-purple-100 hover:border-purple-400 transition-all"
+                                            disabled={disabled || exercises.length === 0}
+                                            aria-label={ARIA_LABELS.suggestExercises}
+                                        >
+                                            <Sparkles className="h-4 w-4" />
+                                            <span className="hidden sm:inline">Sugerir</span>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p className="text-sm">Sugerir exercícios baseados na evolução</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        )}
+                    </div>
                 </div>
+
+                {/* Lista de exercícios */}
+                <ScrollArea className="flex-1">
+                    <div className="p-3 space-y-3" role="list">
+                        {exercises.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed rounded-lg text-muted-foreground bg-muted/20">
+                                <Dumbbell className="h-10 w-10 mb-3 opacity-30" />
+                                <p className="text-sm font-medium">{EMPTY_STATE_MESSAGES.noExercises.title}</p>
+                                <p className="text-xs mt-1 text-center max-w-[250px]">
+                                    {EMPTY_STATE_MESSAGES.noExercises.description}
+                                </p>
+                            </div>
+                        ) : (
+                            exercises.map((exercise, index) => (
+                                <ExerciseCard
+                                    key={exercise.id}
+                                    exercise={exercise}
+                                    index={index}
+                                    disabled={disabled}
+                                    onUpdate={handleUpdateExercise}
+                                    onRemove={handleRemoveExercise}
+                                />
+                            ))
+                        )}
+                    </div>
+                </ScrollArea>
+
+                {/* Footer com resumo */}
+                {exercises.length > 0 && (
+                    <div className="p-2.5 border-t bg-muted/30 flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">
+                            <span className="font-semibold text-foreground">{exercises.length}</span>
+                            {exercises.length === 1 ? ' exercício' : ' exercícios'}
+                        </span>
+                        <Badge
+                            variant="secondary"
+                            className={cn(
+                                "font-medium transition-colors",
+                                sessionStats.allCompleted
+                                    ? "bg-green-100 text-green-700 border-green-200"
+                                    : "bg-muted"
+                            )}
+                        >
+                            {sessionStats.completedCount} de {exercises.length} concluídos
+                        </Badge>
+                    </div>
+                )}
             </div>
 
-            {/* Lista de exercícios */}
-            <ScrollArea className="flex-1">
-                <div className="p-3 space-y-3" role="list">
-                    {exercises.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed rounded-lg text-muted-foreground bg-muted/20">
-                            <Dumbbell className="h-10 w-10 mb-3 opacity-30" />
-                            <p className="text-sm font-medium">{EMPTY_STATE_MESSAGES.noExercises.title}</p>
-                            <p className="text-xs mt-1 text-center max-w-[250px]">
-                                {EMPTY_STATE_MESSAGES.noExercises.description}
-                            </p>
-                        </div>
-                    ) : (
-                        exercises.map((exercise, index) => (
-                            <ExerciseCard
-                                key={exercise.id}
-                                exercise={exercise}
-                                index={index}
-                                disabled={disabled}
-                                onUpdate={handleUpdateExercise}
-                                onRemove={handleRemoveExercise}
-                            />
-                        ))
-                    )}
-                </div>
-            </ScrollArea>
-
-            {/* Footer com resumo */}
-            {exercises.length > 0 && (
-                <div className="p-2.5 border-t bg-muted/30 flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">
-                        <span className="font-semibold text-foreground">{exercises.length}</span>
-                        {exercises.length === 1 ? ' exercício' : ' exercícios'}
-                    </span>
-                    <Badge
-                        variant="secondary"
-                        className={cn(
-                            "font-medium transition-colors",
-                            sessionStats.allCompleted
-                                ? "bg-green-100 text-green-700 border-green-200"
-                                : "bg-muted"
-                        )}
-                    >
-                        {sessionStats.completedCount} de {exercises.length} concluídos
-                    </Badge>
-                </div>
-            )}
-        </div>
+            {/* Exercise Library Modal */}
+            <ExerciseLibraryModal
+                open={isLibraryModalOpen}
+                onOpenChange={setIsLibraryModalOpen}
+                onSelectExercise={handleAddExerciseFromLibrary}
+                addedExerciseIds={exercises.map(e => e.exerciseId)}
+            />
+        </>
     );
 });
 
