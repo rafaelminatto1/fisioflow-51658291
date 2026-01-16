@@ -1,7 +1,7 @@
 import React, { forwardRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { GripHorizontal, Maximize2, X, GripVertical } from 'lucide-react';
+import { GripHorizontal, Maximize2, X, GripVertical, MoveDiagonal2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -86,10 +86,10 @@ export const GridWidget = forwardRef<HTMLDivElement, GridWidgetProps>(
                 {...props}
             >
                 <Card className={cn(
-                    "h-full flex flex-col shadow-sm transition-all duration-200 overflow-hidden select-none",
+                    "h-full flex flex-col shadow-sm transition-all duration-200 overflow-hidden select-none group",
                     "border-2 border-border/60",
                     isDraggable && "hover:border-primary/30",
-                    isDraggable && isGrabbed && "shadow-xl ring-4 ring-primary/10 scale-[1.02] border-primary/50 z-50" // Enhanced grab state
+                    isDraggable && isGrabbed && "shadow-xl ring-4 ring-primary/10 scale-[1.01] border-primary/50 z-[100]" // Higher z-index when grabbed
                 )}>
                     {(title || icon || isDraggable || extraHeaderContent || headerActions) && (
                         <CardHeader className={cn(
@@ -154,6 +154,11 @@ export const GridWidget = forwardRef<HTMLDivElement, GridWidgetProps>(
                     <CardContent className={cn("p-0 flex-1 overflow-hidden flex flex-col", contentClassName)}>
                         {children}
                     </CardContent>
+                    {isDraggable && (
+                        <div className="react-resizable-handle react-resizable-handle-se absolute bottom-1 right-1 opacity-10 group-hover:opacity-100 transition-opacity cursor-se-resize p-1 z-[110]">
+                            <MoveDiagonal2 className="h-3 w-3 text-primary rotate-90" />
+                        </div>
+                    )}
                 </Card>
             </div>
         );
