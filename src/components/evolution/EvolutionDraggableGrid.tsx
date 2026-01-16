@@ -296,13 +296,12 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
     // State initialization with lazy loading for performance
     const [isEditable, setIsEditable] = useState(false);
     const [showPainDetails, setShowPainDetails] = useState(false);
+    const [currentLayout, setCurrentLayout] = useState<Layout[]>([]);
     const { user, profile } = useAuth();
 
-    // Priority: Saved storage > Profile preferences > undefined (default)
     const [storedLayouts, setStoredLayouts] = useState<{ lg: Layout[] } | undefined>(() => {
-        if (typeof window === 'undefined') return undefined; // SSR safety
+        if (typeof window === 'undefined') return undefined;
 
-        // 1. Try local storage first (fastest)
         const saved = localStorage.getItem('evolution_layout_v1');
         if (saved) {
             try {
@@ -315,7 +314,6 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
             }
         }
 
-        // 2. Try profile preferences if available on mount
         if (profile?.preferences?.evolution_layout) {
             return { lg: profile.preferences.evolution_layout };
         }
@@ -344,9 +342,8 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
     useEffect(() => {
         if (storedLayouts?.lg) {
             const painItem = storedLayouts.lg.find(i => i.i === 'pain-scale');
-            const targetH = showPainDetails ? 16 : 5;
+            const targetH = showPainDetails ? 11 : 9;
 
-            // Only update if height is different to avoid loops
             if (painItem && painItem.h !== targetH) {
                 const newLayout = storedLayouts.lg.map(item => {
                     if (item.i === 'pain-scale') {
@@ -355,21 +352,29 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     return item;
                 });
                 setStoredLayouts({ ...storedLayouts, lg: newLayout });
+                // Also update currentLayout if we are in edit mode to prevent jump
+                if (isEditable) {
+                    setCurrentLayout(newLayout);
+                }
             }
         }
-    }, [showPainDetails, storedLayouts]);
+    }, [showPainDetails]); // Removed storedLayouts from deps to avoid infinite loop
 
-    // Layout management (save/reset)
-    const handleSaveLayout = async (layout: Layout[]) => {
-        // Only save when in edit mode (user clicked "Salvar")
+    const handleLayoutChange = (layout: Layout[]) => {
         if (isEditable) {
-            // 1. Save to local storage (immediate feedback)
-            localStorage.setItem('evolution_layout_v1', JSON.stringify(layout));
-            setStoredLayouts({ lg: layout });
-            setIsEditable(false);
-            toast.success('Layout salvo!');
+            setCurrentLayout(layout);
+        }
+    };
 
-            // 2. Persist to Supabase profile
+    const handleSaveLayout = async () => {
+        if (currentLayout.length > 0) {
+            // 1. Save to local storage
+            localStorage.setItem('evolution_layout_v1', JSON.stringify(currentLayout));
+            setStoredLayouts({ lg: currentLayout });
+            setIsEditable(false);
+            toast.success('Layout salvo com sucesso!');
+
+            // 2. Persist to Supabase
             if (user?.id) {
                 try {
                     const currentPreferences = profile?.preferences || {};
@@ -378,30 +383,28 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                         .update({
                             preferences: {
                                 ...currentPreferences,
-                                evolution_layout: layout
+                                evolution_layout: currentLayout
                             }
                         })
                         .eq('id', user.id);
 
-                    if (error) {
-                        console.error('Error saving layout preference:', error);
-                        // Optional: silent fail or toast error, better to just log as local storage works
-                    }
+                    if (error) throw error;
                 } catch (err) {
-                    console.error('Failed to save preferences:', err);
+                    console.error('Failed to save preferences to database:', err);
                 }
             }
+        } else {
+            setIsEditable(false);
         }
     };
 
     const handleResetLayout = async () => {
-        // 1. Clear local
         localStorage.removeItem('evolution_layout_v1');
         setStoredLayouts(undefined);
+        setCurrentLayout([]);
         setIsEditable(false);
-        toast.success('Layout redefinido!');
+        toast.success('Layout restaurado para o padrão!');
 
-        // 2. Clear from Supabase
         if (user?.id && profile?.preferences) {
             try {
                 const { evolution_layout, ...restPreferences } = profile.preferences;
@@ -412,7 +415,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     })
                     .eq('id', user.id);
             } catch (err) {
-                console.error('Failed to reset preferences:', err);
+                console.error('Failed to reset preferences in database:', err);
             }
         }
     };
@@ -433,9 +436,25 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
         onPainScaleChange(data);
     }, [onPainScaleChange]);
 
-    const handleExercisesChange = React.useCallback((newExercises: SessionExercise[]) => {
-        if (onExercisesChange) onExercisesChange(newExercises);
-    }, [onExercisesChange]);
+    const toggleEditMode = () => {
+        if (!isEditable) {
+            // When entering edit mode, initialize currentLayout with the current state of gridItems
+            const initialLayout = gridItems.map(item => ({
+                i: item.id,
+                w: item.defaultLayout.w,
+                h: item.defaultLayout.h,
+                x: item.defaultLayout.x,
+                y: item.defaultLayout.y,
+                minW: item.defaultLayout.minW,
+                minH: item.defaultLayout.minH,
+            }));
+            setCurrentLayout(initialLayout);
+            setIsEditable(true);
+        } else {
+            setIsEditable(false);
+            setCurrentLayout([]);
+        }
+    };
 
     const gridItems: GridItem[] = React.useMemo(() => [
         // ===== LINHA 1: Nível de Dor (30%) | Exercícios (70%) =====
@@ -500,7 +519,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 4, h: showPainDetails ? 16 : 14, x: 0, y: 0, minW: 3, minH: 8 } // Standardized height to match exercises
+            defaultLayout: { w: 4, h: showPainDetails ? 11 : 9, x: 0, y: 0, minW: 3, minH: 8 } // Standardized height to match exercises
         },
         // Exercícios da Sessão (70% da largura)
         {
@@ -525,7 +544,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 8, h: showPainDetails ? 16 : 14, x: 4, y: 0, minW: 6, minH: 8 } // Standardized height to match pain scale
+            defaultLayout: { w: 8, h: showPainDetails ? 11 : 9, x: 4, y: 0, minW: 6, minH: 8 } // Standardized height to match pain scale
         },
 
         // ===== LINHA 2: Formulário SOAP (4 campos em 2x2) - Using memoized components =====
@@ -543,7 +562,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     onCopyLast={onCopyLast}
                 />
             ),
-            defaultLayout: { w: 6, h: 7, x: (index % 2) * 6, y: (showPainDetails ? 16 : 14) + Math.floor(index / 2) * 7, minW: 4, minH: 5 }
+            defaultLayout: { w: 6, h: 7, x: (index % 2) * 6, y: (showPainDetails ? 11 : 9) + Math.floor(index / 2) * 7, minW: 4, minH: 5 }
         })),
 
         // ===== LINHA 3: Registro de Medições | Home Care =====
@@ -575,7 +594,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 6, h: 9, x: 0, y: (showPainDetails ? 30 : 28), minW: 6, minH: 6 }
+            defaultLayout: { w: 6, h: 9, x: 0, y: (showPainDetails ? 25 : 23), minW: 6, minH: 6 }
         },
         // Home Care (direita)
         {
@@ -597,7 +616,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 6, h: 12, x: 6, y: (showPainDetails ? 30 : 28), minW: 6, minH: 8 }
+            defaultLayout: { w: 6, h: 12, x: 6, y: (showPainDetails ? 25 : 23), minW: 6, minH: 8 }
         },
 
         // ===== LINHA 4: Sessões Anteriores | Anexos =====
@@ -708,7 +727,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 6, h: 10, x: 0, y: (showPainDetails ? 42 : 40), minW: 6, minH: 6 }
+            defaultLayout: { w: 6, h: 10, x: 0, y: (showPainDetails ? 37 : 35), minW: 6, minH: 6 }
         },
         // Anexos (direita)
         {
@@ -738,7 +757,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 6, h: 10, x: 6, y: (showPainDetails ? 42 : 40), minW: 6, minH: 6 }
+            defaultLayout: { w: 6, h: 10, x: 6, y: (showPainDetails ? 37 : 35), minW: 6, minH: 6 }
         },
     ], [
         isEditable,
@@ -764,6 +783,51 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
         onCopyLastEvolution
     ]);
 
+    // Generate layouts for different breakpoints
+    const layouts = React.useMemo(() => {
+        const lgLayout = gridItems.map(item => ({
+            i: item.id,
+            ...item.defaultLayout
+        }));
+
+        // For mobile (sm and smaller), force width to full (6 for sm, 4 for xs, 2 for xxs as per DraggableGrid config)
+        // and stack them vertically
+        const mobileLayout = gridItems.map((item, index) => ({
+            i: item.id,
+            x: 0,
+            y: index * 10, // Approximate stack height
+            w: 6, // Full width for 'sm' breakpoint (max 6)
+            h: item.defaultLayout.h,
+            minW: 6
+        }));
+
+        const xsLayout = gridItems.map((item, index) => ({
+            i: item.id,
+            x: 0,
+            y: index * 10,
+            w: 4, // Full width for 'xs' breakpoint (max 4)
+            h: item.defaultLayout.h,
+            minW: 4
+        }));
+
+        const xxsLayout = gridItems.map((item, index) => ({
+            i: item.id,
+            x: 0,
+            y: index * 10,
+            w: 2, // Full width for 'xxs' breakpoint (max 2)
+            h: item.defaultLayout.h,
+            minW: 2
+        }));
+
+        return {
+            lg: lgLayout,
+            md: lgLayout,
+            sm: mobileLayout,
+            xs: xsLayout,
+            xxs: xxsLayout
+        };
+    }, [gridItems]);
+
     return (
         <TooltipProvider>
             <div className={cn("space-y-5", className)}>
@@ -776,47 +840,58 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     <div className="flex gap-2">
                         {isEditable ? (
                             <>
-                                <Button variant="ghost" size="sm" onClick={() => setIsEditable(false)} className="h-8.5 px-3">Cancelar</Button>
-                                <Button size="sm" onClick={() => {
-                                    // Trigger layout save by calling onLayoutChange which saves to localStorage
-                                    // Trigger layout save to localStorage
-                                    const currentLayout = gridItems.map(item => ({
-                                        i: item.id,
-                                        w: item.defaultLayout.w,
-                                        h: item.defaultLayout.h,
-                                        x: item.defaultLayout.x,
-                                        y: item.defaultLayout.y,
-                                        minW: item.defaultLayout.minW,
-                                        minH: item.defaultLayout.minH,
-                                    }));
-                                    handleSaveLayout(currentLayout);
-                                }} className="h-8.5 px-3.5 gap-2">
-                                    <Save className="h-3.5 w-3.5" /> Salvar
+                                <Button variant="ghost" size="sm" onClick={() => {
+                                    setIsEditable(false);
+                                    setCurrentLayout([]); // Clear current changes
+                                }} className="h-8.5 px-3">Cancelar</Button>
+                                <Button size="sm" onClick={handleSaveLayout} className="h-8.5 px-3.5 gap-2">
+                                    <Save className="h-3.5 w-3.5" /> Salvar Alterações
                                 </Button>
-                                <Button variant="ghost" size="icon" onClick={handleResetLayout} title="Resetar" className="h-8.5 w-8.5">
-                                    <RotateCcw className="h-3.5 w-3.5" />
-                                </Button>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" onClick={handleResetLayout} className="h-8.5 w-8.5 text-muted-foreground hover:text-destructive">
+                                                <RotateCcw className="h-3.5 w-3.5" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="bottom">
+                                            <p className="text-xs">Restaurar layout padrão</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
                             </>
                         ) : (
                             <>
-                                <Button variant="outline" size="sm" onClick={handleResetLayout} className="h-8.5 px-3 gap-2">
-                                    <Undo className="h-3.5 w-3.5" /> Redefinir
-                                </Button>
-                                <Button variant="outline" size="sm" onClick={() => setIsEditable(true)} className="h-8.5 px-3 gap-2">
-                                    <LayoutDashboard className="h-3.5 w-3.5" /> Personalizar
+                                <Button variant="outline" size="sm" onClick={toggleEditMode} className="h-8.5 px-3 gap-2 border-primary/20 hover:border-primary/50 hover:bg-primary/5 transition-all">
+                                    <LayoutDashboard className="h-3.5 w-3.5 text-primary" />
+                                    <span className="font-semibold">Personalizar</span>
                                 </Button>
                             </>
                         )}
                     </div>
                 </div>
 
-                <DraggableGrid
-                    items={gridItems}
-                    onLayoutChange={handleSaveLayout}
-                    isEditable={isEditable}
-                    rowHeight={50}
-                    layouts={storedLayouts}
-                />
+                <div className={cn(
+                    "relative rounded-2xl transition-all duration-300",
+                    isEditable && "bg-muted/30 p-4 ring-1 ring-primary/10 shadow-inner"
+                )}>
+                    {isEditable && (
+                        <div
+                            className="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.05]"
+                            style={{
+                                backgroundImage: `radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)`,
+                                backgroundSize: '24px 24px'
+                            }}
+                        />
+                    )}
+                    <DraggableGrid
+                        items={gridItems}
+                        onLayoutChange={handleLayoutChange}
+                        isEditable={isEditable}
+                        layouts={layouts}
+                        className="min-h-[800px]"
+                    />
+                </div>
             </div>
         </TooltipProvider>
     );

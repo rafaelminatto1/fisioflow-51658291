@@ -113,15 +113,15 @@ const Schedule = () => {
 
   const { data: appointments = [], isLoading: loading, error, refetch, isFromCache, cacheTimestamp } = useAppointments();
   const { mutateAsync: rescheduleAppointment } = useRescheduleAppointment();
-  
-  const { 
-    selectedIds, 
-    isSelectionMode, 
-    toggleSelectionMode, 
-    toggleSelection, 
-    clearSelection, 
-    deleteSelected, 
-    updateStatusSelected 
+
+  const {
+    selectedIds,
+    isSelectionMode,
+    toggleSelectionMode,
+    toggleSelection,
+    clearSelection,
+    deleteSelected,
+    updateStatusSelected
   } = useBulkActions();
 
   const {
@@ -193,7 +193,7 @@ const Schedule = () => {
     // If in selection mode, maybe we want to ignore slot clicks or allow creating?
     // For now, let's keep it as is, or disable if selection mode?
     if (isSelectionMode) return;
-    
+
     setSelectedAppointment(null);
     setModalDefaultDate(date);
     setModalDefaultTime(time);
@@ -285,11 +285,12 @@ const Schedule = () => {
   }, [appointments.length, loading, viewType]);
 
   // Force day view on mobile
+  // No longer forcing 'day' view on mobile to allow responsive weekly view
   useEffect(() => {
-    if (isMobile) {
+    if (isMobile && viewType === 'month') {
       setViewType('day');
     }
-  }, [isMobile]);
+  }, [isMobile, viewType]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
