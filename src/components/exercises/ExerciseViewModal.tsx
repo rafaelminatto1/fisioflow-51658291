@@ -84,10 +84,17 @@ export function ExerciseViewModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl h-[90vh] p-0 gap-0 overflow-hidden flex flex-col bg-background/95 backdrop-blur-xl border-border/50 shadow-2xl">
+      <DialogContent
+        className="max-w-5xl max-h-[85vh] w-[calc(100vw-2rem)] p-0 gap-0 overflow-hidden flex flex-col bg-background/95 backdrop-blur-xl border-border/50 shadow-2xl rounded-lg"
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => {
+          e.preventDefault()
+          onOpenChange(false)
+        }}
+      >
 
         {/* Header */}
-        <div className="flex-none p-6 border-b bg-background/50 backdrop-blur-sm z-10 flex items-start justify-between gap-4">
+        <div className="flex-none p-4 sm:p-6 border-b bg-background/50 backdrop-blur-sm z-10 flex items-start justify-between gap-4">
           <div className="space-y-1.5 pt-1">
             <h2 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
               {exercise.name}
@@ -156,7 +163,7 @@ export function ExerciseViewModal({
         </div>
 
         {/* Content - Scrollable */}
-        <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-12 h-full">
+        <div className="flex-1 min-h-0 overflow-hidden grid grid-cols-1 lg:grid-cols-12">
 
           {/* Left Column - Media (7 cols) */}
           <div className="lg:col-span-7 bg-muted/10 h-full flex flex-col border-r border-border/50 overflow-hidden relative">
@@ -174,7 +181,7 @@ export function ExerciseViewModal({
                 </TabsList>
               </div>
 
-              <div className="flex-1 p-6 flex items-center justify-center min-h-0">
+              <div className="flex-1 p-3 sm:p-6 flex items-center justify-center min-h-0">
                 <TabsContent value="video" className="w-full h-full mt-0 data-[state=active]:flex data-[state=active]:items-center data-[state=active]:justify-center">
                   {hasVideo ? (
                     <div className="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-white/10 ring-1 ring-black/5 relative group">
@@ -230,9 +237,9 @@ export function ExerciseViewModal({
           </div>
 
           {/* Right Column - Information (5 cols) */}
-          <div className="lg:col-span-5 h-full bg-background flex flex-col min-h-0">
-            <ScrollArea className="flex-1 h-full">
-              <div className="p-6 space-y-8">
+          <div className="lg:col-span-5 h-full min-h-0 bg-background flex flex-col">
+            <ScrollArea className="flex-1 h-full min-h-0">
+              <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
 
                 {/* Metrics / Parameters */}
                 <div className="grid grid-cols-3 gap-4">
