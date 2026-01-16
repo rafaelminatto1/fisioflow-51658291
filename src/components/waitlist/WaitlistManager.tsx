@@ -16,6 +16,7 @@ import {
   Phone,
   Mail
 } from 'lucide-react';
+import { useDebounce } from '@/hooks/performance/useDebounce';
 import { useWaitlist, useRemoveFromWaitlist, useUpdatePriority, type WaitlistEntry } from '@/hooks/useWaitlist';
 import { WaitlistEntryModal } from './WaitlistEntryModal';
 import { formatDistanceToNow } from 'date-fns';
@@ -48,6 +49,9 @@ import { cn } from '@/lib/utils';
 
 export function WaitlistManager() {
   const [searchQuery, setSearchQuery] = useState('');
+  // ⚡ Bolt: Debounce search query to prevent excessive re-renders/filtering while typing
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingEntry, setEditingEntry] = useState<WaitlistEntry | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -59,14 +63,14 @@ export function WaitlistManager() {
 
   const filteredWaitlist = useMemo(() => {
     return waitlist.filter(entry => {
-      const matchesSearch = !searchQuery || 
-        entry.patient?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        entry.patient?.phone?.includes(searchQuery) ||
-        entry.patient?.email?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = !debouncedSearchQuery ||
+        entry.patient?.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+        entry.patient?.phone?.includes(debouncedSearchQuery) ||
+        entry.patient?.email?.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
       const matchesPriority = priorityFilter === 'all' || entry.priority === priorityFilter;
       return matchesSearch && matchesPriority;
     });
-  }, [waitlist, searchQuery, priorityFilter]);
+  }, [waitlist, debouncedSearchQuery, priorityFilter]);
 
   const getPriorityColor = useCallback((priority: string) => {
     switch (priority) {
