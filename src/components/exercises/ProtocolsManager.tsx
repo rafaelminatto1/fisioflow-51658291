@@ -1,6 +1,7 @@
 
 import { useState, useMemo, memo, useEffect } from 'react';
 import { useExerciseProtocols, type ExerciseProtocol } from '@/hooks/useExerciseProtocols';
+import { useDebounce } from '@/hooks/performance/useDebounce';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,21 +39,13 @@ import { NewProtocolModal } from '@/components/modals/NewProtocolModal';
 export const ProtocolsManager = memo(function ProtocolsManager() {
   const [activeTab, setActiveTab] = useState<'patologia' | 'pos_operatorio'>('pos_operatorio');
   const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
   const [viewProtocol, setViewProtocol] = useState<ExerciseProtocol | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editingProtocol, setEditingProtocol] = useState<ExerciseProtocol | null>(null);
 
   const { protocols, loading, createProtocol, updateProtocol, deleteProtocol, isCreating, isUpdating, isDeleting } = useExerciseProtocols();
-
-  // Debounce para busca - evita recalcular filtros a cada tecla
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [search]);
 
   const filteredProtocols = useMemo(() => protocols.filter(p =>
     (p.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
