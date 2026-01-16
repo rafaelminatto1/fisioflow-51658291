@@ -6,6 +6,15 @@ on:
   pull_request:
     branches: [main, develop]
 
+# Disable email notifications
+permissions:
+  contents: read
+
+# Cancel in-progress runs for the same workflow and branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test-edge-functions:
     runs-on: ubuntu-latest

@@ -13,6 +13,7 @@
 import { inngest, retryConfig } from '../../lib/inngest/client';
 import { Events, DailyReportPayload, InngestStep } from '../../lib/inngest/types';
 import { createClient } from '@supabase/supabase-js';
+import { logger } from '@/lib/errors/logger';
 
 export const dailyReportsWorkflow = inngest.createFunction(
   {
@@ -113,12 +114,14 @@ export const dailyReportsWorkflow = inngest.createFunction(
               for (const therapist of therapists) {
                 try {
                   // TODO: Send via Resend
-                  console.log(
-                    `Sending daily report to ${therapist.email} for org ${org.name}`
+                  logger.info(
+                    `Sending daily report to therapist for org`,
+                    { organizationId: org.id, organizationName: org.name },
+                    'daily-reports'
                   );
                   emailsSent++;
                 } catch (error) {
-                  console.error(`Failed to send report to ${therapist.email}:`, error);
+                  logger.error(`Failed to send report to therapist`, error, 'daily-reports');
                 }
               }
 

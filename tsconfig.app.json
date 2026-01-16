@@ -19,10 +19,10 @@
     "resolveJsonModule": true,
     /* Linting - Strict mode for better type safety */
     "strict": false,
-    "strictNullChecks": false,
+    "strictNullChecks": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": false,
     "noUncheckedIndexedAccess": false,

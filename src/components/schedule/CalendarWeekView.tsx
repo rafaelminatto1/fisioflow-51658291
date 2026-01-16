@@ -43,7 +43,7 @@ interface CalendarWeekViewProps {
 const START_HOUR = 7;
 const END_HOUR = 21;
 const SLOT_DURATION_MINUTES = 30;
-const SLOT_HEIGHT = 60; // px per slot (reduzido de 80px para 60px)
+const SLOT_HEIGHT = 50; // px per slot (reduzido de 80px para 60px -> agora 50px)
 
 // =====================================================================
 // HELPER FUNCTIONS
@@ -86,7 +86,7 @@ export const CalendarWeekView = memo(({
     onToggleSelection
 }: CalendarWeekViewProps) => {
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
-    const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+    const weekDays = Array.from({ length: 6 }, (_, i) => addDays(weekStart, i));
     const timeSlots = generateTimeSlots(currentDate);
 
     // Removed hoveredAppointmentId state to prevent global re-renders
@@ -117,7 +117,7 @@ export const CalendarWeekView = memo(({
     // Filter appointments for this week
     const weekAppointments = useMemo(() => {
         const start = startOfDay(weekDays[0]);
-        const end = startOfDay(addDays(weekDays[6], 1));
+        const end = startOfDay(addDays(weekDays[5], 1)); // End at end of Saturday
 
         return appointments.filter(apt => {
             const aptDate = parseAppointmentDate(apt.date);
@@ -187,7 +187,7 @@ export const CalendarWeekView = memo(({
         <TooltipProvider>
             <div className="flex flex-col bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-slate-900 dark:text-slate-100 font-display">
                 {/* Header Row */}
-                <div className="grid grid-cols-[60px_repeat(7,1fr)] bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 shadow-sm">
+                <div className="grid grid-cols-[60px_repeat(6,1fr)] bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 shadow-sm">
                     {/* Time icon */}
                     <div className="h-14 border-r border-slate-200 dark:border-slate-800 flex items-center justify-center">
                         <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-400">
@@ -227,7 +227,7 @@ export const CalendarWeekView = memo(({
 
                 {/* Scrollable Grid Area */}
                 <div className="relative bg-white dark:bg-slate-950" id="calendar-grid">
-                    <div className="grid grid-cols-[60px_repeat(7,1fr)] relative min-h-0" style={{
+                    <div className="grid grid-cols-[60px_repeat(6,1fr)] relative min-h-0" style={{
                         gridTemplateRows: `repeat(${timeSlots.length}, ${SLOT_HEIGHT}px)`
                     }}>
 

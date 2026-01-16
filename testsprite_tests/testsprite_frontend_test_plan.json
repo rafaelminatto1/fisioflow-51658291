@@ -1,235 +1,372 @@
-{
-  "testPlan": {
-    "id": "FISIOFLOW-FRONTEND-TEST-001",
-    "title": "Teste de Frontend FisioFlow",
-    "description": "Plano de testes E2E automatizados para validar as funcionalidades principais do sistema FisioFlow, incluindo autenticação, dashboard, navegação, agendamento e pacientes"
+[
+  {
+    "id": "TC001",
+    "title": "Patient Registration with Valid Data",
+    "description": "Verify that a receptionist can successfully register a patient with complete and valid information including CPF, phone, email, clinical history, and emergency contact.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to patient registration page."
+      },
+      {
+        "type": "action",
+        "description": "Input valid CPF, phone number, email, clinical history, and emergency contact."
+      },
+      {
+        "type": "action",
+        "description": "Submit the registration form."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify patient is successfully registered and confirmation is shown."
+      }
+    ]
   },
-  "requirements": [
-    {
-      "id": "REQ-001",
-      "name": "Autenticação e Login",
-      "description": "Permite que usuários façam login no sistema com email e senha",
-      "test_cases": [
-        {
-          "id": "TC-001",
-          "name": "Login com credenciais válidas",
-          "description": "Verifica se é possível fazer login com email e senha corretos",
-          "steps": [
-            "Navegar para http://localhost:8080",
-            "Clicar no botão de login",
-            "Inserir email: rafael.minatto@yahoo.com.br",
-            "Inserir senha: Yukari30@",
-            "Clicar em Entrar",
-            "Verificar se o login foi bem-sucedido e o dashboard é exibido"
-          ],
-          "expected_result": "Usuário deve ser redirecionado para o dashboard principal após login bem-sucedido",
-          "priority": "high",
-          "status": "pending"
-        },
-        {
-          "id": "TC-002",
-          "name": "Login com credenciais inválidas",
-          "description": "Verifica se o sistema rejeita login com email ou senha incorretos",
-          "steps": [
-            "Navegar para http://localhost:8080",
-            "Clicar no botão de login",
-            "Inserir email: invalido@teste.com",
-            "Inserir senha: senhaerrada",
-            "Clicar em Entrar",
-            "Verificar se uma mensagem de erro é exibida"
-          ],
-          "expected_result": "Sistema deve exibir mensagem de erro e não permitir o acesso",
-          "priority": "high",
-          "status": "pending"
-        },
-        {
-          "id": "TC-003",
-          "name": "Logout e limpeza de sessão",
-          "description": "Verifica se o sistema permite fazer logout e limpa a sessão",
-          "steps": [
-            "Fazer login com credenciais válidas",
-            "Navegar até o dashboard principal",
-            "Clicar no botão de Sair",
-            "Verificar se o logout foi bem-sucedido",
-            "Verificar se o usuário foi redirecionado para a página de login",
-            "Verificar se localStorage foi limpo"
-          ],
-          "expected_result": "Sessão deve ser encerrada e dados de autenticação removidos do localStorage",
-          "priority": "medium",
-          "status": "pending"
-        }
-      ]
-    },
-    {
-      "id": "REQ-002",
-      "name": "Dashboard Principal",
-      "description": "Exibe visão geral do sistema com estatísticas e métricas",
-      "test_cases": [
-        {
-          "id": "TC-004",
-          "name": "Visualizar dashboard após login",
-          "description": "Verifica se o dashboard principal é exibido corretamente após login",
-          "steps": [
-            "Fazer login com credenciais válidas",
-            "Aguardar o carregamento do dashboard",
-            "Verificar se o dashboard principal foi carregado",
-            "Verificar se as métricas principais estão visíveis (total de agendamentos, taxa de ocupação, receita)",
-            "Verificar se os botões de navegação estão presentes"
-          ],
-          "expected_result": "Dashboard deve ser exibido com todas as métricas e navegação funcionando",
-          "priority": "high",
-          "status": "pending"
-        },
-        {
-          "id": "TC-005",
-          "name": "Verificar métricas iniciais",
-          "description": "Verifica se as métricas do dashboard são carregadas corretamente na inicialização",
-          "steps": [
-            "Fazer login",
-            "Aguardar o dashboard carregar completamente",
-            "Verificar se os contadores de agendamentos estão exibidos",
-            "Verificar se a taxa de ocupação está calculada corretamente",
-            "Verificar se a receita do dia está visível"
-          ],
-          "expected_result": "Todas as métricas devem ser exibidas com valores corretos desde o carregamento inicial",
-          "priority": "high",
-          "status": "pending"
-        }
-      ]
-    },
-    {
-      "id": "REQ-003",
-      "name": "Navegação Principal",
-      "description": "Permite navegar entre diferentes seções do sistema",
-      "test_cases": [
-        {
-          "id": "TC-006",
-          "name": "Navegar para Agenda",
-          "description": "Verifica se é possível navegar para a página de agenda",
-          "steps": [
-            "Fazer login",
-            "Localizar o link 'Agenda' na barra de navegação",
-            "Clicar no link 'Agenda'",
-            "Verificar se a página de agenda é carregada",
-            "Verificar se o calendário visível"
-          ],
-          "expected_result": "Página de agenda deve ser carregada com calendário visível e funcional",
-          "priority": "medium",
-          "status": "pending"
-        },
-        {
-          "id": "TC-007",
-          "name": "Navegar para Pacientes",
-          "description": "Verifica se é possível navegar para a página de pacientes",
-          "steps": [
-            "Fazer login",
-            "Localizar o link 'Paciente' na barra de navegação",
-            "Clicar no link 'Paciente'",
-            "Verificar se a página de pacientes é carregada",
-            "Verificar se a lista de pacientes está visível"
-          ],
-          "expected_result": "Página de pacientes deve ser carregada com lista de pacientes visível e funcional",
-          "priority": "medium",
-          "status": "pending"
-        }
-      ]
-    },
-    {
-      "id": "REQ-004",
-      "name": "Agendamento",
-      "description": "Permite visualizar e gerenciar consultas agendadas",
-      "test_cases": [
-        {
-          "id": "TC-008",
-          "name": "Visualizar calendário de agenda",
-          "description": "Verifica se o calendário de agenda é exibido corretamente",
-          "steps": [
-            "Fazer login",
-            "Navegar para a página de Agenda",
-            "Aguardar o calendário carregar",
-            "Verificar se o calendário é exibido",
-            "Verificar se os botões de filtro de período estão presentes (hoje, esta semana, este mês, custom)",
-            "Verificar se os agendamentos são mostrados no calendário"
-          ],
-          "expected_result": "Calendário deve ser exibido com filtros de período funcionando e agendamentos visíveis",
-          "priority": "high",
-          "status": "pending"
-        }
-      ]
-    },
-    {
-      "id": "REQ-005",
-      "name": "Gestão de Pacientes",
-      "description": "Permite gerenciar cadastro completo de pacientes com histórico médico",
-      "test_cases": [
-        {
-          "id": "TC-009",
-          "name": "Visualizar lista de pacientes",
-          "description": "Verifica se a lista de pacientes é exibida corretamente",
-          "steps": [
-            "Fazer login",
-            "Navegar para a página de Pacientes",
-            "Aguardar a lista de pacientes carregar",
-            "Verificar se a lista de pacientes está visível",
-            "Verificar se os cards de pacientes são exibidos corretamente",
-            "Verificar se as informações dos pacientes estão completas (nome, email, telefone)"
-          ],
-          "expected_result": "Lista de pacientes deve ser exibida com cards contendo nome, email, telefone e status",
-          "priority": "medium",
-          "status": "pending"
-        },
-        {
-          "id": "TC-010",
-          "name": "Buscar paciente existente",
-          "description": "Verifica se a funcionalidade de busca funciona corretamente",
-          "steps": [
-            "Navegar para a página de Pacientes",
-            "Verificar se há um campo de busca",
-            "Preencher o campo de busca com nome de um paciente existente",
-            "Clicar em buscar ou pressionar Enter",
-            "Verificar se o paciente buscado aparece nos resultados",
-            "Verificar se as informações do paciente estão corretas"
-          ],
-          "expected_result": "Sistema deve exibir o paciente buscado com todas as informações completas",
-          "priority": "low",
-          "status": "pending"
-        },
-        {
-          "id": "TC-011",
-          "name": "Editar paciente existente",
-          "description": "Verifica se a funcionalidade de edição funciona",
-          "steps": [
-            "Navegar para a página de Pacientes",
-            "Encontrar um paciente existente na lista",
-            "Clicar no botão de editar do paciente",
-            "Modificar informações do paciente (nome, email, telefone)",
-            "Clicar no botão de salvar",
-            "Verificar se as alterações foram salvas com sucesso",
-            "Verificar se uma mensagem de sucesso é exibida",
-            "Verificar se as informações atualizadas estão visíveis na lista"
-          ],
-          "expected_result": "Alterações no paciente devem ser salvas com sucesso e refletidas na interface",
-          "priority": "medium",
-          "status": "pending"
-        },
-        {
-          "id": "TC-012",
-          "name": "Deletar paciente",
-          "description": "Verifica se a funcionalidade de exclusão funciona",
-          "steps": [
-            "Navegar para a página de Pacientes",
-            "Encontrar um paciente existente na lista",
-            "Clicar no botão de deletar do paciente",
-            "Verificar se uma mensagem de confirmação é exibida",
-            "Clicar em confirmar",
-            "Verificar se o paciente foi removido da lista",
-            "Verificar se uma mensagem de sucesso é exibida"
-          ],
-          "expected_result": "Paciente deve ser removido do sistema após confirmação e lista atualizada",
-          "priority": "medium",
-          "status": "pending"
-        }
-      ]
-    }
-  ]
-}
+  {
+    "id": "TC002",
+    "title": "Patient Registration with Invalid CPF",
+    "description": "Verify that the system prevents registration for patients with an invalid CPF, showing appropriate validation error.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to patient registration page."
+      },
+      {
+        "type": "action",
+        "description": "Input invalid CPF along with other valid patient data."
+      },
+      {
+        "type": "action",
+        "description": "Submit the registration form."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an error message is displayed for invalid CPF and registration is blocked."
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "Patient Search by Name and CPF with Fast Response",
+    "description": "Verify that searching for patients by name or CPF returns accurate results in less than 2 seconds.",
+    "category": "performance",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to patient search interface."
+      },
+      {
+        "type": "action",
+        "description": "Enter a valid patient name and trigger search."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify relevant patients are displayed within 2 seconds."
+      },
+      {
+        "type": "action",
+        "description": "Enter a valid CPF and trigger search."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the patient matching the CPF is displayed within 2 seconds."
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "Create Appointment Without Conflict",
+    "description": "Verify that a receptionist can schedule an appointment in a free time slot without conflicts and the system confirms the booking.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open the calendar appointment interface."
+      },
+      {
+        "type": "action",
+        "description": "Select an available date and time slot for a specific physiotherapist."
+      },
+      {
+        "type": "action",
+        "description": "Enter appointment details and save the appointment."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify appointment is created and displayed on the calendar."
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Prevent Appointment Scheduling with Time Conflict",
+    "description": "Ensure the system blocks scheduling an appointment if the selected time slot is already occupied for the same professional and notifies the user.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Attempt to schedule an appointment in a time slot already booked for the same physiotherapist."
+      },
+      {
+        "type": "action",
+        "description": "Submit the appointment request."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that the system shows a conflict error and prevents appointment creation."
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Reschedule Appointment using Drag-and-Drop",
+    "description": "Verify that appointments can be rescheduled by dragging and dropping to a different valid time slot on the calendar, updating the appointment accordingly.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open the calendar with existing appointments."
+      },
+      {
+        "type": "action",
+        "description": "Drag an existing appointment to a free, valid time slot."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm the appointment reflects the new date/time and no conflicts exist."
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Register Clinical Session with Complete SOAP Notes and Pain Map",
+    "description": "Verify physiotherapist can register a clinical session including structured SOAP notes, interact with pain map, record EVA pain scale, and attach documents.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the patient's clinical session recording interface."
+      },
+      {
+        "type": "action",
+        "description": "Fill out structured SOAP notes."
+      },
+      {
+        "type": "action",
+        "description": "Mark points on the interactive pain map."
+      },
+      {
+        "type": "action",
+        "description": "Record pain level using the EVA pain scale."
+      },
+      {
+        "type": "action",
+        "description": "Attach relevant clinical documents to the session."
+      },
+      {
+        "type": "action",
+        "description": "Save the clinical session."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the clinical session is saved correctly with all data and attachments."
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "Manage and Notify Waitlist for Appointment Cancellations",
+    "description": "Verify that when an appointment is cancelled, the system automatically offers the slot to waitlisted patients and manages timeout for their confirmation.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Cancel an existing appointment in the system."
+      },
+      {
+        "type": "assertion",
+        "description": "Check that waitlisted patients receive notification of the available slot."
+      },
+      {
+        "type": "action",
+        "description": "Simulate waitlisted patient confirming acceptance within timeout period."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify appointment is allocated to waiting patient upon confirmation."
+      },
+      {
+        "type": "action",
+        "description": "Simulate waitlisted patient not responding within timeout."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify system revokes offer and moves to the next patient in the waitlist."
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Sales Registration and Automatic Debit of Session Packages",
+    "description": "Verify that receptionist can register the sale of session packages, the system automatically debits sessions upon use, and alerts about package validity.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Register a package sale for a patient including package type and sessions count."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the package is recorded in patient's financial records."
+      },
+      {
+        "type": "action",
+        "description": "Conduct a patient session and confirm that one session is debited automatically."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the package sessions count is decremented accurately."
+      },
+      {
+        "type": "action",
+        "description": "Approach package expiration date."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that system alerts receptionist of package validity expiration."
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Financial Integration with Stripe and Payment Alert Notifications",
+    "description": "Verify integration with Stripe for processing payments and that the system generates appropriate financial alerts and updates after transactions.",
+    "category": "integration",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Initiate a payment transaction using Stripe integration for a session package."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify payment is processed and recorded successfully."
+      },
+      {
+        "type": "assertion",
+        "description": "Check that the system displays alert notifications for successful or failed payment."
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "Exercise Library Browsing and Personalized Prescription",
+    "description": "Verify that users can browse the exercise library with videos and that physiotherapists can prescribe personalized exercises to patients with sending functionality.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Access the exercise library and browse through exercise videos."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify video previews and exercise details are displayed properly."
+      },
+      {
+        "type": "action",
+        "description": "Create a personalized exercise prescription for a patient."
+      },
+      {
+        "type": "action",
+        "description": "Send the prescribed exercises to the patient through the system."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify prescription is recorded and patient receives exercise details."
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Dashboard Real-Time KPI Display and Export",
+    "description": "Verify that administrators can view real-time KPIs such as occupancy rate, no-show percentage, and revenue, with correct graphical representation and ability to export reports in Excel and PDF.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as administrator and navigate to the dashboard."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm real-time KPIs are displayed correctly with graphs."
+      },
+      {
+        "type": "action",
+        "description": "Click options to export reports as Excel and PDF files."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify exported files contain accurate and complete KPI data."
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "System Performance Under Load - Page Load Below 2 Seconds",
+    "description": "Verify that the system maintains page load times under 2 seconds under standard operational load conditions.",
+    "category": "performance",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Simulate typical user load on the system."
+      },
+      {
+        "type": "action",
+        "description": "Navigate through major pages including dashboard, patient registration, and appointment scheduling."
+      },
+      {
+        "type": "assertion",
+        "description": "Measure and confirm each page loads in under 2 seconds."
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "System Availability Smoke Test",
+    "description": "Perform basic smoke tests after deployment to confirm all critical features are accessible and working to maintain availability above 99.5%.",
+    "category": "smoke",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Access login page and authenticate successfully."
+      },
+      {
+        "type": "action",
+        "description": "Navigate to patient registration, create a test patient, and verify success."
+      },
+      {
+        "type": "action",
+        "description": "Create an appointment and verify it is listed in the calendar."
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm all operations performed without errors."
+      }
+    ]
+  }
+]
