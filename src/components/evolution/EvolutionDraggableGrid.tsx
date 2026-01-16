@@ -436,6 +436,10 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
         onPainScaleChange(data);
     }, [onPainScaleChange]);
 
+    const handleExercisesChange = React.useCallback((exercises: SessionExercise[]) => {
+        onExercisesChange?.(exercises);
+    }, [onExercisesChange]);
+
     const toggleEditMode = () => {
         if (!isEditable) {
             // When entering edit mode, initialize currentLayout with the current state of gridItems
