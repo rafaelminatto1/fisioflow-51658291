@@ -122,7 +122,7 @@ const getStatusStyles = (status: string) => {
     return styles[status as keyof typeof styles] || styles.default;
 };
 
-export const CalendarAppointmentCard = memo(({
+const CalendarAppointmentCardBase = ({
     appointment,
     style,
     isDraggable,
@@ -339,6 +339,54 @@ export const CalendarAppointmentCard = memo(({
             {cardContent}
         </AppointmentQuickView>
     );
-});
+};
 
+
+function appointmentCardAreEqual(prev: CalendarAppointmentCardProps, next: CalendarAppointmentCardProps) {
+    // 1. Primitive/Simple booleans
+    if (
+        prev.isDragging !== next.isDragging ||
+        prev.isDraggable !== next.isDraggable ||
+        prev.isDropTarget !== next.isDropTarget ||
+        prev.selectionMode !== next.selectionMode ||
+        prev.isSelected !== next.isSelected ||
+        prev.isPopoverOpen !== next.isPopoverOpen
+    ) {
+        return false;
+    }
+
+    // 2. Appointment Data (Check visual fields)
+    if (
+        prev.appointment.id !== next.appointment.id ||
+        prev.appointment.status !== next.appointment.status ||
+        prev.appointment.time !== next.appointment.time ||
+        prev.appointment.patientName !== next.appointment.patientName ||
+        prev.appointment.type !== next.appointment.type ||
+        prev.appointment.duration !== next.appointment.duration ||
+        prev.appointment.date !== next.appointment.date
+    ) {
+        return false;
+    }
+
+    // 3. Style (Shallow comparison)
+    // The parent creates a new style object on every render, so we must check values.
+    const prevStyle = prev.style;
+    const nextStyle = next.style;
+
+    if (
+        prevStyle.height !== nextStyle.height ||
+        prevStyle.width !== nextStyle.width ||
+        prevStyle.top !== nextStyle.top ||
+        prevStyle.left !== nextStyle.left ||
+        prevStyle.gridColumn !== nextStyle.gridColumn ||
+        prevStyle.gridRow !== nextStyle.gridRow ||
+        prevStyle.zIndex !== nextStyle.zIndex
+    ) {
+        return false;
+    }
+
+    return true;
+}
+
+export const CalendarAppointmentCard = memo(CalendarAppointmentCardBase, appointmentCardAreEqual);
 CalendarAppointmentCard.displayName = 'CalendarAppointmentCard';
