@@ -3,7 +3,6 @@ import { Appointment, AppointmentStatus } from '@/types/appointment';
 import { STATUS_CONFIG } from '@/lib/config/agenda';
 import { cn } from '@/lib/utils';
 import { MoreVertical, GripVertical, CheckCircle2, Circle, Clock } from 'lucide-react';
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { AppointmentQuickView } from './AppointmentQuickView';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -326,66 +325,19 @@ export const CalendarAppointmentCard = memo(({
     if (selectionMode) return cardContent;
 
     return (
-        <Tooltip delayDuration={300}>
-            <AppointmentQuickView
-                appointment={appointment}
-                open={isPopoverOpen}
-                onOpenChange={(open) => {
-                    // Prevent opening if currently dragging or if a drag action is likely happening
-                    if (isDragging && open) return;
-                    onOpenPopover(open ? appointment.id : null);
-                }}
-                onEdit={onEditAppointment ? () => onEditAppointment(appointment) : undefined}
-                onDelete={onDeleteAppointment ? () => onDeleteAppointment(appointment) : undefined}
-            >
-                <TooltipTrigger asChild>
-                    {cardContent}
-                </TooltipTrigger>
-            </AppointmentQuickView>
-
-            <TooltipContent side="right" className="p-0 overflow-hidden border-none shadow-xl z-[60] bg-transparent">
-                <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-3.5 rounded-xl border border-slate-200/60 dark:border-slate-800/60 w-64 shadow-2xl">
-                    <div className={cn("w-full h-1 rounded-full mb-3", statusStyles.accent)} />
-
-                    <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                            <Avatar className="h-8 w-8 border-2 border-white dark:border-slate-800 shadow-sm">
-                                <AvatarFallback className={cn("text-[10px] font-bold", statusStyles.accent, "text-white")}>
-                                    {getInitials(appointment.patientName)}
-                                </AvatarFallback>
-                            </Avatar>
-                            <div className="flex flex-col">
-                                <p className="font-bold text-slate-900 dark:text-slate-100 text-sm leading-tight">
-                                    {appointment.patientName}
-                                </p>
-                                <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">
-                                    {appointment.type}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="space-y-2 bg-slate-50/50 dark:bg-slate-800/50 rounded-lg p-2.5 border border-slate-100 dark:border-slate-800">
-                        <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 font-medium">
-                            <Clock className="w-3.5 h-3.5 text-slate-400" />
-                            {appointment.time} - {format(new Date().setHours(...(appointment.time?.split(':').map(Number) as [number, number]) || [0, 0]) + (appointment.duration || 60) * 60 * 1000, 'HH:mm')}
-                            <span className="text-slate-300 mx-1">|</span>
-                            {appointment.duration} min
-                        </div>
-
-                        <Badge variant="outline" className={cn("text-[10px] uppercase border-0 px-1.5 h-5", statusStyles.bg, statusStyles.text)}>
-                            {config.label}
-                        </Badge>
-                    </div>
-
-                    {appointment.notes && (
-                        <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 italic px-1">
-                            "{appointment.notes}"
-                        </div>
-                    )}
-                </div>
-            </TooltipContent>
-        </Tooltip>
+        <AppointmentQuickView
+            appointment={appointment}
+            open={isPopoverOpen}
+            onOpenChange={(open) => {
+                // Prevent opening if currently dragging or if a drag action is likely happening
+                if (isDragging && open) return;
+                onOpenPopover(open ? appointment.id : null);
+            }}
+            onEdit={onEditAppointment ? () => onEditAppointment(appointment) : undefined}
+            onDelete={onDeleteAppointment ? () => onDeleteAppointment(appointment) : undefined}
+        >
+            {cardContent}
+        </AppointmentQuickView>
     );
 });
 
