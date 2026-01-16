@@ -1,14 +1,14 @@
 import React, { memo, useState } from 'react';
-import { format, addDays, parseISO } from 'date-fns';
 import { Appointment, AppointmentStatus } from '@/types/appointment';
 import { STATUS_CONFIG } from '@/lib/config/agenda';
 import { cn } from '@/lib/utils';
-import { MoreVertical, GripVertical, CheckCircle2, Circle } from 'lucide-react';
+import { MoreVertical, GripVertical, CheckCircle2, Circle, Clock } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { AppointmentQuickView } from './AppointmentQuickView';
 import { Badge } from '@/components/ui/badge';
-import { Clock } from 'lucide-react';
-import { getOptimalTextColor, isLightColor } from '@/utils/colorContrast';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { motion, AnimatePresence } from 'framer-motion';
+import { format } from 'date-fns';
 
 interface CalendarAppointmentCardProps {
     appointment: Appointment;
@@ -21,12 +21,9 @@ interface CalendarAppointmentCardProps {
     onDeleteAppointment?: (appointment: Appointment) => void;
     onOpenPopover: (id: string | null) => void;
     isPopoverOpen: boolean;
-    // Allow dropping on this card to add multiple appointments at same time
     onDragOver?: (e: React.DragEvent) => void;
     onDrop?: (e: React.DragEvent) => void;
-    // Visual feedback when this card is a drop target
     isDropTarget?: boolean;
-    // Selection props
     selectionMode?: boolean;
     isSelected?: boolean;
     onToggleSelection?: (id: string) => void;
@@ -35,6 +32,95 @@ interface CalendarAppointmentCardProps {
 const normalizeTime = (time: string | null | undefined): string => {
     if (!time || !time.trim()) return '00:00';
     return time.substring(0, 5);
+};
+
+const getInitials = (name: string) => {
+    return name
+        .split(' ')
+        .map((n) => n[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase();
+};
+
+const getStatusStyles = (status: string) => {
+    // Vivid & Standardized Palette
+    const styles = {
+        confirmado: {
+            border: 'border-emerald-500',
+            bg: 'bg-emerald-100/90 dark:bg-emerald-500/20',
+            hoverBg: 'hover:bg-emerald-200/90 dark:hover:bg-emerald-500/30',
+            text: 'text-emerald-900 dark:text-emerald-50',
+            subtext: 'text-emerald-800/80 dark:text-emerald-200/80',
+            accent: 'bg-emerald-600',
+            indicator: 'text-emerald-700'
+        },
+        agendado: {
+            border: 'border-blue-500',
+            bg: 'bg-blue-100/90 dark:bg-blue-500/20',
+            hoverBg: 'hover:bg-blue-200/90 dark:hover:bg-blue-500/30',
+            text: 'text-blue-900 dark:text-blue-50',
+            subtext: 'text-blue-800/80 dark:text-blue-200/80',
+            accent: 'bg-blue-600',
+            indicator: 'text-blue-700'
+        },
+        em_andamento: {
+            border: 'border-amber-500',
+            bg: 'bg-amber-100/90 dark:bg-amber-500/20',
+            hoverBg: 'hover:bg-amber-200/90 dark:hover:bg-amber-500/30',
+            text: 'text-amber-900 dark:text-amber-50',
+            subtext: 'text-amber-800/80 dark:text-amber-200/80',
+            accent: 'bg-amber-600',
+            indicator: 'text-amber-700'
+        },
+        // Combined Red for negative states
+        cancelado: {
+            border: 'border-red-500',
+            bg: 'bg-red-100/90 dark:bg-red-500/20',
+            hoverBg: 'hover:bg-red-200/90 dark:hover:bg-red-500/30',
+            text: 'text-red-900 dark:text-red-50',
+            subtext: 'text-red-800/80 dark:text-red-200/80',
+            accent: 'bg-red-600',
+            indicator: 'text-red-700'
+        },
+        falta: {
+            border: 'border-red-500', // Same vibrant red
+            bg: 'bg-red-100/90 dark:bg-red-500/20',
+            hoverBg: 'hover:bg-red-200/90 dark:hover:bg-red-500/30',
+            text: 'text-red-900 dark:text-red-50',
+            subtext: 'text-red-800/80 dark:text-red-200/80',
+            accent: 'bg-red-600',
+            indicator: 'text-red-700'
+        },
+        concluido: {
+            border: 'border-indigo-500',
+            bg: 'bg-indigo-100/90 dark:bg-indigo-500/20',
+            hoverBg: 'hover:bg-indigo-200/90 dark:hover:bg-indigo-500/30',
+            text: 'text-indigo-900 dark:text-indigo-50',
+            subtext: 'text-indigo-800/80 dark:text-indigo-200/80',
+            accent: 'bg-indigo-600',
+            indicator: 'text-indigo-700'
+        },
+        avaliacao: {
+            border: 'border-violet-500',
+            bg: 'bg-violet-100/90 dark:bg-violet-500/20',
+            hoverBg: 'hover:bg-violet-200/90 dark:hover:bg-violet-500/30',
+            text: 'text-violet-900 dark:text-violet-50',
+            subtext: 'text-violet-800/80 dark:text-violet-200/80',
+            accent: 'bg-violet-600',
+            indicator: 'text-violet-700'
+        },
+        default: {
+            border: 'border-slate-500',
+            bg: 'bg-slate-100/90 dark:bg-slate-500/20',
+            hoverBg: 'hover:bg-slate-200/90 dark:hover:bg-slate-500/30',
+            text: 'text-slate-900 dark:text-slate-50',
+            subtext: 'text-slate-700/80 dark:text-slate-300/80',
+            accent: 'bg-slate-600',
+            indicator: 'text-slate-700'
+        }
+    };
+    return styles[status as keyof typeof styles] || styles.default;
 };
 
 export const CalendarAppointmentCard = memo(({
@@ -57,13 +143,14 @@ export const CalendarAppointmentCard = memo(({
 }: CalendarAppointmentCardProps) => {
     const [isHovered, setIsHovered] = useState(false);
 
+    // Status visual config
+    const statusStyles = getStatusStyles(appointment.status);
     const config = STATUS_CONFIG[appointment.status as AppointmentStatus] || STATUS_CONFIG.agendado;
     const StatusIcon = config.icon;
-    const isSmall = (appointment.duration || 60) <= 30;
 
-    // Calculate optimal text color based on background color
-    const textColor = getOptimalTextColor(config.bgColor);
-    const isLight = isLightColor(config.bgColor);
+    const duration = appointment.duration || 60;
+    const isSmall = duration <= 30; // 30 min or less
+    const isTiny = duration < 30; // Less than 30 min (e.g. 15, 20)
 
     const handleMouseEnter = () => setIsHovered(true);
     const handleMouseLeave = () => setIsHovered(false);
@@ -79,141 +166,175 @@ export const CalendarAppointmentCard = memo(({
     };
 
     const cardContent = (
-        <div
+        <motion.div
+            layout // Smooth layout changes
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            whileHover={{ scale: 1.005, zIndex: 20 }}
             draggable={draggable}
-            onDragStart={(e) => draggable && onDragStart(e, appointment)}
-            onDragEnd={onDragEnd}
-            onDragOver={(e) => {
-                // Always call onDragOver if provided to allow drop feedback
-                // Important: call preventDefault to allow dropping
-                if (onDragOver && !selectionMode) {
-                    onDragOver(e);
+            onDragStart={(e) => {
+                if (draggable) {
+                    onOpenPopover(null); // Close popover if open
+                    onDragStart(e as any, appointment);
                 }
             }}
+            onDragEnd={onDragEnd}
+            onDragOver={(e) => {
+                if (onDragOver && !selectionMode) onDragOver(e as any);
+            }}
             onDrop={(e) => {
-                // Always call onDrop if provided to handle dropping on existing appointments
-                if (onDrop && !selectionMode) {
-                    onDrop(e);
-                }
+                if (onDrop && !selectionMode) onDrop(e as any);
             }}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             onClick={handleClick}
             className={cn(
-                "absolute rounded-md flex flex-col border-l-[3px] transition-all shadow-sm cursor-pointer overflow-hidden group hover:shadow-md my-0.5",
+                "absolute rounded-md flex flex-col overflow-hidden transition-colors border",
+                "shadow-xs hover:shadow-md cursor-pointer",
+                statusStyles.bg,
+                statusStyles.hoverBg,
+                statusStyles.border,
                 draggable && "cursor-grab active:cursor-grabbing",
-                isDragging && "opacity-50 scale-95 z-50 ring-2 ring-blue-400",
-                !isDragging && isHovered && !selectionMode && "z-30 ring-1 ring-black/5 dark:ring-white/10",
-                // Drop target visual feedback
+                isDragging && "opacity-60 scale-95 z-50 ring-2 ring-blue-400 grayscale",
+                !isDragging && isHovered && !selectionMode && "ring-1 ring-black/10 dark:ring-white/10",
                 isDropTarget && !isDragging && "ring-2 ring-primary/60 ring-offset-1 shadow-lg scale-[1.02] z-25",
-                appointment.status === 'cancelado' && "opacity-80 grayscale-[0.5]",
-                // Selection styles
                 selectionMode && "hover:opacity-90",
                 isSelected && "ring-2 ring-primary ring-offset-1 z-40"
             )}
             style={{
                 ...style,
-                backgroundColor: config.bgColor,
-                borderLeftColor: config.borderColor,
+                backgroundColor: undefined, // Override calculator styles
             }}
         >
-            <div className="p-1 pl-1.5 pr-1 flex flex-col h-full relative">
-                {/* Header Line (Time + Status) */}
-                <div className="flex items-center justify-between mb-0.5">
-                    <span
-                        className="text-[11px] font-semibold uppercase tracking-wide leading-none opacity-90"
-                        style={{ color: textColor }}
-                    >
-                        {normalizeTime(appointment.time)}
-                        {appointment.duration && (() => {
-                            const [h, m] = (appointment.time || "00:00").split(':').map(Number);
-                            const end = new Date();
-                            end.setHours(h, m + appointment.duration);
-                            return ` - ${format(end, 'HH:mm')}`;
-                        })()}
-                    </span>
-                    
-                    {/* Selection Indicator or Status Icon */}
-                    {selectionMode ? (
-                        <div className="flex-shrink-0">
-                            {isSelected ? (
-                                <CheckCircle2 className="w-4 h-4 text-primary fill-background" />
+            <div className={cn(
+                "flex flex-col h-full relative",
+                isTiny ? "p-0.5 justify-center items-center" : "p-1.5"
+            )}>
+                {/* 1. Tiny View (< 30m): Minimal indicator */}
+                {isTiny ? (
+                    <div className="flex items-center gap-1 w-full justify-center">
+                        <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", statusStyles.accent)} />
+                        {/* Only show time if > 15m allows? Actually for 15m, usually just color is enough on grid */}
+                        {duration >= 20 && (
+                            <span className={cn("text-[9px] font-bold", statusStyles.text)}>
+                                {normalizeTime(appointment.time)}
+                            </span>
+                        )}
+                    </div>
+                ) : (
+                    /* 2. Normal View (>= 30m) */
+                    <>
+                        {/* Header: Time & Status */}
+                        <div className="flex items-center justify-between gap-1 mb-0.5 w-full">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                                {/* Accent Bar logic instead of dot for cleaner look */}
+                                <div className={cn("w-1 h-3 rounded-full shrink-0 opacity-80", statusStyles.accent)} />
+
+                                <span className={cn(
+                                    "font-mono font-semibold truncate leading-none tracking-tight",
+                                    statusStyles.text,
+                                    isSmall ? "text-[10px]" : "text-[11px]"
+                                )}>
+                                    {normalizeTime(appointment.time)}
+                                </span>
+                            </div>
+
+                            {/* Selection or Icon */}
+                            {selectionMode ? (
+                                <div className="flex-shrink-0">
+                                    {isSelected ? (
+                                        <CheckCircle2 className="w-3.5 h-3.5 text-primary fill-background" />
+                                    ) : (
+                                        <Circle className="w-3.5 h-3.5 opacity-40" />
+                                    )}
+                                </div>
                             ) : (
-                                <Circle className="w-4 h-4 opacity-50" style={{ color: textColor }} />
+                                StatusIcon && !isSmall && (
+                                    <StatusIcon className={cn("w-3 h-3 opacity-50", statusStyles.indicator)} />
+                                )
                             )}
                         </div>
-                    ) : (
-                        StatusIcon && !isSmall && (
-                            <StatusIcon className="w-3.5 h-3.5 opacity-70" style={{ color: textColor }} />
-                        )
-                    )}
-                </div>
 
-                {/* Patient Name - 2 linhas com fonte proporcional */}
-                <div className="flex items-start gap-1 min-h-[2em]">
-                    <span
-                        className={cn(
-                            "text-[13px] font-bold leading-snug line-clamp-2 calendar-patient-name-compact",
-                            appointment.status === 'cancelado' && "line-through decoration-red-500/50"
-                        )}
-                        style={{ color: textColor }}
-                    >
-                        {appointment.patientName || 'Paciente'}
-                    </span>
-                </div>
+                        {/* Patient Name & Details */}
+                        <div className="flex items-start gap-1.5 mt-0.5 min-h-0 w-full">
+                            {/* Avatar only for regular cards (> 30m) */}
+                            {!isSmall && (
+                                <div className="hidden sm:block shrink-0 mt-0.5">
+                                    <Avatar className="h-5 w-5 border border-white/40 shadow-sm">
+                                        <AvatarFallback className={cn("text-[8px] font-bold", statusStyles.accent, "text-white")}>
+                                            {getInitials(appointment.patientName)}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                </div>
+                            )}
 
-                {/* Type/Treatment */}
-                {!isSmall && (
-                    <span
-                        className="text-[11px] truncate mt-0 leading-tight opacity-80"
-                        style={{ color: textColor }}
-                    >
-                        {appointment.type || 'Consulta'}
-                    </span>
-                )}
+                            <div className="min-w-0 flex-1">
+                                <span className={cn(
+                                    "block font-bold leading-tight line-clamp-2 tracking-tight",
+                                    statusStyles.text,
+                                    // Responsive text sizing
+                                    isSmall ? "text-[11px]" : "text-[12px]"
+                                )}>
+                                    {appointment.patientName}
+                                </span>
 
-                {/* Actions / Drag Handle Popup */}
-                {isHovered && draggable && !isDragging && !selectionMode && (
-                    <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity delay-75">
-                        <div className={cn(
-                            "rounded p-0.5 shadow-sm",
-                            isLight ? "bg-black/10 hover:bg-black/20" : "bg-white/20 hover:bg-white/30"
-                        )}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onEditAppointment?.(appointment);
-                            }}
-                        >
-                            <MoreVertical className="w-3 h-3" style={{ color: textColor }} />
+                                {!isSmall && (
+                                    <span className={cn(
+                                        "block text-[10px] truncate opacity-70 mt-0.5 font-medium",
+                                        statusStyles.subtext
+                                    )}>
+                                        {appointment.type}
+                                    </span>
+                                )}
+                            </div>
                         </div>
-                    </div>
+                    </>
                 )}
 
-                {/* Drag Handle (Visible on hover) */}
-                {isHovered && draggable && !selectionMode && (
-                    <div className="absolute bottom-1 right-1 opacity-20 group-hover:opacity-100 cursor-grab">
-                        <GripVertical className="w-3 h-3" style={{ color: textColor }} />
-                    </div>
+                {/* Hover Actions (Edit/Drag) - Only if not tiny, or if hovered on tiny */}
+                {isHovered && draggable && !isDragging && !selectionMode && (
+                    <AnimatePresence>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="absolute top-0.5 right-0.5 flex flex-col gap-0.5"
+                        >
+                            <div
+                                role="button"
+                                className="p-0.5 rounded-sm hover:bg-black/10 dark:hover:bg-white/10 transition-colors backdrop-blur-[1px]"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onEditAppointment?.(appointment);
+                                }}
+                            >
+                                <MoreVertical className={cn("w-3 h-3", statusStyles.subtext)} />
+                            </div>
+                        </motion.div>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="absolute bottom-0.5 right-0.5 opacity-50 hover:opacity-100 cursor-grab active:cursor-grabbing backdrop-blur-[1px] p-0.5 rounded-sm"
+                        >
+                            <GripVertical className={cn("w-3 h-3", statusStyles.subtext)} />
+                        </motion.div>
+                    </AnimatePresence>
                 )}
             </div>
-        </div>
+        </motion.div>
     );
 
-    // If in selection mode, don't use Tooltip/Popover to allow easy clicking
-    if (selectionMode) {
-        return cardContent;
-    }
+    if (selectionMode) return cardContent;
 
     return (
-        <Tooltip>
-            {/* 
-               IMPORTANT: Tooltip requires a single child. AppointmentQuickView gives that,
-               wrapping the cardContent.
-            */}
+        <Tooltip delayDuration={300}>
             <AppointmentQuickView
                 appointment={appointment}
                 open={isPopoverOpen}
-                onOpenChange={(open) => onOpenPopover(open ? appointment.id : null)}
+                onOpenChange={(open) => {
+                    // Prevent opening if currently dragging or if a drag action is likely happening
+                    if (isDragging && open) return;
+                    onOpenPopover(open ? appointment.id : null);
+                }}
                 onEdit={onEditAppointment ? () => onEditAppointment(appointment) : undefined}
                 onDelete={onDeleteAppointment ? () => onDeleteAppointment(appointment) : undefined}
             >
@@ -222,19 +343,46 @@ export const CalendarAppointmentCard = memo(({
                 </TooltipTrigger>
             </AppointmentQuickView>
 
-            <TooltipContent side="right" className="p-0 overflow-hidden border-none shadow-xl">
-                <div className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800 w-56">
-                    <div className={cn("w-full h-1.5 rounded-full mb-2", config.twBg?.replace('bg-', 'bg-').replace('50', '500') || "")} />
-                    <p className="font-bold text-slate-800 dark:text-slate-100 text-sm mb-0.5">{appointment.patientName}</p>
-                    <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
-                        <Clock className="w-3 h-3" />
-                        {appointment.time} - {appointment.duration}min
+            <TooltipContent side="right" className="p-0 overflow-hidden border-none shadow-xl z-[60] bg-transparent">
+                <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-3.5 rounded-xl border border-slate-200/60 dark:border-slate-800/60 w-64 shadow-2xl">
+                    <div className={cn("w-full h-1 rounded-full mb-3", statusStyles.accent)} />
+
+                    <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                            <Avatar className="h-8 w-8 border-2 border-white dark:border-slate-800 shadow-sm">
+                                <AvatarFallback className={cn("text-[10px] font-bold", statusStyles.accent, "text-white")}>
+                                    {getInitials(appointment.patientName)}
+                                </AvatarFallback>
+                            </Avatar>
+                            <div className="flex flex-col">
+                                <p className="font-bold text-slate-900 dark:text-slate-100 text-sm leading-tight">
+                                    {appointment.patientName}
+                                </p>
+                                <span className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">
+                                    {appointment.type}
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                    <div className="flex gap-2">
-                        <Badge variant="outline" className={cn("text-[10px] uppercase", config.twText, config.twBg, config.twBorder)}>
-                            {appointment.status}
+
+                    <div className="space-y-2 bg-slate-50/50 dark:bg-slate-800/50 rounded-lg p-2.5 border border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 font-medium">
+                            <Clock className="w-3.5 h-3.5 text-slate-400" />
+                            {appointment.time} - {format(new Date().setHours(...(appointment.time?.split(':').map(Number) as [number, number]) || [0, 0]) + (appointment.duration || 60) * 60 * 1000, 'HH:mm')}
+                            <span className="text-slate-300 mx-1">|</span>
+                            {appointment.duration} min
+                        </div>
+
+                        <Badge variant="outline" className={cn("text-[10px] uppercase border-0 px-1.5 h-5", statusStyles.bg, statusStyles.text)}>
+                            {config.label}
                         </Badge>
                     </div>
+
+                    {appointment.notes && (
+                        <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 italic px-1">
+                            "{appointment.notes}"
+                        </div>
+                    )}
                 </div>
             </TooltipContent>
         </Tooltip>

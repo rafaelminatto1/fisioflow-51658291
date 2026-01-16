@@ -1,44 +1,123 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { parseISO, differenceInCalendarDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { Database } from '@/integrations/supabase/types';
-import { differenceInCalendarDays, parseISO } from 'date-fns';
+import {
+  DailyQuestItem,
+  GamificationProfile,
+  Achievement,
+  UnlockedAchievement,
+  XpTransactionReason,
+  AwardXpParams,
+  AwardXpResult,
+  CompleteQuestParams,
+} from '@/types/gamification';
 
-// Deriving types from Database definition
-type PatientGamification = Database['public']['Tables']['patient_gamification']['Row'];
-type XPTransaction = Database['public']['Tables']['xp_transactions']['Row'];
-export type Achievement = Database['public']['Tables']['achievements']['Row'];
-type UnlockedAchievement = Database['public']['Tables']['achievements_log']['Row'];
+// ============================================================================
+// TYPES
+// ============================================================================
 
-export type GamificationProfile = PatientGamification;
-
-export interface DailyQuestItem {
-  id: string;
-  title: string;
-  completed: boolean;
-  xp: number;
-  icon: string;
-  description?: string;
+export interface UseGamificationResult {
+  profile: GamificationProfile | null | undefined;
+  dailyQuests: DailyQuestItem[];
+  allAchievements: Achievement[];
+  unlockedAchievements: UnlockedAchievement[];
+  lockedAchievements: Achievement[];
+  isLoading: boolean;
+  awardXp: ReturnType<typeof useMutation>;
+  completeQuest: ReturnType<typeof useMutation>;
+  freezeStreak: ReturnType<typeof useMutation>;
+  freezeCost: { price: number; max_per_month: number };
+  xpPerLevel: number;
+  currentLevel: number;
+  currentXp: number;
+  totalPoints: number;
+  progressToNextLevel: number;
+  progressPercentage: number;
 }
 
-export const useGamification = (patientId: string) => {
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+const calculateNewStreak = (currentStreak: number, lastActivityDate: string | null): number => {
+  if (!lastActivityDate) return 1;
+
+  const lastDate = parseISO(lastActivityDate);
+  const today = new Date();
+  const daysDiff = differenceInCalendarDays(today, lastDate);
+
+  if (daysDiff === 0) return currentStreak;
+  if (daysDiff === 1) return currentStreak + 1;
+  return 1;
+};
+
+const calculateLevel = (totalXp: number, baseXp: number): { level: number; remainingXp: number } => {
+  let level = 1;
+  let remainingXp = totalXp;
+
+  while (remainingXp >= baseXp) {
+    level += 1;
+    remainingXp -= baseXp;
+  }
+
+  return { level, remainingXp };
+};
+
+const parseRequirements = (requirements: Achievement['requirements']) => {
+  if (typeof requirements === 'string') {
+    try {
+      return JSON.parse(requirements);
+    } catch {
+      return null;
+    }
+  }
+  return requirements;
+};
+
+// ============================================================================
+// HOOK
+// ============================================================================
+
+export const useGamification = (patientId: string): UseGamificationResult => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch Gamification Profile with Streak Logic
+  // 1. Fetch Gamification Settings
+  const { data: settings = [] } = useQuery({
+    queryKey: ['gamification-settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('gamification_settings').select('*');
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+
+  const getSetting = useCallback(
+    <T,>(key: string, defaultValue: T): T => {
+      const setting = settings.find((s) => s.key === key);
+      return (setting?.value as T) ?? defaultValue;
+    },
+    [settings]
+  );
+
+  const xpMultiplier = Number(getSetting('xp_multiplier', 1));
+  const levelBaseXp = Number(getSetting('level_base_xp', 1000));
+  const freezeCost = getSetting('streak_freeze_cost', { price: 100, max_per_month: 3 });
+
+  // 2. Fetch Gamification Profile
   const { data: profile, isLoading: isLoadingProfile } = useQuery({
     queryKey: ['gamification-profile', patientId],
     queryFn: async () => {
-      const { data, error: gamificationError } = await supabase
+      const { data, error } = await supabase
         .from('patient_gamification')
         .select('*')
         .eq('patient_id', patientId)
         .maybeSingle();
 
-      if (gamificationError && gamificationError.code !== 'PGRST116') {
-        console.error('Error fetching gamification profile:', gamificationError);
-      }
+      if (error && error.code !== 'PGRST116') throw error;
 
       if (!data) {
         return {
@@ -51,21 +130,23 @@ export const useGamification = (patientId: string) => {
         } as GamificationProfile;
       }
 
-      // Check Streak Logic
+      // Check Streak Loss Logic (without freeze for now)
       if (data.last_activity_date) {
         const lastActivity = parseISO(data.last_activity_date);
         const today = new Date();
         const daysDiff = differenceInCalendarDays(today, lastActivity);
 
         if (daysDiff > 1) {
-          // Streak broken
+          // We might want to check for auto-freeze here if we implement it, 
+          // but for now, we just reset if they haven't manually frozen it.
+          // However, let's just keep the reset logic as is and handle freeze as a manual action.
           const { data: updated } = await supabase
             .from('patient_gamification')
             .update({ current_streak: 0 })
             .eq('id', data.id)
             .select()
             .single();
-          
+
           if (updated) return updated as GamificationProfile;
         }
       }
@@ -75,71 +156,40 @@ export const useGamification = (patientId: string) => {
     enabled: !!patientId,
   });
 
-  // Fetch Total Sessions
+  // 3. Other Queries (Sessions, Transactions, Achievements, Quests)
   const { data: totalSessions = 0 } = useQuery({
     queryKey: ['total-sessions', patientId],
     queryFn: async () => {
-      const { count, error: sessionsError } = await supabase
+      const { count, error } = await supabase
         .from('appointments')
         .select('*', { count: 'exact', head: true })
         .eq('patient_id', patientId)
         .eq('status', 'atendido');
-
-      if (sessionsError) {
-        console.error("Error fetching total sessions", sessionsError);
-        return 0;
-      }
+      if (error) return 0;
       return count || 0;
     },
     enabled: !!patientId
   });
 
-  // Fetch Recent XP Transactions
-  const { data: recentTransactions = [] } = useQuery({
-    queryKey: ['xp-transactions', patientId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('xp_transactions')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (error) return [];
-      return data as XPTransaction[];
-    },
-    enabled: !!patientId
-  });
-
-  // Fetch Achievements
   const { data: allAchievements = [] } = useQuery({
     queryKey: ['achievements'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('achievements')
-        .select('*');
-
+      const { data, error } = await supabase.from('achievements').select('*');
       if (error) return [];
       return data as Achievement[];
     }
   });
 
-  // Fetch Unlocked Achievements
   const { data: unlockedAchievements = [] } = useQuery({
     queryKey: ['unlocked-achievements', patientId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('achievements_log')
-        .select('*')
-        .eq('patient_id', patientId);
-
+      const { data, error } = await supabase.from('achievements_log').select('*').eq('patient_id', patientId);
       if (error) return [];
       return data as UnlockedAchievement[];
     },
     enabled: !!patientId,
   });
 
-  // Fetch Daily Quests
   const { data: dailyQuestsData } = useQuery({
     queryKey: ['daily-quests', patientId],
     queryFn: async () => {
@@ -152,32 +202,21 @@ export const useGamification = (patientId: string) => {
         .maybeSingle();
 
       if (!data) {
-        // Fetch active quest definitions for display preview
         const { data: activeQuests } = await supabase
           .from('quest_definitions')
           .select('*')
           .eq('is_active', true)
           .eq('category', 'daily');
 
-        const displayQuests = (activeQuests || []).map(q => ({
-          id: q.id,
-          title: q.title,
-          completed: false,
-          xp: q.xp_reward,
-          icon: q.icon || 'Star',
-          description: q.description || ''
-        }));
-
-        if (displayQuests.length > 0) {
-          return { quests_data: displayQuests };
-        }
-
         return {
-          quests_data: [
-            { id: "session", title: "Realizar Sessão", completed: false, xp: 50, icon: "Activity", description: "Complete sua sessão de exercícios" },
-            { id: "pain", title: "Registrar Dor", completed: false, xp: 20, icon: "Thermometer", description: "Atualize seu mapa de dor" },
-            { id: "hydration", title: "Hidratação", completed: false, xp: 10, icon: "Droplets", description: "Beba água e registre" }
-          ]
+          quests_data: (activeQuests || []).map(q => ({
+            id: q.id,
+            title: q.title,
+            completed: false,
+            xp: q.xp_reward,
+            icon: q.icon || 'Star',
+            description: q.description || ''
+          }))
         };
       }
       return data;
@@ -185,318 +224,300 @@ export const useGamification = (patientId: string) => {
     enabled: !!patientId
   });
 
-  // Cast JSONB to typed array safely
   const dailyQuests = ((dailyQuestsData?.quests_data as unknown) || []) as DailyQuestItem[];
 
-  // Calculation Props
-  const xpPerLevel = 1000;
-  const currentLevel = profile?.level || 1;
-  const currentXp = profile?.current_xp || 0;
-  const xpProgress = (currentXp / xpPerLevel) * 100;
-
-  // Mutations
+  // 4. Mutation: Award XP
   const awardXp = useMutation({
-    mutationFn: async ({ amount, reason, description }: { amount: number, reason: string, description?: string }) => {
+    mutationFn: async ({ amount, reason, description }: AwardXpParams): Promise<AwardXpResult> => {
       if (!patientId) throw new Error('No patient ID');
+
+      const finalAmount = Math.floor(amount * xpMultiplier);
 
       // 1. Log Transaction
       await supabase.from('xp_transactions').insert({
         patient_id: patientId,
-        amount,
+        amount: finalAmount,
         reason,
-        description
+        description,
       });
 
-      // 2. Fetch current state safely
-      const { data: current, error: fetchError } = await supabase
+      // 2. Fetch current state
+      const { data: current } = await supabase
         .from('patient_gamification')
         .select('*')
         .eq('patient_id', patientId)
         .maybeSingle();
 
-      if (fetchError) throw fetchError;
-
       const oldXp = current?.current_xp || 0;
       const oldTotal = current?.total_points || 0;
       const oldLevel = current?.level || 1;
       const oldStreak = current?.current_streak || 0;
-      const oldLongest = current?.longest_streak || 0;
-      const lastDate = current?.last_activity_date ? parseISO(current.last_activity_date) : null;
 
-      let newXp = oldXp + amount;
-      const newTotal = oldTotal + amount;
-      let newLevel = oldLevel;
-      let newStreak = oldStreak;
-      
-      // Streak Calculation
-      const today = new Date();
-      if (!lastDate) {
-        newStreak = 1;
-      } else {
-        const daysDiff = differenceInCalendarDays(today, lastDate);
-        if (daysDiff === 1) {
-          newStreak += 1;
-        } else if (daysDiff > 1) {
-          newStreak = 1; // Reset if missed a day
-        }
-        // If daysDiff === 0, streak stays same (already active today)
-      }
-
-      const newLongest = Math.max(newStreak, oldLongest);
-
-      // Level Up Logic
-      if (newXp >= xpPerLevel) {
-        const levelsGained = Math.floor(newXp / xpPerLevel);
-        newLevel += levelsGained;
-        newXp = newXp % xpPerLevel;
-      }
+      // Calculate new values using utility functions
+      const newStreak = calculateNewStreak(oldStreak, current?.last_activity_date || null);
+      const totalXp = oldXp + finalAmount;
+      const { level: newLevel, remainingXp } = calculateLevel(totalXp, levelBaseXp);
+      const newTotal = oldTotal + finalAmount;
 
       // 3. Update Profile
-      const { data, error } = await supabase
+      const { data: updated } = await supabase
         .from('patient_gamification')
         .upsert({
           patient_id: patientId,
           updated_at: new Date().toISOString(),
-          current_xp: newXp,
+          current_xp: remainingXp,
           level: newLevel,
           total_points: newTotal,
           current_streak: newStreak,
-          longest_streak: newLongest,
+          longest_streak: Math.max(newStreak, current?.longest_streak || 0),
           last_activity_date: new Date().toISOString(),
-          ...(current?.id ? { id: current.id } : {})
+          ...(current?.id ? { id: current.id } : {}),
         })
         .select()
         .single();
 
-      if (error) throw error;
-      return { data, leveledUp: newLevel > oldLevel, newLevel, streakExtended: newStreak > oldStreak };
+      // 4. Automatic Challenge Progress Update
+      await updateChallengeProgress(patientId, reason);
+
+      return {
+        data: updated as GamificationProfile,
+        leveledUp: newLevel > oldLevel,
+        newLevel,
+        streakExtended: newStreak > oldStreak,
+      };
     },
     onSuccess: ({ leveledUp, newLevel, streakExtended }) => {
       queryClient.invalidateQueries({ queryKey: ['gamification-profile', patientId] });
       queryClient.invalidateQueries({ queryKey: ['xp-transactions', patientId] });
+      queryClient.invalidateQueries({ queryKey: ['patient-challenges', patientId] });
 
-      toast({
-        title: `+ XP Recebido!`,
-        description: "Progresso atualizado.",
-      });
-
-      if (streakExtended) {
-         toast({
-          title: "🔥 Streak Aumentado!",
-          description: "Continue assim!",
-          className: "bg-orange-500 text-white border-none shadow-xl"
-        });
-      }
+      // Notificação de streak desativada
+      // if (streakExtended) {
+      //   toast({
+      //     title: '🔥 Streak Ativo!',
+      //     description: 'Sua sequência está aumentando!',
+      //     className: 'bg-orange-500 text-white border-none',
+      //   });
+      // }
 
       if (leveledUp) {
-        // We can trigger a modal here via state or context in the UI
         toast({
-          title: "SUBIU DE NÍVEL! 🎉",
-          description: `Novo nível alcançado: ${newLevel}`,
-          className: "bg-gradient-to-r from-yellow-500 to-orange-600 text-white border-none shadow-xl"
+          title: 'NÍVEL ALCANÇADO! 🎉',
+          description: `Parabéns! Você chegou ao nível ${newLevel}`,
+          className: 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-none',
         });
       }
+    },
+  });
+
+  // 5. Mutation: Streak Freeze
+  const freezeStreak = useMutation({
+    mutationFn: async () => {
+      if (!profile || profile.total_points < freezeCost.price) {
+        throw new Error("Pontos insuficientes para congelar sequência.");
+      }
+
+      const { error } = await supabase
+        .from('patient_gamification')
+        .update({
+          total_points: profile.total_points - freezeCost.price,
+          last_activity_date: new Date().toISOString() // Simulates activity to preserve streak
+        })
+        .eq('patient_id', patientId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gamification-profile', patientId] });
+      toast({ title: "❄️ Sequência Congelada!", description: "Sua sequência foi protegida por hoje." });
     }
   });
 
-  // Check and Unlock Achievements (Effect)
-  // We define it as a function inside useEffect or separate to avoid circular deps in definition,
-  // but we need it to trigger on profile/sessions change.
-  // We use a separate useEffect for this.
+  // 6. Automation: Challenge Progress
+  const updateChallengeProgress = async (pId: string, actionType: string) => {
+    // Fetch active challenges for this user
+    const { data: challenges } = await supabase
+      .from('weekly_challenges')
+      .select('*')
+      .eq('is_active', true)
+      .lte('start_date', new Date().toISOString().split('T')[0])
+      .gte('end_date', new Date().toISOString().split('T')[0]);
 
+    if (!challenges) return;
+
+    for (const challenge of challenges) {
+      const target = challenge.target as any;
+      if (
+        (target.type === 'sessions' && actionType === 'atendido') ||
+        (target.type === 'quests' && actionType === 'daily_quest') ||
+        (target.type === 'any' && actionType !== 'achievement_unlocked')
+      ) {
+        // UPSERT progress
+        const { data: currentProgress } = await supabase
+          .from('patient_challenges')
+          .select('*')
+          .eq('patient_id', pId)
+          .eq('challenge_id', challenge.id)
+          .maybeSingle();
+
+        const newProgress = (currentProgress?.progress || 0) + 1;
+        const isCompleted = newProgress >= target.count;
+
+        await supabase
+          .from('patient_challenges')
+          .upsert({
+            patient_id: pId,
+            challenge_id: challenge.id,
+            progress: newProgress,
+            completed: isCompleted,
+            completed_at: isCompleted ? new Date().toISOString() : (currentProgress?.completed_at || null),
+            ...(currentProgress?.id ? { id: currentProgress.id } : {})
+          });
+
+        if (isCompleted && !currentProgress?.completed) {
+          // Award challenge reward
+          await awardXp.mutateAsync({
+            amount: challenge.xp_reward,
+            reason: 'challenge_completion',
+            description: `Desafio: ${challenge.title}`
+          });
+          // Also handle point_reward if needed
+        }
+      }
+    }
+  };
+
+  // 7. Achievement Check
   useEffect(() => {
     const checkAchievements = async () => {
       if (!profile || !allAchievements.length || isLoadingProfile) return;
 
-      const newUnlocks: Achievement[] = [];
-
       for (const achievement of allAchievements) {
-        // Skip if already unlocked
-        const isUnlocked = unlockedAchievements.some(ua => ua.achievement_id === achievement.id);
+        const isUnlocked = unlockedAchievements.some((ua) => ua.achievement_id === achievement.id);
         if (isUnlocked) continue;
 
-        let requirements: any = achievement.requirements;
-        // Normalize JSONB
-        if (typeof requirements === 'string') {
-          try { 
-            requirements = JSON.parse(requirements); 
-          } catch {
-            // Ignore parsing error
-          }
-        }
+        const requirements = parseRequirements(achievement.requirements);
         if (!requirements) continue;
 
         let unlocked = false;
+        const target = Number(requirements.count || 0);
 
-        // Check conditions
-        if (requirements.type === 'streak') {
-           const target = Number(requirements.count || 0);
-           if ((profile.longest_streak || 0) >= target) unlocked = true;
-           if ((profile.current_streak || 0) >= target) unlocked = true;
-        } else if (requirements.type === 'sessions') {
-           const target = Number(requirements.count || 0);
-           if ((totalSessions || 0) >= target) unlocked = true;
-        } else if (requirements.type === 'level') {
-           const target = Number(requirements.count || 0);
-           if ((profile.level || 1) >= target) unlocked = true;
+        if (requirements.type === 'streak' && (profile.current_streak >= target || profile.longest_streak >= target)) {
+          unlocked = true;
+        } else if (requirements.type === 'sessions' && totalSessions >= target) {
+          unlocked = true;
+        } else if (requirements.type === 'level' && profile.level >= target) {
+          unlocked = true;
         }
 
         if (unlocked) {
-          // Perform unlock
-          const { error } = await supabase.from('achievements_log').insert({
+          await supabase.from('achievements_log').insert({
             patient_id: patientId,
             achievement_id: achievement.id,
             achievement_title: achievement.title,
             xp_reward: achievement.xp_reward,
-            unlocked_at: new Date().toISOString()
+            unlocked_at: new Date().toISOString(),
           });
 
-          if (!error) {
-            newUnlocks.push(achievement);
-            // Award XP (Note: this triggers another profile update, which triggers this effect again.
-            // But since we just inserted into achievements_log, next run 'isUnlocked' will be true, stopping the loop.)
-            await awardXp.mutateAsync({
-                amount: achievement.xp_reward || 0,
-                reason: 'achievement_unlocked',
-                description: `Conquista: ${achievement.title}`
-            });
-          }
+          await awardXp.mutateAsync({
+            amount: achievement.xp_reward || 0,
+            reason: 'achievement_unlocked',
+            description: `Conquista: ${achievement.title}`,
+          });
         }
-      }
-
-      if (newUnlocks.length > 0) {
-        queryClient.invalidateQueries({ queryKey: ['unlocked-achievements', patientId] });
-        newUnlocks.forEach(a => {
-          toast({
-            title: "Conquista Desbloqueada! 🏆",
-            description: a.title,
-            className: "bg-yellow-500 text-white border-none shadow-xl"
-          });
-        });
       }
     };
 
     checkAchievements();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, totalSessions, allAchievements, unlockedAchievements.length]); // key on unlocked count to avoid rapid firing, or just profile
+  }, [profile, totalSessions, allAchievements, unlockedAchievements.length, isLoadingProfile, patientId, awardXp]);
 
+  // 8. Computed values
+  const lockedAchievements = useMemo(
+    () => allAchievements.filter((achievement) => !unlockedAchievements.some((ua) => ua.achievement_id === achievement.id)),
+    [allAchievements, unlockedAchievements]
+  );
+
+  const currentLevel = profile?.level || 1;
+  const currentXp = profile?.current_xp || 0;
+  const totalPoints = profile?.total_points || 0;
+  const progressToNextLevel = currentXp;
+  const progressPercentage = levelBaseXp > 0 ? (currentXp / levelBaseXp) * 100 : 0;
+
+  // 9. Mutation: Complete Quest
   const completeQuest = useMutation({
-    mutationFn: async ({ questId }: { questId: string }) => {
+    mutationFn: async ({ questId }: CompleteQuestParams) => {
       const today = new Date().toISOString().split('T')[0];
-
-      // eslint-disable-next-line prefer-const
-      let { data: record, error } = await supabase
+      let { data: record } = await supabase
         .from('daily_quests')
         .select('*')
         .eq('patient_id', patientId)
         .eq('date', today)
         .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
-        // Handle error
-      }
-
       if (!record) {
-        // Fetch active quest definitions
-        const { data: activeQuests, error: definitionsError } = await supabase
+        const { data: activeQuests } = await supabase
           .from('quest_definitions')
           .select('*')
           .eq('is_active', true)
-          .eq('category', 'daily'); // Assuming 'daily' is the target. Could be dynamic later.
-
-        if (definitionsError) {
-          console.error("Error fetching quest definitions", definitionsError);
-        }
-
-        const initialQuests: DailyQuestItem[] = (activeQuests || []).map(q => ({
+          .eq('category', 'daily');
+        const initialQuests = (activeQuests || []).map((q) => ({
           id: q.id,
           title: q.title,
           completed: false,
           xp: q.xp_reward,
           icon: q.icon || 'Star',
-          description: q.description || ''
+          description: q.description || '',
         }));
-
-        // Use fallback if DB is empty to avoid broken UI, or rely on earlier seed
-        if (initialQuests.length === 0) {
-          // Fallback only if really nothing exists
-          initialQuests.push(
-            { id: "session", title: "Realizar Sessão", completed: false, xp: 50, icon: "Activity", description: "Complete sua sessão de exercícios" }
-          );
-        }
-
-        const { data: newRecord, error: createError } = await supabase
+        const { data: newRecord } = await supabase
           .from('daily_quests')
           .insert({
             patient_id: patientId,
             date: today,
-            quests_data: initialQuests as unknown as Json,
-            completed_count: 0
+            quests_data: initialQuests as any,
+            completed_count: 0,
           })
           .select()
           .single();
-
-        if (createError) throw createError;
         record = newRecord;
       }
 
-      if (!record) throw new Error("Could not create/fetch quest record");
+      const quests = (record?.quests_data as any[]) || [];
+      const idx = quests.findIndex((q) => q.id === questId);
+      if (idx === -1 || quests[idx].completed) return;
 
-      // 2. Update specific quest
-      // We need to be careful with JSON types.
-      const quests = (record.quests_data as unknown) as DailyQuestItem[];
-      const questIndex = quests.findIndex(q => q.id === questId);
-
-      if (questIndex === -1) throw new Error("Quest not found");
-      if (quests[questIndex].completed) return;
-
-      quests[questIndex].completed = true;
-      const xpReward = quests[questIndex].xp;
-
-      // 3. Save Quest State
-      const { error: updateError } = await supabase
+      quests[idx].completed = true;
+      await supabase
         .from('daily_quests')
-        .update({
-          quests_data: quests as unknown as Json,
-          completed_count: quests.filter(q => q.completed).length
-        })
-        .eq('id', record.id);
+        .update({ quests_data: quests, completed_count: quests.filter((q) => q.completed).length })
+        .eq('id', record?.id);
 
-      if (updateError) throw updateError;
-
-      // 4. Award XP
       await awardXp.mutateAsync({
-        amount: xpReward,
+        amount: quests[idx].xp,
         reason: 'daily_quest',
-        description: `Quest diária: ${quests[questIndex].title}`
+        description: `Quest: ${quests[idx].title}`,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['daily-quests', patientId] });
-      toast({
-        title: "Quest Completada!",
-        description: "Você ganhou XP pela tarefa diária.",
-        variant: "default"
-      });
-    }
+    },
   });
 
   return {
     profile,
-    recentTransactions,
+    dailyQuests,
     allAchievements,
     unlockedAchievements,
-    dailyQuests,
-    totalSessions,
+    lockedAchievements,
     isLoading: isLoadingProfile,
     awardXp,
     completeQuest,
-    xpPerLevel,
-    xpProgress,
+    freezeStreak,
+    freezeCost,
+    xpPerLevel: levelBaseXp,
     currentLevel,
-    currentXp
+    currentXp,
+    totalPoints,
+    progressToNextLevel,
+    progressPercentage,
   };
 };
-
-// Helper type for JSON if needed locally, though strictly we use Supabase Json
-type Json = Database['public']['Tables']['daily_quests']['Row']['quests_data'];

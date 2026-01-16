@@ -22,9 +22,10 @@ export function useEvolutionTemplates(tipo?: string) {
   return useQuery({
     queryKey: ['evolution-templates', tipo],
     queryFn: async () => {
+      // Optimized: Select only required columns instead of *
       let query = supabase
         .from('evolution_templates')
-        .select('*')
+        .select('id, nome, tipo, descricao, conteudo, campos_padrao, ativo, organization_id, created_by, created_at, updated_at')
         .eq('ativo', true)
         .order('nome');
 
@@ -36,6 +37,8 @@ export function useEvolutionTemplates(tipo?: string) {
       if (error) throw error;
       return data as EvolutionTemplate[];
     },
+    staleTime: 1000 * 60 * 10, // 10 minutos - templates mudam pouco
+    gcTime: 1000 * 60 * 30, // 30 minutos
   });
 }
 
@@ -44,21 +47,50 @@ export function useCreateEvolutionTemplate() {
 
   return useMutation({
     mutationFn: async (template: EvolutionTemplateFormData) => {
+      // Optimized: Select only required columns
       const { data, error } = await supabase
         .from('evolution_templates')
         .insert(template)
-        .select()
+        .select('id, nome, tipo, descricao, conteudo, campos_padrao, ativo, organization_id, created_by, created_at, updated_at')
         .single();
 
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['evolution-templates'] });
-      toast.success('Template de evolução criado com sucesso.');
+    // Optimistic update - adiciona template à lista antes da resposta do servidor
+    onMutate: async (newTemplate) => {
+      await queryClient.cancelQueries({ queryKey: ['evolution-templates'] });
+
+      const previousTemplates = queryClient.getQueryData<EvolutionTemplate[]>(['evolution-templates']);
+
+      // Adicionar template otimista com ID temporário
+      const optimisticTemplate: EvolutionTemplate = {
+        ...newTemplate,
+        id: `temp-${Date.now()}`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        created_by: null,
+        organization_id: null,
+      };
+
+      queryClient.setQueryData<EvolutionTemplate[]>(['evolution-templates'], (old) => [
+        ...(old || []),
+        optimisticTemplate,
+      ]);
+
+      return { previousTemplates };
     },
-    onError: () => {
+    onError: (err, newTemplate, context) => {
+      // Rollback para os dados anteriores
+      queryClient.setQueryData(['evolution-templates'], context?.previousTemplates);
       toast.error('Erro ao criar template de evolução.');
+    },
+    onSuccess: (data) => {
+      // Substituir template otimista pelo real (com ID do servidor)
+      queryClient.setQueryData<EvolutionTemplate[]>(['evolution-templates'], (old) =>
+        old?.map((t) => (t.id.startsWith('temp-') ? data : t)) || [data]
+      );
+      toast.success('Template de evolução criado com sucesso.');
     },
   });
 }
@@ -68,22 +100,40 @@ export function useUpdateEvolutionTemplate() {
 
   return useMutation({
     mutationFn: async ({ id, ...template }: Partial<EvolutionTemplate> & { id: string }) => {
+      // Optimized: Select only required columns
       const { data, error } = await supabase
         .from('evolution_templates')
         .update(template)
         .eq('id', id)
-        .select()
+        .select('id, nome, tipo, descricao, conteudo, campos_padrao, ativo, organization_id, created_by, created_at, updated_at')
         .single();
 
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['evolution-templates'] });
-      toast.success('Template de evolução atualizado com sucesso.');
+    // Optimistic update - atualiza template na lista antes da resposta do servidor
+    onMutate: async ({ id, ...template }) => {
+      await queryClient.cancelQueries({ queryKey: ['evolution-templates'] });
+
+      const previousTemplates = queryClient.getQueryData<EvolutionTemplate[]>(['evolution-templates']);
+
+      queryClient.setQueryData<EvolutionTemplate[]>(['evolution-templates'], (old) =>
+        old?.map((t) =>
+          t.id === id
+            ? { ...t, ...template, updated_at: new Date().toISOString() }
+            : t
+        ) || []
+      );
+
+      return { previousTemplates };
     },
-    onError: () => {
+    onError: (err, variables, context) => {
+      // Rollback para os dados anteriores
+      queryClient.setQueryData(['evolution-templates'], context?.previousTemplates);
       toast.error('Erro ao atualizar template de evolução.');
+    },
+    onSuccess: (data) => {
+      toast.success('Template de evolução atualizado com sucesso.');
     },
   });
 }
@@ -100,12 +150,25 @@ export function useDeleteEvolutionTemplate() {
 
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['evolution-templates'] });
-      toast.success('Template de evolução excluído com sucesso.');
+    // Optimistic update - remove template da lista visualmente
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['evolution-templates'] });
+
+      const previousTemplates = queryClient.getQueryData<EvolutionTemplate[]>(['evolution-templates']);
+
+      queryClient.setQueryData<EvolutionTemplate[]>(['evolution-templates'], (old) =>
+        old?.filter((t) => t.id !== id) || []
+      );
+
+      return { previousTemplates };
     },
-    onError: () => {
+    onError: (err, id, context) => {
+      // Rollback para os dados anteriores
+      queryClient.setQueryData(['evolution-templates'], context?.previousTemplates);
       toast.error('Erro ao excluir template de evolução.');
+    },
+    onSuccess: () => {
+      toast.success('Template de evolução excluído com sucesso.');
     },
   });
 }

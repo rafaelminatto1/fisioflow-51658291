@@ -4,7 +4,16 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2 } from 'lucide-react';
+import {
+    Plus,
+    Trash2,
+    Eye,
+    ClipboardCheck,
+    Dumbbell,
+    CircleDot,
+    CheckCircle2
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface SpecialTest {
     name: string;
@@ -53,7 +62,10 @@ export const PhysicalExamForm = ({ data, onChange, readOnly = false }: PhysicalE
         <div className="space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-lg">Inspeção e Palpação</CardTitle>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                        <Eye className="w-5 h-5 text-primary" />
+                        Inspeção e Palpação
+                    </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -94,7 +106,10 @@ export const PhysicalExamForm = ({ data, onChange, readOnly = false }: PhysicalE
 
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="text-lg">Testes Especiais</CardTitle>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                        <ClipboardCheck className="w-5 h-5 text-primary" />
+                        Testes Especiais
+                    </CardTitle>
                     {!readOnly && (
                         <Button onClick={addSpecialTest} variant="outline" size="sm">
                             <Plus className="w-4 h-4 mr-2" /> Adicionar Teste
@@ -113,16 +128,38 @@ export const PhysicalExamForm = ({ data, onChange, readOnly = false }: PhysicalE
                                         readOnly={readOnly}
                                     />
                                 </div>
-                                <div className="w-full md:w-32">
-                                    <select
-                                        className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                        value={test.result}
-                                        onChange={(e) => updateSpecialTest(i, 'result', e.target.value)}
-                                        disabled={readOnly}
-                                    >
-                                        <option value="positive">Positivo (+)</option>
-                                        <option value="negative">Negativo (-)</option>
-                                    </select>
+                                <div className="w-full md:w-36 flex items-center justify-center">
+                                    {readOnly ? (
+                                        <Badge
+                                            variant={test.result === 'positive' ? 'destructive' : 'default'}
+                                            className={test.result === 'negative' ? 'bg-green-500 hover:bg-green-600' : ''}
+                                        >
+                                            {test.result === 'positive' ? (
+                                                <><CircleDot className="w-3 h-3 mr-1" /> Positivo</>
+                                            ) : (
+                                                <><CheckCircle2 className="w-3 h-3 mr-1" /> Negativo</>
+                                            )}
+                                        </Badge>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => updateSpecialTest(i, 'result', test.result === 'positive' ? 'negative' : 'positive')}
+                                            className="focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-md"
+                                            aria-label={`Alternar resultado para ${test.result === 'positive' ? 'negativo' : 'positivo'}`}
+                                        >
+                                            <Badge
+                                                variant={test.result === 'positive' ? 'destructive' : 'default'}
+                                                className={`cursor-pointer transition-all hover:opacity-80 py-1.5 px-3 ${test.result === 'negative' ? 'bg-green-500 hover:bg-green-600 font-bold' : 'font-bold'
+                                                    }`}
+                                            >
+                                                {test.result === 'positive' ? (
+                                                    <><CircleDot className="w-3 h-3 mr-1" /> Positivo (+)</>
+                                                ) : (
+                                                    <><CheckCircle2 className="w-3 h-3 mr-1" /> Negativo (-)</>
+                                                )}
+                                            </Badge>
+                                        </button>
+                                    )}
                                 </div>
                                 <div className="flex-1 w-full">
                                     <Input
@@ -148,7 +185,10 @@ export const PhysicalExamForm = ({ data, onChange, readOnly = false }: PhysicalE
 
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-lg">Amplitude de Movimento (ADM) e Força</CardTitle>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                        <Dumbbell className="w-5 h-5 text-primary" />
+                        Amplitude de Movimento (ADM) e Força
+                    </CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

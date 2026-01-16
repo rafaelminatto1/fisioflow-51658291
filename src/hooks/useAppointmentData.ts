@@ -15,21 +15,9 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
                 .eq('id', appointmentId)
                 .maybeSingle();
 
-            // Se encontrou o agendamento, buscar o paciente separadamente
+            // Se encontrou o agendamento, verificar se há patient_id
             if (result.data && !result.error) {
-                const patientId = result.data.patient_id;
-                if (patientId) {
-                    const patientResult = await supabase
-                        .from('patients')
-                        .select('*')
-                        .eq('id', patientId)
-                        .maybeSingle();
-                    
-                    // Adicionar dados do paciente ao agendamento
-                    if (patientResult.data) {
-                        result.data.patients = patientResult.data;
-                    }
-                }
+                // Não precisamos buscar o paciente aqui, pois já temos uma query dedicada para isso abaixo
             }
 
             // Retornar null em vez de undefined para evitar erro do React Query
@@ -54,7 +42,7 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
                 .select('*')
                 .eq('id', patientId)
                 .maybeSingle();
-            
+
             // Retornar null em vez de undefined para evitar erro do React Query
             return result.data ?? null;
         },
@@ -68,7 +56,9 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
         appointment,
         patient,
         patientId,
-        isLoading: appointmentLoading || patientLoading,
+        // isLoading deve ser true se o appointment ainda está carregando
+        // OU se temos um appointment (e patientId) e o patient está carregando
+        isLoading: appointmentLoading || (!!patientId && patientLoading),
         error: appointmentError || patientError,
         appointmentLoading,
         patientLoading,
