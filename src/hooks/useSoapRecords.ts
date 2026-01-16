@@ -474,10 +474,6 @@ export const useUploadSessionAttachment = () => {
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: soapKeys.attachments(variables.soapRecordId, variables.patientId) });
-      toast({
-        title: 'Arquivo anexado',
-        description: 'O arquivo foi anexado com sucesso.'
-      });
     },
     onError: (error: unknown) => {
       toast({
