@@ -251,13 +251,13 @@ ${session.plan || 'Não preenchido'}
 
 EXERCÍCIOS (${sessionExercises.length}):
 ${sessionExercises.length > 0 ? sessionExercises.map((ex, i) =>
-  `${i + 1}. ${ex.name}${ex.sets ? ` - ${ex.sets} séries` : ''}${ex.repetitions ? ` x ${ex.repetitions} reps` : ''}${ex.load ? ` - ${ex.load}` : ''}`
-).join('\n') : 'Nenhum exercício registrado'}
+      `${i + 1}. ${ex.name}${ex.sets ? ` - ${ex.sets} séries` : ''}${ex.repetitions ? ` x ${ex.repetitions} reps` : ''}${ex.load ? ` - ${ex.load}` : ''}`
+    ).join('\n') : 'Nenhum exercício registrado'}
 
 MEDIDAS (${sessionMeasurements.length}):
 ${sessionMeasurements.length > 0 ? sessionMeasurements.map(m =>
-  `- ${m.measurement_name}: ${m.value}${m.unit || ''}`
-).join('\n') : 'Nenhuma medida registrada'}
+      `- ${m.measurement_name}: ${m.value}${m.unit || ''}`
+    ).join('\n') : 'Nenhuma medida registrada'}
     `.trim();
 
     // Criar blob e download
@@ -383,8 +383,8 @@ ${sessionMeasurements.length > 0 ? sessionMeasurements.map(m =>
                             className={cn(
                               "text-lg px-3 py-1 font-bold",
                               session.pain_level >= 7 ? 'bg-red-100 text-red-700 border-red-300 dark:bg-red-900/30 dark:text-red-300' :
-                              session.pain_level >= 4 ? 'bg-yellow-100 text-yellow-700 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-300' :
-                              'bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-300'
+                                session.pain_level >= 4 ? 'bg-yellow-100 text-yellow-700 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                                  'bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-300'
                             )}
                           >
                             {session.pain_level}/10
@@ -951,7 +951,6 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
 
             {showFilters && (
               <div className="flex items-center gap-2 flex-wrap">
-                {/* Toggle compact view */}
                 <Button
                   variant={compactView ? "default" : "outline"}
                   size="sm"
@@ -961,7 +960,6 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
                   {compactView ? 'Detalhado' : 'Compacto'}
                 </Button>
 
-                {/* Filtro por tipo */}
                 <Select value={filterType} onValueChange={(v) => setFilterType(v as TimelineEventType | 'all')}>
                   <SelectTrigger className="w-[140px] h-8">
                     <Filter className="h-3.5 w-3.5 mr-2" />
@@ -977,7 +975,6 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
                   </SelectContent>
                 </Select>
 
-                {/* Busca */}
                 <div className="relative">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <Input
@@ -988,7 +985,6 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
                   />
                 </div>
 
-                {/* Toggle view mode */}
                 <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'timeline' | 'list')}>
                   <TabsList className="h-8">
                     <TabsTrigger value="timeline" className="text-xs h-7">
@@ -1003,7 +999,6 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
             )}
           </div>
 
-          {/* Stats badges */}
           <div className="flex flex-wrap gap-2 mt-4">
             <Badge variant="outline" className="gap-1.5 px-3 py-1">
               <FileText className="h-3 w-3" />
@@ -1025,8 +1020,8 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
               <ImageIcon className="h-3 w-3" />
               <span className="font-medium">{stats.attachments} anexos</span>
             </Badge>
+          </div>
 
-          {/* Gamification Panel */}
           {showGamification && !isLoadingGamification && unlockedAchievements.length > 0 && (
             <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-3">
@@ -1142,184 +1137,184 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
                                   {!compactView && isExpanded && event.data && (
                                     <div className="mt-3 pt-3 border-t border-border/50 space-y-2">
                                       {event.type === 'session' && (
-                                                                        <>
-                                                                          <div className="grid grid-cols-2 gap-2 text-xs">
-                                                                            <div>
-                                                                              <span className="text-muted-foreground">Sessão:</span>{' '}
-                                                                              <span className="font-medium">#{(event.data as SoapRecord).session_number}</span>
-                                                                            </div>
-                                                                            <div>
-                                                                              <span className="text-muted-foreground">Status:</span>{' '}
-                                                                              <Badge variant="outline" className="text-[10px]">
-                                                                                {(event.data as SoapRecord).status === 'finalized' ? 'Finalizada' : 'Rascunho'}
-                                                                              </Badge>
-                                                                            </div>
-                                                                          </div>
-                                                                          {(event.data as SoapRecord).pain_level !== undefined && (
-                                                                            <div className="text-xs">
-                                                                              <span className="text-muted-foreground">EVA:</span>{' '}
-                                                                              <span className="font-medium">{(event.data as SoapRecord).pain_level}/10</span>
-                                                                            </div>
-                                                                          )}
-
-                                                                          {/* Resumo SOAP */}
-                                                                          {((event.data as SoapRecord).subjective ||
-                                                                            (event.data as SoapRecord).objective ||
-                                                                            (event.data as SoapRecord).assessment ||
-                                                                            (event.data as SoapRecord).plan) && (
-                                                                            <div className="mt-2 space-y-1.5">
-                                                                              {(event.data as SoapRecord).subjective && (
-                                                                                <div className="text-xs bg-blue-50 dark:bg-blue-950/20 p-2 rounded-lg">
-                                                                                  <span className="font-semibold text-blue-600">S:</span>{' '}
-                                                                                  <span className="line-clamp-2">{(event.data as SoapRecord).subjective}</span>
-                                                                                </div>
-                                                                              )}
-                                                                              {(event.data as SoapRecord).objective && (
-                                                                                <div className="text-xs bg-green-50 dark:bg-green-950/20 p-2 rounded-lg">
-                                                                                  <span className="font-semibold text-green-600">O:</span>{' '}
-                                                                                  <span className="line-clamp-2">{(event.data as SoapRecord).objective}</span>
-                                                                                </div>
-                                                                              )}
-                                                                              {(event.data as SoapRecord).assessment && (
-                                                                                <div className="text-xs bg-purple-50 dark:bg-purple-950/20 p-2 rounded-lg">
-                                                                                  <span className="font-semibold text-purple-600">A:</span>{' '}
-                                                                                  <span className="line-clamp-2">{(event.data as SoapRecord).assessment}</span>
-                                                                                </div>
-                                                                              )}
-                                                                              {(event.data as SoapRecord).plan && (
-                                                                                <div className="text-xs bg-amber-50 dark:bg-amber-950/20 p-2 rounded-lg">
-                                                                                  <span className="font-semibold text-amber-600">P:</span>{' '}
-                                                                                  <span className="line-clamp-2">{(event.data as SoapRecord).plan}</span>
-                                                                                </div>
-                                                                              )}
-                                                                            </div>
-                                                                          )}
-                                                                        </>
-                                                                      )}
-
-                                                                      {event.type === 'surgery' && (
-                                                                        <div className="text-xs space-y-1">
-                                                                          <div><span className="text-muted-foreground">Data:</span> {format(new Date(event.data.surgery_date), 'dd/MM/yyyy', { locale: ptBR })}</div>
-                                                                          {event.data.affected_side && (
-                                                                            <div><span className="text-muted-foreground">Lado:</span> {event.data.affected_side}</div>
-                                                                          )}
-                                                                          {event.data.notes && (
-                                                                            <div><span className="text-muted-foreground">Obs:</span> {event.data.notes}</div>
-                                                                          )}
-                                                                        </div>
-                                                                      )}
-                                                                    </div>
-                                                                  )}
-                                                                </div>
-
-                                                                <div className="flex items-center gap-1 shrink-0">
-                                                                  {isSession && onCopyEvolution && (
-                                                                    <Button
-                                                                      variant="ghost"
-                                                                      size="icon"
-                                                                      className="h-8 w-8"
-                                                                      onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleCopySession(event.data as SoapRecord);
-                                                                      }}
-                                                                      title="Copiar evolução"
-                                                                    >
-                                                                      <Copy className="h-3.5 w-3.5" />
-                                                                    </Button>
-                                                                  )}
-                                                                  {isSession && (
-                                                                    <Button
-                                                                      variant="ghost"
-                                                                      size="icon"
-                                                                      className="h-8 w-8"
-                                                                      onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleViewSessionDetails(event.data as SoapRecord);
-                                                                      }}
-                                                                      title="Ver detalhes completos"
-                                                                    >
-                                                                      <Maximize2 className="h-3.5 w-3.5" />
-                                                                    </Button>
-                                                                  )}
-                                                                  {!compactView && (
-                                                                    <Button
-                                                                      variant="ghost"
-                                                                      size="icon"
-                                                                      className="h-8 w-8"
-                                                                      onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        toggleExpand(event.id);
-                                                                      }}
-                                                                    >
-                                                                      {isExpanded ? (
-                                                                        <ChevronUp className="h-4 w-4" />
-                                                                      ) : (
-                                                                        <ChevronDown className="h-4 w-4" />
-                                                                      )}
-                                                                    </Button>
-                                                                  )}
-                                                                </div>
-                                                              </div>
-                                                            </div>
-                                                          );
-                                                        })}
-                                                      </div>
-                                                    </div>
-                                                  ))}
-                                                </div>
-                                              </div>
-                                            </ScrollArea>
-                                          ) : (
-                                            <ScrollArea className={compactView ? 'h-[500px]' : 'h-[600px]'}>
-                                              <div className="divide-y">
-                                                {filteredEvents.map((event) => {
-                                                  const config = EVENT_TYPE_CONFIG[event.type];
-                                                  const isSession = event.type === 'session';
-                                                  return (
-                                                    <div
-                                                      key={event.id}
-                                                      className={cn(
-                                                        "flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors cursor-pointer",
-                                                        config.bgColor
-                                                      )}
-                                                      onClick={() => isSession && handleViewSessionDetails(event.data as SoapRecord)}
-                                                    >
-                                                      <div className={cn("shrink-0", config.color)}>
-                                                        {config.icon}
-                                                      </div>
-                                                      <div className="flex-1 min-w-0">
-                                                        <p className="font-medium text-sm truncate">
-                                                          {event.title}
-                                                        </p>
-                                                        <p className="text-xs text-muted-foreground truncate">
-                                                          {event.description}
-                                                        </p>
-                                                      </div>
-                                                      <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
-                                                        {format(event.date, 'dd/MM/yyyy')}
-                                                      </span>
-                                                      {isSession && (
-                                                        <Button
-                                                          variant="ghost"
-                                                          size="icon"
-                                                          className="h-8 w-8 shrink-0"
-                                                          onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleViewSessionDetails(event.data as SoapRecord);
-                                                          }}
-                                                          title="Ver detalhes"
-                                                        >
-                                                          <Eye className="h-3.5 w-3.5" />
-                                                        </Button>
-                                                      )}
-                                                    </div>
-                                                  );
-                                                })}
-                                              </div>
-                                            </ScrollArea>
+                                        <>
+                                          <div className="grid grid-cols-2 gap-2 text-xs">
+                                            <div>
+                                              <span className="text-muted-foreground">Sessão:</span>{' '}
+                                              <span className="font-medium">#{(event.data as SoapRecord).session_number}</span>
+                                            </div>
+                                            <div>
+                                              <span className="text-muted-foreground">Status:</span>{' '}
+                                              <Badge variant="outline" className="text-[10px]">
+                                                {(event.data as SoapRecord).status === 'finalized' ? 'Finalizada' : 'Rascunho'}
+                                              </Badge>
+                                            </div>
+                                          </div>
+                                          {(event.data as SoapRecord).pain_level !== undefined && (
+                                            <div className="text-xs">
+                                              <span className="text-muted-foreground">EVA:</span>{' '}
+                                              <span className="font-medium">{(event.data as SoapRecord).pain_level}/10</span>
+                                            </div>
                                           )}
-                                        </CardContent>
-                                      </Card>
+
+                                          {/* Resumo SOAP */}
+                                          {((event.data as SoapRecord).subjective ||
+                                            (event.data as SoapRecord).objective ||
+                                            (event.data as SoapRecord).assessment ||
+                                            (event.data as SoapRecord).plan) && (
+                                              <div className="mt-2 space-y-1.5">
+                                                {(event.data as SoapRecord).subjective && (
+                                                  <div className="text-xs bg-blue-50 dark:bg-blue-950/20 p-2 rounded-lg">
+                                                    <span className="font-semibold text-blue-600">S:</span>{' '}
+                                                    <span className="line-clamp-2">{(event.data as SoapRecord).subjective}</span>
+                                                  </div>
+                                                )}
+                                                {(event.data as SoapRecord).objective && (
+                                                  <div className="text-xs bg-green-50 dark:bg-green-950/20 p-2 rounded-lg">
+                                                    <span className="font-semibold text-green-600">O:</span>{' '}
+                                                    <span className="line-clamp-2">{(event.data as SoapRecord).objective}</span>
+                                                  </div>
+                                                )}
+                                                {(event.data as SoapRecord).assessment && (
+                                                  <div className="text-xs bg-purple-50 dark:bg-purple-950/20 p-2 rounded-lg">
+                                                    <span className="font-semibold text-purple-600">A:</span>{' '}
+                                                    <span className="line-clamp-2">{(event.data as SoapRecord).assessment}</span>
+                                                  </div>
+                                                )}
+                                                {(event.data as SoapRecord).plan && (
+                                                  <div className="text-xs bg-amber-50 dark:bg-amber-950/20 p-2 rounded-lg">
+                                                    <span className="font-semibold text-amber-600">P:</span>{' '}
+                                                    <span className="line-clamp-2">{(event.data as SoapRecord).plan}</span>
+                                                  </div>
+                                                )}
+                                              </div>
+                                            )}
+                                        </>
+                                      )}
+
+                                      {event.type === 'surgery' && (
+                                        <div className="text-xs space-y-1">
+                                          <div><span className="text-muted-foreground">Data:</span> {format(new Date(event.data.surgery_date), 'dd/MM/yyyy', { locale: ptBR })}</div>
+                                          {event.data.affected_side && (
+                                            <div><span className="text-muted-foreground">Lado:</span> {event.data.affected_side}</div>
+                                          )}
+                                          {event.data.notes && (
+                                            <div><span className="text-muted-foreground">Obs:</span> {event.data.notes}</div>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center gap-1 shrink-0">
+                                  {isSession && onCopyEvolution && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleCopySession(event.data as SoapRecord);
+                                      }}
+                                      title="Copiar evolução"
+                                    >
+                                      <Copy className="h-3.5 w-3.5" />
+                                    </Button>
+                                  )}
+                                  {isSession && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleViewSessionDetails(event.data as SoapRecord);
+                                      }}
+                                      title="Ver detalhes completos"
+                                    >
+                                      <Maximize2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                  )}
+                                  {!compactView && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleExpand(event.id);
+                                      }}
+                                    >
+                                      {isExpanded ? (
+                                        <ChevronUp className="h-4 w-4" />
+                                      ) : (
+                                        <ChevronDown className="h-4 w-4" />
+                                      )}
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </ScrollArea>
+          ) : (
+            <ScrollArea className={compactView ? 'h-[500px]' : 'h-[600px]'}>
+              <div className="divide-y">
+                {filteredEvents.map((event) => {
+                  const config = EVENT_TYPE_CONFIG[event.type];
+                  const isSession = event.type === 'session';
+                  return (
+                    <div
+                      key={event.id}
+                      className={cn(
+                        "flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors cursor-pointer",
+                        config.bgColor
+                      )}
+                      onClick={() => isSession && handleViewSessionDetails(event.data as SoapRecord)}
+                    >
+                      <div className={cn("shrink-0", config.color)}>
+                        {config.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">
+                          {event.title}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {event.description}
+                        </p>
+                      </div>
+                      <span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
+                        {format(event.date, 'dd/MM/yyyy')}
+                      </span>
+                      {isSession && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 shrink-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewSessionDetails(event.data as SoapRecord);
+                          }}
+                          title="Ver detalhes"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Modal de Detalhes da Sessão */}
       {selectedSession && (
