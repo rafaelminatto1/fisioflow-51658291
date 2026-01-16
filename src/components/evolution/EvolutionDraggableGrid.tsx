@@ -500,7 +500,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 4, h: showPainDetails ? 16 : 5, x: 0, y: 0, minW: 3, minH: 4 } // 30% da largura (4 de 12)
+            defaultLayout: { w: 4, h: showPainDetails ? 16 : 14, x: 0, y: 0, minW: 3, minH: 8 } // Standardized height to match exercises
         },
         // Exercícios da Sessão (70% da largura)
         {
@@ -525,7 +525,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 8, h: 14, x: 4, y: 0, minW: 6, minH: 8 } // Increased height for premium cards
+            defaultLayout: { w: 8, h: showPainDetails ? 16 : 14, x: 4, y: 0, minW: 6, minH: 8 } // Standardized height to match pain scale
         },
 
         // ===== LINHA 2: Formulário SOAP (4 campos em 2x2) - Using memoized components =====
