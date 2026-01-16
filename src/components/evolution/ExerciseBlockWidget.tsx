@@ -264,6 +264,8 @@ const ExerciseCard = memo<ExerciseCardProps>(({ exercise, index, disabled, onUpd
                     <img
                         src={exercise.image_url}
                         alt={exercise.name}
+                        loading="lazy"
+                        decoding="async"
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                 ) : (
@@ -522,6 +524,14 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
         onChange([...exercises, newExercise]);
     }, [exercises, onChange]);
 
+    // Handler para abrir o modal da biblioteca
+    const openLibraryModal = useCallback(() => setIsLibraryModalOpen(true), []);
+
+    // Handler para remover exercício (para uso com onClick inline)
+    const handleRemove = useCallback((id: string) => {
+        handleRemoveExercise(id);
+    }, [handleRemoveExercise]);
+
     // Estatísticas da sessão
     const sessionStats = useMemo(() => {
         const completedCount = exercises.filter(e => e.completed).length;
@@ -666,7 +676,7 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => setIsLibraryModalOpen(true)}
+                                        onClick={openLibraryModal}
                                         className="h-8 px-2.5 gap-1.5 text-sm font-medium border-dashed border-purple-300 hover:border-purple-400 hover:bg-purple-50 transition-all"
                                         disabled={disabled}
                                         aria-label="Abrir biblioteca de exercícios"

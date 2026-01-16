@@ -11,7 +11,7 @@
  * - Histórico visual dos valores anteriores
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -68,29 +68,29 @@ const PAIN_CHARACTERISTICS = [
   'Cócegas/irritação'
 ];
 
-export const PainScaleInput: React.FC<PainScaleInputProps> = ({
+export const PainScaleInput = React.memo(function PainScaleInput({
   value = { level: 0 },
   onChange,
   readonly = false,
   history = [],
   showHistory = true
-}) => {
+}: PainScaleInputProps) {
   const [inputValue, setInputValue] = useState(value.level.toString());
 
   const currentDescription = PAIN_DESCRIPTIONS[value.level] || PAIN_DESCRIPTIONS[0];
 
   // Atualiza input quando value muda externamente
-  React.useEffect(() => {
+  useEffect(() => {
     setInputValue(value.level.toString());
   }, [value.level]);
 
-  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSliderChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = parseInt(e.target.value);
     setInputValue(newValue.toString());
     onChange?.({ ...value, level: newValue });
-  };
+  }, [value, onChange]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setInputValue(val);
 
@@ -98,15 +98,15 @@ export const PainScaleInput: React.FC<PainScaleInputProps> = ({
     if (!isNaN(numVal) && numVal >= 0 && numVal <= 10) {
       onChange?.({ ...value, level: numVal });
     }
-  };
+  }, [value, onChange]);
 
-  const handleQuickSelect = (level: number) => {
+  const handleQuickSelect = useCallback((level: number) => {
     setInputValue(level.toString());
     onChange?.({ ...value, level });
-  };
+  }, [value, onChange]);
 
   // Cálculo da posição do indicador
-  const sliderPosition = `${(value.level / 10) * 100}%`;
+  const sliderPosition = useMemo(() => `${(value.level / 10) * 100}%`, [value.level]);
 
   // Média de dor do histórico
   const avgPain = useMemo(() => {
@@ -333,6 +333,6 @@ export const PainScaleInput: React.FC<PainScaleInputProps> = ({
       </div>
     </div>
   );
-};
+});
 
 export default PainScaleInput;

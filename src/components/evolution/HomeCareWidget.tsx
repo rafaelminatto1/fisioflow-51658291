@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useExercises, type Exercise } from '@/hooks/useExercises';
 import { usePrescribedExercises, PrescribedExercise } from '@/hooks/usePrescribedExercises';
 import { Button } from '@/components/ui/button';
@@ -33,8 +33,11 @@ export const HomeCareWidget: React.FC<HomeCareWidgetProps> = ({
     const [selectedExerciseId, setSelectedExerciseId] = useState('');
     const [isLibraryModalOpen, setIsLibraryModalOpen] = useState(false);
 
-    const filteredExercises = availableExercises.filter(ex =>
-        ex.name.toLowerCase().includes(searchTerm.toLowerCase())
+    const filteredExercises = useMemo(() =>
+        availableExercises.filter(ex =>
+            ex.name.toLowerCase().includes(searchTerm.toLowerCase())
+        ),
+        [availableExercises, searchTerm]
     );
 
     // Get IDs of exercises already prescribed (for showing as added in modal)
@@ -42,7 +45,7 @@ export const HomeCareWidget: React.FC<HomeCareWidgetProps> = ({
         return prescriptions?.map(p => p.exercise_id) || [];
     }, [prescriptions]);
 
-    const handleAddExercise = (exerciseId: string) => {
+    const handleAddExercise = useCallback((exerciseId: string) => {
         const exercise = availableExercises.find(e => e.id === exerciseId);
         if (!exercise) return;
 
@@ -54,9 +57,9 @@ export const HomeCareWidget: React.FC<HomeCareWidgetProps> = ({
             notes: ''
         });
         setSelectedExerciseId('');
-    };
+    }, [availableExercises, addPrescription]);
 
-    const handleAddExerciseFromLibrary = (exercise: Exercise) => {
+    const handleAddExerciseFromLibrary = useCallback((exercise: Exercise) => {
         // Check if already prescribed
         if (prescribedExerciseIds.includes(exercise.id)) {
             toast({
@@ -79,9 +82,9 @@ export const HomeCareWidget: React.FC<HomeCareWidgetProps> = ({
             title: 'Exercício adicionado',
             description: `${exercise.name} foi adicionado à prescrição.`
         });
-    };
+    }, [prescribedExerciseIds, addPrescription]);
 
-    const handleWhatsAppShare = () => {
+    const handleWhatsAppShare = useCallback(() => {
         if (!patientPhone) {
             toast({
                 title: 'Telefone não cadastrado',
@@ -116,95 +119,92 @@ export const HomeCareWidget: React.FC<HomeCareWidgetProps> = ({
             title: 'WhatsApp aberto',
             description: 'Prescrição enviada via WhatsApp.',
         });
-    };
+    }, [patientPhone, prescriptions]);
 
     return (
         <>
-            <div className={cn("flex flex-col h-full", className)}>
-                <div className="p-3 border-b flex items-center justify-between gap-2 shrink-0 bg-muted/20">
-                    <div className="flex-1 relative">
-                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                        <Select value={selectedExerciseId} onValueChange={handleAddExercise} disabled={disabled || addPrescription.isPending}>
-                            <SelectTrigger className="pl-9 h-8 text-xs">
-                                <SelectValue placeholder="Prescrever exercício p/ casa..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <div className="p-2 border-b">
-                                    <Input
-                                        placeholder="Buscar..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="h-7 text-xs"
-                                        autoFocus
-                                    />
-                                </div>
-                                <ScrollArea className="h-[200px]">
-                                    {filteredExercises.length === 0 ? (
-                                        <div className="p-4 text-center text-xs text-muted-foreground">Nenhum encontrado</div>
-                                    ) : (
-                                        filteredExercises.map((exercise) => {
-                                            const isAdded = prescribedExerciseIds.includes(exercise.id);
-                                            return (
-                                                <SelectItem
-                                                    key={exercise.id}
-                                                    value={exercise.id}
-                                                    className={cn(
-                                                        "text-xs",
-                                                        isAdded && "opacity-50"
-                                                    )}
-                                                    disabled={isAdded}
-                                                >
-                                                    <div className="flex items-center gap-2">
-                                                        {isAdded && <CheckCircle2 className="h-3 w-3 text-green-600" />}
-                                                        <span>{exercise.name}</span>
-                                                        {isAdded && <span className="text-[10px] text-green-600">(Prescrito)</span>}
-                                                    </div>
-                                                </SelectItem>
-                                            );
-                                        })
-                                    )}
-                                </ScrollArea>
-                            </SelectContent>
-                        </Select>
-                    </div>
+            <TooltipProvider>
+                <div className={cn("flex flex-col h-full", className)}>
+                    <div className="p-3 border-b flex items-center justify-between gap-2 shrink-0 bg-muted/20">
+                        <div className="flex-1 relative">
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                            <Select value={selectedExerciseId} onValueChange={handleAddExercise} disabled={disabled || addPrescription.isPending}>
+                                <SelectTrigger className="pl-9 h-8 text-xs">
+                                    <SelectValue placeholder="Prescrever exercício p/ casa..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <div className="p-2 border-b">
+                                        <Input
+                                            placeholder="Buscar..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            className="h-7 text-xs"
+                                            autoFocus
+                                        />
+                                    </div>
+                                    <ScrollArea className="h-[200px]">
+                                        {filteredExercises.length === 0 ? (
+                                            <div className="p-4 text-center text-xs text-muted-foreground">Nenhum encontrado</div>
+                                        ) : (
+                                            filteredExercises.map((exercise) => {
+                                                const isAdded = prescribedExerciseIds.includes(exercise.id);
+                                                return (
+                                                    <SelectItem
+                                                        key={exercise.id}
+                                                        value={exercise.id}
+                                                        className={cn(
+                                                            "text-xs",
+                                                            isAdded && "opacity-50"
+                                                        )}
+                                                        disabled={isAdded}
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                            {isAdded && <CheckCircle2 className="h-3 w-3 text-green-600" />}
+                                                            <span>{exercise.name}</span>
+                                                            {isAdded && <span className="text-[10px] text-green-600">(Prescrito)</span>}
+                                                        </div>
+                                                    </SelectItem>
+                                                );
+                                            })
+                                        )}
+                                    </ScrollArea>
+                                </SelectContent>
+                            </Select>
+                        </div>
 
                     {/* Library Button */}
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setIsLibraryModalOpen(true)}
-                                    className="h-8 px-2 gap-1 text-xs border-dashed border-green-300 hover:border-green-400 hover:bg-green-50 transition-all"
-                                    disabled={disabled}
-                                >
-                                    <Library className="h-3.5 w-3.5 text-green-600" />
-                                    <span className="hidden sm:inline">Biblioteca</span>
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Abrir biblioteca de exercícios</TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setIsLibraryModalOpen(true)}
+                                className="h-8 px-2 gap-1 text-xs border-dashed border-green-300 hover:border-green-400 hover:bg-green-50 transition-all"
+                                disabled={disabled}
+                            >
+                                <Library className="h-3.5 w-3.5 text-green-600" />
+                                <span className="hidden sm:inline">Biblioteca</span>
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Abrir biblioteca de exercícios</TooltipContent>
+                    </Tooltip>
 
                     {/* WhatsApp Share Button */}
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleWhatsAppShare}
-                                    className="h-8 px-2 gap-1.5 text-xs text-green-600 border-green-200 bg-green-50/50 hover:bg-green-100/50"
-                                    disabled={disabled || !prescriptions?.length}
-                                >
-                                    <Send className="h-3.5 w-3.5" />
-                                    <span className="hidden sm:inline">Compartilhar</span>
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Enviar prescrição via WhatsApp</TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleWhatsAppShare}
+                                className="h-8 px-2 gap-1.5 text-xs text-green-600 border-green-200 bg-green-50/50 hover:bg-green-100/50"
+                                disabled={disabled || !prescriptions?.length}
+                            >
+                                <Send className="h-3.5 w-3.5" />
+                                <span className="hidden sm:inline">Compartilhar</span>
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Enviar prescrição via WhatsApp</TooltipContent>
+                    </Tooltip>
                 </div>
 
                 <ScrollArea className="flex-1">
@@ -323,9 +323,10 @@ export const HomeCareWidget: React.FC<HomeCareWidgetProps> = ({
                         )}
                     </div>
                 </ScrollArea>
-            </div>
+                </div>
+            </TooltipProvider>
 
-            {/* Exercise Library Modal */}
+            {/* Exercise Library Modal - Outside TooltipProvider */}
             <ExerciseLibraryModal
                 open={isLibraryModalOpen}
                 onOpenChange={setIsLibraryModalOpen}
