@@ -43,7 +43,7 @@ interface CalendarWeekViewProps {
 const START_HOUR = 7;
 const END_HOUR = 21;
 const SLOT_DURATION_MINUTES = 30;
-const SLOT_HEIGHT = 80; // px per slot
+const SLOT_HEIGHT = 60; // px per slot (reduzido de 80px para 60px)
 
 // =====================================================================
 // HELPER FUNCTIONS
