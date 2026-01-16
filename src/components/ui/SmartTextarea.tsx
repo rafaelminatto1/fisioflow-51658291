@@ -40,6 +40,11 @@ import {
 interface SmartTextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
     label?: string;
     containerClassName?: string;
+    showToolbar?: boolean;
+    showToolbarOnFocus?: boolean;
+    showStats?: boolean;
+    compact?: boolean;
+    variant?: 'default' | 'ghost';
 }
 
 interface ToolbarButtonProps {
@@ -151,8 +156,20 @@ const createFormattingActions = (): Record<string, FormattingAction[]> => ({
 });
 
 const MemoizedSmartTextarea = memo(React.forwardRef<HTMLTextAreaElement, SmartTextareaProps>(
-    ({ className, value, onChange, containerClassName, ...props }, ref) => {
+    ({
+        className,
+        value,
+        onChange,
+        containerClassName,
+        showToolbar = true,
+        showToolbarOnFocus = false,
+        showStats = true,
+        compact = false,
+        variant = 'default',
+        ...props
+    }, ref) => {
         const [isFullScreen, setIsFullScreen] = React.useState(false);
+        const [isFocused, setIsFocused] = React.useState(false);
         const internalRef = useRef<HTMLTextAreaElement | null>(null);
 
         // Combine refs with proper typing
@@ -319,104 +336,125 @@ const MemoizedSmartTextarea = memo(React.forwardRef<HTMLTextAreaElement, SmartTe
         return (
             <div
                 className={cn(
-                    "relative group border rounded-lg shadow-sm bg-background/50 backdrop-blur-sm transition-all focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50",
-                    isFullScreen && "fixed inset-0 z-50 rounded-none bg-background flex flex-col h-screen",
+                    "relative group transition-all duration-300",
+                    variant === 'default' && "border rounded-lg shadow-sm bg-background/50 backdrop-blur-sm",
+                    variant === 'default' && (isFocused ? "ring-2 ring-primary/20 border-primary/50 bg-background" : "hover:border-primary/30"),
+                    isFullScreen && "fixed inset-0 z-[100] rounded-none bg-background flex flex-col h-screen",
                     !isFullScreen && "relative flex flex-col",
                     containerClassName
                 )}
                 role="region"
                 aria-label="Editor de texto rico"
+                onMouseEnter={() => !showToolbarOnFocus && setIsFocused(true)}
+                onMouseLeave={() => !showToolbarOnFocus && !internalRef.current?.matches(':focus') && setIsFocused(false)}
             >
                 {/* Toolbar */}
-                <div
-                    className="flex items-center gap-0.5 p-1.5 border-b bg-muted/30 rounded-t-lg flex-wrap max-h-[60px] overflow-y-auto overflow-x-hidden"
-                    role="toolbar"
-                    aria-label="Barra de ferramentas de formatação"
-                >
-                    {/* Formatação Básica */}
-                    {renderToolbarSection(formattingActions.basic)}
-                    <ToolbarSeparator />
+                {showToolbar && (
+                    <div
+                        className={cn(
+                            "flex items-center gap-0.5 p-1.5 border-b bg-muted/30 flex-wrap shrink-0 transition-all duration-300 ease-in-out origin-top",
+                            variant === 'default' && "rounded-t-lg",
+                            showToolbarOnFocus && !isFocused && !isFullScreen ? "h-0 p-0 border-b-0 opacity-0 scale-y-95 pointer-events-none" : "h-auto opacity-100 scale-y-100",
+                            compact && "p-1 gap-0"
+                        )}
+                        role="toolbar"
+                        aria-label="Barra de ferramentas de formatação"
+                    >
+                        {/* Formatação Básica */}
+                        {renderToolbarSection(formattingActions.basic)}
+                        <ToolbarSeparator />
 
-                    {/* Cabeçalhos */}
-                    {renderToolbarSection(formattingActions.headings)}
-                    <ToolbarSeparator />
+                        {/* Cabeçalhos */}
+                        {renderToolbarSection(formattingActions.headings)}
+                        <ToolbarSeparator />
 
-                    {/* Listas */}
-                    {renderToolbarSection(formattingActions.lists)}
-                    <ToolbarSeparator />
+                        {/* Listas */}
+                        {renderToolbarSection(formattingActions.lists)}
+                        <ToolbarSeparator />
 
-                    {/* Código */}
-                    {renderToolbarSection(formattingActions.code)}
-                    <ToolbarSeparator />
+                        {/* Código */}
+                        {renderToolbarSection(formattingActions.code)}
+                        <ToolbarSeparator />
 
-                    {/* Alinhamento */}
-                    {renderToolbarSection(formattingActions.alignment)}
-                    <ToolbarSeparator />
+                        {/* Alinhamento */}
+                        {renderToolbarSection(formattingActions.alignment)}
+                        <ToolbarSeparator />
 
-                    {/* Ênfase */}
-                    {renderToolbarSection(formattingActions.emphasis)}
-                    <ToolbarSeparator />
+                        {/* Ênfase */}
+                        {renderToolbarSection(formattingActions.emphasis)}
+                        <ToolbarSeparator />
 
-                    {/* Estrutura */}
-                    {renderToolbarSection(formattingActions.structure)}
-                    <ToolbarSeparator />
+                        {/* Estrutura */}
+                        {renderToolbarSection(formattingActions.structure)}
+                        <ToolbarSeparator />
 
-                    {/* Botões de Ação */}
-                    <div className="ml-auto flex items-center gap-1 pl-2 border-l border-border/50">
-                        <ToolbarButton
-                            onClick={() => {
-                                const textarea = internalRef.current;
-                                if (textarea) {
-                                    textarea.value = '';
-                                    onChange?.({ target: { value: '' } } as React.ChangeEvent<HTMLTextAreaElement>);
-                                    textarea.focus();
-                                }
-                            }}
-                            title="Limpar"
-                            icon={Eraser}
-                            ariaLabel="Limpar todo o texto"
-                        />
-                        <ToolbarButton
-                            onClick={() => setIsFullScreen(!isFullScreen)}
-                            title={isFullScreen ? "Sair da Tela Cheia" : "Tela Cheia"}
-                            icon={isFullScreen ? Minimize2 : Maximize2}
-                            shortcut={isFullScreen ? 'Esc' : undefined}
-                            ariaLabel={isFullScreen ? 'Sair do modo tela cheia' : 'Entrar em modo tela cheia'}
-                        />
+                        {/* Botões de Ação */}
+                        <div className="ml-auto flex items-center gap-1 pl-2 border-l border-border/50">
+                            <ToolbarButton
+                                onClick={() => {
+                                    const textarea = internalRef.current;
+                                    if (textarea) {
+                                        textarea.value = '';
+                                        onChange?.({ target: { value: '' } } as React.ChangeEvent<HTMLTextAreaElement>);
+                                        textarea.focus();
+                                    }
+                                }}
+                                title="Limpar"
+                                icon={Eraser}
+                                ariaLabel="Limpar todo o texto"
+                            />
+                            <ToolbarButton
+                                onClick={() => setIsFullScreen(!isFullScreen)}
+                                title={isFullScreen ? "Sair da Tela Cheia" : "Tela Cheia"}
+                                icon={isFullScreen ? Minimize2 : Maximize2}
+                                shortcut={isFullScreen ? 'Esc' : undefined}
+                                ariaLabel={isFullScreen ? 'Sair do modo tela cheia' : 'Entrar em modo tela cheia'}
+                            />
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {/* Text Area */}
-                <div className={cn("relative", isFullScreen && "flex-1 flex flex-col")}>
+                <div className={cn("relative flex-1 flex flex-col min-h-0 h-full", isFullScreen && "flex-1 flex flex-col")}>
                     <Textarea
                         ref={setRef}
                         value={value}
                         onChange={onChange}
-                        onKeyDown={handleKeyDown}
+                        onFocus={(e) => {
+                            setIsFocused(true);
+                            props.onFocus?.(e);
+                        }}
+                        onBlur={(e) => {
+                            setIsFocused(false);
+                            props.onBlur?.(e);
+                        }}
                         className={cn(
-                            "min-h-[120px] resize-y border-0 focus-visible:ring-0 rounded-t-none bg-transparent p-3 text-sm sm:text-base leading-relaxed placeholder:text-muted-foreground/50 tabular-nums",
-                            isFullScreen ? "flex-1 resize-none h-full text-base p-8 max-w-5xl mx-auto" : "flex-1 resize-none h-full",
+                            "resize-y border-0 focus-visible:ring-0 bg-transparent p-3 text-sm sm:text-base leading-relaxed placeholder:text-muted-foreground/30 tabular-nums transition-all duration-300",
+                            showToolbar && (!showToolbarOnFocus || isFocused || isFullScreen) ? "rounded-t-none" : "rounded-t-lg",
+                            isFullScreen ? "flex-1 resize-none h-full text-base p-8 max-w-5xl mx-auto" : "flex-1 resize-none h-full min-h-0",
                             className
                         )}
-                        placeholder="Comece a digitar... Use Ctrl+B para negrito, Ctrl+I para itálico, etc."
+                        placeholder={props.placeholder || "Comece a digitar... Use Ctrl+B para negrito, Ctrl+I para itálico, etc."}
                         aria-label="Área de edição de texto"
                         {...props}
                     />
 
                     {/* Stats Bar */}
-                    <div className={cn(
-                        "absolute bottom-2 right-2 flex items-center gap-2 pointer-events-none transition-opacity",
-                        !isFullScreen && "opacity-0 group-focus-within:opacity-100",
-                        isFullScreen && "opacity-100 bottom-4 right-4"
-                    )}>
-                        <span
-                            className="text-[10px] sm:text-[11px] text-muted-foreground bg-background/90 px-2 py-1 rounded-md border border-border/50 backdrop-blur-sm shadow-sm font-medium tabular-nums"
-                            aria-live="polite"
-                            aria-atomic="true"
-                        >
-                            {lineCount} lin · {wordCount} pal · {charCount} car
-                        </span>
-                    </div>
+                    {showStats && (
+                        <div className={cn(
+                            "absolute bottom-2 right-2 flex items-center gap-2 pointer-events-none transition-opacity",
+                            !isFullScreen && "opacity-0 group-focus-within:opacity-100",
+                            isFullScreen && "opacity-100 bottom-4 right-4"
+                        )}>
+                            <span
+                                className="text-[10px] sm:text-[11px] text-muted-foreground bg-background/90 px-2 py-1 rounded-md border border-border/50 backdrop-blur-sm shadow-sm font-medium tabular-nums"
+                                aria-live="polite"
+                                aria-atomic="true"
+                            >
+                                {lineCount} lin · {wordCount} pal · {charCount} car
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Escape key handler for fullscreen */}

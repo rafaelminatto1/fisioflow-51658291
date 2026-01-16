@@ -13,10 +13,11 @@ export class SessionEvolutionService {
     return (previousRecords?.length || 0) + 1;
   }
 
+  // Optimized: Select only required columns instead of *
   static async getSessionEvolution(sessionId: string): Promise<SessionEvolution | null> {
     const { data, error } = await supabase
       .from('soap_records')
-      .select('*')
+      .select('id, patient_id, appointment_id, record_date, subjective, objective, assessment, plan, created_by, created_at, updated_at')
       .eq('id', sessionId)
       .single();
 
@@ -25,10 +26,10 @@ export class SessionEvolutionService {
       throw error;
     }
 
-    // Get test results for this session
+    // Get test results for this session - optimized query
     const { data: measurements } = await supabase
       .from('evolution_measurements')
-      .select('*')
+      .select('id, patient_id, soap_record_id, measurement_name, measurement_type, value, unit, notes, created_by, measured_at, created_at')
       .eq('soap_record_id', sessionId);
 
     const testResults = (measurements || []).map(m => ({
@@ -67,6 +68,7 @@ export class SessionEvolutionService {
   }
 
   static async saveSessionEvolution(data: SessionEvolutionFormData): Promise<SessionEvolution> {
+    // Otimizado: Select apenas colunas necessárias
     const { data: soapRecord, error } = await supabase
       .from('soap_records')
       .insert({
@@ -79,7 +81,7 @@ export class SessionEvolutionService {
         plan: data.plan,
         created_by: data.created_by
       })
-      .select()
+      .select('id, patient_id, appointment_id, record_date, subjective, objective, assessment, plan, created_by, created_at, updated_at')
       .single();
 
     if (error) throw error;

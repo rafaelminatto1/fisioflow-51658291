@@ -26,7 +26,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { CalendarIcon, User, Phone, Mail, MapPin, Activity, FileText } from 'lucide-react';
+import { CalendarIcon, User, Phone, Mail, MapPin, Activity, FileText, HeartPulse, Shield, Briefcase } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { cleanCPF, emailSchema, phoneSchema, cpfSchema } from '@/lib/validations';
 import { formatCPF, formatPhoneInput, formatCEP } from '@/utils/formatInputs';
@@ -224,8 +224,8 @@ export const PatientForm: React.FC<PatientFormProps> = ({
             Endereço
           </TabsTrigger>
           <TabsTrigger value="additional">
-            <FileText className="w-4 h-4 mr-2" />
-            Additional
+            <Briefcase className="w-4 h-4 mr-2" />
+            Adicional
           </TabsTrigger>
         </TabsList>
 
@@ -233,7 +233,10 @@ export const PatientForm: React.FC<PatientFormProps> = ({
         <TabsContent value="basic" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Informações Pessoais</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <User className="w-5 h-5 text-primary" />
+                Informações Pessoais
+              </CardTitle>
               <CardDescription>Informações básicas do paciente</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -413,7 +416,10 @@ export const PatientForm: React.FC<PatientFormProps> = ({
           {/* Emergency Contact Card */}
           <Card>
             <CardHeader>
-              <CardTitle>Contato de Emergência</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-primary" />
+                Contato de Emergência
+              </CardTitle>
               <CardDescription>Informações para contato em casos de emergência</CardDescription>
             </CardHeader>
             <CardContent>
@@ -455,7 +461,10 @@ export const PatientForm: React.FC<PatientFormProps> = ({
         <TabsContent value="medical" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Informações Médicas</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <HeartPulse className="w-5 h-5 text-primary" />
+                Informações Médicas
+              </CardTitle>
               <CardDescription>Dados clínicos do paciente</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -562,7 +571,10 @@ export const PatientForm: React.FC<PatientFormProps> = ({
         <TabsContent value="address" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Endereço</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-primary" />
+                Endereço
+              </CardTitle>
               <CardDescription>Informações de localização</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -648,7 +660,10 @@ export const PatientForm: React.FC<PatientFormProps> = ({
         <TabsContent value="additional" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Informações Adicionais</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-primary" />
+                Informações Adicionais
+              </CardTitle>
               <CardDescription>Dados complementares do paciente</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

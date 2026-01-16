@@ -1,3 +1,15 @@
+/**
+ * React Query hooks for fetching patients
+ *
+ * Features:
+ * - Offline support with cache fallback
+ * - Realtime subscriptions for updates
+ * - Intelligent prefetching of related data
+ * - Type-safe queries with validation
+ *
+ * @module hooks/usePatients
+ */
+
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/errors/logger';
@@ -5,51 +17,104 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useEffect } from 'react';
 import { PatientSchema, type Patient } from '@/schemas/patient';
 import { patientsCacheService } from '@/lib/offline/PatientsCacheService';
-import { PATIENT_SELECT, validatePatientSelectQuery } from '@/lib/constants/patient-queries';
+import {
+  PATIENT_SELECT,
+  PATIENT_QUERY_CONFIG,
+  devValidate,
+  getPatientName,
+  type PatientDBStandard
+} from '@/lib/constants/patient-queries';
+import {
+  withTimeout,
+  retryWithBackoff,
+  isOnline,
+  isNetworkError
+} from '@/lib/utils/query-helpers';
 
-// Helper for timeout
-function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> {
-  return Promise.race([
-    Promise.resolve(promise),
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`Timeout após ${timeoutMs}ms`)), timeoutMs)
-    ),
-  ]);
+// ==============================================================================
+// MAPPING FUNCTIONS
+// ==============================================================================
+
+/**
+ * Map database patient record to application Patient type
+ */
+function mapPatientToApp(dbPatient: PatientDBStandard): Patient {
+  return {
+    id: dbPatient.id,
+    name: getPatientName(dbPatient),
+    email: dbPatient.email ?? undefined,
+    phone: dbPatient.phone ?? undefined,
+    cpf: dbPatient.cpf ?? undefined,
+    birthDate: dbPatient.birth_date ?? new Date().toISOString(),
+    gender: 'outro' as const,
+    mainCondition: dbPatient.observations ?? '',
+    status: (dbPatient.status === 'active' ? 'Em Tratamento' : 'Inicial'),
+    progress: 0,
+    incomplete_registration: dbPatient.incomplete_registration ?? false,
+    createdAt: dbPatient.created_at ?? new Date().toISOString(),
+    updatedAt: dbPatient.updated_at ?? new Date().toISOString(),
+  };
 }
 
-// Helper for retry
-async function retryWithBackoff<T>(
-  fn: () => Promise<T>,
-  maxRetries: number = 3,
-  initialDelay: number = 1000
-): Promise<T> {
-  let lastError: Error | unknown;
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
+/**
+ * Validate and map multiple patients from database
+ */
+function mapPatientsFromDB(dbPatients: PatientDBStandard[] | null | undefined): Patient[] {
+  if (!dbPatients || dbPatients.length === 0) return [];
+
+  const validPatients: Patient[] = [];
+
+  for (const dbPatient of dbPatients) {
     try {
-      return await fn();
-    } catch (error) {
-      lastError = error;
-      if (attempt < maxRetries - 1) {
-        const delay = initialDelay * Math.pow(2, attempt);
-        await new Promise(resolve => setTimeout(resolve, delay));
+      const mapped = mapPatientToApp(dbPatient);
+      const result = PatientSchema.safeParse(mapped);
+
+      if (result.success) {
+        validPatients.push(result.data);
+      } else {
+        logger.warn(
+          `Paciente inválido ignorado: ${dbPatient.id}`,
+          { error: result.error.format() },
+          'usePatients'
+        );
       }
+    } catch (error) {
+      logger.error(
+        `Erro ao mapear paciente ${dbPatient.id}`,
+        error,
+        'usePatients'
+      );
     }
   }
-  throw lastError;
+
+  return validPatients;
 }
 
+// ==============================================================================
+// HOOKS
+// ==============================================================================
+
+/**
+ * Hook for fetching active patients with realtime updates
+ *
+ * Features:
+ * - Offline support with cache fallback
+ * - Realtime subscriptions for automatic updates
+ * - Intelligent prefetching of related data
+ * - Query validation (dev-only)
+ * - Retry with backoff for network errors
+ */
 export const useActivePatients = () => {
   const { profile } = useAuth();
   const organizationId = profile?.organization_id;
   const queryClient = useQueryClient();
 
   // Setup realtime subscription
-  // FIX: Track subscription state to avoid WebSocket errors
   useEffect(() => {
     if (!organizationId) return;
 
     let isSubscribed = false;
-    const channel = supabase.channel('patients-changes');
+    const channel = supabase.channel(`patients-${organizationId}`);
 
     (channel as any)
       .on(
@@ -61,20 +126,21 @@ export const useActivePatients = () => {
           filter: `organization_id=eq.${organizationId}`
         },
         () => {
-          logger.info('Realtime: Pacientes atualizados', {}, 'usePatients');
+          logger.info('Realtime: Pacientes atualizados', { organizationId }, 'usePatients');
           queryClient.invalidateQueries({ queryKey: ['patients', organizationId] });
         }
       )
       .subscribe((status: string) => {
         if (status === 'SUBSCRIBED') {
           isSubscribed = true;
+          logger.debug('Realtime subscription active', { organizationId }, 'usePatients');
         }
       });
 
     return () => {
       if (isSubscribed) {
-        supabase.removeChannel(channel).catch(() => {
-          // Ignore cleanup errors
+        supabase.removeChannel(channel).catch((error) => {
+          logger.warn('Failed to remove realtime channel', error, 'usePatients');
         });
       }
     };
@@ -83,88 +149,63 @@ export const useActivePatients = () => {
   const result = useQuery({
     queryKey: ['patients', organizationId],
     queryFn: async () => {
-      // Offline check - try cache first
-      if (!navigator.onLine) {
-        logger.warn('Offline: Carregando pacientes do cache', {}, 'usePatients');
+      // Try cache first when offline
+      if (isOffline()) {
+        logger.info('Offline: Carregando pacientes do cache', { organizationId }, 'usePatients');
         const cacheResult = await patientsCacheService.getFromCache(organizationId);
         if (cacheResult.data.length > 0) {
           logger.info('Pacientes carregados do cache offline', { count: cacheResult.data.length }, 'usePatients');
           return cacheResult.data;
         }
-        logger.warn('Cache vazio ou expirado, retornando lista vazia', {}, 'usePatients');
+        logger.warn('Cache vazio ou expirado', { organizationId }, 'usePatients');
         return [];
       }
 
-      try {
-        // Optimized query: use centralized constant for column selection
-        // Validates that we don't accidentally select non-existent columns like 'name'
-        validatePatientSelectQuery(PATIENT_SELECT.standard);
+      // Dev-only validation (removed in production for performance)
+      devValidate(PATIENT_SELECT.standard);
 
+      try {
+        // Build and execute query
         let query = supabase
           .from('patients')
-          .select(PATIENT_SELECT.standard)
+          .select<PatientDBStandard>(PATIENT_SELECT.standard)
           .in('status', ['active']);
 
         if (organizationId) {
           query = query.eq('organization_id', organizationId);
         }
 
-        const { data: supabasePatients, error } = await retryWithBackoff(() =>
-          withTimeout(
+        const { data, error } = await retryWithBackoff(
+          () => withTimeout(
             query.order('created_at', { ascending: false }),
-            10000
-          )
+            PATIENT_QUERY_CONFIG.timeout
+          ),
+          {
+            maxRetries: PATIENT_QUERY_CONFIG.maxRetries,
+            shouldRetry: isNetworkError
+          }
         );
 
         if (error) throw error;
 
-        // Validation & Transformation
-        const validPatients: Patient[] = [];
-
-        if (supabasePatients && supabasePatients.length > 0) {
-          supabasePatients.forEach(p => {
-            // Map to schema expected format
-            const mapped = {
-              id: p.id,
-              name: p.full_name || (p.phone ? `Paciente (${p.phone})` : 'Paciente sem nome'),
-              email: p.email,
-              phone: p.phone,
-              cpf: p.cpf,
-              birthDate: p.birth_date,
-              gender: 'outro' as const, // Default fallback
-              mainCondition: p.observations,
-              status: (p.status === 'active' ? 'Em Tratamento' : 'Inicial'),
-              progress: 0,
-              incomplete_registration: p.incomplete_registration,
-              createdAt: p.created_at,
-              updatedAt: p.updated_at,
-              organization_id: p.organization_id
-            };
-
-            const result = PatientSchema.safeParse(mapped);
-            if (result.success) {
-              validPatients.push(result.data);
-            } else {
-              logger.warn(`Paciente inválido ignorado: ${p.id}`, { error: result.error }, 'usePatients');
-            }
-          });
-        }
+        // Transform data
+        const validPatients = mapPatientsFromDB(data);
 
         // Save to cache for offline use
         if (validPatients.length > 0) {
-          patientsCacheService.saveToCache(validPatients, organizationId).catch(err => {
-            logger.warn('Falha ao salvar pacientes no cache', err, 'usePatients');
+          patientsCacheService.saveToCache(validPatients, organizationId).catch((error) => {
+            logger.warn('Falha ao salvar pacientes no cache', error, 'usePatients');
           });
         }
 
         return validPatients;
 
-      } catch (err: unknown) {
-        logger.error('Erro ao carregar pacientes', err, 'usePatients');
+      } catch (error) {
+        logger.error('Erro ao carregar pacientes', error, 'usePatients');
 
         // Try cache on network error
-        if (err instanceof Error && err.message && (err.message.includes('fetch') || err.message.includes('network') || err.message.includes('Timeout'))) {
-          logger.info('Erro de rede detectado, tentando cache', {}, 'usePatients');
+        if (isNetworkError(error)) {
+          logger.info('Erro de rede detectado, tentando cache', { organizationId }, 'usePatients');
           const cacheResult = await patientsCacheService.getFromCache(organizationId);
           if (cacheResult.data.length > 0) {
             logger.info('Pacientes carregados do cache (fallback)', { count: cacheResult.data.length }, 'usePatients');
@@ -172,29 +213,26 @@ export const useActivePatients = () => {
           }
         }
 
-        throw err;
+        throw error;
       }
     },
     enabled: !!organizationId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    retry: 2
+    staleTime: PATIENT_QUERY_CONFIG.staleTime,
+    retry: PATIENT_QUERY_CONFIG.maxRetries,
   });
 
-  // Prefetch inteligente: carregar dados relacionados quando a lista de pacientes é carregada
+  // Intelligent prefetch of related data
   useEffect(() => {
     if (result.data && result.data.length > 0) {
-      // Prefetch estatísticas dos primeiros 10 pacientes em background
-      const firstTenPatients = result.data.slice(0, 10);
+      // Prefetch stats for first 10 patients
+      const patientsToPrefetch = result.data.slice(0, 10);
 
-      // Delay para não priorizar sobre a query principal
       const timer = setTimeout(() => {
-        firstTenPatients.forEach((patient, index) => {
-          // Stagger prefetch para não sobrecarregar a rede
+        patientsToPrefetch.forEach((patient, index) => {
           setTimeout(() => {
             queryClient.prefetchQuery({
               queryKey: ['patient-stats', patient.id],
               queryFn: async () => {
-                // Prefetch stats para cada paciente
                 const { data } = await supabase
                   .from('appointments')
                   .select('id, patient_id, status, date')
@@ -203,11 +241,11 @@ export const useActivePatients = () => {
                   .limit(10);
                 return data;
               },
-              staleTime: 1000 * 60 * 5, // 5 minutos
+              staleTime: PATIENT_QUERY_CONFIG.staleTime,
             });
-          }, index * 100); // 100ms entre cada prefetch
+          }, index * 100); // Stagger by 100ms
         });
-      }, 500);
+      }, 500); // Start after 500ms
 
       return () => clearTimeout(timer);
     }
@@ -216,6 +254,36 @@ export const useActivePatients = () => {
   return result;
 };
 
-export const usePatients = () => {
-  return useActivePatients();
+/**
+ * Alias for useActivePatients
+ * @deprecated Use useActivePatients directly for clarity
+ */
+export const usePatients = useActivePatients;
+
+/**
+ * Hook for fetching a single patient by ID
+ */
+export const usePatientById = (id: string | undefined) => {
+  return useQuery({
+    queryKey: ['patient', id],
+    queryFn: async () => {
+      if (!id) return null;
+
+      devValidate(PATIENT_SELECT.standard);
+
+      const { data, error } = await supabase
+        .from('patients')
+        .select<PatientDBStandard>(PATIENT_SELECT.standard)
+        .eq('id', id)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) return null;
+
+      const patients = mapPatientsFromDB([data]);
+      return patients[0] ?? null;
+    },
+    enabled: !!id,
+    staleTime: PATIENT_QUERY_CONFIG.staleTimeLong,
+  });
 };
