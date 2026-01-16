@@ -331,6 +331,43 @@ const PatientEvolution = () => {
     [previousEvolutions]
   );
 
+  // Memoize tab configuration to prevent recreation on every render
+  const tabsConfig = useMemo(() => [
+    { value: 'evolucao', label: 'Evolução', shortLabel: 'Evol', icon: FileText, description: 'SOAP + Dor' },
+    { value: 'avaliacao', label: 'Avaliação', shortLabel: 'Aval', icon: BarChart3, description: 'Medições + Testes' },
+    { value: 'tratamento', label: 'Tratamento', shortLabel: 'Trat', icon: Activity, description: 'Exercícios + Metas' },
+    { value: 'historico', label: 'Histórico', shortLabel: 'Hist', icon: Clock, description: 'Timeline + Relatórios' },
+    { value: 'assistente', label: 'Assistente', shortLabel: 'IA', icon: Sparkles, description: 'IA + WhatsApp' },
+  ], []);
+
+  // Memoize required measurements for alerts to prevent recreation
+  const pendingRequiredMeasurements = useMemo(() =>
+    requiredMeasurements.filter(req => {
+      const completedToday = todayMeasurements.some(m => m.measurement_name === req.measurement_name);
+      return !completedToday;
+    }).map(req => ({
+      id: req.id || req.measurement_name,
+      name: req.measurement_name,
+      critical: req.alert_level === 'high',
+      completed: false
+    })),
+    [requiredMeasurements, todayMeasurements]
+  );
+
+  // Memoize mandatory test alerts data
+  const mandatoryTestAlertsData = useMemo(() =>
+    requiredMeasurements.map(req => {
+      const completedToday = todayMeasurements.some(m => m.measurement_name === req.measurement_name);
+      return {
+        id: req.id || req.measurement_name,
+        name: req.measurement_name,
+        critical: req.alert_level === 'high',
+        completed: completedToday
+      };
+    }),
+    [requiredMeasurements, todayMeasurements]
+  );
+
   // ========== AUTO-SAVE ==========
   const { lastSavedAt } = useAutoSave({
     data: { subjective, objective, assessment, plan },
@@ -717,15 +754,7 @@ const PatientEvolution = () => {
           {/* Alerta de Testes Obrigatórios */}
           {requiredMeasurements.length > 0 && (
             <MandatoryTestAlert
-              tests={requiredMeasurements.map(req => {
-                const completedToday = todayMeasurements.some(m => m.measurement_name === req.measurement_name);
-                return {
-                  id: req.id || req.measurement_name,
-                  name: req.measurement_name,
-                  critical: req.alert_level === 'high',
-                  completed: completedToday
-                };
-              })}
+              tests={mandatoryTestAlertsData}
               onResolve={() => setActiveTab('avaliacao')}
             />
           )}
@@ -866,13 +895,7 @@ const PatientEvolution = () => {
           {/* Abas de Navegação */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full pb-20">
             <TabsList className="inline-flex h-10 sm:h-11 items-center justify-start rounded-xl bg-muted/40 p-1 text-muted-foreground w-full lg:w-auto overflow-x-auto scrollbar-hide sticky top-0 z-40 backdrop-blur-sm">
-              {[
-                { value: 'evolucao', label: 'Evolução', shortLabel: 'Evol', icon: FileText, description: 'SOAP + Dor' },
-                { value: 'avaliacao', label: 'Avaliação', shortLabel: 'Aval', icon: BarChart3, description: 'Medições + Testes' },
-                { value: 'tratamento', label: 'Tratamento', shortLabel: 'Trat', icon: Activity, description: 'Exercícios + Metas' },
-                { value: 'historico', label: 'Histórico', shortLabel: 'Hist', icon: Clock, description: 'Timeline + Relatórios' },
-                { value: 'assistente', label: 'Assistente', shortLabel: 'IA', icon: Sparkles, description: 'IA + WhatsApp' },
-              ].map(tab => (
+              {tabsConfig.map(tab => (
                 <TabsTrigger
                   key={tab.value}
                   value={tab.value}
@@ -949,40 +972,37 @@ const PatientEvolution = () => {
               />
 
               {/* Alerta de Medições Pendentes */}
-              {requiredMeasurements.filter(req => {
-                const completedToday = todayMeasurements.some(m => m.measurement_name === req.measurement_name);
-                return !completedToday;
-              }).length > 0 && (
-                  <Card className="border-destructive/30 shadow-sm">
-                    <CardHeader className="bg-destructive/5 py-2 px-3">
-                      <CardTitle className="flex items-center gap-2 text-destructive text-sm">
-                        <AlertTriangle className="h-3.5 w-3.5" />
-                        Medições Obrigatórias Pendentes
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2 pt-3 px-3 pb-3">
-                      {requiredMeasurements
-                        .filter(req => {
-                          const completedToday = todayMeasurements.some(m => m.measurement_name === req.measurement_name);
-                          return !completedToday;
-                        })
-                        .map((req) => (
-                          <Alert
-                            key={req.id}
-                            variant={req.alert_level === 'high' ? 'destructive' : 'default'}
-                            className="py-2"
-                          >
-                            <AlertTriangle className="h-3.5 w-3.5" />
-                            <AlertTitle className="text-xs font-semibold">{req.measurement_name}</AlertTitle>
-                            <AlertDescription className="text-[10px]">
-                              {req.instructions}
-                              {req.measurement_unit && ` (${req.measurement_unit})`}
-                            </AlertDescription>
-                          </Alert>
-                        ))}
-                    </CardContent>
-                  </Card>
-                )}
+              {pendingRequiredMeasurements.length > 0 && (
+                <Card className="border-destructive/30 shadow-sm">
+                  <CardHeader className="bg-destructive/5 py-2 px-3">
+                    <CardTitle className="flex items-center gap-2 text-destructive text-sm">
+                      <AlertTriangle className="h-3.5 w-3.5" />
+                      Medições Obrigatórias Pendentes
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 pt-3 px-3 pb-3">
+                    {requiredMeasurements
+                      .filter(req => {
+                        const completedToday = todayMeasurements.some(m => m.measurement_name === req.measurement_name);
+                        return !completedToday;
+                      })
+                      .map((req) => (
+                        <Alert
+                          key={req.id}
+                          variant={req.alert_level === 'high' ? 'destructive' : 'default'}
+                          className="py-2"
+                        >
+                          <AlertTriangle className="h-3.5 w-3.5" />
+                          <AlertTitle className="text-xs font-semibold">{req.measurement_name}</AlertTitle>
+                          <AlertDescription className="text-[10px]">
+                            {req.instructions}
+                            {req.measurement_unit && ` (${req.measurement_unit})`}
+                          </AlertDescription>
+                        </Alert>
+                      ))}
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Formulário de Medição */}
               {patientId && (

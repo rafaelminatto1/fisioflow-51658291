@@ -9,6 +9,15 @@ import { useEffect } from 'react';
 import { AppointmentNotificationService } from '@/lib/services/AppointmentNotificationService';
 import { requireUserOrganizationId, getUserOrganizationId } from '@/utils/userHelpers';
 
+// Query keys factory for better cache management
+export const appointmentKeys = {
+  all: ['appointments'] as const,
+  lists: () => [...appointmentKeys.all, 'list'] as const,
+  list: (organizationId?: string | null) => [...appointmentKeys.lists(), organizationId] as const,
+  details: () => [...appointmentKeys.all, 'detail'] as const,
+  detail: (id: string) => [...appointmentKeys.details(), id] as const,
+} as const;
+
 // Função auxiliar para criar timeout em promises (suporta PromiseLike do Supabase)
 function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> {
   return Promise.race([
@@ -275,7 +284,7 @@ export function useAppointments() {
           logger.info(`Realtime event: appointments ${payload.eventType}`, {}, 'useAppointments');
 
           // Invalidar queries para atualizar os dados
-          queryClient.invalidateQueries({ queryKey: ['appointments'] });
+          queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
 
           // Show toast notification for changes made by other users
           if (payload.eventType === 'INSERT') {
@@ -321,7 +330,7 @@ export function useAppointments() {
   }, [toast, organizationId, queryClient]);
 
   const query = useQuery({
-    queryKey: ['appointments', organizationId], // Include organizationId in query key
+    queryKey: appointmentKeys.list(organizationId), // Use appointmentKeys factory
     queryFn: () => fetchAppointments(organizationId),
     staleTime: 1000 * 10, // 10 segundos (dados mais frescos conforme solicitado)
     gcTime: 1000 * 60 * 5, // 5 minutos
@@ -365,7 +374,7 @@ export function useCreateAppointment() {
       const organizationId = profile?.organization_id || await requireUserOrganizationId();
 
       // Check for conflicts with current data
-      const currentAppointments = queryClient.getQueryData<AppointmentBase[]>(['appointments']) || [];
+      const currentAppointments = queryClient.getQueryData<AppointmentsQueryResult>(appointmentKeys.list(profile?.organization_id))?.data || [];
       checkAppointmentConflict({
         date: new Date(data.appointment_date),
         time: data.appointment_time,
@@ -478,8 +487,16 @@ export function useCreateAppointment() {
 
       return appointment;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: appointmentKeys.list(profile?.organization_id) });
+      // Otimistic update: adicionar o novo agendamento à cache imediatamente
+      queryClient.setQueryData(
+        appointmentKeys.list(profile?.organization_id),
+        (old: AppointmentsQueryResult | undefined) => ({
+          ...old,
+          data: [...(old?.data || []), data]
+        })
+      );
       toast({
         title: 'Sucesso',
         description: 'Agendamento criado com sucesso'
@@ -673,8 +690,12 @@ export function useUpdateAppointment() {
 
       return transformedAppointment;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: appointmentKeys.list(profile?.organization_id) });
+      queryClient.setQueryData(
+        appointmentKeys.detail(appointmentId),
+        data
+      );
       toast({
         title: 'Sucesso',
         description: 'Agendamento atualizado com sucesso'
@@ -719,7 +740,7 @@ export function useDeleteAppointment() {
       const organizationId = await requireUserOrganizationId();
 
       // Buscar dados do agendamento antes de deletar (para notificação)
-      const currentAppointments = queryClient.getQueryData<AppointmentBase[]>(['appointments']) || [];
+      const currentAppointments = queryClient.getQueryData<AppointmentsQueryResult>(appointmentKeys.list())?.data || [];
       const appointment = currentAppointments.find(apt => apt.id === appointmentId);
 
       const { error } = await supabase
@@ -754,8 +775,16 @@ export function useDeleteAppointment() {
 
       return appointmentId;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
+      // Otimistic update: remover da cache imediatamente
+      queryClient.setQueryData(
+        appointmentKeys.list(),
+        (old: AppointmentsQueryResult | undefined) => ({
+          ...old,
+          data: (old?.data || []).filter(apt => apt.id !== variables.appointmentId)
+        })
+      );
       toast({
         title: 'Sucesso',
         description: 'Agendamento excluído com sucesso'
@@ -816,8 +845,20 @@ export function useUpdateAppointmentStatus() {
 
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
+      // Otimistic update: atualizar na cache imediatamente
+      queryClient.setQueryData(
+        appointmentKeys.list(),
+        (old: AppointmentsQueryResult | undefined) => ({
+          ...old,
+          data: (old?.data || []).map(apt =>
+            apt.id === variables.appointmentId
+              ? { ...apt, status: variables.status }
+              : apt
+          )
+        })
+      );
       toast({
         title: 'Status atualizado',
         description: 'Status do agendamento atualizado com sucesso'

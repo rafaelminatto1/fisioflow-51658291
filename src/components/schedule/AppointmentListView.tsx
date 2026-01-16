@@ -91,6 +91,12 @@ export const AppointmentListView: React.FC<AppointmentListViewProps> = ({
       title: "Abrindo WhatsApp...",
     });
   }, [toast]);
+
+  // Wrapper handler for appointment click - memoized to prevent inline function creation
+  const handleAppointmentClickWrapper = useCallback((appointment: Appointment) => {
+    onAppointmentClick(appointment);
+  }, [onAppointmentClick]);
+
   // Filtra e agrupa agendamentos por horário
   const sortedAppointments = useMemo(() => {
     return appointments
@@ -229,7 +235,7 @@ export const AppointmentListView: React.FC<AppointmentListViewProps> = ({
               <SwipeableAppointmentCard
                 key={apt.id}
                 appointment={apt}
-                onClick={() => onAppointmentClick(apt)}
+                onClick={handleAppointmentClickWrapper}
                 onConfirm={handleConfirm}
                 onCancel={handleCancel}
                 onCall={handleCall}
@@ -253,7 +259,7 @@ export const AppointmentListView: React.FC<AppointmentListViewProps> = ({
               <SwipeableAppointmentCard
                 key={apt.id}
                 appointment={apt}
-                onClick={() => onAppointmentClick(apt)}
+                onClick={handleAppointmentClickWrapper}
                 onConfirm={handleConfirm}
                 onCancel={handleCancel}
                 onCall={handleCall}
@@ -277,7 +283,7 @@ export const AppointmentListView: React.FC<AppointmentListViewProps> = ({
               <SwipeableAppointmentCard
                 key={apt.id}
                 appointment={apt}
-                onClick={() => onAppointmentClick(apt)}
+                onClick={handleAppointmentClickWrapper}
                 onConfirm={handleConfirm}
                 onCancel={handleCancel}
                 onCall={handleCall}

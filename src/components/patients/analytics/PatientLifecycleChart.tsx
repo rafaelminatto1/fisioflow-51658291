@@ -305,7 +305,7 @@ export function PatientLifecycleChart({ summary, isLoading }: PatientLifecycleCh
     );
   }
 
-  if (!summary || summary.stage_history.length === 0) {
+  if (!summary || !summary.stage_history || summary.stage_history.length === 0) {
     return (
       <Card>
         <CardHeader>

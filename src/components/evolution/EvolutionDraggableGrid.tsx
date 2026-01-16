@@ -336,6 +336,13 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
         return calculatePainTrend(painHistory, painScaleData.level);
     }, [painHistory, painScaleData.level]);
 
+    // Memoize grid layout calculations to prevent recreation
+    const gridLayouts = React.useMemo(() => ({
+        painHeight: showPainDetails ? 11 : 9,
+        soapYOffset: showPainDetails ? 11 : 9,
+        measurementsYOffset: (showPainDetails ? 25 : 23),
+    }), [showPainDetails]);
+
     // Update stored layout when pain details are toggled
     // We update the local state but NOT localStorage yet (unless user saves)
     // Actually, we should probably just treat this as a temporary strict override for the view
@@ -405,7 +412,12 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
         setIsEditable(false);
         toast.success('Layout restaurado para o padrão!');
 
-        if (user?.id && profile?.preferences) {
+        // Force a page reload to ensure all components reset properly
+        setTimeout(() => {
+            window.location.reload();
+        }, 500);
+
+        if (user?.id && profile?.preferences?.evolution_layout) {
             try {
                 const { evolution_layout, ...restPreferences } = profile.preferences;
                 await supabase
@@ -523,7 +535,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 4, h: showPainDetails ? 11 : 9, x: 0, y: 0, minW: 3, minH: 8 } // Standardized height to match exercises
+            defaultLayout: { w: 4, h: gridLayouts.painHeight, x: 0, y: 0, minW: 3, minH: 8 }
         },
         // Exercícios da Sessão (70% da largura)
         {
@@ -548,7 +560,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 8, h: showPainDetails ? 11 : 9, x: 4, y: 0, minW: 6, minH: 8 } // Standardized height to match pain scale
+            defaultLayout: { w: 8, h: gridLayouts.painHeight, x: 4, y: 0, minW: 6, minH: 8 }
         },
 
         // ===== LINHA 2: Formulário SOAP (4 campos em 2x2) - Using memoized components =====
@@ -566,7 +578,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     onCopyLast={onCopyLast}
                 />
             ),
-            defaultLayout: { w: 6, h: 7, x: (index % 2) * 6, y: (showPainDetails ? 11 : 9) + Math.floor(index / 2) * 7, minW: 4, minH: 5 }
+            defaultLayout: { w: 6, h: 7, x: (index % 2) * 6, y: gridLayouts.soapYOffset + Math.floor(index / 2) * 7, minW: 4, minH: 5 }
         })),
 
         // ===== LINHA 3: Registro de Medições | Home Care =====
@@ -598,7 +610,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 6, h: 9, x: 0, y: (showPainDetails ? 25 : 23), minW: 6, minH: 6 }
+            defaultLayout: { w: 6, h: 9, x: 0, y: gridLayouts.measurementsYOffset, minW: 6, minH: 6 }
         },
         // Home Care (direita)
         {
@@ -620,7 +632,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 6, h: 12, x: 6, y: (showPainDetails ? 25 : 23), minW: 6, minH: 8 }
+            defaultLayout: { w: 6, h: 12, x: 6, y: gridLayouts.measurementsYOffset, minW: 6, minH: 8 }
         },
 
         // ===== LINHA 4: Sessões Anteriores | Anexos =====

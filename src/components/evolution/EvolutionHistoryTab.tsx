@@ -19,7 +19,7 @@ interface EvolutionHistoryTabProps {
     onToggleComparison: () => void;
 }
 
-export function EvolutionHistoryTab({
+export const EvolutionHistoryTab = React.memo(function EvolutionHistoryTab({
     patientId,
     surgeries,
     previousEvolutions,
@@ -31,7 +31,11 @@ export function EvolutionHistoryTab({
         <div className="mt-4 space-y-4">
             {/* Evolution Timeline */}
             {patientId && (
-                <EvolutionTimeline patientId={patientId} showFilters />
+                <EvolutionTimeline
+                    patientId={patientId}
+                    showFilters
+                    onCopyEvolution={onCopyEvolution}
+                />
             )}
 
             {/* Surgery Timeline */}
@@ -125,4 +129,4 @@ export function EvolutionHistoryTab({
             )}
         </div>
     );
-}
+});

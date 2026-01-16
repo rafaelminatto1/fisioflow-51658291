@@ -67,7 +67,7 @@ const categoryColors: Record<string, string> = {
   'Propriocepção': 'bg-indigo-500/10 text-indigo-600 border-indigo-500/30',
 };
 
-function ExerciseCard({
+const ExerciseCard = React.memo(function ExerciseCard({
   exercise,
   isFavorite,
   onToggleFavorite,
@@ -92,7 +92,7 @@ function ExerciseCard({
   const catColor = exercise.category ? categoryColors[exercise.category] || 'bg-muted text-muted-foreground' : '';
 
   return (
-    <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:border-primary/40 hover:-translate-y-1">
+    <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:border-primary/40 hover:-translate-y-1 will-change-transform touch-manipulation">
       {/* Image Section */}
       <div className="relative h-44 bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
         {exercise.image_url ? (
@@ -109,8 +109,8 @@ function ExerciseCard({
           </div>
         )}
 
-        {/* Overlay Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        {/* Overlay Gradient - pointer-events-none to prevent blocking touch */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
         {/* Top Badges */}
         <div className="absolute top-3 left-3 right-3 flex items-start justify-between">
@@ -118,7 +118,7 @@ function ExerciseCard({
             variant="ghost"
             size="icon"
             className={cn(
-              "h-9 w-9 bg-background/90 backdrop-blur-sm hover:bg-background shadow-lg",
+              "h-9 w-9 bg-background/90 backdrop-blur-sm hover:bg-background shadow-lg touch-manipulation",
               isFavorite && "text-rose-500 hover:text-rose-600"
             )}
             onClick={(e) => {
@@ -144,12 +144,12 @@ function ExerciseCard({
           </div>
         </div>
 
-        {/* Quick View on Hover */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+        {/* Quick View on Hover - pointer-events-none on mobile to prevent blocking */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all pointer-events-none md:pointer-events-auto">
           <Button
             onClick={onView}
             size="lg"
-            className="shadow-2xl gap-2 bg-white/95 text-foreground hover:bg-white"
+            className="shadow-2xl gap-2 bg-white/95 text-foreground hover:bg-white touch-manipulation"
           >
             <Play className="h-5 w-5" />
             Visualizar
@@ -219,7 +219,7 @@ function ExerciseCard({
                 if (!isAdded && onAdd) onAdd();
               }}
               className={cn(
-                "flex-1 gap-2 transition-all",
+                "flex-1 gap-2 transition-all touch-manipulation",
                 isAdded
                   ? "bg-emerald-500 hover:bg-emerald-600 text-white"
                   : "bg-primary hover:bg-primary/90"
@@ -242,7 +242,7 @@ function ExerciseCard({
           ) : (
             <Button
               onClick={onView}
-              className="flex-1 gap-2"
+              className="flex-1 gap-2 touch-manipulation"
               size="sm"
             >
               <Eye className="h-4 w-4" />
@@ -251,21 +251,21 @@ function ExerciseCard({
           )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="h-8 w-8">
+              <Button variant="outline" size="icon" className="h-8 w-8 touch-manipulation">
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onEdit}>
+              <DropdownMenuItem onClick={onEdit} className="touch-manipulation">
                 <Edit className="h-4 w-4 mr-2" />
                 Editar
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onToggleFavorite}>
+              <DropdownMenuItem onClick={onToggleFavorite} className="touch-manipulation">
                 <Heart className={cn("h-4 w-4 mr-2", isFavorite && "fill-rose-500 text-rose-500")} />
                 {isFavorite ? 'Remover favorito' : 'Adicionar favorito'}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
+              <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive touch-manipulation">
                 <Trash2 className="h-4 w-4 mr-2" />
                 Excluir
               </DropdownMenuItem>
@@ -275,7 +275,7 @@ function ExerciseCard({
       </div>
     </Card>
   );
-}
+});
 
 const ExerciseListItem = React.memo(function ExerciseListItem({
   exercise,
@@ -296,7 +296,7 @@ const ExerciseListItem = React.memo(function ExerciseListItem({
   const catColor = exercise.category ? categoryColors[exercise.category] || 'bg-muted text-muted-foreground' : '';
 
   return (
-    <Card className="p-4 hover:shadow-md transition-all hover:border-primary/30 group">
+    <Card className="p-4 hover:shadow-md transition-all hover:border-primary/30 group touch-manipulation">
       <div className="flex items-center gap-4">
         {/* Thumbnail */}
         <div className="h-16 w-16 flex-shrink-0 rounded-xl overflow-hidden bg-gradient-to-br from-muted to-muted/50">
@@ -367,19 +367,19 @@ const ExerciseListItem = React.memo(function ExerciseListItem({
           <Button
             variant="ghost"
             size="icon"
-            className={cn("h-9 w-9", isFavorite && "text-rose-500")}
+            className={cn("h-9 w-9 touch-manipulation", isFavorite && "text-rose-500")}
             onClick={onToggleFavorite}
           >
             <Heart className={cn("h-4 w-4", isFavorite && "fill-current")} />
           </Button>
-          <Button onClick={onView} size="sm" className="gap-2">
+          <Button onClick={onView} size="sm" className="gap-2 touch-manipulation">
             <Play className="h-4 w-4" />
             Ver
           </Button>
-          <Button onClick={onEdit} variant="outline" size="icon" className="h-8 w-8">
+          <Button onClick={onEdit} variant="outline" size="icon" className="h-8 w-8 touch-manipulation">
             <Edit className="h-4 w-4" />
           </Button>
-          <Button onClick={onDelete} variant="outline" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+          <Button onClick={onDelete} variant="outline" size="icon" className="h-8 w-8 text-destructive hover:text-destructive touch-manipulation">
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>

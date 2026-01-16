@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback, memo } from 'react';
 import { Phone, MessageCircle, Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AppointmentCard } from './AppointmentCard';
@@ -26,26 +26,26 @@ export const SwipeableAppointmentCard: React.FC<SwipeableAppointmentCardProps> =
   const startX = useRef(0);
   const currentX = useRef(0);
 
-  const handleTouchStart = (e: React.TouchEvent) => {
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
     startX.current = e.touches[0].clientX;
     setIsSwiping(true);
-  };
+  }, []);
 
-  const handleTouchMove = (e: React.TouchEvent) => {
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!isSwiping) return;
-    
+
     currentX.current = e.touches[0].clientX;
     const diff = currentX.current - startX.current;
-    
+
     // Limita o swipe
     const maxSwipe = 200;
     const limitedDiff = Math.max(-maxSwipe, Math.min(maxSwipe, diff));
     setSwipeX(limitedDiff);
-  };
+  }, [isSwiping]);
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = useCallback(() => {
     setIsSwiping(false);
-    
+
     // Se swipou mais de 60px, executa ação
     if (swipeX > 60) {
       // Swipe direita - confirmar
@@ -54,16 +54,26 @@ export const SwipeableAppointmentCard: React.FC<SwipeableAppointmentCardProps> =
       // Swipe esquerda - cancelar
       if (onCancel) onCancel(appointment.id);
     }
-    
+
     // Volta para posição original
     setSwipeX(0);
-  };
+  }, [swipeX, onConfirm, onCancel, appointment.id]);
 
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     if (Math.abs(swipeX) < 10) {
       onClick();
     }
-  };
+  }, [swipeX, onClick]);
+
+  const handleCallClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onCall) onCall(appointment.id);
+  }, [onCall, appointment.id]);
+
+  const handleWhatsAppClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onWhatsApp) onWhatsApp(appointment.id);
+  }, [onWhatsApp, appointment.id]);
 
   return (
     <div className="relative overflow-hidden rounded-2xl">
@@ -122,10 +132,7 @@ export const SwipeableAppointmentCard: React.FC<SwipeableAppointmentCardProps> =
         {onCall && (
           <button
             className="p-1.5 rounded-full bg-blue-500 text-white shadow-lg pointer-events-auto"
-            onClick={(e) => {
-              e.stopPropagation();
-              onCall(appointment.id);
-            }}
+            onClick={handleCallClick}
           >
             <Phone className="h-3 w-3" />
           </button>
@@ -133,10 +140,7 @@ export const SwipeableAppointmentCard: React.FC<SwipeableAppointmentCardProps> =
         {onWhatsApp && (
           <button
             className="p-1.5 rounded-full bg-green-500 text-white shadow-lg pointer-events-auto"
-            onClick={(e) => {
-              e.stopPropagation();
-              onWhatsApp(appointment.id);
-            }}
+            onClick={handleWhatsAppClick}
           >
             <MessageCircle className="h-3 w-3" />
           </button>
@@ -145,3 +149,5 @@ export const SwipeableAppointmentCard: React.FC<SwipeableAppointmentCardProps> =
     </div>
   );
 };
+
+export const MemoizedSwipeableAppointmentCard = memo(SwipeableAppointmentCard);
