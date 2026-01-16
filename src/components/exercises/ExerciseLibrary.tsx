@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   Play, Search, Edit, Trash2, Heart, Dumbbell,
   Video, Clock, Repeat, LayoutGrid, List, VideoOff,
-  Eye, MoreVertical, Merge
+  Eye, MoreVertical, Merge, Plus, CheckCircle2
 } from 'lucide-react';
 import { EQUIPMENT, HOME_EQUIPMENT_GROUP, NO_EQUIPMENT_GROUP_ID } from '@/lib/constants/exerciseConstants';
 import { useExercises, type Exercise } from '@/hooks/useExercises';
@@ -42,6 +42,10 @@ import { CreateTemplateFromSelectionModal } from './CreateTemplateFromSelectionM
 interface ExerciseLibraryProps {
   onSelectExercise?: (exercise: Exercise) => void;
   onEditExercise: (exercise: Exercise) => void;
+  /** When true, shows 'Adicionar' button instead of 'Ver Detalhes' */
+  selectionMode?: boolean;
+  /** List of exercise IDs already added to the session */
+  addedExerciseIds?: string[];
 }
 
 const difficultyConfig: Record<string, { color: string; bg: string; border: string }> = {
@@ -69,7 +73,10 @@ function ExerciseCard({
   onToggleFavorite,
   onView,
   onEdit,
-  onDelete
+  onDelete,
+  selectionMode,
+  isAdded,
+  onAdd
 }: {
   exercise: Exercise;
   isFavorite: boolean;
@@ -77,6 +84,9 @@ function ExerciseCard({
   onView: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  selectionMode?: boolean;
+  isAdded?: boolean;
+  onAdd?: () => void;
 }) {
   const diffConfig = exercise.difficulty ? difficultyConfig[exercise.difficulty] : null;
   const catColor = exercise.category ? categoryColors[exercise.category] || 'bg-muted text-muted-foreground' : '';
@@ -202,14 +212,43 @@ function ExerciseCard({
 
         {/* Actions */}
         <div className="flex gap-2 pt-2">
-          <Button
-            onClick={onView}
-            className="flex-1 gap-2"
-            size="sm"
-          >
-            <Eye className="h-4 w-4" />
-            Ver Detalhes
-          </Button>
+          {selectionMode ? (
+            <Button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!isAdded && onAdd) onAdd();
+              }}
+              className={cn(
+                "flex-1 gap-2 transition-all",
+                isAdded
+                  ? "bg-emerald-500 hover:bg-emerald-600 text-white"
+                  : "bg-primary hover:bg-primary/90"
+              )}
+              size="sm"
+              disabled={isAdded}
+            >
+              {isAdded ? (
+                <>
+                  <CheckCircle2 className="h-4 w-4" />
+                  Adicionado
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4" />
+                  Adicionar
+                </>
+              )}
+            </Button>
+          ) : (
+            <Button
+              onClick={onView}
+              className="flex-1 gap-2"
+              size="sm"
+            >
+              <Eye className="h-4 w-4" />
+              Ver Detalhes
+            </Button>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="icon" className="h-8 w-8">
@@ -351,7 +390,7 @@ const ExerciseListItem = React.memo(function ExerciseListItem({
 
 
 
-export function ExerciseLibrary({ onSelectExercise: _onSelectExercise, onEditExercise }: ExerciseLibraryProps) {
+export function ExerciseLibrary({ onSelectExercise, onEditExercise, selectionMode = false, addedExerciseIds = [] }: ExerciseLibraryProps) {
   const [searchTerm, setSearchTerm] = useState('');
   // Filter panel state
   const [advancedFilters, setAdvancedFilters] = useState<ExerciseFiltersState>({
@@ -623,6 +662,9 @@ export function ExerciseLibrary({ onSelectExercise: _onSelectExercise, onEditExe
                 onView={() => setViewExercise(exercise)}
                 onEdit={() => onEditExercise(exercise)}
                 onDelete={() => setDeleteId(exercise.id)}
+                selectionMode={selectionMode}
+                isAdded={addedExerciseIds.includes(exercise.id)}
+                onAdd={() => onSelectExercise && onSelectExercise(exercise)}
               />
               {isSelectionMode && (
                 <div className="absolute top-2 right-2 z-20">
