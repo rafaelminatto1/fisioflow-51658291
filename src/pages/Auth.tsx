@@ -370,11 +370,7 @@ export default function Auth() {
       <div className="hidden lg:flex w-1/2 relative overflow-hidden">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-blue-500/10 to-sky-400/20" />
-          <img
-            src="/hero-bg.jpg"
-            alt=""
-            className="w-full h-full object-cover opacity-40 mix-blend-overlay"
-          />
+          {/* Image removed due to missing asset - relying on CSS gradients */}
         </div>
 
         {/* Overlay Content */}
