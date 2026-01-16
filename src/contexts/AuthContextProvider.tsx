@@ -64,23 +64,23 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
     };
 
     const initAuth = async () => {
-      // Timeout de segurança mais permissivo - 10 segundos
+      // Timeout de segurança mais permissivo - 30 segundos
       initTimeout = setTimeout(() => {
         if (mounted && !initialized) {
           logger.warn('Timeout na inicialização - continuando sem sessão', null, 'AuthContextProvider');
           setLoading(false);
           setInitialized(true);
         }
-      }, 10000);
+      }, 30000);
 
       try {
         setLoading(true);
         setSessionCheckFailed(false);
 
-        // Buscar sessão com timeout interno aumentado para 10s
+        // Buscar sessão com timeout interno aumentado para 30s
         const sessionPromise = supabase.auth.getSession();
         const timeoutPromise = new Promise<{ data: { session: null }, error: null }>((resolve) =>
-          setTimeout(() => resolve({ data: { session: null }, error: null }), 10000)
+          setTimeout(() => resolve({ data: { session: null }, error: null }), 30000)
         );
 
         const { data: { session: initialSession }, error: sessionError } = await Promise.race([
