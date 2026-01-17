@@ -111,8 +111,8 @@ export class GoogleCalendarSync {
 
     // Configurar OAuth2 client
     this.oauth2Client = new OAuth2Client({
-      clientId: process.env.VITE_GOOGLE_CLIENT_ID,
-      redirectUri: process.env.VITE_GOOGLE_REDIRECT_URI,
+      clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      redirectUri: import.meta.env.VITE_GOOGLE_REDIRECT_URI,
     });
 
     // Configurar calendar API
@@ -395,8 +395,8 @@ export function createGoogleAuthUrl(state?: string): string {
     'https://www.googleapis.com/auth/calendar.events',
   ];
 
-  const clientId = process.env.VITE_GOOGLE_CLIENT_ID;
-  const redirectUri = process.env.VITE_GOOGLE_REDIRECT_URI;
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const redirectUri = import.meta.env.VITE_GOOGLE_REDIRECT_URI;
 
   if (!clientId || !redirectUri) {
     throw new Error('Google OAuth não configurado');
@@ -419,9 +419,9 @@ export function createGoogleAuthUrl(state?: string): string {
  * Troca código de autorização por token de acesso
  */
 export async function exchangeCodeForToken(code: string): Promise<GoogleOAuthToken> {
-  const clientId = process.env.VITE_GOOGLE_CLIENT_ID;
-  const clientSecret = process.env.VITE_GOOGLE_CLIENT_SECRET;
-  const redirectUri = process.env.VITE_GOOGLE_REDIRECT_URI;
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const clientSecret = import.meta.env.VITE_GOOGLE_CLIENT_SECRET;
+  const redirectUri = import.meta.env.VITE_GOOGLE_REDIRECT_URI;
 
   if (!clientId || !clientSecret || !redirectUri) {
     throw new Error('Google OAuth não configurado');
@@ -460,8 +460,8 @@ export async function exchangeCodeForToken(code: string): Promise<GoogleOAuthTok
  * Renova token de acesso usando refresh token
  */
 export async function refreshAccessToken(refreshToken: string): Promise<GoogleOAuthToken> {
-  const clientId = process.env.VITE_GOOGLE_CLIENT_ID;
-  const clientSecret = process.env.VITE_GOOGLE_CLIENT_SECRET;
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const clientSecret = import.meta.env.VITE_GOOGLE_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
     throw new Error('Google OAuth não configurado');
