@@ -574,8 +574,8 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
         <TooltipProvider>
             <div className={cn("flex flex-col h-full", className)}>
                 {/* Header: Busca, Filtros e Ações */}
-                <div className="p-2.5 border-b flex items-center justify-between gap-2 shrink-0 bg-muted/20">
-                    <div className="flex-1 relative">
+                <div className="p-2.5 border-b flex flex-wrap items-center gap-x-2 gap-y-2.5 shrink-0 bg-muted/20">
+                    <div className="flex-1 min-w-[150px] relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" aria-hidden="true" />
                         <Input
                             placeholder="Buscar exercícios..."
@@ -590,7 +590,7 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
                         )}
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                         {/* Filtros */}
                         <Popover open={showFilters} onOpenChange={setShowFilters}>
                             <PopoverTrigger asChild>
