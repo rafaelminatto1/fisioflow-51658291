@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, memo } from 'react';
+import { useDebounce } from '@/hooks/performance/useDebounce';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -67,6 +68,7 @@ export function ExerciseVideoLibrary({ onUploadClick: _onUploadClick }: Exercise
   const updateVideoMutation = useUpdateExerciseVideo();
 
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [difficultyFilter, setDifficultyFilter] = useState<string>('all');
   const [bodyPartFilter, setBodyPartFilter] = useState<string>('all');
@@ -101,8 +103,8 @@ export function ExerciseVideoLibrary({ onUploadClick: _onUploadClick }: Exercise
 
     return videos.filter((video) => {
       const matchesSearch =
-        video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (video.description?.toLowerCase().includes(searchTerm.toLowerCase()));
+        video.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        (video.description?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()));
 
       if (!matchesSearch) return false;
       if (categoryFilter !== 'all' && video.category !== categoryFilter) return false;
@@ -112,7 +114,7 @@ export function ExerciseVideoLibrary({ onUploadClick: _onUploadClick }: Exercise
 
       return true;
     });
-  }, [videos, searchTerm, categoryFilter, difficultyFilter, bodyPartFilter, equipmentFilter]);
+  }, [videos, debouncedSearchTerm, categoryFilter, difficultyFilter, bodyPartFilter, equipmentFilter]);
 
   const hasActiveFilters =
     categoryFilter !== 'all' ||
