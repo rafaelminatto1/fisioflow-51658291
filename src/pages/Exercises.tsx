@@ -169,10 +169,10 @@ export default function Exercises() {
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
               <Card key={i} className="overflow-hidden">
-                <CardContent className="p-3 sm:p-4">
-                  <Skeleton className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl mb-2 sm:mb-3" />
-                  <Skeleton className="h-3 w-16 sm:h-4 sm:w-20 mb-1 sm:mb-2" />
-                  <Skeleton className="h-6 w-12 sm:h-8 sm:w-16" />
+                <CardContent className="p-3">
+                  <Skeleton className="h-8 w-8 rounded-xl mb-2" />
+                  <Skeleton className="h-3 w-16 mb-1" />
+                  <Skeleton className="h-6 w-12" />
                 </CardContent>
               </Card>
             ))
@@ -180,64 +180,64 @@ export default function Exercises() {
             <>
               {/* Total Exercises */}
               <Card className="group overflow-hidden hover:shadow-lg transition-all hover:border-primary/30 bg-gradient-to-br from-primary/5 to-background">
-                <CardContent className="p-3 sm:p-4 lg:p-5">
+                <CardContent className="p-3 sm:p-4">
                   <div className="flex items-start justify-between">
-                    <div className="p-2 sm:p-2.5 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                      <Dumbbell className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                    <div className="p-1.5 sm:p-2 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                      <Dumbbell className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
                     </div>
                   </div>
-                  <div className="mt-2 sm:mt-4">
-                    <p className="text-2xl sm:text-3xl lg:text-4xl font-bold">{exercises.length}</p>
-                    <p className="text-[10px] sm:text-xs lg:text-sm text-muted-foreground mt-0.5 sm:mt-1">Exercícios</p>
+                  <div className="mt-2 sm:mt-3">
+                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{exercises.length}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Exercícios</p>
                   </div>
                 </CardContent>
               </Card>
 
               {/* Video Coverage */}
               <Card className="group overflow-hidden hover:shadow-lg transition-all hover:border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-background">
-                <CardContent className="p-3 sm:p-4 lg:p-5">
+                <CardContent className="p-3 sm:p-4">
                   <div className="flex items-start justify-between">
-                    <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors">
-                      <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" />
+                    <div className="p-1.5 sm:p-2 rounded-xl bg-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors">
+                      <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-600" />
                     </div>
-                    <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 text-[10px] sm:text-xs">
+                    <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 text-[10px]">
                       {videoPercentage}%
                     </Badge>
                   </div>
-                  <div className="mt-2 sm:mt-4">
-                    <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-emerald-600">{exercisesWithVideo.length}</p>
-                    <p className="text-[10px] sm:text-xs lg:text-sm text-muted-foreground mt-0.5 sm:mt-1">Com vídeo</p>
-                    <Progress value={videoPercentage} className="h-1 sm:h-1.5 mt-2" />
+                  <div className="mt-2 sm:mt-3">
+                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-emerald-600">{exercisesWithVideo.length}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Com vídeo</p>
+                    <Progress value={videoPercentage} className="h-1 mt-2" />
                   </div>
                 </CardContent>
               </Card>
 
               {/* Templates */}
               <Card className="group overflow-hidden hover:shadow-lg transition-all hover:border-blue-500/30 bg-gradient-to-br from-blue-500/5 to-background">
-                <CardContent className="p-3 sm:p-4 lg:p-5">
+                <CardContent className="p-3 sm:p-4">
                   <div className="flex items-start justify-between">
-                    <div className="p-2 sm:p-2.5 rounded-xl bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors">
-                      <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                    <div className="p-1.5 sm:p-2 rounded-xl bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors">
+                      <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-600" />
                     </div>
                   </div>
-                  <div className="mt-2 sm:mt-4">
-                    <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-blue-600">{templates.length}</p>
-                    <p className="text-[10px] sm:text-xs lg:text-sm text-muted-foreground mt-0.5 sm:mt-1">Templates</p>
+                  <div className="mt-2 sm:mt-3">
+                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-600">{templates.length}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Templates</p>
                   </div>
                 </CardContent>
               </Card>
 
               {/* Protocols - Hidden on small mobile, shown on sm+ */}
               <Card className="group overflow-hidden hover:shadow-lg transition-all hover:border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-background hidden sm:block">
-                <CardContent className="p-3 sm:p-4 lg:p-5">
+                <CardContent className="p-3 sm:p-4">
                   <div className="flex items-start justify-between">
-                    <div className="p-2 sm:p-2.5 rounded-xl bg-amber-500/10 group-hover:bg-amber-500/20 transition-colors">
-                      <Target className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
+                    <div className="p-1.5 sm:p-2 rounded-xl bg-amber-500/10 group-hover:bg-amber-500/20 transition-colors">
+                      <Target className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-600" />
                     </div>
                   </div>
-                  <div className="mt-2 sm:mt-4">
-                    <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-600">{protocols.length}</p>
-                    <p className="text-[10px] sm:text-xs lg:text-sm text-muted-foreground mt-0.5 sm:mt-1">Protocolos</p>
+                  <div className="mt-2 sm:mt-3">
+                    <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-amber-600">{protocols.length}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Protocolos</p>
                   </div>
                 </CardContent>
               </Card>
