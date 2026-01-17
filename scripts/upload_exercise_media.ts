@@ -178,7 +178,20 @@ const images = [
     { id: 'e381977a-2726-47ef-b66b-c28f8079fff2', file: 'nordic_curl_gen_1768658585928.png' }, // Nordic Hamstring Curl
     { id: 'dc5176c2-cd8c-4548-9eab-025d52163e16', file: 'copenhagen_plank_gen_1768658598876.png' }, // Copenhagen Plank
     { id: '48faaf03-3626-4ecb-9c33-6d2a244618e1', file: 'scorpion_stretch_gen_1768658612976.png' }, // Scorpion Stretch
-    { id: 'a8afa48a-77cc-40df-b23d-cf61f343a206', file: 'worlds_greatest_stretch_gen_1768658626743.png' } // World's Greatest Stretch
+    { id: 'a8afa48a-77cc-40df-b23d-cf61f343a206', file: 'worlds_greatest_stretch_gen_1768658626743.png' }, // World's Greatest Stretch
+
+    // Batch 16 - Sports Physio & Mobility Exercises
+    { id: 'c3ba30fe-9684-463b-a7cc-565ec0650b48', file: 'lateral_lunge_gen_1768668118556.png' }, // Afundo Lateral
+    { id: '91f3e5c9-ac80-48e6-8da0-0049f7fc2c35', file: 'hip_airplane_gen_1768668131752.png' }, // Hip Airplane
+    { id: '2203b17a-f256-48eb-a023-53d82198e71e', file: 'pallof_press_gen_1768668144969.png' }, // Pallof Press
+    { id: 'b6488dc0-fb26-43ee-ad99-d701bef53963', file: 'single_leg_rdl_gen_1768668172225.png' }, // Stiff Unilateral
+    { id: 'dc502cfe-3831-465a-b39f-bd753f403608', file: 'banded_side_step_gen_1768668186551.png' }, // Passos Laterais com Faixa
+    { id: 'e8525045-eac8-4221-a9af-17bbdd63219b', file: 'thoracic_rotation_gen_1768668202093.png' }, // Rotação Torácica em 4 Apoios
+    { id: 'c5e5a7b1-e695-4ac5-98f9-7b3df1fdbaab', file: 'heel_slides_gen_1768668215847.png' }, // Deslizamento de Calcanhar
+    { id: '5d4e9e60-72c7-4646-acb6-77bfcef7869a', file: 'hip_flexor_march_gen_1768668241596.png' }, // Marcha Supina de Quadril
+    { id: 'af498abc-e4d5-4014-8f05-d131e83e6309', file: 'split_squat_gen_1768668256430.png' }, // Agachamento Búlgaro
+    { id: 'bea028c5-24f8-4f05-95fa-f9df68cfa6f8', file: 'prone_cobra_gen_1768668270472.png' }, // Cobra Prona
+    { id: '647b66fe-d57e-41dd-8107-abe7d008a81f', file: '90_90_stretch_gen_1768668286262.png' } // Alongamento 90-90
 ];
 
 async function upload() {
