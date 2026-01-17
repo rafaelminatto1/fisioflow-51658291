@@ -133,11 +133,12 @@ export function AppRoutes() {
             <Route path="/prescricoes/publica/:qrCode" element={<PublicPrescriptionPage />} />
 
             {/* Protected routes */}
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/ocupacao-fisioterapeutas" element={<ProtectedRoute><TherapistOccupancy /></ProtectedRoute>} />
             <Route path="/patients" element={<ProtectedRoute><Patients /></ProtectedRoute>} />
-            <Route path="/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
-            <Route path="/agenda" element={<Navigate to="/schedule" replace />} />
+            <Route path="/schedule" element={<Navigate to="/" replace />} />
+            <Route path="/agenda" element={<Navigate to="/" replace />} />
             <Route path="/goals" element={<Navigate to="/cadastros/objetivos" replace />} />
             <Route path="/login" element={<Navigate to="/auth" replace />} />
             <Route path="/perfil" element={<Navigate to="/profile" replace />} />
