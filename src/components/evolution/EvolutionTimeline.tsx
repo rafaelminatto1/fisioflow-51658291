@@ -12,7 +12,7 @@
  * - Indicadores visuais de progresso
  */
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -47,13 +47,13 @@ import {
   Maximize2,
   Download,
   X,
-  ChevronRight
+  ChevronRight,
+  Trophy
 } from 'lucide-react';
-import { format, formatDistanceToNow, isSameDay, parseISO } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
-  useGamification,
-  type UnlockedAchievement
+  useGamification
 } from '@/hooks/useGamification';
 import {
   useSoapRecords,
@@ -73,7 +73,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -717,7 +716,13 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
   showGamification = true,
   onCopyEvolution
 }) => {
-  const { data: unlockedAchievements = [], isLoading: isLoadingGamification } = useGamification(patientId);
+  const {
+    isLoading: isLoadingGamification,
+    currentLevel,
+    currentXp,
+    progressPercentage,
+    unlockedAchievements
+  } = useGamification(patientId);
   const [filterType, setFilterType] = useState<TimelineEventType | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'timeline' | 'list'>('timeline');
@@ -859,6 +864,13 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
     return filtered.slice(0, limit);
   }, [timelineEvents, filterType, searchQuery, limit]);
 
+  // Verificar se evento é recente (últimas 24 horas)
+  const isRecentEvent = useCallback((eventDate: Date) => {
+    const now = new Date();
+    const diffHours = (now.getTime() - eventDate.getTime()) / (1000 * 60 * 60);
+    return diffHours <= 24;
+  }, []);
+
   // Agrupar eventos por período
   const groupedEvents = useMemo(() => {
     const groups: Record<string, TimelineEvent[]> = {};
@@ -943,9 +955,17 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
               <Clock className="h-5 w-5" />
               Linha do Tempo
               {showGamification && !isLoadingGamification && (
-                <Badge variant="secondary" className="ml-2 gap-0.5 px-2 py-0.5">
-                  🏆 {unlockedAchievements.length}
-                </Badge>
+                <div className="flex items-center gap-2 ml-2">
+                  <Badge variant="secondary" className="gap-0.5 px-2 py-0.5">
+                    <Trophy className="h-3 w-3 text-amber-500" />
+                    Level {currentLevel}
+                  </Badge>
+                  {unlockedAchievements.length > 0 && (
+                    <Badge variant="outline" className="gap-0.5 px-2 py-0.5 text-xs">
+                      🏆 {unlockedAchievements.length}
+                    </Badge>
+                  )}
+                </div>
               )}
             </CardTitle>
 
@@ -1022,33 +1042,78 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
             </Badge>
           </div>
 
-          {showGamification && !isLoadingGamification && unlockedAchievements.length > 0 && (
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-2xl">🏆</span>
-                <h3 className="font-semibold text-sm">Conquistas Recentes</h3>
-                <Badge variant="outline" className="h-5 px-1.5 text-xs">
-                  {unlockedAchievements.length} novas
-                </Badge>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {unlockedAchievements.slice(0, 6).map((achievement) => (
-                  <div
-                    key={achievement.id}
-                    className="flex items-center gap-1 px-2 py-1 bg-background rounded-lg border border-amber-200 dark:border-amber-700 cursor-pointer hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
-                  >
-                    <span className="text-xs">🎯</span>
-                    <span className="text-xs font-medium line-clamp-1 min-w-0">
-                      {achievement.achievement_title}
-                    </span>
+            {/* Gamification Progress Panel */}
+          {showGamification && (
+            <div className="space-y-4">
+              {/* Level Progress */}
+              {!isLoadingGamification && (
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+                      <span className="text-sm font-bold text-white">Lvl {currentLevel}</span>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-semibold">Progresso de Nível</span>
+                        <span className="text-xs text-muted-foreground">{currentXp} XP</span>
+                      </div>
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <div
+                          className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-500"
+                          style={{ width: `${progressPercentage}%` }}
+                        />
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {Math.round(progressPercentage)}% completo
+                      </div>
+                    </div>
                   </div>
-                ))}
-                {unlockedAchievements.length > 6 && (
-                  <div className="flex items-center px-2 py-1 bg-muted rounded-lg text-muted-foreground text-xs">
-                    +{unlockedAchievements.length - 6} mais
+                </div>
+              )}
+
+              {/* Achievements Panel */}
+              {!isLoadingGamification && unlockedAchievements.length > 0 && (
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-2xl">🏆</span>
+                    <h3 className="font-semibold text-sm">Conquistas Recentes</h3>
+                    <Badge variant="outline" className="h-5 px-1.5 text-xs">
+                      {unlockedAchievements.length} novas
+                    </Badge>
                   </div>
-                )}
-              </div>
+                  <div className="flex flex-wrap gap-2">
+                    {unlockedAchievements.slice(0, 6).map((achievement: any) => (
+                      <div
+                        key={achievement.id}
+                        className="flex items-center gap-1 px-2 py-1 bg-background rounded-lg border border-amber-200 dark:border-amber-700 cursor-pointer hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
+                      >
+                        <span className="text-xs">🎯</span>
+                        <span className="text-xs font-medium line-clamp-1 min-w-0">
+                          {achievement.achievement_title}
+                        </span>
+                      </div>
+                    ))}
+                    {unlockedAchievements.length > 6 && (
+                      <div className="flex items-center px-2 py-1 bg-muted rounded-lg text-muted-foreground text-xs">
+                        +{unlockedAchievements.length - 6} mais
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Loading skeleton for gamification */}
+              {isLoadingGamification && (
+                <div className="bg-muted/30 border border-muted rounded-xl p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Skeleton className="w-10 h-10 rounded-full" />
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-2 w-full rounded-full" />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardHeader>
@@ -1101,11 +1166,19 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
                             <div
                               key={event.id}
                               className={cn(
-                                "border rounded-xl p-4 transition-all cursor-pointer hover:shadow-md",
+                                "border rounded-xl p-4 transition-all cursor-pointer hover:shadow-lg hover:scale-[1.02] duration-200 relative",
                                 config.bgColor,
-                                config.borderColor
+                                config.borderColor,
+                                isRecentEvent(event.date) && "ring-2 ring-green-400/50 dark:ring-green-400/30"
                               )}
                             >
+                              {isRecentEvent(event.date) && (
+                                <div className="absolute -top-1 -right-1">
+                                  <div className="animate-pulse">
+                                    <div className="w-2 h-2 bg-green-500 rounded-full shadow-lg shadow-green-500/50" />
+                                  </div>
+                                </div>
+                              )}
                               <div className="flex items-start gap-3">
                                 <div className={cn("mt-0.5 shrink-0", config.color)}>
                                   {config.icon}
@@ -1116,12 +1189,22 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
                                     <p className="font-medium text-sm truncate">
                                       {event.title}
                                     </p>
-                                    <span className="text-xs text-muted-foreground whitespace-nowrap">
-                                      {formatDistanceToNow(event.date, {
-                                        locale: ptBR,
-                                        addSuffix: true
-                                      })}
-                                    </span>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                        {formatDistanceToNow(event.date, {
+                                          locale: ptBR,
+                                          addSuffix: true
+                                        })}
+                                      </span>
+                                      {isSession && (
+                                        <Badge
+                                          variant="outline"
+                                          className="text-[10px] h-5 px-1.5 bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-300"
+                                        >
+                                          Sessão
+                                        </Badge>
+                                      )}
+                                    </div>
                                   </div>
 
                                   {event.description && (
@@ -1274,7 +1357,7 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
                     <div
                       key={event.id}
                       className={cn(
-                        "flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors cursor-pointer",
+                        "flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors cursor-pointer hover:scale-[1.01] duration-200",
                         config.bgColor
                       )}
                       onClick={() => isSession && handleViewSessionDetails(event.data as SoapRecord)}

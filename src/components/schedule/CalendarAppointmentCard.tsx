@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface CalendarAppointmentCardProps {
     appointment: Appointment;
@@ -140,6 +141,7 @@ const CalendarAppointmentCardBase = ({
     isSelected = false,
     onToggleSelection
 }: CalendarAppointmentCardProps) => {
+    const isMobile = useIsMobile();
     const [isHovered, setIsHovered] = useState(false);
 
     // Status visual config
@@ -291,7 +293,7 @@ const CalendarAppointmentCardBase = ({
                 )}
 
                 {/* Hover Actions (Edit/Drag) - Only if not tiny, or if hovered on tiny */}
-                {isHovered && draggable && !isDragging && !selectionMode && (
+                {!isMobile && isHovered && draggable && !isDragging && !selectionMode && (
                     <AnimatePresence>
                         <motion.div
                             initial={{ opacity: 0 }}

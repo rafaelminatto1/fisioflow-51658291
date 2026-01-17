@@ -274,13 +274,13 @@ export const useGamification = (patientId: string): UseGamificationResult => {
       description: q.description || '',
     }));
 
-    // Create daily quest record
-    await supabase.from('daily_quests').insert({
+    // Create daily quest record using upsert to prevent conflicts
+    await supabase.from('daily_quests').upsert({
       patient_id: patientId,
       date: today,
       quests_data: newQuests,
       completed_count: 0,
-    });
+    }, { onConflict: 'patient_id,date' });
 
     return newQuests;
   }, [patientId]);
@@ -419,12 +419,12 @@ export const useGamification = (patientId: string): UseGamificationResult => {
 
         const { data: newRecord } = await supabase
           .from('daily_quests')
-          .insert({
+          .upsert({
             patient_id: patientId,
             date: today,
             quests_data: quests,
             completed_count: 0,
-          })
+          }, { onConflict: 'patient_id,date' })
           .select()
           .single();
 

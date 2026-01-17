@@ -24,13 +24,23 @@ import { WifiOff, RefreshCw, AlertCircle, CloudOff } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-export type OfflineIndicatorVariant = 'offline' | 'cache' | 'checking' | 'reconnecting' | 'error';
+// Mapeamento de fontes de dados para labels amigáveis
+const sourceLabels: Record<string, string> = {
+    supabase: 'Servidor',
+    indexeddb: 'Cache Local',
+    localstorage: 'Backup de Emergência',
+    memory: 'Memória',
+};
 
 export interface OfflineIndicatorProps {
     /** Se os dados exibidos são do cache */
     isFromCache: boolean;
     /** Se está online */
     isOnline: boolean;
+    /** Se os dados podem estar desatualizados */
+    isStale?: boolean;
+    /** Origem dos dados */
+    dataSource?: 'supabase' | 'indexeddb' | 'localstorage' | 'memory';
     /** Se está verificando conexão */
     isChecking?: boolean;
     /** Se está tentando reconectar */
@@ -91,8 +101,8 @@ function getVariant(props: OfflineIndicatorProps): OfflineIndicatorVariant {
     if (!props.isOnline) return 'offline';
     if (props.isChecking) return 'checking';
     if (props.isReconnecting) return 'reconnecting';
-    if (props.isFromCache) return 'cache';
-    return 'cache';
+    if (props.isFromCache || props.isStale) return 'cache';
+    return 'cache'; // Default fallback
 }
 
 function getIcon(variant: OfflineIndicatorVariant, isAnimating: boolean) {
@@ -111,7 +121,7 @@ function getIcon(variant: OfflineIndicatorVariant, isAnimating: boolean) {
     }
 }
 
-function getTitle(variant: OfflineIndicatorVariant): string {
+function getTitle(variant: OfflineIndicatorVariant, isStale?: boolean, dataSource?: string): string {
     switch (variant) {
         case 'offline':
             return 'Modo Offline';
@@ -121,6 +131,10 @@ function getTitle(variant: OfflineIndicatorVariant): string {
             return 'Reconectando...';
         case 'error':
             return 'Erro de conexão';
+        case 'cache':
+            if (dataSource === 'localstorage') return 'Backup de Emergência';
+            if (isStale) return 'Dados Antigos';
+            return 'Modo Offline (Cache)';
         default:
             return 'Dados do cache';
     }
@@ -129,6 +143,8 @@ function getTitle(variant: OfflineIndicatorVariant): string {
 export function OfflineIndicator({
     isFromCache,
     isOnline,
+    isStale = false,
+    dataSource,
     isChecking = false,
     isReconnecting = false,
     cacheTimestamp,
@@ -140,12 +156,12 @@ export function OfflineIndicator({
     size = 'md',
     minimal = false,
 }: OfflineIndicatorProps) {
-    // Não mostrar se está online e não está usando cache
-    if (isOnline && !isFromCache && !isChecking && !isReconnecting && !errorMessage) {
+    // Não mostrar se está online, com dados frescos e sem erros
+    if (isOnline && !isFromCache && !isStale && !isChecking && !isReconnecting && !errorMessage) {
         return null;
     }
 
-    const variant = getVariant({ isFromCache, isOnline, isChecking, isReconnecting, cacheTimestamp, errorMessage });
+    const variant = getVariant({ isFromCache, isOnline, isStale, isChecking, isReconnecting, cacheTimestamp, errorMessage });
     const styles = variantStyles[variant];
     const isLoading = isChecking || isReconnecting;
 
@@ -177,7 +193,7 @@ export function OfflineIndicator({
                 <div className={styles.icon}>
                     {getIcon(variant, isLoading)}
                 </div>
-                <span>{getTitle(variant)}</span>
+                <span>{getTitle(variant, isStale, dataSource)}</span>
             </div>
         );
     }
@@ -198,13 +214,15 @@ export function OfflineIndicator({
                 </div>
                 <div>
                     <p className={cn('font-medium', styles.text)}>
-                        {getTitle(variant)}
+                        {getTitle(variant, isStale, dataSource)}
                     </p>
                     <p className={cn('text-xs opacity-80', styles.text)}>
                         {errorMessage ? (
                             errorMessage
                         ) : (
                             <>
+                                {dataSource && <span className="font-semibold">{sourceLabels[dataSource] || dataSource}</span>}
+                                {dataSource && ' • '}
                                 {itemCount !== undefined && `${itemCount} ${itemLabel}`}
                                 {itemCount !== undefined && timestamp && ' • '}
                                 {timestamp && `Atualizado ${timestamp}`}
