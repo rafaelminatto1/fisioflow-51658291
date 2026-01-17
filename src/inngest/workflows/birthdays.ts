@@ -10,8 +10,8 @@
  * - Sends via WhatsApp and/or Email using integrated services
  */
 
-import { inngest, retryConfig } from '../../lib/inngest/client';
-import { Events, BirthdayMessagePayload, InngestStep } from '../../lib/inngest/types';
+import { inngest, retryConfig } from '../../lib/inngest/client.js';
+import { Events, BirthdayMessagePayload, InngestStep } from '../../lib/inngest/types.js';
 import { createClient } from '@supabase/supabase-js';
 
 export const birthdayMessagesWorkflow = inngest.createFunction(
