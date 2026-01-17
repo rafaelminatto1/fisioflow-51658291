@@ -108,45 +108,47 @@ export default function Exercises() {
           <div className="absolute top-0 right-0 w-32 h-32 sm:w-64 sm:h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-24 h-24 sm:w-48 sm:h-48 bg-primary/5 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
 
-          <div className="relative flex flex-col gap-4">
-            {/* Title and Icon */}
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-primary/20 flex items-center justify-center shadow-lg shadow-primary/20 flex-shrink-0">
-                <Dumbbell className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+          <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex flex-col gap-4 flex-1">
+              {/* Title and Icon */}
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-primary/20 flex items-center justify-center shadow-lg shadow-primary/20 flex-shrink-0">
+                  <Dumbbell className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
+                    Biblioteca de Exercícios
+                  </h1>
+                  <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
+                    Gerencie exercícios, templates e protocolos de tratamento
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
-                  Biblioteca de Exercícios
-                </h1>
-                <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
-                  Gerencie exercícios, templates e protocolos de tratamento
-                </p>
-              </div>
+
+              {/* Categories - Hidden on smallest mobile, shown on xs+ */}
+              {!isLoading && topCategories.length > 0 && (
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                  <span className="text-[10px] sm:text-xs text-muted-foreground">Categorias:</span>
+                  {topCategories.map(cat => (
+                    <Badge key={cat} variant="secondary" className="text-[10px] sm:text-xs bg-background/50 backdrop-blur">
+                      {cat}
+                    </Badge>
+                  ))}
+                  {categories.length > 3 && (
+                    <Badge variant="outline" className="text-[10px] sm:text-xs">
+                      +{categories.length - 3}
+                    </Badge>
+                  )}
+                </div>
+              )}
             </div>
 
-            {/* Categories - Hidden on smallest mobile, shown on xs+ */}
-            {!isLoading && topCategories.length > 0 && (
-              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                <span className="text-[10px] sm:text-xs text-muted-foreground">Categorias:</span>
-                {topCategories.map(cat => (
-                  <Badge key={cat} variant="secondary" className="text-[10px] sm:text-xs bg-background/50 backdrop-blur">
-                    {cat}
-                  </Badge>
-                ))}
-                {categories.length > 3 && (
-                  <Badge variant="outline" className="text-[10px] sm:text-xs">
-                    +{categories.length - 3}
-                  </Badge>
-                )}
-              </div>
-            )}
-
             {/* Action Buttons - Full width on mobile */}
-            <div className="flex gap-2 w-full sm:w-auto">
+            <div className="flex gap-2 w-full lg:w-auto">
               <Button
                 onClick={handleNewExercise}
                 size="default"
-                className="flex-1 sm:flex-auto shadow-lg shadow-primary/20 gap-2 group touch-target"
+                className="flex-1 lg:flex-auto shadow-lg shadow-primary/20 gap-2 group touch-target"
               >
                 <Plus className="h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:rotate-90" />
                 <span>Novo Exercício</span>
@@ -155,7 +157,7 @@ export default function Exercises() {
                 onClick={handleUploadClick}
                 variant="outline"
                 size="default"
-                className="flex-1 sm:flex-auto gap-2 touch-target"
+                className="flex-1 lg:flex-auto gap-2 touch-target"
               >
                 <Video className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span>Upload Vídeo</span>
