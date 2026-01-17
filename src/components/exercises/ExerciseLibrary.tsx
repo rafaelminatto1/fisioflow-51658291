@@ -390,8 +390,12 @@ const ExerciseListItem = React.memo(function ExerciseListItem({
 
 
 
+import { useDebounce } from '@/hooks/performance/useDebounce';
+
 export function ExerciseLibrary({ onSelectExercise, onEditExercise, selectionMode = false, addedExerciseIds = [] }: ExerciseLibraryProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
   // Filter panel state
   const [advancedFilters, setAdvancedFilters] = useState<ExerciseFiltersState>({
     bodyParts: [],
@@ -418,8 +422,8 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise, selectionMod
   const filteredExercises = useMemo(() => {
     return exercises.filter(exercise => {
       // Text search
-      const matchesSearch = (exercise.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-        (exercise.description?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+      const matchesSearch = (exercise.name?.toLowerCase() || '').includes(debouncedSearchTerm.toLowerCase()) ||
+        (exercise.description?.toLowerCase() || '').includes(debouncedSearchTerm.toLowerCase());
 
       if (!matchesSearch) return false;
 
@@ -509,7 +513,7 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise, selectionMod
 
       return true;
     });
-  }, [exercises, searchTerm, activeFilter, isFavorite, advancedFilters]);
+  }, [exercises, debouncedSearchTerm, activeFilter, isFavorite, advancedFilters]);
 
   const handleDelete = async () => {
     if (deleteId) {
