@@ -5,8 +5,8 @@
  * Runs every Monday at 9:00 AM to send weekly summary reports
  */
 
-import { inngest, retryConfig } from '../../lib/inngest/client';
-import { Events, InngestStep } from '../../lib/inngest/types';
+import { inngest, retryConfig } from '../../lib/inngest/client.js';
+import { Events, InngestStep } from '../../lib/inngest/types.js';
 import { createClient } from '@supabase/supabase-js';
 
 // Define types for steps

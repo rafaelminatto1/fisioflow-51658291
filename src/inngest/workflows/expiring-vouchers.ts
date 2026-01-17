@@ -5,10 +5,10 @@
  * Runs daily at 10:00 AM to send reminders for vouchers expiring in 7 days
  */
 
-import { inngest, retryConfig } from '../../lib/inngest/client';
-import { Events, InngestStep } from '../../lib/inngest/types';
+import { inngest, retryConfig } from '../../lib/inngest/client.js';
+import { Events, InngestStep } from '../../lib/inngest/types.js';
 import { createClient } from '@supabase/supabase-js';
-import { logger } from '@/lib/errors/logger';
+import { logger } from '../../lib/errors/logger.js';
 
 type VoucherWithRelations = {
   id: string;
@@ -77,7 +77,7 @@ export const expiringVouchersWorkflow = inngest.createFunction(
     // Send reminders
     const results = await step.run('send-reminders', async () => {
       return await Promise.all(
-        vouchers.map(async (voucher) => {
+        vouchers.map(async (voucher: VoucherWithRelations) => {
           try {
             // Send email reminder
             if (voucher.patient?.email) {

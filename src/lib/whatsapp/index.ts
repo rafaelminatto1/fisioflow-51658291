@@ -2,4 +2,4 @@
  * WhatsApp Module - Main Export
  */
 
-export * from './evolution';
+export * from './evolution.js';

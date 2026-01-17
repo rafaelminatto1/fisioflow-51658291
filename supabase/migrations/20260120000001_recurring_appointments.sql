@@ -317,7 +317,9 @@ $$ LANGUAGE plpgsql;
 -- =====================================================================
 
 -- View para séries ativas com contagem de ocorrências
-CREATE OR REPLACE VIEW active_recurring_series AS
+CREATE OR REPLACE VIEW active_recurring_series
+WITH (security_invoker = true)
+AS
 SELECT
   s.*,
   COUNT(o.id) as occurrence_count,
