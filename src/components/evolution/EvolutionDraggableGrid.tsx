@@ -830,9 +830,9 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
             i: item.id,
             x: 0,
             y: index * 10,
-            w: 2, // Full width for 'xxs' breakpoint (max 2)
+            w: 1, // Full width for 'xxs' breakpoint (max 1)
             h: item.defaultLayout.h,
-            minW: 2
+            minW: 1
         }));
 
         return {
