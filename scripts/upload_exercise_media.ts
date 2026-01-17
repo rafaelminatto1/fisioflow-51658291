@@ -148,7 +148,25 @@ const images = [
     { id: 'aabcf71c-9234-426e-bef9-759e1286c47f', file: 'stair_descent_1768593606337.png' },
     { id: 'caca8746-0545-4876-a060-101dc614d5ba', file: 'gait_obstacles_1768593617798.png' },
     { id: 'cd66cb4b-9e85-44f1-84d9-0ca60b9462cb', file: 'lunge_rotation_1768593629842.png' },
-    { id: 'd6046fa7-8a3a-4cf4-98f5-d4dc8edf7d20', file: 'squat_jump_1768593670074.png' }
+    { id: 'd6046fa7-8a3a-4cf4-98f5-d4dc8edf7d20', file: 'squat_jump_1768593670074.png' },
+    // Phase 13 FINAL BATCH (Mobility & Remaining) - CORRECTED
+    { id: '0b6a0d0e-aed9-4300-b0a2-b739e768ec13', file: 'prona_shoulder_extension_1768622457672.png' },
+    { id: '63058119-f79a-4aaf-ac42-0fb342d1df3e', file: 'glute_kickback_mat_1768622470807.png' },
+    { id: '5fd7f81f-bb4a-47e6-bcce-c95b7fd0103b', file: 'glute_kickback_mat_1768622470807.png' },
+    { id: '5096ca7d-787b-4c96-8f6d-0f77b4266e6d', file: 'stair_climb_1768622629987.png' },
+    { id: 'adb7373b-bfae-4ca6-ad4a-6f26851a6e3b', file: 'codman_pendular_1768622642881.png' },
+    { id: 'b5e67932-ac7a-40c2-8b2f-9973fcf26f7f', file: 'hip_flexion_broom_1768622656634.png' },
+    { id: '69dd4f63-d7e1-46d2-9383-a98af2639578', file: 'cat_camel_1768622671230.png' },
+    { id: '286a7f27-9989-4504-8812-50c31cfd9468', file: 'cervical_towel_mobilization_1768622684001.png' },
+    { id: '7d9dd2cc-eaf7-43bc-a6ef-4d9ee5b05647', file: 'thoracic_foam_roller_1768622696628.png' },
+    { id: 'd509897f-7126-45c1-937f-707e409b128e', file: 'sciatic_slump_1768622710022.png' },
+    { id: 'f57b18d2-5da8-4d34-9c3c-6fc4d1df3fd1', file: 'median_nerve_1768622723706.png' },
+    { id: '4e87539c-3199-4aec-ae20-4749e80ea055', file: 'ulnar_nerve_1768622738036.png' },
+    { id: '36562767-4169-4997-987d-480f48d77aca', file: 'shoulder_mobility_stick_1768622484332.png' },
+    { id: '64391fd6-e533-495d-bd98-aff25dabf8ff', file: 'incentive_spirometry_1768622497509.png' },
+    { id: '4b1e716a-a0ff-4e8c-a69f-14b53234f011', file: 'costal_breathing_1768622511228.png' },
+    // Fix for missed Wall Slides ID
+    { id: '9a6d787c-9975-4b28-81f6-797dbe7ae58c', file: 'wall_shoulder_exercise_1768593410983.png' }
 ];
 
 async function upload() {
