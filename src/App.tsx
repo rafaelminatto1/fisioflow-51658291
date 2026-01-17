@@ -145,8 +145,9 @@ const App = () => {
         client={queryClient}
         persistOptions={{
           persister,
-          maxAge: 1000 * 60 * 60 * 24, // 24 hours
-          buster: __APP_VERSION__,
+          maxAge: 1000 * 60 * 60 * 24 * 7, // 7 dias - manter dados por mais tempo
+          // REMOVIDO: buster que invalidava cache a cada deploy
+          // Os dados do banco serão atualizados via refetch, não precisamos limpar o cache
         }}
         onSuccess={() => logger.info('Cache persistente restaurado com sucesso', {}, 'App')}
       >
@@ -155,20 +156,20 @@ const App = () => {
             <StatsigProviderWrapper>
               <RealtimeProvider>
                 <DataProvider>
-                <Toaster />
-                <Sonner />
-                {/* <PWAInstallPrompt /> */}
-                {/* <PWAUpdatePrompt /> */}
-                <BrowserRouter
-                  future={{
-                    v7_startTransition: true,
-                    v7_relativeSplatPath: true,
-                  }}
-                >
-                  <Suspense fallback={<PageLoadingFallback />}>
-                    <AppRoutes />
-                    <VersionManager />
-                    {/* Vercel Analytics - Disabled to prevent 400 errors
+                  <Toaster />
+                  <Sonner />
+                  {/* <PWAInstallPrompt /> */}
+                  {/* <PWAUpdatePrompt /> */}
+                  <BrowserRouter
+                    future={{
+                      v7_startTransition: true,
+                      v7_relativeSplatPath: true,
+                    }}
+                  >
+                    <Suspense fallback={<PageLoadingFallback />}>
+                      <AppRoutes />
+                      <VersionManager />
+                      {/* Vercel Analytics - Disabled to prevent 400 errors
                     {Analytics && (
                       <ErrorBoundary fallback={null}>
                         <Analytics />
@@ -176,11 +177,11 @@ const App = () => {
                     )}
                     */}
 
-                    <WebVitalsIndicator />
+                      <WebVitalsIndicator />
 
-                  </Suspense>
-                </BrowserRouter>
-              </DataProvider>
+                    </Suspense>
+                  </BrowserRouter>
+                </DataProvider>
               </RealtimeProvider>
             </StatsigProviderWrapper>
           </AuthContextProvider>
