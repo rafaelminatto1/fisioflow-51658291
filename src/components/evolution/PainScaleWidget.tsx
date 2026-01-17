@@ -169,14 +169,14 @@ const PainLevelIndicator = memo<PainLevelIndicatorProps>(({ level }) => {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
             className={cn(
-                'w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-2xl flex flex-col items-center justify-center shadow-xl',
+                'w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl flex flex-col items-center justify-center shadow-lg',
                 currentLevel.color,
                 'text-white'
             )}
             aria-label={`Nível de dor: ${level} de 10 - ${currentLevel.label}`}
             role="img"
         >
-            <span className="text-2xl sm:text-3xl md:text-4xl font-bold" aria-hidden="true">{level}</span>
+            <span className="text-xl sm:text-2xl md:text-3xl font-bold" aria-hidden="true">{level}</span>
             <span className="text-[10px] sm:text-xs md:text-sm opacity-90 font-medium" aria-hidden="true">/10</span>
         </motion.div>
     );
@@ -404,7 +404,7 @@ export const PainScaleWidget: React.FC<PainScaleWidgetProps> = ({
                 )}
             >
                 {!hideHeader && (
-                    <CardHeader className="pb-3 sm:pb-4 px-4 sm:px-5">
+                    <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-4 pt-3">
                         <div className="flex items-center justify-between gap-2 sm:gap-4">
                             <CardTitle className="flex items-center gap-2 sm:gap-2.5 text-base font-semibold">
                                 <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-primary" aria-hidden="true" />
@@ -432,7 +432,7 @@ export const PainScaleWidget: React.FC<PainScaleWidgetProps> = ({
                     </CardHeader>
                 )}
 
-                <CardContent className="px-4 sm:px-5 space-y-4 sm:space-y-5">
+                <CardContent className="px-3 sm:px-4 pb-3 space-y-3 sm:space-y-4">
                     {/* Main Pain Display */}
                     <div className="flex items-center gap-3 sm:gap-4 md:gap-5">
                         <PainLevelIndicator level={value.level} />
