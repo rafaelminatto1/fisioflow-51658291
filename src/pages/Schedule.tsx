@@ -89,6 +89,9 @@ const Schedule = () => {
 
   // Detect mobile and default to day view on mobile
   const [viewType, setViewType] = useState<CalendarViewType | 'list'>(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 768 ? 'day' : 'week';
+    }
     return isMobile ? 'day' : 'week';
   });
 
@@ -111,7 +114,18 @@ const Schedule = () => {
   // HOOKS
   // ===================================================================
 
-  const { data: appointments = [], isLoading: loading, error, refetch, isFromCache, cacheTimestamp } = useAppointments();
+  const {
+    data: appointments = [],
+    isLoading: loading,
+    error,
+    refetch,
+    isFromCache,
+    cacheTimestamp,
+    // @ts-ignore - Propriedades novas
+    dataSource,
+    // @ts-ignore
+    isUsingStaleData
+  } = useAppointments();
   const { mutateAsync: rescheduleAppointment } = useRescheduleAppointment();
 
   const {
@@ -391,6 +405,10 @@ const Schedule = () => {
           itemCount={appointments.length}
           onRefresh={handleRefresh}
           className=""
+          // @ts-ignore - Propriedades dinâmicas retornadas pelo hook atualizado
+          isStale={isUsingStaleData}
+          // @ts-ignore
+          dataSource={dataSource}
         />
 
         {/* Header Section - Kept simple/clean to match design */}
@@ -467,7 +485,7 @@ const Schedule = () => {
           />
 
           {/* Calendar Area */}
-          <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950 p-6 pt-4">
+          <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950 p-2 md:p-6 pt-2 md:pt-4">
             <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950 relative min-h-[600px]">
               <Suspense fallback={<LoadingSkeleton type="card" rows={3} className="h-full w-full" />}>
                 <CalendarView
@@ -514,7 +532,7 @@ const Schedule = () => {
           defaultDate={modalDefaultDate}
           defaultTime={modalDefaultTime}
           defaultPatientId={scheduleFromWaitlist?.patientId}
-          mode={selectedAppointment ? 'view' : 'create'}
+          mode={selectedAppointment ? 'edit' : 'create'}
         />
 
         {waitlistQuickAdd && (

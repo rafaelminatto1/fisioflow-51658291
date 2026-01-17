@@ -284,40 +284,29 @@ export const CalendarView = memo(({
         <CardContent className="p-2 md:p-3 lg:p-4 flex flex-col h-full">
           {/* Header - Mobile Optimized */}
           <div className="p-2 sm:p-3 border-b bg-gradient-to-r from-muted/30 to-muted/10" role="toolbar" aria-label="Navegação do calendário">
-            {/* Mobile Header Layout */}
-            <div className="flex items-center justify-between sm:hidden gap-2">
-              <div className="flex items-center gap-1 bg-background rounded-lg p-1 shadow-sm" role="group" aria-label="Navegação por data">
+            <div className="flex items-center justify-between sm:hidden gap-2 w-full">
+              <div className="flex items-center gap-1">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => navigateCalendar('prev')}
-                  className="h-8 w-8 p-0 touch-target"
-                  aria-label={`Navegar para ${viewType === 'day' ? 'ontem' : viewType === 'week' ? 'semana anterior' : 'mês anterior'}`}
+                  className="h-8 w-8 p-0"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={goToToday}
-                  className="h-8 px-2 text-xs font-medium touch-target"
-                  aria-label="Ir para hoje"
-                >
-                  Hoje
-                </Button>
+
+                <div className="text-sm font-semibold text-foreground/80 text-center min-w-[100px]">
+                  {getHeaderTitle()}
+                </div>
+
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => navigateCalendar('next')}
-                  className="h-8 w-8 p-0 touch-target"
-                  aria-label={`Navegar para ${viewType === 'day' ? 'amanhã' : viewType === 'week' ? 'próxima semana' : 'próximo mês'}`}
+                  className="h-8 w-8 p-0"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
-              </div>
-
-              <div className="text-xs font-semibold text-foreground/70 truncate max-w-[120px]" aria-live="polite" aria-atomic="true">
-                {getHeaderTitle()}
               </div>
 
               <div className="flex items-center gap-1 bg-background rounded-lg p-1 shadow-sm" role="group" aria-label="Seleção de visualização">
