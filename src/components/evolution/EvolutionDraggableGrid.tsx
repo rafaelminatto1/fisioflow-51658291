@@ -338,9 +338,9 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
 
     // Memoize grid layout calculations to prevent recreation
     const gridLayouts = React.useMemo(() => ({
-        painHeight: showPainDetails ? 11 : 9,
-        soapYOffset: showPainDetails ? 11 : 9,
-        measurementsYOffset: (showPainDetails ? 25 : 23),
+        painHeight: showPainDetails ? 11 : 6, // Reduced from 9 to 6
+        soapYOffset: showPainDetails ? 11 : 6, // Reduced from 9 to 6
+        measurementsYOffset: (showPainDetails ? 25 : 20), // Adjusted based on new height
     }), [showPainDetails]);
 
     // Update stored layout when pain details are toggled
@@ -349,7 +349,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
     useEffect(() => {
         if (storedLayouts?.lg) {
             const painItem = storedLayouts.lg.find(i => i.i === 'pain-scale');
-            const targetH = showPainDetails ? 11 : 9;
+            const targetH = showPainDetails ? 11 : 6;
 
             if (painItem && painItem.h !== targetH) {
                 const newLayout = storedLayouts.lg.map(item => {
@@ -535,7 +535,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 4, h: gridLayouts.painHeight, x: 0, y: 0, minW: 3, minH: 8 }
+            defaultLayout: { w: 4, h: gridLayouts.painHeight, x: 0, y: 0, minW: 3, minH: 6 }
         },
         // Exercícios da Sessão (70% da largura)
         {
@@ -560,7 +560,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 8, h: gridLayouts.painHeight, x: 4, y: 0, minW: 6, minH: 8 }
+            defaultLayout: { w: 8, h: gridLayouts.painHeight, x: 4, y: 0, minW: 6, minH: 6 }
         },
 
         // ===== LINHA 2: Formulário SOAP (4 campos em 2x2) - Using memoized components =====
@@ -743,7 +743,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 6, h: 10, x: 0, y: (showPainDetails ? 37 : 35), minW: 6, minH: 6 }
+            defaultLayout: { w: 6, h: 10, x: 0, y: (showPainDetails ? 37 : 32), minW: 6, minH: 6 }
         },
         // Anexos (direita)
         {
@@ -773,7 +773,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 6, h: 10, x: 6, y: (showPainDetails ? 37 : 35), minW: 6, minH: 6 }
+            defaultLayout: { w: 6, h: 10, x: 6, y: (showPainDetails ? 37 : 32), minW: 6, minH: 6 }
         },
     ], [
         isEditable,

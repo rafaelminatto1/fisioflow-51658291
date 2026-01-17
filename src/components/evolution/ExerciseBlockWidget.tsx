@@ -581,7 +581,7 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
                             placeholder="Buscar exercícios..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="h-8 pl-10 text-sm"
+                            className="h-7 pl-9 text-xs"
                             aria-label={ARIA_LABELS.search}
                             disabled={isLoading}
                         />
@@ -598,7 +598,7 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
                                     variant="outline"
                                     size="sm"
                                     className={cn(
-                                        "h-8 px-2.5 gap-1.5 text-sm font-medium relative transition-colors",
+                                        "h-7 px-2.5 gap-1.5 text-xs font-medium relative transition-colors",
                                         activeFiltersCount > 0 && "border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100"
                                     )}
                                     aria-label={ARIA_LABELS.filters}
@@ -635,7 +635,7 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
                             disabled={disabled || filteredExercises.length === 0 || isLoading}
                         >
                             <SelectTrigger
-                                className="h-8 w-[140px] text-sm"
+                                className="h-7 w-[130px] text-xs"
                                 aria-label={ARIA_LABELS.addExercise}
                             >
                                 <SelectValue placeholder="Adicionar..." />
@@ -684,7 +684,7 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
                                         variant="outline"
                                         size="sm"
                                         onClick={onRepeatLastSession}
-                                        className="h-8 px-2.5 gap-1.5 text-sm font-medium border-dashed border-amber-300 hover:border-amber-400 hover:bg-amber-50 transition-all"
+                                        className="h-7 px-2 gap-1.5 text-xs font-medium border-dashed border-amber-300 hover:border-amber-400 hover:bg-amber-50 transition-all"
                                         disabled={disabled}
                                         aria-label="Repetir exercícios da sessão anterior"
                                     >
@@ -744,7 +744,7 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
 
                 {/* Lista de exercícios */}
                 <ScrollArea className="flex-1">
-                    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4" role="list">
+                    <div className="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-3" role="list">
                         {exercises.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed rounded-lg text-muted-foreground bg-muted/20">
                                 <Dumbbell className="h-10 w-10 mb-3 opacity-30" />
