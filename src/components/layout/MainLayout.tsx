@@ -85,7 +85,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         <Sidebar />
       </div>
 
-      <div className="flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out pl-0 md:pl-0 lg:pl-0"> {/* Adjusted for sidebar if needed, but sidebar is likely fixed or unrelated to this flex container's padding if handled by Sidebar component internally */}
+      <div className="flex-1 flex flex-col min-h-screen min-w-0 overflow-hidden transition-all duration-300 ease-in-out pl-0 md:pl-0 lg:pl-0"> {/* Adjusted for sidebar if needed, but sidebar is likely fixed or unrelated to this flex container's padding if handled by Sidebar component internally */}
         {/* Header Desktop */}
         <header className="hidden md:flex h-16 bg-white/80 dark:bg-background-dark/80 border-b border-gray-200/50 dark:border-gray-800/50 items-center justify-between px-6 shadow-sm backdrop-blur-xl sticky top-0 z-40 transition-all duration-300">
           <div className="flex items-center gap-4">

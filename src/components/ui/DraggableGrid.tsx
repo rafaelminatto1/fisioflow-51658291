@@ -33,7 +33,12 @@ interface DraggableGridProps {
 
 // Configuration constants for the responsive grid layout
 const GRID_CONFIG = {
-    cols: { lg: 12, md: 12, sm: 6, xs: 4, xxs: 1 } as const,
+    // Mobile-first column configuration:
+    // - xxs (0-480px): 1 column for iPhone/small phones - single column stack
+    // - xs (480-768px): 2 columns for larger phones/tablets in portrait
+    // - sm (768-996px): 6 columns for tablets/small desktops
+    // - md/lg (996px+): 12 columns for desktops
+    cols: { lg: 12, md: 12, sm: 6, xs: 2, xxs: 1 } as const,
     breakpoints: { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 } as const,
     margin: [16, 16] as const, // [horizontal, vertical] margin between items
     rowHeight: 50, // default height of each grid row in pixels
@@ -50,11 +55,30 @@ const GRID_CONFIG = {
  */
 const useContainerWidth = () => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const [width, setWidth] = useState(1200); // Default to desktop width
+    // Use window.innerWidth as initial estimate for mobile-friendly default
+    const [width, setWidth] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return Math.min(window.innerWidth, 1200);
+        }
+        return 1200;
+    });
 
     useEffect(() => {
         const element = containerRef.current;
         if (!element) return;
+
+        // Immediate measurement to get accurate width ASAP
+        const measureWidth = () => {
+            if (element.offsetWidth > 0) {
+                setWidth(element.offsetWidth);
+            }
+        };
+
+        // Measure immediately
+        measureWidth();
+
+        // Also measure on next frame to catch layout updates
+        requestAnimationFrame(measureWidth);
 
         const resizeObserver = new ResizeObserver((entries) => {
             for (const entry of entries) {
@@ -63,11 +87,6 @@ const useContainerWidth = () => {
                 }
             }
         });
-
-        // Initial measurement
-        if (element.offsetWidth > 0) {
-            setWidth(element.offsetWidth);
-        }
 
         resizeObserver.observe(element);
 
@@ -149,8 +168,8 @@ export const DraggableGrid = memo(function DraggableGrid({
     return (
         <div
             ref={containerRef}
-            className={cn("w-full", className)}
-            style={{ position: 'relative' }}
+            className={cn("w-full max-w-full", className)}
+            style={{ position: 'relative', overflow: 'hidden' }}
         >
             <Responsive
                 className={cn("layout", isEditable && "editable")}
@@ -188,11 +207,12 @@ export const DraggableGrid = memo(function DraggableGrid({
                             h: item.defaultLayout.h,
                             x: item.defaultLayout.x,
                             y: item.defaultLayout.y,
-                            minW: item.defaultLayout.minW,
-                            minH: item.defaultLayout.minH,
-                            maxW: item.defaultLayout.w ? item.defaultLayout.w + 4 : undefined, // Allow slight expansion
+                            // Note: minW/minH are intentionally omitted here to allow
+                            // responsive layouts (passed via 'layouts' prop) to take full control
+                            // on smaller breakpoints without being constrained by desktop minimums.
+                            maxW: item.defaultLayout.w ? item.defaultLayout.w + 4 : undefined,
                         }}
-                        style={{ overflow: 'visible' }} // Allow shadows and tooltips to overflow
+                        style={{ overflow: 'visible' }}
                     >
                         {item.content}
                     </div>

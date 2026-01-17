@@ -15,73 +15,124 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const newExercises = [
+    // Batch 16 - Sports Physio & Mobility Exercises
     {
-        id: 'e381977a-2726-47ef-b66b-c28f8079fff2',
-        name: 'Nordic Hamstring Curl',
-        description: 'Excentric strengthening for hamstrings. Start kneeling with ankles held, lower torso forward with control.',
+        id: 'c3ba30fe-9684-463b-a7cc-565ec0650b48',
+        name: 'Afundo Lateral',
+        description: 'Passo lateral profundo com uma perna flexionada e outra estendida. Trabalha adutores, glúteos e quadríceps.',
         category: 'Fortalecimento',
-        difficulty: 'Avançado',
-        body_parts: ['Isquiotibiais', 'Glúteos'],
-        equipment: ['Parceiro ou Apoio Fixo'],
+        difficulty: 'Intermediário',
+        body_parts: ['Quadril', 'Adutores', 'Quadríceps'],
+        equipment: ['Peso Corporal'],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
     },
     {
-        id: 'dc5176c2-cd8c-4548-9eab-025d52163e16',
-        name: 'Copenhagen Plank',
-        description: 'Side plank variation for adductor strengthening. Top leg on bench, bottom leg lifted.',
+        id: '91f3e5c9-ac80-48e6-8da0-0049f7fc2c35',
+        name: 'Hip Airplane',
+        description: 'Exercício de equilíbrio unipodal com rotação de tronco. Trabalha estabilidade de quadril e propriocepção.',
+        category: 'Propriocepção',
+        difficulty: 'Avançado',
+        body_parts: ['Quadril', 'Core', 'Glúteos'],
+        equipment: ['Peso Corporal'],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    },
+    {
+        id: '2203b17a-f256-48eb-a023-53d82198e71e',
+        name: 'Pallof Press',
+        description: 'Pressão anti-rotacional com cabo ou elástico. Fortalece core e estabilizadores de tronco.',
+        category: 'Fortalecimento',
+        difficulty: 'Intermediário',
+        body_parts: ['Core', 'Abdômen'],
+        equipment: ['Faixa Elástica', 'Cabo'],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    },
+    {
+        id: 'b6488dc0-fb26-43ee-ad99-d701bef53963',
+        name: 'Stiff Unilateral',
+        description: 'Levantamento terra romeno em uma perna. Trabalha isquiotibiais, glúteos e equilíbrio.',
         category: 'Fortalecimento',
         difficulty: 'Avançado',
-        body_parts: ['Adutores', 'Core'],
+        body_parts: ['Isquiotibiais', 'Glúteos', 'Core'],
+        equipment: ['Halter'],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    },
+    {
+        id: 'dc502cfe-3831-465a-b39f-bd753f403608',
+        name: 'Passos Laterais com Faixa',
+        description: 'Passos laterais com faixa elástica nos tornozelos. Ativa glúteo médio.',
+        category: 'Fortalecimento',
+        difficulty: 'Iniciante',
+        body_parts: ['Glúteos', 'Quadril'],
+        equipment: ['Faixa Elástica'],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    },
+    {
+        id: 'e8525045-eac8-4221-a9af-17bbdd63219b',
+        name: 'Rotação Torácica em 4 Apoios',
+        description: 'Rotação de coluna torácica em posição quadrúpede. Melhora mobilidade de tronco.',
+        category: 'Mobilidade',
+        difficulty: 'Iniciante',
+        body_parts: ['Coluna Torácica', 'Core'],
+        equipment: ['Colchonete'],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    },
+    {
+        id: 'c5e5a7b1-e695-4ac5-98f9-7b3df1fdbaab',
+        name: 'Deslizamento de Calcanhar',
+        description: 'Deslizar calcanhar para flexionar joelho em decúbito dorsal. Exercício pós-operatório de joelho.',
+        category: 'Mobilidade',
+        difficulty: 'Iniciante',
+        body_parts: ['Joelho'],
+        equipment: ['Colchonete'],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    },
+    {
+        id: '5d4e9e60-72c7-4646-acb6-77bfcef7869a',
+        name: 'Marcha Supina de Quadril',
+        description: 'Movimento de marcha alternando pernas em decúbito dorsal. Fortalece flexores de quadril.',
+        category: 'Fortalecimento',
+        difficulty: 'Iniciante',
+        body_parts: ['Quadril', 'Core'],
+        equipment: ['Colchonete'],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    },
+    {
+        id: 'af498abc-e4d5-4014-8f05-d131e83e6309',
+        name: 'Agachamento Búlgaro',
+        description: 'Agachamento unilateral com pé traseiro elevado. Trabalha quadríceps, glúteos e equilíbrio.',
+        category: 'Fortalecimento',
+        difficulty: 'Avançado',
+        body_parts: ['Quadríceps', 'Glúteos', 'Quadril'],
         equipment: ['Banco ou Cadeira'],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
     },
     {
-        id: '48faaf03-3626-4ecb-9c33-6d2a244618e1',
-        name: 'Scorpion Stretch',
-        description: 'Prone dynamic stretch for hip flexors and spine. Reach foot across back to opposite hand.',
-        category: 'Mobilidade',
-        difficulty: 'Intermediário',
-        body_parts: ['Coluna', 'Quadril'],
-        equipment: ['Colchonete'],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-    },
-    {
-        id: 'a8afa48a-77cc-40df-b23d-cf61f343a206',
-        name: "World's Greatest Stretch",
-        description: 'Compound mobility movement combining lunge and thoracic rotation. Targets hips, t-spine, and hamstrings.',
-        category: 'Mobilidade',
-        difficulty: 'Intermediário',
-        body_parts: ['Quadril', 'Coluna Torácica', 'Isquiotibiais'],
-        equipment: ['Colchonete'],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-    },
-    {
-        id: 'NEW_UUID_PLACEHOLDER', // Will be replaced by tool argument logic? No, I must provide content.
-        // Wait, I need the actual UUID here.
-        // I will copy the UUID from the previous step output manually?
-        // No, I can't "copy paste" from future output.
-        // I will use a placeholder string then run a second replace?
-        // Or I can just wait for the output first?
-        // I must wait. I will cancel this tool call?
-        // No, I can't cancel.
-        // I will use a hardcoded UUID that I generate NOW in my head? No, random.
-        // I will use the one I WILL get in the next step.
-        // Actually, I can't see the output of the previous command in this turn.
-        // I should have waited.
-        // I'll make up a valid UUID. `11111111-2222-3333-4444-555555555555`.
-        // Or I'll just use one from the previous list if I had spares. I didn't.
-        // I will use a dummy one and then replace it in next turn?
-        // No, I'll use a valid v4 UUID that I generate myself deterministically or just trusting probability.
-        // `9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d`
-        name: 'Perdigueiro (Bird Dog)',
-        description: 'Core stability exercise. All fours, opposite arm and leg extension.',
+        id: 'bea028c5-24f8-4f05-95fa-f9df68cfa6f8',
+        name: 'Cobra Prona',
+        description: 'Elevação de tronco e braços em decúbito ventral. Fortalece extensores de coluna e escápula.',
         category: 'Fortalecimento',
         difficulty: 'Iniciante',
-        body_parts: ['Core', 'Costas'],
+        body_parts: ['Costas', 'Ombro'],
+        equipment: ['Colchonete'],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    },
+    {
+        id: '647b66fe-d57e-41dd-8107-abe7d008a81f',
+        name: 'Alongamento 90-90',
+        description: 'Alongamento de rotação de quadril sentado com pernas em 90 graus. Mobilidade de quadril.',
+        category: 'Mobilidade',
+        difficulty: 'Intermediário',
+        body_parts: ['Quadril'],
         equipment: ['Colchonete'],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -89,7 +140,7 @@ const newExercises = [
 ];
 
 async function insertdata() {
-    console.log('Inserting new exercises...');
+    console.log('Inserting new exercises (Batch 16)...');
     for (const exercise of newExercises) {
         const { error } = await supabase.from('exercises').upsert(exercise);
         if (error) {
