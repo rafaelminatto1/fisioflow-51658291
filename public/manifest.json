@@ -9,7 +9,11 @@
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "pt-BR",
-  "categories": ["health", "fitness", "medical"],
+  "categories": [
+    "health",
+    "fitness",
+    "medical"
+  ],
   "icons": [
     {
       "src": "/icons/icon-192x192.svg",
@@ -34,44 +38,7 @@
       "type": "image/svg+xml"
     }
   ],
-  "shortcuts": [
-    {
-      "name": "Iniciar Exercício",
-      "short_name": "Exercício",
-      "description": "Iniciar uma sessão de exercícios",
-      "url": "/exercise",
-      "icons": [
-        {
-          "src": "/icons/exercise-icon.png",
-          "sizes": "96x96"
-        }
-      ]
-    },
-    {
-      "name": "Ver Progresso",
-      "short_name": "Progresso",
-      "description": "Visualizar seu progresso e conquistas",
-      "url": "/progress",
-      "icons": [
-        {
-          "src": "/icons/progress-icon.png",
-          "sizes": "96x96"
-        }
-      ]
-    },
-    {
-      "name": "Desafios",
-      "short_name": "Desafios",
-      "description": "Participar de desafios e competições",
-      "url": "/challenges",
-      "icons": [
-        {
-          "src": "/icons/challenge-icon.png",
-          "sizes": "96x96"
-        }
-      ]
-    }
-  ],
+  "shortcuts": [],
   "screenshots": [
     {
       "src": "/screenshots/dashboard.png",

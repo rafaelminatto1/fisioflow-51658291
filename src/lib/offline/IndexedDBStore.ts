@@ -19,7 +19,7 @@ export class IndexedDBStore {
   private version: number;
   private db: IDBDatabase | null = null;
 
-  constructor(dbName: string = 'fisioflow-offline', version: number = 1) {
+  constructor(dbName: string = 'fisioflow-offline', version: number = 2) {
     this.dbName = dbName;
     this.version = version;
   }
@@ -63,6 +63,12 @@ export class IndexedDBStore {
         if (!db.objectStoreNames.contains('exercises')) {
           const exercisesStore = db.createObjectStore('exercises', { keyPath: 'id' });
           exercisesStore.createIndex('category', 'category', { unique: false });
+        }
+
+        // Store para protocolos
+        if (!db.objectStoreNames.contains('exercise_protocols')) {
+          const protocolsStore = db.createObjectStore('exercise_protocols', { keyPath: 'id' });
+          protocolsStore.createIndex('condition_name', 'condition_name', { unique: false });
         }
 
         // Store para operações pendentes (sync queue)

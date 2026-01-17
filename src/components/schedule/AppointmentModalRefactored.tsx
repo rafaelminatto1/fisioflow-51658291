@@ -135,25 +135,63 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
 
   useEffect(() => {
     if (appointment && isOpen) {
-      reset({
-        patient_id: appointment.patientId,
-        appointment_date: appointment.date ? format(new Date(appointment.date), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
-        appointment_time: appointment.time,
-        duration: appointment.duration || 60,
-        type: appointment.type || 'Fisioterapia',
-        status: appointment.status || 'agendado',
-        notes: appointment.notes || '',
-        therapist_id: appointment.therapistId || '',
-        room: appointment.room || '',
-        payment_status: appointment?.payment_status || 'pending',
-        payment_amount: appointment?.payment_amount || 170,
-        payment_method: appointment?.payment_method || '',
-        installments: appointment?.installments || 1,
-        is_recurring: appointment?.is_recurring || false,
-        recurring_until: appointment?.recurring_until ? format(new Date(appointment?.recurring_until || ''), 'yyyy-MM-dd') : '',
-      });
+      try {
+        // Log para debug (ajuda a identificar se o objeto appointment está chegando)
+        console.log('Resetting form with appointment:', appointment);
+
+        // Tratamento seguro de datas para evitar Shifts de Timezone
+        let formattedDate = format(new Date(), 'yyyy-MM-dd');
+
+        if (appointment.date) {
+          if (typeof appointment.date === 'string') {
+            // Se já for string (YYYY-MM-DD ou ISO), preservar se possível ou formatar sem shift
+            // Se for YYYY-MM-DD, usar direto
+            if (/^\d{4}-\d{2}-\d{2}$/.test(appointment.date)) {
+              formattedDate = appointment.date;
+            } else {
+              // Se for ISO com hora, cuidado com UTC
+              formattedDate = format(new Date(appointment.date), 'yyyy-MM-dd');
+            }
+          } else if (appointment.date instanceof Date) {
+            formattedDate = format(appointment.date, 'yyyy-MM-dd');
+          }
+        } else if (defaultDate) {
+          formattedDate = format(defaultDate, 'yyyy-MM-dd');
+        }
+
+        const formData: AppointmentFormData = {
+          patient_id: appointment.patientId || defaultPatientId || '',
+          appointment_date: formattedDate,
+          // Garante fallback seguro para horário
+          appointment_time: appointment.time || defaultTime || '00:00',
+          duration: appointment.duration || 60,
+          type: appointment.type as any || 'Fisioterapia',
+          status: appointment.status as any || 'agendado',
+          notes: appointment.notes || '',
+          therapist_id: appointment.therapistId || '',
+          room: appointment.room || '',
+          payment_status: appointment.payment_status || 'pending',
+          payment_amount: appointment.payment_amount || 170, // Valor default se não houver
+          payment_method: appointment.payment_method || '',
+          installments: appointment.installments || 1,
+          is_recurring: appointment.is_recurring || false,
+          recurring_until: appointment.recurring_until ? format(new Date(appointment.recurring_until), 'yyyy-MM-dd') : '',
+          session_package_id: appointment.session_package_id || ''
+        };
+
+        reset(formData);
+      } catch (err) {
+        console.error('Error resetting appointment form:', err);
+        // Fallback para evitar tela branca
+        reset({
+          patient_id: appointment.patientId || '',
+          appointment_date: format(new Date(), 'yyyy-MM-dd'),
+          status: 'agendado',
+          duration: 60
+        });
+      }
     } else if (isOpen) {
-      // Para novos agendamentos, define o status padrão como 'agendado'
+      // Para novos agendamentos, define valores padrão
       reset({
         patient_id: defaultPatientId || '',
         appointment_date: defaultDate ? format(defaultDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
@@ -169,7 +207,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         is_recurring: false,
       });
     }
-    setCurrentMode(initialMode);
+    setCurrentMode(appointment ? 'edit' : initialMode);
     setActiveTab('info');
   }, [appointment, isOpen, defaultDate, defaultTime, defaultPatientId, initialMode, reset]);
 
@@ -419,7 +457,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const ModalTitle = isMobile ? SheetTitle : DialogTitle;
 
   const contentProps = isMobile
-    ? { side: "bottom" as const, className: "h-[95vh] p-0 flex flex-col" }
+    ? { side: "bottom" as const, className: "h-[95dvh] p-0 flex flex-col" }
     : { className: "fixed left-[50%] top-[50%] z-50 transform !-translate-x-1/2 !-translate-y-1/2 w-full max-w-[95vw] sm:max-w-[600px] max-h-[80vh] h-auto flex flex-col p-0 shadow-2xl rounded-xl border border-border/40 bg-background/95 backdrop-blur-xl" };
 
   return (
