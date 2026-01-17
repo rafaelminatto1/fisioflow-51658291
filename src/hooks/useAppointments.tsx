@@ -56,11 +56,94 @@ import { useAuth } from '@/contexts/AuthContext';
 import { appointmentsCacheService } from '@/lib/offline/AppointmentsCacheService';
 import { dateSchema, timeSchema } from '@/lib/validations/agenda';
 
+// Constantes para backup de emergência em localStorage
+const EMERGENCY_CACHE_KEY = 'fisioflow_appointments_emergency';
+const EMERGENCY_CACHE_MAX_AGE = 1000 * 60 * 60 * 24 * 7; // 7 dias
+
 // Flag para indicar se dados vieram do cache
 export interface AppointmentsQueryResult {
   data: AppointmentBase[];
   isFromCache: boolean;
   cacheTimestamp: string | null;
+  source?: 'supabase' | 'indexeddb' | 'localstorage' | 'memory';
+}
+
+// Salvar backup de emergência em localStorage (compactado)
+function saveEmergencyBackup(appointments: AppointmentBase[], organizationId?: string) {
+  try {
+    // Salvar apenas campos essenciais para economizar espaço
+    const minimal = appointments.map(apt => ({
+      id: apt.id,
+      patientId: apt.patientId,
+      patientName: apt.patientName,
+      phone: apt.phone,
+      date: apt.date instanceof Date ? apt.date.toISOString() : apt.date,
+      time: apt.time,
+      duration: apt.duration,
+      type: apt.type,
+      status: apt.status,
+      notes: apt.notes,
+      therapistId: apt.therapistId,
+      room: apt.room,
+    }));
+
+    const backup = {
+      data: minimal,
+      timestamp: new Date().toISOString(),
+      organizationId,
+      count: minimal.length,
+    };
+
+    localStorage.setItem(EMERGENCY_CACHE_KEY, JSON.stringify(backup));
+    logger.debug(`Backup de emergência salvo: ${minimal.length} agendamentos`, {}, 'useAppointments');
+  } catch (err) {
+    // localStorage pode estar cheio, não quebrar por causa disso
+    logger.warn('Falha ao salvar backup de emergência', err, 'useAppointments');
+  }
+}
+
+// Recuperar backup de emergência do localStorage
+function getEmergencyBackup(organizationId?: string): AppointmentsQueryResult {
+  try {
+    const raw = localStorage.getItem(EMERGENCY_CACHE_KEY);
+    if (!raw) return { data: [], isFromCache: false, cacheTimestamp: null, source: 'localstorage' };
+
+    const backup = JSON.parse(raw);
+
+    // Verificar se é da mesma organização
+    if (organizationId && backup.organizationId !== organizationId) {
+      return { data: [], isFromCache: false, cacheTimestamp: null, source: 'localstorage' };
+    }
+
+    // Verificar idade do backup
+    const backupAge = Date.now() - new Date(backup.timestamp).getTime();
+    if (backupAge > EMERGENCY_CACHE_MAX_AGE) {
+      logger.warn('Backup de emergência expirado', { ageHours: backupAge / 3600000 }, 'useAppointments');
+      return { data: [], isFromCache: false, cacheTimestamp: null, source: 'localstorage' };
+    }
+
+    // Converter datas de volta
+    const appointments: AppointmentBase[] = (backup.data || []).map((apt: Record<string, unknown>) => ({
+      ...apt,
+      date: apt.date ? new Date(apt.date as string) : new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }));
+
+    logger.info(`Backup de emergência recuperado: ${appointments.length} agendamentos`, {
+      ageMinutes: Math.round(backupAge / 60000),
+    }, 'useAppointments');
+
+    return {
+      data: appointments,
+      isFromCache: true,
+      cacheTimestamp: backup.timestamp,
+      source: 'localstorage',
+    };
+  } catch (err) {
+    logger.error('Falha ao ler backup de emergência', err, 'useAppointments');
+    return { data: [], isFromCache: false, cacheTimestamp: null, source: 'localstorage' };
+  }
 }
 
 // Fetch all appointments with improved error handling and validation
@@ -190,18 +273,19 @@ async function fetchAppointments(organizationIdOverride?: string | null): Promis
       logger.warn(`Ignorados ${validationErrors.length} agendamentos inválidos`, {}, 'useAppointments');
     }
 
-    // Salvar no cache atualizado
+    // Salvar no cache atualizado (IndexedDB + localStorage backup)
     appointmentsCacheService.saveToCache(transformedAppointments, organizationId || undefined);
+    saveEmergencyBackup(transformedAppointments, organizationId || undefined);
 
     timer();
-    return { data: transformedAppointments, isFromCache: false, cacheTimestamp: null };
+    return { data: transformedAppointments, isFromCache: false, cacheTimestamp: null, source: 'supabase' };
 
   } catch (error: unknown) {
     logger.error('Erro crítico no fetchAppointments', error, 'useAppointments');
 
-    // Último recurso: tentar cache se algo crítico falhou
+    // Último recurso: tentar cache multi-camada
     timer();
-    return getFromCacheWithMetadata();
+    return getFromCacheWithMetadata(organizationIdOverride || undefined);
   }
 }
 
@@ -227,14 +311,16 @@ function isNetworkError(error: unknown): boolean {
   );
 }
 
-// Função auxiliar para obter dados do cache com metadata
+// Função auxiliar para obter dados do cache com fallback multi-camada
+// Ordem: IndexedDB -> localStorage -> array vazio (NUNCA enquanto houver dados)
 async function getFromCacheWithMetadata(organizationId?: string): Promise<AppointmentsQueryResult> {
+  // CAMADA 1: Tentar IndexedDB (mais confiável e completo)
   try {
     const cacheResult = await appointmentsCacheService.getFromCache(organizationId);
 
     if (cacheResult.data.length > 0) {
       const ageMinutes = appointmentsCacheService.getCacheAgeMinutes();
-      logger.info('Usando dados do cache (Fallback)', {
+      logger.info('Usando dados do IndexedDB (Fallback Camada 1)', {
         count: cacheResult.data.length,
         ageMinutes,
         isStale: cacheResult.isStale
@@ -244,12 +330,25 @@ async function getFromCacheWithMetadata(organizationId?: string): Promise<Appoin
         data: cacheResult.data,
         isFromCache: true,
         cacheTimestamp: cacheResult.metadata?.lastUpdated || null,
+        source: 'indexeddb',
       };
     }
-  } catch (cacheError) {
-    logger.error('Falha ao ler cache', cacheError, 'useAppointments');
+  } catch (indexedDbError) {
+    logger.error('Falha ao ler IndexedDB, tentando localStorage', indexedDbError, 'useAppointments');
   }
-  return { data: [], isFromCache: false, cacheTimestamp: null };
+
+  // CAMADA 2: Tentar localStorage (backup de emergência)
+  const emergencyResult = getEmergencyBackup(organizationId);
+  if (emergencyResult.data.length > 0) {
+    logger.warn('Usando backup de emergência do localStorage (Fallback Camada 2)', {
+      count: emergencyResult.data.length,
+    }, 'useAppointments');
+    return emergencyResult;
+  }
+
+  // CAMADA 3: Sem dados disponíveis
+  logger.error('NENHUM CACHE DISPONÍVEL - retornando array vazio', {}, 'useAppointments');
+  return { data: [], isFromCache: false, cacheTimestamp: null, source: 'memory' };
 }
 
 // Main hook to fetch appointments with Realtime support
@@ -332,31 +431,69 @@ export function useAppointments() {
   const query = useQuery({
     queryKey: appointmentKeys.list(organizationId), // Use appointmentKeys factory
     queryFn: () => fetchAppointments(organizationId),
-    staleTime: 1000 * 10, // 10 segundos (dados mais frescos conforme solicitado)
-    gcTime: 1000 * 60 * 5, // 5 minutos
-    retry: 3,
+    staleTime: 1000 * 10, // 10 segundos (dados mais frescos)
+    gcTime: 1000 * 60 * 60, // 1 hora (mantém cache em memória por mais tempo)
+    retry: 5, // Mais retries para conexões instáveis
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Backoff exponencial
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
-    // Garantir que sempre retorne um resultado válido
-    placeholderData: { data: [], isFromCache: false, cacheTimestamp: null },
-    enabled: !!organizationId || !!user, // Enable if we have org ID OR if user is logged in (we can fetch org ID)
+    refetchInterval: false, // Não refetch automático, apenas em eventos
+    // CRÍTICO: Manter dados anteriores para NUNCA mostrar lista vazia durante recarregamento
+    placeholderData: (previousData) => previousData,
+    enabled: !!organizationId || !!user, // Enable if we have org ID OR if user is logged in
+    // Não lançar erro para o componente se falhar - usar fallback silencioso
+    throwOnError: false,
   });
 
   // Extrair dados do resultado
   const result = query.data as AppointmentsQueryResult | undefined;
+
+  // SISTEMA DE FALLBACK MULTI-CAMADA para NUNCA retornar array vazio
+  // Ordem de prioridade:
+  // 1. Dados frescos da query atual
+  // 2. Dados anteriores do React Query cache
+  // 3. Nunca retornar vazio se teve dados antes
+  const previousData = queryClient.getQueryData<AppointmentsQueryResult>(appointmentKeys.list(organizationId));
+
+  // Determinar os dados finais com fallback defensivo
+  let finalData: AppointmentBase[] = [];
+  let dataSource: 'fresh' | 'cache' | 'previous' = 'fresh';
+
+  if (result?.data && result.data.length > 0) {
+    // Dados frescos disponíveis
+    finalData = result.data;
+    dataSource = 'fresh';
+  } else if (previousData?.data && previousData.data.length > 0) {
+    // Fallback para dados anteriores do React Query
+    finalData = previousData.data;
+    dataSource = 'previous';
+    logger.debug('Usando dados anteriores do React Query como fallback', {
+      count: finalData.length,
+    }, 'useAppointments');
+  } else if (result?.isFromCache && result.data) {
+    // Dados do cache (IndexedDB ou localStorage)
+    finalData = result.data;
+    dataSource = 'cache';
+  }
 
   // Função helper para forçar atualização como Promise
   const refreshAppointments = async () => {
     return await query.refetch();
   };
 
+  // Verificar se está usando dados stale
+  const isUsingStaleData = dataSource !== 'fresh' && finalData.length > 0;
+
   return {
     ...query,
-    data: result?.data || [],
-    isFromCache: result?.isFromCache || false,
+    data: finalData,
+    isFromCache: result?.isFromCache || dataSource === 'cache' || dataSource === 'previous',
     cacheTimestamp: result?.cacheTimestamp || null,
-    refreshAppointments, // Expose promise-based refresh
+    refreshAppointments,
+    // Novos campos para UI
+    dataSource: result?.source || dataSource,
+    isUsingStaleData,
+    hasData: finalData.length > 0,
   };
 }
 
@@ -693,7 +830,7 @@ export function useUpdateAppointment() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: appointmentKeys.list(profile?.organization_id) });
       queryClient.setQueryData(
-        appointmentKeys.detail(appointmentId),
+        appointmentKeys.detail(data.id),
         data
       );
       toast({

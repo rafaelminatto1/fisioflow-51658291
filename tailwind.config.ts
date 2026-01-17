@@ -1,5 +1,6 @@
 import type { Config } from "tailwindcss";
 import tailwindcssAnimate from "tailwindcss-animate";
+import typography from "@tailwindcss/typography";
 import plugin from "tailwindcss/plugin";
 
 export default {
@@ -291,6 +292,7 @@ export default {
 	},
 	plugins: [
 		tailwindcssAnimate,
+		typography,
 		plugin(({ addUtilities }) => {
 			addUtilities({
 				'.hover-scale': {
