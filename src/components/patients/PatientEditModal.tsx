@@ -46,7 +46,7 @@ export const PatientEditModal: React.FC<PatientEditModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+      <DialogContent className="max-w-4xl max-h-[85vh] p-0">
         <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle className="flex items-center gap-2">
             <Edit className="w-5 h-5" />
@@ -57,7 +57,7 @@ export const PatientEditModal: React.FC<PatientEditModalProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="px-6 pb-6 max-h-[calc(90vh-120px)]">
+        <ScrollArea className="px-6 pb-6 max-h-[calc(85vh-120px)]">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center space-y-2">

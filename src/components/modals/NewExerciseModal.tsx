@@ -103,49 +103,21 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0">
+        <DialogHeader className="p-6 pb-2">
           <DialogTitle>{exercise ? 'Editar Exercício' : 'Novo Exercício'}</DialogTitle>
         </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nome*</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Nome do exercício" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descrição</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} placeholder="Descrição do exercício" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
+        <div className="flex-1 overflow-y-auto px-6 py-2">
+          <Form {...form}>
+            <form id="exercise-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="category"
+                name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Categoria</FormLabel>
+                    <FormLabel>Nome*</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Ex: Fortalecimento" />
+                      <Input {...field} placeholder="Nome do exercício" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -154,56 +126,138 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
 
               <FormField
                 control={form.control}
-                name="difficulty"
+                name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Dificuldade</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <FormLabel>Descrição</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} placeholder="Descrição do exercício" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Categoria</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
+                        <Input {...field} placeholder="Ex: Fortalecimento" />
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Iniciante">Iniciante</SelectItem>
-                        <SelectItem value="Intermediário">Intermediário</SelectItem>
-                        <SelectItem value="Avançado">Avançado</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="difficulty"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Dificuldade</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Iniciante">Iniciante</SelectItem>
+                          <SelectItem value="Intermediário">Intermediário</SelectItem>
+                          <SelectItem value="Avançado">Avançado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="instructions"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Instruções</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} placeholder="Instruções detalhadas" />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
 
-            <FormField
-              control={form.control}
-              name="instructions"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Instruções</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} placeholder="Instruções detalhadas" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <div className="grid grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="sets"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Séries</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <div className="grid grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="repetitions"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Repetições</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="duration"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Duração (seg)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <FormField
                 control={form.control}
-                name="sets"
+                name="video_url"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Séries</FormLabel>
+                    <FormLabel>URL do Vídeo</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        {...field}
-                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                        value={field.value || ''}
-                      />
+                      <Input {...field} placeholder="https://..." />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -212,165 +266,112 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
 
               <FormField
                 control={form.control}
-                name="repetitions"
+                name="image_url"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Repetições</FormLabel>
+                    <FormLabel>URL da Imagem</FormLabel>
                     <FormControl>
-                      <Input
-                        type="number"
-                        {...field}
-                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                        value={field.value || ''}
-                      />
+                      <Input {...field} placeholder="https://..." />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="duration"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Duração (seg)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        {...field}
-                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                        value={field.value || ''}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="indicated_pathologies"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Patologias Indicadas (separar por vírgula)</FormLabel>
+                      <FormControl>
+                        {/* Handle string[] <-> string conversion here or in schema */}
+                        {/* Since Zod schema handles simple strings, we might need to update schema too. 
+                             For quick implementation, let's treat it as string in form and split on submit, 
+                             but matching Zod type is better. 
+                             Let's stick to simple Textarea and I will update schema next.
+                         */}
+                        <Textarea
+                          placeholder="Ex: Joelho Valgo, Artrose"
+                          {...field}
+                          value={Array.isArray(field.value) ? field.value.join(', ') : field.value || ''}
+                          onChange={e => field.onChange(e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="contraindicated_pathologies"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contraindicações (separar por vírgula)</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Ex: Fratura Recente"
+                          {...field}
+                          value={Array.isArray(field.value) ? field.value.join(', ') : field.value || ''}
+                          onChange={e => field.onChange(e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-            <FormField
-              control={form.control}
-              name="video_url"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>URL do Vídeo</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="https://..." />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="image_url"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>URL da Imagem</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="https://..." />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="indicated_pathologies"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Patologias Indicadas (separar por vírgula)</FormLabel>
-                    <FormControl>
-                      {/* Handle string[] <-> string conversion here or in schema */}
-                      {/* Since Zod schema handles simple strings, we might need to update schema too. 
-                           For quick implementation, let's treat it as string in form and split on submit, 
-                           but matching Zod type is better. 
-                           Let's stick to simple Textarea and I will update schema next.
-                       */}
-                      <Textarea
-                        placeholder="Ex: Joelho Valgo, Artrose"
-                        {...field}
-                        value={Array.isArray(field.value) ? field.value.join(', ') : field.value || ''}
-                        onChange={e => field.onChange(e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="contraindicated_pathologies"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Contraindicações (separar por vírgula)</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Ex: Fratura Recente"
-                        {...field}
-                        value={Array.isArray(field.value) ? field.value.join(', ') : field.value || ''}
-                        onChange={e => field.onChange(e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="body_parts"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Partes do Corpo (separar por vírgula)</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Ex: Ombro, Cotovelo"
-                        {...field}
-                        value={Array.isArray(field.value) ? field.value.join(', ') : field.value || ''}
-                        onChange={e => field.onChange(e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="equipment"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Equipamentos (separar por vírgula)</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Ex: Halter, Elástico"
-                        {...field}
-                        value={Array.isArray(field.value) ? field.value.join(', ') : field.value || ''}
-                        onChange={e => field.onChange(e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? 'Salvando...' : exercise ? 'Atualizar' : 'Criar'}
-              </Button>
-            </div>
-          </form>
-        </Form>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="body_parts"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Partes do Corpo (separar por vírgula)</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Ex: Ombro, Cotovelo"
+                          {...field}
+                          value={Array.isArray(field.value) ? field.value.join(', ') : field.value || ''}
+                          onChange={e => field.onChange(e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="equipment"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Equipamentos (separar por vírgula)</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Ex: Halter, Elástico"
+                          {...field}
+                          value={Array.isArray(field.value) ? field.value.join(', ') : field.value || ''}
+                          onChange={e => field.onChange(e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </form>
+          </Form>
+        </div>
+        <div className="flex justify-end gap-2 p-6 pt-4 border-t mt-auto bg-background">
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button type="submit" form="exercise-form" disabled={isLoading}>
+            {isLoading ? 'Salvando...' : exercise ? 'Atualizar' : 'Criar'}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

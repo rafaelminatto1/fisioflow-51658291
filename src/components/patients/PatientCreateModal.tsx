@@ -48,7 +48,7 @@ export const PatientCreateModal: React.FC<PatientCreateModalProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="px-6 pb-6 max-h-[calc(90vh-120px)]">
+        <ScrollArea className="px-6 pb-6 max-h-[calc(85vh-120px)]">
           {currentOrganization?.id ? (
             <PatientForm
               organizationId={currentOrganization.id}

@@ -121,9 +121,9 @@ const Schedule = () => {
     refetch,
     isFromCache,
     cacheTimestamp,
-    // @ts-ignore - Propriedades novas
+    // @ts-expect-error - Propriedades novas
     dataSource,
-    // @ts-ignore
+    // @ts-expect-error
     isUsingStaleData
   } = useAppointments();
   const { mutateAsync: rescheduleAppointment } = useRescheduleAppointment();
@@ -405,9 +405,9 @@ const Schedule = () => {
           itemCount={appointments.length}
           onRefresh={handleRefresh}
           className=""
-          // @ts-ignore - Propriedades dinâmicas retornadas pelo hook atualizado
+          // @ts-expect-error - Propriedades dinâmicas retornadas pelo hook atualizado
           isStale={isUsingStaleData}
-          // @ts-ignore
+          // @ts-expect-error
           dataSource={dataSource}
         />
 
