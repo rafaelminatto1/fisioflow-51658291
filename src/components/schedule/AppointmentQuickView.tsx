@@ -10,6 +10,14 @@ import {
   Dialog,
   DialogContent,
 } from '@/components/ui/dialog';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Select,
@@ -116,7 +124,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
 
   // Content component shared between Popover and Dialog
   const Content = (
-    <>
+    <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center justify-between p-3.5 border-b border-border bg-gradient-to-r from-muted/50 to-muted/30">
         <div className="flex items-center gap-2.5">
@@ -130,15 +138,17 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
             <p className="text-xs text-muted-foreground">({appointment.duration || 60} min)</p>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 touch-target hover:bg-muted"
-          onClick={() => onOpenChange?.(false)}
-          aria-label="Fechar detalhes"
-        >
-          <X className="h-4 w-4" />
-        </Button>
+        {!isMobile && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 touch-target hover:bg-muted"
+            onClick={() => onOpenChange?.(false)}
+            aria-label="Fechar detalhes"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       {/* Waitlist Interest Alert */}
@@ -159,7 +169,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
       )}
 
       {/* Content */}
-      <div className="p-4 space-y-3">
+      <div className="p-4 space-y-3 flex-1 overflow-y-auto">
         {/* Fisioterapeuta - placeholder */}
         <div className="flex items-start gap-3">
           <span className="text-sm text-muted-foreground min-w-[100px]">Fisioterapeuta:</span>
@@ -291,45 +301,42 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
           Outro paciente quer este horário?
         </Button>
       </div>
-    </>
+    </div>
   );
 
   return (
     <>
       {isMobile ? (
-        // Mobile: use Dialog (centered modal)
-        // We use a wrapper that doesn't affect absolute positioning of the card
-        <>
-          <span
-            className="contents"
-            onClick={(e) => {
-              // Prevent opening if a drag might be happening
-              e.stopPropagation();
-              onOpenChange?.(true);
-            }}
-            role="button"
-            tabIndex={0}
-            aria-haspopup="dialog"
-            aria-expanded={open}
-            aria-label={`Ver detalhes do agendamento de ${appointment.patientName}`}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
+        // Mobile: use Drawer (Bottom Sheet)
+        <Drawer open={open} onOpenChange={onOpenChange}>
+          <DrawerTrigger asChild>
+            <span
+              className="contents"
+              onClick={(e) => {
+                // Prevent opening if a drag might be happening
+                e.stopPropagation();
                 onOpenChange?.(true);
-              }
-            }}
-          >
-            {children}
-          </span>
-          <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent
-              className="w-[calc(100%-2rem)] max-w-sm p-0 gap-0"
-              aria-describedby={undefined}
+              }}
+              role="button"
+              tabIndex={0}
+              aria-haspopup="dialog"
+              aria-expanded={open}
+              aria-label={`Ver detalhes do agendamento de ${appointment.patientName}`}
             >
+              {children}
+            </span>
+          </DrawerTrigger>
+          <DrawerContent className="max-h-[90vh]">
+            <DrawerHeader className="text-left border-b pb-4 hidden">
+              <DrawerTitle>Detalhes do Agendamento</DrawerTitle>
+              <DrawerDescription>Visualizar e editar detalhes do agendamento</DrawerDescription>
+            </DrawerHeader>
+            {/* Wrap Content in a div that handles the layout structure for Drawer */}
+            <div className="pb-6">
               {Content}
-            </DialogContent>
-          </Dialog>
-        </>
+            </div>
+          </DrawerContent>
+        </Drawer>
       ) : (
         // Desktop: use Popover (side panel)
         <Popover open={open} onOpenChange={onOpenChange}>
@@ -341,6 +348,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
             align="start"
             side="right"
             sideOffset={8}
+            collisionPadding={16}
             role="dialog"
             aria-modal="false"
             aria-label={`Detalhes do agendamento de ${appointment.patientName}`}
