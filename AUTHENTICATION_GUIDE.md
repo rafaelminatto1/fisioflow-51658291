@@ -39,6 +39,9 @@ Ensure these environment variables are set in your `.env` file:
 ```env
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_key
+VITE_GOOGLE_CLIENT_ID=your_google_client_id
+VITE_GOOGLE_CLIENT_SECRET=your_google_client_secret
+VITE_GOOGLE_REDIRECT_URI=your_google_redirect_uri
 ```
 
 ### 2. App Integration
@@ -485,7 +488,6 @@ For issues or questions about the authentication system:
 Potential future improvements:
 
 - Two-factor authentication (2FA)
-- Social login providers
 - Advanced audit logging
 - Device management
 - Advanced session controls
