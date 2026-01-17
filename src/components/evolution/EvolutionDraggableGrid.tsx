@@ -806,7 +806,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
             ...item.defaultLayout
         }));
 
-        // For mobile (sm and smaller), force width to full (6 for sm, 4 for xs, 2 for xxs as per DraggableGrid config)
+        // For mobile (sm and smaller), force width to full (6 for sm, 4 for xs, 1 for xxs as per DraggableGrid config)
         // and stack them vertically
         const mobileLayout = gridItems.map((item, index) => ({
             i: item.id,
