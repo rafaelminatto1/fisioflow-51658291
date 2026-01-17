@@ -30,6 +30,7 @@ interface WaitlistQuickAddProps {
   onOpenChange: (open: boolean) => void;
   date: Date;
   time: string;
+  defaultPatientId?: string;
 }
 
 const DAY_MAP: Record<number, string> = {
@@ -51,13 +52,20 @@ const getTimeSlot = (time: string): string => {
   return 'evening';
 };
 
-export function WaitlistQuickAdd({ open, onOpenChange, date, time = '00:00' }: WaitlistQuickAddProps) {
-  const [patientId, setPatientId] = useState('');
+export function WaitlistQuickAdd({ open, onOpenChange, date, time = '00:00', defaultPatientId = '' }: WaitlistQuickAddProps) {
+  const [patientId, setPatientId] = useState(defaultPatientId);
   const [priority, setPriority] = useState<'normal' | 'high' | 'urgent'>('normal');
   const [notes, setNotes] = useState('');
 
   const { mutate: addToWaitlist, isPending: isAdding } = useAddToWaitlist();
   const { data: patients = [] } = usePatients();
+
+  // Update local state when prop changes
+  useEffect(() => {
+    if (defaultPatientId) {
+      setPatientId(defaultPatientId);
+    }
+  }, [defaultPatientId]);
 
   // Safely handle potentially invalid dates
   const safeDate = date instanceof Date && !isNaN(date.getTime()) ? date : new Date();
