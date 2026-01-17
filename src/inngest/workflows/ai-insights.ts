@@ -5,8 +5,8 @@
  * This demonstrates the power of Inngest for long-running AI workflows
  */
 
-import { inngest, retryConfig } from '../../lib/inngest/client';
-import { Events, InngestStep } from '../../lib/inngest/types';
+import { inngest, retryConfig } from '../../lib/inngest/client.js';
+import { Events, InngestStep } from '../../lib/inngest/types.js';
 import { createClient } from '@supabase/supabase-js';
 import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
@@ -114,7 +114,7 @@ Age: ${patient.date_of_birth}
 Main Complaint: ${patient.main_complaint || 'Not specified'}
 
 Recent Sessions (${recentSessions.length}):
-${recentSessions.map((s, i: number) => `
+${recentSessions.map((s: any, i: number) => `
 Session ${i + 1} (${s.created_at}):
 - Subjective: ${s.subjective || 'N/A'}
 - Objective: ${s.objective || 'N/A'}

@@ -5,9 +5,9 @@
  * Uses the WhatsAppService for templates and rendering
  */
 
-import { inngest, retryConfig } from '../../lib/inngest/client';
-import { Events, WhatsAppSendPayload, InngestStep } from '../../lib/inngest/types';
-import { WhatsAppService } from '../../lib/whatsapp';
+import { inngest, retryConfig } from '../../lib/inngest/client.js';
+import { Events, WhatsAppSendPayload, InngestStep } from '../../lib/inngest/types.js';
+import { WhatsAppService } from '../../lib/whatsapp/index.js';
 
 /**
  * Send a single WhatsApp message
