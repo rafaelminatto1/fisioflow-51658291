@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsTouch } from '@/hooks/use-touch';
 
 interface CalendarAppointmentCardProps {
     appointment: Appointment;
@@ -142,6 +143,7 @@ const CalendarAppointmentCardBase = ({
     onToggleSelection
 }: CalendarAppointmentCardProps) => {
     const isMobile = useIsMobile();
+    const isTouch = useIsTouch();
     const [isHovered, setIsHovered] = useState(false);
 
     // Status visual config
@@ -156,13 +158,23 @@ const CalendarAppointmentCardBase = ({
     const handleMouseEnter = () => setIsHovered(true);
     const handleMouseLeave = () => setIsHovered(false);
 
-    // Disable dragging in selection mode
-    const draggable = isDraggable && !selectionMode;
+    // Disable dragging in selection mode or on touch devices (Mobile/iPad) for better UX
+    // This allows clicks to register immediately without waiting for drag detection
+    const draggable = isDraggable && !selectionMode && !isTouch;
 
     const handleClick = (e: React.MouseEvent) => {
+        // Always stop propagation to prevent parent handlers (like calendar slot click) from firing
+        e.stopPropagation();
+
         if (selectionMode && onToggleSelection) {
-            e.stopPropagation();
             onToggleSelection(appointment.id);
+            return;
+        }
+
+        // On touch devices (Mobile/iPad), we trigger the popover manually via click
+        // This ensures reliable opening even if drag/drop logic would otherwise interfere
+        if (isTouch) {
+            onOpenPopover(appointment.id);
         }
     };
 
