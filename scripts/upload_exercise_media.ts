@@ -48,7 +48,7 @@ const images = [
     { id: 'c9640a9f-4448-4573-8852-7e085d2cfcad', file: 'side_plank_exercise_1768440858852.png' }, // Side Plank
     { id: 'bf5122ab-fd57-47d3-b6ed-e2f081e71918', file: 'hamstring_stretch_1768440871853.png' }, // Alongamento Isquiotibiais
     { id: 'acfc8fa4-6d28-4748-bf52-5d66b787803f', file: 'hamstring_stretch_1768440871853.png' }, // Alongamento Isquiotibiais em Pé
-    { id: 'd8d9d4b8-1941-4c9f-9d2d-8d9d4b8194a', file: 'bird_dog_exercise_1768440884296.png' }, // Perdigueiro (if ID valid)
+    // { id: 'd8d9d4b8-1941-4c9f-9d2d-8d9d4b8194a', file: 'bird_dog_exercise_1768440884296.png' }, // Perdigueiro (if ID valid) - DISABLED DUE TO MALFORMED UUID
     { id: 'd7548baf-4209-4c11-8bb9-c144325e7d5b', file: 'sit_to_stand_1768440897918.png' }, // Sit-to-Stand
     { id: 'e1007b01-eb24-43e4-893d-e17c2f9b565e', file: 'foam_rolling_1768440911208.png' }, // Rolling com Foam Roller
     { id: '36fba17a-19c0-425c-a1ae-8c71ca9d6f0e', file: 'adductor_stretch_1768440940033.png' }, // Alongamento de Adutores
@@ -166,7 +166,19 @@ const images = [
     { id: '64391fd6-e533-495d-bd98-aff25dabf8ff', file: 'incentive_spirometry_1768622497509.png' },
     { id: '4b1e716a-a0ff-4e8c-a69f-14b53234f011', file: 'costal_breathing_1768622511228.png' },
     // Fix for missed Wall Slides ID
-    { id: '9a6d787c-9975-4b28-81f6-797dbe7ae58c', file: 'wall_shoulder_exercise_1768593410983.png' }
+    { id: '9a6d787c-9975-4b28-81f6-797dbe7ae58c', file: 'wall_shoulder_exercise_1768593410983.png' },
+
+    // Re-generated Exercises (Batch 14)
+    { id: '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d', file: 'bird_dog_re_gen_1768658515939.png' }, // Perdigueiro (Update with NEW UUID)
+    { id: '04a5f252-82e5-416e-b3fe-4bbbf1be7370', file: 'face_pull_re_gen_1768658530579.png' }, // Face Pull (Update)
+    { id: '68a79743-9985-40a5-bd88-585927eebafc', file: 'tandem_walk_re_gen_1768658560361.png' }, // Tandem Walk (Update)
+    { id: '8216eda0-2151-468e-9cd7-8efafd8d6fbd', file: 'squat_support_gen_1768658545704.png' }, // Agachamento com Suporte (Update Chair Squat as Proxy)
+
+    // New Sports Physio & Mobility Exercises (Batch 15)
+    { id: 'e381977a-2726-47ef-b66b-c28f8079fff2', file: 'nordic_curl_gen_1768658585928.png' }, // Nordic Hamstring Curl
+    { id: 'dc5176c2-cd8c-4548-9eab-025d52163e16', file: 'copenhagen_plank_gen_1768658598876.png' }, // Copenhagen Plank
+    { id: '48faaf03-3626-4ecb-9c33-6d2a244618e1', file: 'scorpion_stretch_gen_1768658612976.png' }, // Scorpion Stretch
+    { id: 'a8afa48a-77cc-40df-b23d-cf61f343a206', file: 'worlds_greatest_stretch_gen_1768658626743.png' } // World's Greatest Stretch
 ];
 
 async function upload() {
