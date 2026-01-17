@@ -10,10 +10,10 @@
  * - Email delivery via Resend
  */
 
-import { inngest, retryConfig } from '../../lib/inngest/client';
-import { Events, DailyReportPayload, InngestStep } from '../../lib/inngest/types';
+import { inngest, retryConfig } from '../../lib/inngest/client.js';
+import { Events, DailyReportPayload, InngestStep } from '../../lib/inngest/types.js';
 import { createClient } from '@supabase/supabase-js';
-import { logger } from '@/lib/errors/logger';
+import { logger } from '../../lib/errors/logger.js';
 
 export const dailyReportsWorkflow = inngest.createFunction(
   {

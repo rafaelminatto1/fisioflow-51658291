@@ -5,9 +5,9 @@
  * Uses the ResendService for templates and rendering
  */
 
-import { inngest, retryConfig } from '../../lib/inngest/client';
-import { Events, EmailSendPayload, InngestStep } from '../../lib/inngest/types';
-import { ResendService } from '../../lib/email';
+import { inngest, retryConfig } from '../../lib/inngest/client.js';
+import { Events, EmailSendPayload, InngestStep } from '../../lib/inngest/types.js';
+import { ResendService } from '../../lib/email/index.js';
 
 export const sendEmailWorkflow = inngest.createFunction(
   {

@@ -10,8 +10,8 @@
  * - Detailed logging
  */
 
-import { inngest, retryConfig } from '../../lib/inngest/client';
-import { Events, CleanupPayload, CleanupResult, InngestStep } from '../../lib/inngest/types';
+import { inngest, retryConfig } from '../../lib/inngest/client.js';
+import { Events, CleanupPayload, CleanupResult, InngestStep } from '../../lib/inngest/types.js';
 import { createClient } from '@supabase/supabase-js';
 
 export const cleanupWorkflow = inngest.createFunction(

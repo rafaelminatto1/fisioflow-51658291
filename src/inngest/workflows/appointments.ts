@@ -5,8 +5,8 @@
  * Can be triggered manually or scheduled
  */
 
-import { inngest, retryConfig } from '../../lib/inngest/client';
-import { Events, InngestStep } from '../../lib/inngest/types';
+import { inngest, retryConfig } from '../../lib/inngest/client.js';
+import { Events, InngestStep } from '../../lib/inngest/types.js';
 import { createClient } from '@supabase/supabase-js';
 
 type AppointmentWithRelations = {
@@ -80,7 +80,7 @@ export const appointmentReminderWorkflow = inngest.createFunction(
     // Send reminders
     const results = await step.run('send-reminders', async (): Promise<{ appointmentId: string; patientId: string; notificationsQueued: number }[]> => {
       return await Promise.all(
-        appointments.map(async (appointment) => {
+        appointments.map(async (appointment: AppointmentWithRelations) => {
           const patient = appointment.patient;
           const preferences = patient.notification_preferences || {};
           const orgSettings = appointment.organization?.settings || {};
