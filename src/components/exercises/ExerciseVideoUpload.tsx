@@ -272,312 +272,314 @@ export const ExerciseVideoUpload: React.FC<ExerciseVideoUploadProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0">
+        <DialogHeader className="p-6 pb-2">
           <DialogTitle>Adicionar Vídeo de Exercício</DialogTitle>
           <DialogDescription>
             Faça upload de um vídeo demonstrativo de exercício para a biblioteca
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5">
-          {/* Video Upload Area */}
-          <div className="space-y-2">
-            <Label>
-              Vídeo <span className="text-destructive">*</span>
-            </Label>
-            {!videoFile ? (
-              <div
-                {...getRootProps()}
-                className={cn(
-                  'border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all',
-                  'hover:border-primary/50 hover:bg-muted/50',
-                  isDragActive && !isDragReject && 'border-primary bg-primary/5 scale-[1.02]',
-                  isDragReject && 'border-destructive bg-destructive/5',
-                  isUploading && 'opacity-50 cursor-not-allowed'
-                )}
-              >
-                <input {...getInputProps()} />
-                <div className={cn(
-                  'w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center transition-colors',
-                  isDragActive && !isDragReject ? 'bg-primary/20' : 'bg-muted',
-                  isDragReject && 'bg-destructive/20'
-                )}>
-                  <Video className={cn(
-                    'h-8 w-8 transition-colors',
-                    isDragActive && !isDragReject ? 'text-primary' : 'text-muted-foreground',
-                    isDragReject && 'text-destructive'
-                  )} />
+        <div className="flex-1 overflow-y-auto px-6 py-2">
+          <div className="space-y-5">
+            {/* Video Upload Area */}
+            <div className="space-y-2">
+              <Label>
+                Vídeo <span className="text-destructive">*</span>
+              </Label>
+              {!videoFile ? (
+                <div
+                  {...getRootProps()}
+                  className={cn(
+                    'border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all',
+                    'hover:border-primary/50 hover:bg-muted/50',
+                    isDragActive && !isDragReject && 'border-primary bg-primary/5 scale-[1.02]',
+                    isDragReject && 'border-destructive bg-destructive/5',
+                    isUploading && 'opacity-50 cursor-not-allowed'
+                  )}
+                >
+                  <input {...getInputProps()} />
+                  <div className={cn(
+                    'w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center transition-colors',
+                    isDragActive && !isDragReject ? 'bg-primary/20' : 'bg-muted',
+                    isDragReject && 'bg-destructive/20'
+                  )}>
+                    <Video className={cn(
+                      'h-8 w-8 transition-colors',
+                      isDragActive && !isDragReject ? 'text-primary' : 'text-muted-foreground',
+                      isDragReject && 'text-destructive'
+                    )} />
+                  </div>
+                  <p className="text-sm font-medium">
+                    {isDragActive
+                      ? isDragReject
+                        ? 'Formato não suportado'
+                        : 'Solte o vídeo aqui'
+                      : 'Arraste um vídeo ou clique para selecionar'}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    MP4, WebM, MOV (máx. {exerciseVideosService.formatFileSize(MAX_VIDEO_SIZE)})
+                  </p>
                 </div>
-                <p className="text-sm font-medium">
-                  {isDragActive
-                    ? isDragReject
-                      ? 'Formato não suportado'
-                      : 'Solte o vídeo aqui'
-                    : 'Arraste um vídeo ou clique para selecionar'}
-                </p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  MP4, WebM, MOV (máx. {exerciseVideosService.formatFileSize(MAX_VIDEO_SIZE)})
-                </p>
-              </div>
-            ) : (
-              <Card className="overflow-hidden">
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Film className="h-5 w-5 text-primary flex-shrink-0" />
-                        <p className="font-medium text-sm truncate">{videoFile.name}</p>
+              ) : (
+                <Card className="overflow-hidden">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Film className="h-5 w-5 text-primary flex-shrink-0" />
+                          <p className="font-medium text-sm truncate">{videoFile.name}</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-3">
+                          {exerciseVideosService.formatFileSize(videoFile.size)}
+                        </p>
+                        <video
+                          src={videoPreview}
+                          className="rounded-md w-full max-h-48 object-cover bg-black"
+                          controls
+                        />
                       </div>
-                      <p className="text-xs text-muted-foreground mb-3">
-                        {exerciseVideosService.formatFileSize(videoFile.size)}
-                      </p>
-                      <video
-                        src={videoPreview}
-                        className="rounded-md w-full max-h-48 object-cover bg-black"
-                        controls
-                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setVideoFile(null);
+                          setVideoPreview('');
+                          setUploadError(null);
+                        }}
+                        disabled={isUploading}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        setVideoFile(null);
-                        setVideoPreview('');
-                        setUploadError(null);
-                      }}
-                      disabled={isUploading}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
-          {/* Thumbnail Upload (Optional) */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Label>Thumbnail (opcional)</Label>
-              <Badge variant="outline" className="text-xs">
-                Será gerada automaticamente
-              </Badge>
+                  </CardContent>
+                </Card>
+              )}
             </div>
-            {!thumbnailPreview ? (
-              <div
-                className={cn(
-                  'border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors hover:border-primary/50',
-                  isUploading && 'opacity-50 cursor-not-allowed'
-                )}
-                onClick={() => !isUploading && thumbnailInputRef.current?.click()}
-              >
-                <input
-                  ref={thumbnailInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleThumbnailChange}
-                  className="hidden"
-                  disabled={isUploading}
-                />
-                <ImageIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  Clique para adicionar uma imagem personalizada
-                </p>
+
+            {/* Thumbnail Upload (Optional) */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label>Thumbnail (opcional)</Label>
+                <Badge variant="outline" className="text-xs">
+                  Será gerada automaticamente
+                </Badge>
               </div>
-            ) : (
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    <img
-                      src={thumbnailPreview}
-                      alt="Thumbnail"
-                      className="w-24 h-16 object-cover rounded"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">Thumbnail personalizada</p>
-                      <p className="text-xs text-muted-foreground truncate">{thumbnailFile?.name}</p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        setThumbnailFile(null);
-                        setThumbnailPreview('');
-                        if (thumbnailInputRef.current) {
-                          thumbnailInputRef.current.value = '';
-                        }
-                      }}
-                      disabled={isUploading}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
-          {/* Title */}
-          <div className="space-y-2">
-            <Label>
-              Título do Exercício <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              placeholder="Ex: Rotação de Ombro com Bastão"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              disabled={isUploading}
-              maxLength={100}
-            />
-            <p className="text-xs text-muted-foreground text-right">
-              {title.length}/100 caracteres
-            </p>
-          </div>
-
-          {/* Description */}
-          <div className="space-y-2">
-            <Label>Descrição</Label>
-            <Textarea
-              placeholder="Descreva o exercício, objetivo e cuidados importantes..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              disabled={isUploading}
-              rows={3}
-              maxLength={500}
-            />
-            <p className="text-xs text-muted-foreground text-right">
-              {description.length}/500 caracteres
-            </p>
-          </div>
-
-          {/* Category and Difficulty */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>
-                Categoria <span className="text-destructive">*</span>
-              </Label>
-              <Select value={category} onValueChange={setCategory} disabled={isUploading}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {VIDEO_CATEGORIES.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>
-                Dificuldade <span className="text-destructive">*</span>
-              </Label>
-              <Select value={difficulty} onValueChange={setDifficulty} disabled={isUploading}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {VIDEO_DIFFICULTY.map((diff) => (
-                    <SelectItem key={diff} value={diff}>
-                      {diff.charAt(0).toUpperCase() + diff.slice(1)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Body Parts */}
-          <div className="space-y-2">
-            <Label>Partes do Corpo</Label>
-            <div className="flex flex-wrap gap-2">
-              {BODY_PARTS.map((part) => (
-                <Badge
-                  key={part}
-                  variant={selectedBodyParts.includes(part) ? 'default' : 'outline'}
+              {!thumbnailPreview ? (
+                <div
                   className={cn(
-                    'cursor-pointer transition-colors',
-                    !isUploading && 'hover:bg-primary/20',
-                    selectedBodyParts.includes(part) && 'bg-primary text-primary-foreground hover:bg-primary'
+                    'border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors hover:border-primary/50',
+                    isUploading && 'opacity-50 cursor-not-allowed'
                   )}
-                  onClick={() => !isUploading && toggleBodyPart(part)}
+                  onClick={() => !isUploading && thumbnailInputRef.current?.click()}
                 >
-                  {part.charAt(0).toUpperCase() + part.slice(1)}
-                  {selectedBodyParts.includes(part) && (
-                    <Check className="h-3 w-3 ml-1" />
-                  )}
-                </Badge>
-              ))}
-            </div>
-          </div>
-
-          {/* Equipment */}
-          <div className="space-y-2">
-            <Label>Equipamentos Necessários</Label>
-            <div className="flex flex-wrap gap-2">
-              {EQUIPMENT_OPTIONS.map((eq) => (
-                <Badge
-                  key={eq}
-                  variant={selectedEquipment.includes(eq) ? 'default' : 'outline'}
-                  className={cn(
-                    'cursor-pointer transition-colors',
-                    !isUploading && 'hover:bg-primary/20',
-                    selectedEquipment.includes(eq) && 'bg-primary text-primary-foreground hover:bg-primary'
-                  )}
-                  onClick={() => !isUploading && toggleEquipment(eq)}
-                >
-                  {eq.charAt(0).toUpperCase() + eq.slice(1)}
-                  {selectedEquipment.includes(eq) && (
-                    <Check className="h-3 w-3 ml-1" />
-                  )}
-                </Badge>
-              ))}
-            </div>
-          </div>
-
-          {/* Upload Progress */}
-          {isUploading && (
-            <div className="space-y-3 p-4 bg-muted/50 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm">
-                  <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
-                  <span className="font-medium">Enviando vídeo...</span>
+                  <input
+                    ref={thumbnailInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleThumbnailChange}
+                    className="hidden"
+                    disabled={isUploading}
+                  />
+                  <ImageIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    Clique para adicionar uma imagem personalizada
+                  </p>
                 </div>
-                <span className="text-sm text-muted-foreground">{uploadProgress}%</span>
-              </div>
-              <Progress value={uploadProgress} className="h-2" />
+              ) : (
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4">
+                      <img
+                        src={thumbnailPreview}
+                        alt="Thumbnail"
+                        className="w-24 h-16 object-cover rounded"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">Thumbnail personalizada</p>
+                        <p className="text-xs text-muted-foreground truncate">{thumbnailFile?.name}</p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setThumbnailFile(null);
+                          setThumbnailPreview('');
+                          if (thumbnailInputRef.current) {
+                            thumbnailInputRef.current.value = '';
+                          }
+                        }}
+                        disabled={isUploading}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
-          )}
 
-          {/* Error Message */}
-          {uploadError && (
-            <div className="flex items-start gap-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-              <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-destructive">{uploadError}</p>
+            {/* Title */}
+            <div className="space-y-2">
+              <Label>
+                Título do Exercício <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                placeholder="Ex: Rotação de Ombro com Bastão"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                disabled={isUploading}
+                maxLength={100}
+              />
+              <p className="text-xs text-muted-foreground text-right">
+                {title.length}/100 caracteres
+              </p>
             </div>
-          )}
 
-          {/* Info Message */}
-          {!videoFile && (
-            <div className="flex items-start gap-3 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-lg">
-              <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-              <div className="text-sm text-blue-800 dark:text-blue-200">
-                <p className="font-medium mb-1">Dicas para um bom vídeo:</p>
-                <ul className="list-disc list-inside space-y-0.5 text-blue-700 dark:text-blue-300">
-                  <li>Use iluminação adequada</li>
-                  <li>Mantenha a câmera estável</li>
-                  <li>Demonstre o movimento completamente</li>
-                  <li>Vídeos curtos (30s - 2min) funcionam melhor</li>
-                </ul>
+            {/* Description */}
+            <div className="space-y-2">
+              <Label>Descrição</Label>
+              <Textarea
+                placeholder="Descreva o exercício, objetivo e cuidados importantes..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                disabled={isUploading}
+                rows={3}
+                maxLength={500}
+              />
+              <p className="text-xs text-muted-foreground text-right">
+                {description.length}/500 caracteres
+              </p>
+            </div>
+
+            {/* Category and Difficulty */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>
+                  Categoria <span className="text-destructive">*</span>
+                </Label>
+                <Select value={category} onValueChange={setCategory} disabled={isUploading}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {VIDEO_CATEGORIES.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>
+                  Dificuldade <span className="text-destructive">*</span>
+                </Label>
+                <Select value={difficulty} onValueChange={setDifficulty} disabled={isUploading}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {VIDEO_DIFFICULTY.map((diff) => (
+                      <SelectItem key={diff} value={diff}>
+                        {diff.charAt(0).toUpperCase() + diff.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-          )}
+
+            {/* Body Parts */}
+            <div className="space-y-2">
+              <Label>Partes do Corpo</Label>
+              <div className="flex flex-wrap gap-2">
+                {BODY_PARTS.map((part) => (
+                  <Badge
+                    key={part}
+                    variant={selectedBodyParts.includes(part) ? 'default' : 'outline'}
+                    className={cn(
+                      'cursor-pointer transition-colors',
+                      !isUploading && 'hover:bg-primary/20',
+                      selectedBodyParts.includes(part) && 'bg-primary text-primary-foreground hover:bg-primary'
+                    )}
+                    onClick={() => !isUploading && toggleBodyPart(part)}
+                  >
+                    {part.charAt(0).toUpperCase() + part.slice(1)}
+                    {selectedBodyParts.includes(part) && (
+                      <Check className="h-3 w-3 ml-1" />
+                    )}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            {/* Equipment */}
+            <div className="space-y-2">
+              <Label>Equipamentos Necessários</Label>
+              <div className="flex flex-wrap gap-2">
+                {EQUIPMENT_OPTIONS.map((eq) => (
+                  <Badge
+                    key={eq}
+                    variant={selectedEquipment.includes(eq) ? 'default' : 'outline'}
+                    className={cn(
+                      'cursor-pointer transition-colors',
+                      !isUploading && 'hover:bg-primary/20',
+                      selectedEquipment.includes(eq) && 'bg-primary text-primary-foreground hover:bg-primary'
+                    )}
+                    onClick={() => !isUploading && toggleEquipment(eq)}
+                  >
+                    {eq.charAt(0).toUpperCase() + eq.slice(1)}
+                    {selectedEquipment.includes(eq) && (
+                      <Check className="h-3 w-3 ml-1" />
+                    )}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            {/* Upload Progress */}
+            {isUploading && (
+              <div className="space-y-3 p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+                    <span className="font-medium">Enviando vídeo...</span>
+                  </div>
+                  <span className="text-sm text-muted-foreground">{uploadProgress}%</span>
+                </div>
+                <Progress value={uploadProgress} className="h-2" />
+              </div>
+            )}
+
+            {/* Error Message */}
+            {uploadError && (
+              <div className="flex items-start gap-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-destructive">{uploadError}</p>
+              </div>
+            )}
+
+            {/* Info Message */}
+            {!videoFile && (
+              <div className="flex items-start gap-3 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-lg">
+                <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-blue-800 dark:text-blue-200">
+                  <p className="font-medium mb-1">Dicas para um bom vídeo:</p>
+                  <ul className="list-disc list-inside space-y-0.5 text-blue-700 dark:text-blue-300">
+                    <li>Use iluminação adequada</li>
+                    <li>Mantenha a câmera estável</li>
+                    <li>Demonstre o movimento completamente</li>
+                    <li>Vídeos curtos (30s - 2min) funcionam melhor</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="p-6 pt-2 border-t mt-auto bg-background">
           <Button
             variant="outline"
             onClick={handleClose}

@@ -138,155 +138,162 @@ export const EditPatientModal: React.FC<{
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0">
+        <DialogHeader className="p-6 pb-2">
           <DialogTitle>Editar Paciente</DialogTitle>
           <DialogDescription>
             Atualize as informações cadastrais do paciente
           </DialogDescription>
         </DialogHeader>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            {/* Basic Information */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Informações Básicas</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="name" className="text-sm">Nome Completo *</Label>
-                  <Input id="name" {...register('name')} className="h-9" />
-                  {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
-                </div>
+        <div className="flex-1 overflow-y-auto px-6 py-2">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <form id="edit-patient-form" onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+              {/* Basic Information */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Informações Básicas</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="name" className="text-sm">Nome Completo *</Label>
+                    <Input id="name" {...register('name')} className="h-9" />
+                    {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
+                  </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="birth_date" className="text-sm">Data de Nascimento</Label>
-                  <Input id="birth_date" type="date" {...register('birth_date')} className="h-9" />
-                </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="birth_date" className="text-sm">Data de Nascimento</Label>
+                    <Input id="birth_date" type="date" {...register('birth_date')} className="h-9" />
+                  </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="cpf" className="text-sm">CPF</Label>
-                  <Input id="cpf" {...register('cpf')} placeholder="000.000.000-00" className="h-9" />
-                </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="cpf" className="text-sm">CPF</Label>
+                    <Input id="cpf" {...register('cpf')} placeholder="000.000.000-00" className="h-9" />
+                  </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="status" className="text-sm">Status</Label>
-                  <Controller
-                    name="status"
-                    control={control}
-                    render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <SelectTrigger className="h-9">
-                          <SelectValue placeholder="Selecione o status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="active">Ativo</SelectItem>
-                          <SelectItem value="inactive">Inativo</SelectItem>
-                          <SelectItem value="Inicial">Inicial</SelectItem>
-                          <SelectItem value="Em Tratamento">Em Tratamento</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
+                  <div className="space-y-1.5">
+                    <Label htmlFor="status" className="text-sm">Status</Label>
+                    <Controller
+                      name="status"
+                      control={control}
+                      render={({ field }) => (
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="Selecione o status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="active">Ativo</SelectItem>
+                            <SelectItem value="inactive">Inativo</SelectItem>
+                            <SelectItem value="Inicial">Inicial</SelectItem>
+                            <SelectItem value="Em Tratamento">Em Tratamento</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Contact Information */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Contato</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="email" className="text-sm">Email</Label>
-                  <Input id="email" type="email" {...register('email')} className="h-9" />
-                  {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
-                </div>
+              {/* Contact Information */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Contato</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="email" className="text-sm">Email</Label>
+                    <Input id="email" type="email" {...register('email')} className="h-9" />
+                    {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
+                  </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="phone" className="text-sm">Telefone</Label>
-                  <Input id="phone" {...register('phone')} placeholder="(00) 00000-0000" className="h-9" />
-                </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="phone" className="text-sm">Telefone</Label>
+                    <Input id="phone" {...register('phone')} placeholder="(00) 00000-0000" className="h-9" />
+                  </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="emergency_contact" className="text-sm">Contato de Emergência</Label>
-                  <Input id="emergency_contact" {...register('emergency_contact')} className="h-9" />
-                </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="emergency_contact" className="text-sm">Contato de Emergência</Label>
+                    <Input id="emergency_contact" {...register('emergency_contact')} className="h-9" />
+                  </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="emergency_phone" className="text-sm">Tel. Emergência</Label>
-                  <Input id="emergency_phone" {...register('emergency_phone')} placeholder="(00) 00000-0000" className="h-9" />
-                </div>
-              </div>
-            </div>
-
-            {/* Address */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Endereço</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="space-y-1.5 md:col-span-2">
-                  <Label htmlFor="address" className="text-sm">Endereço</Label>
-                  <Input id="address" {...register('address')} placeholder="Rua, número, complemento" className="h-9" />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="city" className="text-sm">Cidade</Label>
-                  <Input id="city" {...register('city')} className="h-9" />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="state" className="text-sm">Estado</Label>
-                  <Input id="state" {...register('state')} placeholder="SP" className="h-9" />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="zip_code" className="text-sm">CEP</Label>
-                  <Input id="zip_code" {...register('zip_code')} placeholder="00000-000" className="h-9" />
+                  <div className="space-y-1.5">
+                    <Label htmlFor="emergency_phone" className="text-sm">Tel. Emergência</Label>
+                    <Input id="emergency_phone" {...register('emergency_phone')} placeholder="(00) 00000-0000" className="h-9" />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Health Insurance */}
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Plano de Saúde</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="health_insurance" className="text-sm">Convênio</Label>
-                  <Input id="health_insurance" {...register('health_insurance')} className="h-9" />
+              {/* Address */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Endereço</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-1.5 md:col-span-2">
+                    <Label htmlFor="address" className="text-sm">Endereço</Label>
+                    <Input id="address" {...register('address')} placeholder="Rua, número, complemento" className="h-9" />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="city" className="text-sm">Cidade</Label>
+                    <Input id="city" {...register('city')} className="h-9" />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="state" className="text-sm">Estado</Label>
+                    <Input id="state" {...register('state')} placeholder="SP" className="h-9" />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="zip_code" className="text-sm">CEP</Label>
+                    <Input id="zip_code" {...register('zip_code')} placeholder="00000-000" className="h-9" />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Observations */}
-            <div className="space-y-1.5">
-              <Label htmlFor="observations" className="text-sm">Observações</Label>
-              <Textarea
-                id="observations"
-                {...register('observations')}
-                rows={3}
-                placeholder="Informações adicionais sobre o paciente..."
-                className="resize-none"
-              />
-            </div>
+              {/* Health Insurance */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Plano de Saúde</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="health_insurance" className="text-sm">Convênio</Label>
+                    <Input id="health_insurance" {...register('health_insurance')} className="h-9" />
+                  </div>
+                </div>
+              </div>
 
-            <DialogFooter className="gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={updateMutation.isPending}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={updateMutation.isPending}>
-                {updateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Salvar Alterações
-              </Button>
-            </DialogFooter>
-          </form>
-        )}
+              {/* Observations */}
+              <div className="space-y-1.5">
+                <Label htmlFor="observations" className="text-sm">Observações</Label>
+                <Textarea
+                  id="observations"
+                  {...register('observations')}
+                  rows={3}
+                  placeholder="Informações adicionais sobre o paciente..."
+                  className="resize-none"
+                />
+              </div>
+            </form>
+          )}
+        </div>
+
+        <DialogFooter className="gap-2 p-6 pt-2 border-t mt-auto bg-background">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={updateMutation.isPending}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            form="edit-patient-form"
+            disabled={updateMutation.isPending}
+            className="bg-primary hover:bg-primary/90"
+          >
+            {updateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Salvar Alterações
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
