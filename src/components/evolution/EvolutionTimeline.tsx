@@ -46,8 +46,6 @@ import {
   Eye,
   Maximize2,
   Download,
-  X,
-  ChevronRight,
   Trophy
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -162,12 +160,12 @@ const SessionDetailsSkeleton: React.FC = () => (
 // Componente para visualização detalhada da sessão
 const SessionDetailsModal: React.FC<{
   session: SoapRecord;
-  measurements: any[];
-  attachments: any[];
+  measurements: Array<{ id: string; [key: string]: unknown }>;
+  attachments: Array<{ id: string; [key: string]: unknown }>;
   isOpen: boolean;
   onClose: () => void;
 }> = ({ session, measurements, attachments, isOpen, onClose }) => {
-  const [sessionExercises, setSessionExercises] = React.useState<any[]>([]);
+  const [sessionExercises, setSessionExercises] = React.useState<Array<{ [key: string]: unknown }>>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [activeTab, setActiveTab] = React.useState<'overview' | 'soap' | 'exercises' | 'measurements' | 'attachments'>('overview');
 
@@ -332,7 +330,7 @@ ${sessionMeasurements.length > 0 ? sessionMeasurements.map(m =>
             ].map((tab) => (
               <button
                 key={tab.value}
-                onClick={() => setActiveTab(tab.value as any)}
+                onClick={() => setActiveTab(tab.value as 'overview' | 'soap' | 'exercises' | 'measurements' | 'attachments')}
                 className={cn(
                   "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
                   activeTab === tab.value
@@ -1082,7 +1080,7 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
                     </Badge>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {unlockedAchievements.slice(0, 6).map((achievement: any) => (
+                    {unlockedAchievements.slice(0, 6).map((achievement) => (
                       <div
                         key={achievement.id}
                         className="flex items-center gap-1 px-2 py-1 bg-background rounded-lg border border-amber-200 dark:border-amber-700 cursor-pointer hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors"
