@@ -58,9 +58,9 @@ interface NewPatientModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export const NewPatientModal: React.FC<NewPatientModalProps> = ({ 
-  open, 
-  onOpenChange 
+export const NewPatientModal: React.FC<NewPatientModalProps> = ({
+  open,
+  onOpenChange
 }) => {
   const [isCalendarOpen, setIsCalendarOpen] = React.useState(false);
   const { toast } = useToast();
@@ -95,7 +95,7 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
   });
 
   const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting }, reset } = form;
-  
+
   const watchedBirthDate = watch('birth_date');
   const watchedPhone = watch('phone');
   const watchedCpf = watch('cpf');
@@ -110,7 +110,7 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
     const formatted = formatPhoneInput(e.target.value);
     setValue('phone', formatted, { shouldValidate: false });
   };
-  
+
   const handleSave = async (data: PatientFormData) => {
     try {
       // Validar organização
@@ -210,7 +210,7 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
       onOpenChange(false);
     } catch (error: unknown) {
       logger.error('Erro ao cadastrar paciente', error, 'NewPatientModal');
-      
+
       let errorMessage = 'Não foi possível cadastrar o paciente.';
 
       if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
@@ -233,367 +233,371 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[700px] max-h-[85vh] flex flex-col p-0">
+        <DialogHeader className="p-6 pb-2">
           <DialogTitle className="flex items-center gap-2">
             <User className="w-5 h-5" />
             Novo Paciente
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(handleSave)} className="space-y-6">
-          {/* Basic Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Informações Básicas</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nome Completo *</Label>
-                <Input
-                  id="name"
-                  {...register('name')}
-                  placeholder="Nome completo do paciente"
-                />
-                {errors.name && (
-                  <p className="text-sm text-destructive">{String(errors.name.message)}</p>
-                )}
-              </div>
+        <div className="flex-1 overflow-y-auto px-6 py-2">
+          <form id="patient-form" onSubmit={handleSubmit(handleSave)} className="space-y-6">
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Informações Básicas</h3>
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  {...register('email')}
-                  placeholder="email@exemplo.com"
-                />
-                {errors.email && (
-                  <p className="text-sm text-destructive">{errors.email.message}</p>
-                )}
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nome Completo *</Label>
+                  <Input
+                    id="name"
+                    {...register('name')}
+                    placeholder="Nome completo do paciente"
+                  />
+                  {errors.name && (
+                    <p className="text-sm text-destructive">{String(errors.name.message)}</p>
+                  )}
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="phone">Telefone</Label>
-                <Input
-                  id="phone"
-                  value={watchedPhone || ''}
-                  onChange={handlePhoneChange}
-                  onBlur={() => {
-                    if (watchedPhone) {
-                      setValue('phone', watchedPhone, { shouldValidate: true });
-                    }
-                  }}
-                  placeholder="(11) 99999-9999"
-                  maxLength={15}
-                />
-                {errors.phone && (
-                  <p className="text-sm text-destructive">{errors.phone.message}</p>
-                )}
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    {...register('email')}
+                    placeholder="email@exemplo.com"
+                  />
+                  {errors.email && (
+                    <p className="text-sm text-destructive">{errors.email.message}</p>
+                  )}
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="cpf">CPF</Label>
-                <Input
-                  id="cpf"
-                  value={watchedCpf || ''}
-                  onChange={handleCpfChange}
-                  onBlur={() => {
-                    if (watchedCpf) {
-                      setValue('cpf', watchedCpf, { shouldValidate: true });
-                    }
-                  }}
-                  placeholder="000.000.000-00"
-                  maxLength={14}
-                />
-                {errors.cpf && (
-                  <p className="text-sm text-destructive">{errors.cpf.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label>Data de Nascimento *</Label>
-                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !watchedBirthDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {watchedBirthDate ? (
-                        format(watchedBirthDate, 'dd/MM/yyyy', { locale: ptBR })
-                      ) : (
-                        "Selecione uma data"
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={watchedBirthDate}
-                      onSelect={(date) => {
-                        setValue('birth_date', date || new Date());
-                        setIsCalendarOpen(false);
-                      }}
-                      disabled={(date) =>
-                        date > new Date() || date < new Date("1900-01-01")
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Telefone</Label>
+                  <Input
+                    id="phone"
+                    value={watchedPhone || ''}
+                    onChange={handlePhoneChange}
+                    onBlur={() => {
+                      if (watchedPhone) {
+                        setValue('phone', watchedPhone, { shouldValidate: true });
                       }
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-                {errors.birth_date && (
-                  <p className="text-sm text-destructive">{String(errors.birth_date.message)}</p>
+                    }}
+                    placeholder="(11) 99999-9999"
+                    maxLength={15}
+                  />
+                  {errors.phone && (
+                    <p className="text-sm text-destructive">{errors.phone.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="cpf">CPF</Label>
+                  <Input
+                    id="cpf"
+                    value={watchedCpf || ''}
+                    onChange={handleCpfChange}
+                    onBlur={() => {
+                      if (watchedCpf) {
+                        setValue('cpf', watchedCpf, { shouldValidate: true });
+                      }
+                    }}
+                    placeholder="000.000.000-00"
+                    maxLength={14}
+                  />
+                  {errors.cpf && (
+                    <p className="text-sm text-destructive">{errors.cpf.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Data de Nascimento *</Label>
+                  <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !watchedBirthDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {watchedBirthDate ? (
+                          format(watchedBirthDate, 'dd/MM/yyyy', { locale: ptBR })
+                        ) : (
+                          "Selecione uma data"
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={watchedBirthDate}
+                        onSelect={(date) => {
+                          setValue('birth_date', date || new Date());
+                          setIsCalendarOpen(false);
+                        }}
+                        disabled={(date) =>
+                          date > new Date() || date < new Date("1900-01-01")
+                        }
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {errors.birth_date && (
+                    <p className="text-sm text-destructive">{String(errors.birth_date.message)}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="gender">Gênero *</Label>
+                  <Select
+                    value={watch('gender')}
+                    onValueChange={(value) => setValue('gender', value as 'masculino' | 'feminino' | 'outro')}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o gênero" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="masculino">Masculino</SelectItem>
+                      <SelectItem value="feminino">Feminino</SelectItem>
+                      <SelectItem value="outro">Outro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.gender && (
+                    <p className="text-sm text-destructive">{errors.gender.message}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="address">Endereço</Label>
+                <Input
+                  id="address"
+                  {...register('address')}
+                  placeholder="Endereço completo"
+                />
+              </div>
+            </div>
+
+            {/* Emergency Contact */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Contato de Emergência</h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="emergency_contact">Contato</Label>
+                  <Input
+                    id="emergency_contact"
+                    {...register('emergency_contact')}
+                    placeholder="Nome e telefone"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="emergency_contact_relationship">Parentesco</Label>
+                  <Input
+                    id="emergency_contact_relationship"
+                    {...register('emergency_contact_relationship')}
+                    placeholder="Ex: Mãe, Pai, Cônjuge"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Medical Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Informações Médicas</h3>
+
+              <div className="space-y-2">
+                <Label htmlFor="main_condition">Condição Principal *</Label>
+                <Input
+                  id="main_condition"
+                  {...register('main_condition')}
+                  placeholder="Ex: Dor lombar, Lesão no joelho"
+                />
+                {errors.main_condition && (
+                  <p className="text-sm text-destructive">{errors.main_condition.message}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="gender">Gênero *</Label>
-                <Select
-                  value={watch('gender')}
-                  onValueChange={(value) => setValue('gender', value as 'masculino' | 'feminino' | 'outro')}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o gênero" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="masculino">Masculino</SelectItem>
-                    <SelectItem value="feminino">Feminino</SelectItem>
-                    <SelectItem value="outro">Outro</SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.gender && (
-                  <p className="text-sm text-destructive">{errors.gender.message}</p>
-                )}
+                <Label htmlFor="medical_history">Histórico Médico</Label>
+                <Textarea
+                  id="medical_history"
+                  {...register('medical_history')}
+                  placeholder="Histórico médico relevante"
+                  rows={3}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="allergies">Alergias</Label>
+                  <Input
+                    id="allergies"
+                    {...register('allergies')}
+                    placeholder="Alergias conhecidas"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="medications">Medicamentos</Label>
+                  <Input
+                    id="medications"
+                    {...register('medications')}
+                    placeholder="Medicamentos em uso"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="weight_kg">Peso (kg)</Label>
+                  <Input
+                    id="weight_kg"
+                    type="number"
+                    {...register('weight_kg', { valueAsNumber: true })}
+                    placeholder="70"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="height_cm">Altura (cm)</Label>
+                  <Input
+                    id="height_cm"
+                    type="number"
+                    {...register('height_cm', { valueAsNumber: true })}
+                    placeholder="170"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="blood_type">Tipo Sanguíneo</Label>
+                  <Select
+                    value={watch('blood_type')}
+                    onValueChange={(value) => setValue('blood_type', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="A+">A+</SelectItem>
+                      <SelectItem value="A-">A-</SelectItem>
+                      <SelectItem value="B+">B+</SelectItem>
+                      <SelectItem value="B-">B-</SelectItem>
+                      <SelectItem value="AB+">AB+</SelectItem>
+                      <SelectItem value="AB-">AB-</SelectItem>
+                      <SelectItem value="O+">O+</SelectItem>
+                      <SelectItem value="O-">O-</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="address">Endereço</Label>
-              <Input
-                id="address"
-                {...register('address')}
-                placeholder="Endereço completo"
-              />
-            </div>
-          </div>
+            {/* Additional Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Informações Adicionais</h3>
 
-          {/* Emergency Contact */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Contato de Emergência</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="emergency_contact">Contato</Label>
-                <Input
-                  id="emergency_contact"
-                  {...register('emergency_contact')}
-                  placeholder="Nome e telefone"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="marital_status">Estado Civil</Label>
+                  <Select
+                    value={watch('marital_status')}
+                    onValueChange={(value) => setValue('marital_status', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="solteiro">Solteiro(a)</SelectItem>
+                      <SelectItem value="casado">Casado(a)</SelectItem>
+                      <SelectItem value="divorciado">Divorciado(a)</SelectItem>
+                      <SelectItem value="viuvo">Viúvo(a)</SelectItem>
+                      <SelectItem value="uniao_estavel">União Estável</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="profession">Profissão</Label>
+                  <Input
+                    id="profession"
+                    {...register('profession')}
+                    placeholder="Profissão"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="education_level">Escolaridade</Label>
+                  <Select
+                    value={watch('education_level')}
+                    onValueChange={(value) => setValue('education_level', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fundamental">Ensino Fundamental</SelectItem>
+                      <SelectItem value="medio">Ensino Médio</SelectItem>
+                      <SelectItem value="superior">Ensino Superior</SelectItem>
+                      <SelectItem value="pos">Pós-graduação</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="emergency_contact_relationship">Parentesco</Label>
-                <Input
-                  id="emergency_contact_relationship"
-                  {...register('emergency_contact_relationship')}
-                  placeholder="Ex: Mãe, Pai, Cônjuge"
-                />
-              </div>
-            </div>
-          </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="insurance_plan">Plano de Saúde</Label>
+                  <Input
+                    id="insurance_plan"
+                    {...register('insurance_plan')}
+                    placeholder="Nome do plano"
+                  />
+                </div>
 
-          {/* Medical Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Informações Médicas</h3>
-            
-            <div className="space-y-2">
-              <Label htmlFor="main_condition">Condição Principal *</Label>
-              <Input
-                id="main_condition"
-                {...register('main_condition')}
-                placeholder="Ex: Dor lombar, Lesão no joelho"
-              />
-              {errors.main_condition && (
-                <p className="text-sm text-destructive">{errors.main_condition.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="medical_history">Histórico Médico</Label>
-              <Textarea
-                id="medical_history"
-                {...register('medical_history')}
-                placeholder="Histórico médico relevante"
-                rows={3}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="allergies">Alergias</Label>
-                <Input
-                  id="allergies"
-                  {...register('allergies')}
-                  placeholder="Alergias conhecidas"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="medications">Medicamentos</Label>
-                <Input
-                  id="medications"
-                  {...register('medications')}
-                  placeholder="Medicamentos em uso"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="weight_kg">Peso (kg)</Label>
-                <Input
-                  id="weight_kg"
-                  type="number"
-                  {...register('weight_kg', { valueAsNumber: true })}
-                  placeholder="70"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="height_cm">Altura (cm)</Label>
-                <Input
-                  id="height_cm"
-                  type="number"
-                  {...register('height_cm', { valueAsNumber: true })}
-                  placeholder="170"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="blood_type">Tipo Sanguíneo</Label>
-                <Select
-                  value={watch('blood_type')}
-                  onValueChange={(value) => setValue('blood_type', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="A+">A+</SelectItem>
-                    <SelectItem value="A-">A-</SelectItem>
-                    <SelectItem value="B+">B+</SelectItem>
-                    <SelectItem value="B-">B-</SelectItem>
-                    <SelectItem value="AB+">AB+</SelectItem>
-                    <SelectItem value="AB-">AB-</SelectItem>
-                    <SelectItem value="O+">O+</SelectItem>
-                    <SelectItem value="O-">O-</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-
-          {/* Additional Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Informações Adicionais</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="marital_status">Estado Civil</Label>
-                <Select
-                  value={watch('marital_status')}
-                  onValueChange={(value) => setValue('marital_status', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="solteiro">Solteiro(a)</SelectItem>
-                    <SelectItem value="casado">Casado(a)</SelectItem>
-                    <SelectItem value="divorciado">Divorciado(a)</SelectItem>
-                    <SelectItem value="viuvo">Viúvo(a)</SelectItem>
-                    <SelectItem value="uniao_estavel">União Estável</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="profession">Profissão</Label>
-                <Input
-                  id="profession"
-                  {...register('profession')}
-                  placeholder="Profissão"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="education_level">Escolaridade</Label>
-                <Select
-                  value={watch('education_level')}
-                  onValueChange={(value) => setValue('education_level', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="fundamental">Ensino Fundamental</SelectItem>
-                    <SelectItem value="medio">Ensino Médio</SelectItem>
-                    <SelectItem value="superior">Ensino Superior</SelectItem>
-                    <SelectItem value="pos">Pós-graduação</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="space-y-2">
+                  <Label htmlFor="insurance_number">Número da Carteira</Label>
+                  <Input
+                    id="insurance_number"
+                    {...register('insurance_number')}
+                    placeholder="Número da carteira do plano"
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="insurance_plan">Plano de Saúde</Label>
-                <Input
-                  id="insurance_plan"
-                  {...register('insurance_plan')}
-                  placeholder="Nome do plano"
-                />
-              </div>
+            {/* Action Buttons are moved to footer */}
+          </form>
+        </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="insurance_number">Número da Carteira</Label>
-                <Input
-                  id="insurance_number"
-                  {...register('insurance_number')}
-                  placeholder="Número da carteira do plano"
-                />
-              </div>
-            </div>
-          </div>
+        <div className="flex justify-end gap-3 p-6 pt-2 border-t mt-auto bg-background">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
+            Cancelar
+          </Button>
 
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancelar
-            </Button>
-            
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-primary hover:bg-primary/90"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-                  Salvando...
-                </>
-              ) : (
-                'Cadastrar Paciente'
-              )}
-            </Button>
-          </div>
-        </form>
+          <Button
+            type="submit"
+            form="patient-form"
+            disabled={isSubmitting}
+            className="bg-primary hover:bg-primary/90"
+          >
+            {isSubmitting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                Salvando...
+              </>
+            ) : (
+              'Cadastrar Paciente'
+            )}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
