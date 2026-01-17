@@ -88,7 +88,7 @@ const CalendarDayView = memo(({
     }
 
     return (
-        <div className="flex bg-gradient-to-br from-background to-muted/20 h-[calc(100vh-240px)] md:h-full overflow-hidden">
+        <div className="flex bg-gradient-to-br from-background to-muted/20 h-[calc(100vh-240px)] md:h-full overflow-y-auto custom-scrollbar">
             {/* Styles for responsive positioning */}
             <style dangerouslySetInnerHTML={{
                 __html: `

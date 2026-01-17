@@ -185,9 +185,9 @@ export const CalendarWeekView = memo(({
 
     return (
         <TooltipProvider>
-            <div className="flex flex-col bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-slate-900 dark:text-slate-100 font-display overflow-hidden">
-                {/* Wrap everything in a horizontal scroll container on mobile */}
-                <div className="overflow-x-auto w-full custom-scrollbar">
+            <div className="flex flex-col bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-slate-900 dark:text-slate-100 font-display h-full relative overflow-hidden">
+                {/* Wrap everything in a scroll container (both X and Y) */}
+                <div className="overflow-auto w-full h-full custom-scrollbar">
                     <div className="min-w-[800px] md:min-w-0">
                         {/* Header Row */}
                         <div className="grid grid-cols-[60px_repeat(6,1fr)] bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 shadow-sm">
