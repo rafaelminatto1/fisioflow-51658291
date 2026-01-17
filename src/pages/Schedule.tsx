@@ -123,7 +123,7 @@ const Schedule = () => {
     cacheTimestamp,
     // @ts-expect-error - Propriedades novas
     dataSource,
-    // @ts-expect-error
+    // @ts-expect-error - New property from hook
     isUsingStaleData
   } = useAppointments();
   const { mutateAsync: rescheduleAppointment } = useRescheduleAppointment();
@@ -407,7 +407,7 @@ const Schedule = () => {
           className=""
           // @ts-expect-error - Propriedades dinâmicas retornadas pelo hook atualizado
           isStale={isUsingStaleData}
-          // @ts-expect-error
+          // @ts-expect-error - Dynamic property from hook
           dataSource={dataSource}
         />
 
