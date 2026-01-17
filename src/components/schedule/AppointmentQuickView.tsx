@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Play, Edit, Trash2, Clock, X, Bell, Users, UserPlus, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -297,11 +297,35 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   return (
     <>
       {isMobile ? (
-        // Mobile: use Dialog (centered modal) - render trigger and dialog separately
+        // Mobile: use Dialog (centered modal)
+        // We use a wrapper that doesn't affect absolute positioning of the card
         <>
-          {children}
+          <span
+            className="contents"
+            onClick={(e) => {
+              // Prevent opening if a drag might be happening
+              e.stopPropagation();
+              onOpenChange?.(true);
+            }}
+            role="button"
+            tabIndex={0}
+            aria-haspopup="dialog"
+            aria-expanded={open}
+            aria-label={`Ver detalhes do agendamento de ${appointment.patientName}`}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onOpenChange?.(true);
+              }
+            }}
+          >
+            {children}
+          </span>
           <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="w-[calc(100%-2rem)] max-w-sm p-0 gap-0">
+            <DialogContent
+              className="w-[calc(100%-2rem)] max-w-sm p-0 gap-0"
+              aria-describedby={undefined}
+            >
               {Content}
             </DialogContent>
           </Dialog>
