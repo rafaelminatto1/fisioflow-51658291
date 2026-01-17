@@ -821,9 +821,9 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
             i: item.id,
             x: 0,
             y: index * 10,
-            w: 4, // Full width for 'xs' breakpoint (max 4)
+            w: 2, // Full width for 'xs' breakpoint (max 2 cols now)
             h: item.defaultLayout.h,
-            minW: 4
+            minW: 2
         }));
 
         const xxsLayout = gridItems.map((item, index) => ({
