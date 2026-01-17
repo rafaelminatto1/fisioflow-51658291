@@ -288,7 +288,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     if (currentCount >= maxCapacity) {
       setPendingFormData({
         ...data,
-        appointment_date: format(new Date(), 'yyyy-MM-dd')
+        // appointment_date: format(new Date(), 'yyyy-MM-dd') // Don't reset date to today
       });
       setCapacityDialogOpen(true);
       return;
@@ -737,6 +737,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
               }}
               date={pendingFormData.appointment_date ? parseISO(pendingFormData.appointment_date) : new Date()}
               time={pendingFormData.appointment_time}
+              defaultPatientId={pendingFormData.patient_id}
             />
           )
         }

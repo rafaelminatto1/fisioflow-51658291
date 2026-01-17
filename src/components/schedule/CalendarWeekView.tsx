@@ -235,15 +235,26 @@ export const CalendarWeekView = memo(({
                             }}>
 
                                 {/* Current Time Indicator Line */}
-                                {currentTimePosition !== null && (
-                                    <div
-                                        className="absolute left-[60px] right-0 z-20 pointer-events-none flex items-center"
-                                        style={{ top: `${currentTimePosition}px` }}
-                                    >
-                                        <div className="w-2 h-2 rounded-full bg-red-500 -ml-1"></div>
-                                        <div className="h-px bg-red-500 w-full shadow-sm"></div>
-                                    </div>
-                                )}
+                                {/* Current Time Indicator Line */}
+                                {currentTimePosition !== null && (() => {
+                                    const todayIndex = weekDays.findIndex(d => isSameDay(d, new Date()));
+                                    if (todayIndex === -1) return null;
+
+                                    return (
+                                        <div
+                                            className="absolute z-20 pointer-events-none flex items-center w-full"
+                                            style={{
+                                                top: `${currentTimePosition}px`,
+                                                gridColumn: `${todayIndex + 2}`, // +2 because column 1 is time labels
+                                                left: 0,
+                                                right: 0
+                                            }}
+                                        >
+                                            <div className="w-2 h-2 rounded-full bg-red-500 -ml-1 flex-shrink-0"></div>
+                                            <div className="h-px bg-red-500 w-full shadow-sm"></div>
+                                        </div>
+                                    );
+                                })()}
 
                                 {/* Time Labels Column - Sticky Left */}
                                 {timeSlots.map((time, index) => {
