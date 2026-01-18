@@ -29,15 +29,10 @@ export default defineConfig({
     hookTimeout: 10000,
     // Prevent "Should not already be working" errors - use threads pool for better React 18 support
     maxConcurrency: 2,
-    pool: 'threads',
-    poolOptions: {
-      threads: {
-        minThreads: 1,
-        maxThreads: 2
-      }
-    },
-    // Use isolate=false to allow sharing of mocks between tests
-    isolate: false,
+    // Use forks pool for better isolation and to prevent React 18 concurrency issues
+    // pool: 'forks',
+    // Use isolate=true to ensure clean environment for each test
+    isolate: true,
     // Mock de módulos problemáticos para Edge Functions
     mock: {
       'web-push': {
