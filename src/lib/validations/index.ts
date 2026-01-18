@@ -7,17 +7,17 @@ export const cleanCPF = (cpf: string): string => cpf.replace(/\D/g, '');
 export const validateCPFFormat = (cpf: string): boolean => {
   const cleaned = cleanCPF(cpf);
   if (cleaned.length !== 11) return false;
-  
+
   // Reject sequences like 111.111.111-11
   if (/^(\d)\1+$/.test(cleaned)) return false;
-  
+
   return true;
 };
 
 export const validateCPFDigits = (cpf: string): boolean => {
   const cleaned = cleanCPF(cpf);
   if (!validateCPFFormat(cpf)) return false;
-  
+
   // Calculate first check digit
   let sum = 0;
   for (let i = 0; i < 9; i++) {
@@ -26,7 +26,7 @@ export const validateCPFDigits = (cpf: string): boolean => {
   let remainder = (sum * 10) % 11;
   if (remainder === 10 || remainder === 11) remainder = 0;
   if (remainder !== parseInt(cleaned[9])) return false;
-  
+
   // Calculate second check digit
   sum = 0;
   for (let i = 0; i < 10; i++) {
@@ -35,7 +35,7 @@ export const validateCPFDigits = (cpf: string): boolean => {
   remainder = (sum * 10) % 11;
   if (remainder === 10 || remainder === 11) remainder = 0;
   if (remainder !== parseInt(cleaned[10])) return false;
-  
+
   return true;
 };
 
@@ -49,7 +49,7 @@ export const cpfSchema = z
 // ============= Email Validation =============
 export const validateEmail = (email: string): boolean => {
   const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return pattern.test(email.trim());
+  return pattern.test(email);
 };
 
 export const emailSchema = z

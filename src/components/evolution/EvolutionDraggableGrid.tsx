@@ -365,6 +365,14 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                 }
             }
         }
+
+        // Fix for overlap issue: Force layout recalculation after animation
+        // This resolves issues where widgets below didn't push down correctly
+        const timer = setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+        }, 350); // Slightly longer than transition duration (usually 300ms)
+
+        return () => clearTimeout(timer);
     }, [showPainDetails]); // Removed storedLayouts from deps to avoid infinite loop
 
     const handleLayoutChange = (layout: Layout[]) => {
