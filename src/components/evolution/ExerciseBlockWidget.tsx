@@ -575,13 +575,13 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
             <div className={cn("flex flex-col h-full", className)}>
                 {/* Header: Busca, Filtros e Ações */}
                 <div className="p-2.5 border-b flex flex-wrap items-center gap-x-2 gap-y-2.5 shrink-0 bg-muted/20">
-                    <div className="flex-1 min-w-[150px] relative">
+                    <div className="flex-1 min-w-[120px] relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" aria-hidden="true" />
                         <Input
                             placeholder="Buscar exercícios..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="h-7 pl-9 text-xs"
+                            className="h-8 sm:h-7 pl-9 text-xs shadow-sm bg-background border-muted-foreground/20 focus:border-primary/50 transition-colors"
                             aria-label={ARIA_LABELS.search}
                             disabled={isLoading}
                         />
@@ -598,7 +598,7 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
                                     variant="outline"
                                     size="sm"
                                     className={cn(
-                                        "h-7 px-2.5 gap-1.5 text-xs font-medium relative transition-colors",
+                                        "h-8 sm:h-7 px-2.5 gap-1.5 text-xs font-medium relative transition-colors shadow-sm",
                                         activeFiltersCount > 0 && "border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100"
                                     )}
                                     aria-label={ARIA_LABELS.filters}
@@ -635,7 +635,7 @@ export const ExerciseBlockWidget: React.FC<ExerciseBlockWidgetProps> = memo(({
                             disabled={disabled || filteredExercises.length === 0 || isLoading}
                         >
                             <SelectTrigger
-                                className="h-7 w-[130px] text-xs"
+                                className="h-8 sm:h-7 w-[120px] sm:w-[130px] text-xs shadow-sm bg-background"
                                 aria-label={ARIA_LABELS.addExercise}
                             >
                                 <SelectValue placeholder="Adicionar..." />
