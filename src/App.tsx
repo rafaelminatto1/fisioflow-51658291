@@ -22,6 +22,8 @@ import { initWebVitalsMonitoring, WebVitalsIndicator } from "@/lib/monitoring/we
 import { FeatureFlagProvider } from "@/lib/featureFlags/hooks";
 import { useServiceWorkerUpdate } from "@/hooks/useServiceWorkerUpdate";
 import { SkipLink, FocusVisibleHandler } from "@/components/accessibility";
+import { NetworkStatus } from "@/components/ui/network-status";
+import { SyncManager } from "@/components/sync/SyncManager";
 
 // Lazy load Vercel Analytics only in production
 // Analytics disabled to prevent 400 errors (Hobby Plan limits/Configuration)
@@ -158,6 +160,8 @@ const App = () => {
                 <DataProvider>
                   <Toaster />
                   <Sonner />
+                  <NetworkStatus />
+                  <SyncManager />
                   {/* <PWAInstallPrompt /> */}
                   {/* <PWAUpdatePrompt /> */}
                   <BrowserRouter
