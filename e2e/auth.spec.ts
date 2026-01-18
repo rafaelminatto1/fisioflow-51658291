@@ -9,7 +9,7 @@ test.describe('Autenticação', () => {
     await page.fill('input[type="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
 
-    await expect(page).toHaveURL(/\/(eventos|dashboard|schedule)/);
+    await expect(page).toHaveURL(/\/$/);
   });
 
   test('deve mostrar erro com credenciais inválidas', async ({ page }) => {
@@ -29,7 +29,7 @@ test.describe('Autenticação', () => {
     await page.fill('input[type="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
 
-    await page.waitForURL(/\/(eventos|dashboard|schedule)/);
+    await page.waitForURL(/\/$/);
 
     // Logout
     await page.click('button[aria-label*="menu"], button[aria-label*="perfil"], [data-testid="user-menu"]');
@@ -48,7 +48,7 @@ test.describe('Autenticação', () => {
     await page.fill('input[type="email"]', testUsers.admin.email);
     await page.fill('input[type="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
-    await page.waitForURL(/\/(eventos|dashboard|schedule|smart-dashboard)/, { timeout: 10000 });
+    await page.waitForURL(/\/$/, { timeout: 10000 });
 
     // Aguardar um pouco para o profile carregar
     await page.waitForTimeout(2000);

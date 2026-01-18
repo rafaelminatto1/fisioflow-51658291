@@ -5,32 +5,32 @@
 
 // Tempos de cache padrão (em ms)
 export const CACHE_TIMES = {
-  // Dados que mudam raramente
-  LONG: 1000 * 60 * 30, // 30 minutos
-  
+  // Dados que mudam raramente (exercícios, CIDs)
+  LONG: 1000 * 60 * 60, // 1 hora
+
   // Dados padrão
-  DEFAULT: 1000 * 60 * 5, // 5 minutos
-  
+  DEFAULT: 1000 * 60 * 10, // 10 minutos
+
   // Dados que mudam frequentemente
-  SHORT: 1000 * 60 * 1, // 1 minuto
-  
+  SHORT: 1000 * 60 * 2, // 2 minutos
+
   // Dados em tempo real
-  REALTIME: 1000 * 30, // 30 segundos
+  REALTIME: 1000 * 60, // 1 minuto (mantém no cache um pouco mais, mas stale forçará update)
 } as const;
 
 // Tempos de stale (quando considerar dados desatualizados)
 export const STALE_TIMES = {
   // Dados estáticos (exercícios, configurações)
-  STATIC: 1000 * 60 * 15, // 15 minutos
-  
+  STATIC: 1000 * 60 * 30, // 30 minutos
+
   // Dados que mudam pouco (pacientes, perfis)
-  STABLE: 1000 * 60 * 5, // 5 minutos
-  
+  STABLE: 1000 * 60 * 10, // 10 minutos
+
   // Dados dinâmicos (agendamentos, notificações)
-  DYNAMIC: 1000 * 60 * 1, // 1 minuto
-  
-  // Dados em tempo real
-  REALTIME: 1000 * 15, // 15 segundos
+  DYNAMIC: 1000 * 60 * 2, // 2 minutos
+
+  // Dados em tempo real (chat, notificações urgentes)
+  REALTIME: 1000 * 5, // 5 segundos
 } as const;
 
 // Query keys organizadas por domínio
@@ -42,7 +42,7 @@ export const QUERY_KEYS = {
     detail: (id: string) => [...QUERY_KEYS.patients.all, 'detail', id] as const,
     search: (term: string) => [...QUERY_KEYS.patients.all, 'search', term] as const,
   },
-  
+
   // Agendamentos
   appointments: {
     all: ['appointments'] as const,
@@ -52,7 +52,7 @@ export const QUERY_KEYS = {
     byPatient: (patientId: string) => [...QUERY_KEYS.appointments.all, 'patient', patientId] as const,
     byTherapist: (therapistId: string) => [...QUERY_KEYS.appointments.all, 'therapist', therapistId] as const,
   },
-  
+
   // Terapeutas
   therapists: {
     all: ['therapists'] as const,
@@ -60,7 +60,7 @@ export const QUERY_KEYS = {
     detail: (id: string) => [...QUERY_KEYS.therapists.all, 'detail', id] as const,
     availability: (id: string) => [...QUERY_KEYS.therapists.all, 'availability', id] as const,
   },
-  
+
   // Exercícios
   exercises: {
     all: ['exercises'] as const,
@@ -68,7 +68,7 @@ export const QUERY_KEYS = {
     detail: (id: string) => [...QUERY_KEYS.exercises.all, 'detail', id] as const,
     byCategory: (category: string) => [...QUERY_KEYS.exercises.all, 'category', category] as const,
   },
-  
+
   // Financeiro
   financial: {
     all: ['financial'] as const,
@@ -76,27 +76,27 @@ export const QUERY_KEYS = {
     summary: () => [...QUERY_KEYS.financial.all, 'summary'] as const,
     cashflow: (period: string) => [...QUERY_KEYS.financial.all, 'cashflow', period] as const,
   },
-  
+
   // Eventos
   events: {
     all: ['eventos'] as const,
     list: () => [...QUERY_KEYS.events.all, 'list'] as const,
     detail: (id: string) => [...QUERY_KEYS.events.all, 'detail', id] as const,
   },
-  
+
   // Notificações
   notifications: {
     all: ['notifications'] as const,
     unread: () => [...QUERY_KEYS.notifications.all, 'unread'] as const,
   },
-  
+
   // Analytics
   analytics: {
     all: ['analytics'] as const,
     dashboard: () => [...QUERY_KEYS.analytics.all, 'dashboard'] as const,
     performance: () => [...QUERY_KEYS.analytics.all, 'performance'] as const,
   },
-  
+
   // Perfil e configurações
   profile: {
     all: ['profile'] as const,
@@ -114,7 +114,7 @@ export const queryConfigs = {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   },
-  
+
   // Dados estáveis - cache médio
   stable: {
     staleTime: STALE_TIMES.STABLE,
@@ -122,7 +122,7 @@ export const queryConfigs = {
     refetchOnWindowFocus: true,
     refetchOnMount: true,
   },
-  
+
   // Dados dinâmicos - cache curto
   dynamic: {
     staleTime: STALE_TIMES.DYNAMIC,
@@ -130,13 +130,13 @@ export const queryConfigs = {
     refetchOnWindowFocus: true,
     refetchOnMount: true,
   },
-  
+
   // Dados em tempo real
   realtime: {
     staleTime: STALE_TIMES.REALTIME,
     gcTime: CACHE_TIMES.REALTIME,
     refetchOnWindowFocus: true,
     refetchOnMount: true,
-    refetchInterval: 30000, // 30 segundos
+    refetchInterval: 10000, // 10 segundos
   },
 } as const;

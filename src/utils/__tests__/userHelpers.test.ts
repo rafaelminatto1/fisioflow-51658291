@@ -7,30 +7,31 @@ vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     auth: {
       getUser: vi.fn(),
+      signOut: vi.fn(),
     },
     from: vi.fn(),
   },
 }));
 
 describe('userHelpers', () => {
+  const MOCK_VALID_USER_ID = '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d';
+  const MOCK_VALID_ORG_ID = 'd290f1ee-6c54-4b01-90e6-d701748f0851';
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   describe('getUserOrganizationId', () => {
     it('deve retornar organization_id quando usuário está autenticado e tem organização', async () => {
-      const mockUserId = 'user-123';
-      const mockOrgId = 'org-456';
-
       (supabase.auth.getUser as any).mockResolvedValue({
-        data: { user: { id: mockUserId } },
+        data: { user: { id: MOCK_VALID_USER_ID } },
         error: null,
       });
 
       const mockSelect = vi.fn().mockReturnThis();
       const mockEq = vi.fn().mockReturnThis();
       const mockSingle = vi.fn().mockResolvedValue({
-        data: { organization_id: mockOrgId },
+        data: { organization_id: MOCK_VALID_ORG_ID },
         error: null,
       });
 
@@ -46,19 +47,18 @@ describe('userHelpers', () => {
 
       const result = await getUserOrganizationId();
 
-      expect(result).toBe(mockOrgId);
+      expect(result).toBe(MOCK_VALID_ORG_ID);
       expect(supabase.auth.getUser).toHaveBeenCalled();
       expect(supabase.from).toHaveBeenCalledWith('profiles');
       expect(mockSelect).toHaveBeenCalledWith('organization_id');
-      expect(mockEq).toHaveBeenCalledWith('user_id', mockUserId);
+      expect(mockEq).toHaveBeenCalledWith('user_id', MOCK_VALID_USER_ID);
       expect(mockSingle).toHaveBeenCalled();
     });
 
     it('deve retornar null quando usuário não tem organização', async () => {
-      const mockUserId = 'user-123';
-
+      // Mocks
       (supabase.auth.getUser as any).mockResolvedValue({
-        data: { user: { id: mockUserId } },
+        data: { user: { id: MOCK_VALID_USER_ID } },
         error: null,
       });
 
@@ -103,11 +103,10 @@ describe('userHelpers', () => {
     });
 
     it('deve propagar erro quando query do profile falha', async () => {
-      const mockUserId = 'user-123';
       const mockError = { message: 'Erro ao buscar perfil' };
 
       (supabase.auth.getUser as any).mockResolvedValue({
-        data: { user: { id: mockUserId } },
+        data: { user: { id: MOCK_VALID_USER_ID } },
         error: null,
       });
 
@@ -134,38 +133,32 @@ describe('userHelpers', () => {
 
   describe('requireUserOrganizationId', () => {
     it('deve retornar organization_id quando encontrado', async () => {
-      const mockOrgId = 'org-456';
-
       (supabase.auth.getUser as any).mockResolvedValue({
-        data: { user: { id: 'user-123' } },
+        data: { user: { id: MOCK_VALID_USER_ID } },
         error: null,
       });
 
       const mockSelect = vi.fn().mockReturnThis();
       const mockEq = vi.fn().mockReturnThis();
       const mockSingle = vi.fn().mockResolvedValue({
-        data: { organization_id: mockOrgId },
+        data: { organization_id: MOCK_VALID_ORG_ID },
         error: null,
       });
 
       (supabase.from as any).mockReturnValue({
-        select: mockSelect,
-      });
-      mockSelect.mockReturnValue({
-        eq: mockEq,
-      });
-      mockEq.mockReturnValue({
-        single: mockSingle,
-      });
+        select: mockSelect
+      } as any);
+
+      mockSelect.mockReturnValue({ eq: mockEq });
+      mockEq.mockReturnValue({ single: mockSingle });
 
       const result = await requireUserOrganizationId();
-
-      expect(result).toBe(mockOrgId);
+      expect(result).toBe(MOCK_VALID_ORG_ID);
     });
 
     it('deve lançar erro quando organization_id não é encontrado', async () => {
       (supabase.auth.getUser as any).mockResolvedValue({
-        data: { user: { id: 'user-123' } },
+        data: { user: { id: MOCK_VALID_USER_ID } },
         error: null,
       });
 

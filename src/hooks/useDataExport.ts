@@ -1,80 +1,70 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { logger } from "@/lib/errors/logger";
-
-export type DataExportRequestType = 'export' | 'deletion';
-export type DataExportStatus = 'pending' | 'processing' | 'completed' | 'failed';
-
-export interface DataExportRequest {
-  id: string;
-  user_id: string;
-  status: DataExportStatus;
-  request_type: DataExportRequestType;
-  data_package_url: string | null;
-  expires_at: string | null;
-  completed_at: string | null;
-  error_message: string | null;
-  created_at: string;
-  updated_at: string;
-}
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 export function useDataExport() {
-  const queryClient = useQueryClient();
+  const [isExporting, setIsExporting] = useState(false);
+  const { toast } = useToast();
 
-  const { data: requests, isLoading } = useQuery({
-    queryKey: ["data-export-requests"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("data_export_requests")
-        .select("*")
-        .order("created_at", { ascending: false });
+  const exportPatientData = async (patientId: string) => {
+    setIsExporting(true);
+    try {
+      // 1. Fetch patient profile
+      const { data: patient, error: patientError } = await supabase
+        .from('patients')
+        .select('*')
+        .eq('id', patientId)
+        .single();
 
-      if (error) throw error;
-      return data as DataExportRequest[];
-    },
-  });
+      if (patientError) throw patientError;
 
-  const requestExport = useMutation({
-    mutationFn: async (requestType: DataExportRequestType) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Usuário não autenticado");
+      // 2. Fetch related data (appointments, records, etc)
+      // Usando Promise.all para paralelo
+      const [
+        { data: appointments },
+        { data: records },
+        { data: exercises }
+      ] = await Promise.all([
+        supabase.from('appointments').select('*').eq('patient_id', patientId),
+        supabase.from('medical_records').select('*').eq('patient_id', patientId),
+        supabase.from('prescribed_exercises').select('*').eq('patient_id', patientId)
+      ]);
 
-      const { data, error } = await supabase.rpc("request_data_export", {
-        _user_id: user.id,
-        _request_type: requestType,
+      const fullData = {
+        exportedAt: new Date().toISOString(),
+        patient,
+        appointments: appointments || [],
+        medicalRecords: records || [],
+        prescribedExercises: exercises || [],
+      };
+
+      // 3. Trigger download
+      const blob = new Blob([JSON.stringify(fullData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `patient_export_${patient.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Exportação concluída",
+        description: "O download do arquivo JSON iniciou.",
       });
 
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (_, requestType) => {
-      queryClient.invalidateQueries({ queryKey: ["data-export-requests"] });
-      toast.success(
-        requestType === "export"
-          ? "Solicitação de exportação criada. Você receberá um email quando estiver pronta."
-          : "Solicitação de exclusão criada. Seus dados serão removidos em breve."
-      );
-    },
-    onError: (error) => {
-      logger.error("Erro ao solicitar exportação", error, 'useDataExport');
-      toast.error("Erro ao criar solicitação");
-    },
-  });
-
-  const pendingRequests = requests?.filter((r) => r.status === "pending") || [];
-  const completedRequests = requests?.filter((r) => r.status === "completed") || [];
-  const hasPendingExport = pendingRequests.some((r) => r.request_type === "export");
-  const hasPendingDeletion = pendingRequests.some((r) => r.request_type === "deletion");
-
-  return {
-    requests,
-    isLoading,
-    requestExport: requestExport.mutate,
-    isRequesting: requestExport.isPending,
-    pendingRequests,
-    completedRequests,
-    hasPendingExport,
-    hasPendingDeletion,
+    } catch (error) {
+      console.error('Export erro:', error);
+      toast({
+        title: "Erro na exportação",
+        description: "Não foi possível gerar o arquivo de dados.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
+
+  return { exportPatientData, isExporting };
 }

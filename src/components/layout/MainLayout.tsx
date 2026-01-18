@@ -113,7 +113,11 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-3 h-10 px-3 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all rounded-full border border-transparent hover:border-gray-200 dark:hover:border-gray-700">
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-3 h-10 px-3 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-all rounded-full border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
+                  data-testid="user-menu"
+                >
                   {loading ? (
                     <>
                       <Skeleton className="w-9 h-9 rounded-full" />

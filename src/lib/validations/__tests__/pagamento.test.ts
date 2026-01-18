@@ -1,32 +1,33 @@
 import { describe, it, expect } from 'vitest';
-import { pagamentoSchema } from '../pagamento';
+import { pagamentoCreateSchema } from '../pagamento';
 
 describe('Pagamento Validations', () => {
-  describe('pagamentoSchema', () => {
+  describe('pagamentoCreateSchema', () => {
     it('deve validar pagamento válido', () => {
       const validPagamento = {
         tipo: 'prestador',
         descricao: 'Pagamento Fisioterapeuta',
         valor: 500.00,
-        pago_em: '2025-10-01',
-        evento_id: 'evento-123',
+        pago_em: new Date('2025-10-01'),
+        evento_id: '123e4567-e89b-12d3-a456-426614174000', // Valid UUID
       };
 
-      const result = pagamentoSchema.safeParse(validPagamento);
+      const result = pagamentoCreateSchema.safeParse(validPagamento);
       expect(result.success).toBe(true);
     });
 
     it('deve validar tipos de pagamento permitidos', () => {
       const validTypes = ['prestador', 'insumo', 'outro'];
-      
+
       validTypes.forEach(tipo => {
         const pagamento = {
           tipo,
           descricao: 'Teste',
           valor: 100,
-          pago_em: '2025-10-01',
+          pago_em: new Date('2025-10-01'),
+          evento_id: '123e4567-e89b-12d3-a456-426614174000',
         };
-        const result = pagamentoSchema.safeParse(pagamento);
+        const result = pagamentoCreateSchema.safeParse(pagamento);
         expect(result.success).toBe(true);
       });
     });
@@ -36,10 +37,11 @@ describe('Pagamento Validations', () => {
         tipo: 'tipo_invalido',
         descricao: 'Teste',
         valor: 100,
-        pago_em: '2025-10-01',
+        pago_em: new Date('2025-10-01'),
+        evento_id: '123e4567-e89b-12d3-a456-426614174000',
       };
 
-      const result = pagamentoSchema.safeParse(invalidPagamento);
+      const result = pagamentoCreateSchema.safeParse(invalidPagamento);
       expect(result.success).toBe(false);
     });
 
@@ -48,10 +50,11 @@ describe('Pagamento Validations', () => {
         tipo: 'prestador',
         descricao: 'Teste',
         valor: 0,
-        pago_em: '2025-10-01',
+        pago_em: new Date('2025-10-01'),
+        evento_id: '123e4567-e89b-12d3-a456-426614174000',
       };
 
-      const result = pagamentoSchema.safeParse(invalidPagamento);
+      const result = pagamentoCreateSchema.safeParse(invalidPagamento);
       expect(result.success).toBe(false);
     });
 
@@ -60,10 +63,11 @@ describe('Pagamento Validations', () => {
         tipo: 'insumo',
         descricao: 'Teste',
         valor: -50,
-        pago_em: '2025-10-01',
+        pago_em: new Date('2025-10-01'),
+        evento_id: '123e4567-e89b-12d3-a456-426614174000',
       };
 
-      const result = pagamentoSchema.safeParse(invalidPagamento);
+      const result = pagamentoCreateSchema.safeParse(invalidPagamento);
       expect(result.success).toBe(false);
     });
 
@@ -72,23 +76,25 @@ describe('Pagamento Validations', () => {
         tipo: 'prestador',
         descricao: 'Pagamento com comprovante',
         valor: 200,
-        pago_em: '2025-10-01',
+        pago_em: new Date('2025-10-01'),
+        evento_id: '123e4567-e89b-12d3-a456-426614174000',
         comprovante_url: 'https://example.com/comprovante.pdf',
       };
 
-      const result = pagamentoSchema.safeParse(pagamento);
+      const result = pagamentoCreateSchema.safeParse(pagamento);
       expect(result.success).toBe(true);
     });
 
     it('deve rejeitar descrição muito curta', () => {
       const invalidPagamento = {
         tipo: 'outro',
-        descricao: 'Ab',
+        descricao: 'A',
         valor: 100,
-        pago_em: '2025-10-01',
+        pago_em: new Date('2025-10-01'),
+        evento_id: '123e4567-e89b-12d3-a456-426614174000',
       };
 
-      const result = pagamentoSchema.safeParse(invalidPagamento);
+      const result = pagamentoCreateSchema.safeParse(invalidPagamento);
       expect(result.success).toBe(false);
     });
   });
