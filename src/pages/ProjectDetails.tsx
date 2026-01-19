@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,12 +8,15 @@ import { KanbanSquare, ListTodo, CalendarRange, Settings } from 'lucide-react';
 import { ProjectKanban } from '@/components/projects/ProjectKanban';
 import { ProjectTimeline } from '@/components/projects/ProjectTimeline';
 import { ProjectTableView } from '@/components/projects/ProjectTableView';
+import { ProjectModal } from '@/components/projects/ProjectModal';
 import { Badge } from '@/components/ui/badge';
 
 export default function ProjectDetailsPage() {
     const { id } = useParams<{ id: string }>();
     // @ts-expect-error - Supabase types issue workaround
     const { data: project, isLoading } = useProject(id!);
+
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     if (isLoading) {
         return (
@@ -45,7 +49,7 @@ export default function ProjectDetailsPage() {
                         <p className="text-muted-foreground">{project.description}</p>
                     </div>
                     <div className="flex gap-2 mt-4 sm:mt-0">
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => setIsEditModalOpen(true)}>
                             <Settings className="h-4 w-4 mr-2" />
                             Configurações
                         </Button>
@@ -90,6 +94,12 @@ export default function ProjectDetailsPage() {
                         </TabsContent>
                     </div>
                 </Tabs>
+
+                <ProjectModal
+                    open={isEditModalOpen}
+                    onOpenChange={setIsEditModalOpen}
+                    project={project}
+                />
             </div>
         </MainLayout>
     );
