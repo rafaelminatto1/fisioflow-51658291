@@ -3,7 +3,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { CalendarIcon, Tag, X, CheckSquare, Link as LinkIcon, Plus, Trash2, GripVertical } from 'lucide-react';
+import { CalendarIcon, Tag, X, CheckSquare, Link as LinkIcon, Plus, Trash2, GripVertical, Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -22,6 +22,15 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Popover,
@@ -72,8 +81,10 @@ const tarefaSchema = z.object({
   start_date: z.date().optional().nullable(),
   tags: z.array(z.string()).default([]),
   project_id: z.string().optional().nullable(),
+  parent_id: z.string().optional().nullable(),
   checklist: z.array(checklistItemSchema).optional(),
-  attachments: z.array(attachmentSchema).optional()
+  attachments: z.array(attachmentSchema).optional(),
+  dependencies: z.array(z.string()).default([])
 });
 
 type TarefaFormData = z.infer<typeof tarefaSchema>;
@@ -90,6 +101,7 @@ export function TarefaModal({ open, onOpenChange, tarefa, defaultStatus = 'A_FAZ
   const createTarefa = useCreateTarefa();
   const updateTarefa = useUpdateTarefa();
   const { data: projects } = useProjects();
+  const { data: allTarefas } = useTarefas();
 
   const form = useForm<TarefaFormData>({
     resolver: zodResolver(tarefaSchema),
@@ -102,8 +114,10 @@ export function TarefaModal({ open, onOpenChange, tarefa, defaultStatus = 'A_FAZ
       start_date: null,
       tags: [],
       project_id: defaultProjectId || '',
+      parent_id: null,
       checklist: [],
-      attachments: []
+      attachments: [],
+      dependencies: []
     }
   });
 
@@ -130,8 +144,10 @@ export function TarefaModal({ open, onOpenChange, tarefa, defaultStatus = 'A_FAZ
         start_date: tarefa.start_date ? new Date(tarefa.start_date) : null,
         tags: tarefa.tags || [],
         project_id: tarefa.project_id || defaultProjectId || '',
+        parent_id: tarefa.parent_id || null,
         checklist: tarefa.checklist || [],
-        attachments: tarefa.attachments || []
+        attachments: tarefa.attachments || [],
+        dependencies: tarefa.dependencies || []
       });
     } else {
       form.reset({
@@ -143,8 +159,10 @@ export function TarefaModal({ open, onOpenChange, tarefa, defaultStatus = 'A_FAZ
         start_date: null,
         tags: [],
         project_id: defaultProjectId || '',
+        parent_id: null,
         checklist: [],
-        attachments: []
+        attachments: [],
+        dependencies: []
       });
     }
   }, [tarefa, defaultStatus, defaultProjectId, form]);
@@ -182,14 +200,18 @@ export function TarefaModal({ open, onOpenChange, tarefa, defaultStatus = 'A_FAZ
           ...data,
           project_id: data.project_id || null,
           data_vencimento: data.data_vencimento?.toISOString().split('T')[0],
-          start_date: data.start_date?.toISOString().split('T')[0]
+          start_date: data.start_date?.toISOString().split('T')[0],
+          parent_id: data.parent_id,
+          dependencies: data.dependencies
         });
       } else {
         await createTarefa.mutateAsync({
           ...data,
           project_id: data.project_id || null,
           data_vencimento: data.data_vencimento?.toISOString().split('T')[0],
-          start_date: data.start_date?.toISOString().split('T')[0]
+          start_date: data.start_date?.toISOString().split('T')[0],
+          parent_id: data.parent_id,
+          dependencies: data.dependencies
         });
       }
       onOpenChange(false);
@@ -526,6 +548,130 @@ export function TarefaModal({ open, onOpenChange, tarefa, defaultStatus = 'A_FAZ
                   />
                 </div>
 
+
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Parent Task Selection */}
+                  <FormField
+                    control={form.control}
+                    name="parent_id"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Tarefa Pai (Subtarefa de)</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn(
+                                  "w-full justify-between",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value
+                                  ? allTarefas?.find((t) => t.id === field.value)?.titulo
+                                  : "Selecione a tarefa pai"}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[300px] p-0">
+                            <Command>
+                              <CommandInput placeholder="Buscar tarefa..." />
+                              <CommandList>
+                                <CommandEmpty>Nenhuma tarefa encontrada.</CommandEmpty>
+                                <CommandGroup>
+                                  {allTarefas?.filter(t => t.id !== tarefa?.id).map((t) => (
+                                    <CommandItem
+                                      value={t.titulo}
+                                      key={t.id}
+                                      onSelect={() => {
+                                        form.setValue("parent_id", t.id === field.value ? null : t.id);
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          t.id === field.value ? "opacity-100" : "opacity-0"
+                                        )}
+                                      />
+                                      {t.titulo}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Dependencies Selection */}
+                  <FormField
+                    control={form.control}
+                    name="dependencies"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Dependências (Bloqueado por)</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className={cn(
+                                  "w-full justify-between",
+                                  (!field.value || field.value.length === 0) && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value && field.value.length > 0
+                                  ? `${field.value.length} tarefa(s) selecionada(s)`
+                                  : "Selecione dependências"}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[300px] p-0">
+                            <Command>
+                              <CommandInput placeholder="Buscar tarefa..." />
+                              <CommandList>
+                                <CommandEmpty>Nenhuma tarefa encontrada.</CommandEmpty>
+                                <CommandGroup>
+                                  {allTarefas?.filter(t => t.id !== tarefa?.id).map((t) => (
+                                    <CommandItem
+                                      value={t.titulo}
+                                      key={t.id}
+                                      onSelect={() => {
+                                        const current = field.value || [];
+                                        const next = current.includes(t.id)
+                                          ? current.filter((id) => id !== t.id)
+                                          : [...current, t.id];
+                                        form.setValue("dependencies", next);
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          field.value?.includes(t.id) ? "opacity-100" : "opacity-0"
+                                        )}
+                                      />
+                                      {t.titulo}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
                 {/* Tags */}
                 <FormField
                   control={form.control}
@@ -578,6 +724,6 @@ export function TarefaModal({ open, onOpenChange, tarefa, defaultStatus = 'A_FAZ
           </form>
         </Form>
       </DialogContent>
-    </Dialog>
+    </Dialog >
   );
 }
