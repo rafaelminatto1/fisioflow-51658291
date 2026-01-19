@@ -4,16 +4,18 @@ import path from 'path';
 import dotenv from 'dotenv';
 
 // Load environment variables
-dotenv.config({ path: '.env.local' });
+dotenv.config({ path: '.env' });
 
 // Credentials
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
-    console.error('Missing VITE_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local');
+    console.error('Missing VITE_SUPABASE_URL or keys in .env');
     process.exit(1);
 }
+
+console.log('Using key type:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Service Role' : 'Anon/Public');
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -167,6 +169,9 @@ const images = [
     { id: '4b1e716a-a0ff-4e8c-a69f-14b53234f011', file: 'costal_breathing_1768622511228.png' },
     // Fix for missed Wall Slides ID
     { id: '9a6d787c-9975-4b28-81f6-797dbe7ae58c', file: 'wall_shoulder_exercise_1768593410983.png' },
+    // Phase 14: New Exercises (Batch 21 Partial)
+    { id: 'ef9809ab-8ed8-4054-a7a8-126aa530a9dc', file: 'lateral_shuffle_1768825431053.png' },
+    { id: 'a1545d00-8aed-4ba7-812a-83470b38edc8', file: 'shadow_boxing_1768825445465.png' },
 
     // Re-generated Exercises (Batch 14)
     { id: '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d', file: 'bird_dog_re_gen_1768658515939.png' }, // Perdigueiro (Update with NEW UUID)
@@ -240,27 +245,27 @@ const images = [
 
     // Batch 21 - Plyometrics & Advanced Core
     { id: '9fa43615-8b6e-49cc-ad58-577298bfa2dd', file: 'depth_jump_gen_1768789383206.png' }, // Depth Jump - Generated
-    { id: 'd6042be1-f9e7-443c-aa79-39e64960f113', file: 'PLACEHOLDER' }, // Salto Unilateral na Caixa
-    { id: '95dd2a2c-5fe2-40ed-b57d-ace308a859cf', file: 'PLACEHOLDER' }, // Salto Horizontal
-    { id: '3a914408-ff33-4924-a853-9a833151463c', file: 'PLACEHOLDER' }, // Tuck Jump
-    { id: '1b2fed47-b1f8-4caa-9200-43664eb9deeb', file: 'PLACEHOLDER' }, // Medicine Ball Slam
-    { id: 'bf9fd47a-e046-4f63-9565-b1bc49f7db87', file: 'PLACEHOLDER' }, // Elevação de Pernas na Barra
-    { id: '49b385fb-7f5f-444b-b749-58e2c5195bea', file: 'PLACEHOLDER' }, // Ab Wheel Rollout
-    { id: 'a4759e6b-2570-49cd-97a7-9b48a8b211bc', file: 'PLACEHOLDER' }, // Hollow Rock
-    { id: '7ddcb9f0-daf5-4921-b29f-7a81faca8014', file: 'PLACEHOLDER' }, // V-Up
-    { id: '85cb38c0-d365-41fe-893c-35093cb2d6f8', file: 'PLACEHOLDER' }, // L-Sit
+    { id: 'd6042be1-f9e7-443c-aa79-39e64960f113', file: 'single_leg_box_jump_gen_1768820569698.png' }, // Salto Unilateral na Caixa
+    { id: '95dd2a2c-5fe2-40ed-b57d-ace308a859cf', file: 'broad_jump_gen_1768820584384.png' }, // Salto Horizontal
+    { id: '3a914408-ff33-4924-a853-9a833151463c', file: 'tuck_jump_gen_1768820599504.png' }, // Tuck Jump
+    { id: '1b2fed47-b1f8-4caa-9200-43664eb9deeb', file: 'med_ball_slam_gen_1768820613893.png' }, // Medicine Ball Slam
+    { id: 'bf9fd47a-e046-4f63-9565-b1bc49f7db87', file: 'hanging_leg_raise_gen_1768820628800.png' }, // Elevação de Pernas na Barra
+    { id: '49b385fb-7f5f-444b-b749-58e2c5195bea', file: 'ab_wheel_rollout_gen_1768820642865.png' }, // Ab Wheel Rollout
+    { id: 'a4759e6b-2570-49cd-97a7-9b48a8b211bc', file: 'hollow_rock_gen_1768820657455.png' }, // Hollow Rock
+    { id: '7ddcb9f0-daf5-4921-b29f-7a81faca8014', file: 'v_up_exercise_gen_1768820672556.png' }, // V-Up
+    { id: '85cb38c0-d365-41fe-893c-35093cb2d6f8', file: 'l_sit_gen_1768820686881.png' }, // L-Sit
 
     // Batch 22 - Cardio Adaptado & Agilidade
-    { id: 'fdf0361a-b2f6-48ef-8be3-b35f51be3b6f', file: 'PLACEHOLDER' }, // Polichinelo Adaptado
-    { id: 'd25f2891-9c91-4b06-b5d5-a965ca657350', file: 'PLACEHOLDER' }, // Marcha Estacionária Alta
-    { id: 'a1545d00-8aed-4ba7-812a-83470b38edc8', file: 'PLACEHOLDER' }, // Boxe de Sombra
-    { id: '75f5f09d-3010-4615-9a15-73f41f0c05a5', file: 'PLACEHOLDER' }, // Agachamento com Soco
-    { id: 'ef9809ab-8ed8-4054-a7a8-126aa530a9dc', file: 'PLACEHOLDER' }, // Deslocamento Lateral
-    { id: '45803b1d-30ca-400e-ad2f-df7e266729ce', file: 'PLACEHOLDER' }, // Coordenação Cruzada
-    { id: '8ff5fa14-835c-4a25-b82c-d642782be9f4', file: 'PLACEHOLDER' }, // Escalada na Parede
-    { id: '44df23a0-a4be-4cc3-8e6f-e5aaaefb5d82', file: 'PLACEHOLDER' }, // Pular Corda Imaginária
-    { id: 'ff68b19a-3e01-41fe-aa5a-88b1451f6c7d', file: 'PLACEHOLDER' }, // Step Touch com Braços
-    { id: 'ce4cad36-c3d9-42f6-8a55-82513a6567f1', file: 'PLACEHOLDER' } // Heel Flicks
+    { id: 'fdf0361a-b2f6-48ef-8be3-b35f51be3b6f', file: 'stepping_jacks_gen_1768820700928.png' }, // Polichinelo Adaptado
+    { id: 'd25f2891-9c91-4b06-b5d5-a965ca657350', file: 'high_knees_march_gen_1768820724799.png' }, // Marcha Estacionária Alta
+    { id: 'a1545d00-8aed-4ba7-812a-83470b38edc8', file: 'shadow_boxing_gen_1768820738489.png' }, // Boxe de Sombra
+    { id: '75f5f09d-3010-4615-9a15-73f41f0c05a5', file: 'squat_punch_gen_1768820753787.png' }, // Agachamento com Soco
+    { id: 'ef9809ab-8ed8-4054-a7a8-126aa530a9dc', file: 'lateral_shuffle_gen_1768820769599.png' }, // Deslocamento Lateral
+    { id: '45803b1d-30ca-400e-ad2f-df7e266729ce', file: 'cross_crawl_gen_1768820784162.png' }, // Coordenação Cruzada
+    { id: '8ff5fa14-835c-4a25-b82c-d642782be9f4', file: 'wall_climber_gen_1768820800501.png' }, // Escalada na Parede
+    { id: '44df23a0-a4be-4cc3-8e6f-e5aaaefb5d82', file: 'imaginary_jump_rope_gen_1768820815347.png' }, // Pular Corda Imaginária
+    { id: 'ff68b19a-3e01-41fe-aa5a-88b1451f6c7d', file: 'step_touch_arms_gen_1768820830506.png' }, // Step Touch com Braços
+    { id: 'ce4cad36-c3d9-42f6-8a55-82513a6567f1', file: 'heel_flicks_gen_1768820844797.png' } // Heel Flicks
 ];
 
 async function upload() {
