@@ -105,11 +105,6 @@ export const appointmentReminderWorkflow = inngest.createFunction(
             });
           }
 
-          `,
-              },
-            });
-          }
-
           // WhatsApp reminder (Using structured event)
           if (preferences.whatsapp !== false && orgSettings.whatsapp_enabled && patient.phone) {
             reminderEvents.push({
@@ -173,14 +168,14 @@ export const appointmentCreatedWorkflow = inngest.createFunction(
 
     // 1. Fetch complete appointment details
     const appointment = await step.run('get-appointment-details', async () => {
-        const { data, error } = await supabase
-            .from('appointments')
-            .select('*, patient:patients(id, name, email, phone, notification_preferences), organization:organizations(id, name, settings), therapist:profiles!therapist_id(full_name)')
-            .eq('id', appointmentId)
-            .single();
-        
-        if (error) throw new Error('Failed to fetch appointment: ' + error.message);
-        return data;
+      const { data, error } = await supabase
+        .from('appointments')
+        .select('*, patient:patients(id, name, email, phone, notification_preferences), organization:organizations(id, name, settings), therapist:profiles!therapist_id(full_name)')
+        .eq('id', appointmentId)
+        .single();
+
+      if (error) throw new Error('Failed to fetch appointment: ' + error.message);
+      return data;
     });
 
     if (!appointment) return { success: false, reason: 'Appointment not found' };
@@ -193,29 +188,29 @@ export const appointmentCreatedWorkflow = inngest.createFunction(
 
     // Send confirmation message
     await step.run('send-confirmation', async () => {
-        const patient = appointment.patient;
-        const org = appointment.organization;
-        const therapist = appointment.therapist;
-        
-        // Check preferences
-        const whatsappEnabled = org?.settings?.whatsapp_enabled ?? true;
-        
-        if (whatsappEnabled && patient?.phone) {
-             await inngest.send({
-                name: 'whatsapp/appointment.confirmation',
-                data: {
-                    to: patient.phone,
-                    patientName: patient.name,
-                    therapistName: therapist?.full_name || 'Fisioterapeuta',
-                    date: new Date(appointment.start_time).toLocaleDateString('pt-BR'),
-                    time: new Date(appointment.start_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-                    organizationName: org?.name || 'FisioFlow',
-                    location: 'Consultório'
-                }
-            });
-            return { sent: true, channel: 'whatsapp' };
-        }
-        return { sent: false, reason: 'Disabled or no phone' };
+      const patient = appointment.patient;
+      const org = appointment.organization;
+      const therapist = appointment.therapist;
+
+      // Check preferences
+      const whatsappEnabled = org?.settings?.whatsapp_enabled ?? true;
+
+      if (whatsappEnabled && patient?.phone) {
+        await inngest.send({
+          name: 'whatsapp/appointment.confirmation',
+          data: {
+            to: patient.phone,
+            patientName: patient.name,
+            therapistName: therapist?.full_name || 'Fisioterapeuta',
+            date: new Date(appointment.start_time).toLocaleDateString('pt-BR'),
+            time: new Date(appointment.start_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            organizationName: org?.name || 'FisioFlow',
+            location: 'Consultório'
+          }
+        });
+        return { sent: true, channel: 'whatsapp' };
+      }
+      return { sent: false, reason: 'Disabled or no phone' };
     });
 
     return {
