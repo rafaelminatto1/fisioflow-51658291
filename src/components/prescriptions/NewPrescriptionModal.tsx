@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useDebounce } from '@/hooks/performance/useDebounce';
 import { useExercises } from '@/hooks/useExercises';
 import { usePrescriptions, PrescriptionExercise } from '@/hooks/usePrescriptions';
 
@@ -52,8 +53,10 @@ export function NewPrescriptionModal({
     equipment: [] as string[]
   });
 
+  const debouncedSearchTerm = useDebounce(filters.searchTerm, 300);
+
   const { exercises: availableExercises } = useExercises({
-    searchTerm: filters.searchTerm,
+    searchTerm: debouncedSearchTerm,
     category: filters.category === 'all' ? undefined : filters.category,
     pathologies: filters.pathologies.length > 0 ? filters.pathologies : undefined,
     bodyParts: filters.bodyParts.length > 0 ? filters.bodyParts : undefined,
