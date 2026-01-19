@@ -248,7 +248,19 @@ const images = [
     { id: '49b385fb-7f5f-444b-b749-58e2c5195bea', file: 'PLACEHOLDER' }, // Ab Wheel Rollout
     { id: 'a4759e6b-2570-49cd-97a7-9b48a8b211bc', file: 'PLACEHOLDER' }, // Hollow Rock
     { id: '7ddcb9f0-daf5-4921-b29f-7a81faca8014', file: 'PLACEHOLDER' }, // V-Up
-    { id: '85cb38c0-d365-41fe-893c-35093cb2d6f8', file: 'PLACEHOLDER' } // L-Sit
+    { id: '85cb38c0-d365-41fe-893c-35093cb2d6f8', file: 'PLACEHOLDER' }, // L-Sit
+
+    // Batch 22 - Cardio Adaptado & Agilidade
+    { id: 'fdf0361a-b2f6-48ef-8be3-b35f51be3b6f', file: 'PLACEHOLDER' }, // Polichinelo Adaptado
+    { id: 'd25f2891-9c91-4b06-b5d5-a965ca657350', file: 'PLACEHOLDER' }, // Marcha Estacionária Alta
+    { id: 'a1545d00-8aed-4ba7-812a-83470b38edc8', file: 'PLACEHOLDER' }, // Boxe de Sombra
+    { id: '75f5f09d-3010-4615-9a15-73f41f0c05a5', file: 'PLACEHOLDER' }, // Agachamento com Soco
+    { id: 'ef9809ab-8ed8-4054-a7a8-126aa530a9dc', file: 'PLACEHOLDER' }, // Deslocamento Lateral
+    { id: '45803b1d-30ca-400e-ad2f-df7e266729ce', file: 'PLACEHOLDER' }, // Coordenação Cruzada
+    { id: '8ff5fa14-835c-4a25-b82c-d642782be9f4', file: 'PLACEHOLDER' }, // Escalada na Parede
+    { id: '44df23a0-a4be-4cc3-8e6f-e5aaaefb5d82', file: 'PLACEHOLDER' }, // Pular Corda Imaginária
+    { id: 'ff68b19a-3e01-41fe-aa5a-88b1451f6c7d', file: 'PLACEHOLDER' }, // Step Touch com Braços
+    { id: 'ce4cad36-c3d9-42f6-8a55-82513a6567f1', file: 'PLACEHOLDER' } // Heel Flicks
 ];
 
 async function upload() {
