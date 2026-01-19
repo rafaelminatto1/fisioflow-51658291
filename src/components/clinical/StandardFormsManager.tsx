@@ -150,7 +150,7 @@ export function StandardFormsManager() {
     const config = STANDARD_FORMS[type];
 
     // Map standard fields to form fields
-    const fields: EvaluationFormFieldFormData[] = config.campos.map(c => ({
+    const fields: EvaluationFormFieldFormData[] = config.campos.map((c: any) => ({
       tipo_campo: c.tipo_campo,
       label: c.rotulo,
       placeholder: c.pergunta,

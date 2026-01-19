@@ -41,7 +41,7 @@ import {
 } from '../../inngest/workflows/ai-insights.js';
 
 // Export the Inngest handler for Vercel
-export const { GET, POST } = serve({
+export const { GET, POST, PUT } = serve({
   client: inngest,
   functions: [
     // Cron/Scheduled workflows

@@ -163,7 +163,27 @@ export const invalidPhones = [
 // ============= Mock Function Creators =============
 
 export const createMockQueryChain = () => {
-  const chain: { query: () => chain; eq: () => chain; select: () => chain; single: () => chain; order: () => chain; limit: () => chain; gte: () => chain; lt: () => chain } = {
+  const chain: {
+    select: () => any;
+    insert: () => any;
+    update: () => any;
+    delete: () => any;
+    upsert: () => any;
+    eq: () => any;
+    neq: () => any;
+    gte: () => any;
+    lte: () => any;
+    in: () => any;
+    is: () => any;
+    or: () => any;
+    and: () => any;
+    order: () => any;
+    limit: () => any;
+    range: () => any;
+    single: () => any;
+    maybeSingle: () => any;
+    then: () => any;
+  } = {
     select: vi.fn().mockReturnThis(),
     insert: vi.fn().mockReturnThis(),
     update: vi.fn().mockReturnThis(),

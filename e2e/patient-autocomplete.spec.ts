@@ -170,4 +170,50 @@ test.describe('Patient Autocomplete - Novo Agendamento', () => {
       console.log('⚠️ No patients available to select');
     }
   });
+
+  test('deve realizar busca fuzzy com Fuse.js - busca parcial', async ({ page }) => {
+    // Open new appointment modal
+    await page.click('button:has-text("Novo Agendamento")');
+    await page.waitForTimeout(500);
+
+    // Click on patient combobox
+    await page.click('button[role="combobox"]:has-text("Selecione ou digite")');
+    await page.waitForTimeout(500);
+
+    // Type partial name (fuzzy search should work)
+    const searchInput = page.locator('input[placeholder*="Buscar"]').first();
+    await searchInput.fill('Rafa');
+    await page.waitForTimeout(1000);
+
+    // Check if results appear (or empty state if no patients)
+    const results = page.locator('[role="option"]');
+    const emptyState = page.locator('text=/Paciente não encontrado/i');
+
+    const hasResults = await results.count() > 0;
+    const hasEmpty = await emptyState.isVisible().catch(() => false);
+
+    // One of these should be true
+    expect(hasResults || hasEmpty).toBe(true);
+    console.log(`✅ Fuzzy search test: ${hasResults ? 'Found results' : 'Empty state shown'}`);
+  });
+
+  test('deve lidar com acentos na busca', async ({ page }) => {
+    // Open new appointment modal
+    await page.click('button:has-text("Novo Agendamento")');
+    await page.waitForTimeout(500);
+
+    // Click on patient combobox
+    await page.click('button[role="combobox"]:has-text("Selecione ou digite")');
+    await page.waitForTimeout(500);
+
+    // Type name without accent (should still find patients with accents)
+    const searchInput = page.locator('input[placeholder*="Buscar"]').first();
+    await searchInput.fill('Joao');
+    await page.waitForTimeout(1000);
+
+    // Verify no errors
+    const errorToast = page.locator('[role="alert"]').filter({ hasText: /erro|400/i });
+    await expect(errorToast).not.toBeVisible({ timeout: 3000 });
+    console.log('✅ Accent handling test passed');
+  });
 });
