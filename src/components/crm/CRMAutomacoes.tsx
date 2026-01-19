@@ -68,7 +68,7 @@ export function CRMAutomacoes() {
     await createMutation.mutateAsync({
       ...formData,
       ativo: false,
-    });
+    } as any);
     setIsDialogOpen(false);
     resetForm();
   };
@@ -163,7 +163,7 @@ export function CRMAutomacoes() {
                 const canalInfo = getCanalInfo(automacao.canal);
                 const TipoIcon = tipoInfo.icon;
                 const CanalIcon = canalInfo.icon;
-                
+
                 return (
                   <div key={automacao.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center gap-4">
@@ -188,7 +188,7 @@ export function CRMAutomacoes() {
                         )}
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-muted-foreground">{automacao.ativo ? 'Ativa' : 'Inativa'}</span>
@@ -212,7 +212,7 @@ export function CRMAutomacoes() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction 
+                            <AlertDialogAction
                               onClick={() => deleteMutation.mutate(automacao.id)}
                               className="bg-destructive text-destructive-foreground"
                             >
@@ -236,7 +236,7 @@ export function CRMAutomacoes() {
           <DialogHeader>
             <DialogTitle>Nova Automação</DialogTitle>
           </DialogHeader>
-          
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label>Nome *</Label>
@@ -295,8 +295,8 @@ export function CRMAutomacoes() {
                 <Input
                   type="number"
                   value={formData.gatilho_config.dias_inativo || 7}
-                  onChange={(e) => setFormData(prev => ({ 
-                    ...prev, 
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
                     gatilho_config: { ...prev.gatilho_config, dias_inativo: parseInt(e.target.value) }
                   }))}
                   min={1}

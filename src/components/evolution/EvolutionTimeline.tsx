@@ -83,7 +83,7 @@ interface TimelineEvent {
   date: Date;
   title: string;
   description?: string;
-  data?: Record<string, unknown>;
+  data?: any;
   expanded?: boolean;
 }
 
@@ -160,12 +160,12 @@ const SessionDetailsSkeleton: React.FC = () => (
 // Componente para visualização detalhada da sessão
 const SessionDetailsModal: React.FC<{
   session: SoapRecord;
-  measurements: Array<{ id: string; [key: string]: unknown }>;
-  attachments: Array<{ id: string; [key: string]: unknown }>;
+  measurements: any[];
+  attachments: any[];
   isOpen: boolean;
   onClose: () => void;
 }> = ({ session, measurements, attachments, isOpen, onClose }) => {
-  const [sessionExercises, setSessionExercises] = React.useState<Array<{ [key: string]: unknown }>>([]);
+  const [sessionExercises, setSessionExercises] = React.useState<any[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [activeTab, setActiveTab] = React.useState<'overview' | 'soap' | 'exercises' | 'measurements' | 'attachments'>('overview');
 
@@ -1040,7 +1040,7 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
             </Badge>
           </div>
 
-            {/* Gamification Progress Panel */}
+          {/* Gamification Progress Panel */}
           {showGamification && (
             <div className="space-y-4">
               {/* Level Progress */}

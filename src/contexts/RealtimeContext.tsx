@@ -166,22 +166,25 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
    * Handler otimizado para mudanças de Realtime
    * Acumula mudanças e processa em batch
    */
-  const handleRealtimeChange = useCallback((payload: { eventType?: string; new?: Record<string, unknown>; old?: Record<string, unknown> }) => {
+  const handleRealtimeChange = useCallback((payload: { eventType: string; new: Record<string, any>; old: Record<string, any> }) => {
     const updateFn = (prev: Appointment[]) => {
       if (payload.eventType === 'INSERT') {
+        const newData = payload.new as Appointment;
         // Só adiciona se for futuro ou hoje (reduz tamanho do array)
-        const apptDate = new Date(payload.new.start_time || payload.new.date);
+        const apptDate = new Date(newData.start_time || (newData as any).date);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
         if (apptDate >= today) {
-          return [...prev, payload.new as Appointment];
+          return [...prev, newData];
         }
         return prev;
       } else if (payload.eventType === 'UPDATE') {
-        return prev.map(a => a.id === payload.new.id ? payload.new as Appointment : a);
+        const newData = payload.new as Appointment;
+        return prev.map(a => a.id === newData.id ? newData : a);
       } else if (payload.eventType === 'DELETE') {
-        return prev.filter(a => a.id !== payload.old.id);
+        const oldData = payload.old as { id: string };
+        return prev.filter(a => a.id !== oldData.id);
       }
       return prev;
     };
@@ -205,18 +208,18 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const subscribeToAppointments = useCallback(() => {
     if (!organizationId) {
       logger.warn('Realtime: No organization_id, skipping subscription', {}, 'RealtimeContext');
-      return () => {};
+      return () => { };
     }
 
     logger.info('Realtime: Subscribing to appointments via Context', { organizationId }, 'RealtimeContext');
 
     let isSubscribed = false;
     const channel = supabase.channel(`appointments-realtime-${organizationId}`, {
-        config: {
-          broadcast: { self: false },
-          presence: { key: '' }
-        }
-      });
+      config: {
+        broadcast: { self: false },
+        presence: { key: '' }
+      }
+    });
 
     // Type assertion para postgres_changes devido ao tipo Database genérico
     (channel as any)

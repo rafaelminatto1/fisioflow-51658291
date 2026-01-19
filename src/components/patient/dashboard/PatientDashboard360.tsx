@@ -35,6 +35,7 @@ interface PatientDashboardProps {
         alerts?: string[];
         isActive?: boolean;
         balance?: number;
+        mainCondition?: string;
     };
     appointments: Array<{
         date: Date | string;

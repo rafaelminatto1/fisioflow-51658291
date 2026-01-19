@@ -9,6 +9,8 @@ export interface Point2D {
     visibility?: number;
 }
 
+export type UnifiedLandmark = Point2D;
+
 export interface Vector2D {
     x: number;
     y: number;

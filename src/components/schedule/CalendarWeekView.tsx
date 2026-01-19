@@ -322,7 +322,7 @@ export const CalendarWeekView = memo(({
                                             style={style}
                                             isDraggable={isDraggable}
                                             isDragging={isDraggingThis(apt.id)}
-                                            isDropTarget={isDropTarget}
+                                            isDropTarget={!!isDropTarget}
                                             onDragStart={handleDragStart}
                                             onDragEnd={handleDragEnd}
                                             onDragOver={(e) => {

@@ -348,11 +348,12 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
     // Actually, we should probably just treat this as a temporary strict override for the view
     useEffect(() => {
         if (storedLayouts?.lg) {
-            const painItem = storedLayouts.lg.find(i => i.i === 'pain-scale');
+            const currentLayout = storedLayouts.lg as Layout[];
+            const painItem = currentLayout.find(i => i.i === 'pain-scale');
             const targetH = showPainDetails ? 11 : 6;
 
             if (painItem && painItem.h !== targetH) {
-                const newLayout = storedLayouts.lg.map(item => {
+                const newLayout = currentLayout.map(item => {
                     if (item.i === 'pain-scale') {
                         return { ...item, h: targetH };
                     }

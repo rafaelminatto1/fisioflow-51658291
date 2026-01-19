@@ -98,12 +98,24 @@ class Logger {
     }
   }
 
+
   error(message: string, error?: unknown, component?: string) {
     this.addLog(this.createLogEntry('error', message, error, component));
+    if (import.meta.env.PROD && typeof window !== 'undefined' && (window as any).Sentry) {
+      (window as any).Sentry.captureException(error instanceof Error ? error : new Error(message), {
+        extra: { component, message, data: error }
+      });
+    }
   }
 
   warn(message: string, data?: unknown, component?: string) {
     this.addLog(this.createLogEntry('warn', message, data, component));
+    if (import.meta.env.PROD && typeof window !== 'undefined' && (window as any).Sentry) {
+      (window as any).Sentry.captureMessage(message, {
+        level: 'warning',
+        extra: { component, data }
+      });
+    }
   }
 
   info(message: string, data?: unknown, component?: string) {

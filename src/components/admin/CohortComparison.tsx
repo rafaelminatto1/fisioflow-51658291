@@ -275,7 +275,7 @@ function getOutcomeCategory(progress: number, dropoutRisk: number): string {
  */
 function sortCohorts(cohorts: CohortData[], sortBy: CohortBy): CohortData[] {
   return cohorts.sort((a, b) => {
-    let order: string[] = [];
+    let order: readonly string[] = [];
 
     switch (sortBy) {
       case 'age_group':
@@ -1015,8 +1015,8 @@ export function CohortComparison({
                   />
                   {(selectedCohorts.length > 0
                     ? filteredCohorts
-                        .filter((c) => selectedCohorts.includes(c.name))
-                        .slice(0, 5)
+                      .filter((c) => selectedCohorts.includes(c.name))
+                      .slice(0, 5)
                     : filteredCohorts.slice(0, 3)
                   ).map((cohort, index) => (
                     <Radar
@@ -1155,4 +1155,4 @@ export function CohortComparison({
 // ============================================================================
 
 export default CohortComparison;
-export type { CohortData, PatientWithCohortData, TimeRangeConfig, CohortComparisonProps };
+export type { PatientWithCohortData, TimeRangeConfig, CohortComparisonProps };

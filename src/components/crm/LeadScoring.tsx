@@ -40,7 +40,19 @@ export function LeadScoring({ _leadId, showSettings = false }: LeadScoringProps)
       }
       const { data, error } = await query.order('total_score', { ascending: false });
       if (error) throw error;
-      return data;
+
+      // Cast the response to expected type to avoid SelectQueryError inference
+      return data as unknown as Array<{
+        id: string;
+        lead_id: string;
+        total_score: number;
+        engagement_score: number;
+        demographic_score: number;
+        behavioral_score: number;
+        tier: string;
+        factors: any[];
+        leads: { name: string } | null;
+      }>;
     },
   });
 
@@ -63,12 +75,14 @@ export function LeadScoring({ _leadId, showSettings = false }: LeadScoringProps)
   const stats = useMemo(() => {
     if (!scores.length) return null;
 
+    const typedScores = scores as any[];
+
     return {
       total: scores.length,
-      hot: scores.filter((s: { tier: string }) => s.tier === 'hot').length,
-      warm: scores.filter((s: { tier: string }) => s.tier === 'warm').length,
-      cold: scores.filter((s: { tier: string }) => s.tier === 'cold').length,
-      avgScore: Math.round(scores.reduce((acc: number, s: { total_score: number }) => acc + s.total_score, 0) / scores.length),
+      hot: typedScores.filter((s) => s.tier === 'hot').length,
+      warm: typedScores.filter((s) => s.tier === 'warm').length,
+      cold: typedScores.filter((s) => s.tier === 'cold').length,
+      avgScore: Math.round(typedScores.reduce((acc, s) => acc + (s.total_score || 0), 0) / scores.length),
     };
   }, [scores]);
 

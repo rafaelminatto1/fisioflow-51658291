@@ -1,0 +1,38 @@
+
+import SwaggerUI from 'swagger-ui-react';
+import 'swagger-ui-react/swagger-ui.css';
+import yaml from 'yaml';
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Navigate } from 'react-router-dom';
+
+export default function ApiDocs() {
+  const { user } = useAuth();
+  const [spec, setSpec] = useState<object | null>(null);
+
+  // Load YAML spec
+  useEffect(() => {
+    fetch('/src/docs/openapi.yaml')
+      .then((res) => res.text())
+      .then((text) => setSpec(yaml.parse(text)))
+      .catch(console.error);
+  }, []);
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  if (!spec) {
+    return <div className="p-8 text-center bg-white min-h-screen">Carregando documentação...</div>;
+  }
+
+  return (
+    <div className="container mx-auto py-8 bg-white min-h-screen">
+      <div className="mb-4 text-center">
+        <h1 className="text-3xl font-bold mb-2">Documentação da API FisioFlow</h1>
+        <p className="text-gray-600">Referência técnica para integração</p>
+      </div>
+      <SwaggerUI spec={spec} />
+    </div>
+  );
+}

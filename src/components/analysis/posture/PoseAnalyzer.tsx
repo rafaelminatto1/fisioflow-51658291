@@ -123,7 +123,12 @@ const PoseAnalyzer: React.FC<PoseAnalyzerProps> = ({ videoSrc, onAnalysisUpdate:
             drawLandmarks(canvasCtx, results.poseLandmarks, { color: '#FF0000', lineWidth: 2 });
 
             if (results.poseWorldLandmarks) {
-                analyzePosture(results.poseWorldLandmarks, canvasCtx, videoWidth, videoHeight, results.poseLandmarks);
+                const completeLandmarks = results.poseWorldLandmarks.map(l => ({
+                    x: l.x,
+                    y: l.y,
+                    z: l.z ?? 0 // Ensure z is defined
+                }));
+                analyzePosture(completeLandmarks, canvasCtx, videoWidth, videoHeight, results.poseLandmarks);
             }
         }
         canvasCtx.restore();

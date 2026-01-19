@@ -42,7 +42,7 @@ const AssetViewer: React.FC<AssetViewerProps> = ({ file, fileUrl, assetId }) => 
         // versions,
         currentVersion,
         // setCurrentVersion
-    } = useAssetAnnotations(assetId);
+    } = useAssetAnnotations(assetId ?? null);
 
     useEffect(() => {
         if (file) {

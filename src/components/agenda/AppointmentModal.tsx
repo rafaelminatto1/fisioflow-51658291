@@ -36,10 +36,10 @@ export function AppointmentModal({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'scheduled': return 'default';
-      case 'completed': return 'secondary';
-      case 'cancelled': return 'destructive';
-      case 'missed': return 'outline';
+      case 'agendado': return 'default';
+      case 'concluido': return 'secondary';
+      case 'cancelado': return 'destructive';
+      case 'falta': return 'outline';
       default: return 'default';
     }
   };
@@ -113,7 +113,7 @@ export function AppointmentModal({
 
         {/* Actions */}
         <div className="flex gap-2 pt-4">
-          {onConfirm && appointment.status === 'scheduled' && (
+          {onConfirm && appointment.status === 'agendado' && (
             <Button
               onClick={() => onConfirm(appointment)}
               className="flex-1"
@@ -132,7 +132,7 @@ export function AppointmentModal({
             </Button>
           )}
 
-          {onCancel && appointment.status !== 'cancelled' && (
+          {onCancel && appointment.status !== 'cancelado' && (
             <Button
               variant="destructive"
               onClick={() => onCancel(appointment)}

@@ -32,7 +32,7 @@ const RealTimeFeedbackCard: React.FC<{ feedback: { severity: string; type: strin
 };
 
 // Componente de Métricas em Tempo Real
-const RealTimeMetrics: React.FC<{ session: { totalRepetitions?: number; formScore?: number }; processingStats: { fps?: number; latency?: number } }> = ({ session, processingStats }) => {
+const RealTimeMetrics: React.FC<{ session: { totalRepetitions?: number; formScore?: number; averageForm?: number; caloriesBurned?: number }; processingStats: { fps?: number; latency?: number } }> = ({ session, processingStats }) => {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
       <div className="bg-white p-4 rounded-lg shadow-sm border">
@@ -42,7 +42,7 @@ const RealTimeMetrics: React.FC<{ session: { totalRepetitions?: number; formScor
         </div>
         <p className="text-2xl font-bold text-gray-900 mt-1">{session?.totalRepetitions || 0}</p>
       </div>
-      
+
       <div className="bg-white p-4 rounded-lg shadow-sm border">
         <div className="flex items-center space-x-2">
           <Award className="h-5 w-5 text-green-600" />
@@ -52,7 +52,7 @@ const RealTimeMetrics: React.FC<{ session: { totalRepetitions?: number; formScor
           {session?.averageForm || 0}%
         </p>
       </div>
-      
+
       <div className="bg-white p-4 rounded-lg shadow-sm border">
         <div className="flex items-center space-x-2">
           <Zap className="h-5 w-5 text-orange-600" />
@@ -60,7 +60,7 @@ const RealTimeMetrics: React.FC<{ session: { totalRepetitions?: number; formScor
         </div>
         <p className="text-2xl font-bold text-gray-900 mt-1">{session?.caloriesBurned || 0}</p>
       </div>
-      
+
       <div className="bg-white p-4 rounded-lg shadow-sm border">
         <div className="flex items-center space-x-2">
           <Timer className="h-5 w-5 text-purple-600" />
@@ -89,11 +89,11 @@ const CalibrationModal: React.FC<{ isOpen: boolean; onClose: () => void; onCalib
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
         <h3 className="text-lg font-semibold mb-4">Calibração do Sistema</h3>
-        
+
         {step === 1 && (
           <div>
             <p className="text-gray-600 mb-4">Primeiro, vamos configurar suas medidas corporais:</p>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Altura (cm)</label>
@@ -106,7 +106,7 @@ const CalibrationModal: React.FC<{ isOpen: boolean; onClose: () => void; onCalib
                   max="250"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Envergadura dos braços (cm)</label>
                 <input
@@ -119,7 +119,7 @@ const CalibrationModal: React.FC<{ isOpen: boolean; onClose: () => void; onCalib
                 />
               </div>
             </div>
-            
+
             <div className="flex justify-end space-x-3 mt-6">
               <button
                 onClick={onClose}
@@ -136,11 +136,11 @@ const CalibrationModal: React.FC<{ isOpen: boolean; onClose: () => void; onCalib
             </div>
           </div>
         )}
-        
+
         {step === 2 && (
           <div>
             <p className="text-gray-600 mb-4">Agora, posicione-se em frente à câmera com os braços estendidos lateralmente (posição T):</p>
-            
+
             <div className="bg-blue-50 p-4 rounded-lg mb-4">
               <div className="flex items-center space-x-2">
                 <Info className="h-5 w-5 text-blue-600" />
@@ -153,7 +153,7 @@ const CalibrationModal: React.FC<{ isOpen: boolean; onClose: () => void; onCalib
                 <li>• Permaneça imóvel por alguns segundos</li>
               </ul>
             </div>
-            
+
             <div className="flex justify-end space-x-3 mt-6">
               <button
                 onClick={() => setStep(1)}
@@ -176,14 +176,14 @@ const CalibrationModal: React.FC<{ isOpen: boolean; onClose: () => void; onCalib
 };
 
 // Componente de Configurações
-const SettingsPanel: React.FC<{ settings: Record<string, unknown>; onSettingsChange: (settings: Record<string, unknown>) => void; isOpen: boolean; onClose: () => void }> = ({ settings, onSettingsChange, isOpen, onClose }) => {
+const SettingsPanel: React.FC<{ settings: any; onSettingsChange: (settings: any) => void; isOpen: boolean; onClose: () => void }> = ({ settings, onSettingsChange, isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto">
         <h3 className="text-lg font-semibold mb-4">Configurações</h3>
-        
+
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Precisão do Modelo</label>
@@ -197,7 +197,7 @@ const SettingsPanel: React.FC<{ settings: Record<string, unknown>; onSettingsCha
               <option value="accurate">Preciso (mais lento)</option>
             </select>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Sensibilidade do Feedback</label>
             <select
@@ -210,7 +210,7 @@ const SettingsPanel: React.FC<{ settings: Record<string, unknown>; onSettingsCha
               <option value="high">Alta</option>
             </select>
           </div>
-          
+
           <div className="space-y-3">
             <label className="flex items-center">
               <input
@@ -221,7 +221,7 @@ const SettingsPanel: React.FC<{ settings: Record<string, unknown>; onSettingsCha
               />
               <span className="text-sm text-gray-700">Mostrar esqueleto</span>
             </label>
-            
+
             <label className="flex items-center">
               <input
                 type="checkbox"
@@ -231,7 +231,7 @@ const SettingsPanel: React.FC<{ settings: Record<string, unknown>; onSettingsCha
               />
               <span className="text-sm text-gray-700">Mostrar ângulos</span>
             </label>
-            
+
             <label className="flex items-center">
               <input
                 type="checkbox"
@@ -241,7 +241,7 @@ const SettingsPanel: React.FC<{ settings: Record<string, unknown>; onSettingsCha
               />
               <span className="text-sm text-gray-700">Mostrar feedback</span>
             </label>
-            
+
             <label className="flex items-center">
               <input
                 type="checkbox"
@@ -251,7 +251,7 @@ const SettingsPanel: React.FC<{ settings: Record<string, unknown>; onSettingsCha
               />
               <span className="text-sm text-gray-700">Modo espelho</span>
             </label>
-            
+
             <label className="flex items-center">
               <input
                 type="checkbox"
@@ -263,7 +263,7 @@ const SettingsPanel: React.FC<{ settings: Record<string, unknown>; onSettingsCha
             </label>
           </div>
         </div>
-        
+
         <div className="flex justify-end space-x-3 mt-6">
           <button
             onClick={onClose}
@@ -409,7 +409,7 @@ const ComputerVisionExercise: React.FC<ComputerVisionExerciseProps> = ({ onSessi
           <h1 className="text-2xl font-bold text-gray-900">Análise de Exercícios com IA</h1>
           <p className="text-gray-600">Análise em tempo real da forma e execução dos exercícios</p>
         </div>
-        
+
         <div className="flex items-center space-x-3">
           <button
             onClick={() => setShowSettings(true)}
@@ -417,7 +417,7 @@ const ComputerVisionExercise: React.FC<ComputerVisionExerciseProps> = ({ onSessi
           >
             <Settings className="h-5 w-5" />
           </button>
-          
+
           {!isCalibrated && (
             <button
               onClick={() => setShowCalibration(true)}
@@ -472,7 +472,7 @@ const ComputerVisionExercise: React.FC<ComputerVisionExerciseProps> = ({ onSessi
             <div className="p-4 border-b">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold text-gray-900">Câmera de Análise</h3>
-                
+
                 <div className="flex items-center space-x-2">
                   {isCalibrated && (
                     <span className="flex items-center space-x-1 text-green-600 text-sm">
@@ -480,7 +480,7 @@ const ComputerVisionExercise: React.FC<ComputerVisionExerciseProps> = ({ onSessi
                       <span>Calibrado</span>
                     </span>
                   )}
-                  
+
                   <button
                     onClick={handleScreenshot}
                     disabled={!isActive}
@@ -491,7 +491,7 @@ const ComputerVisionExercise: React.FC<ComputerVisionExerciseProps> = ({ onSessi
                 </div>
               </div>
             </div>
-            
+
             <div className="relative bg-gray-900">
               <video
                 ref={videoRef}
@@ -501,13 +501,13 @@ const ComputerVisionExercise: React.FC<ComputerVisionExerciseProps> = ({ onSessi
                 playsInline
                 style={{ transform: settings.mirrorMode ? 'scaleX(-1)' : 'none' }}
               />
-              
+
               <canvas
                 ref={canvasRef}
                 className="absolute inset-0 w-full h-full"
                 style={{ transform: settings.mirrorMode ? 'scaleX(-1)' : 'none' }}
               />
-              
+
               {/* Overlay de Status */}
               <div className="absolute top-4 left-4 space-y-2">
                 {isActive && (
@@ -516,7 +516,7 @@ const ComputerVisionExercise: React.FC<ComputerVisionExerciseProps> = ({ onSessi
                     <span>GRAVANDO</span>
                   </div>
                 )}
-                
+
                 <div className="bg-black bg-opacity-50 text-white px-3 py-1 rounded text-sm">
                   FPS: {processingStats.fps} | Latência: {processingStats.latency}ms
                 </div>
@@ -530,7 +530,7 @@ const ComputerVisionExercise: React.FC<ComputerVisionExerciseProps> = ({ onSessi
           {/* Seleção de Exercício */}
           <div className="bg-white rounded-lg shadow-sm border p-4">
             <h3 className="font-semibold text-gray-900 mb-3">Exercício</h3>
-            
+
             <select
               value={selectedExercise}
               onChange={(e) => setSelectedExercise(e.target.value)}
@@ -543,7 +543,7 @@ const ComputerVisionExercise: React.FC<ComputerVisionExerciseProps> = ({ onSessi
                 </option>
               ))}
             </select>
-            
+
             {selectedExercise && exerciseTemplates[selectedExercise] && (
               <div className="mt-3 p-3 bg-gray-50 rounded-md">
                 <p className="text-sm text-gray-600 mb-2">
@@ -560,7 +560,7 @@ const ComputerVisionExercise: React.FC<ComputerVisionExerciseProps> = ({ onSessi
           {/* Controles */}
           <div className="bg-white rounded-lg shadow-sm border p-4">
             <h3 className="font-semibold text-gray-900 mb-3">Controles</h3>
-            
+
             <div className="space-y-3">
               {!isActive ? (
                 <button
@@ -580,7 +580,7 @@ const ComputerVisionExercise: React.FC<ComputerVisionExerciseProps> = ({ onSessi
                   <span>Parar Análise</span>
                 </button>
               )}
-              
+
               {!isCalibrated && (
                 <button
                   onClick={() => setShowCalibration(true)}
@@ -597,7 +597,7 @@ const ComputerVisionExercise: React.FC<ComputerVisionExerciseProps> = ({ onSessi
           {selectedExercise && exerciseTemplates[selectedExercise] && (
             <div className="bg-white rounded-lg shadow-sm border p-4">
               <h3 className="font-semibold text-gray-900 mb-3">Instruções</h3>
-              
+
               <div className="space-y-2">
                 {getExerciseInstructions(selectedExercise).map((instruction, index) => (
                   <div key={index} className="flex items-start space-x-2 text-sm">
@@ -613,7 +613,7 @@ const ComputerVisionExercise: React.FC<ComputerVisionExerciseProps> = ({ onSessi
           {settings.showFeedback && realTimeFeedback.length > 0 && (
             <div className="bg-white rounded-lg shadow-sm border p-4">
               <h3 className="font-semibold text-gray-900 mb-3">Feedback</h3>
-              
+
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {realTimeFeedback.slice(-5).map((feedback, index) => (
                   <RealTimeFeedbackCard key={index} feedback={feedback} />
@@ -630,7 +630,7 @@ const ComputerVisionExercise: React.FC<ComputerVisionExerciseProps> = ({ onSessi
         onClose={() => setShowCalibration(false)}
         onCalibrate={handleCalibrate}
       />
-      
+
       <SettingsPanel
         settings={settings}
         onSettingsChange={setSettings}

@@ -117,7 +117,10 @@ export function EvaluationTemplateSelector({
             const { data, error } = await query;
             if (error) throw error;
 
-            return (data || []).map((t) => ({
+            // Cast to any to avoid SelectQueryError issues with deep relations
+            const typedData = data as any[];
+
+            return (typedData || []).map((t) => ({
                 id: t.id,
                 nome: t.nome,
                 descricao: t.descricao,

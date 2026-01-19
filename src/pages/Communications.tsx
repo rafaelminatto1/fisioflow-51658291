@@ -18,7 +18,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
-import { usePatientsQuery } from '@/hooks/usePatientsQuery';
+import { useActivePatients } from '@/hooks/usePatients';
 import {
   useCommunications,
   useCommunicationStats,
@@ -78,7 +78,7 @@ const Communications = () => {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
 
-  const { data: patients = [] } = usePatientsQuery();
+  const { data: patients = [] } = useActivePatients();
   const { data: communications = [], isLoading } = useCommunications({ channel: selectedChannel });
   const { data: stats } = useCommunicationStats();
   const sendCommunication = useSendCommunication();

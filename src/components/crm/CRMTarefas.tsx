@@ -68,7 +68,7 @@ export function CRMTarefas({ leadId, compact = false }: CRMTarefasProps) {
       hora_vencimento: formData.hora_vencimento || null,
       status: 'pendente',
       responsavel_id: null,
-    } as Record<string, unknown>);
+    } as any);
     setIsDialogOpen(false);
     setFormData({
       titulo: '',
@@ -122,7 +122,7 @@ export function CRMTarefas({ leadId, compact = false }: CRMTarefasProps) {
             })}
           </div>
         )}
-        
+
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent>
             <DialogHeader>

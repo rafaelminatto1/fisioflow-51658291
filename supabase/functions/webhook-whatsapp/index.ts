@@ -31,13 +31,13 @@ serve(async (req: Request) => {
     }
 
     const body = await req.json();
-    
+
     // Validar estrutura básica do payload
     if (!body.event && !body.entry) {
       await captureMessage('Webhook recebido sem estrutura válida', 'warning');
       return errorResponse('Payload inválido', 400);
     }
-    
+
     await captureMessage('WhatsApp Webhook recebido', 'info', { hasEvent: !!body.event, hasEntry: !!body.entry });
 
     // Evolution API webhook format
@@ -90,9 +90,9 @@ async function handleIncomingMessage(data: any, instance: string) {
 
   const remoteJid = message.key?.remoteJid;
   const fromMe = message.key?.fromMe;
-  const messageContent = message.message?.conversation || 
-                        message.message?.extendedTextMessage?.text ||
-                        '[Mídia recebida]';
+  const messageContent = message.message?.conversation ||
+    message.message?.extendedTextMessage?.text ||
+    '[Mídia recebida]';
 
   // Ignorar mensagens enviadas por nós
   if (fromMe) return;
@@ -129,7 +129,7 @@ async function handleIncomingMessage(data: any, instance: string) {
 async function handleMessageStatusUpdate(data: any, instance: string) {
   const { key, status } = data;
   const messageId = key?.id;
-  
+
   if (!messageId) return;
 
   // Mapear status do Evolution API
@@ -297,7 +297,7 @@ async function processAutoResponse(
         // Confirmar agendamento
         await supabase
           .from('appointments')
-          .update({ 
+          .update({
             status: 'confirmed',
             confirmed_at: new Date().toISOString(),
             confirmed_via: 'whatsapp',
@@ -305,15 +305,56 @@ async function processAutoResponse(
           .eq('id', appointment.id);
 
         // Enviar resposta
-        await sendAutoResponse(phone, patient.organization_id, 
+        await sendAutoResponse(phone, patient.organization_id,
           `Obrigado, ${patient.name.split(' ')[0]}! ✅\n\nSua consulta está confirmada.\n\nAté lá!`
         );
         return;
       }
+
+      // Check for pending slot offer
+      const { data: waitlistEntry } = await supabase
+        .from('waitlist')
+        .select('id, offered_slot, offer_expires_at')
+        .eq('patient_id', patient.id)
+        .eq('status', 'offered')
+        .single();
+
+      if (waitlistEntry && waitlistEntry.offer_expires_at) {
+        const expiresAt = new Date(waitlistEntry.offer_expires_at);
+        if (expiresAt > new Date()) {
+          // Accept the slot offer
+          await supabase
+            .from('waitlist')
+            .update({ status: 'scheduled' })
+            .eq('id', waitlistEntry.id);
+
+          // Create appointment from offered slot
+          const [dateStr, timeStr] = (waitlistEntry.offered_slot || '').split(' ');
+          if (dateStr && timeStr) {
+            const startTime = new Date(`${dateStr}T${timeStr}:00`);
+            const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // 1 hour
+
+            await supabase.from('appointments').insert({
+              patient_id: patient.id,
+              start_time: startTime.toISOString(),
+              end_time: endTime.toISOString(),
+              status: 'confirmed',
+              confirmed_at: new Date().toISOString(),
+              confirmed_via: 'whatsapp_waitlist',
+              organization_id: patient.organization_id,
+            });
+          }
+
+          await sendAutoResponse(phone, patient.organization_id,
+            `Excelente, ${patient.name.split(' ')[0]}! 🎉\n\nSua vaga está confirmada para ${waitlistEntry.offered_slot}.\n\nAguardamos você!`
+          );
+          return;
+        }
+      }
     }
   }
 
-  // Recusa de oferta de vaga (NÃO)
+  // Recusa de oferta de vaga (NÃO) - existing code follows...
   if (['nao', 'não', 'no', 'recusar'].includes(lowerMessage)) {
     if (patient) {
       // Verificar se há oferta pendente

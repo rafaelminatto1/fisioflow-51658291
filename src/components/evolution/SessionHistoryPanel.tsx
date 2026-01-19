@@ -26,7 +26,7 @@ import { cn } from '@/lib/utils';
 
 interface SessionHistoryPanelProps {
   patientId: string;
-  onReplicateConduct?: (conduct: string) => void;
+  onReplicateConduct?: (conduct: { plan?: string; subjective?: string; objective?: string; assessment?: string }) => void;
   onSelectSession?: (sessionId: string) => void;
   maxItems?: number;
 }
@@ -209,18 +209,24 @@ export const SessionHistoryPanel: React.FC<SessionHistoryPanelProps> = ({
                             </div>
                           )}
 
-                          {record.plan && onReplicateConduct && (
+                          {/* Only Plan button logic changed to callback usage */}
+                          {onReplicateConduct && (
                             <Button
                               size="sm"
                               variant="outline"
                               className="w-full h-8 text-xs"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                onReplicateConduct(record.plan!);
+                                onReplicateConduct({
+                                  plan: record.plan || undefined,
+                                  subjective: record.subjective || undefined,
+                                  objective: record.objective || undefined,
+                                  assessment: record.assessment || undefined
+                                });
                               }}
                             >
                               <Copy className="h-3 w-3 mr-2" />
-                              Replicar Esta Conduta
+                              Replicar Esta Evolução
                             </Button>
                           )}
                         </div>

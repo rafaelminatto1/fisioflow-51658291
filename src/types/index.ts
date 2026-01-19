@@ -77,6 +77,7 @@ export type AppointmentStatus =
 export interface Patient {
   id: string;
   name: string;
+  full_name?: string; // Added for compatibility
   email?: string;
   phone?: string;
   cpf?: string;

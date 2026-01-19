@@ -8,6 +8,10 @@ import { logger } from '@/lib/errors/logger';
 import { useEffect } from 'react';
 import { AppointmentNotificationService } from '@/lib/services/AppointmentNotificationService';
 import { requireUserOrganizationId, getUserOrganizationId } from '@/utils/userHelpers';
+import { useAuth } from '@/contexts/AuthContext';
+import { appointmentsCacheService } from '@/lib/offline/AppointmentsCacheService';
+import { AppointmentService } from '@/services/appointmentService';
+import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 
 // Query keys factory for better cache management
 export const appointmentKeys = {
@@ -50,11 +54,6 @@ async function retryWithBackoff<T>(
 
   throw lastError;
 }
-
-// Fetch all appointments with improved error handling and validation
-import { useAuth } from '@/contexts/AuthContext';
-import { appointmentsCacheService } from '@/lib/offline/AppointmentsCacheService';
-import { dateSchema, timeSchema } from '@/lib/validations/agenda';
 
 // Constantes para backup de emergência em localStorage
 const EMERGENCY_CACHE_KEY = 'fisioflow_appointments_emergency';
@@ -160,7 +159,7 @@ async function fetchAppointments(organizationIdOverride?: string | null): Promis
   }
 
   try {
-    // Obter organization_id do usuário para filtrar (usar override ou fallback para função utilitária)
+    // Obter organization_id do usuário
     let organizationId: string | null = organizationIdOverride || null;
 
     if (!organizationId) {
@@ -171,117 +170,40 @@ async function fetchAppointments(organizationIdOverride?: string | null): Promis
       }
     }
 
-    // Construir query - Buscando relacionamentos essenciais
-    let query = supabase
-      .from('appointments')
-      .select(`
-        *,
-        patients!inner(
-          id,
-          full_name,
-          phone,
-          email
-        ),
-        profiles:therapist_id(
-          full_name
-        )
-      `);
-
-    // Filtrar por organização se disponível (melhora performance e segurança)
-    if (organizationId) {
-      query = query.eq('organization_id', organizationId);
+    // Usar AppointmentService
+    if (!organizationId) {
+      // Se não tiver organizationId e não conseguir recuperar, pode falhar ou retornar vazio
+      // Por segurança, vamos tentar buscar sem filtro explicito se for permitido pelo RLS, 
+      // mas o Service espera string.
+      // Vamos assumir que getUserOrganizationId vai retornar algo ou lançar erro se crítico.
+      // Para evitar crash, vamos retornar vazio se não tiver ID.
+      logger.warn('Abortando fetch: organization_id não encontrado', {}, 'useAppointments');
+      return { data: [], isFromCache: false, cacheTimestamp: null, source: 'memory' };
     }
 
-    // Usar retry com timeout forçado
-    const result = await retryWithBackoff(() =>
+    // Usar retry com backoff para resiliência de rede
+    const data = await retryWithBackoff(() =>
       withTimeout(
-        query
-          .order('appointment_date', { ascending: true })
-          .order('appointment_time', { ascending: true }),
-        15000 // 15 segundos de timeout para garantir em conexões lentas
-      ),
-      3, // 3 tentativas
-      1000 // delay inicial
+        AppointmentService.fetchAppointments(organizationId!),
+        15000
+      )
     );
 
-    const { data, error } = result;
-
-    if (error) {
-      logger.error('Erro ao buscar agendamentos', error, 'useAppointments');
-
-      // Verificar erros de rede/conexão
-      if (isNetworkError(error)) {
-        logger.warn('Erro de rede identificado, fallback para cache', { error: error.message }, 'useAppointments');
-        timer();
-        return getFromCacheWithMetadata();
-      }
-
-      // Tratar erros específicos de permissão/schema
-      if (error.code === 'PGRST116' || error.message?.includes('permission')) {
-        logger.error('Erro de permissão ou dados não encontrados.', error, 'useAppointments');
-        return { data: [], isFromCache: false, cacheTimestamp: null };
-      }
-
-      throw error;
-    }
-
-    // Validar e transformar dados usando Zod
-    const transformedAppointments: AppointmentBase[] = [];
-    const validationErrors: { id: string; error: unknown }[] = [];
-
-    (data || []).forEach((item) => {
-      // Mapear estrutura do banco para estrutura esperada pelo Zod Schema se necessário
-      // O Schema espera 'patient' mas o retorno do supabase é 'patients' (plural) ou mapeado
-      const itemToValidate = {
-        ...item,
-        patient: item.patients, // flat map para validação
-        professional: item.profiles // flat map
-      };
-
-      const validation = VerifiedAppointmentSchema.safeParse(itemToValidate);
-
-      if (validation.success) {
-        const validData = validation.data;
-
-        // Converter para AppointmentBase (Interface legada da UI)
-        transformedAppointments.push({
-          id: validData.id,
-          patientId: validData.patient_id || '',
-          patientName: validData.patientName, // Campo computado pelo Zod
-          phone: item.patients?.phone || '',
-          date: validData.date,
-          time: validData.start_time || validData.appointment_time || '00:00',
-          duration: validData.duration || 60,
-          type: (validData.type || 'Fisioterapia') as AppointmentType,
-          status: (validData.status || 'agendado') as AppointmentStatus,
-          notes: validData.notes || '',
-          createdAt: validData.created_at ? new Date(validData.created_at) : new Date(),
-          updatedAt: validData.updated_at ? new Date(validData.updated_at) : new Date(),
-          therapistId: validData.therapist_id,
-          room: validData.room,
-        });
-      } else {
-        validationErrors.push({ id: item.id, error: validation.error });
-        logger.warn(`Agendamento ${item.id} inválido`, { error: validation.error }, 'useAppointments');
-
-        // Opcional: tentar recuperar parcialmente ou ignorar
-        // Por segurança, ignoramos dados inválidos para não quebrar a UI
-      }
-    });
-
-    if (validationErrors.length > 0) {
-      logger.warn(`Ignorados ${validationErrors.length} agendamentos inválidos`, {}, 'useAppointments');
-    }
-
     // Salvar no cache atualizado (IndexedDB + localStorage backup)
-    appointmentsCacheService.saveToCache(transformedAppointments, organizationId || undefined);
-    saveEmergencyBackup(transformedAppointments, organizationId || undefined);
+    appointmentsCacheService.saveToCache(data, organizationId || undefined);
+    saveEmergencyBackup(data, organizationId || undefined);
 
     timer();
-    return { data: transformedAppointments, isFromCache: false, cacheTimestamp: null, source: 'supabase' };
+    return { data, isFromCache: false, cacheTimestamp: null, source: 'supabase' };
 
   } catch (error: unknown) {
     logger.error('Erro crítico no fetchAppointments', error, 'useAppointments');
+
+    // Verificar erros de rede/conexão para decidir sobre fallback
+    if (isNetworkError(error)) {
+      logger.warn('Erro de rede, usando fallback cache', {}, 'useAppointments');
+      return getFromCacheWithMetadata(organizationIdOverride || undefined);
+    }
 
     // Último recurso: tentar cache multi-camada
     timer();
@@ -292,12 +214,9 @@ async function fetchAppointments(organizationIdOverride?: string | null): Promis
 // Função auxiliar para detectar erros de rede
 function isNetworkError(error: unknown): boolean {
   if (!error) return false;
-  // Log message para debug
-  // console.log('Checking network error:', error); 
 
   const message = (error instanceof Error ? error.message : '').toLowerCase();
 
-  // Lista extensiva de erros de rede
   return (
     message.includes('network') ||
     message.includes('timeout') ||
@@ -359,14 +278,11 @@ export function useAppointments() {
   const organizationId = profile?.organization_id;
 
   // Setup Realtime subscription using custom hook
-  // Esta inscrição já gerencia a invalidação de queries quando há mudanças
-  // Não precisamos de uma inscrição duplicada para toasts
   const channelName = `appointments-changes-${organizationId || 'all'}`;
 
   useEffect(() => {
     if (!organizationId) return;
 
-    // FIX: Track subscription state to avoid WebSocket errors
     let isSubscribed = false;
     const channel = supabase.channel(channelName);
 
@@ -381,11 +297,8 @@ export function useAppointments() {
         },
         (payload) => {
           logger.info(`Realtime event: appointments ${payload.eventType}`, {}, 'useAppointments');
-
-          // Invalidar queries para atualizar os dados
           queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
 
-          // Show toast notification for changes made by other users
           if (payload.eventType === 'INSERT') {
             toast({
               title: '🔄 Novo agendamento',
@@ -421,67 +334,50 @@ export function useAppointments() {
     return () => {
       logger.debug(`Cleanup subscription ${channelName}`, { isSubscribed }, 'useAppointments');
       if (isSubscribed) {
-        supabase.removeChannel(channel).catch(() => {
-          // Ignore cleanup errors
-        });
+        supabase.removeChannel(channel).catch(() => { });
       }
     };
   }, [toast, organizationId, queryClient]);
 
   const query = useQuery({
-    queryKey: appointmentKeys.list(organizationId), // Use appointmentKeys factory
+    queryKey: appointmentKeys.list(organizationId),
     queryFn: () => fetchAppointments(organizationId),
-    staleTime: 1000 * 10, // 10 segundos (dados mais frescos)
-    gcTime: 1000 * 60 * 60, // 1 hora (mantém cache em memória por mais tempo)
-    retry: 5, // Mais retries para conexões instáveis
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Backoff exponencial
+    staleTime: 1000 * 10,
+    gcTime: 1000 * 60 * 60,
+    retry: 5,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
-    refetchInterval: false, // Não refetch automático, apenas em eventos
-    // CRÍTICO: Manter dados anteriores para NUNCA mostrar lista vazia durante recarregamento
+    refetchInterval: false,
     placeholderData: (previousData) => previousData,
-    enabled: !!organizationId || !!user, // Enable if we have org ID OR if user is logged in
-    // Não lançar erro para o componente se falhar - usar fallback silencioso
+    enabled: !!organizationId || !!user,
     throwOnError: false,
   });
 
-  // Extrair dados do resultado
   const result = query.data as AppointmentsQueryResult | undefined;
-
-  // SISTEMA DE FALLBACK MULTI-CAMADA para NUNCA retornar array vazio
-  // Ordem de prioridade:
-  // 1. Dados frescos da query atual
-  // 2. Dados anteriores do React Query cache
-  // 3. Nunca retornar vazio se teve dados antes
   const previousData = queryClient.getQueryData<AppointmentsQueryResult>(appointmentKeys.list(organizationId));
 
-  // Determinar os dados finais com fallback defensivo
   let finalData: AppointmentBase[] = [];
   let dataSource: 'fresh' | 'cache' | 'previous' = 'fresh';
 
   if (result?.data && result.data.length > 0) {
-    // Dados frescos disponíveis
     finalData = result.data;
     dataSource = 'fresh';
   } else if (previousData?.data && previousData.data.length > 0) {
-    // Fallback para dados anteriores do React Query
     finalData = previousData.data;
     dataSource = 'previous';
     logger.debug('Usando dados anteriores do React Query como fallback', {
       count: finalData.length,
     }, 'useAppointments');
   } else if (result?.isFromCache && result.data) {
-    // Dados do cache (IndexedDB ou localStorage)
     finalData = result.data;
     dataSource = 'cache';
   }
 
-  // Função helper para forçar atualização como Promise
   const refreshAppointments = async () => {
     return await query.refetch();
   };
 
-  // Verificar se está usando dados stale
   const isUsingStaleData = dataSource !== 'fresh' && finalData.length > 0;
 
   return {
@@ -490,7 +386,6 @@ export function useAppointments() {
     isFromCache: result?.isFromCache || dataSource === 'cache' || dataSource === 'previous',
     cacheTimestamp: result?.cacheTimestamp || null,
     refreshAppointments,
-    // Novos campos para UI
     dataSource: result?.source || dataSource,
     isUsingStaleData,
     hasData: finalData.length > 0,
@@ -505,128 +400,19 @@ export function useCreateAppointment() {
 
   return useMutation({
     mutationFn: async (data: AppointmentFormData) => {
-      logger.info('Criando novo agendamento', { patientId: data.patient_id, date: data.appointment_date || data.date }, 'useAppointments');
-
-      // Obter organization_id do usuário (usar contexto ou fallback)
       const organizationId = profile?.organization_id || await requireUserOrganizationId();
 
-      // Check for conflicts with current data
-      const currentAppointments = queryClient.getQueryData<AppointmentsQueryResult>(appointmentKeys.list(profile?.organization_id))?.data || [];
-      checkAppointmentConflict({
-        date: new Date(data.appointment_date),
-        time: data.appointment_time,
-        duration: data.duration,
-        appointments: currentAppointments
-      });
+      // Get current appointments for conflict checking
+      const currentResult = queryClient.getQueryData<AppointmentsQueryResult>(appointmentKeys.list(profile?.organization_id));
+      const currentAppointments = currentResult?.data || [];
 
-      logger.warn('Conflito de horário detectado, mas permitindo criação (controle de capacidade no frontend)', { appointmentData: data }, 'useAppointments');
-      // Não lançar erro aqui para permitir sobreposição controlada pela capacidade
-      // throw new Error('Conflito de horário');
-
-      // Validar dados antes de inserir
-      if (!data.patient_id) {
-        throw new Error('ID do paciente é obrigatório');
-      }
-
-      // Normalização e Validação com Zod
-      const rawDate = data.appointment_date || data.date;
-      const rawTime = data.appointment_time || data.start_time;
-
-      if (!rawDate) throw new Error('Data do agendamento é obrigatória');
-      if (!rawTime) throw new Error('Horário do agendamento é obrigatório');
-
-      const dateValidation = dateSchema.safeParse(rawDate);
-      if (!dateValidation.success) {
-        throw new Error(`Formato de data inválido: ${rawDate || 'vazio'}. Use YYYY-MM-DD.`);
-      }
-
-      const timeValidation = timeSchema.safeParse(rawTime);
-      if (!timeValidation.success) {
-        // Tentar recuperar formato HH:MM simples se falhar (embora o schema já deva cobrir)
-        const simpleTimeRegex = /^([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/;
-        if (!simpleTimeRegex.test(rawTime)) {
-          throw new Error(`Formato de horário inválido: ${rawTime || 'vazio'}. Use HH:MM.`);
-        }
-      }
-
-      const { data: newAppointment, error } = await supabase
-        .from('appointments')
-        .insert({
-          patient_id: data.patient_id,
-          // Dual Write Strategy: Gravar em ambas as colunas para garantir compatibilidade
-          appointment_date: rawDate,
-          date: rawDate,
-          appointment_time: rawTime,
-          start_time: rawTime,
-          duration: data.duration || 60,
-          type: data.type || 'fisioterapia',
-          status: data.status || 'agendado',
-          notes: data.notes || null,
-          therapist_id: data.therapist_id || null,
-          room: data.room || null,
-          organization_id: organizationId,
-        })
-        .select(`
-          *,
-          patients!inner(
-            id,
-            full_name,
-            phone,
-            email
-          )
-        `)
-        .single();
-
-
-
-      if (error) {
-        logger.error('Erro ao inserir agendamento no Supabase', error, 'useAppointments');
-
-        // Melhorar mensagens de erro
-        if (error.message?.includes('violates row-level security')) {
-          throw new Error('Você não tem permissão para criar agendamentos nesta organização.');
-        }
-        if (error.message?.includes('foreign key')) {
-          throw new Error('Paciente ou terapeuta não encontrado.');
-        }
-        if (error.message?.includes('unique') || error.message?.includes('duplicate')) {
-          throw new Error('Já existe um agendamento com estes dados.');
-        }
-
-        throw error;
-      }
-
-      const appointment: AppointmentBase = {
-        id: newAppointment.id,
-        patientId: newAppointment.patient_id,
-        patientName: newAppointment.patients.full_name || newAppointment.patients.name,
-        phone: newAppointment.patients.phone,
-        date: new Date(newAppointment.date || newAppointment.appointment_date),
-        time: newAppointment.start_time || newAppointment.appointment_time,
-        duration: newAppointment.duration,
-        type: newAppointment.type as AppointmentType,
-        status: newAppointment.status as AppointmentStatus,
-        notes: newAppointment.notes || '',
-        createdAt: new Date(newAppointment.created_at),
-        updatedAt: new Date(newAppointment.updated_at)
-      };
-
-      logger.info('Agendamento criado com sucesso', { appointmentId: appointment.id }, 'useAppointments');
-
-      // Enviar notificação (não bloquear se falhar)
-      AppointmentNotificationService.scheduleNotification(
-        appointment.id,
-        appointment.patientId,
-        appointment.date,
-        appointment.time,
-        appointment.patientName
-      );
-
-      return appointment;
+      // Delegate to service
+      return await AppointmentService.createAppointment(data, organizationId, currentAppointments);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: appointmentKeys.list(profile?.organization_id) });
-      // Otimistic update: adicionar o novo agendamento à cache imediatamente
+
+      // Optimistic update
       queryClient.setQueryData(
         appointmentKeys.list(profile?.organization_id),
         (old: AppointmentsQueryResult | undefined) => ({
@@ -634,29 +420,23 @@ export function useCreateAppointment() {
           data: [...(old?.data || []), data]
         })
       );
+
       toast({
         title: 'Sucesso',
         description: 'Agendamento criado com sucesso'
       });
+
+      // Notificação (asynchronous)
+      AppointmentNotificationService.scheduleNotification(
+        data.id,
+        data.patientId,
+        data.date,
+        data.time,
+        data.patientName
+      );
     },
     onError: (error: Error) => {
-      logger.error('Erro ao criar agendamento', error, 'useAppointments');
-
-      let errorMessage = 'Não foi possível criar o agendamento.';
-
-      if (error.message === 'Conflito de horário') {
-        errorMessage = 'Já existe um agendamento neste horário.';
-      } else if (error.message.includes('Organização não encontrada')) {
-        errorMessage = 'Organização não encontrada. Você precisa estar vinculado a uma organização.';
-      } else if (error.message.includes('não autenticado')) {
-        errorMessage = 'Sessão expirada. Por favor, faça login novamente.';
-      }
-
-      toast({
-        title: error.message === 'Conflito de horário' ? 'Conflito de Horário' : 'Erro',
-        description: errorMessage,
-        variant: 'destructive'
-      });
+      ErrorHandler.handle(error, 'useCreateAppointment');
     }
   });
 }
@@ -669,195 +449,20 @@ export function useUpdateAppointment() {
 
   return useMutation({
     mutationFn: async ({ appointmentId, updates }: { appointmentId: string; updates: Partial<AppointmentFormData> }) => {
-      logger.info('Atualizando agendamento', { appointmentId, updates }, 'useAppointments');
-
-      // Obter organization_id do usuário para garantir segurança
       const organizationId = profile?.organization_id || await requireUserOrganizationId();
-
-      // Check for conflicts if date/time is being changed
-      if (updates.appointment_date || updates.appointment_time || updates.duration) {
-        const currentAppointments = queryClient.getQueryData<AppointmentBase[]>(['appointments']) || [];
-        const existing = currentAppointments.find(apt => apt.id === appointmentId);
-
-        if (existing) {
-          checkAppointmentConflict({
-            date: updates.appointment_date ? new Date(updates.appointment_date) : existing.date,
-            time: updates.appointment_time || existing.time,
-            duration: updates.duration || existing.duration,
-            excludeId: appointmentId,
-            appointments: currentAppointments
-          });
-
-          logger.warn('Conflito de horário detectado na atualização, permitindo (controle no frontend)', { appointmentId }, 'useAppointments');
-          // throw new Error('Conflito de horário');
-        }
-      }
-
-      // Normalize update data
-      const updateDate = updates.appointment_date || updates.date;
-      const updateTime = updates.appointment_time || updates.start_time;
-
-      const updateData: Record<string, unknown> = {};
-
-      // Strict validation for date with Zod
-      if (updateDate) {
-        const dateValidation = dateSchema.safeParse(updateDate);
-        if (!dateValidation.success) {
-          throw new Error(`Formato de data inválido: ${updateDate}. Use YYYY-MM-DD.`);
-        }
-        // Dual Write Strategy
-        updateData.appointment_date = updateDate;
-        updateData.date = updateDate;
-      }
-
-      // Strict validation for time with Zod
-      if (updateTime) {
-        const timeValidation = timeSchema.safeParse(updateTime);
-        if (!timeValidation.success) {
-          // Fallback regex logic from original code preserved/adapted if schema is too strict, 
-          // but keeping consistent with Zod as primary.
-          const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/;
-          if (!timeRegex.test(updateTime)) {
-            throw new Error(`Formato de horário inválido: ${updateTime}. Use HH:MM.`);
-          }
-        }
-        // Dual Write Strategy
-        updateData.appointment_time = updateTime;
-        updateData.start_time = updateTime;
-      }
-
-      if (updates.patient_id) updateData.patient_id = updates.patient_id;
-      if (updates.duration) updateData.duration = updates.duration;
-      if (updates.type) updateData.type = updates.type;
-      if (updates.status) updateData.status = updates.status;
-      if (updates.notes !== undefined) updateData.notes = updates.notes || null;
-      if (updates.therapist_id !== undefined) updateData.therapist_id = updates.therapist_id;
-      if (updates.room !== undefined) updateData.room = updates.room;
-
-      // Validar que há dados para atualizar
-      if (Object.keys(updateData).length === 0) {
-        throw new Error('Nenhum dado para atualizar');
-      }
-
-      logger.debug('Enviando atualização para Supabase', { appointmentId, updateData, organizationId }, 'useAppointments');
-
-      // Primeiro fazer o update sem select (evitar erro 400 com JOIN)
-      const { error: updateError } = await supabase
-        .from('appointments')
-        .update(updateData)
-        .eq('id', appointmentId)
-        .eq('organization_id', organizationId);
-
-      if (updateError) {
-        logger.error('Erro ao atualizar agendamento no Supabase', updateError, 'useAppointments');
-
-        // Melhorar mensagens de erro
-        if (updateError.message?.includes('violates row-level security')) {
-          throw new Error('Você não tem permissão para atualizar este agendamento.');
-        }
-        if (updateError.code === 'PGRST116') {
-          throw new Error('Agendamento não encontrado ou você não tem permissão para acessá-lo.');
-        }
-        // Tratamento para erro 400 data inválida
-        if (updateError.code === '22007' || updateError.code === '22008' || updateError.message?.includes('invalid input syntax')) {
-          throw new Error('Dados inválidos ao atualizar agendamento. Verifique data e hora.');
-        }
-
-        throw updateError;
-      }
-
-      // Agora buscar os dados atualizados com JOIN
-      const { data: updatedAppointment, error: selectError } = await supabase
-        .from('appointments')
-        .select(`
-          *,
-          patients!inner(
-            id,
-            full_name,
-            phone,
-            email
-          )
-        `)
-        .eq('id', appointmentId)
-        .single();
-
-      if (selectError) {
-        logger.error('Erro ao buscar agendamento atualizado', selectError, 'useAppointments');
-        throw new Error('Erro ao buscar dados atualizados do agendamento.');
-      }
-
-      // Verificar se o agendamento foi encontrado
-      if (!updatedAppointment) {
-        throw new Error('Agendamento não encontrado após atualização');
-      }
-
-      const transformedAppointment: AppointmentBase = {
-        id: updatedAppointment.id,
-        patientId: updatedAppointment.patient_id,
-        patientName: updatedAppointment.patients?.full_name || updatedAppointment.patients?.name || 'Paciente não identificado',
-        phone: updatedAppointment.patients?.phone || '',
-        // Use local component parsing to avoid UTC offset issues
-        date: (() => {
-          const dateStr = updatedAppointment.date || updatedAppointment.appointment_date;
-          if (!dateStr) return new Date();
-          const [y, m, d] = dateStr.split('-').map(Number);
-          return new Date(y, m - 1, d, 12, 0, 0);
-        })(),
-        time: updatedAppointment.start_time || updatedAppointment.appointment_time,
-        duration: updatedAppointment.duration || 60,
-        type: updatedAppointment.type as AppointmentType,
-        status: updatedAppointment.status as AppointmentStatus,
-        notes: updatedAppointment.notes || '',
-        createdAt: new Date(updatedAppointment.created_at),
-        updatedAt: new Date(updatedAppointment.updated_at)
-      };
-
-      logger.info('Agendamento atualizado com sucesso', { appointmentId: transformedAppointment.id }, 'useAppointments');
-
-      // Se data/hora mudou, notificar reagendamento
-      if (updates.date || updates.appointment_date || updates.start_time || updates.appointment_time) {
-        AppointmentNotificationService.notifyReschedule(
-          transformedAppointment.id,
-          transformedAppointment.patientId,
-          transformedAppointment.date,
-          transformedAppointment.time,
-          transformedAppointment.patientName
-        );
-      }
-
-      return transformedAppointment;
+      return await AppointmentService.updateAppointment(appointmentId, updates, organizationId);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: appointmentKeys.list(profile?.organization_id) });
-      queryClient.setQueryData(
-        appointmentKeys.detail(data.id),
-        data
-      );
+      queryClient.invalidateQueries({ queryKey: appointmentKeys.detail(data.id) });
+
       toast({
         title: 'Sucesso',
         description: 'Agendamento atualizado com sucesso'
       });
     },
     onError: (error: Error) => {
-      logger.error('Erro ao atualizar agendamento', error, 'useAppointments');
-
-      let errorMessage = 'Não foi possível atualizar o agendamento.';
-
-      if (error.message === 'Conflito de horário') {
-        errorMessage = 'Já existe um agendamento neste horário.';
-      } else if (error.message.includes('Organização não encontrada')) {
-        errorMessage = 'Organização não encontrada. Você precisa estar vinculado a uma organização.';
-      } else if (error.message.includes('não autenticado')) {
-        errorMessage = 'Sessão expirada. Por favor, faça login novamente.';
-      } else if (error.message.includes('Dados inválidos')) {
-        errorMessage = error.message;
-      }
-
-      toast({
-        title: error.message === 'Conflito de horário' ? 'Conflito de Horário' : 'Erro',
-        description: errorMessage,
-        variant: 'destructive'
-      });
+      ErrorHandler.handle(error, 'useUpdateAppointment');
     }
   });
 }
@@ -866,78 +471,29 @@ export function useUpdateAppointment() {
 export function useDeleteAppointment() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { profile } = useAuth();
 
   return useMutation({
     mutationFn: async (appointmentId: string) => {
-      if (!appointmentId) {
-        throw new Error('ID do agendamento é obrigatório');
-      }
-
-      // Obter organization_id para garantir segurança
-      const organizationId = await requireUserOrganizationId();
-
-      // Buscar dados do agendamento antes de deletar (para notificação)
-      const currentAppointments = queryClient.getQueryData<AppointmentsQueryResult>(appointmentKeys.list())?.data || [];
-      const appointment = currentAppointments.find(apt => apt.id === appointmentId);
-
-      const { error } = await supabase
-        .from('appointments')
-        .delete()
-        .eq('id', appointmentId)
-        .eq('organization_id', organizationId); // Garantir que só deleta da própria organização
-
-      if (error) {
-        logger.error('Erro ao deletar agendamento', error, 'useAppointments');
-
-        if (error.message?.includes('violates row-level security')) {
-          throw new Error('Você não tem permissão para deletar este agendamento.');
-        }
-        if (error.code === 'PGRST116') {
-          throw new Error('Agendamento não encontrado ou já foi deletado.');
-        }
-
-        throw error;
-      }
-
-      // Notificar cancelamento se encontrou os dados
-      if (appointment) {
-        AppointmentNotificationService.notifyCancellation(
-          appointment.id,
-          appointment.patientId,
-          appointment.date,
-          appointment.time,
-          appointment.patientName
-        );
-      }
-
+      const organizationId = profile?.organization_id || await requireUserOrganizationId();
+      await AppointmentService.deleteAppointment(appointmentId, organizationId);
       return appointmentId;
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: (deletedId) => {
+      // Invalidate both list and detail queries
       queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
-      // Otimistic update: remover da cache imediatamente
-      queryClient.setQueryData(
-        appointmentKeys.list(),
-        (old: AppointmentsQueryResult | undefined) => ({
-          ...old,
-          data: (old?.data || []).filter(apt => apt.id !== variables.appointmentId)
-        })
-      );
+      queryClient.removeQueries({ queryKey: appointmentKeys.detail(deletedId) });
+
       toast({
         title: 'Sucesso',
         description: 'Agendamento excluído com sucesso'
       });
     },
-    onError: (error) => {
-      logger.error('Erro ao excluir agendamento', error, 'useAppointments');
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível excluir o agendamento',
-        variant: 'destructive'
-      });
+    onError: (error: Error) => {
+      ErrorHandler.handle(error, 'useDeleteAppointment');
     }
   });
 }
-
 // Update appointment status
 export function useUpdateAppointmentStatus() {
   const queryClient = useQueryClient();

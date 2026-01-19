@@ -31,7 +31,7 @@ interface Template {
     description: string;
     category: string;
     content: Record<string, unknown>;
-    isActive: boolean;
+    is_active: boolean;
 }
 
 export const EvaluationTemplateManager = () => {
@@ -163,7 +163,7 @@ export const EvaluationTemplateManager = () => {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {templates.map((template: Template) => (
+                            {(templates as Template[]).map((template: Template) => (
                                 <TableRow key={template.id}>
                                     <TableCell className="font-medium">{template.title}</TableCell>
                                     <TableCell>

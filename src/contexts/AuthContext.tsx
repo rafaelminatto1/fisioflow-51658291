@@ -15,6 +15,7 @@ interface AuthContextType {
   initialized: boolean;
   sessionCheckFailed: boolean;
   role?: UserRole;
+  organizationId?: string;
   signIn: (email: string, password: string, remember?: boolean) => Promise<{ error?: AuthError | null }>;
   signUp: (data: RegisterFormData) => Promise<{ error?: AuthError | null; user?: User | null }>;
   signOut: () => Promise<void>;

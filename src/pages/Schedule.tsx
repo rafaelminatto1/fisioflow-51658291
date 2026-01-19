@@ -392,7 +392,7 @@ const Schedule = () => {
   }
 
   return (
-    <MainLayout fullWidth showBreadcrumbs={false}>
+    <MainLayout fullWidth noPadding showBreadcrumbs={false}>
       <div className="flex flex-col min-h-[calc(100vh-64px)] bg-slate-50 dark:bg-slate-950">
 
         {/* Offline Cache Indicator */}
@@ -485,7 +485,7 @@ const Schedule = () => {
           />
 
           {/* Calendar Area */}
-          <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950 p-2 md:p-6 pt-2 md:pt-4">
+          <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950">
             <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950 relative min-h-[600px]">
               <Suspense fallback={<LoadingSkeleton type="card" rows={3} className="h-full w-full" />}>
                 <CalendarView

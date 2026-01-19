@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { DataProvider } from "@/contexts/DataContext";
+
 import App from "./App.tsx";
 import "./index.css";
 import { initSentry } from "@/lib/sentry/config";
@@ -53,7 +53,7 @@ if ('serviceWorker' in navigator) {
 if (import.meta.env.DEV) {
   // Adicionar timestamp para evitar cache em dev
   const originalFetch = window.fetch;
-  window.fetch = function(input, init) {
+  window.fetch = function (input, init) {
     const url = typeof input === 'string' ? input : input.url;
     if (url.includes('/sw.js')) {
       // Adicionar timestamp para SW em dev
@@ -71,8 +71,6 @@ if (import.meta.env.DEV) {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <DataProvider>
-      <App />
-    </DataProvider>
+    <App />
   </StrictMode>
 );

@@ -12,7 +12,7 @@ const OriginalNode = global.Node
 if (typeof document !== 'undefined') {
   // Ensure document.activeElement works properly
   Object.defineProperty(document, 'activeElement', {
-    get: function() {
+    get: function () {
       return document.body || null
     },
     configurable: true
@@ -24,7 +24,7 @@ if (typeof document !== 'undefined') {
       static ELEMENT_NODE = 1
       static TEXT_NODE = 3
       static DOCUMENT_NODE = 9
-    }
+    } as any
   }
 }
 
@@ -137,7 +137,7 @@ Object.defineProperty(global, 'Notification', {
 
 Object.defineProperty(global, 'window', {
   value: {
-    PushManager: class MockPushManager {},
+    PushManager: class MockPushManager { },
     atob: vi.fn((str) => str),
     btoa: vi.fn((str) => str),
     addEventListener: vi.fn(),

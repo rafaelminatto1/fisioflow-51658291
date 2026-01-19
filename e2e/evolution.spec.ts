@@ -4,48 +4,83 @@ import { testUsers } from './fixtures/test-data';
 
 test.describe('Evolução SOAP (Mocked)', () => {
     test.beforeEach(async ({ page }) => {
-        // Debug Logging
-        page.on('console', msg => console.log('BROWSER LOG:', msg.text()));
+        // Debug setup
+        page.on('console', msg => {
+            if (!msg.text().includes('[vite]')) console.log('BROWSER LOG:', msg.text());
+        });
         page.on('pageerror', err => console.log('BROWSER ERROR:', err));
-        page.on('request', req => console.log('>> ' + req.method() + ' ' + req.url()));
-        page.on('response', res => {
-            if (res.status() >= 400) console.log('<< ERROR ' + res.status() + ' ' + res.url());
+        page.on('response', resp => {
+            if (resp.status() >= 400 && resp.status() !== 401) { // 401 might happen for non-essential assets
+                console.log(`RESPONSE ERROR ${resp.status()}:`, resp.url());
+            }
         });
 
-        // 1. Generic Catch-all mocks (Last resort)
-        await page.route('**/rest/v1/**', async route => route.fulfill({ json: [] }));
-        await page.route('**/auth/v1/**', async route => route.fulfill({ json: {} }));
-        await page.route('**/functions/v1/**', async route => route.fulfill({ json: { message: 'mock' } }));
+        // --- CONSTANTS ---
+        const validUserId = '123e4567-e89b-12d3-a456-426614174000';
+        const validPatientId = '123e4567-e89b-12d3-a456-426614174001';
+        const validApptId = '123e4567-e89b-12d3-a456-426614174002';
+        const validOrgId = '123e4567-e89b-12d3-a456-426614174003';
 
-        // Mock Data
+        // --- MOCKS SETUP ---
+        await page.route('**/rest/v1/**', async route => {
+            await route.fulfill({ json: [] });
+        });
+        await page.route('**/functions/v1/**', async route => {
+            await route.fulfill({ json: { message: 'ok' } });
+        });
+
+        // Auth Mocks
+        const mockUser = {
+            id: validUserId,
+            aud: 'authenticated',
+            role: 'authenticated',
+            email: 'admin@test.com',
+            app_metadata: { provider: 'email' },
+            user_metadata: { full_name: 'Admin Tester' },
+            created_at: new Date().toISOString(),
+        };
+
+        const mockSession = {
+            access_token: 'fake-jwt-token',
+            token_type: 'bearer',
+            expires_in: 3600,
+            refresh_token: 'fake-refresh-token',
+            user: mockUser
+        };
+
+        await page.route('**/auth/v1/token?*', async route => route.fulfill({ json: mockSession }));
+        await page.route('**/auth/v1/user*', async route => route.fulfill({ json: mockUser }));
+
+        // Data Mocks
         const mockPatient = {
-            id: 'patient-123',
+            id: validPatientId,
             name: 'Paciente Mock',
             email: 'mock@teste.com'
         };
 
         const mockAppointment = {
-            id: 'appt-123',
-            patient_id: 'patient-123',
-            organization_id: 'org-123',
-            start_time: '2024-01-01T10:00:00',
-            end_time: '2024-01-01T11:00:00',
+            id: validApptId,
+            patient_id: validPatientId,
+            organization_id: validOrgId,
+            start_time: new Date().toISOString(),
+            end_time: new Date(Date.now() + 3600000).toISOString(),
             status: 'agendado',
+            notes: JSON.stringify({ soap: {}, exercises: [] }),
             patients: mockPatient
         };
 
-        // 2. Specific Mocks (Override generics)
+        // API Routes
         await page.route('**/rest/v1/appointments*', async route => {
             const method = route.request().method();
             const url = route.request().url();
 
             if (method === 'PATCH') {
-                await route.fulfill({ json: { ...mockAppointment, status: 'Realizado' } });
+                await route.fulfill({ json: [{ ...mockAppointment, status: 'Realizado' }] });
                 return;
             }
 
             if (method === 'GET' || method === 'HEAD') {
-                if (url.includes('id=eq.appt-123')) {
+                if (url.includes(`id=eq.${validApptId}`)) {
                     await route.fulfill({ json: mockAppointment });
                 } else {
                     await route.fulfill({
@@ -62,22 +97,39 @@ test.describe('Evolução SOAP (Mocked)', () => {
             await route.fulfill({ json: mockPatient });
         });
 
-        // Profiles
         await page.route('**/rest/v1/profiles*', async route => {
-            await route.fulfill({ json: { id: testUsers.admin.email, role: 'admin', full_name: 'Admin Tester' } });
+            await route.fulfill({ json: { id: validUserId, organization_id: validOrgId, role: 'admin', full_name: 'Admin Tester' } });
         });
 
-        // Organizations
-        await page.route('**/rest/v1/organizations*', async route => route.fulfill({ json: [{ id: 'org-123', name: 'Org Mock' }] }));
-        await page.route('**/rest/v1/organization_members*', async route => route.fulfill({ json: [{ organization_id: 'org-123', role: 'admin' }] }));
+        await page.route('**/rest/v1/organizations*', async route => route.fulfill({ json: [{ id: validOrgId, name: 'Org Mock' }] }));
+        await page.route('**/rest/v1/organization_members*', async route => route.fulfill({ json: [{ organization_id: validOrgId, role: 'admin' }] }));
 
-        // Login (navigation only, requests mocked)
+        // SOAP RECORDS MOCK
+        await page.route('**/rest/v1/soap_records*', async route => {
+            console.log('MOCK SOAP RECORD HIT:', route.request().method(), route.request().url());
+            if (route.request().method() === 'POST') {
+                const body = route.request().postDataJSON();
+                console.log('MOCK POST BODY:', JSON.stringify(body));
+                await route.fulfill({
+                    status: 201,
+                    json: [{ id: 'soap-new-1', ...body }]
+                });
+            } else {
+                await route.fulfill({ json: [] });
+            }
+        });
+
+        // Ancillary Tables
+        const ancillaryTables = [
+            'patient_surgeries', 'patient_pathologies', 'patient_goals',
+            'mandatory_tests', 'patient_test_exceptions', 'treatment_sessions'
+        ];
+        for (const table of ancillaryTables) {
+            await page.route(`**/rest/v1/${table}*`, async route => route.fulfill({ json: [] }));
+        }
+
+        // Navigation
         await page.goto('/auth');
-        // We might need to mock the login call specifically if it uses Supabase Auth SDK which calls /auth/v1/token
-        // But the previous run showed login worked (or at least navigated away).
-        // If we mock auth, we might bypass real auth logic?
-        // The test fills inputs and clicks submit.
-        // If we mock /auth/v1/token to return success, then we are good.
         await page.fill('input[type="email"]', testUsers.admin.email);
         await page.fill('input[type="password"]', testUsers.admin.password);
         await page.click('button[type="submit"]');
@@ -85,22 +137,53 @@ test.describe('Evolução SOAP (Mocked)', () => {
     });
 
     test('deve carregar dados do agendamento e salvar evolução', async ({ page }) => {
-        // Navegar direto para a URL de evolução com ID mockado
-        await page.goto('/session-evolution/appt-123');
+        const validApptId = '123e4567-e89b-12d3-a456-426614174002';
+        await page.goto(`/session-evolution/${validApptId}`);
 
-        // Verificar carregamento
+        await expect(page.locator('.lucide-loader-2')).toBeHidden({ timeout: 15000 });
         await expect(page.locator('text=Evolução de Sessão')).toBeVisible({ timeout: 10000 });
 
-        // Preencher SOAP
-        await page.fill('textarea[name="subjective"], textarea[placeholder*="Subjetivo"]', 'Paciente relata dor nível 2.');
-        await page.fill('textarea[name="objective"], textarea[placeholder*="Objetivo"]', 'Exercícios de fortalecimento realizados.');
-        await page.fill('textarea[name="assessment"], textarea[placeholder*="Avaliação"]', 'Melhora consistente.');
-        await page.fill('textarea[name="plan"], textarea[placeholder*="Plano"]', 'Manter plano.');
+        // Fill Form
+        await page.fill('textarea[placeholder*="Queixas do paciente"]', 'Teste Subjetivo');
+        await page.fill('textarea[placeholder*="Achados clínicos"]', 'Teste Objetivo');
+        await page.fill('textarea[placeholder*="Análise clínica"]', 'Teste Avaliação');
+        await page.fill('textarea[placeholder*="Conduta, exercícios"]', 'Teste Plano');
 
-        // Salvar
-        await page.click('button:has-text("Salvar Evolução")');
+        // Click Save
+        const saveButtons = page.locator('button', { hasText: 'Salvar Evolução' });
+        const count = await saveButtons.count();
+        // Removed console.log
 
-        // Verificar feedback de sucesso
-        await expect(page.locator('text=Evolução salva')).toBeVisible();
+        if (count === 0) throw new Error('Botão Salvar Evolução não encontrado!');
+
+        if (count < 2) { /* Removed console.warn */ }
+
+        // Removed console.log
+        await saveButtons.last().click({ force: true });
+
+        // Wait for potential toast
+        await page.waitForTimeout(1000);
+
+        try {
+            await expect(page.locator('text=Evolução salva').first()).toBeVisible({ timeout: 10000 });
+        } catch (e) {
+            // Removed console.error
+            // Dump all toasts
+            const toasts = page.locator('[role="status"], .toast, [data-sonner-toast]');
+            const toastCount = await toasts.count();
+            if (toastCount > 0) {
+                for (let i = 0; i < toastCount; i++) {
+                    // Removed console.error
+                }
+            } else {
+                // Removed console.error
+            }
+
+            // Dump body start
+            const bodyText = await page.textContent('body');
+            // Removed console.error
+
+            throw e;
+        }
     });
 });

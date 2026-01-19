@@ -40,6 +40,8 @@ interface MainLayoutProps {
   fullWidth?: boolean;
   /** Control max-width granularity: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '7xl' | 'full' */
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '7xl' | 'full';
+  /** Remove all main content padding for flush full-width layouts */
+  noPadding?: boolean;
 }
 
 export const MainLayout: React.FC<MainLayoutProps> = ({
@@ -48,6 +50,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   customBreadcrumbLabels,
   fullWidth = false,
   maxWidth,
+  noPadding = false,
 }) => {
   const { profile, loading, getDisplayName, getInitials } = useUserProfile();
   const navigate = useNavigate();
@@ -179,7 +182,12 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
           id="main-content"
           tabIndex={-1}
           aria-label="Conteúdo principal"
-          className="flex-1 p-3 xs:p-4 sm:p-6 md:p-8 pt-[60px] md:pt-8 pb-24 md:pb-8 overflow-x-hidden bg-gray-50/50 dark:bg-background/50"
+          className={cn(
+            "flex-1 overflow-x-hidden bg-gray-50/50 dark:bg-background/50",
+            noPadding
+              ? "pt-[60px] md:pt-0 pb-24 md:pb-0"
+              : "p-3 xs:p-4 sm:p-6 md:p-8 pt-[60px] md:pt-8 pb-24 md:pb-8"
+          )}
         >
           <div className={cn(
             "mx-auto transition-all duration-300",

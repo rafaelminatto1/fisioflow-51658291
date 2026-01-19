@@ -10,18 +10,18 @@
  * @module hooks/usePatients
  */
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/errors/logger';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect } from 'react';
 import { PatientSchema, type Patient } from '@/schemas/patient';
 import { patientsCacheService } from '@/lib/offline/PatientsCacheService';
+import { ErrorHandler } from '@/lib/errors/ErrorHandler';
+import { PatientService } from '@/services/patientService';
 import {
-  PATIENT_SELECT,
   PATIENT_QUERY_CONFIG,
   devValidate,
-  getPatientName,
   type PatientDBStandard
 } from '@/lib/constants/patient-queries';
 import {
@@ -35,60 +35,7 @@ import {
 // MAPPING FUNCTIONS
 // ==============================================================================
 
-/**
- * Map database patient record to application Patient type
- */
-function mapPatientToApp(dbPatient: PatientDBStandard): Patient {
-  return {
-    id: dbPatient.id,
-    name: getPatientName(dbPatient),
-    email: dbPatient.email ?? undefined,
-    phone: dbPatient.phone ?? undefined,
-    cpf: dbPatient.cpf ?? undefined,
-    birthDate: dbPatient.birth_date ?? new Date().toISOString(),
-    gender: 'outro' as const,
-    mainCondition: dbPatient.observations ?? '',
-    status: (dbPatient.status === 'active' ? 'Em Tratamento' : 'Inicial'),
-    progress: 0,
-    incomplete_registration: dbPatient.incomplete_registration ?? false,
-    createdAt: dbPatient.created_at ?? new Date().toISOString(),
-    updatedAt: dbPatient.updated_at ?? new Date().toISOString(),
-  };
-}
 
-/**
- * Validate and map multiple patients from database
- */
-function mapPatientsFromDB(dbPatients: PatientDBStandard[] | null | undefined): Patient[] {
-  if (!dbPatients || dbPatients.length === 0) return [];
-
-  const validPatients: Patient[] = [];
-
-  for (const dbPatient of dbPatients) {
-    try {
-      const mapped = mapPatientToApp(dbPatient);
-      const result = PatientSchema.safeParse(mapped);
-
-      if (result.success) {
-        validPatients.push(result.data);
-      } else {
-        logger.warn(
-          `Paciente inválido ignorado: ${dbPatient.id}`,
-          { error: result.error.format() },
-          'usePatients'
-        );
-      }
-    } catch (error) {
-      logger.error(
-        `Erro ao mapear paciente ${dbPatient.id}`,
-        error,
-        'usePatients'
-      );
-    }
-  }
-
-  return validPatients;
-}
 
 // ==============================================================================
 // HOOKS
@@ -165,19 +112,12 @@ export const useActivePatients = () => {
       devValidate(PATIENT_SELECT.standard);
 
       try {
-        // Build and execute query
-        let query = supabase
-          .from('patients')
-          .select<PatientDBStandard>(PATIENT_SELECT.standard)
-          .in('status', ['active']);
-
-        if (organizationId) {
-          query = query.eq('organization_id', organizationId);
-        }
+        // Build and execute query via Service
+        const query = await PatientService.getActivePatients(organizationId);
 
         const { data, error } = await retryWithBackoff(
           () => withTimeout(
-            query.order('created_at', { ascending: false }),
+            query,
             PATIENT_QUERY_CONFIG.timeout
           ),
           {
@@ -189,7 +129,7 @@ export const useActivePatients = () => {
         if (error) throw error;
 
         // Transform data
-        const validPatients = mapPatientsFromDB(data);
+        const validPatients = PatientService.mapPatientsFromDB(data);
 
         // Save to cache for offline use
         if (validPatients.length > 0) {
@@ -271,19 +211,93 @@ export const usePatientById = (id: string | undefined) => {
 
       devValidate(PATIENT_SELECT.standard);
 
-      const { data, error } = await supabase
-        .from('patients')
-        .select<PatientDBStandard>(PATIENT_SELECT.standard)
-        .eq('id', id)
-        .maybeSingle();
+      const { data, error } = await PatientService.getPatientById(id);
 
       if (error) throw error;
       if (!data) return null;
 
-      const patients = mapPatientsFromDB([data]);
+      const patients = PatientService.mapPatientsFromDB([data]);
       return patients[0] ?? null;
     },
     enabled: !!id,
     staleTime: PATIENT_QUERY_CONFIG.staleTimeLong,
+  });
+};
+
+/**
+ * Hook for creating a new patient
+ */
+export const useCreatePatient = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (patient: any) => {
+      const { data, error } = await PatientService.createPatient(patient);
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
+      toast({
+        title: 'Paciente cadastrado',
+        description: 'O paciente foi cadastrado com sucesso.',
+      });
+    },
+    onError: (error: Error) => {
+      ErrorHandler.handle(error, 'useCreatePatient');
+    },
+  });
+};
+
+/**
+ * Hook for updating an existing patient
+ */
+export const useUpdatePatient = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: any & { id: string }) => {
+      const { data, error } = await PatientService.updatePatient(id, updates);
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
+      queryClient.invalidateQueries({ queryKey: ['patient', variables.id] });
+      toast({
+        title: 'Paciente atualizado',
+        description: 'As informações foram atualizadas com sucesso.',
+      });
+    },
+    onError: (error: Error) => {
+      ErrorHandler.handle(error, 'useUpdatePatient');
+    },
+  });
+};
+
+/**
+ * Hook for deleting a patient
+ */
+export const useDeletePatient = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (patientId: string) => {
+      const { error } = await PatientService.deletePatient(patientId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patients'] });
+      toast({
+        title: 'Paciente excluído',
+        description: 'O paciente foi removido com sucesso.',
+      });
+    },
+    onError: (error: Error) => {
+      ErrorHandler.handle(error, 'useDeletePatient');
+    },
   });
 };

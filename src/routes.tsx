@@ -83,7 +83,9 @@ const OrganizationSettings = lazy(() => import(/* webpackChunkName: "admin-organ
 const Admin = lazy(() => import(/* webpackChunkName: "admin-analytics" */ "./pages/Admin"));
 const AdvancedAnalytics = lazy(() => import(/* webpackChunkName: "analytics-advanced" */ "./pages/AdvancedAnalytics"));
 const CohortAnalysis = lazy(() => import(/* webpackChunkName: "analytics-cohorts" */ "./pages/CohortAnalysis"));
-const ApiDocs = lazy(() => import(/* webpackChunkName: "api-docs" */ "./pages/ApiDocs"));
+// const ApiDocs = lazy(() => import(/* webpackChunkName: "api-docs" */ "./pages/ApiDocs"));
+
+// <Route path="/api-docs" element={<ProtectedRoute><ApiDocs /></ProtectedRoute>} />
 
 // Gamification
 const PatientGamificationPage = lazy(() => import(/* webpackChunkName: "gamification-patient" */ "./pages/PatientGamificationPage"));
@@ -150,7 +152,7 @@ export function AppRoutes() {
             <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-            <Route path="/api-docs" element={<ProtectedRoute><ApiDocs /></ProtectedRoute>} />
+            {/* <Route path="/api-docs" element={<ProtectedRoute><ApiDocs /></ProtectedRoute>} /> */}
             {/* Mobile route disabled - PatientApp not implemented */}
             <Route path="/medical-record" element={<ProtectedRoute><MedicalRecord /></ProtectedRoute>} />
             <Route path="/smart-ai" element={<ProtectedRoute><SmartAI /></ProtectedRoute>} />

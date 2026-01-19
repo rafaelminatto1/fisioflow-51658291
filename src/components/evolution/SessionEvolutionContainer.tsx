@@ -46,14 +46,17 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [patient, setPatient] = useState<Record<string, unknown> | null>(null);
+
+  const [patient, setPatient] = useState<any | null>(null);
+
   const [, setAppointment] = useState<Record<string, unknown> | null>(null);
   const [activeTab, setActiveTab] = useState('evolution');
 
   // Patient data
-  const [surgeries, setSurgeries] = useState<Record<string, unknown>[]>([]);
-  const [pathologies, setPathologies] = useState<Record<string, unknown>[]>([]);
-  const [goals, setGoals] = useState<Record<string, unknown>[]>([]);
+  // Using any[] to avoid strict type conflicts with child components that expect specific interfaces
+  const [surgeries, setSurgeries] = useState<any[]>([]);
+  const [pathologies, setPathologies] = useState<any[]>([]);
+  const [goals, setGoals] = useState<any[]>([]);
 
   // SOAP Form State
   const [soapData, setSoapData] = useState({
@@ -95,7 +98,8 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
         if (appointmentError) throw appointmentError;
 
         setAppointment(appointmentData);
-        setPatient(appointmentData.patients);
+        // Cast to any to handle the joined data structure which TS/Supabase might strictly type as array or single depending on query
+        setPatient(appointmentData.patients as any);
         currentPatientId = appointmentData.patient_id;
         setPatientId(currentPatientId);
 
@@ -489,6 +493,8 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
                   patientId={patientId}
                   data={soapData}
                   onChange={handleSoapChange}
+                  onSave={handleSave}
+                  isSaving={isSaving}
                 />
               )}
             </CardContent>

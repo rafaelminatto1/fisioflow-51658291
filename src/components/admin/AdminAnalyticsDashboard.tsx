@@ -32,7 +32,7 @@ import {
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import {
   AreaChart,
@@ -199,7 +199,7 @@ function useAdminAnalytics() {
         // Only keep the most recent risk score per patient
         const existing = riskMap.get(r.patient_id);
         if (!existing || new Date(r.calculated_at) > new Date(existing.calculated_at)) {
-          riskMap.set(r.patient_id, r);
+          riskMap.set(r.patient_id, r as any);
         }
       });
 
@@ -1066,8 +1066,8 @@ export function AdminAnalyticsDashboard({ className }: AdminAnalyticsDashboardPr
                                 className={cn(
                                   'h-full transition-all',
                                   patient.overall_progress >= 75 ? 'bg-green-500' :
-                                  patient.overall_progress >= 50 ? 'bg-yellow-500' :
-                                  patient.overall_progress >= 25 ? 'bg-orange-500' : 'bg-red-500'
+                                    patient.overall_progress >= 50 ? 'bg-yellow-500' :
+                                      patient.overall_progress >= 25 ? 'bg-orange-500' : 'bg-red-500'
                                 )}
                                 style={{ width: `${patient.overall_progress}%` }}
                               />
@@ -1129,7 +1129,7 @@ export function AdminAnalyticsDashboard({ className }: AdminAnalyticsDashboardPr
                                   {patient.last_session
                                     ? format(new Date(patient.last_session), 'dd/MM/yyyy', { locale: ptBR })
                                     : 'N/A'}
-                                  </p>
+                                </p>
                               </div>
                             </div>
                           </td>

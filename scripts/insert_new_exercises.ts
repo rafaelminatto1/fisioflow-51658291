@@ -15,132 +15,121 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const newExercises = [
-    // Batch 16 - Sports Physio & Mobility Exercises
+    // Batch 21 - Plyometrics & Advanced Core
     {
-        id: 'c3ba30fe-9684-463b-a7cc-565ec0650b48',
-        name: 'Afundo Lateral',
-        description: 'Passo lateral profundo com uma perna flexionada e outra estendida. Trabalha adutores, glúteos e quadríceps.',
-        category: 'Fortalecimento',
+        id: '9fa43615-8b6e-49cc-ad58-577298bfa2dd',
+        name: 'Depth Jump (Salto Profundo)',
+        description: 'Cair de uma caixa e saltar verticalmente o mais alto possível imediatamente após o contato com o solo. Potência reativa.',
+        category: 'Pliometria',
+        difficulty: 'Avançado',
+        body_parts: ['Pernas', 'Glúteos'],
+        equipment: ['Box Pliométrico'],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    },
+    {
+        id: 'd6042be1-f9e7-443c-aa79-39e64960f113',
+        name: 'Salto Unilateral na Caixa',
+        description: 'Saltar para cima de uma caixa utilizando apenas uma perna. Desenvolvimento de força e potência unilateral.',
+        category: 'Pliometria',
+        difficulty: 'Avançado',
+        body_parts: ['Pernas', 'Glúteos'],
+        equipment: ['Box Pliométrico'],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    },
+    {
+        id: '95dd2a2c-5fe2-40ed-b57d-ace308a859cf',
+        name: 'Salto Horizontal (Broad Jump)',
+        description: 'Salto em distância parado, focando em máxima extensão de quadril e aterrissagem controlada.',
+        category: 'Pliometria',
         difficulty: 'Intermediário',
-        body_parts: ['Quadril', 'Adutores', 'Quadríceps'],
+        body_parts: ['Pernas', 'Glúteos'],
         equipment: ['Peso Corporal'],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
     },
     {
-        id: '91f3e5c9-ac80-48e6-8da0-0049f7fc2c35',
-        name: 'Hip Airplane',
-        description: 'Exercício de equilíbrio unipodal com rotação de tronco. Trabalha estabilidade de quadril e propriocepção.',
-        category: 'Propriocepção',
+        id: '3a914408-ff33-4924-a853-9a833151463c',
+        name: 'Tuck Jump (Salto Grupard)',
+        description: 'Saltar verticalmente puxando os joelhos em direção ao peito no ponto mais alto. Potência explosiva.',
+        category: 'Pliometria',
         difficulty: 'Avançado',
-        body_parts: ['Quadril', 'Core', 'Glúteos'],
+        body_parts: ['Pernas', 'Core'],
         equipment: ['Peso Corporal'],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
     },
     {
-        id: '2203b17a-f256-48eb-a023-53d82198e71e',
-        name: 'Pallof Press',
-        description: 'Pressão anti-rotacional com cabo ou elástico. Fortalece core e estabilizadores de tronco.',
-        category: 'Fortalecimento',
+        id: '1b2fed47-b1f8-4caa-9200-43664eb9deeb',
+        name: 'Medicine Ball Slam',
+        description: 'Arremessar a bola medicinal contra o chão com força total, utilizando o corpo todo. Potência e core.',
+        category: 'Potência',
         difficulty: 'Intermediário',
-        body_parts: ['Core', 'Abdômen'],
-        equipment: ['Faixa Elástica', 'Cabo'],
+        body_parts: ['Core', 'Ombros', 'Dorsal'],
+        equipment: ['Medicine Ball'],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
     },
     {
-        id: 'b6488dc0-fb26-43ee-ad99-d701bef53963',
-        name: 'Stiff Unilateral',
-        description: 'Levantamento terra romeno em uma perna. Trabalha isquiotibiais, glúteos e equilíbrio.',
+        id: 'bf9fd47a-e046-4f63-9565-b1bc49f7db87',
+        name: 'Elevação de Pernas na Barra',
+        description: 'Pendurado na barra, elevar as pernas estendidas até a altura do quadril ou tocar a barra (Toes to Bar).',
         category: 'Fortalecimento',
         difficulty: 'Avançado',
-        body_parts: ['Isquiotibiais', 'Glúteos', 'Core'],
-        equipment: ['Halter'],
+        body_parts: ['Abdômen', 'Flexores de Quadril'],
+        equipment: ['Barra Fixa'],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
     },
     {
-        id: 'dc502cfe-3831-465a-b39f-bd753f403608',
-        name: 'Passos Laterais com Faixa',
-        description: 'Passos laterais com faixa elástica nos tornozelos. Ativa glúteo médio.',
-        category: 'Fortalecimento',
-        difficulty: 'Iniciante',
-        body_parts: ['Glúteos', 'Quadril'],
-        equipment: ['Faixa Elástica'],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-    },
-    {
-        id: 'e8525045-eac8-4221-a9af-17bbdd63219b',
-        name: 'Rotação Torácica em 4 Apoios',
-        description: 'Rotação de coluna torácica em posição quadrúpede. Melhora mobilidade de tronco.',
-        category: 'Mobilidade',
-        difficulty: 'Iniciante',
-        body_parts: ['Coluna Torácica', 'Core'],
-        equipment: ['Colchonete'],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-    },
-    {
-        id: 'c5e5a7b1-e695-4ac5-98f9-7b3df1fdbaab',
-        name: 'Deslizamento de Calcanhar',
-        description: 'Deslizar calcanhar para flexionar joelho em decúbito dorsal. Exercício pós-operatório de joelho.',
-        category: 'Mobilidade',
-        difficulty: 'Iniciante',
-        body_parts: ['Joelho'],
-        equipment: ['Colchonete'],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-    },
-    {
-        id: '5d4e9e60-72c7-4646-acb6-77bfcef7869a',
-        name: 'Marcha Supina de Quadril',
-        description: 'Movimento de marcha alternando pernas em decúbito dorsal. Fortalece flexores de quadril.',
-        category: 'Fortalecimento',
-        difficulty: 'Iniciante',
-        body_parts: ['Quadril', 'Core'],
-        equipment: ['Colchonete'],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-    },
-    {
-        id: 'af498abc-e4d5-4014-8f05-d131e83e6309',
-        name: 'Agachamento Búlgaro',
-        description: 'Agachamento unilateral com pé traseiro elevado. Trabalha quadríceps, glúteos e equilíbrio.',
+        id: '49b385fb-7f5f-444b-b749-58e2c5195bea',
+        name: 'Ab Wheel Rollout',
+        description: 'Ajoelhado, rolar a roda abdominal para frente estendendo o tronco e retornar controlado. Anti-extensão intensa.',
         category: 'Fortalecimento',
         difficulty: 'Avançado',
-        body_parts: ['Quadríceps', 'Glúteos', 'Quadril'],
-        equipment: ['Banco ou Cadeira'],
+        body_parts: ['Core'],
+        equipment: ['Roda Abdominal'],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
     },
     {
-        id: 'bea028c5-24f8-4f05-95fa-f9df68cfa6f8',
-        name: 'Cobra Prona',
-        description: 'Elevação de tronco e braços em decúbito ventral. Fortalece extensores de coluna e escápula.',
+        id: 'a4759e6b-2570-49cd-97a7-9b48a8b211bc',
+        name: 'Hollow Rock (Canoa)',
+        description: 'Posição de canoa (lombar no chão, braços e pernas estendidos fora do chão), balançando o corpo em bloco.',
+        category: 'Isometria',
+        difficulty: 'Avançado',
+        body_parts: ['Core'],
+        equipment: ['Peso Corporal'],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    },
+    {
+        id: '7ddcb9f0-daf5-4921-b29f-7a81faca8014',
+        name: 'V-Up (Abdominal Canivete)',
+        description: 'Simultaneamente elevar tronco e pernas estendidas, tocando os pés no topo do movimento.',
         category: 'Fortalecimento',
-        difficulty: 'Iniciante',
-        body_parts: ['Costas', 'Ombro'],
-        equipment: ['Colchonete'],
+        difficulty: 'Avançado',
+        body_parts: ['Abdômen'],
+        equipment: ['Peso Corporal'],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
     },
     {
-        id: '647b66fe-d57e-41dd-8107-abe7d008a81f',
-        name: 'Alongamento 90-90',
-        description: 'Alongamento de rotação de quadril sentado com pernas em 90 graus. Mobilidade de quadril.',
-        category: 'Mobilidade',
-        difficulty: 'Intermediário',
-        body_parts: ['Quadril'],
-        equipment: ['Colchonete'],
+        id: '85cb38c0-d365-41fe-893c-35093cb2d6f8',
+        name: 'L-Sit (Sustentação em L)',
+        description: 'Sustentar o peso do corpo nas mãos (chão ou paralelas) mantendo as pernas estendidas à frente em L.',
+        category: 'Isometria',
+        difficulty: 'Avançado',
+        body_parts: ['Core', 'Tríceps', 'Flexores de Quadril'],
+        equipment: ['Paralelas/Peso Corporal'],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
     }
 ];
 
 async function insertdata() {
-    console.log('Inserting new exercises (Batch 16)...');
+    console.log('Inserting new exercises (Batch 21)...');
     for (const exercise of newExercises) {
         const { error } = await supabase.from('exercises').upsert(exercise);
         if (error) {

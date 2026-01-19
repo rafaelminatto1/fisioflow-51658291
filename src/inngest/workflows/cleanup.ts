@@ -128,6 +128,52 @@ export const cleanupWorkflow = inngest.createFunction(
     })) as number;
     result.deletedRecords.incompleteSessions = sessionsResult;
 
+    // Step 5: Expire stale waitlist offers
+    const expiredOffersResult = (await step.run('expire-stale-waitlist-offers', async (): Promise<number> => {
+      const now = new Date().toISOString();
+
+      // Find all offers that have expired
+      const { data: expiredOffers, error: fetchError } = await supabase
+        .from('waitlist')
+        .select('id, refusal_count')
+        .eq('status', 'offered')
+        .lt('offer_expires_at', now);
+
+      if (fetchError) {
+        result.errors.push(`Expired offers fetch: ${fetchError.message}`);
+        return 0;
+      }
+
+      if (!expiredOffers || expiredOffers.length === 0) {
+        return 0;
+      }
+
+      // Process each expired offer - increment refusal count and return to waiting/remove
+      let processedCount = 0;
+      for (const offer of expiredOffers) {
+        const newRefusalCount = (offer.refusal_count || 0) + 1;
+        const newStatus = newRefusalCount >= 3 ? 'removed' : 'waiting';
+
+        const { error: updateError } = await supabase
+          .from('waitlist')
+          .update({
+            status: newStatus,
+            offered_slot: null,
+            offered_at: null,
+            offer_expires_at: null,
+            refusal_count: newRefusalCount,
+          })
+          .eq('id', offer.id);
+
+        if (!updateError) {
+          processedCount++;
+        }
+      }
+
+      return processedCount;
+    })) as number;
+    (result.deletedRecords as Record<string, number>).expiredWaitlistOffers = expiredOffersResult;
+
     // Log completion
     await step.run('log-cleanup-summary', async () => {
       console.log('Cleanup completed:', {
