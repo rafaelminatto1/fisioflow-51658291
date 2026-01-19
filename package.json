@@ -132,6 +132,7 @@
     "google-auth-library": "^10.5.0",
     "googleapis": "^170.0.0",
     "ical-generator": "^10.0.0",
+    "idb": "^8.0.3",
     "idb-keyval": "^6.2.2",
     "inngest": "^3.49.1",
     "input-otp": "^1.4.2",
