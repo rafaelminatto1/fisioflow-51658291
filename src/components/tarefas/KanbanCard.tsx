@@ -58,7 +58,7 @@ export function KanbanCard({ tarefa, index, onEdit, onDelete }: KanbanCardProps)
                   <Pencil className="h-4 w-4 mr-2" />
                   Editar
                 </DropdownMenuItem>
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => onDelete(tarefa.id)}
                   className="text-destructive focus:text-destructive"
                 >
@@ -107,8 +107,8 @@ export function KanbanCard({ tarefa, index, onEdit, onDelete }: KanbanCardProps)
                 {PRIORIDADE_LABELS[tarefa.prioridade]}
               </Badge>
 
-              {/* Due Date */}
-              {tarefa.data_vencimento && (
+              {/* Date Range or Due Date */}
+              {(tarefa.data_vencimento || tarefa.start_date) && (
                 <div
                   className={cn(
                     'flex items-center gap-1 text-[10px]',
@@ -118,7 +118,11 @@ export function KanbanCard({ tarefa, index, onEdit, onDelete }: KanbanCardProps)
                   )}
                 >
                   {isOverdue ? <Clock className="h-3 w-3" /> : <Calendar className="h-3 w-3" />}
-                  {format(new Date(tarefa.data_vencimento), 'dd MMM', { locale: ptBR })}
+                  <span>
+                    {tarefa.start_date && format(new Date(tarefa.start_date), 'dd/MM')}
+                    {tarefa.start_date && tarefa.data_vencimento && ' - '}
+                    {tarefa.data_vencimento && format(new Date(tarefa.data_vencimento), 'dd/MM')}
+                  </span>
                 </div>
               )}
             </div>

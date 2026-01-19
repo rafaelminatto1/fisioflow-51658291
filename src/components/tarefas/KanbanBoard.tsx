@@ -37,7 +37,11 @@ import {
 
 const STATUSES: TarefaStatus[] = ['A_FAZER', 'EM_PROGRESSO', 'REVISAO', 'CONCLUIDO'];
 
-export function KanbanBoard() {
+interface KanbanBoardProps {
+  projectId?: string;
+}
+
+export function KanbanBoard({ projectId }: KanbanBoardProps) {
   const { data: tarefas, isLoading } = useTarefas();
   const updateTarefa = useUpdateTarefa();
   const deleteTarefa = useDeleteTarefa();
@@ -58,10 +62,11 @@ export function KanbanBoard() {
       const matchesSearch = t.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
         t.descricao?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         t.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-      
-      const matchesPrioridade = filterPrioridade === 'ALL' || t.prioridade === filterPrioridade;
 
-      return matchesSearch && matchesPrioridade;
+      const matchesPrioridade = filterPrioridade === 'ALL' || t.prioridade === filterPrioridade;
+      const matchesProject = projectId ? t.project_id === projectId : true;
+
+      return matchesSearch && matchesPrioridade && matchesProject;
     });
 
     return STATUSES.reduce((acc, status) => {
@@ -70,7 +75,7 @@ export function KanbanBoard() {
         .sort((a, b) => a.order_index - b.order_index);
       return acc;
     }, {} as Record<TarefaStatus, Tarefa[]>);
-  }, [tarefas, searchTerm, filterPrioridade]);
+  }, [tarefas, searchTerm, filterPrioridade, projectId]);
 
   const handleDragEnd = async (result: DropResult) => {
     const { source, destination, draggableId } = result;
@@ -83,13 +88,13 @@ export function KanbanBoard() {
 
     // Create new arrays for source and destination
     const sourceTasks = [...(groupedTarefas[sourceStatus] || [])];
-    const destTasks = sourceStatus === destStatus 
-      ? sourceTasks 
+    const destTasks = sourceStatus === destStatus
+      ? sourceTasks
       : [...(groupedTarefas[destStatus] || [])];
 
     // Find the task being moved
     const [movedTask] = sourceTasks.splice(source.index, 1);
-    
+
     // Insert into destination
     if (sourceStatus === destStatus) {
       sourceTasks.splice(destination.index, 0, movedTask);
@@ -108,7 +113,7 @@ export function KanbanBoard() {
 
     // Update order indices
     const updates: Array<{ id: string; order_index: number }> = [];
-    
+
     if (sourceStatus === destStatus) {
       sourceTasks.forEach((t, i) => {
         if (t.order_index !== i) {
@@ -185,6 +190,7 @@ export function KanbanBoard() {
           onOpenChange={setModalOpen}
           tarefa={selectedTarefa}
           defaultStatus={defaultStatus}
+          defaultProjectId={projectId}
         />
       </>
     );
@@ -243,12 +249,12 @@ export function KanbanBoard() {
         </div>
       </DragDropContext>
 
-      {/* Task Modal */}
       <TarefaModal
         open={modalOpen}
         onOpenChange={setModalOpen}
         tarefa={selectedTarefa}
         defaultStatus={defaultStatus}
+        defaultProjectId={projectId}
       />
 
       {/* Delete Confirmation */}
