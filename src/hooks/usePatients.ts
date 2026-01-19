@@ -21,12 +21,11 @@ import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 import { PatientService } from '@/services/patientService';
 import {
   PATIENT_QUERY_CONFIG,
+  PATIENT_SELECT,
   devValidate,
   type PatientDBStandard
 } from '@/lib/constants/patient-queries';
 import {
-  withTimeout,
-  retryWithBackoff,
   isOnline,
   isNetworkError
 } from '@/lib/utils/query-helpers';
@@ -101,7 +100,7 @@ export const useActivePatients = () => {
     queryKey: ['patients', organizationId],
     queryFn: async () => {
       // Try cache first when offline
-      if (isOffline()) {
+      if (!isOnline()) {
         logger.info('Offline: Carregando pacientes do cache', { organizationId }, 'usePatients');
         const cacheResult = await patientsCacheService.getFromCache(organizationId);
         if (cacheResult.data.length > 0) {
@@ -116,19 +115,8 @@ export const useActivePatients = () => {
       devValidate(PATIENT_SELECT.standard);
 
       try {
-        // Build and execute query via Service
-        const query = await PatientService.getActivePatients(organizationId);
-
-        const { data, error } = await retryWithBackoff(
-          () => withTimeout(
-            query,
-            PATIENT_QUERY_CONFIG.timeout
-          ),
-          {
-            maxRetries: PATIENT_QUERY_CONFIG.maxRetries,
-            shouldRetry: isNetworkError
-          }
-        );
+        // Execute query via Service (getActivePatients returns a thenable query builder)
+        const { data, error } = await PatientService.getActivePatients(organizationId!);
 
         if (error) throw error;
 

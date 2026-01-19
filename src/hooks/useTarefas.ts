@@ -9,11 +9,19 @@ export interface Tarefa {
   status: 'A_FAZER' | 'EM_PROGRESSO' | 'REVISAO' | 'CONCLUIDO';
   prioridade: 'BAIXA' | 'MEDIA' | 'ALTA' | 'URGENTE';
   data_vencimento?: string;
+  hora_vencimento?: string;
+  start_date?: string; // For Gantt/Timeline
   responsavel_id?: string;
+  lead_id?: string;
   organization_id?: string;
   created_by?: string;
+  project_id?: string;
+  parent_id?: string;
   order_index: number;
   tags: string[];
+  checklist?: { id: string; text: string; completed: boolean }[];
+  attachments?: { id: string; url: string; name: string; type: string }[];
+  dependencies?: string[]; // IDs of tasks that must be completed before this one
   created_at: string;
   updated_at: string;
   responsavel?: {
@@ -157,10 +165,10 @@ export function useBulkUpdateTarefas() {
       const promises = tarefas.map(({ id, ...updates }) =>
         supabase.from('tarefas').update(updates).eq('id', id)
       );
-      
+
       const results = await Promise.all(promises);
       const errors = results.filter(r => r.error);
-      
+
       if (errors.length > 0) {
         throw new Error('Erro ao atualizar algumas tarefas');
       }

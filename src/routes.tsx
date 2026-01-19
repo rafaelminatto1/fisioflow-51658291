@@ -64,6 +64,8 @@ const Install = lazy(() => import(/* webpackChunkName: "install" */ "./pages/Ins
 const Waitlist = lazy(() => import(/* webpackChunkName: "waitlist" */ "./pages/Waitlist"));
 const Surveys = lazy(() => import(/* webpackChunkName: "surveys" */ "./pages/Surveys"));
 const Tarefas = lazy(() => import(/* webpackChunkName: "tasks" */ "./pages/Tarefas"));
+const Projects = lazy(() => import(/* webpackChunkName: "projects" */ "./pages/Projects"));
+const ProjectDetails = lazy(() => import(/* webpackChunkName: "project-details" */ "./pages/ProjectDetails"));
 const Inventory = lazy(() => import(/* webpackChunkName: "inventory" */ "./pages/Inventory"));
 const ProtocolsPage = lazy(() => import(/* webpackChunkName: "protocols" */ "./pages/Protocols"));
 
@@ -252,7 +254,8 @@ export function AppRoutes() {
             <Route path="/admin/cohorts" element={<ProtectedRoute allowedRoles={['admin', 'fisioterapeuta']}><CohortAnalysis /></ProtectedRoute>} />
 
 
-            {/* Catch-all route */}
+            <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
+            <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetails /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
         </Routes>
     );
