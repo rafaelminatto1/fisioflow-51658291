@@ -27,6 +27,7 @@ import {
 import { EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useFinancial, type Transaction } from '@/hooks/useFinancial';
 import { TransactionModal, PackagesManager } from '@/components/financial';
+import { PackageUsageReport } from '@/components/financial/PackageUsageReport';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -473,6 +474,9 @@ const Financial = () => {
 
           <TabsContent value="packages" className="space-y-6">
             <PackagesManager />
+            <div className="pt-6 border-t">
+              <PackageUsageReport />
+            </div>
           </TabsContent>
         </Tabs>
       </div>

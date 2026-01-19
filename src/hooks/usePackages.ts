@@ -73,56 +73,58 @@ export function useSessionPackages() {
   });
 }
 
-// Hook para listar pacotes de um paciente
-export function usePatientPackages(patientId: string | undefined) {
+// Hook para listar pacotes de um paciente (ou todos se admin)
+export function usePatientPackages(patientId?: string) {
   return useQuery({
-    queryKey: ['patient-packages', patientId],
+    queryKey: ['patient-packages', patientId || 'all'],
     queryFn: async () => {
-      if (!patientId) return [];
-
-      const { data, error } = await supabase
+      let query = supabase
         .from('patient_packages')
         .select(`
           *,
-          package:session_packages(id, package_name, total_sessions, final_value)
+          package:session_packages(id, package_name, total_sessions, final_value),
+          patient:patients(id, name)
         `)
-        .eq('patient_id', patientId)
         .order('purchased_at', { ascending: false });
 
+      if (patientId) {
+        query = query.eq('patient_id', patientId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
 
       // Calcular campos adicionais e mapear
-      const enrichedData = (data || []).map((pp: PatientPackage | Record<string, unknown>) => {
-        const ppTyped = pp as PatientPackage & { package?: Record<string, unknown> };
-        const remaining = ppTyped.sessions_purchased - ppTyped.sessions_used;
-        const isExpired = ppTyped.expires_at && new Date(ppTyped.expires_at) < new Date();
-        const pkg = ppTyped.package as Record<string, unknown> | undefined;
+      const enrichedData = (data || []).map((pp: any) => {
+        const remaining = pp.sessions_purchased - pp.sessions_used;
+        const isExpired = pp.expires_at && new Date(pp.expires_at) < new Date();
+        const pkg = pp.package;
 
         return {
-          id: String(ppTyped.id),
-          patient_id: String(ppTyped.patient_id),
-          package_id: String(ppTyped.package_id),
-          sessions_purchased: Number(ppTyped.sessions_purchased),
-          sessions_used: Number(ppTyped.sessions_used),
-          price_paid: Number(ppTyped.price_paid),
-          purchased_at: String(ppTyped.purchased_at),
-          expires_at: String(ppTyped.expires_at),
-          last_used_at: ppTyped.last_used_at ? String(ppTyped.last_used_at) : undefined,
+          id: String(pp.id),
+          patient_id: String(pp.patient_id),
+          package_id: String(pp.package_id),
+          sessions_purchased: Number(pp.sessions_purchased),
+          sessions_used: Number(pp.sessions_used),
+          price_paid: Number(pp.price_paid),
+          purchased_at: String(pp.purchased_at),
+          expires_at: String(pp.expires_at),
+          last_used_at: pp.last_used_at ? String(pp.last_used_at) : undefined,
           package: pkg ? {
             id: String(pkg.id),
             name: String(pkg.package_name || pkg.name || ''),
             sessions_count: Number(pkg.total_sessions || pkg.sessions_count || 0),
             price: Number(pkg.final_value || pkg.price || 0),
           } : undefined,
+          patient_name: pp.patient?.name, // Added for reporting
           sessions_remaining: remaining,
           is_expired: isExpired,
           status: isExpired ? 'expired' : remaining <= 0 ? 'depleted' : 'active',
-        } as PatientPackage;
+        } as PatientPackage & { patient_name?: string };
       });
 
       return enrichedData;
     },
-    enabled: !!patientId,
   });
 }
 

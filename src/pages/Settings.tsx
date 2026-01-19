@@ -32,6 +32,7 @@ import { NotificationHistory } from '@/components/notifications/NotificationHist
 import { InviteUserModal } from '@/components/admin/InviteUserModal';
 import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
+import { BackupSettings } from '@/components/settings/BackupSettings';
 
 // ============================================================================================
 // TYPES & INTERFACES
@@ -435,7 +436,7 @@ const usePasswordForm = () => {
 
   const passwordsMatch = useMemo(
     () => passwordForm.newPassword && passwordForm.confirmPassword &&
-         passwordForm.newPassword === passwordForm.confirmPassword,
+      passwordForm.newPassword === passwordForm.confirmPassword,
     [passwordForm]
   );
 
@@ -572,7 +573,7 @@ const Settings = () => {
               <WorkingHoursSection
                 workingHours={workingHours}
                 onChange={setWorkingHours}
-                onSave={() => {/* TODO: Implement save */}}
+                onSave={() => {/* TODO: Implement save */ }}
               />
             </div>
           </TabsContent>
@@ -716,7 +717,7 @@ const Settings = () => {
                     label="Autenticação de dois fatores"
                     description="Adicione uma camada extra de segurança"
                     checked={false}
-                    onCheckedChange={() => {/* TODO: Implement 2FA */}}
+                    onCheckedChange={() => {/* TODO: Implement 2FA */ }}
                   />
                 </div>
 
@@ -736,6 +737,8 @@ const Settings = () => {
                 </Button>
               </CardContent>
             </Card>
+
+            <BackupSettings />
           </TabsContent>
 
           {/* Schedule Tab */}
@@ -743,7 +746,7 @@ const Settings = () => {
             <WorkingHoursSection
               workingHours={workingHours}
               onChange={setWorkingHours}
-              onSave={() => {/* TODO: Implement save */}}
+              onSave={() => {/* TODO: Implement save */ }}
             />
           </TabsContent>
         </Tabs>
