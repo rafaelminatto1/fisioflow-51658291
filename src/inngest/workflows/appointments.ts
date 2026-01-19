@@ -175,16 +175,11 @@ export const appointmentCreatedWorkflow = inngest.createFunction(
     const appointment = await step.run('get-appointment-details', async () => {
         const { data, error } = await supabase
             .from('appointments')
-            .select(`
-            *,
-            patient: patients(id, name, email, phone, notification_preferences),
-              organization: organizations(id, name, settings),
-                therapist: profiles!therapist_id(full_name)
-            `)
+            .select('*, patient:patients(id, name, email, phone, notification_preferences), organization:organizations(id, name, settings), therapist:profiles!therapist_id(full_name)')
             .eq('id', appointmentId)
             .single();
         
-        if (error) throw new Error(`Failed to fetch appointment: ${ error.message } `);
+        if (error) throw new Error('Failed to fetch appointment: ' + error.message);
         return data;
     });
 

@@ -1,6 +1,6 @@
 import Fuse from 'fuse.js';
 import * as React from "react";
-import { Check, ChevronsUpDown, UserPlus } from "lucide-react";
+import { Check, ChevronsUpDown, UserPlus, Search, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,13 +16,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-
-
-interface Patient {
-  id: string;
-  name: string;
-  incomplete_registration?: boolean;
-}
+import type { Patient } from "@/types";
 
 interface PatientComboboxProps {
   patients: Patient[];
@@ -45,18 +39,27 @@ export function PatientCombobox({
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = React.useState("");
 
-  const selectedPatient = patients.find((patient) => patient.id === value);
+  const selectedPatient = React.useMemo(() =>
+    patients.find((patient) => patient.id === value),
+    [patients, value]
+  );
 
-  // Initialize Fuse instance with permissive settings for better fuzzy matching
+  // Initialize Fuse instance with improved settings
   const fuse = React.useMemo(() => {
     return new Fuse(patients, {
-      keys: ['name'],
-      threshold: 0.4, // More permissive threshold for fuzzy matching
+      keys: [
+        { name: 'name', weight: 0.7 },
+        { name: 'full_name', weight: 0.7 },
+        { name: 'cpf', weight: 0.3 },
+        { name: 'phone', weight: 0.3 }
+      ],
+      threshold: 0.3,
       ignoreLocation: true,
-      minMatchCharLength: 1, // Allow single character matches
+      minMatchCharLength: 1,
       includeScore: true,
       isCaseSensitive: false,
       findAllMatches: true,
+      useExtendedSearch: true,
     });
   }, [patients]);
 
@@ -64,28 +67,40 @@ export function PatientCombobox({
     if (!inputValue || inputValue.trim() === '') return patients;
 
     const searchTerm = inputValue.trim().toLowerCase();
-    const results = fuse.search(searchTerm);
 
-    // Sort by score (lower is better) and return items
+    // Check if it's a direct partial match first (optimization)
+    const directMatches = patients.filter(p =>
+      (p.name && p.name.toLowerCase().includes(searchTerm)) ||
+      (p.cpf && p.cpf.includes(searchTerm)) ||
+      (p.phone && p.phone.includes(searchTerm))
+    );
+
+    // If we have good direct matches, use them (often faster/better for simple constraints)
+    // Otherwise fallback to fuzzy for typos
+    if (directMatches.length > 0) return directMatches;
+
+    const results = fuse.search(searchTerm);
     return results
       .sort((a, b) => (a.score || 0) - (b.score || 0))
       .map(result => result.item);
   }, [fuse, inputValue, patients]);
 
-  const handleSelect = (currentValue: string) => {
-    onValueChange(currentValue === value ? "" : currentValue);
+  const handleSelect = (patientId: string) => {
+    onValueChange(patientId === value ? "" : patientId);
     setOpen(false);
+    setInputValue("");
   };
 
   const handleCreateNew = () => {
     setOpen(false);
     onCreateNew(inputValue);
+    setInputValue("");
   };
 
   return (
-    <Popover open={open} onOpenChange={(open) => {
-      setOpen(open);
-      if (!open) {
+    <Popover open={open} onOpenChange={(newOpen) => {
+      setOpen(newOpen);
+      if (!newOpen) {
         setInputValue("");
       }
     }}>
@@ -94,86 +109,117 @@ export function PatientCombobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full justify-between bg-background", className)}
+          className={cn(
+            "w-full justify-between bg-background text-left font-normal",
+            !selectedPatient && "text-muted-foreground",
+            className
+          )}
           disabled={disabled}
         >
           {selectedPatient ? (
-            <div className="flex items-center gap-2">
-              <span className="truncate">{selectedPatient.name}</span>
-              {selectedPatient.incomplete_registration && (
-                <span className="text-xs px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-full">
-                  ⚠️
-                </span>
-              )}
+            <div className="flex items-center gap-2 overflow-hidden">
+              <User className="h-4 w-4 shrink-0 opacity-50" />
+              <div className="flex flex-col items-start truncate leading-tight">
+                <span className="truncate font-medium">{selectedPatient.name || selectedPatient.full_name}</span>
+                {selectedPatient.incomplete_registration && (
+                  <span className="text-[10px] text-amber-600 font-normal">Cadastro incompleto</span>
+                )}
+              </div>
             </div>
           ) : (
-            "Selecione ou digite o nome do paciente..."
+            "Selecione o paciente..."
           )}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
+      <PopoverContent className="w-[300px] sm:w-[400px] p-0" align="start">
         <Command shouldFilter={false}>
           <CommandInput
             ref={inputRef}
-            placeholder="Buscar ou criar paciente..."
+            placeholder="Buscar por nome, CPF ou telefone..."
             value={inputValue}
             onValueChange={setInputValue}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
-                // If user presses enter and there are no matches, allow creation
                 if (inputValue && filteredPatients.length === 0) {
                   e.preventDefault();
                   handleCreateNew();
                 }
-                // If there are matches, standard behavior handles selection usually.
               }
             }}
           />
-          <CommandList>
+          <CommandList className="max-h-[300px] overflow-y-auto">
             {filteredPatients.length === 0 && (
               <CommandEmpty>
-                <div className="py-6 text-center">
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Paciente não encontrado
+                <div className="py-4 px-2 flex flex-col items-center gap-2">
+                  <p className="text-sm text-muted-foreground text-center">
+                    Nenhum paciente encontrado com "{inputValue}"
                   </p>
                   <Button
                     size="sm"
-                    variant="outline"
+                    variant="secondary"
                     onClick={handleCreateNew}
-                    className="gap-2"
+                    className="w-full mt-2 gap-2"
                   >
                     <UserPlus className="w-4 h-4" />
-                    Criar Novo Paciente
+                    Cadastrar "{inputValue}"
                   </Button>
                 </div>
               </CommandEmpty>
             )}
-            <CommandGroup heading="Pacientes">
-              {filteredPatients.map((patient) => (
-                <CommandItem
-                  key={patient.id}
-                  value={patient.id}
-                  onSelect={() => handleSelect(patient.id)}
-                  className="cursor-pointer"
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      value === patient.id ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  <div className="flex items-center gap-2 flex-1">
-                    <span>{patient.name}</span>
+
+            {filteredPatients.length > 0 && (
+              <CommandGroup heading="Pacientes Encontrados">
+                {filteredPatients.map((patient) => (
+                  <CommandItem
+                    key={patient.id}
+                    value={`${patient.name || ''} ${patient.cpf || ''} ${patient.id}`} // Helper for cmdk internal keying if needed, though filtered manually
+                    onSelect={() => handleSelect(patient.id)}
+                    className="cursor-pointer flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0 py-2"
+                  >
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <div className={cn(
+                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border",
+                        value === patient.id ? "bg-primary text-primary-foreground border-primary" : "bg-muted border-transparent"
+                      )}>
+                        {value === patient.id ? <Check className="h-4 w-4" /> : <User className="h-4 w-4 opacity-50" />}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-medium truncate">{patient.name || patient.full_name}</span>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          {patient.phone && <span>{patient.phone}</span>}
+                          {patient.cpf && <span>• CPF: {patient.cpf}</span>}
+                        </div>
+                      </div>
+                    </div>
+
                     {patient.incomplete_registration && (
-                      <span className="text-xs px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-full">
-                        ⚠️ Cadastro incompleto
-                      </span>
+                      <div className="shrink-0 flex items-start sm:items-center">
+                        <span className="text-[10px] px-2 py-0.5 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-full font-medium whitespace-nowrap">
+                          ⚠️ Incompleto
+                        </span>
+                      </div>
                     )}
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+
+            {/* Always show create option at bottom if there is input */}
+            {inputValue.length > 0 && filteredPatients.length > 0 && (
+              <>
+                <div className="h-px bg-border mx-2 my-1" />
+                <CommandGroup>
+                  <CommandItem
+                    onSelect={handleCreateNew}
+                    className="cursor-pointer text-primary"
+                  >
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    <span>Cadastrar novo: "{inputValue}"</span>
+                  </CommandItem>
+                </CommandGroup>
+              </>
+            )}
           </CommandList>
         </Command>
       </PopoverContent>
