@@ -68,18 +68,44 @@ npm install
 Renomeie `.env.example` para `.env` e configure:
 
 ```env
+# Supabase
 VITE_SUPABASE_URL=sua_url_do_supabase
 VITE_SUPABASE_ANON_KEY=sua_chave_anonima
+SUPABASE_SERVICE_ROLE_KEY=sua_chave_service_role (Apenas para Edge Functions)
+
+# Google Calendar (Opcional)
+VITE_GOOGLE_CLIENT_ID=seu_client_id
+VITE_GOOGLE_API_KEY=sua_api_key
+
+# Notificações (Opcional)
+RESEND_API_KEY=sua_chave_resend
+WHATSAPP_ACCESS_TOKEN=token_whatsapp_cloud
+WHATSAPP_PHONE_NUMBER_ID=id_numero_telefone
+WHATSAPP_BUSINESS_ACCOUNT_ID=id_conta_business
 ```
 
 ### 4. Configure o banco de dados
 Execute as migrações SQL no Supabase:
-- Importe o arquivo `supabase/schema.sql`
-- Configure as políticas RLS com `supabase-rls-policies.sql`
+- Sincronize o schema local com `supabase db push` ou copie o SQL do diretório `supabase/migrations`.
+- Assegure-se de habilitar as extensões necessárias (pg_cron, etc).
 
 ### 5. Execute o projeto
+Inicie o frontend e o servidor de desenvolvimento do Inngest (para automações):
+
 ```bash
+# Terminal 1: Frontend
 npm run dev
+
+# Terminal 2: Inngest (Background Jobs)
+npx inngest-cli@latest dev
+```
+
+### 6. Edge Functions
+Para funcionalidades críticas como reservas públicas e sync de calendário:
+
+```bash
+npx supabase functions deploy public-booking --no-verify-jwt
+npx supabase functions deploy google-calendar-sync --no-verify-jwt
 ```
 
 ## 🚀 Deploy em Produção

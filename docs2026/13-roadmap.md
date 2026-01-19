@@ -315,37 +315,19 @@ export async function GET(req: Request) {
 
 ### ⚡ Média Prioridade
 
-#### 6. Integração com WhatsApp Business API
+#### 6. Integração com WhatsApp (Cloud/Evolution)
 
-**Descrição:** Envio de lembretes e confirmações via WhatsApp
+**Status:** ✅ Implementado (Jan/2026)
 
-**Benefícios:**
-- Taxa de abertura >90%
-- Redução de no-shows
-- Melhor experiência
-
-**Implementação:**
-- Integrar Twilio ou WhatsApp Cloud API
-- Template de mensagens
-- Webhooks para respostas
-
-**Estimativa:** 2-3 semanas
+**Descrição:** Envio de lembretes e confirmações via WhatsApp e Email.
+**Implementação:** Inngest Workflows + WhatsApp Cloud API + Resend.
 
 #### 7. Google Calendar Sync
 
-**Descrição:** Sincronizar agendamentos com Google Calendar
+**Status:** ✅ Implementado (Jan/2026)
 
-**Benefícios:**
-- Visão unificada para fisioterapeutas
-- Reduz conflitos
-- Melhor organização
-
-**Implementação:**
-- Google Calendar API
-- Sync bidirecional
-- Conflict resolution
-
-**Estimativa:** 2 semanas
+**Descrição:** Sincronização bidirecional em tempo real.
+**Implementação:** Edge Function + Google APIs.
 
 #### 8. Gateway de Pagamento
 
@@ -479,11 +461,11 @@ Semanas 5-8: Telemedicina avançada
 Semanas 9-12: Gamificação completa
 ```
 
-### Q3 2026 (Foco: Integrações)
+### Q3 2026 (Foco: Financeiro e Mobile) (Revisado)
 
 ```
-Semanas 1-4: WhatsApp + Google Calendar
-Semanas 5-8: Gateway de pagamento
+Semanas 1-4: Gateway de pagamento
+Semanas 5-8: App mobile nativo
 Semanas 9-12: Analytics avançado
 ```
 
