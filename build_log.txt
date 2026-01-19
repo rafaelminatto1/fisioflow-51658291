@@ -11,120 +11,177 @@ transforming...
 
 warn - The class `duration-[3s]` is ambiguous and matches multiple utilities.
 warn - If this is content and not a class, replace it with `duration-&lsqb;3s&rsqb;` to silence this warning.
-✓ 1170 modules transformed.
+✓ 5074 modules transformed.
 
 ✨ [vite-plugin-compression]:algorithm=gzip - compressed file successfully: 
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/AuditLogs-DJeRl6Vs.js.gz                   24.22kb / gzip: 5.66kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/AssetViewer-BHPFXF36.js.gz                 11.49kb / gzip: 3.50kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/AdminCRUD-Bvi9X1PV.js.gz                   59.29kb / gzip: 10.93kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/AdminGamificationPage-DYzyG5fx.js.gz       39.64kb / gzip: 6.84kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/AdvancedAnalytics-A3AEY95D.js.gz           40.38kb / gzip: 7.00kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Auth-Ra4Q3XxF.js.gz                        21.77kb / gzip: 5.89kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/ClinicalPostureAnalysis-BDYTRUbc.js.gz     25.39kb / gzip: 7.24kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/CalendarSettings-BLkGmbCE.js.gz            32.22kb / gzip: 6.37kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/ContasFinanceirasPage-BrWinppE.js.gz       16.30kb / gzip: 4.01kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/CRMDashboard-DvrAQwa1.js.gz                57.81kb / gzip: 10.66kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Communications-C3LWQJaN.js.gz              19.52kb / gzip: 4.76kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/DicomViewer-Bb7wlU-a.js.gz                 10.26kb / gzip: 3.28kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/DynamicAnalysisViewer-TSZVm7iU.js.gz       22.50kb / gzip: 5.35kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/EditEventoModal-BUm4duU2.js.gz             11.40kb / gzip: 3.15kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/EvaluationFormBuilderPage-k1SC91fi.js.gz   18.18kb / gzip: 4.65kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/EditPatientModal-BLBNYAqI.js.gz            10.69kb / gzip: 2.75kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/DynamicCompareDetailsPage-IUZ_Z_KA.js.gz   30.03kb / gzip: 9.23kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/DynamicComparisonPage-DS2pyIW3.js.gz       53.07kb / gzip: 14.56kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/EventosStatsWidget-BtLKtPSZ.js.gz          10.08kb / gzip: 2.62kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/EvolutionTemplatesPage-DleaNZ4n.js.gz      14.20kb / gzip: 3.88kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Eventos-BFKZH0MK.js.gz                     30.76kb / gzip: 7.16kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/FeriadosPage-NjIye6B6.js.gz                12.35kb / gzip: 3.43kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/ClinicalTestsLibrary-B47EXE7M.js.gz        73.99kb / gzip: 15.80kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/CohortAnalysis-UdGSEm_x.js.gz              65.93kb / gzip: 14.71kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/EvaluationFormsPage-vXDpkXhg.js.gz         38.79kb / gzip: 9.27kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/GoalProfileListPage-DG7boKBX.js.gz         10.87kb / gzip: 3.19kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/FornecedoresPage-CBSPZP-C.js.gz            27.87kb / gzip: 5.01kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/GoalProfileEditorPage-DUhgx0nJ.js.gz       14.33kb / gzip: 4.00kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Financial-DhWYFmS0.js.gz                   34.75kb / gzip: 7.47kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/EventoDetalhes-6BqWGFY9.js.gz              68.31kb / gzip: 11.92kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/ExerciseLibrary-CA4KerDB.js.gz             57.96kb / gzip: 12.23kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/InvitationManagement-ChAov7WT.js.gz        15.28kb / gzip: 3.68kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Inventory-Dn2d9Bcw.js.gz                   19.43kb / gzip: 4.07kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Notifications-CazJqWMP.js.gz               14.69kb / gzip: 4.05kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/MeasurementCharts-usDdHjkU.js.gz           18.35kb / gzip: 4.86kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/NewExerciseModal-Waf1pbd4.js.gz            10.97kb / gzip: 2.24kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/OrganizationSettings-C58L0DG3.js.gz        13.24kb / gzip: 3.72kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Partner-BOjZCmdL.js.gz                     10.30kb / gzip: 2.87kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/PainMapHistoryPage-CsWtW7MV.js.gz          41.91kb / gzip: 9.59kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/PatientObjectivesPage-B5rkQobZ.js.gz       11.54kb / gzip: 3.25kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/PatientEvolutionReport-BQNkHk9p.js.gz      13.24kb / gzip: 4.45kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/ContratosPage-CgK7yxZR.js.gz               11.06kb / gzip: 3.21kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/PoseAnalyzer-DUGmwnmA.js.gz                11.18kb / gzip: 3.81kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/PatientGamification-B4AH5uYX.js.gz         69.29kb / gzip: 14.97kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/PatientPortal-CVQdt1Dt.js.gz               36.52kb / gzip: 8.21kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/PreCadastro-9pXE9lqL.js.gz                 11.34kb / gzip: 2.96kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Profile-3zdNvTYN.js.gz                     16.48kb / gzip: 3.54kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/PhysiotherapyHub-D81JnCzA.js.gz            21.14kb / gzip: 4.44kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/PreCadastroAdmin-Cgx5h1-k.js.gz            26.13kb / gzip: 5.98kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/PublicPrescriptionPage-Bj5NK0yg.js.gz      14.01kb / gzip: 3.56kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Reports-D1dYvoQj.js.gz                     26.29kb / gzip: 6.53kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Protocols-B9AifetF.js.gz                   66.36kb / gzip: 14.24kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/SecuritySettings-g8risEb9.js.gz            26.48kb / gzip: 7.00kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Settings-Cy0UDgQD.js.gz                    30.05kb / gzip: 6.30kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/SmartAI-BrIUpqQv.js.gz                     12.37kb / gzip: 4.03kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/ScheduleSettings-DwdInBly.js.gz            61.74kb / gzip: 12.19kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/SmartDashboard-BB_nhSut.js.gz              14.08kb / gzip: 4.10kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Surveys-CeeobK9v.js.gz                     13.50kb / gzip: 3.51kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/TelemedicineRoom-B0KRRY7s.js.gz            11.64kb / gzip: 3.33kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/TreatmentAssistant-Bdp5thLI.js.gz          10.27kb / gzip: 2.86kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Tarefas-BV2dqe5q.js.gz                     23.53kb / gzip: 6.32kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/TherapistOccupancy-DpTjaw3k.js.gz          27.33kb / gzip: 6.65kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/WhatsAppIntegration-CAy8dYxr.js.gz         17.55kb / gzip: 4.44kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Waitlist-DdeWK0h9.js.gz                    20.25kb / gzip: 4.84kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/TeamPerformance-DUgSxm0h.js.gz             52.81kb / gzip: 10.30kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/geometry-C3eVh0dn.js.gz                    23.09kb / gzip: 5.63kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Vouchers-BTLQyp0w.js.gz                    25.82kb / gzip: 5.89kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/date-vendor-B3Th9OiI.js.gz                 50.75kb / gzip: 11.63kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/useExerciseProtocols-BUbMDoF6.js.gz        10.69kb / gzip: 3.14kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/toggle-ClXaElcy.js.gz                      41.17kb / gzip: 8.20kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/usePatientEvolutionReport-CG-A671n.js.gz   21.65kb / gzip: 5.83kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/useAppointments-_pXaBB63.js.gz             37.14kb / gzip: 8.83kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/useWaitlist-CF6Z5BXv.js.gz                 16.35kb / gzip: 4.59kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/AssetViewer-DIuxnpyN.js.gz                 11.46kb / gzip: 3.49kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/AdvancedAnalytics-BxJlmWOE.js.gz           40.42kb / gzip: 7.03kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/AdminGamificationPage-zbTTgFFZ.js.gz       39.67kb / gzip: 6.85kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/AdminCRUD-lLeX26B1.js.gz                   59.31kb / gzip: 10.93kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Auth-RRNkEJU4.js.gz                        21.77kb / gzip: 5.89kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/AuditLogs-DGflwtP_.js.gz                   24.25kb / gzip: 5.67kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/CalendarSettings-CopSjosT.js.gz            32.25kb / gzip: 6.38kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/ClinicalPostureAnalysis-DBlDKves.js.gz     18.12kb / gzip: 5.64kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Communications-DIt5cCFV.js.gz              19.56kb / gzip: 4.77kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/CRMDashboard-CarsKju7.js.gz                57.84kb / gzip: 10.67kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/ContratosPage-D4WW-s-4.js.gz               11.10kb / gzip: 3.23kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/ContasFinanceirasPage-ua8UpCHo.js.gz       16.33kb / gzip: 4.02kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/DicomViewer-BTZsY-TL.js.gz                 10.26kb / gzip: 3.28kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/EditPatientModal-DHYoHnH-.js.gz            10.70kb / gzip: 2.75kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/DynamicAnalysisViewer-6liSqpl3.js.gz       22.54kb / gzip: 5.37kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/CohortAnalysis-ZJvDL5WL.js.gz              65.95kb / gzip: 14.72kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/ClinicalTestsLibrary-CYolvO-L.js.gz        74.02kb / gzip: 15.81kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/EvaluationFormBuilderPage-zWeSK2Ns.js.gz   18.22kb / gzip: 4.67kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/EventosStatsWidget-Jl3rQkwE.js.gz          10.09kb / gzip: 2.63kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/DynamicCompareDetailsPage-C9dF-ci0.js.gz   30.03kb / gzip: 9.24kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/DynamicComparisonPage-CRRrH3rj.js.gz       53.15kb / gzip: 14.58kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/FeriadosPage-C9OsMcz-.js.gz                12.38kb / gzip: 3.44kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/EvaluationFormsPage-CxCsnpZz.js.gz         38.82kb / gzip: 9.29kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/EvolutionTemplatesPage-j4ChHjmp.js.gz      14.23kb / gzip: 3.90kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Eventos-BPKPxV7d.js.gz                     30.79kb / gzip: 7.17kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/FornecedoresPage-4Cl8n8ay.js.gz            27.88kb / gzip: 5.02kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/GoalProfileEditorPage-BKsfoDE8.js.gz       14.36kb / gzip: 4.02kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/GoalProfileListPage-Ct6yzeUj.js.gz         10.91kb / gzip: 3.21kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/EventoDetalhes-C8zfsoX1.js.gz              66.70kb / gzip: 11.62kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/ExerciseLibrary-DEa_lVbd.js.gz             57.95kb / gzip: 12.22kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Inventory-cFkZ-MW5.js.gz                   19.47kb / gzip: 4.08kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Financial-D42u0ICs.js.gz                   38.01kb / gzip: 7.67kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/InvitationManagement-F5kLnbyG.js.gz        15.28kb / gzip: 3.68kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/MeasurementCharts-4eWnudwF.js.gz           46.25kb / gzip: 10.79kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/NewExerciseModal-ClZhQX6o.js.gz            10.98kb / gzip: 2.25kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Notifications-DyiTT42y.js.gz               14.68kb / gzip: 4.05kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/OrganizationSettings-niW723K_.js.gz        13.25kb / gzip: 3.73kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Partner-CYbZGAkm.js.gz                     10.34kb / gzip: 2.89kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/PatientEvolutionReport-CJruo39H.js.gz      13.26kb / gzip: 4.46kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/PainMapHistoryPage-BTYnP1a_.js.gz          41.90kb / gzip: 9.59kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/PatientPortal-DtLHrLfD.js.gz               36.56kb / gzip: 8.24kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/PatientObjectivesPage-gPJlComI.js.gz       11.58kb / gzip: 3.28kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Index-DnL1Vuzx.js.gz                       79.49kb / gzip: 14.89kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/PhysiotherapyHub-BEqNonpw.js.gz            21.18kb / gzip: 4.46kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/PoseAnalyzer-BcX2l0dc.js.gz                11.26kb / gzip: 3.84kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/PatientGamification-DpVj1Sf_.js.gz         69.30kb / gzip: 14.97kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/PreCadastroAdmin-BeHk216r.js.gz            26.17kb / gzip: 6.00kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/PreCadastro-DYO4048U.js.gz                 21.98kb / gzip: 5.69kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/ProjectDetails-BIxRMaG1.js.gz              17.22kb / gzip: 4.49kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Profile-C6Cn9e3J.js.gz                     17.23kb / gzip: 3.75kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Projects-DYxeK1tF.js.gz                    13.28kb / gzip: 3.80kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/PublicPrescriptionPage-BoQ12FSc.js.gz      14.01kb / gzip: 3.91kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/SecuritySettings-cpo9coMh.js.gz            26.52kb / gzip: 7.02kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Reports-71-ufCXB.js.gz                     26.32kb / gzip: 6.55kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Settings-CdcpJnR5.js.gz                    32.56kb / gzip: 6.94kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/ScheduleSettings-CB48iE5G.js.gz            61.79kb / gzip: 12.22kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/SmartAI-CWz9WTJF.js.gz                     12.41kb / gzip: 4.05kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Protocols-y4g0nxGe.js.gz                   66.40kb / gzip: 14.25kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Surveys-BRUweVn9.js.gz                     13.53kb / gzip: 3.52kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/SmartDashboard-DpDDJDyH.js.gz              23.64kb / gzip: 6.51kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/TelemedicineRoom-_AnGkGmv.js.gz            11.64kb / gzip: 3.33kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/TreatmentAssistant-B7Zor92x.js.gz          10.26kb / gzip: 2.85kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Tarefas-DdPdCMfu.js.gz                     31.44kb / gzip: 7.52kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/TherapistOccupancy-bj4t-ome.js.gz          27.37kb / gzip: 6.66kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Vouchers-wUekvcyg.js.gz                    25.85kb / gzip: 5.91kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/TeamPerformance-B9JsEWjR.js.gz             52.84kb / gzip: 10.31kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Waitlist-7D00qDHd.js.gz                    20.30kb / gzip: 4.86kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/geometry-KXnRva2a.js.gz                    15.51kb / gzip: 4.73kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/loading-skeleton-C6ILTUph.js.gz            19.88kb / gzip: 4.55kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/date-vendor-CXHrkRWK.js.gz                 50.75kb / gzip: 11.62kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/usePatientEvolutionReport-C3tE64pz.js.gz   21.64kb / gzip: 5.82kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/usePackages-CdBQ858z.js.gz                 14.64kb / gzip: 4.10kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/sw.js.gz                                             10.07kb / gzip: 3.18kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/toggle-Cf3_9jqs.js.gz                      37.71kb / gzip: 7.01kb
 dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/workbox-d4a253db.js.gz                               22.01kb / gzip: 7.45kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/CalendarView-DpxWuKHQ.js.gz                71.54kb / gzip: 16.88kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/FileUploadTest-DgEezIoK.js.gz              118.97kb / gzip: 25.71kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Index-DCV-Aw9e.js.gz                       85.47kb / gzip: 16.25kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Exercises-CgLVeYNW.js.gz                   118.76kb / gzip: 23.26kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/PatientProfilePage-DBG1ZBCS.js.gz          108.07kb / gzip: 21.82kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Patients-DNph4bwa.js.gz                    91.10kb / gzip: 18.91kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/NewEvaluationPage-lgtwyE-H.js.gz           128.46kb / gzip: 29.20kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/SessionEvolutionPage-CHFyJsis.js.gz        113.88kb / gzip: 25.44kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Schedule-B03-3oQB.js.gz                    139.26kb / gzip: 31.33kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/css/NotFound-B9zKNeHZ.css.gz                  306.67kb / gzip: 41.14kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/NotFound-B1MIsPIb.js.gz                    179.01kb / gzip: 43.27kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/supabase-vendor-CuLa_ryo.js.gz             212.12kb / gzip: 45.27kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/mediapipe-vendor-EQu2mcvK.js.gz            175.63kb / gzip: 55.20kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/PatientEvolution-Cnjt4Sni.js.gz            266.25kb / gzip: 55.86kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/konva-vendor-ChWldhK6.js.gz                247.87kb / gzip: 61.89kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/pdf-vendor-C4mWunSr.js.gz                  370.74kb / gzip: 114.40kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/xlsx-vendor-BYPsU3cB.js.gz                 507.77kb / gzip: 150.11kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/cornerstone-vendor-CgTyP9uX.js.gz          950.00kb / gzip: 202.32kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/CalendarView-DlEZH9Gq.js.gz                72.17kb / gzip: 17.06kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Exercises-onAQpLNw.js.gz                   118.80kb / gzip: 23.27kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/FileUploadTest-kUL05tNq.js.gz              113.59kb / gzip: 24.23kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/PatientProfilePage-BFmpP3E3.js.gz          108.11kb / gzip: 21.83kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Patients-DTs8l4CR.js.gz                    91.14kb / gzip: 18.92kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/SessionEvolutionPage-Ov4OLNJG.js.gz        114.03kb / gzip: 25.49kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/Schedule-739ZOW9E.js.gz                    140.85kb / gzip: 31.95kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/WhatsAppIntegration-_oIflIUl.js.gz         136.54kb / gzip: 30.75kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/css/NotFound-CSJjJ4gY.css.gz                  306.98kb / gzip: 41.19kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/NotFound-zDEgjBqp.js.gz                    194.87kb / gzip: 47.11kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/supabase-vendor-ByTwYejW.js.gz             212.12kb / gzip: 45.27kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/konva-vendor-DpRBLYJ3.js.gz                247.87kb / gzip: 61.89kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/PatientEvolution-BdVIYiyG.js.gz            266.54kb / gzip: 55.93kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/mediapipe-vendor-BT-w4KYC.js.gz            175.63kb / gzip: 55.20kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/pdf-vendor-BvmnXbTe.js.gz                  370.74kb / gzip: 114.40kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/xlsx-vendor-BmocwJwe.js.gz                 507.77kb / gzip: 150.11kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/cornerstone-vendor-ZQndIV3U.js.gz          950.00kb / gzip: 202.32kb
 dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/computeWorker-BOBjp49H.js.gz                  1658.25kb / gzip: 374.39kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/react-vendor-CE1oRk7F.js.gz                3380.25kb / gzip: 782.79kb
-dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/vendor-BOE96WAE.js.gz                      4816.06kb / gzip: 1237.02kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/react-vendor-DZ7X1CjR.js.gz                3380.35kb / gzip: 782.82kb
+dist//home/rafael/cursor/fisiolovable/fisioflow-51658291/assets/js/vendor-UV4TJFnz.js.gz                      4787.55kb / gzip: 1227.64kb
 
 
-x Build failed in 16.71s
+x Build failed in 17.84s
 error during build:
-[vite-plugin-pwa:build] [plugin vite-plugin-pwa:build] There was an error during the build:
-  [vite]: Rollup failed to resolve import "swagger-ui-react" from "/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/ApiDocs.tsx".
-This is most likely unintended because it can break your application at runtime.
-If you do want to externalize this module explicitly add it to
-`build.rollupOptions.external`
+[vite-plugin-pwa:build] [plugin vite-plugin-pwa:build] src/components/tarefas/TarefaModal.tsx (657:14): There was an error during the build:
+  Transform failed with 6 errors:
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/tarefas/TarefaModal.tsx:657:14: ERROR: Unexpected closing "div" tag does not match opening "ScrollArea" tag
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/tarefas/TarefaModal.tsx:658:12: ERROR: Unexpected closing "ScrollArea" tag does not match opening "form" tag
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/tarefas/TarefaModal.tsx:672:10: ERROR: Unexpected closing "form" tag does not match opening "Form" tag
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/tarefas/TarefaModal.tsx:673:8: ERROR: Unexpected closing "Form" tag does not match opening "DialogContent" tag
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/tarefas/TarefaModal.tsx:674:6: ERROR: Unexpected closing "DialogContent" tag does not match opening "Dialog" tag
+...
 Additionally, handling the error in the 'buildEnd' hook caused the following error:
-  [vite]: Rollup failed to resolve import "swagger-ui-react" from "/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/pages/ApiDocs.tsx".
-This is most likely unintended because it can break your application at runtime.
-If you do want to externalize this module explicitly add it to
-`build.rollupOptions.external`
+  Transform failed with 6 errors:
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/tarefas/TarefaModal.tsx:657:14: ERROR: Unexpected closing "div" tag does not match opening "ScrollArea" tag
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/tarefas/TarefaModal.tsx:658:12: ERROR: Unexpected closing "ScrollArea" tag does not match opening "form" tag
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/tarefas/TarefaModal.tsx:672:10: ERROR: Unexpected closing "form" tag does not match opening "Form" tag
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/tarefas/TarefaModal.tsx:673:8: ERROR: Unexpected closing "Form" tag does not match opening "DialogContent" tag
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/tarefas/TarefaModal.tsx:674:6: ERROR: Unexpected closing "DialogContent" tag does not match opening "Dialog" tag
+...
+file: /home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/tarefas/TarefaModal.tsx:657:14
+
+Unexpected closing "div" tag does not match opening "ScrollArea" tag
+655|                  )}
+656|                />
+657|              </div>
+   |                ^
+658|            </ScrollArea>
+659|  
+
+Unexpected closing "ScrollArea" tag does not match opening "form" tag
+656|                />
+657|              </div>
+658|            </ScrollArea>
+   |              ^
+659|  
+660|            {/* Actions */}
+
+Unexpected closing "form" tag does not match opening "Form" tag
+670|              </Button>
+671|            </div>
+672|          </form>
+   |            ^
+673|        </Form>
+674|      </DialogContent>
+
+Unexpected closing "Form" tag does not match opening "DialogContent" tag
+671|            </div>
+672|          </form>
+673|        </Form>
+   |          ^
+674|      </DialogContent>
+675|      </Dialog >
+
+Unexpected closing "DialogContent" tag does not match opening "Dialog" tag
+672|          </form>
+673|        </Form>
+674|      </DialogContent>
+   |        ^
+675|      </Dialog >
+676|    );
+
+Unterminated regular expression
+673|        </Form>
+674|      </DialogContent>
+675|      </Dialog >
+   |                ^
+676|    );
+677|  }
+
     at getRollupError (file:///home/rafael/cursor/fisiolovable/fisioflow-51658291/node_modules/.pnpm/rollup@4.50.0/node_modules/rollup/dist/es/shared/parseAst.js:401:41)
     at file:///home/rafael/cursor/fisiolovable/fisioflow-51658291/node_modules/.pnpm/rollup@4.50.0/node_modules/rollup/dist/es/shared/node-entry.js:23290:39
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
     at async catchUnfinishedHookActions (file:///home/rafael/cursor/fisiolovable/fisioflow-51658291/node_modules/.pnpm/rollup@4.50.0/node_modules/rollup/dist/es/shared/node-entry.js:22749:16)
     at async rollupInternal (file:///home/rafael/cursor/fisiolovable/fisioflow-51658291/node_modules/.pnpm/rollup@4.50.0/node_modules/rollup/dist/es/shared/node-entry.js:23273:5)
     at async build (file:///home/rafael/cursor/fisiolovable/fisioflow-51658291/node_modules/.pnpm/vite@5.4.19_@types+node@22.18.1_terser@5.44.1/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:65693:14)

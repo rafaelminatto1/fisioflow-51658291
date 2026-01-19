@@ -319,6 +319,27 @@ export default {
 					'min-height': '44px',
 					'min-width': '44px'
 				},
+				// iOS Safe Area utilities
+				'.pt-safe': {
+					'padding-top': 'env(safe-area-inset-top)'
+				},
+				'.pb-safe': {
+					'padding-bottom': 'env(safe-area-inset-bottom)'
+				},
+				'.px-safe': {
+					'padding-left': 'env(safe-area-inset-left)',
+					'padding-right': 'env(safe-area-inset-right)'
+				},
+				'.py-safe': {
+					'padding-top': 'env(safe-area-inset-top)',
+					'padding-bottom': 'env(safe-area-inset-bottom)'
+				},
+				'.p-safe': {
+					'padding-top': 'env(safe-area-inset-top)',
+					'padding-bottom': 'env(safe-area-inset-bottom)',
+					'padding-left': 'env(safe-area-inset-left)',
+					'padding-right': 'env(safe-area-inset-right)'
+				},
 				// Staggered animation delays for lists
 				'.animate-delay-0': { 'animation-delay': '0ms' },
 				'.animate-delay-1': { 'animation-delay': '50ms' },
