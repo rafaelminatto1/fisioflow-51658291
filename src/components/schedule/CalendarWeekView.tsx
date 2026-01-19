@@ -85,9 +85,12 @@ export const CalendarWeekView = memo(({
     selectedIds = new Set(),
     onToggleSelection
 }: CalendarWeekViewProps) => {
-    const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
-    const weekDays = Array.from({ length: 6 }, (_, i) => addDays(weekStart, i));
-    const timeSlots = generateTimeSlots(currentDate);
+    const weekDays = useMemo(() => {
+        const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+        return Array.from({ length: 6 }, (_, i) => addDays(weekStart, i));
+    }, [currentDate]);
+
+    const timeSlots = useMemo(() => generateTimeSlots(currentDate), [currentDate]);
 
     // Removed hoveredAppointmentId state to prevent global re-renders
     const [currentTimePosition, setCurrentTimePosition] = useState<number | null>(null);
@@ -142,6 +145,29 @@ export const CalendarWeekView = memo(({
         });
         return result;
     }, [weekAppointments, weekDays]);
+
+    // Optimize blocked time checks by memoizing the status for all cells
+    // This avoids O(N*M) calculations during render
+    const blockedStatusCache = useMemo(() => {
+        const cache = new Map<string, { blocked: boolean; reason?: string }>();
+
+        weekDays.forEach(day => {
+            timeSlots.forEach(time => {
+                // Creates a unique key for the day+time combination
+                // Using day index is safer than date string avoid timezone issues during lookup
+                const dayIndex = weekDays.indexOf(day);
+                const uniqueKey = `${dayIndex}-${time}`;
+                cache.set(uniqueKey, checkTimeBlocked(day, time));
+            });
+        });
+
+        return cache;
+    }, [weekDays, timeSlots, checkTimeBlocked]);
+
+    // Memoize isDayClosed status
+    const dayClosedStatus = useMemo(() => {
+        return weekDays.map(day => isDayClosedForDate(day));
+    }, [weekDays, isDayClosedForDate]);
 
     // Calculate position and width for overlapping appointments
     const getAppointmentStyle = useCallback((apt: Appointment) => {
@@ -275,9 +301,14 @@ export const CalendarWeekView = memo(({
 
                                 {/* Grid Background Cells for Interaction */}
                                 {weekDays.map((day, colIndex) => {
-                                    const isClosed = isDayClosedForDate(day);
+                                    // Use memoized closed status
+                                    const isClosed = dayClosedStatus[colIndex];
+
                                     return timeSlots.map((time, rowIndex) => {
-                                        const { blocked } = checkTimeBlocked(day, time);
+                                        // Use memoized blocked status
+                                        const key = `${colIndex}-${time}`;
+                                        const { blocked } = blockedStatusCache.get(key) || { blocked: false };
+
                                         const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === time;
 
                                         return (
@@ -312,7 +343,18 @@ export const CalendarWeekView = memo(({
 
                                     const day = weekDays[dayIndex];
                                     const aptTime = normalizeTime(apt.time);
-                                    const { blocked } = checkTimeBlocked(day, aptTime);
+
+                                    // Use lookup for blocked status
+                                    // Note: appointments might have times not in timeSlots list?
+                                    // If so, fall back to checkTimeBlocked?
+                                    // Since we built cache based on timeSlots, if aptTime is not in list we might miss it.
+                                    // But typically appointments align with slots.
+                                    // Let's use checkTimeBlocked here as fallback to be safe since it's only for appointments (much fewer than cells)
+                                    // or just use cache if we are sure. To match the plan optimization, we should prefer cache if possible.
+                                    const key = `${dayIndex}-${aptTime}`;
+                                    const cachedBlock = blockedStatusCache.get(key);
+                                    const { blocked } = cachedBlock || checkTimeBlocked(day, aptTime);
+
                                     const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === aptTime;
 
                                     return (
