@@ -31,7 +31,7 @@ interface MedicalChatbotProps {
 }
 
 interface ChatBubbleProps {
-  message: { id?: string; content: string; type?: string; timestamp?: string };
+  message: { id?: string; content: string; type?: string; timestamp?: string; metadata?: any };
   isUser: boolean;
   showTime?: boolean;
 }
@@ -68,12 +68,12 @@ interface VoiceRecorderProps {
 
 // Componente de bolha de chat
 const ChatBubble: React.FC<ChatBubbleProps> = ({ message, isUser, showTime = true }) => {
-  const bubbleClass = isUser 
-    ? 'bg-blue-500 text-white ml-auto' 
+  const bubbleClass = isUser
+    ? 'bg-blue-500 text-white ml-auto'
     : 'bg-gray-100 text-gray-800 mr-auto';
-  
+
   const alignClass = isUser ? 'justify-end' : 'justify-start';
-  
+
   return (
     <div className={`flex ${alignClass} mb-4 group`}>
       <div className={`flex items-start space-x-2 max-w-xs lg:max-w-md`}>
@@ -82,11 +82,11 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message, isUser, showTime = tru
             <Bot className="w-4 h-4 text-white" />
           </div>
         )}
-        
+
         <div className={`px-4 py-2 rounded-lg ${bubbleClass} shadow-sm`}>
           <div className="flex items-center space-x-1 mb-1">
             <span className="text-xs opacity-75">
-              {getMessageTypeIcon(message.type)}
+              {getMessageTypeIcon(message.type as any)}
             </span>
             {message.metadata?.confidence && (
               <span className="text-xs opacity-60">
@@ -94,17 +94,17 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message, isUser, showTime = tru
               </span>
             )}
           </div>
-          
+
           <p className="text-sm leading-relaxed whitespace-pre-wrap">
             {message.content}
           </p>
-          
+
           {showTime && (
             <div className="text-xs opacity-60 mt-1">
-              {formatChatTime(message.timestamp)}
+              {formatChatTime(message.timestamp ? new Date(message.timestamp) : new Date())}
             </div>
           )}
-          
+
           {message.metadata?.suggestions && message.metadata.suggestions.length > 0 && (
             <div className="mt-2 space-y-1">
               <p className="text-xs opacity-75">Sugestões:</p>
@@ -116,7 +116,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({ message, isUser, showTime = tru
             </div>
           )}
         </div>
-        
+
         {isUser && (
           <div className="flex-shrink-0 w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
             <User className="w-4 h-4 text-gray-600" />
@@ -143,7 +143,7 @@ const QuickReplyButton: React.FC<QuickReplyButtonProps> = ({ reply, onClick }) =
 // Indicador de digitação
 const TypingIndicator: React.FC<TypingIndicatorProps> = ({ show }) => {
   if (!show) return null;
-  
+
   return (
     <div className="flex justify-start mb-4">
       <div className="flex items-start space-x-2">
@@ -165,7 +165,7 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({ show }) => {
 // Avaliação de satisfação
 const SatisfactionRating: React.FC<SatisfactionRatingProps> = ({ onRate, currentRating }) => {
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
-  
+
   return (
     <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
       <h4 className="text-sm font-medium text-gray-800 mb-2">Como foi nosso atendimento?</h4>
@@ -176,11 +176,10 @@ const SatisfactionRating: React.FC<SatisfactionRatingProps> = ({ onRate, current
             onClick={() => onRate(rating)}
             onMouseEnter={() => setHoveredRating(rating)}
             onMouseLeave={() => setHoveredRating(null)}
-            className={`text-2xl transition-transform duration-200 hover:scale-110 ${
-              (hoveredRating && rating <= hoveredRating) || (currentRating && rating <= currentRating)
-                ? 'text-yellow-400'
-                : 'text-gray-300'
-            }`}
+            className={`text-2xl transition-transform duration-200 hover:scale-110 ${(hoveredRating && rating <= hoveredRating) || (currentRating && rating <= currentRating)
+              ? 'text-yellow-400'
+              : 'text-gray-300'
+              }`}
           >
             <Star className="w-6 h-6 fill-current" />
           </button>
@@ -196,13 +195,13 @@ const SatisfactionRating: React.FC<SatisfactionRatingProps> = ({ onRate, current
 };
 
 // Cabeçalho do chat
-const ChatHeader: React.FC<ChatHeaderProps> = ({ 
-  isMinimized, 
-  onMinimize, 
-  onClose, 
-  onRequestHuman, 
+const ChatHeader: React.FC<ChatHeaderProps> = ({
+  isMinimized,
+  onMinimize,
+  onClose,
+  onRequestHuman,
   isConnected,
-  humanHandoffRequested 
+  humanHandoffRequested
 }) => {
   return (
     <div className="bg-blue-500 text-white p-4 rounded-t-lg flex items-center justify-between">
@@ -213,21 +212,20 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         <div>
           <h3 className="font-semibold">Assistente FisioFlow</h3>
           <div className="flex items-center space-x-2 text-sm opacity-90">
-            <div className={`w-2 h-2 rounded-full ${
-              isConnected ? 'bg-green-400' : 'bg-red-400'
-            }`}></div>
+            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-red-400'
+              }`}></div>
             <span>
-              {humanHandoffRequested 
-                ? 'Conectando com especialista...' 
-                : isConnected 
-                  ? 'Online' 
+              {humanHandoffRequested
+                ? 'Conectando com especialista...'
+                : isConnected
+                  ? 'Online'
                   : 'Offline'
               }
             </span>
           </div>
         </div>
       </div>
-      
+
       <div className="flex items-center space-x-2">
         {!humanHandoffRequested && (
           <button
@@ -238,7 +236,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             <Phone className="w-4 h-4" />
           </button>
         )}
-        
+
         <button
           onClick={onMinimize}
           className="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors"
@@ -246,7 +244,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         >
           {isMinimized ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
         </button>
-        
+
         {onClose && (
           <button
             onClick={onClose}
@@ -262,14 +260,14 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 };
 
 // Gravador de voz
-const VoiceRecorder: React.FC<VoiceRecorderProps> = ({ 
-  isRecording, 
-  onStartRecording, 
-  onStopRecording, 
-  onVoiceMessage 
+const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
+  isRecording,
+  onStartRecording,
+  onStopRecording,
+  onVoiceMessage
 }) => {
   // const [transcript, setTranscript] = useState('');
-  
+
   // Simular reconhecimento de voz (em produção, usar Web Speech API)
   useEffect(() => {
     if (isRecording) {
@@ -279,19 +277,18 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         onVoiceMessage(mockTranscript);
         onStopRecording();
       }, 3000);
-      
+
       return () => clearTimeout(timer);
     }
   }, [isRecording, onVoiceMessage, onStopRecording]);
-  
+
   return (
     <button
       onClick={isRecording ? onStopRecording : onStartRecording}
-      className={`p-2 rounded-full transition-colors ${
-        isRecording 
-          ? 'bg-red-500 text-white animate-pulse' 
-          : 'text-gray-400 hover:text-gray-600'
-      }`}
+      className={`p-2 rounded-full transition-colors ${isRecording
+        ? 'bg-red-500 text-white animate-pulse'
+        : 'text-gray-400 hover:text-gray-600'
+        }`}
       title={isRecording ? 'Parar gravação' : 'Gravar mensagem de voz'}
     >
       {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
@@ -300,11 +297,11 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
 };
 
 // Componente principal do chatbot
-const MedicalChatbot: React.FC<MedicalChatbotProps> = ({ 
-  userId, 
-  patientId, 
-  initialContext, 
-  onClose, 
+const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
+  userId,
+  patientId,
+  initialContext,
+  onClose,
   embedded = false,
   theme = 'light'
 }) => {
@@ -325,59 +322,59 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
     exportChat,
     getFrequentQuestions
   } = useMedicalChatbot();
-  
+
   const [inputMessage, setInputMessage] = useState('');
   const [isMinimized, setIsMinimized] = useState(false);
   const [showSatisfactionRating, setShowSatisfactionRating] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  // const [showFrequentQuestions, setShowFrequentQuestions] = useState(false);
+  const [showFrequentQuestions, setShowFrequentQuestions] = useState(false);
   const [attachments, setAttachments] = useState<File[]>([]);
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Inicializar sessão ao montar o componente
   useEffect(() => {
     if (!currentSession) {
       startChatSession(userId, { patientId, ...initialContext });
     }
   }, [userId, patientId, initialContext, currentSession, startChatSession]);
-  
+
   // Auto-scroll para a última mensagem
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
-  
+
   // Focar no input quando não minimizado
   useEffect(() => {
     if (!isMinimized && inputRef.current) {
       inputRef.current.focus();
     }
   }, [isMinimized]);
-  
+
   // Enviar mensagem
   const handleSendMessage = async () => {
     if (!inputMessage.trim() && attachments.length === 0) return;
-    
+
     let messageContent = inputMessage.trim();
-    
+
     // Adicionar informações sobre anexos
     if (attachments.length > 0) {
       const attachmentInfo = attachments.map(file => `[Anexo: ${file.name}]`).join(' ');
       messageContent = `${messageContent} ${attachmentInfo}`.trim();
     }
-    
+
     await processUserMessage(messageContent);
     setInputMessage('');
     setAttachments([]);
   };
-  
+
   // Enviar resposta rápida
   const handleQuickReply = async (payload: string, text: string) => {
     await processUserMessage(text, 'quick_reply');
   };
-  
+
   // Manipular tecla Enter
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -385,18 +382,18 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
       handleSendMessage();
     }
   };
-  
+
   // Manipular anexos
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     setAttachments(prev => [...prev, ...files]);
   };
-  
+
   // Remover anexo
   const removeAttachment = (index: number) => {
     setAttachments(prev => prev.filter((_, i) => i !== index));
   };
-  
+
   // Exportar conversa
   const handleExportChat = () => {
     const chatData = exportChat();
@@ -412,10 +409,10 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
       URL.revokeObjectURL(url);
     }
   };
-  
+
   // Perguntas frequentes
   const frequentQuestions = getFrequentQuestions();
-  
+
   if (!currentSession) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -426,15 +423,14 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
       </div>
     );
   }
-  
-  const containerClass = embedded 
-    ? 'w-full h-full' 
+
+  const containerClass = embedded
+    ? 'w-full h-full'
     : 'fixed bottom-4 right-4 w-96 h-[600px] z-50';
-  
-  const chatClass = `bg-white rounded-lg shadow-2xl border border-gray-200 flex flex-col ${
-    isMinimized ? 'h-16' : 'h-full'
-  } ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : ''}`;
-  
+
+  const chatClass = `bg-white rounded-lg shadow-2xl border border-gray-200 flex flex-col ${isMinimized ? 'h-16' : 'h-full'
+    } ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : ''}`;
+
   return (
     <div className={containerClass}>
       <div className={chatClass}>
@@ -447,7 +443,7 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
           isConnected={isConnected}
           humanHandoffRequested={humanHandoffRequested}
         />
-        
+
         {!isMinimized && (
           <>
             {/* Área de mensagens */}
@@ -463,7 +459,7 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
                   </div>
                 </div>
               )}
-              
+
               {/* Perguntas frequentes */}
               {messages.length === 1 && showFrequentQuestions && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
@@ -484,19 +480,22 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
                   </div>
                 </div>
               )}
-              
+
               {/* Mensagens */}
               {messages.map((message) => (
                 <ChatBubble
                   key={message.id}
-                  message={message}
+                  message={{
+                    ...message,
+                    timestamp: typeof message.timestamp === 'object' ? (message.timestamp as Date).toISOString() : message.timestamp
+                  }}
                   isUser={message.sender === 'user'}
                 />
               ))}
-              
+
               {/* Indicador de digitação */}
               <TypingIndicator show={isTyping} />
-              
+
               {/* Avaliação de satisfação */}
               {showSatisfactionRating && (
                 <SatisfactionRating
@@ -506,10 +505,10 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
                   }}
                 />
               )}
-              
+
               <div ref={messagesEndRef} />
             </div>
-            
+
             {/* Respostas rápidas */}
             {quickReplies.length > 0 && (
               <div className="px-4 pb-2">
@@ -524,7 +523,7 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
                 </div>
               </div>
             )}
-            
+
             {/* Anexos */}
             {attachments.length > 0 && (
               <div className="px-4 pb-2">
@@ -544,7 +543,7 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
                 </div>
               </div>
             )}
-            
+
             {/* Área de input */}
             <div className="border-t border-gray-200 p-4">
               <div className="flex items-end space-x-2">
@@ -557,7 +556,7 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
                     >
                       <Paperclip className="w-5 h-5" />
                     </button>
-                    
+
                     <VoiceRecorder
                       isRecording={isRecording}
                       onStartRecording={() => setIsRecording(true)}
@@ -567,7 +566,7 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
                         setIsRecording(false);
                       }}
                     />
-                    
+
                     <button
                       onClick={handleExportChat}
                       className="p-2 text-gray-400 hover:text-gray-600 rounded-full transition-colors"
@@ -575,7 +574,7 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
                     >
                       <Download className="w-5 h-5" />
                     </button>
-                    
+
                     <button
                       onClick={() => setShowSatisfactionRating(true)}
                       className="p-2 text-gray-400 hover:text-gray-600 rounded-full transition-colors"
@@ -584,7 +583,7 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
                       <Star className="w-5 h-5" />
                     </button>
                   </div>
-                  
+
                   <div className="flex items-end space-x-2">
                     <input
                       ref={inputRef}
@@ -596,7 +595,7 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
                       className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                       disabled={isTyping || humanHandoffRequested}
                     />
-                    
+
                     <button
                       onClick={handleSendMessage}
                       disabled={(!inputMessage.trim() && attachments.length === 0) || isTyping}
@@ -607,7 +606,7 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
                   </div>
                 </div>
               </div>
-              
+
               {/* Input de arquivo oculto */}
               <input
                 ref={fileInputRef}
@@ -628,7 +627,7 @@ const MedicalChatbot: React.FC<MedicalChatbotProps> = ({
 export default MedicalChatbot;
 
 // Componente de botão flutuante para abrir o chatbot
- 
+
 export const ChatbotFloatingButton: React.FC<{
   onClick: () => void;
   hasUnreadMessages?: boolean;
@@ -653,22 +652,22 @@ export const ChatbotFloatingButton: React.FC<{
 export const useChatbotState = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
-  
+
   const openChatbot = () => {
     setIsOpen(true);
     setHasUnreadMessages(false);
   };
-  
+
   const closeChatbot = () => {
     setIsOpen(false);
   };
-  
+
   const markAsUnread = () => {
     if (!isOpen) {
       setHasUnreadMessages(true);
     }
   };
-  
+
   return {
     isOpen,
     hasUnreadMessages,

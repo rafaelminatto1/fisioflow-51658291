@@ -190,7 +190,7 @@ interface ReciboData {
 }
 
 export const ReciboPDFDocument = ({ data }: { data: ReciboData }) => (
-  <Document size="A4">
+  <Document>
     <Page size="A4" style={styles.page}>
       {/* Header */}
       <View style={styles.header}>

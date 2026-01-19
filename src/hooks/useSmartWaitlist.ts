@@ -157,7 +157,7 @@ export function useWaitlistAnomalies() {
 // =====================================================================
 
 /**
- * Hook para oferecer vagas automaticamente para candidatos
+ * Hook para oferecer vagas automaticamente para candidatos via WhatsApp
  */
 export function useAutoOfferSlots() {
   const queryClient = useQueryClient();
@@ -170,26 +170,77 @@ export function useAutoOfferSlots() {
       recommendation: WaitlistRecommendation;
       maxCandidates?: number;
     }) => {
+      const { WhatsAppService } = await import('@/lib/services/WhatsAppService');
+      const { supabase } = await import('@/integrations/supabase/client');
       const results = [];
 
       for (let i = 0; i < Math.min(recommendation.candidates.length, maxCandidates); i++) {
         const candidate = recommendation.candidates[i];
         const slot = recommendation.slot;
+        const entry = candidate.entry;
 
-        // TODO: Call offer slot mutation
-        // For now, just return the candidate data
+        // Get patient phone from entry
+        const patientPhone = entry.patient?.phone;
+        const patientName = entry.patient?.name || 'Paciente';
+
+        if (!patientPhone) {
+          results.push({
+            candidate,
+            slot,
+            success: false,
+            error: 'Paciente sem telefone cadastrado',
+          });
+          continue;
+        }
+
+        // Update waitlist entry status to 'offered'
+        await supabase
+          .from('waitlist')
+          .update({
+            status: 'offered',
+            offered_slot: `${slot.dateString} ${slot.time}`,
+            offered_at: new Date().toISOString(),
+            offer_expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          })
+          .eq('id', entry.id);
+
+        // Send WhatsApp offer
+        const sendResult = await WhatsAppService.sendSlotOffer({
+          patientName,
+          patientPhone,
+          patientId: entry.patient_id,
+          waitlistEntryId: entry.id,
+          slotDate: slot.date,
+          slotTime: slot.time,
+          expiresInHours: 24,
+        });
+
         results.push({
           candidate,
           slot,
           offeredAt: new Date().toISOString(),
+          success: sendResult.success,
+          messageId: sendResult.messageId,
+          error: sendResult.error,
         });
       }
 
       return results;
     },
-    onSuccess: () => {
+    onSuccess: (results) => {
       queryClient.invalidateQueries({ queryKey: ['waitlist'] });
       queryClient.invalidateQueries({ queryKey: ['smart-waitlist'] });
+
+      const successCount = results.filter(r => r.success).length;
+      const failCount = results.filter(r => !r.success).length;
+
+      if (successCount > 0) {
+        // Toast is handled by toast from sonner - import at top if needed
+        console.log(`[useAutoOfferSlots] ${successCount} ofertas enviadas com sucesso`);
+      }
+      if (failCount > 0) {
+        console.warn(`[useAutoOfferSlots] ${failCount} ofertas falharam`);
+      }
     },
   });
 }

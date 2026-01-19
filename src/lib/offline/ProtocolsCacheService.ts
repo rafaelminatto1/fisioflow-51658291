@@ -1,196 +1,91 @@
 /**
- * Serviço de cache para protocolos
- * Gerencia persistência offline e fallback automaticamente
+ * Service for caching exercise protocols data offline.
  */
-import { dbStore } from './IndexedDBStore';
-import type { ExerciseProtocol } from '@/hooks/useExerciseProtocols';
 import { logger } from '@/lib/errors/logger';
 
-const CACHE_KEY = 'protocols_cache_metadata';
-const STORE_NAME = 'exercise_protocols';
-const DEFAULT_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 dias (protocolos mudam pouco)
-const EMERGENCY_CACHE_KEY = 'protocols_emergency_backup';
-
-export interface CacheMetadata {
+interface CacheMetadata {
     lastUpdated: string;
-    count: number;
-    version: number;
-    expiresAt: string;
 }
 
-export interface CacheResult {
-    data: ExerciseProtocol[];
-    metadata: CacheMetadata | null;
-    isExpired: boolean;
+interface CacheResult<T> {
+    data: T[];
     isStale: boolean;
-    source: 'indexeddb' | 'localstorage' | 'none';
+    metadata: CacheMetadata | null;
+    source: 'indexeddb' | 'localstorage' | 'memory';
 }
 
 class ProtocolsCacheService {
-    private initialized = false;
-    private readonly CACHE_VERSION = 1;
-    // Protocolos são dados estáticos, então "stale" é menos crítico, 
-    // mas vamos considerar stale após 24h para tentar refresh em background
-    private readonly STALE_THRESHOLD_MS = 1000 * 60 * 60 * 24;
+    private readonly CACHE_KEY = 'protocols_cache';
+    private readonly CACHE_TIMESTAMP_KEY = 'protocols_cache_timestamp';
+    private readonly CACHE_DURATION_MS = 60 * 60 * 1000; // 1 hour (protocols change infrequently)
 
-    async init(): Promise<void> {
-        if (this.initialized) return;
-        try {
-            await dbStore.init();
-            this.initialized = true;
-            logger.debug('ProtocolsCacheService inicializado', {}, 'ProtocolsCacheService');
-        } catch (error) {
-            logger.error('Erro ao inicializar ProtocolsCacheService', error, 'ProtocolsCacheService');
-            // Não relança erro para permitir fallback
-        }
+    /**
+     * Check if cached data is still valid (not expired)
+     */
+    async isCacheValid(): Promise<boolean> {
+        const timestamp = localStorage.getItem(this.CACHE_TIMESTAMP_KEY);
+        if (!timestamp) return false;
+
+        const cacheTime = parseInt(timestamp, 10);
+        return Date.now() - cacheTime < this.CACHE_DURATION_MS;
     }
 
     /**
-     * Salva protocolos no cache local com metadata
+     * Get cached protocols
      */
-    async saveToCache(protocols: ExerciseProtocol[], ttlMs: number = DEFAULT_CACHE_TTL_MS): Promise<void> {
+    async getFromCache<T>(): Promise<CacheResult<T>> {
         try {
-            await this.init();
-
-            const now = new Date();
-            const expiresAt = new Date(now.getTime() + ttlMs);
-
-            // Limpar cache anterior
-            await dbStore.clear(STORE_NAME);
-
-            if (protocols.length > 0) {
-                // Salvar no IndexedDB
-                await dbStore.putAll(STORE_NAME, protocols);
-
-                // Salvar backup de emergência no localStorage (apenas dados essenciais se for muito grande)
-                this.saveEmergencyBackup(protocols);
+            const cached = localStorage.getItem(this.CACHE_KEY);
+            if (!cached) {
+                return { data: [], isStale: false, metadata: null, source: 'memory' };
             }
 
-            // Salvar metadata
-            const metadata: CacheMetadata = {
-                lastUpdated: now.toISOString(),
-                count: protocols.length,
-                version: this.CACHE_VERSION,
-                expiresAt: expiresAt.toISOString(),
-            };
-            localStorage.setItem(CACHE_KEY, JSON.stringify(metadata));
+            const isValid = await this.isCacheValid();
+            const timestamp = localStorage.getItem(this.CACHE_TIMESTAMP_KEY);
 
-            logger.info('Cache de protocolos atualizado', {
-                count: protocols.length,
-                expiresAt: expiresAt.toISOString()
-            }, 'ProtocolsCacheService');
-        } catch (error) {
-            logger.error('Erro ao salvar cache de protocolos', error, 'ProtocolsCacheService');
-        }
-    }
-
-    /**
-     * Salva backup de emergência no localStorage
-     * Útil se IndexedDB falhar ou não estiver disponível
-     */
-    private saveEmergencyBackup(protocols: ExerciseProtocol[]) {
-        try {
-            // Se for muitos dados, pode estourar localStorage, então cuidado
-            // Protocolos costumam ter texto e JSONs grandes.
-            // Vamos tentar salvar, mas com catch.
-            const backup = {
-                data: protocols,
-                timestamp: new Date().toISOString(),
-                count: protocols.length
-            };
-            localStorage.setItem(EMERGENCY_CACHE_KEY, JSON.stringify(backup));
-        } catch (e) {
-            logger.warn('Não foi possível salvar backup de emergência de protocolos (provavelmente quota excedida)', e, 'ProtocolsCacheService');
-        }
-    }
-
-    private getEmergencyBackup(): CacheResult {
-        try {
-            const backupStr = localStorage.getItem(EMERGENCY_CACHE_KEY);
-            if (!backupStr) return { data: [], metadata: null, isExpired: true, isStale: true, source: 'none' };
-
-            const backup = JSON.parse(backupStr);
             return {
-                data: backup.data || [],
-                metadata: {
-                    lastUpdated: backup.timestamp,
-                    count: backup.count || 0,
-                    version: this.CACHE_VERSION,
-                    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString() // Fake expiry
-                },
-                isExpired: false, // Backup é sempre considerado "melhor que nada"
-                isStale: true,
+                data: JSON.parse(cached) as T[],
+                isStale: !isValid,
+                metadata: timestamp ? { lastUpdated: new Date(parseInt(timestamp, 10)).toISOString() } : null,
                 source: 'localstorage'
             };
-        } catch {
-            return { data: [], metadata: null, isExpired: true, isStale: true, source: 'none' };
+        } catch (error) {
+            logger.error('Error reading protocols cache', error, 'ProtocolsCacheService');
+            return { data: [], isStale: false, metadata: null, source: 'memory' };
         }
     }
 
     /**
-     * Recupera protocolos do cache local com fallback
+     * Save protocols to cache
      */
-    async getFromCache(): Promise<CacheResult> {
-        const emptyResult: CacheResult = {
-            data: [],
-            metadata: null,
-            isExpired: true,
-            isStale: true,
-            source: 'none'
-        };
-
+    async saveToCache<T>(data: T[]): Promise<void> {
         try {
-            await this.init();
-
-            const metadata = this.getCacheMetadata();
-
-            // 1. Tentar IndexedDB se metadata existir
-            if (metadata && metadata.version === this.CACHE_VERSION) {
-                try {
-                    const cachedData = await dbStore.getAll<ExerciseProtocol>(STORE_NAME);
-
-                    if (cachedData && cachedData.length > 0) {
-                        const now = new Date();
-                        const lastUpdated = new Date(metadata.lastUpdated);
-                        const isStale = now.getTime() - lastUpdated.getTime() > this.STALE_THRESHOLD_MS;
-
-                        logger.info('Protocolos recuperados do IndexedDB', { count: cachedData.length }, 'ProtocolsCacheService');
-
-                        return {
-                            data: cachedData,
-                            metadata,
-                            isExpired: false,
-                            isStale,
-                            source: 'indexeddb'
-                        };
-                    }
-                } catch (dbError) {
-                    logger.error('Falha ao ler IndexedDB, tentando backup', dbError, 'ProtocolsCacheService');
-                }
-            }
-
-            // 2. Fallback para LocalStorage
-            const backup = this.getEmergencyBackup();
-            if (backup.source === 'localstorage' && backup.data.length > 0) {
-                logger.warn('Usando backup de emergência para protocolos', { count: backup.data.length }, 'ProtocolsCacheService');
-                return backup;
-            }
-
-            return emptyResult;
+            localStorage.setItem(this.CACHE_KEY, JSON.stringify(data));
+            localStorage.setItem(this.CACHE_TIMESTAMP_KEY, Date.now().toString());
         } catch (error) {
-            logger.error('Erro geral ao recuperar cache de protocolos', error, 'ProtocolsCacheService');
-            // Tentar backup uma última vez em caso de erro no init()
-            return this.getEmergencyBackup();
+            logger.error('Error caching protocols', error, 'ProtocolsCacheService');
         }
     }
 
-    getCacheMetadata(): CacheMetadata | null {
+    /**
+     * Clear the protocols cache
+     */
+    async clearCache(): Promise<void> {
         try {
-            const metadataStr = localStorage.getItem(CACHE_KEY);
-            return metadataStr ? JSON.parse(metadataStr) : null;
-        } catch {
-            return null;
+            localStorage.removeItem(this.CACHE_KEY);
+            localStorage.removeItem(this.CACHE_TIMESTAMP_KEY);
+        } catch (error) {
+            logger.error('Error clearing protocols cache', error, 'ProtocolsCacheService');
         }
+    }
+
+    /**
+     * Get cache age in minutes
+     */
+    getCacheAgeMinutes(): number {
+        const timestamp = localStorage.getItem(this.CACHE_TIMESTAMP_KEY);
+        if (!timestamp) return Infinity;
+        return Math.round((Date.now() - parseInt(timestamp, 10)) / 60000);
     }
 }
 

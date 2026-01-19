@@ -266,7 +266,7 @@ class OfflineSyncService {
     }
 
     try {
-      await this.swRegistration.sync.register('offline-actions-sync');
+      await (this.swRegistration as any).sync.register('offline-actions-sync');
       return true;
     } catch (error) {
       console.warn('[OfflineSyncService] Background sync registration failed:', error);
@@ -293,7 +293,7 @@ class OfflineSyncService {
       const pendingActions = await index.getAll(false);
 
       if (pendingActions.length === 0) {
-        this.lastSyncStats = this.getStats();
+        this.lastSyncStats = await this.getStats();
         return this.lastSyncStats;
       }
 
@@ -303,7 +303,7 @@ class OfflineSyncService {
       );
 
       if (validActions.length === 0) {
-        this.lastSyncStats = this.getStats();
+        this.lastSyncStats = await this.getStats();
         return this.lastSyncStats;
       }
 
@@ -476,6 +476,84 @@ class OfflineSyncService {
   }
 
   // ========================================================================
+  // CACHING
+  // ========================================================================
+
+  /**
+   * Caches critical data for offline use
+   * Fetches upcoming appointments, related patients, and common exercises
+   */
+  public async cacheCriticalData(): Promise<void> {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      console.log('[OfflineSyncService] Cannot cache data while offline');
+      return;
+    }
+
+    try {
+      console.log('[OfflineSyncService] Starting critical data caching...');
+      const db = await getDB();
+      const { supabase } = await import('@/integrations/supabase/client');
+
+      // 1. Cache upcoming appointments (next 24 hours)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      // Format as YYYY-MM-DD for date comparison
+      const todayStr = today.toISOString().split('T')[0];
+      const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+      const { data: appointments, error: apptError } = await supabase
+        .from('appointments')
+        .select('*, patients(*)')
+        .gte('appointment_date', todayStr)
+        .lte('appointment_date', tomorrowStr);
+
+      if (apptError) {
+        console.warn('[OfflineSyncService] Error caching appointments:', apptError.message);
+      }
+
+      if (appointments && appointments.length > 0) {
+        const tx = db.transaction(['appointments', 'patients'], 'readwrite');
+        const apptStore = tx.objectStore('appointments');
+        const patientStore = tx.objectStore('patients');
+
+        for (const appt of appointments) {
+          await apptStore.put(appt);
+          if (appt.patients) {
+            await patientStore.put(appt.patients);
+          }
+        }
+        await tx.done;
+        console.log(`[OfflineSyncService] Cached ${appointments.length} appointments`);
+      } else {
+        console.log('[OfflineSyncService] No appointments to cache for today');
+      }
+
+      // 2. Cache common exercises (first 100)
+      const { data: exercises } = await supabase
+        .from('exercises')
+        .select('*')
+        .limit(100);
+
+      if (exercises) {
+        const tx = db.transaction('exercises', 'readwrite');
+        const store = tx.store;
+        for (const ex of exercises) {
+          await store.put(ex);
+        }
+        await tx.done;
+        console.log(`[OfflineSyncService] Cached ${exercises.length} exercises`);
+      }
+
+      console.log('[OfflineSyncService] Critical data caching complete');
+    } catch (error) {
+      console.error('[OfflineSyncService] Error caching critical data:', error);
+    }
+  }
+
+  // ========================================================================
   // STATS & LISTENERS
   // ========================================================================
 
@@ -486,18 +564,18 @@ class OfflineSyncService {
   public async getStats(): Promise<SyncStats> {
     try {
       const db = await getDB();
-      const tx = db.transaction('offline_actions', 'readonly');
+      const allActions = await db.getAll('offline_actions');
 
       let total = 0;
       let pending = 0;
       let synced = 0;
       let failed = 0;
 
-      for await (const cursor of tx.store) {
+      for (const action of allActions) {
         total++;
-        if (cursor.value.synced) {
+        if (action.synced) {
           synced++;
-        } else if (cursor.value.retryCount >= (this.config.maxRetries || DEFAULT_MAX_RETRIES)) {
+        } else if (action.retryCount >= (this.config.maxRetries || DEFAULT_MAX_RETRIES)) {
           failed++;
         } else {
           pending++;
@@ -739,6 +817,11 @@ export function useOfflineSync(config?: SyncConfig) {
     service.updateConfig(newConfig);
   }, []);
 
+  const cacheCriticalData = useCallback(async () => {
+    const service = getOfflineSyncService();
+    return service.cacheCriticalData();
+  }, []);
+
   return {
     stats,
     syncNow,
@@ -746,6 +829,7 @@ export function useOfflineSync(config?: SyncConfig) {
     stopSync,
     updateConfig,
     isOnline,
+    cacheCriticalData,
   };
 }
 
@@ -754,11 +838,4 @@ export function useOfflineSync(config?: SyncConfig) {
 // ============================================================================
 
 export { OfflineSyncService };
-export type {
-  SyncConfig,
-  QueuedAction,
-  SyncStats,
-  SyncEventType,
-  SyncEvent,
-  SyncEventListener,
-};
+

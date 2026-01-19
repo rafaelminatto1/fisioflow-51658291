@@ -1,0 +1,37 @@
+
+> vite_react_shadcn_ts@0.0.0 build /home/rafael/cursor/fisiolovable/fisioflow-51658291
+> NODE_OPTIONS='--max-old-space-size=4096' vite build
+
+vite v5.4.19 building for production...
+[sentry-vite-plugin] Info: Sending telemetry data on issues and performance to Sentry. To disable telemetry, set `options.telemetry` to `false`.
+transforming...
+
+warn - The class `duration-[3s]` is ambiguous and matches multiple utilities.
+warn - If this is content and not a class, replace it with `duration-&lsqb;3s&rsqb;` to silence this warning.
+✓ 3017 modules transformed.
+x Build failed in 6.93s
+error during build:
+[vite-plugin-pwa:build] [plugin vite-plugin-pwa:build] src/hooks/useAppointments.tsx (473:8): There was an error during the build:
+  Transform failed with 1 error:
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useAppointments.tsx:473:8: ERROR: Unexpected "}"
+Additionally, handling the error in the 'buildEnd' hook caused the following error:
+  Transform failed with 1 error:
+/home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useAppointments.tsx:473:8: ERROR: Unexpected "}"
+file: /home/rafael/cursor/fisiolovable/fisioflow-51658291/src/hooks/useAppointments.tsx:473:8
+
+Unexpected "}"
+471|  const [y, m, d] = dateStr.split('-').map(Number);
+472|  return new Date(y, m - 1, d, 12, 0, 0);
+473|          }) (),
+   |          ^
+474|    time: updatedAppointment.start_time || updatedAppointment.appointment_time,
+475|      duration: updatedAppointment.duration || 60,
+
+    at getRollupError (file:///home/rafael/cursor/fisiolovable/fisioflow-51658291/node_modules/.pnpm/rollup@4.50.0/node_modules/rollup/dist/es/shared/parseAst.js:401:41)
+    at file:///home/rafael/cursor/fisiolovable/fisioflow-51658291/node_modules/.pnpm/rollup@4.50.0/node_modules/rollup/dist/es/shared/node-entry.js:23290:39
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async catchUnfinishedHookActions (file:///home/rafael/cursor/fisiolovable/fisioflow-51658291/node_modules/.pnpm/rollup@4.50.0/node_modules/rollup/dist/es/shared/node-entry.js:22749:16)
+    at async rollupInternal (file:///home/rafael/cursor/fisiolovable/fisioflow-51658291/node_modules/.pnpm/rollup@4.50.0/node_modules/rollup/dist/es/shared/node-entry.js:23273:5)
+    at async build (file:///home/rafael/cursor/fisiolovable/fisioflow-51658291/node_modules/.pnpm/vite@5.4.19_@types+node@22.18.1_terser@5.44.1/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:65693:14)
+    at async CAC.<anonymous> (file:///home/rafael/cursor/fisiolovable/fisioflow-51658291/node_modules/.pnpm/vite@5.4.19_@types+node@22.18.1_terser@5.44.1/node_modules/vite/dist/node/cli.js:829:5)
+ ELIFECYCLE  Command failed with exit code 1.

@@ -126,7 +126,7 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
             <Layer>
                 {annotations.map((ann) => {
                     if (ann.type === 'arrow') {
-                        return <Arrow key={ann.id} points={ann.points} stroke={ann.stroke} strokeWidth={ann.strokeWidth || 4} />;
+                        return <Arrow key={ann.id} points={ann.points || []} stroke={ann.stroke} strokeWidth={ann.strokeWidth || 4} />;
                     } else if (ann.type === 'circle') {
                         return <Circle key={ann.id} x={ann.x} y={ann.y} radius={ann.radius} stroke={ann.stroke} strokeWidth={ann.strokeWidth || 4} />;
                     } else if (ann.type === 'rect') {
@@ -138,7 +138,7 @@ const AnnotationLayer: React.FC<AnnotationLayerProps> = ({
                 })}
 
                 {newAnnotation && (
-                    newAnnotation.type === 'arrow' ? <Arrow points={newAnnotation.points} stroke="red" strokeWidth={4} /> :
+                    newAnnotation.type === 'arrow' ? <Arrow points={newAnnotation.points || []} stroke="red" strokeWidth={4} /> :
                         newAnnotation.type === 'circle' ? <Circle x={newAnnotation.x} y={newAnnotation.y} radius={newAnnotation.radius} stroke="red" strokeWidth={4} /> :
                             newAnnotation.type === 'rect' ? <Rect x={newAnnotation.x} y={newAnnotation.y} width={newAnnotation.width} height={newAnnotation.height} stroke="red" strokeWidth={4} /> : null
                 )}

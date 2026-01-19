@@ -350,15 +350,4 @@ export interface CreateSeriesResult {
 // EXPORTS
 // =====================================================================
 
-export type {
-  RecurringAppointmentSeries,
-  RecurringAppointmentOccurrence,
-  RecurringAppointmentSeriesWithStats,
-  RecurringAppointmentFormData,
-  ModifyOccurrenceFormData,
-  OccurrencePreview,
-  GenerateOccurrencesResult,
-  FetchRecurringSeriesParams,
-  FetchRecurringSeriesResult,
-  CreateSeriesResult,
-};
+
