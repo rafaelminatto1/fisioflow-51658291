@@ -1,0 +1,33 @@
+
+> vite_react_shadcn_ts@0.0.0 build /home/rafael/cursor/fisiolovable/fisioflow-51658291
+> NODE_OPTIONS='--max-old-space-size=4096' vite build
+
+vite v5.4.19 building for production...
+[sentry-vite-plugin] Info: Sending telemetry data on issues and performance to Sentry. To disable telemetry, set `options.telemetry` to `false`.
+transforming...
+
+warn - The class `duration-[3s]` is ambiguous and matches multiple utilities.
+warn - If this is content and not a class, replace it with `duration-&lsqb;3s&rsqb;` to silence this warning.
+✓ 7245 modules transformed.
+x Build failed in 24.27s
+error during build:
+[vite-plugin-pwa:build] There was an error during the build:
+  src/components/schedule/AppointmentModalRefactored.tsx (29:2): "useDeleteAppointment" is not exported by "src/hooks/useAppointments.tsx", imported by "src/components/schedule/AppointmentModalRefactored.tsx".
+Additionally, handling the error in the 'buildEnd' hook caused the following error:
+  src/components/schedule/AppointmentModalRefactored.tsx (29:2): "useDeleteAppointment" is not exported by "src/hooks/useAppointments.tsx", imported by "src/components/schedule/AppointmentModalRefactored.tsx".
+file: /home/rafael/cursor/fisiolovable/fisioflow-51658291/src/components/schedule/AppointmentModalRefactored.tsx:29:2
+
+27:   useCreateAppointment,
+28:   useUpdateAppointment,
+29:   useDeleteAppointment
+      ^
+30: } from '@/hooks/useAppointments';
+31: import { useScheduleCapacity } from '@/hooks/useScheduleCapacity';
+
+    at getRollupError (file:///home/rafael/cursor/fisiolovable/fisioflow-51658291/node_modules/.pnpm/rollup@4.50.0/node_modules/rollup/dist/es/shared/parseAst.js:401:41)
+    at file:///home/rafael/cursor/fisiolovable/fisioflow-51658291/node_modules/.pnpm/rollup@4.50.0/node_modules/rollup/dist/es/shared/node-entry.js:23290:39
+    at async catchUnfinishedHookActions (file:///home/rafael/cursor/fisiolovable/fisioflow-51658291/node_modules/.pnpm/rollup@4.50.0/node_modules/rollup/dist/es/shared/node-entry.js:22749:16)
+    at async rollupInternal (file:///home/rafael/cursor/fisiolovable/fisioflow-51658291/node_modules/.pnpm/rollup@4.50.0/node_modules/rollup/dist/es/shared/node-entry.js:23273:5)
+    at async build (file:///home/rafael/cursor/fisiolovable/fisioflow-51658291/node_modules/.pnpm/vite@5.4.19_@types+node@22.18.1_terser@5.44.1/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:65693:14)
+    at async CAC.<anonymous> (file:///home/rafael/cursor/fisiolovable/fisioflow-51658291/node_modules/.pnpm/vite@5.4.19_@types+node@22.18.1_terser@5.44.1/node_modules/vite/dist/node/cli.js:829:5)
+ ELIFECYCLE  Command failed with exit code 1.

@@ -111,7 +111,6 @@ export default defineConfig(({ mode }) => {
             }
           ],
           categories: ['health', 'medical', 'productivity'],
-          version: '1.0.0', // Restaurado version campo
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff2}'],

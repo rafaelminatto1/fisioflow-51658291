@@ -15,7 +15,8 @@ import {
   MessageSquare,
   Download,
   Play,
-  CheckCircle
+  CheckCircle,
+  TrendingUp
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -31,8 +32,8 @@ export function PatientDashboard({ _lastUpdate, profile }: PatientDashboardProps
   // Estado local para dados específicos (opcional)
   const [upcomingAppointments, setUpcomingAppointments] = useState(5);
   const [todayExercises, setTodayExercises] = useState(5);
-  const [progressData, setProgressData] = useState<Array<{date: string, value: number}>>([]);
-  const [messages, setMessages] = useState<Array<{type: 'success' | 'error', text: string}>>([]);
+  const [progressData, setProgressData] = useState<Array<{ date: string, value: number }>>([]);
+  const [messages, setMessages] = useState<Array<{ type: 'success' | 'error', text: string }>>([]);
 
   /**
    * Carregar dados específicos do paciente
@@ -44,13 +45,13 @@ export function PatientDashboard({ _lastUpdate, profile }: PatientDashboardProps
       const sortedAppointments = [...appointments]
         .sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())
         .slice(0, 5);
-      
+
       // Exercícios de hoje
       const todayExercisesData = Array.from({ length: 5 }, (_, i) => ({
         date: format(new Date(), 'dd/MM'),
         value: Math.floor(Math.random() * 30) + (i * 5),
       }));
-      
+
       // Progresso do tratamento
       const progressChartData = Array.from({ length: 7 }, (_, i) => ({
         date: format(new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000), 'dd/MM'),
@@ -70,7 +71,7 @@ export function PatientDashboard({ _lastUpdate, profile }: PatientDashboardProps
           }
         ]);
       }
-      
+
     } catch (error) {
       console.error('Erro ao carregar dados do dashboard:', error);
       toast({
@@ -119,7 +120,7 @@ export function PatientDashboard({ _lastUpdate, profile }: PatientDashboardProps
           gradient="from-blue-500 to-blue-600"
           loading={false}
         />
-        
+
         <StatCard
           title="Exercícios Hoje"
           value={stats.todayExercises}
@@ -128,7 +129,7 @@ export function PatientDashboard({ _lastUpdate, profile }: PatientDashboardProps
           gradient="from-green-500 to-green-600"
           loading={false}
         />
-        
+
         <StatCard
           title="Progresso do Tratamento"
           value={`${stats.treatmentProgress}%`}
@@ -137,7 +138,7 @@ export function PatientDashboard({ _lastUpdate, profile }: PatientDashboardProps
           gradient={stats.treatmentProgress >= 80 ? 'from-orange-500 to-orange-600' : 'from-yellow-500 to-yellow-600'}
           loading={false}
         />
-        
+
         <StatCard
           title="Mensagens"
           value={stats.totalMessages}
@@ -157,7 +158,7 @@ export function PatientDashboard({ _lastUpdate, profile }: PatientDashboardProps
           <Download className="mr-2 h-4 w-4" />
           Atualizar Dados
         </Button>
-        
+
         <Button
           onClick={() => window.location.reload()}
           variant="outline"
@@ -173,11 +174,10 @@ export function PatientDashboard({ _lastUpdate, profile }: PatientDashboardProps
           {messages.map((msg, index) => (
             <div
               key={index}
-              className={`p-4 rounded-lg border ${
-                msg.type === 'success' 
-                  ? 'bg-green-500/10 border-green-500' 
+              className={`p-4 rounded-lg border ${msg.type === 'success'
+                  ? 'bg-green-500/10 border-green-500'
                   : 'bg-red-500/10 border-red-500'
-              }`}
+                }`}
             >
               <div className="flex items-start gap-3">
                 {msg.type === 'success' ? (

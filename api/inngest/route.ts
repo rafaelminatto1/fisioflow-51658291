@@ -7,9 +7,9 @@
  * Route: /api/inngest
  */
 
-import { GET, POST, OPTIONS } from '../../src/lib/inngest/serve.js';
+import { GET, POST, PUT } from '../../src/lib/inngest/serve.js';
 
-export { GET, POST, OPTIONS };
+export { GET, POST, PUT };
 
 // Edge runtime configuration
 export const runtime = 'edge';
