@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Lead } from '@/hooks/useLeads';
-import { TrendingUp, Users, Target, CheckCircle2, XCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, Users, Target, CheckCircle2, XCircle } from 'lucide-react';
 
 interface LeadFunnelProps {
   leads: Lead[];
@@ -93,10 +93,10 @@ export function LeadFunnel({ leads, estagios }: LeadFunnelProps) {
             {estagiosAtivos.map((estagio, index) => {
               const width = maxCount > 0 ? (estagio.count / maxCount) * 100 : 0;
               const previousCount = index > 0 ? estagiosAtivos[index - 1].count : 0;
-              const conversionRate = previousCount > 0 
-                ? ((estagio.count / previousCount) * 100).toFixed(0) 
+              const conversionRate = previousCount > 0
+                ? ((estagio.count / previousCount) * 100).toFixed(0)
                 : '100';
-              
+
               return (
                 <div key={estagio.value} className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
@@ -119,11 +119,11 @@ export function LeadFunnel({ leads, estagios }: LeadFunnelProps) {
                     </div>
                   </div>
                   <div className="relative h-10 bg-muted rounded-lg overflow-hidden">
-                    <div 
+                    <div
                       className={`absolute left-0 top-0 h-full ${estagio.color} transition-all duration-500 flex items-center justify-center`}
-                      style={{ 
+                      style={{
                         width: `${Math.max(width, 5)}%`,
-                        clipPath: index < estagiosAtivos.length - 1 
+                        clipPath: index < estagiosAtivos.length - 1
                           ? 'polygon(0 0, calc(100% - 20px) 0, 100% 50%, calc(100% - 20px) 100%, 0 100%)'
                           : undefined
                       }}
@@ -147,10 +147,10 @@ export function LeadFunnel({ leads, estagios }: LeadFunnelProps) {
               {Array.from(new Set(leads.map(l => l.origem).filter(Boolean))).map(origem => {
                 const leadsOrigem = leads.filter(l => l.origem === origem);
                 const convertidosOrigem = leadsOrigem.filter(l => l.estagio === 'efetivado').length;
-                const taxaOrigem = leadsOrigem.length > 0 
+                const taxaOrigem = leadsOrigem.length > 0
                   ? ((convertidosOrigem / leadsOrigem.length) * 100).toFixed(0)
                   : '0';
-                
+
                 return (
                   <div key={origem} className="p-3 bg-muted rounded-lg">
                     <div className="text-sm font-medium">{origem}</div>

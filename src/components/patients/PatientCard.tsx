@@ -4,12 +4,12 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ChevronRight, Calendar, Phone, Mail } from 'lucide-react';
 import { cn, calculateAge } from '@/lib/utils';
-import { PatientDB } from '@/hooks/usePatientsQuery';
+import { Patient } from '@/schemas/patient';
 import { PatientHelpers } from '@/types';
 import { PatientStats, formatFirstEvaluationDate } from '@/hooks/usePatientStats';
 
 interface PatientCardProps {
-  patient: PatientDB;
+  patient: Patient;
   index: number;
   onClick: () => void;
   stats?: PatientStats;
@@ -32,7 +32,7 @@ export const PatientCard = memo(({ patient, index, onClick, stats }: PatientCard
     if (patient.email) {
       return { icon: Mail, text: patient.email };
     }
-    return { icon: null, text: `${calculateAge(patient.birth_date)} anos` };
+    return { icon: null, text: `${calculateAge(patient.birthDate || '')} anos` };
   };
 
   const contactDisplay = getContactDisplay();
