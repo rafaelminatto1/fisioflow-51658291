@@ -35,6 +35,10 @@ export function PatientCombobox({
   disabled = false,
   className,
 }: PatientComboboxProps) {
+  React.useEffect(() => {
+    console.log('PatientCombobox mounted. Patients prop length:', patients?.length);
+  }, [patients]);
+
   const [open, setOpen] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = React.useState("");
@@ -80,9 +84,12 @@ export function PatientCombobox({
     if (directMatches.length > 0) return directMatches;
 
     const results = fuse.search(searchTerm);
-    return results
+    const mapped = results
       .sort((a, b) => (a.score || 0) - (b.score || 0))
       .map(result => result.item);
+
+    console.log('PatientCombobox filtering:', { searchTerm, direct: directMatches.length, fuzzy: mapped.length });
+    return mapped;
   }, [fuse, inputValue, patients]);
 
   const handleSelect = (patientId: string) => {

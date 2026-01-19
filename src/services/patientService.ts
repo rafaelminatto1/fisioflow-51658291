@@ -20,11 +20,12 @@ export const PatientService = {
         return {
             id: dbPatient.id,
             name: getPatientName(dbPatient),
+            full_name: dbPatient.full_name, // Explicitly map full_name
             email: dbPatient.email ?? undefined,
             phone: dbPatient.phone ?? undefined,
             cpf: dbPatient.cpf ?? undefined,
             birthDate: dbPatient.birth_date ?? new Date().toISOString(),
-            gender: 'outro' as const,
+            gender: (dbPatient as any).gender || 'outro', // Use DB value if exists (cast to any for extended compatibility)
             mainCondition: dbPatient.observations ?? '',
             status: (dbPatient.status === 'active' ? 'Em Tratamento' : 'Inicial'),
             progress: 0,
@@ -51,10 +52,12 @@ export const PatientService = {
                 if (result.success) {
                     validPatients.push(result.data);
                 } else {
-                    ErrorHandler.handle(
-                        new AppError(`Paciente inválido ignorado: ${dbPatient.id}`, 'DATA_INTEGRITY_ERROR', 422, true),
-                        'PatientService'
-                    );
+                    console.warn(`Patient validation failed for ${dbPatient.id}:`, result.error);
+                    // Fallback: use mapped object even if incomplete, to ensure it appears in UI
+                    // We only strictly require ID and Name for the combobox
+                    if (mapped.id && mapped.name) {
+                        validPatients.push(mapped);
+                    }
                 }
             } catch (error) {
                 ErrorHandler.handle(error, 'PatientService');
