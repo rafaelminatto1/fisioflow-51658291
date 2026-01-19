@@ -58,7 +58,11 @@ export const useActivePatients = () => {
 
   // Setup realtime subscription
   useEffect(() => {
-    if (!organizationId) return;
+    if (!organizationId) {
+      console.warn('useActivePatients: Missing organizationId');
+      return;
+    }
+    console.log('useActivePatients: subscribing with orgId', organizationId);
 
     let isSubscribed = false;
     const channel = supabase.channel(`patients-${organizationId}`);
@@ -130,6 +134,7 @@ export const useActivePatients = () => {
 
         // Transform data
         const validPatients = PatientService.mapPatientsFromDB(data);
+        console.log('useActivePatients: fetched patients', validPatients.length);
 
         // Save to cache for offline use
         if (validPatients.length > 0) {
