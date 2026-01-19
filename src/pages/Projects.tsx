@@ -4,15 +4,27 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { useProjects, useCreateProject } from '@/hooks/useProjects';
-import { FolderKanban, Plus, Search, Calendar, Folder, MoreVertical } from 'lucide-react';
+import { useProjects, useDeleteProject, Project } from '@/hooks/useProjects';
+import { FolderKanban, Plus, Search, Calendar, Folder, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { ProjectModal } from '@/components/projects/ProjectModal';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const STATUS_COLORS = {
     active: 'bg-green-500',
@@ -30,37 +42,42 @@ const STATUS_LABELS = {
 
 export default function ProjectsPage() {
     const { data: projects, isLoading } = useProjects();
-    const createProject = useCreateProject();
+    const deleteProject = useDeleteProject();
+    const navigate = useNavigate();
+
     const [searchTerm, setSearchTerm] = useState('');
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [newProject, setNewProject] = useState({
-        title: '',
-        description: '',
-        status: 'active',
-        start_date: '',
-        end_date: ''
-    });
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+    const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
     const filteredProjects = projects?.filter(p =>
         p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const handleCreate = async (e: React.FormEvent) => {
+    const handleEdit = (e: React.MouseEvent, project: Project) => {
         e.preventDefault();
-        await createProject.mutateAsync({
-            ...newProject,
-            start_date: newProject.start_date || undefined,
-            end_date: newProject.end_date || undefined
-        } as any);
-        setIsDialogOpen(false);
-        setNewProject({
-            title: '',
-            description: '',
-            status: 'active',
-            start_date: '',
-            end_date: ''
-        });
+        e.stopPropagation();
+        setSelectedProject(project);
+        setIsModalOpen(true);
+    };
+
+    const handleDeleteClick = (e: React.MouseEvent, project: Project) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setProjectToDelete(project);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (projectToDelete) {
+            await deleteProject.mutateAsync(projectToDelete.id);
+            setProjectToDelete(null);
+        }
+    };
+
+    const handleCreate = () => {
+        setSelectedProject(null);
+        setIsModalOpen(true);
     };
 
     return (
@@ -75,64 +92,10 @@ export default function ProjectsPage() {
                         </h1>
                         <p className="text-muted-foreground">Gerencie seus projetos e acompanhe o progresso da equipe</p>
                     </div>
-                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                        <DialogTrigger asChild>
-                            <Button>
-                                <Plus className="h-4 w-4 mr-2" />
-                                Novo Projeto
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Criar Novo Projeto</DialogTitle>
-                                <DialogDescription>
-                                    Adicione um novo projeto para organizar tarefas e metas.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <form onSubmit={handleCreate} className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label>Título do Projeto</Label>
-                                    <Input
-                                        required
-                                        value={newProject.title}
-                                        onChange={e => setNewProject({ ...newProject, title: e.target.value })}
-                                        placeholder="Ex: Expansão da Clínica"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Descrição</Label>
-                                    <Textarea
-                                        value={newProject.description}
-                                        onChange={e => setNewProject({ ...newProject, description: e.target.value })}
-                                        placeholder="Detalhes sobre o objetivo do projeto..."
-                                    />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>Início</Label>
-                                        <Input
-                                            type="date"
-                                            value={newProject.start_date}
-                                            onChange={e => setNewProject({ ...newProject, start_date: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Previsão de Término</Label>
-                                        <Input
-                                            type="date"
-                                            value={newProject.end_date}
-                                            onChange={e => setNewProject({ ...newProject, end_date: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-                                <DialogFooter>
-                                    <Button type="submit" disabled={createProject.isPending}>
-                                        {createProject.isPending ? 'Criando...' : 'Criar Projeto'}
-                                    </Button>
-                                </DialogFooter>
-                            </form>
-                        </DialogContent>
-                    </Dialog>
+                    <Button onClick={handleCreate}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Novo Projeto
+                    </Button>
                 </div>
 
                 {/* Search & Filters */}
@@ -160,7 +123,7 @@ export default function ProjectsPage() {
                         <Folder className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                         <h3 className="text-lg font-medium">Nenhum projeto encontrado</h3>
                         <p className="text-muted-foreground mb-4">Crie seu primeiro projeto para começar.</p>
-                        <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
+                        <Button variant="outline" onClick={handleCreate}>
                             Criar Projeto
                         </Button>
                     </div>
@@ -168,7 +131,30 @@ export default function ProjectsPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredProjects?.map(project => (
                             <Link key={project.id} to={`/projects/${project.id}`}>
-                                <Card className="h-full hover:shadow-md transition-shadow cursor-pointer group">
+                                <Card className="h-full hover:shadow-md transition-shadow cursor-pointer group relative">
+                                    <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                                                    <MoreVertical className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onClick={(e) => handleEdit(e, project)}>
+                                                    <Pencil className="h-4 w-4 mr-2" />
+                                                    Editar
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    onClick={(e) => handleDeleteClick(e, project)}
+                                                    className="text-destructive focus:text-destructive"
+                                                >
+                                                    <Trash2 className="h-4 w-4 mr-2" />
+                                                    Excluir
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
+
                                     <CardHeader className="pb-3">
                                         <div className="flex justify-between items-start">
                                             <div className={`p-2 rounded-lg ${STATUS_COLORS[project.status as keyof typeof STATUS_COLORS] || 'bg-slate-500'} bg-opacity-20`}>
@@ -178,7 +164,7 @@ export default function ProjectsPage() {
                                                 {STATUS_LABELS[project.status as keyof typeof STATUS_LABELS]}
                                             </Badge>
                                         </div>
-                                        <CardTitle className="mt-4 text-xl group-hover:text-primary transition-colors">
+                                        <CardTitle className="mt-4 text-xl group-hover:text-primary transition-colors pr-6">
                                             {project.title}
                                         </CardTitle>
                                         <CardDescription className="line-clamp-2 min-h-[2.5rem]">
@@ -212,6 +198,31 @@ export default function ProjectsPage() {
                         ))}
                     </div>
                 )}
+
+                <ProjectModal
+                    open={isModalOpen}
+                    onOpenChange={setIsModalOpen}
+                    project={selectedProject}
+                />
+
+                <AlertDialog open={!!projectToDelete} onOpenChange={() => setProjectToDelete(null)}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Excluir Projeto?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Tem certeza que deseja excluir o projeto "{projectToDelete?.title}"?
+                                Todas as tarefas associadas serão mantidas, mas perderão a associação com o projeto.
+                                Esta ação não pode ser desfeita.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive hover:bg-destructive/90">
+                                Excluir
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </div>
         </MainLayout>
     );
