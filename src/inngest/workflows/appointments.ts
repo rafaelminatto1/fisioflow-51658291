@@ -105,13 +105,23 @@ export const appointmentReminderWorkflow = inngest.createFunction(
             });
           }
 
-          // WhatsApp reminder
+          `,
+              },
+            });
+          }
+
+          // WhatsApp reminder (Using structured event)
           if (preferences.whatsapp !== false && orgSettings.whatsapp_enabled && patient.phone) {
             reminderEvents.push({
-              name: Events.WHATSAPP_SEND,
+              name: 'whatsapp/appointment.reminder',
               data: {
                 to: patient.phone,
-                message: `Olá ${patient.name}! Este é um lembrete da sua consulta amanhã às ${appointment.time}. Até lá!`,
+                patientName: patient.name,
+                therapistName: 'Fisioterapeuta', // TODO: Fetch therapist name if possible, or generic
+                date: new Date(appointment.date).toLocaleDateString('pt-BR'),
+                time: appointment.time,
+                organizationName: appointment.organization?.name || 'FisioFlow',
+                location: 'Clínica' // Optional
               },
             });
           }
@@ -153,24 +163,70 @@ export const appointmentCreatedWorkflow = inngest.createFunction(
   {
     event: Events.APPOINTMENT_CREATED,
   },
-  async ({ step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
+  async ({ event, step }: { event: { data: { appointmentId: string } }; step: InngestStep }) => {
+    const supabase = createClient(
+      process.env.VITE_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const { appointmentId } = event.data;
+
+    // 1. Fetch complete appointment details
+    const appointment = await step.run('get-appointment-details', async () => {
+        const { data, error } = await supabase
+            .from('appointments')
+            .select(`
+            *,
+            patient: patients(id, name, email, phone, notification_preferences),
+              organization: organizations(id, name, settings),
+                therapist: profiles!therapist_id(full_name)
+            `)
+            .eq('id', appointmentId)
+            .single();
+        
+        if (error) throw new Error(`Failed to fetch appointment: ${ error.message } `);
+        return data;
+    });
+
+    if (!appointment) return { success: false, reason: 'Appointment not found' };
 
     // Invalidate cache for patient
     await step.run('invalidate-cache', async () => {
-      // Invalidate appointment cache
-      // TODO: Use KVCacheService
+      // Invalidate appointment cache (kv-cache logic would go here)
       return { invalidated: true };
     });
 
-    // Optionally send confirmation
+    // Send confirmation message
     await step.run('send-confirmation', async () => {
-      // TODO: Send confirmation message
-      return { queued: true };
+        const patient = appointment.patient;
+        const org = appointment.organization;
+        const therapist = appointment.therapist;
+        
+        // Check preferences
+        const whatsappEnabled = org?.settings?.whatsapp_enabled ?? true;
+        
+        if (whatsappEnabled && patient?.phone) {
+             await inngest.send({
+                name: 'whatsapp/appointment.confirmation',
+                data: {
+                    to: patient.phone,
+                    patientName: patient.name,
+                    therapistName: therapist?.full_name || 'Fisioterapeuta',
+                    date: new Date(appointment.start_time).toLocaleDateString('pt-BR'),
+                    time: new Date(appointment.start_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                    organizationName: org?.name || 'FisioFlow',
+                    location: 'Consultório'
+                }
+            });
+            return { sent: true, channel: 'whatsapp' };
+        }
+        return { sent: false, reason: 'Disabled or no phone' };
     });
 
     return {
       success: true,
       timestamp: new Date().toISOString(),
+      appointmentId
     };
   }
 );

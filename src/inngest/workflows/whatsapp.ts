@@ -160,6 +160,40 @@ export const sendBirthdayGreetingWhatsAppWorkflow = inngest.createFunction(
 );
 
 /**
+ * Send reactivation WhatsApp workflow
+ */
+export const sendReactivationWhatsAppWorkflow = inngest.createFunction(
+  {
+    id: 'fisioflow-reactivation-whatsapp',
+    name: 'Send Reactivation WhatsApp',
+    retries: retryConfig.whatsapp.maxAttempts,
+  },
+  {
+    event: 'whatsapp/reactivation',
+  },
+  async ({ event, step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
+    const { to, patientName, organizationName } = event.data;
+
+    const result = await step.run('send-reactivation', async () => {
+      // @ts-ignore
+      return await WhatsAppService.sendReactivation(to, {
+        patientName,
+        organizationName,
+      });
+    });
+
+    return {
+      success: result.success,
+      timestamp: new Date().toISOString(),
+      to,
+      messageId: result.messageId,
+      error: result.error,
+    };
+  }
+);
+
+
+/**
  * Batch WhatsApp sending workflow
  */
 export const sendWhatsAppBatchWorkflow = inngest.createFunction(

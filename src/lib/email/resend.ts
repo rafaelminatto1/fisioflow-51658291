@@ -272,6 +272,42 @@ export function renderPasswordReset(data: PasswordResetData): string {
   `.trim();
 }
 
+/**
+ * Render reactivation email
+ */
+export function renderReactivationEmail(data: { patientName: string; organizationName: string }): string {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sentimos sua falta! - ${data.organizationName}</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+    <h1 style="color: white; margin: 0; font-size: 24px;">👋 Olá, ${data.patientName}!</h1>
+  </div>
+  <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px;">
+    <p style="font-size: 16px; margin-bottom: 20px;">Sentimos sua falta aqui na <strong>${data.organizationName}</strong>!</p>
+    
+    <p style="font-size: 16px; margin-bottom: 20px;">Como você está se sentindo? A manutenção da sua saúde é muito importante para nós.</p>
+    
+    <p style="font-size: 16px; margin-bottom: 20px;">Que tal agendar um retorno para avaliarmos seu progresso?</p>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="#" style="display: inline-block; background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">Agendar Consulta</a>
+    </div>
+
+    <div style="text-align: center; margin-top: 30px;">
+      <p style="font-size: 14px; color: #999;">Equipe ${data.organizationName}</p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+}
+
 // ============================================================================
 // EMAIL SENDING FUNCTIONS
 // ============================================================================
@@ -398,6 +434,21 @@ export async function sendPasswordReset(to: string, data: PasswordResetData) {
   });
 }
 
+/**
+ * Send reactivation email
+ */
+export async function sendReactivationEmail(to: string, data: { patientName: string; organizationName: string }) {
+  return sendEmail({
+    to,
+    subject: `Sentimos sua falta! 👋`,
+    html: renderReactivationEmail(data),
+    tags: {
+      type: 'reactivation',
+      organization: data.organizationName,
+    },
+  });
+}
+
 // ============================================================================
 // EXPORTS
 // ============================================================================
@@ -409,6 +460,7 @@ export const ResendService = {
   sendBirthdayGreeting,
   sendDailyReport,
   sendPasswordReset,
+  sendReactivationEmail,
   templates: EmailTemplates,
   renderers: {
     renderAppointmentConfirmation,
@@ -416,5 +468,6 @@ export const ResendService = {
     renderBirthdayGreeting,
     renderDailyReport,
     renderPasswordReset,
+    renderReactivationEmail
   },
 };

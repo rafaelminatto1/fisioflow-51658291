@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { logger } from '@/lib/errors/logger';
+import { FinancialService } from '@/services/financialService';
 
 export interface SessionPackage {
   id: string;
@@ -131,7 +132,7 @@ export function usePatientPackageBalance(patientId: string | undefined) {
 
   const activePackages = packages?.filter(p => p.status === 'active') || [];
   const totalRemaining = activePackages.reduce((sum, p) => sum + (p.sessions_remaining || 0), 0);
-  
+
   const nearExpiration = activePackages.filter(p => {
     if (!p.expires_at) return false;
     const daysUntilExpiration = Math.ceil(
@@ -225,10 +226,30 @@ export function usePurchasePackage() {
 
       if (error) throw error;
       const pkg = (data as Record<string, unknown>).package as Record<string, unknown> | undefined;
+      // Criar transação financeira
+      try {
+        await FinancialService.createTransaction({
+          tipo: 'receita',
+          descricao: `Venda de Pacote: ${packageTemplate.package_name}`,
+          valor: Number(packageTemplate.final_value),
+          status: 'concluido',
+          metadata: {
+            source: 'package_purchase',
+            patient_id,
+            patient_package_id: data.id,
+            package_template_id: package_id
+          }
+        });
+      } catch (err) {
+        logger.error('Erro ao registrar transação financeira do pacote', err, 'usePackages');
+        // Não falha a compra do pacote se a transação falhar, apenas loga
+      }
+
       return { ...data, package: pkg ? { name: String(pkg.package_name) } : null };
     },
     onSuccess: (_data: unknown, variables) => {
       queryClient.invalidateQueries({ queryKey: ['patient-packages', variables.patient_id] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] }); // Atualiza dashboard financeiro
       toast.success(`Pacote adquirido com sucesso!`);
     },
     onError: (error: unknown) => {
@@ -243,11 +264,11 @@ export function useUsePackageSession() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ 
-      patientPackageId, 
-      appointmentId 
-    }: { 
-      patientPackageId: string; 
+    mutationFn: async ({
+      patientPackageId,
+      appointmentId
+    }: {
+      patientPackageId: string;
       appointmentId?: string;
     }) => {
       // Buscar pacote do paciente
@@ -312,8 +333,8 @@ export function useUpdatePackage() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ 
-      id, 
+    mutationFn: async ({
+      id,
       name,
       description,
       sessions_count,

@@ -72,8 +72,8 @@ class EvolutionApiClient {
       // Clean phone number (remove non-digits, add country code if needed)
       const cleanNumber = this.cleanPhoneNumber(number);
 
-       
-       
+
+
       // External Evolution API payload - structure not fully typed
       const payload: Record<string, unknown> = {
         number: cleanNumber,
@@ -131,8 +131,8 @@ class EvolutionApiClient {
 
       const cleanNumber = this.cleanPhoneNumber(number);
 
-       
-       
+
+
       // External Evolution API payload - structure not fully typed
       const payload: Record<string, unknown> = {
         number: cleanNumber,
@@ -193,8 +193,8 @@ class EvolutionApiClient {
 
       const cleanNumber = this.cleanPhoneNumber(number);
 
-       
-       
+
+
       // External Evolution API payload - structure not fully typed
       const payload: Record<string, unknown> = {
         number: cleanNumber,
@@ -305,6 +305,7 @@ export const WhatsAppTemplates = {
   WELCOME_MESSAGE: 'welcome_message',
   SESSION_REMINDER: 'session_reminder',
   PAYMENT_CONFIRMATION: 'payment_confirmation',
+  REACTIVATION: 'reactivation',
 } as const;
 
 // ============================================================================
@@ -330,6 +331,11 @@ export interface SessionReminderData {
   patientName: string;
   date: string;
   time: string;
+}
+
+export interface ReactivationMessageData {
+  patientName: string;
+  organizationName: string;
 }
 
 /**
@@ -432,6 +438,25 @@ Obrigado pela preferência! 💜
   `.trim();
 }
 
+/**
+ * Render reactivation message
+ */
+export function renderReactivationMessage(data: ReactivationMessageData): string {
+  return `
+👋 *Olá ${data.patientName}!*
+
+Sentimos sua falta aqui na *${data.organizationName}*!
+
+Como você está se sentindo? A manutenção da sua saúde é muito importante para nós.
+
+Que tal agendar um retorno para avaliarmos seu progresso?
+
+Entre em contato conosco por aqui mesmo para marcar!
+
+Equipe *${data.organizationName}* 💙
+    `.trim();
+}
+
 // ============================================================================
 // WHATSAPP SERVICE
 // ============================================================================
@@ -471,6 +496,10 @@ export const WhatsAppService = {
     return this.sendText(number, renderPaymentConfirmation(data));
   },
 
+  async sendReactivation(number: string, data: ReactivationMessageData) {
+    return this.sendText(number, renderReactivationMessage(data));
+  },
+
   templates: WhatsAppTemplates,
   renderers: {
     renderAppointmentConfirmation,
@@ -478,5 +507,6 @@ export const WhatsAppService = {
     renderBirthdayGreeting,
     renderSessionReminder,
     renderPaymentConfirmation,
+    renderReactivationMessage
   },
 };

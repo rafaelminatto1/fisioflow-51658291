@@ -6,6 +6,7 @@ import { dateSchema, timeSchema } from '@/lib/validations/agenda';
 import { AppError } from '@/lib/errors/AppError';
 import { logger } from '@/lib/errors/logger';
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
+import { FinancialService } from '@/services/financialService';
 
 export class AppointmentService {
     /**
@@ -64,7 +65,12 @@ export class AppointmentService {
                         createdAt: validData.created_at ? new Date(validData.created_at) : new Date(),
                         updatedAt: validData.updated_at ? new Date(validData.updated_at) : new Date(),
                         therapistId: validData.therapist_id,
+                        therapistId: validData.therapist_id,
                         room: validData.room,
+                        payment_status: validData.payment_status || 'pending',
+                        payment_method: (item as any).payment_method,
+                        payment_amount: (item as any).payment_amount,
+                        session_package_id: (item as any).session_package_id,
                     });
                 } else {
                     validationErrors.push({ id: item.id, error: validation.error });
@@ -161,6 +167,16 @@ export class AppointmentService {
                 updatedAt: new Date(newAppointment.updated_at)
             };
 
+            // Sync Financial Transaction
+            if (newAppointment.payment_status === 'paid') {
+                await AppointmentService.syncFinancialTransaction({
+                    ...appointment,
+                    payment_status: newAppointment.payment_status,
+                    payment_amount: (data as any).payment_amount, // Ensure we use form data amount logic or from DB if available
+                    payment_method: (data as any).payment_method
+                });
+            }
+
             return appointment;
         } catch (error) {
             throw AppError.from(error, 'AppointmentService.createAppointment');
@@ -214,7 +230,7 @@ export class AppointmentService {
             if (updateError) throw new AppError(updateError.message, updateError.code, 400);
 
             // Fetch updated
-            const { data: updatedAppointment, error: selectError } = await supabase
+            const { data: fetchedUpdatedAppointment, error: selectError } = await supabase
                 .from('appointments')
                 .select(`
           *,
@@ -228,22 +244,34 @@ export class AppointmentService {
                 .eq('id', id)
                 .single();
 
-            if (selectError || !updatedAppointment) throw new AppError('Erro ao buscar agendamento atualizado', 'FETCH_ERROR', 404);
+            if (selectError || !fetchedUpdatedAppointment) throw new AppError('Erro ao buscar agendamento atualizado', 'FETCH_ERROR', 404);
 
-            return {
-                id: updatedAppointment.id,
-                patientId: updatedAppointment.patient_id,
-                patientName: updatedAppointment.patients?.full_name || 'Desconhecido',
-                phone: updatedAppointment.patients?.phone || '',
-                date: new Date(updatedAppointment.date || updatedAppointment.appointment_date),
-                time: updatedAppointment.start_time || updatedAppointment.appointment_time,
-                duration: updatedAppointment.duration,
-                type: updatedAppointment.type as AppointmentType,
-                status: updatedAppointment.status as AppointmentStatus,
-                notes: updatedAppointment.notes || '',
-                createdAt: new Date(updatedAppointment.created_at),
-                updatedAt: new Date(updatedAppointment.updated_at)
+            const updatedAppointment: AppointmentBase = {
+                id: fetchedUpdatedAppointment.id,
+                patientId: fetchedUpdatedAppointment.patient_id,
+                patientName: fetchedUpdatedAppointment.patients?.full_name || 'Desconhecido',
+                phone: fetchedUpdatedAppointment.patients?.phone || '',
+                date: new Date(fetchedUpdatedAppointment.date || fetchedUpdatedAppointment.appointment_date),
+                time: fetchedUpdatedAppointment.start_time || fetchedUpdatedAppointment.appointment_time,
+                duration: fetchedUpdatedAppointment.duration,
+                type: fetchedUpdatedAppointment.type as AppointmentType,
+                status: fetchedUpdatedAppointment.status as AppointmentStatus,
+                notes: fetchedUpdatedAppointment.notes || '',
+                createdAt: new Date(fetchedUpdatedAppointment.created_at),
+                updatedAt: new Date(fetchedUpdatedAppointment.updated_at)
             };
+
+            // Sync Financial Transaction
+            if (updateData.payment_status === 'paid') {
+                await AppointmentService.syncFinancialTransaction({
+                    ...updatedAppointment,
+                    payment_status: updateData.payment_status,
+                    payment_amount: updates.payment_amount,
+                    payment_method: updates.payment_method
+                });
+            }
+
+            return updatedAppointment;
         } catch (error) {
             throw AppError.from(error, 'AppointmentService.updateAppointment');
         }
@@ -278,6 +306,52 @@ export class AppointmentService {
             if (error) throw new AppError(error.message, error.code, 400);
         } catch (error) {
             throw AppError.from(error, 'AppointmentService.deleteAppointment');
+        }
+    }
+
+    /**
+     * Sync financial transaction for paid appointments
+     */
+    private static async syncFinancialTransaction(appointment: Partial<AppointmentBase>): Promise<void> {
+        // Skip if package payment (Cash basis: revenue recognized at package purchase)
+        if (appointment.payment_method === 'package' || appointment.session_package_id) {
+            return;
+        }
+
+        if (appointment.payment_status !== 'paid' || !appointment.payment_amount || appointment.payment_amount <= 0) {
+            return;
+        }
+
+        try {
+            // Check if transaction exists
+            const existing = await FinancialService.findTransactionByAppointmentId(appointment.id!);
+
+            if (existing) {
+                // Update existing
+                if (existing.valor !== appointment.payment_amount) {
+                    await FinancialService.updateTransaction(existing.id, {
+                        valor: appointment.payment_amount,
+                        descricao: `Sessão: ${appointment.type} - ${appointment.patientName} (Atualizado)`,
+                    });
+                    logger.info('Transaction updated for appointment', { appointmentId: appointment.id }, 'AppointmentService');
+                }
+            } else {
+                // Create new
+                await FinancialService.createTransaction({
+                    tipo: 'receita',
+                    descricao: `Sessão: ${appointment.type} - ${appointment.patientName}`,
+                    valor: appointment.payment_amount,
+                    status: 'concluido',
+                    metadata: {
+                        source: 'appointment',
+                        appointment_id: appointment.id
+                    }
+                });
+                logger.info('Transaction created for appointment', { appointmentId: appointment.id }, 'AppointmentService');
+            }
+        } catch (error) {
+            // Don't block appointment flow, just log
+            logger.error('Failed to sync financial transaction', error, 'AppointmentService');
         }
     }
 }

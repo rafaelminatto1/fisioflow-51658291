@@ -248,4 +248,22 @@ export class FinancialService {
             throw AppError.from(error, 'FinancialService.getEventReport');
         }
     }
+
+    /**
+     * Find a transaction by appointment ID stored in metadata
+     */
+    static async findTransactionByAppointmentId(appointmentId: string): Promise<Transaction | null> {
+        try {
+            const { data, error } = await supabase
+                .from('transacoes')
+                .select('*')
+                .contains('metadata', { appointment_id: appointmentId })
+                .maybeSingle();
+
+            if (error) throw new AppError(error.message, error.code, 500);
+            return data as Transaction | null;
+        } catch (error) {
+            throw AppError.from(error, 'FinancialService.findTransactionByAppointmentId');
+        }
+    }
 }

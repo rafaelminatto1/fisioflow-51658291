@@ -159,6 +159,43 @@ export const sendBirthdayGreetingWorkflow = inngest.createFunction(
       error: result.error,
     };
   }
+    };
+  }
+);
+
+/**
+ * Send reactivation email workflow
+ */
+export const sendReactivationEmailWorkflow = inngest.createFunction(
+  {
+    id: 'fisioflow-reactivation-email',
+    name: 'Send Reactivation Email',
+    retries: retryConfig.email.maxAttempts,
+  },
+  {
+    event: 'email/reactivation',
+  },
+  async ({ event, step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
+    const { to, patientName, organizationName } = event.data;
+
+    const result = (await step.run('send-reactivation', async (): Promise<{ success: boolean; messageId?: string; error?: any }> => {
+      return await ResendService.sendReactivationEmail(
+        to,
+        {
+          patientName,
+          organizationName,
+        }
+      );
+    })) as { success: boolean; messageId?: string; error?: any };
+
+    return {
+      success: result.success,
+      timestamp: new Date().toISOString(),
+      to,
+      messageId: result.messageId,
+      error: result.error,
+    };
+  }
 );
 
 /**

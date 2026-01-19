@@ -40,7 +40,8 @@ export const Profile = () => {
     bio: '',
     address: '',
     birthDate: '',
-    avatar: ''
+    avatar: '',
+    slug: ''
   });
 
   // Fetch profile data on load
@@ -67,7 +68,8 @@ export const Profile = () => {
             bio: data.bio || '',
             address: data.address || '',
             birthDate: data.birth_date || '',
-            avatar: data.avatar_url || ''
+            avatar: data.avatar_url || '',
+            slug: data.slug || ''
           });
         }
       } catch (error) {
@@ -93,6 +95,7 @@ export const Profile = () => {
           bio: profileData.bio,
           address: profileData.address,
           birth_date: profileData.birthDate || null,
+          slug: profileData.slug || null,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
@@ -218,6 +221,21 @@ export const Profile = () => {
                         onChange={(e) => handleInputChange('name', e.target.value)}
                         disabled={!isEditing}
                       />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="slug">Link Público</Label>
+                      <div className="flex gap-2 items-center">
+                        <span className="text-sm text-muted-foreground whitespace-nowrap">fisioflow.com.br/agendar/</span>
+                        <Input
+                          id="slug"
+                          value={profileData.slug}
+                          onChange={(e) => handleInputChange('slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                          disabled={!isEditing}
+                          placeholder="seu-nome"
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">URL única para seus pacientes agendarem horários.</p>
                     </div>
 
                     <div className="space-y-2">

@@ -7,6 +7,7 @@ export type { Transaction, FinancialStats };
 
 export const useFinancial = () => {
   const queryClient = useQueryClient();
+  const [period, setPeriod] = React.useState<'daily' | 'weekly' | 'monthly' | 'all'>('monthly');
 
   // Buscar todas as transações
   const { data: transactions = [], isLoading, error } = useQuery({
@@ -14,12 +15,44 @@ export const useFinancial = () => {
     queryFn: FinancialService.fetchTransactions,
   });
 
+  // Filtrar transações baseado no período
+  const filteredTransactions = React.useMemo(() => {
+    if (period === 'all') return transactions;
+
+    const now = new Date();
+    const start = new Date();
+    start.setHours(0, 0, 0, 0); // Zera hora para comparação justa de início
+
+    if (period === 'daily') {
+      // Já é hoje 00:00
+    } else if (period === 'weekly') {
+      start.setDate(now.getDate() - 7);
+    } else if (period === 'monthly') {
+      start.setDate(now.getDate() - 30);
+    }
+
+    return transactions.filter(t => {
+      if (!t.created_at) return false;
+      const tDate = new Date(t.created_at);
+      return tDate >= start;
+    });
+  }, [transactions, period]);
+
   // Calcular estatísticas
-  const { data: stats } = useQuery({
-    queryKey: ['financial-stats', transactions],
-    queryFn: () => FinancialService.calculateStats(transactions),
-    enabled: transactions.length > 0,
-  });
+  const stats = React.useMemo(() => {
+    // Estatísticas do período visualizado
+    const periodStats = FinancialService.calculateStats(filteredTransactions);
+
+    // Estatísticas globais para crescimento (preserva o cálculo de mês atual vs anterior)
+    // Se o período for 'mensal' ou 'all', o crescimento faz sentido ser o global
+    // Se for diário, growth talvez devesse comparar com ontem, mas vamos manter o global mensal por enquanto como indicativo macro
+    const globalStats = FinancialService.calculateStats(transactions);
+
+    return {
+      ...periodStats,
+      monthlyGrowth: globalStats.monthlyGrowth // Mantém crescimento mensal global
+    };
+  }, [filteredTransactions, transactions]);
 
   // Criar transação
   const createMutation = useMutation({
@@ -71,8 +104,11 @@ export const useFinancial = () => {
   });
 
   return {
-    transactions,
+    transactions: filteredTransactions, // Retorna filtradas para listas
+    allTransactions: transactions, // Acesso bruto se precisar
     stats,
+    period,
+    setPeriod,
     loading: isLoading,
     error,
     createTransaction: createMutation.mutate,
