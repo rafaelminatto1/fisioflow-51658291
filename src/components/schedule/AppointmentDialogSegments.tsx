@@ -357,22 +357,39 @@ export const PaymentTab = ({
 
                     {patientId ? (
                         activePackages.length > 0 ? (
-                            <Select
-                                value={watch('session_package_id') || ''}
-                                onValueChange={(val) => setValue('session_package_id', val)}
-                                disabled={disabled}
-                            >
-                                <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm border-blue-200 bg-blue-50/50">
-                                    <SelectValue placeholder="Selecione o pacote para debitar" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {activePackages.map(pkg => (
-                                        <SelectItem key={pkg.id} value={pkg.id}>
-                                            {pkg.package?.name} ({pkg.sessions_remaining} sessões rest.)
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <div className="space-y-1">
+                                <Select
+                                    value={watch('session_package_id') || ''}
+                                    onValueChange={(val) => setValue('session_package_id', val)}
+                                    disabled={disabled}
+                                >
+                                    <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm border-blue-200 bg-blue-50/50">
+                                        <SelectValue placeholder="Selecione o pacote para debitar" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {activePackages.map(pkg => (
+                                            <SelectItem key={pkg.id} value={pkg.id}>
+                                                {pkg.package?.name} ({pkg.sessions_remaining} sessões rest.)
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {(() => {
+                                    const selectedId = watch('session_package_id');
+                                    const selectedPkg = activePackages.find(p => p.id === selectedId);
+                                    if (selectedPkg && (selectedPkg.sessions_remaining || 0) <= 1) {
+                                        return (
+                                            <div className="flex items-center gap-1.5 p-2 rounded-md bg-amber-50 border border-amber-100 text-amber-700">
+                                                <AlertTriangle className="h-3.5 w-3.5" />
+                                                <span className="text-[10px] sm:text-xs font-medium">
+                                                    Atenção: Última sessão deste pacote! Ofereça renovação.
+                                                </span>
+                                            </div>
+                                        );
+                                    }
+                                    return null;
+                                })()}
+                            </div>
                         ) : (
                             <div className="p-3 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md flex flex-col gap-1">
                                 <span className="font-medium flex items-center gap-1.5">

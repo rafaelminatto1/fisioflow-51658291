@@ -21,7 +21,12 @@ export {
 export {
   sendWhatsAppWorkflow,
   sendWhatsAppBatchWorkflow,
+  sendAppointmentConfirmationWhatsAppWorkflow,
+  sendAppointmentReminderWhatsAppWorkflow,
+  sendBirthdayGreetingWhatsAppWorkflow,
+  sendReactivationWhatsAppWorkflow,
 } from './whatsapp';
+export { reactivationWorkflow } from './reactivation';
 export {
   appointmentReminderWorkflow,
   appointmentCreatedWorkflow,
