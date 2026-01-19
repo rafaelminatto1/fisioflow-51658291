@@ -15,18 +15,22 @@ CREATE TABLE IF NOT EXISTS public.projects (
 -- RLS for Projects
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view projects in their organization" ON public.projects;
 CREATE POLICY "Users can view projects in their organization" ON public.projects
     FOR SELECT
     USING (organization_id = (SELECT organization_id FROM public.profiles WHERE id = auth.uid()));
 
+DROP POLICY IF EXISTS "Users can insert projects in their organization" ON public.projects;
 CREATE POLICY "Users can insert projects in their organization" ON public.projects
     FOR INSERT
     WITH CHECK (organization_id = (SELECT organization_id FROM public.profiles WHERE id = auth.uid()));
 
+DROP POLICY IF EXISTS "Users can update projects in their organization" ON public.projects;
 CREATE POLICY "Users can update projects in their organization" ON public.projects
     FOR UPDATE
     USING (organization_id = (SELECT organization_id FROM public.profiles WHERE id = auth.uid()));
 
+DROP POLICY IF EXISTS "Users can delete projects in their organization" ON public.projects;
 CREATE POLICY "Users can delete projects in their organization" ON public.projects
     FOR DELETE
     USING (organization_id = (SELECT organization_id FROM public.profiles WHERE id = auth.uid()));
