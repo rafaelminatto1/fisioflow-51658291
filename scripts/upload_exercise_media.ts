@@ -191,7 +191,64 @@ const images = [
     { id: '5d4e9e60-72c7-4646-acb6-77bfcef7869a', file: 'hip_flexor_march_gen_1768668241596.png' }, // Marcha Supina de Quadril
     { id: 'af498abc-e4d5-4014-8f05-d131e83e6309', file: 'split_squat_gen_1768668256430.png' }, // Agachamento Búlgaro
     { id: 'bea028c5-24f8-4f05-95fa-f9df68cfa6f8', file: 'prone_cobra_gen_1768668270472.png' }, // Cobra Prona
-    { id: '647b66fe-d57e-41dd-8107-abe7d008a81f', file: '90_90_stretch_gen_1768668286262.png' } // Alongamento 90-90
+    { id: '647b66fe-d57e-41dd-8107-abe7d008a81f', file: '90_90_stretch_gen_1768668286262.png' }, // Alongamento 90-90
+
+    // Batch 17 - Functional, Rehab & Streching Exercises
+    { id: 'e20291a1-cec4-4bcc-84f2-86a297f6071c', file: 'reverse_lunge_gen_1768668624102.png' }, // Afundo Reverso
+    { id: '466cacb6-905a-48ff-a507-c6575797901a', file: 'goblet_squat_gen_1768761647382.png' }, // Agachamento Goblet
+    { id: '488d2447-2832-4bb4-9e17-ef65768ecfb2', file: 'hip_circles_gen_1768761659971.png' }, // Círculos de Quadril
+    { id: '534b4eaf-6718-4d58-9d2d-71a1c46febb1', file: 'supermans_gen_1768761674210.png' }, // Superman
+    { id: 'f5d77fd6-6776-4faf-b1c4-286bf77f55f6', file: 'wall_pushup_gen_1768761699971.png' }, // Flexão de Braço na Parede
+    { id: '1b06d13a-7fe3-4197-9419-746f3f61cf17', file: 'piriformis_stretch_gen_1768761714782.png' }, // Alongamento de Piriforme
+    { id: 'caa06c44-7786-4344-be88-73a2abc80767', file: 'hamstring_towel_stretch_gen_1768761726955.png' }, // Alongamento Isquiotibiais com Toalha
+    { id: '3b963b28-4647-4367-88ec-7edd221294c4', file: 'childs_pose_gen_1768761741837.png' }, // Postura da Criança
+    { id: 'a13b1d82-e0e3-4240-9104-92d775ee5a83', file: 'wrist_pronation_supination_gen_1768761756286.png' }, // Pronação e Supinação de Punho
+
+    // Batch 18 - Upper Body & Functional
+    { id: '3345bb1e-cfc0-4ff3-a9c3-cbc162d8827a', file: 'tricep_dips_chair_gen_1768762574101.png' }, // Mergulho no Banco
+    { id: 'b438432e-f4d0-45fc-9e13-2c1306db9dad', file: 'incline_pushup_gen_1768762588446.png' }, // Flexão Inclinada
+    { id: 'a15530ef-7276-4450-a307-c3e126c14117', file: 'calf_raise_standing_gen_1768762604104.png' }, // Elevação de Panturrilha em Pé
+    { id: 'd3f4d506-f735-44bc-a7c1-2b4cce5627f8', file: 'side_lying_leg_raise_gen_1768762617356.png' }, // Abdução de Quadril Deitado
+    { id: 'c2d217e3-53dc-44d7-9c8d-35991df844c5', file: 'neck_lateral_stretch_gen_1768762631890.png' }, // Alongamento Lateral de Pescoço
+    { id: '91624a88-fed9-45fe-8d39-1a277aea225e', file: 'doorway_pec_stretch_gen_1768762645519.png' }, // Alongamento de Peitoral na Porta
+    { id: '78dd3222-a05b-4f27-b1fa-35b892941356', file: 'seated_row_band_gen_1768762674734.png' }, // Remada Sentada com Faixa
+    { id: 'b03643e1-47f7-4eeb-9bc7-de2fbd5a332e', file: 'tandem_stance_gen_1768762687852.png' }, // Equilíbrio em Tandem
+
+    // Batch 19 - Hand, Wrist, Neck & Nerve
+    { id: 'f0ce84fc-23c3-4b47-944a-4725736db1e6', file: 'wrist_dev_radial_gen_1768784150745.png' }, // Desvio Radial
+    { id: 'ebee5a64-2f53-40c3-a253-6a5ae2115e3a', file: 'finger_opposition_gen_1768784165183.png' }, // Oposição de Dedos
+    { id: '6879381c-1a8e-4e29-ba62-1815d0f9f1ff', file: 'tendon_glides_gen_1768784178123.png' }, // Deslizamento de Tendões
+    { id: 'd0037281-3256-4ffc-9d5a-b57c6820d83d', file: 'ball_squeeze_gen_1768784190358.png' }, // Fortalecimento de Preensão
+    { id: '5456ed6b-eef0-49ee-aa0d-1cb94eaf917c', file: 'scapular_retraction_gen_1768784203782.png' }, // Retração Escapular
+    { id: '316b65ac-6d73-4c1f-a7a8-1024b8f4f358', file: 'corner_stretch_gen_1768784216939.png' }, // Alongamento de Peitoral no Canto
+    { id: '36267e08-f5db-4661-a30e-e8e42404412d', file: 'levator_scap_stretch_gen_1768784233714.png' }, // Alongamento Levantador da Escápula
+    { id: '74df06c3-97fa-4448-b8d5-0a35438cb801', file: 'upper_trap_stretch_gen_1768784249284.png' }, // Alongamento Trapézio Superior
+    { id: '3ccfbaba-3c89-419e-a07c-ce98b801d967', file: 'chin_tucks_gen_1768784263012.png' }, // Chin Tucks
+    { id: '37c791cb-bb4a-4ca4-ac6e-b104b6fa4a1b', file: 'nerve_glide_median_gen_1768784275596.png' }, // Deslizamento do Nervo Mediano
+
+    // Batch 20 - Ankle, Foot & Dynamic Stability
+    { id: 'e02bff6b-114e-4921-8ec5-f67ba50940cb', file: 'short_foot_exercise_gen_1768784976204.png' }, // Exercício do Pé Curto
+    { id: '4ab0a36d-7510-4421-b182-6acd88bb730b', file: 'towel_scrunches_gen_1768784989195.png' }, // Preensão de Toalha
+    { id: 'cf1e55c0-1f7f-40c8-b7b8-5e5f46aba86e', file: 'ankle_eversion_band_gen_1768785002735.png' }, // Eversão de Tornozelo
+    { id: '2c7f07f5-8cbd-4ee8-a184-cf4e48802087', file: 'ankle_inversion_band_gen_1768785014502.png' }, // Inversão de Tornozelo
+    { id: '9c2e9feb-4c19-4130-82f3-e08cb77afa84', file: 'single_leg_foam_gen_1768785577486.png' }, // Equilíbrio Unipodal Disco
+    { id: 'cee7cd8a-6f76-400f-b2b8-28de44ab1581', file: 'y_balance_reach_gen_1768785595329.png' }, // Alcance em Y
+    { id: '291e3c43-de1d-46c6-af15-c341e9cf02b5', file: 'skater_hops_gen_1768785609412.png' }, // Saltos Laterais
+    { id: '4530460e-55e5-431f-bf78-5e8966569b23', file: 'step_down_control_gen_1768785624071.png' }, // Descida Controlada
+    { id: 'dd5d26aa-c593-4030-8c77-3a468983b98f', file: 'big_toe_mobility_gen_1768785638435.png' }, // Mobilidade do Hálux
+    { id: '3c72fabd-7eae-4e43-8c6a-22ae0b8ff387', file: 'soleus_stretch_wall_gen_1768785651519.png' }, // Alongamento de Sóleo
+
+    // Batch 21 - Plyometrics & Advanced Core
+    { id: '9fa43615-8b6e-49cc-ad58-577298bfa2dd', file: 'depth_jump_gen_1768789383206.png' }, // Depth Jump - Generated
+    { id: 'd6042be1-f9e7-443c-aa79-39e64960f113', file: 'PLACEHOLDER' }, // Salto Unilateral na Caixa
+    { id: '95dd2a2c-5fe2-40ed-b57d-ace308a859cf', file: 'PLACEHOLDER' }, // Salto Horizontal
+    { id: '3a914408-ff33-4924-a853-9a833151463c', file: 'PLACEHOLDER' }, // Tuck Jump
+    { id: '1b2fed47-b1f8-4caa-9200-43664eb9deeb', file: 'PLACEHOLDER' }, // Medicine Ball Slam
+    { id: 'bf9fd47a-e046-4f63-9565-b1bc49f7db87', file: 'PLACEHOLDER' }, // Elevação de Pernas na Barra
+    { id: '49b385fb-7f5f-444b-b749-58e2c5195bea', file: 'PLACEHOLDER' }, // Ab Wheel Rollout
+    { id: 'a4759e6b-2570-49cd-97a7-9b48a8b211bc', file: 'PLACEHOLDER' }, // Hollow Rock
+    { id: '7ddcb9f0-daf5-4921-b29f-7a81faca8014', file: 'PLACEHOLDER' }, // V-Up
+    { id: '85cb38c0-d365-41fe-893c-35093cb2d6f8', file: 'PLACEHOLDER' } // L-Sit
 ];
 
 async function upload() {

@@ -71,7 +71,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
           setLoading(false);
           setInitialized(true);
         }
-      }, 30000);
+      }, 8000);
 
       try {
         setLoading(true);
@@ -80,7 +80,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
         // Buscar sessão com timeout interno aumentado para 30s
         const sessionPromise = supabase.auth.getSession();
         const timeoutPromise = new Promise<{ data: { session: null }, error: null }>((resolve) =>
-          setTimeout(() => resolve({ data: { session: null }, error: null }), 30000)
+          setTimeout(() => resolve({ data: { session: null }, error: null }), 5000)
         );
 
         const { data: { session: initialSession }, error: sessionError } = await Promise.race([
@@ -163,30 +163,29 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
           setSession(newSession);
           setSessionCheckFailed(false);
 
-          // Carregar perfil com timeout
-          try {
-            const profilePromise = fetchProfile(newSession.user.id);
-            const timeoutPromise = new Promise<null>((resolve) =>
-              setTimeout(() => resolve(null), 3000)
-            );
-            const profileData = await Promise.race([profilePromise, timeoutPromise]);
+          // Carregar perfil em background (não bloqueia a UI)
+          fetchProfile(newSession.user.id)
+            .then(profileData => {
+              if (mounted) setProfile(profileData);
+            })
+            .catch(profileErr => {
+              logger.error('Erro ao carregar perfil', profileErr, 'AuthContextProvider');
+            });
 
-            if (mounted) {
-              setProfile(profileData);
-            }
-          } catch (profileErr) {
-            logger.error('Erro ao carregar perfil', profileErr, 'AuthContextProvider');
-
+          // Liberar UI imediatamente após validar sessão
+          if (mounted) {
+            setLoading(false);
+            setInitialized(true);
           }
         } else {
           setUser(null);
           setProfile(null);
           setSession(null);
-        }
 
-        if (mounted) {
-          setLoading(false);
-          setInitialized(true);
+          if (mounted) {
+            setLoading(false);
+            setInitialized(true);
+          }
         }
       }
     );
@@ -347,6 +346,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const role: UserRole | undefined = profile?.role as UserRole | undefined;
+  const organizationId = profile?.organization_id;
 
   const value: AuthContextType = {
     user,
@@ -356,6 +356,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
     initialized,
     sessionCheckFailed,
     role,
+    organizationId,
     signIn,
     signUp,
     signOut,

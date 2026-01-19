@@ -1,3 +1,4 @@
+import Fuse from 'fuse.js';
 import * as React from "react";
 import { Check, ChevronsUpDown, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -42,8 +43,34 @@ export function PatientCombobox({
 }: PatientComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const [inputValue, setInputValue] = React.useState("");
 
   const selectedPatient = patients.find((patient) => patient.id === value);
+
+  // Initialize Fuse instance with permissive settings for better fuzzy matching
+  const fuse = React.useMemo(() => {
+    return new Fuse(patients, {
+      keys: ['name'],
+      threshold: 0.4, // More permissive threshold for fuzzy matching
+      ignoreLocation: true,
+      minMatchCharLength: 1, // Allow single character matches
+      includeScore: true,
+      isCaseSensitive: false,
+      findAllMatches: true,
+    });
+  }, [patients]);
+
+  const filteredPatients = React.useMemo(() => {
+    if (!inputValue || inputValue.trim() === '') return patients;
+
+    const searchTerm = inputValue.trim().toLowerCase();
+    const results = fuse.search(searchTerm);
+
+    // Sort by score (lower is better) and return items
+    return results
+      .sort((a, b) => (a.score || 0) - (b.score || 0))
+      .map(result => result.item);
+  }, [fuse, inputValue, patients]);
 
   const handleSelect = (currentValue: string) => {
     onValueChange(currentValue === value ? "" : currentValue);
@@ -51,17 +78,15 @@ export function PatientCombobox({
   };
 
   const handleCreateNew = () => {
-    const searchTerm = inputRef.current?.value || "";
     setOpen(false);
-    onCreateNew(searchTerm);
+    onCreateNew(inputValue);
   };
 
   return (
     <Popover open={open} onOpenChange={(open) => {
       setOpen(open);
-      // Clear input when closing popover
-      if (!open && inputRef.current) {
-        inputRef.current.value = "";
+      if (!open) {
+        setInputValue("");
       }
     }}>
       <PopoverTrigger asChild>
@@ -88,42 +113,47 @@ export function PatientCombobox({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
-        <Command>
+        <Command shouldFilter={false}>
           <CommandInput
             ref={inputRef}
             placeholder="Buscar ou criar paciente..."
+            value={inputValue}
+            onValueChange={setInputValue}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
-                e.preventDefault();
-                const searchTerm = inputRef.current?.value || "";
-                if (searchTerm && !patients.find(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))) {
+                // If user presses enter and there are no matches, allow creation
+                if (inputValue && filteredPatients.length === 0) {
+                  e.preventDefault();
                   handleCreateNew();
                 }
+                // If there are matches, standard behavior handles selection usually.
               }
             }}
           />
           <CommandList>
-            <CommandEmpty>
-              <div className="py-6 text-center">
-                <p className="text-sm text-muted-foreground mb-3">
-                  Paciente não encontrado
-                </p>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleCreateNew}
-                  className="gap-2"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  Criar Novo Paciente
-                </Button>
-              </div>
-            </CommandEmpty>
+            {filteredPatients.length === 0 && (
+              <CommandEmpty>
+                <div className="py-6 text-center">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Paciente não encontrado
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleCreateNew}
+                    className="gap-2"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    Criar Novo Paciente
+                  </Button>
+                </div>
+              </CommandEmpty>
+            )}
             <CommandGroup heading="Pacientes">
-              {patients.map((patient) => (
+              {filteredPatients.map((patient) => (
                 <CommandItem
                   key={patient.id}
-                  value={patient.name}
+                  value={patient.id}
                   onSelect={() => handleSelect(patient.id)}
                   className="cursor-pointer"
                 >

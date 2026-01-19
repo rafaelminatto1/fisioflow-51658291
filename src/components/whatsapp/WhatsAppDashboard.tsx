@@ -254,8 +254,8 @@ export function WhatsAppDashboard() {
       </div>
 
       {/* Connection Status */}
-      <Card className={connection?.connected 
-        ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200' 
+      <Card className={connection?.connected
+        ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200'
         : 'bg-red-50 dark:bg-red-950/30 border-red-200'
       }>
         <CardContent className="pt-4">
@@ -269,10 +269,10 @@ export function WhatsAppDashboard() {
             )}
             <div>
               <p className="font-medium">
-                {loadingConnection 
-                  ? 'Verificando conexão...' 
-                  : connection?.connected 
-                    ? 'WhatsApp Business API Conectado' 
+                {loadingConnection
+                  ? 'Verificando conexão...'
+                  : connection?.connected
+                    ? 'WhatsApp Business API Conectado'
                     : 'Desconectado'
                 }
               </p>
@@ -372,14 +372,14 @@ export function WhatsAppDashboard() {
                 <ResponsiveContainer width="100%" height={320}>
                   <BarChart data={dailyStats}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis 
-                      dataKey="date" 
+                    <XAxis
+                      dataKey="date"
                       tick={{ fill: 'hsl(var(--muted-foreground))' }}
                       tickFormatter={(v) => format(new Date(v), 'dd/MM', { locale: ptBR })}
                     />
                     <YAxis tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                    <Tooltip 
-                      contentStyle={{ 
+                    <Tooltip
+                      contentStyle={{
                         backgroundColor: 'hsl(var(--card))',
                         border: '1px solid hsl(var(--border))',
                         borderRadius: '8px',
@@ -416,7 +416,7 @@ export function WhatsAppDashboard() {
               ) : (
                 <ScrollArea className="h-[400px]">
                   <div className="space-y-2">
-                    {messages?.map((msg: {
+                    {(messages as any[])?.map((msg: {
                       id: string;
                       created_at: string;
                       phone_number: string;

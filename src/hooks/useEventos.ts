@@ -8,24 +8,31 @@ export function useEventos(filtros?: { status?: string; categoria?: string; busc
   return useQuery({
     queryKey: ['eventos', filtros],
     queryFn: async () => {
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      let eventos = [...mockEventos];
+      let query = supabase
+        .from('eventos')
+        .select('*');
 
       if (filtros?.status && filtros.status !== 'todos') {
-        eventos = eventos.filter(e => e.status === filtros.status);
+        query = query.eq('status', filtros.status);
       }
 
       if (filtros?.categoria && filtros.categoria !== 'todos') {
-        eventos = eventos.filter(e => e.categoria === filtros.categoria);
+        query = query.eq('categoria', filtros.categoria);
       }
+
+      const { data, error } = await query;
+
+      if (error) {
+        throw error;
+      }
+
+      let eventos = data || [];
 
       if (filtros?.busca) {
         const busca = filtros.busca.toLowerCase();
-        eventos = eventos.filter(e => 
-          e.nome.toLowerCase().includes(busca) || 
-          e.local.toLowerCase().includes(busca)
+        eventos = eventos.filter(e =>
+          e.nome.toLowerCase().includes(busca) ||
+          (e.local && e.local.toLowerCase().includes(busca))
         );
       }
 
@@ -38,12 +45,15 @@ export function useEvento(id: string) {
   return useQuery({
     queryKey: ['evento', id],
     queryFn: async () => {
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      const evento = mockEventos.find(e => e.id === id);
-      if (!evento) throw new Error('Evento não encontrado');
-      
-      return evento;
+      const { data, error } = await supabase
+        .from('eventos')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+
+      return data;
     },
     enabled: !!id,
   });

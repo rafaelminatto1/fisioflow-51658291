@@ -34,6 +34,17 @@ export interface SendResult {
   error?: string;
 }
 
+export interface SlotOfferData {
+  patientName: string;
+  patientPhone: string;
+  patientId?: string;
+  waitlistEntryId: string;
+  slotDate: Date;
+  slotTime: string;
+  therapistName?: string;
+  expiresInHours?: number;
+}
+
 // Template keys for approved messages
 export const TEMPLATE_KEYS = {
   CONFIRMACAO_AGENDAMENTO: 'confirmacao_agendamento',
@@ -42,6 +53,7 @@ export const TEMPLATE_KEYS = {
   PRESCRICAO: 'prescricao',
   RESULTADO_EXAME: 'resultado_exame',
   SOLICITAR_CONFIRMACAO: 'solicitar_confirmacao',
+  OFERTA_VAGA: 'oferta_vaga',
 } as const;
 
 export class WhatsAppService {
@@ -83,7 +95,7 @@ export class WhatsAppService {
         if (error) {
           lastError = error.message;
           logger.error(`Tentativa ${attempt} de envio WhatsApp falhou`, error, 'WhatsAppService');
-          
+
           if (attempt < this.MAX_RETRIES) {
             await this.delay(this.RETRY_DELAY_MS * attempt);
             continue;
@@ -109,7 +121,7 @@ export class WhatsAppService {
       } catch (error) {
         lastError = error instanceof Error ? error.message : 'Unknown error';
         logger.error(`Erro na tentativa ${attempt} de envio WhatsApp`, error, 'WhatsAppService');
-        
+
         if (attempt < this.MAX_RETRIES) {
           await this.delay(this.RETRY_DELAY_MS * attempt);
         }
@@ -321,7 +333,7 @@ export class WhatsAppService {
     patientId?: string
   ): Promise<SendResult> {
     const exerciseList = exercises.map((ex, i) => `${i + 1}. ${ex}`).join('\n');
-    
+
     const message = `🏋️ *Lembrete de Exercícios - Activity Fisioterapia*
 
 Olá *${patientName}*!
@@ -347,6 +359,77 @@ Dúvidas? Entre em contato conosco! 💙`;
   static async sendAppointmentReminder(reminder: AppointmentReminder): Promise<boolean> {
     const result = await this.sendSessionReminder(reminder);
     return result.success;
+  }
+
+  /**
+   * Send slot offer to waitlist patient
+   */
+  static async sendSlotOffer(data: SlotOfferData): Promise<SendResult> {
+    const { patientName, patientPhone, patientId, waitlistEntryId, slotDate, slotTime, therapistName, expiresInHours = 24 } = data;
+
+    const dateFormatted = slotDate.toLocaleDateString('pt-BR', {
+      weekday: 'long',
+      day: '2-digit',
+      month: '2-digit',
+    });
+
+    // Try template first
+    const templateResult = await this.sendFromTemplate(
+      TEMPLATE_KEYS.OFERTA_VAGA,
+      {
+        name: patientName,
+        date: dateFormatted,
+        time: slotTime,
+        therapist: therapistName || 'nossa equipe',
+        expires: expiresInHours.toString(),
+      },
+      patientPhone,
+      patientId
+    );
+
+    // If template fails (not found), send custom message
+    if (!templateResult.success && templateResult.error === 'Template not found') {
+      const message = `🎉 *Vaga Disponível - FisioFlow*
+
+Olá *${patientName}*!
+
+Temos uma vaga disponível para você:
+
+📅 *Data:* ${dateFormatted}
+⏰ *Horário:* ${slotTime}
+${therapistName ? `👨‍⚕️ *Profissional:* ${therapistName}` : ''}
+
+⏳ Esta oferta é válida por *${expiresInHours} horas*.
+
+Para confirmar, responda *SIM* ou *ACEITAR*.
+Para recusar, responda *NÃO* ou *RECUSAR*.
+
+Dúvidas? Entre em contato conosco! 💙`;
+
+      return this.sendMessage({
+        to: patientPhone,
+        message,
+        templateKey: TEMPLATE_KEYS.OFERTA_VAGA,
+        patientId,
+      });
+    }
+
+    // Log the offer to track response
+    try {
+      await supabase.from('waitlist_slot_offers').insert({
+        waitlist_entry_id: waitlistEntryId,
+        patient_id: patientId,
+        offered_date: slotDate.toISOString(),
+        offered_time: slotTime,
+        status: 'pending',
+        expires_at: new Date(Date.now() + expiresInHours * 60 * 60 * 1000).toISOString(),
+        message_id: templateResult.messageId,
+      });
+    } catch (error) {
+      logger.warn('Failed to log slot offer', error, 'WhatsAppService');
+    }
+
+    return templateResult;
   }
 
   /**
@@ -414,7 +497,7 @@ Bem-vindo! 💙`;
     const read = data.filter(m => m.read_at).length;
     const failed = data.filter(m => m.status === 'falhou').length;
     const replied = data.filter(m => m.replied_at).length;
-    
+
     // Calculate average response time in minutes
     const responseTimes = data
       .filter(m => m.sent_at && m.replied_at)
