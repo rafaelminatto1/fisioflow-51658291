@@ -36,15 +36,16 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Tarefa, 
-  TarefaStatus, 
+import {
+  Tarefa,
+  TarefaStatus,
   TarefaPrioridade,
-  STATUS_LABELS, 
+  STATUS_LABELS,
   PRIORIDADE_LABELS,
   useCreateTarefa,
-  useUpdateTarefa 
+  useUpdateTarefa
 } from '@/hooks/useTarefas';
+import { useProjects } from '@/hooks/useProjects';
 
 const tarefaSchema = z.object({
   titulo: z.string().min(1, 'Título é obrigatório'),
@@ -52,7 +53,9 @@ const tarefaSchema = z.object({
   status: z.enum(['A_FAZER', 'EM_PROGRESSO', 'REVISAO', 'CONCLUIDO']),
   prioridade: z.enum(['BAIXA', 'MEDIA', 'ALTA', 'URGENTE']),
   data_vencimento: z.date().optional().nullable(),
-  tags: z.array(z.string()).default([])
+  start_date: z.date().optional().nullable(),
+  tags: z.array(z.string()).default([]),
+  project_id: z.string().optional().nullable()
 });
 
 type TarefaFormData = z.infer<typeof tarefaSchema>;
@@ -62,12 +65,14 @@ interface TarefaModalProps {
   onOpenChange: (open: boolean) => void;
   tarefa?: Tarefa | null;
   defaultStatus?: TarefaStatus;
+  defaultProjectId?: string;
 }
 
-export function TarefaModal({ open, onOpenChange, tarefa, defaultStatus = 'A_FAZER' }: TarefaModalProps) {
+export function TarefaModal({ open, onOpenChange, tarefa, defaultStatus = 'A_FAZER', defaultProjectId }: TarefaModalProps) {
   const createTarefa = useCreateTarefa();
   const updateTarefa = useUpdateTarefa();
-  
+  const { data: projects } = useProjects();
+
   const form = useForm<TarefaFormData>({
     resolver: zodResolver(tarefaSchema),
     defaultValues: {
@@ -76,7 +81,9 @@ export function TarefaModal({ open, onOpenChange, tarefa, defaultStatus = 'A_FAZ
       status: defaultStatus,
       prioridade: 'MEDIA',
       data_vencimento: null,
-      tags: []
+      start_date: null,
+      tags: [],
+      project_id: defaultProjectId || ''
     }
   });
 
@@ -90,7 +97,9 @@ export function TarefaModal({ open, onOpenChange, tarefa, defaultStatus = 'A_FAZ
         status: tarefa.status,
         prioridade: tarefa.prioridade,
         data_vencimento: tarefa.data_vencimento ? new Date(tarefa.data_vencimento) : null,
-        tags: tarefa.tags || []
+        start_date: tarefa.start_date ? new Date(tarefa.start_date) : null,
+        tags: tarefa.tags || [],
+        project_id: tarefa.project_id || defaultProjectId || ''
       });
     } else {
       form.reset({
@@ -99,17 +108,19 @@ export function TarefaModal({ open, onOpenChange, tarefa, defaultStatus = 'A_FAZ
         status: defaultStatus,
         prioridade: 'MEDIA',
         data_vencimento: null,
-        tags: []
+        start_date: null,
+        tags: [],
+        project_id: defaultProjectId || ''
       });
     }
-  }, [tarefa, defaultStatus, form]);
+  }, [tarefa, defaultStatus, defaultProjectId, form]);
 
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       const input = e.currentTarget;
       const value = input.value.trim();
-      
+
       if (value && !tags.includes(value)) {
         form.setValue('tags', [...tags, value]);
         input.value = '';
@@ -127,12 +138,16 @@ export function TarefaModal({ open, onOpenChange, tarefa, defaultStatus = 'A_FAZ
         await updateTarefa.mutateAsync({
           id: tarefa.id,
           ...data,
-          data_vencimento: data.data_vencimento?.toISOString().split('T')[0]
+          project_id: data.project_id || null, // Handle empty string as null
+          data_vencimento: data.data_vencimento?.toISOString().split('T')[0],
+          start_date: data.start_date?.toISOString().split('T')[0]
         });
       } else {
         await createTarefa.mutateAsync({
           ...data,
-          data_vencimento: data.data_vencimento?.toISOString().split('T')[0]
+          project_id: data.project_id || null,
+          data_vencimento: data.data_vencimento?.toISOString().split('T')[0],
+          start_date: data.start_date?.toISOString().split('T')[0]
         });
       }
       onOpenChange(false);
@@ -143,7 +158,7 @@ export function TarefaModal({ open, onOpenChange, tarefa, defaultStatus = 'A_FAZ
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>
             {tarefa ? 'Editar Tarefa' : 'Nova Tarefa'}
@@ -151,7 +166,7 @@ export function TarefaModal({ open, onOpenChange, tarefa, defaultStatus = 'A_FAZ
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 overflow-y-auto flex-1 pr-2">
             {/* Title */}
             <FormField
               control={form.control}
@@ -166,6 +181,33 @@ export function TarefaModal({ open, onOpenChange, tarefa, defaultStatus = 'A_FAZ
                 </FormItem>
               )}
             />
+
+            {/* Project Selection */}
+            {!defaultProjectId && (
+              <FormField
+                control={form.control}
+                name="project_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Projeto</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um projeto (opcional)" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">Nenhum</SelectItem>
+                        {projects?.map(p => (
+                          <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             {/* Description */}
             <FormField
@@ -240,45 +282,88 @@ export function TarefaModal({ open, onOpenChange, tarefa, defaultStatus = 'A_FAZ
               />
             </div>
 
-            {/* Due Date */}
-            <FormField
-              control={form.control}
-              name="data_vencimento"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel>Data de Vencimento</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            'w-full pl-3 text-left font-normal',
-                            !field.value && 'text-muted-foreground'
-                          )}
-                        >
-                          {field.value ? (
-                            format(field.value, 'dd/MM/yyyy')
-                          ) : (
-                            <span>Selecione uma data</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value || undefined}
-                        onSelect={field.onChange}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Dates */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Start Date - New Field */}
+              <FormField
+                control={form.control}
+                name="start_date"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Início</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              'w-full pl-3 text-left font-normal',
+                              !field.value && 'text-muted-foreground'
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, 'dd/MM/yyyy')
+                            ) : (
+                              <span>Definir início</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value || undefined}
+                          onSelect={field.onChange}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Due Date */}
+              <FormField
+                control={form.control}
+                name="data_vencimento"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Vencimento</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              'w-full pl-3 text-left font-normal',
+                              !field.value && 'text-muted-foreground'
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, 'dd/MM/yyyy')
+                            ) : (
+                              <span>Definir prazo</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value || undefined}
+                          onSelect={field.onChange}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             {/* Tags */}
             <FormField
@@ -320,8 +405,8 @@ export function TarefaModal({ open, onOpenChange, tarefa, defaultStatus = 'A_FAZ
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={createTarefa.isPending || updateTarefa.isPending}
               >
                 {tarefa ? 'Salvar' : 'Criar Tarefa'}
