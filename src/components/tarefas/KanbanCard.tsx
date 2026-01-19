@@ -1,7 +1,7 @@
 import { Draggable } from '@hello-pangea/dnd';
 import { format, isPast, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Calendar, Clock, MoreHorizontal, Pencil, Trash2, User } from 'lucide-react';
+import { Calendar, Clock, MoreHorizontal, Pencil, Trash2, User, CheckSquare, Link as LinkIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -123,6 +123,26 @@ export function KanbanCard({ tarefa, index, onEdit, onDelete }: KanbanCardProps)
                     {tarefa.start_date && tarefa.data_vencimento && ' - '}
                     {tarefa.data_vencimento && format(new Date(tarefa.data_vencimento), 'dd/MM')}
                   </span>
+                </div>
+              )}
+
+              {/* Checklist & Attachments Indicators */}
+              {((tarefa.checklist && tarefa.checklist.length > 0) || (tarefa.attachments && tarefa.attachments.length > 0)) && (
+                <div className="flex items-center gap-2 border-l border-border/50 pl-2 ml-1">
+                  {tarefa.checklist && tarefa.checklist.length > 0 && (
+                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground" title="Checklist">
+                      <CheckSquare className="h-3 w-3" />
+                      <span>
+                        {tarefa.checklist.filter(i => i.completed).length}/{tarefa.checklist.length}
+                      </span>
+                    </div>
+                  )}
+                  {tarefa.attachments && tarefa.attachments.length > 0 && (
+                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground" title="Anexos">
+                      <LinkIcon className="h-3 w-3" />
+                      <span>{tarefa.attachments.length}</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
