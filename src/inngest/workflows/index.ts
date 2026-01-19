@@ -27,6 +27,7 @@ export {
   sendReactivationWhatsAppWorkflow,
 } from './whatsapp';
 export { reactivationWorkflow } from './reactivation';
+export { appointmentCompletedWorkflow } from './feedback';
 export {
   appointmentReminderWorkflow,
   appointmentCreatedWorkflow,
