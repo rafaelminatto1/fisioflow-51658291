@@ -159,8 +159,6 @@ export const sendBirthdayGreetingWorkflow = inngest.createFunction(
       error: result.error,
     };
   }
-    };
-  }
 );
 
 /**

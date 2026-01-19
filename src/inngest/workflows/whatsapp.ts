@@ -175,7 +175,7 @@ export const sendReactivationWhatsAppWorkflow = inngest.createFunction(
     const { to, patientName, organizationName } = event.data;
 
     const result = await step.run('send-reactivation', async () => {
-      // @ts-ignore
+      // @ts-expect-error - WhatsAppService dynamic method
       return await WhatsAppService.sendReactivation(to, {
         patientName,
         organizationName,
