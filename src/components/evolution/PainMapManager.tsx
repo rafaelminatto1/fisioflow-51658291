@@ -25,7 +25,7 @@ interface PainMapManagerProps {
   readOnly?: boolean;
 }
 
-export function PainMapManager({ patientId, sessionId, _appointmentId, readOnly = false }: PainMapManagerProps) {
+export function PainMapManager({ patientId, sessionId, appointmentId, readOnly = false }: PainMapManagerProps) {
   const [painPoints, setPainPoints] = useState<PainMapPoint[]>([]);
   const [chartType, setChartType] = useState<'line' | 'area' | 'bar'>('line');
   const [is3DMode, setIs3DMode] = useState(false);

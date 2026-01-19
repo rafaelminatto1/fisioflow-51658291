@@ -33,6 +33,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { EquipmentSelector, type SelectedEquipment } from './EquipmentSelector';
 import { AppointmentReminder, type AppointmentReminderData } from './AppointmentReminder';
+import { usePatientPackages, type PatientPackage } from '@/hooks/usePackages';
 
 export const PatientSelectionSection = ({
     patients,
@@ -276,14 +277,19 @@ export const PaymentTab = ({
     disabled,
     watchPaymentStatus,
     watchPaymentMethod,
-    watchPaymentAmount
+    watchPaymentAmount,
+    patientId
 }: {
     disabled: boolean,
     watchPaymentStatus: string,
     watchPaymentMethod: string,
-    watchPaymentAmount: number
+    watchPaymentAmount: number,
+    patientId?: string
 }) => {
     const { register, setValue, watch } = useFormContext<AppointmentFormData>();
+    const { data: patientPackages, isLoading: isLoadingPackages } = usePatientPackages(patientId);
+
+    const activePackages = patientPackages?.filter(p => p.status === 'active' && (p.sessions_remaining || 0) > 0) || [];
 
     const paymentOptions = [
         { value: 'pending', label: 'Pendente', icon: '⏳', color: 'border-amber-500/30 bg-amber-500/5' },
@@ -320,8 +326,19 @@ export const PaymentTab = ({
                             disabled={disabled}
                             onClick={() => {
                                 setValue('payment_status', option.value);
-                                if (option.value === 'paid_single') setValue('payment_amount', 180);
-                                if (option.value === 'paid_package') setValue('payment_amount', 170);
+                                if (option.value === 'paid_single') {
+                                    setValue('payment_amount', 180);
+                                    setValue('session_package_id', null);
+                                }
+                                if (option.value === 'paid_package') {
+                                    setValue('payment_amount', 170); // Valor de referência
+                                    // Se houver apenas um pacote ativo, seleciona automaticamente
+                                    if (activePackages.length === 1) {
+                                        setValue('session_package_id', activePackages[0].id);
+                                    }
+                                } else {
+                                    setValue('session_package_id', null);
+                                }
                             }}
                         >
                             <span className="text-lg">{option.icon}</span>
@@ -330,6 +347,48 @@ export const PaymentTab = ({
                     ))}
                 </div>
             </div>
+
+            {watchPaymentStatus === 'paid_package' && (
+                <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <Label className="text-xs sm:text-sm font-medium flex items-center justify-between">
+                        <span>Pacote do Paciente</span>
+                        {isLoadingPackages && <span className="text-xs text-muted-foreground animate-pulse">Carregando...</span>}
+                    </Label>
+
+                    {patientId ? (
+                        activePackages.length > 0 ? (
+                            <Select
+                                value={watch('session_package_id') || ''}
+                                onValueChange={(val) => setValue('session_package_id', val)}
+                                disabled={disabled}
+                            >
+                                <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm border-blue-200 bg-blue-50/50">
+                                    <SelectValue placeholder="Selecione o pacote para debitar" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {activePackages.map(pkg => (
+                                        <SelectItem key={pkg.id} value={pkg.id}>
+                                            {pkg.package?.name} ({pkg.sessions_remaining} sessões rest.)
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        ) : (
+                            <div className="p-3 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md flex flex-col gap-1">
+                                <span className="font-medium flex items-center gap-1.5">
+                                    <AlertTriangle className="h-3.5 w-3.5" />
+                                    Nenhum pacote ativo encontrado
+                                </span>
+                                <span>Este paciente não possui pacotes com saldo. Selecione "Avulso" ou cadastre uma nova venda de pacote.</span>
+                            </div>
+                        )
+                    ) : (
+                        <div className="p-2 text-xs text-muted-foreground bg-muted/30 rounded-md">
+                            Selecione um paciente para ver seus pacotes.
+                        </div>
+                    )}
+                </div>
+            )}
 
             <div className="space-y-1.5">
                 <Label className="text-xs sm:text-sm font-medium">Valor da Sessão (R$)</Label>

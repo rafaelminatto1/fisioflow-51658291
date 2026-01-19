@@ -314,8 +314,8 @@ export default function WhatsAppIntegration() {
                       <div className="flex-1">
                         <p className="font-medium">Confirmação de Agendamento</p>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Olá {nome}, seu agendamento para {data} às {hora} foi confirmado.
-                          Esperamos você na {clinica}!
+                          Olá {'{nome}'}, seu agendamento para {'{data}'} às {'{hora}'} foi confirmado.
+                          Esperamos você na {'{clinica}'}!
                         </p>
                         <Button variant="outline" size="sm" className="mt-2">
                           Usar Template
@@ -334,8 +334,8 @@ export default function WhatsAppIntegration() {
                       <div className="flex-1">
                         <p className="font-medium">Lembrete de Sessão</p>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Olá {nome}, lembramos que sua sessão de fisioterapia
-                          é amanhã às {hora}. Confirmamos?
+                          Olá {'{nome}'}, lembramos que sua sessão de fisioterapia
+                          é amanhã às {'{hora}'}. Confirmamos?
                         </p>
                         <Button variant="outline" size="sm" className="mt-2">
                           Usar Template
@@ -354,7 +354,7 @@ export default function WhatsAppIntegration() {
                       <div className="flex-1">
                         <p className="font-medium">Boas-vindas</p>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Olá {nome}! Bem-vindo à {clinica}.
+                          Olá {'{nome}'}! Bem-vindo à {'{clinica}'}.
                           Estamos felizes em atender você!
                         </p>
                         <Button variant="outline" size="sm" className="mt-2">
@@ -374,7 +374,7 @@ export default function WhatsAppIntegration() {
                       <div className="flex-1">
                         <p className="font-medium">Follow-up Pós-Consulta</p>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Olá {nome}, como você está se sentindo após a sessão?
+                          Olá {'{nome}'}, como você está se sentindo após a sessão?
                           Alguma dúvida sobre os exercícios?
                         </p>
                         <Button variant="outline" size="sm" className="mt-2">

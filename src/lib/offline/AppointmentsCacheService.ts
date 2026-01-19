@@ -1,225 +1,124 @@
 /**
- * Serviço de cache para agendamentos
- * Gerencia persistência offline e fallback automático
- * 
- * Melhorias:
- * - Cache com expiração configurável
- * - Validação de integridade do cache
- * - Suporte a múltiplas organizações
- * - Logging detalhado para debug
+ * Service for caching appointments data offline.
+ * Provides methods for managing appointment data in local storage for offline use.
  */
-import { dbStore } from './IndexedDBStore';
-import type { AppointmentBase } from '@/types/appointment';
 import { logger } from '@/lib/errors/logger';
+import { AppointmentBase } from '@/types/appointment';
 
-const CACHE_KEY = 'appointments_cache_metadata';
-const STORE_NAME = 'appointments';
-const DEFAULT_CACHE_TTL_MS = 1000 * 60 * 60 * 24; // 24 horas
-
-export interface CacheMetadata {
+interface CacheMetadata {
     lastUpdated: string;
-    count: number;
     organizationId?: string;
-    version: number;
-    expiresAt: string;
 }
 
-export interface CacheResult {
-    data: AppointmentBase[];
-    metadata: CacheMetadata | null;
-    isExpired: boolean;
+interface CacheResult<T> {
+    data: T[];
     isStale: boolean;
+    metadata: CacheMetadata | null;
+    source: 'indexeddb' | 'localstorage' | 'memory';
 }
 
 class AppointmentsCacheService {
-    private initialized = false;
-    private readonly CACHE_VERSION = 1;
-    private readonly STALE_THRESHOLD_MS = 1000 * 60 * 5; // 5 minutos = stale
+    private readonly CACHE_KEY_PREFIX = 'appointments_cache';
+    private readonly CACHE_TIMESTAMP_KEY_PREFIX = 'appointments_cache_timestamp';
+    private readonly CACHE_DURATION_MS = 30 * 60 * 1000; // 30 minutes
 
-    async init(): Promise<void> {
-        if (this.initialized) return;
-        try {
-            await dbStore.init();
-            this.initialized = true;
-            logger.debug('AppointmentsCacheService inicializado', {}, 'AppointmentsCacheService');
-        } catch (error) {
-            logger.error('Erro ao inicializar AppointmentsCacheService', error, 'AppointmentsCacheService');
-            throw error;
-        }
+    private getCacheKey(organizationId?: string): string {
+        return organizationId ? `${this.CACHE_KEY_PREFIX}_${organizationId}` : this.CACHE_KEY_PREFIX;
+    }
+
+    private getTimestampKey(organizationId?: string): string {
+        return organizationId ? `${this.CACHE_TIMESTAMP_KEY_PREFIX}_${organizationId}` : this.CACHE_TIMESTAMP_KEY_PREFIX;
+    }
+
+    private currentOrganizationId?: string;
+
+    /**
+     * Check if cached data is still valid (not expired)
+     */
+    async isCacheValid(organizationId?: string): Promise<boolean> {
+        const timestamp = localStorage.getItem(this.getTimestampKey(organizationId));
+        if (!timestamp) return false;
+
+        const cacheTime = parseInt(timestamp, 10);
+        return Date.now() - cacheTime < this.CACHE_DURATION_MS;
     }
 
     /**
-     * Salva agendamentos no cache local com metadata
+     * Get cache age in minutes
      */
-    async saveToCache(appointments: AppointmentBase[], organizationId?: string, ttlMs: number = DEFAULT_CACHE_TTL_MS): Promise<void> {
-        try {
-            await this.init();
-
-            const now = new Date();
-            const expiresAt = new Date(now.getTime() + ttlMs);
-
-            // Limpar cache anterior e salvar novos dados
-            await dbStore.clear(STORE_NAME);
-
-            if (appointments.length > 0) {
-                // Converter para formato serializável com ID garantido
-                const serializableAppointments = appointments.map((apt) => ({
-                    ...apt,
-                    id: apt.id, // Garantir que ID existe (keyPath do IndexedDB)
-                    date: apt.date instanceof Date ? apt.date.toISOString() : apt.date,
-                    createdAt: apt.createdAt instanceof Date ? apt.createdAt.toISOString() : apt.createdAt,
-                    updatedAt: apt.updatedAt instanceof Date ? apt.updatedAt.toISOString() : apt.updatedAt,
-                    _cachedAt: now.toISOString(),
-                }));
-
-                await dbStore.putAll(STORE_NAME, serializableAppointments);
-            }
-
-            // Salvar metadata
-            const metadata: CacheMetadata = {
-                lastUpdated: now.toISOString(),
-                count: appointments.length,
-                organizationId,
-                version: this.CACHE_VERSION,
-                expiresAt: expiresAt.toISOString(),
-            };
-            localStorage.setItem(CACHE_KEY, JSON.stringify(metadata));
-
-            logger.info('Cache atualizado', {
-                count: appointments.length,
-                organizationId,
-                expiresAt: expiresAt.toISOString()
-            }, 'AppointmentsCacheService');
-        } catch (error) {
-            logger.error('Erro ao salvar cache', error, 'AppointmentsCacheService');
-        }
+    getCacheAgeMinutes(organizationId?: string): number {
+        const key = this.getTimestampKey(organizationId || this.currentOrganizationId);
+        const timestamp = localStorage.getItem(key);
+        if (!timestamp) return Infinity;
+        return Math.round((Date.now() - parseInt(timestamp, 10)) / 60000);
     }
 
     /**
-     * Recupera agendamentos do cache local com validações
+     * Get cached appointments
      */
-    async getFromCache(organizationId?: string): Promise<CacheResult> {
-        const emptyResult: CacheResult = {
-            data: [],
-            metadata: null,
-            isExpired: true,
-            isStale: true
-        };
-
+    async getFromCache(organizationId?: string): Promise<CacheResult<AppointmentBase>> {
+        this.currentOrganizationId = organizationId;
         try {
-            await this.init();
-
-            const metadata = this.getCacheMetadata();
-
-            // Verificar se existe metadata
-            if (!metadata) {
-                logger.debug('Sem cache disponível', {}, 'AppointmentsCacheService');
-                return emptyResult;
+            const cached = localStorage.getItem(this.getCacheKey(organizationId));
+            if (!cached) {
+                return { data: [], isStale: false, metadata: null, source: 'memory' };
             }
 
-            // Verificar versão do cache
-            if (metadata.version !== this.CACHE_VERSION) {
-                logger.warn('Cache com versão incompatível, limpando', {
-                    cacheVersion: metadata.version,
-                    currentVersion: this.CACHE_VERSION
-                }, 'AppointmentsCacheService');
-                await this.clearCache();
-                return emptyResult;
-            }
+            const isValid = await this.isCacheValid(organizationId);
+            const timestamp = localStorage.getItem(this.getTimestampKey(organizationId));
 
-            // Verificar organização (se especificada)
-            if (organizationId && metadata.organizationId !== organizationId) {
-                logger.debug('Cache de outra organização', {
-                    cacheOrg: metadata.organizationId,
-                    requestedOrg: organizationId
-                }, 'AppointmentsCacheService');
-                return emptyResult;
-            }
-
-            // Calcular estados do cache
-            const now = new Date();
-            const lastUpdated = new Date(metadata.lastUpdated);
-            const expiresAt = new Date(metadata.expiresAt);
-            const isExpired = now > expiresAt;
-            const isStale = now.getTime() - lastUpdated.getTime() > this.STALE_THRESHOLD_MS;
-
-            // Recuperar dados
-            const cachedData = await dbStore.getAll<Record<string, unknown>>(STORE_NAME);
-
-            if (!cachedData || cachedData.length === 0) {
-                return emptyResult;
-            }
-
-            // Converter datas de volta para objetos Date
-            const appointments: AppointmentBase[] = cachedData.map(apt => ({
+            // Parse and convert dates back to Date objects
+            const rawData = JSON.parse(cached);
+            const data: AppointmentBase[] = (rawData || []).map((apt: Record<string, unknown>) => ({
                 ...apt,
-                date: apt.date ? new Date(apt.date) : new Date(),
-                createdAt: apt.createdAt ? new Date(apt.createdAt) : new Date(),
-                updatedAt: apt.updatedAt ? new Date(apt.updatedAt) : new Date(),
+                date: apt.date ? new Date(apt.date as string) : new Date(),
+                createdAt: apt.createdAt ? new Date(apt.createdAt as string) : new Date(),
+                updatedAt: apt.updatedAt ? new Date(apt.updatedAt as string) : new Date(),
             }));
 
-            logger.info('Cache recuperado', {
-                count: appointments.length,
-                isExpired,
-                isStale,
-                ageMinutes: Math.round((now.getTime() - lastUpdated.getTime()) / 60000)
-            }, 'AppointmentsCacheService');
-
-            return { data: appointments, metadata, isExpired, isStale };
+            return {
+                data,
+                isStale: !isValid,
+                metadata: timestamp ? { lastUpdated: new Date(parseInt(timestamp, 10)).toISOString(), organizationId } : null,
+                source: 'localstorage'
+            };
         } catch (error) {
-            logger.error('Erro ao recuperar cache', error, 'AppointmentsCacheService');
-            return emptyResult;
+            logger.error('Error reading appointments cache', error, 'AppointmentsCacheService');
+            return { data: [], isStale: false, metadata: null, source: 'memory' };
         }
     }
 
     /**
-     * Obtém metadata do cache de forma síncrona
+     * Save appointments to cache
      */
-    getCacheMetadata(): CacheMetadata | null {
+    async saveToCache(data: AppointmentBase[], organizationId?: string): Promise<void> {
+        this.currentOrganizationId = organizationId;
         try {
-            const metadataStr = localStorage.getItem(CACHE_KEY);
-            return metadataStr ? JSON.parse(metadataStr) : null;
-        } catch {
-            return null;
-        }
-    }
-
-    /**
-     * Verifica se cache existe e não está expirado
-     */
-    hasValidCache(organizationId?: string): boolean {
-        const metadata = this.getCacheMetadata();
-        if (!metadata) return false;
-        if (metadata.version !== this.CACHE_VERSION) return false;
-        if (organizationId && metadata.organizationId !== organizationId) return false;
-        if (new Date() > new Date(metadata.expiresAt)) return false;
-        return metadata.count > 0;
-    }
-
-    /**
-     * Limpa o cache completamente
-     */
-    async clearCache(): Promise<void> {
-        try {
-            await this.init();
-            await dbStore.clear(STORE_NAME);
-            localStorage.removeItem(CACHE_KEY);
-            logger.info('Cache limpo', {}, 'AppointmentsCacheService');
+            // Convert dates to ISO strings for storage
+            const serialized = data.map(apt => ({
+                ...apt,
+                date: apt.date instanceof Date ? apt.date.toISOString() : apt.date,
+                createdAt: apt.createdAt instanceof Date ? apt.createdAt.toISOString() : apt.createdAt,
+                updatedAt: apt.updatedAt instanceof Date ? apt.updatedAt.toISOString() : apt.updatedAt,
+            }));
+            localStorage.setItem(this.getCacheKey(organizationId), JSON.stringify(serialized));
+            localStorage.setItem(this.getTimestampKey(organizationId), Date.now().toString());
         } catch (error) {
-            logger.error('Erro ao limpar cache', error, 'AppointmentsCacheService');
+            logger.error('Error caching appointments', error, 'AppointmentsCacheService');
         }
     }
 
     /**
-     * Retorna idade do cache em minutos
+     * Clear the appointments cache
      */
-    getCacheAgeMinutes(): number | null {
-        const metadata = this.getCacheMetadata();
-        if (!metadata) return null;
-        const lastUpdated = new Date(metadata.lastUpdated);
-        return Math.round((Date.now() - lastUpdated.getTime()) / 60000);
+    async clearCache(organizationId?: string): Promise<void> {
+        try {
+            localStorage.removeItem(this.getCacheKey(organizationId));
+            localStorage.removeItem(this.getTimestampKey(organizationId));
+        } catch (error) {
+            logger.error('Error clearing appointments cache', error, 'AppointmentsCacheService');
+        }
     }
 }
 
-// Singleton
 export const appointmentsCacheService = new AppointmentsCacheService();

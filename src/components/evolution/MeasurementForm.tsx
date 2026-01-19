@@ -360,7 +360,7 @@ export const MeasurementForm: React.FC<MeasurementFormProps> = ({
         )}
 
         <div className="space-y-4">
-          <AnimatePresence mode="poplayout">
+          <AnimatePresence mode="popLayout">
             {measurements.map((measurement, index) => (
               <motion.div
                 key={index}

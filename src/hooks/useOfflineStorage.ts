@@ -62,6 +62,24 @@ interface FisioFlowDB extends DBSchema {
     };
     indexes: { 'by-expires': number };
   };
+  /** Stores cached patients for offline access */
+  patients: {
+    key: string;
+    value: unknown;
+    indexes: { 'by-name': string };
+  };
+  /** Stores cached appointments for offline access */
+  appointments: {
+    key: string;
+    value: unknown;
+    indexes: { 'by-startTime': string; 'by-patientId': string };
+  };
+  /** Stores cached exercises for offline access */
+  exercises: {
+    key: string;
+    value: unknown;
+    indexes: { 'by-category': string };
+  };
 }
 
 /**
@@ -122,7 +140,7 @@ export interface ConnectionStatus {
 const DEFAULT_DB_NAME = 'FisioFlowOffline';
 
 /** Default database version */
-const DEFAULT_DB_VERSION = 1;
+const DEFAULT_DB_VERSION = 2;
 
 /** Default cache expiry: 24 hours */
 const DEFAULT_CACHE_EXPIRY = 24 * 60 * 60 * 1000;
@@ -178,6 +196,25 @@ async function getDB(): Promise<IDBPDatabase<FisioFlowDB>> {
           keyPath: 'sessionId',
         });
         sessionStore.createIndex('by-expires', 'expiresAt');
+      }
+
+      // Patients store
+      if (!db.objectStoreNames.contains('patients')) {
+        const patientsStore = db.createObjectStore('patients', { keyPath: 'id' });
+        patientsStore.createIndex('by-name', 'name');
+      }
+
+      // Appointments store
+      if (!db.objectStoreNames.contains('appointments')) {
+        const apptStore = db.createObjectStore('appointments', { keyPath: 'id' });
+        apptStore.createIndex('by-startTime', 'start_time');
+        apptStore.createIndex('by-patientId', 'patient_id');
+      }
+
+      // Exercises store
+      if (!db.objectStoreNames.contains('exercises')) {
+        const exStore = db.createObjectStore('exercises', { keyPath: 'id' });
+        exStore.createIndex('by-category', 'category');
       }
     },
   });
@@ -850,6 +887,6 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
 // EXPORTS
 // ============================================================================
 
-export { getDB, resetDBInstance };
+export { getDB };
 export type { FisioFlowDB, OfflineStorageOptions, SyncResult, StorageQuota, ConnectionStatus };
 export { OFFLINE_ACTION_TYPES };

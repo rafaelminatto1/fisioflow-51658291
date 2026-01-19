@@ -1,4 +1,5 @@
 import type { PainPoint } from '@/components/pain-map/BodyMap';
+import { jsPDF } from 'jspdf';
 
 export interface PainMapExportData {
   patientName: string;
@@ -12,6 +13,8 @@ export interface PainMapExportData {
     highIntensityCount: number;
     muscleSpecificCount: number;
   };
+  /** Optional base64 image of the pain map canvas */
+  mapImage?: string;
 }
 
 // Função para gerar relatório em texto
@@ -69,6 +72,141 @@ export function generateTextReport(data: PainMapExportData): string {
   lines.push('='.repeat(60));
 
   return lines.join('\n');
+}
+
+// Função para gerar relatório em PDF
+export async function generatePDFReport(data: PainMapExportData): Promise<Blob> {
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
+  });
+
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 15;
+  let y = 20;
+
+  // Header
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Relatório de Mapa de Dor', pageWidth / 2, y, { align: 'center' });
+  y += 12;
+
+  // Patient info
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Paciente: ${data.patientName}`, margin, y);
+  y += 7;
+  doc.text(`Data: ${new Date(data.date).toLocaleDateString('pt-BR')}`, margin, y);
+  y += 12;
+
+  // Divider
+  doc.setDrawColor(200);
+  doc.line(margin, y, pageWidth - margin, y);
+  y += 8;
+
+  // Statistics
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Estatísticas Gerais', margin, y);
+  y += 8;
+
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`• Total de pontos: ${data.statistics.totalPoints}`, margin + 5, y);
+  y += 6;
+  doc.text(`• Intensidade média: ${data.statistics.averageIntensity.toFixed(1)}/10`, margin + 5, y);
+  y += 6;
+  doc.text(`• Pontos de alta intensidade: ${data.statistics.highIntensityCount}`, margin + 5, y);
+  y += 6;
+  doc.text(`• Músculos específicos: ${data.statistics.muscleSpecificCount}`, margin + 5, y);
+  y += 12;
+
+  // Pain map image (if available)
+  if (data.mapImage) {
+    doc.setDrawColor(200);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 8;
+
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Mapa de Dor', margin, y);
+    y += 8;
+
+    try {
+      const imgWidth = 100;
+      const imgHeight = 120;
+      doc.addImage(data.mapImage, 'PNG', (pageWidth - imgWidth) / 2, y, imgWidth, imgHeight);
+      y += imgHeight + 10;
+    } catch (error) {
+      console.error('Error adding image to PDF:', error);
+    }
+  }
+
+  // Pain points details
+  const allPoints = [
+    ...data.frontPoints.map(p => ({ ...p, view: 'Frente' as const })),
+    ...data.backPoints.map(p => ({ ...p, view: 'Costas' as const })),
+  ];
+
+  if (allPoints.length > 0) {
+    // Check if we need a new page
+    if (y > 230) {
+      doc.addPage();
+      y = 20;
+    }
+
+    doc.setDrawColor(200);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 8;
+
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Detalhes dos Pontos de Dor', margin, y);
+    y += 8;
+
+    doc.setFontSize(10);
+    allPoints.forEach((point, index) => {
+      // Check for page break
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${index + 1}. ${point.region} (${point.view})`, margin + 5, y);
+      y += 5;
+
+      doc.setFont('helvetica', 'normal');
+      doc.text(`   Intensidade: ${point.intensity}/10 | Tipo: ${point.painType}`, margin + 5, y);
+      y += 5;
+
+      if (point.muscleName) {
+        doc.text(`   Músculo: ${point.muscleName}`, margin + 5, y);
+        y += 5;
+      }
+
+      if (point.notes) {
+        const noteLines = doc.splitTextToSize(`   Notas: ${point.notes}`, pageWidth - margin * 2 - 10);
+        doc.text(noteLines, margin + 5, y);
+        y += noteLines.length * 4;
+      }
+
+      y += 3;
+    });
+  }
+
+  // Footer
+  doc.setFontSize(8);
+  doc.setTextColor(128);
+  doc.text(
+    `Gerado em ${new Date().toLocaleString('pt-BR')} - FisioFlow`,
+    pageWidth / 2,
+    doc.internal.pageSize.getHeight() - 10,
+    { align: 'center' }
+  );
+
+  return doc.output('blob');
 }
 
 // Função para gerar CSV
@@ -145,6 +283,23 @@ export function exportPainMap(
 
   const mimeType = format === 'json' ? 'application/json' : format === 'csv' ? 'text/csv' : 'text/plain';
   downloadFile(content, filename, mimeType);
+}
+
+// Função para exportar como PDF (async)
+export async function exportPainMapPDF(data: PainMapExportData): Promise<void> {
+  const timestamp = new Date().toISOString().split('T')[0];
+  const patientSlug = data.patientName.toLowerCase().replace(/\s+/g, '-');
+  const filename = `mapa-dor-${patientSlug}-${timestamp}.pdf`;
+
+  const pdfBlob = await generatePDFReport(data);
+  const url = URL.createObjectURL(pdfBlob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 // Função para copiar para área de transferência

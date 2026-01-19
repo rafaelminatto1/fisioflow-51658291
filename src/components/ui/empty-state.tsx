@@ -12,6 +12,7 @@ interface EmptyStateProps {
     onClick: () => void;
   };
   className?: string;
+  children?: React.ReactNode;
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
@@ -19,7 +20,8 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   title,
   description,
   action,
-  className = ''
+  className = '',
+  children
 }) => {
   return (
     <Card className={`border-dashed ${className}`}>
@@ -35,8 +37,9 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
             {description}
           </p>
         )}
+        {children}
         {action && (
-          <Button onClick={action.onClick}>
+          <Button onClick={action.onClick} className="mt-4">
             {action.label}
           </Button>
         )}

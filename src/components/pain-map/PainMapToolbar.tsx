@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Download, FileText, FileSpreadsheet, Braces, Printer, Copy, Check } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, Braces, Printer, Copy, Check, FileOutput } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import type { PainPoint } from './BodyMap';
 import {
   exportPainMap,
+  exportPainMapPDF,
   printPainMap,
   copyToClipboard,
   generateTextReport,
@@ -51,6 +52,25 @@ export function PainMapToolbar({
       toast.success(`Relatório exportado em ${format.toUpperCase()}`);
     } catch (error) {
       toast.error('Erro ao exportar relatório');
+      console.error(error);
+    }
+  };
+
+  const handlePDFExport = async () => {
+    const data: PainMapExportData = {
+      patientName,
+      date: new Date().toISOString(),
+      view: frontPoints.length > 0 && backPoints.length > 0 ? 'both' : frontPoints.length > 0 ? 'front' : 'back',
+      frontPoints,
+      backPoints,
+      statistics: calculatePainMapStatistics(frontPoints, backPoints),
+    };
+
+    try {
+      await exportPainMapPDF(data);
+      toast.success('Relatório PDF exportado com sucesso');
+    } catch (error) {
+      toast.error('Erro ao exportar PDF');
       console.error(error);
     }
   };
@@ -172,6 +192,14 @@ export function PainMapToolbar({
             <div className="flex flex-col">
               <span className="font-medium">JSON (.json)</span>
               <span className="text-xs text-muted-foreground">Dados estruturados</span>
+            </div>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onClick={handlePDFExport}>
+            <FileOutput className="h-4 w-4 mr-2" />
+            <div className="flex flex-col">
+              <span className="font-medium">PDF (.pdf)</span>
+              <span className="text-xs text-muted-foreground">Documento formatado</span>
             </div>
           </DropdownMenuItem>
 
