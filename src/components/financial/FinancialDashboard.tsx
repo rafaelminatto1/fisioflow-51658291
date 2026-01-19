@@ -72,22 +72,22 @@ export const FinancialDashboard: React.FC = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <Tabs 
-              value={period} 
-              onValueChange={(val) => setPeriod(val as 'daily' | 'weekly' | 'monthly' | 'all')}
-              className="w-full sm:w-auto"
-            >
-              <TabsList className="grid w-full grid-cols-4 sm:w-[400px]">
-                <TabsTrigger value="daily">Hoje</TabsTrigger>
-                <TabsTrigger value="weekly">7 Dias</TabsTrigger>
-                <TabsTrigger value="monthly">30 Dias</TabsTrigger>
-                <TabsTrigger value="all">Total</TabsTrigger>
-              </TabsList>
-            </Tabs>
+          <Tabs
+            value={period}
+            onValueChange={(val) => setPeriod(val as 'daily' | 'weekly' | 'monthly' | 'all')}
+            className="w-full sm:w-auto"
+          >
+            <TabsList className="grid w-full grid-cols-4 sm:w-[400px]">
+              <TabsTrigger value="daily">Hoje</TabsTrigger>
+              <TabsTrigger value="weekly">7 Dias</TabsTrigger>
+              <TabsTrigger value="monthly">30 Dias</TabsTrigger>
+              <TabsTrigger value="all">Total</TabsTrigger>
+            </TabsList>
+          </Tabs>
 
-            <Button variant="outline" size="icon" onClick={handleExport} title="Exportar CSV">
-                <Download className="h-4 w-4" />
-            </Button>
+          <Button variant="outline" size="icon" onClick={handleExport} title="Exportar CSV">
+            <Download className="h-4 w-4" />
+          </Button>
         </div>
       </div>
 
@@ -167,7 +167,7 @@ export const FinancialDashboard: React.FC = () => {
             <div className="space-y-4">
               {(() => {
                 // Agrupamento por categoria
-                const categories = stats.totalRevenue > 0 ? useFinancial().transactions.reduce((acc, t) => {
+                const categories = stats.totalRevenue > 0 ? transactions.reduce((acc, t) => {
                   if (t.status !== 'concluido') return acc;
 
                   let category = 'Outros';
@@ -215,7 +215,7 @@ export const FinancialDashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {useFinancial().transactions.slice(0, 5).map((t) => (
+              {transactions.slice(0, 5).map((t) => (
                 <div key={t.id} className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0">
                   <div className="space-y-1">
                     <p className="text-sm font-medium leading-none truncate max-w-[200px]">{t.descricao}</p>
@@ -226,12 +226,11 @@ export const FinancialDashboard: React.FC = () => {
                   </div>
                 </div>
               ))}
-              {useFinancial().transactions.length === 0 && (
+              {transactions.length === 0 && (
                 <p className="text-sm text-muted-foreground">Nenhuma transação encontrada.</p>
               )}
             </div>
           </CardContent>
-        </Card>
         </Card>
       </div>
 
