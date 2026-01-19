@@ -65,7 +65,7 @@ export class AppointmentService {
                         createdAt: validData.created_at ? new Date(validData.created_at) : new Date(),
                         updatedAt: validData.updated_at ? new Date(validData.updated_at) : new Date(),
                         therapistId: validData.therapist_id,
-                        therapistId: validData.therapist_id,
+
                         room: validData.room,
                         payment_status: validData.payment_status || 'pending',
                         payment_method: (item as any).payment_method,

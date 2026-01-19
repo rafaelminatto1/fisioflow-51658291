@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useTarefas, Tarefa, TarefaStatus, TarefaPrioridade, STATUS_LABELS, PRIORIDADE_LABELS, PRIORIDADE_COLORS, useUpdateTarefa } from '@/hooks/useTarefas';
+import { useTarefas, Tarefa, TarefaStatus, TarefaPrioridade, STATUS_LABELS, PRIORIDADE_LABELS, PRIORIDADE_COLORS, useUpdateTarefa, useDeleteTarefa } from '@/hooks/useTarefas';
 import {
     Table,
     TableBody,
@@ -18,10 +18,11 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Calendar, MoreHorizontal, ArrowUpDown, Search, Filter } from 'lucide-react';
+import { Calendar, MoreHorizontal, ArrowUpDown, Search, Filter, Pencil, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { TarefaModal } from '@/components/tarefas/TarefaModal';
 
 interface ProjectTableViewProps {
     projectId: string;
@@ -30,8 +31,11 @@ interface ProjectTableViewProps {
 export function ProjectTableView({ projectId }: ProjectTableViewProps) {
     const { data: tarefas, isLoading } = useTarefas();
     const updateTarefa = useUpdateTarefa();
+    const deleteTarefa = useDeleteTarefa();
     const [searchTerm, setSearchTerm] = useState('');
     const [sortConfig, setSortConfig] = useState<{ key: keyof Tarefa; direction: 'asc' | 'desc' } | null>(null);
+    const [selectedTarefa, setSelectedTarefa] = useState<Tarefa | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const projectTarefas = useMemo(() => {
         if (!tarefas) return [];
@@ -68,6 +72,11 @@ export function ProjectTableView({ projectId }: ProjectTableViewProps) {
             key,
             direction: current?.key === key && current.direction === 'asc' ? 'desc' : 'asc',
         }));
+    };
+
+    const handleEdit = (tarefa: Tarefa) => {
+        setSelectedTarefa(tarefa);
+        setIsModalOpen(true);
     };
 
     if (isLoading) {
@@ -133,9 +142,9 @@ export function ProjectTableView({ projectId }: ProjectTableViewProps) {
                             </TableRow>
                         ) : (
                             projectTarefas.map((tarefa) => (
-                                <TableRow key={tarefa.id}>
-                                    <TableCell className="font-medium">
-                                        <div className="flex flex-col">
+                                <TableRow key={tarefa.id} className="group hover:bg-muted/50">
+                                    <TableCell className="font-medium p-2">
+                                        <div className="flex flex-col cursor-pointer" onClick={() => handleEdit(tarefa)}>
                                             <span>{tarefa.titulo}</span>
                                             {tarefa.tags && tarefa.tags.length > 0 && (
                                                 <div className="flex gap-1 mt-1">
@@ -148,7 +157,7 @@ export function ProjectTableView({ projectId }: ProjectTableViewProps) {
                                             )}
                                         </div>
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="p-2">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <Button variant="ghost" className="h-8 px-2 py-1 text-xs">
@@ -169,7 +178,7 @@ export function ProjectTableView({ projectId }: ProjectTableViewProps) {
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="p-2">
                                         <Badge
                                             variant="secondary"
                                             className={cn('text-[10px]', PRIORIDADE_COLORS[tarefa.prioridade])}
@@ -177,7 +186,7 @@ export function ProjectTableView({ projectId }: ProjectTableViewProps) {
                                             {PRIORIDADE_LABELS[tarefa.prioridade]}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="p-2">
                                         {tarefa.responsavel ? (
                                             <div className="flex items-center gap-2">
                                                 <Avatar className="h-6 w-6">
@@ -194,7 +203,7 @@ export function ProjectTableView({ projectId }: ProjectTableViewProps) {
                                             <span className="text-muted-foreground text-xs">-</span>
                                         )}
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="p-2">
                                         {tarefa.data_vencimento ? (
                                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                                 <Calendar className="h-3 w-3" />
@@ -204,10 +213,27 @@ export function ProjectTableView({ projectId }: ProjectTableViewProps) {
                                             <span className="text-muted-foreground text-xs">-</span>
                                         )}
                                     </TableCell>
-                                    <TableCell>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                                            <MoreHorizontal className="h-4 w-4" />
-                                        </Button>
+                                    <TableCell className="p-2">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onClick={() => handleEdit(tarefa)}>
+                                                    <Pencil className="h-4 w-4 mr-2" />
+                                                    Editar
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    onClick={() => deleteTarefa.mutate(tarefa.id)}
+                                                    className="text-destructive focus:text-destructive"
+                                                >
+                                                    <Trash2 className="h-4 w-4 mr-2" />
+                                                    Excluir
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </TableCell>
                                 </TableRow>
                             ))
@@ -215,6 +241,13 @@ export function ProjectTableView({ projectId }: ProjectTableViewProps) {
                     </TableBody>
                 </Table>
             </div>
+
+            <TarefaModal
+                open={isModalOpen}
+                onOpenChange={setIsModalOpen}
+                tarefa={selectedTarefa}
+                defaultProjectId={projectId}
+            />
         </div>
     );
 }
