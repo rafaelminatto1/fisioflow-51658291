@@ -122,6 +122,9 @@ const FileUploadTest = lazy(() => import(/* webpackChunkName: "test-upload" */ "
 const ClinicalTestsLibrary = lazy(() => import(/* webpackChunkName: "clinical-tests" */ "./pages/ClinicalTestsLibrary"));
 const NotFound = lazy(() => import(/* webpackChunkName: "not-found" */ "./pages/NotFound"));
 
+// Lazy load Public Booking
+const BookingPage = lazy(() => import(/* webpackChunkName: "public-booking" */ "./pages/public/BookingPage").then(module => ({ default: module.BookingPage })));
+
 export function AppRoutes() {
     return (
         <Routes>
@@ -133,6 +136,7 @@ export function AppRoutes() {
             <Route path="/pre-cadastro" element={<PreCadastro />} />
             <Route path="/pre-cadastro/:token" element={<PreCadastro />} />
             <Route path="/prescricoes/publica/:qrCode" element={<PublicPrescriptionPage />} />
+            <Route path="/agendar/:slug" element={<BookingPage />} />
 
             {/* Protected routes */}
             <Route path="/" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />

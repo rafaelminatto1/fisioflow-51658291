@@ -15,121 +15,121 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const newExercises = [
-    // Batch 21 - Plyometrics & Advanced Core
+    // Batch 22 - Cardio Adaptado & Agilidade
     {
-        id: '9fa43615-8b6e-49cc-ad58-577298bfa2dd',
-        name: 'Depth Jump (Salto Profundo)',
-        description: 'Cair de uma caixa e saltar verticalmente o mais alto possível imediatamente após o contato com o solo. Potência reativa.',
-        category: 'Pliometria',
-        difficulty: 'Avançado',
-        body_parts: ['Pernas', 'Glúteos'],
-        equipment: ['Box Pliométrico'],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-    },
-    {
-        id: 'd6042be1-f9e7-443c-aa79-39e64960f113',
-        name: 'Salto Unilateral na Caixa',
-        description: 'Saltar para cima de uma caixa utilizando apenas uma perna. Desenvolvimento de força e potência unilateral.',
-        category: 'Pliometria',
-        difficulty: 'Avançado',
-        body_parts: ['Pernas', 'Glúteos'],
-        equipment: ['Box Pliométrico'],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-    },
-    {
-        id: '95dd2a2c-5fe2-40ed-b57d-ace308a859cf',
-        name: 'Salto Horizontal (Broad Jump)',
-        description: 'Salto em distância parado, focando em máxima extensão de quadril e aterrissagem controlada.',
-        category: 'Pliometria',
-        difficulty: 'Intermediário',
-        body_parts: ['Pernas', 'Glúteos'],
+        id: 'fdf0361a-b2f6-48ef-8be3-b35f51be3b6f',
+        name: 'Polichinelo Adaptado',
+        description: 'Variação de baixo impacto do polichinelo, dando passos laterais alternados em vez de saltar.',
+        category: 'Cardio',
+        difficulty: 'Iniciante',
+        body_parts: ['Corpo Todo'],
         equipment: ['Peso Corporal'],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
     },
     {
-        id: '3a914408-ff33-4924-a853-9a833151463c',
-        name: 'Tuck Jump (Salto Grupard)',
-        description: 'Saltar verticalmente puxando os joelhos em direção ao peito no ponto mais alto. Potência explosiva.',
-        category: 'Pliometria',
-        difficulty: 'Avançado',
+        id: 'd25f2891-9c91-4b06-b5d5-a965ca657350',
+        name: 'Marcha Estacionária Alta',
+        description: 'Marchar no lugar elevando bem os joelhos, mantendo o abdômen contraído. Cardio leve e equilíbrio.',
+        category: 'Cardio',
+        difficulty: 'Iniciante',
         body_parts: ['Pernas', 'Core'],
         equipment: ['Peso Corporal'],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
     },
     {
-        id: '1b2fed47-b1f8-4caa-9200-43664eb9deeb',
-        name: 'Medicine Ball Slam',
-        description: 'Arremessar a bola medicinal contra o chão com força total, utilizando o corpo todo. Potência e core.',
-        category: 'Potência',
+        id: 'a1545d00-8aed-4ba7-812a-83470b38edc8',
+        name: 'Boxe de Sombra (Shadow Boxing)',
+        description: 'Simular socos (jab, direto) no ar, mantendo base ativa. Pode ser feito em pé ou sentado.',
+        category: 'Cardio',
+        difficulty: 'Iniciante',
+        body_parts: ['Braços', 'Ombros', 'Core'],
+        equipment: ['Peso Corporal'],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    },
+    {
+        id: '75f5f09d-3010-4615-9a15-73f41f0c05a5',
+        name: 'Agachamento com Soco',
+        description: 'Realizar um agachamento e, ao subir, desferir um soco cruzado. Coordenação e força.',
+        category: 'Funcional',
         difficulty: 'Intermediário',
-        body_parts: ['Core', 'Ombros', 'Dorsal'],
-        equipment: ['Medicine Ball'],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-    },
-    {
-        id: 'bf9fd47a-e046-4f63-9565-b1bc49f7db87',
-        name: 'Elevação de Pernas na Barra',
-        description: 'Pendurado na barra, elevar as pernas estendidas até a altura do quadril ou tocar a barra (Toes to Bar).',
-        category: 'Fortalecimento',
-        difficulty: 'Avançado',
-        body_parts: ['Abdômen', 'Flexores de Quadril'],
-        equipment: ['Barra Fixa'],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-    },
-    {
-        id: '49b385fb-7f5f-444b-b749-58e2c5195bea',
-        name: 'Ab Wheel Rollout',
-        description: 'Ajoelhado, rolar a roda abdominal para frente estendendo o tronco e retornar controlado. Anti-extensão intensa.',
-        category: 'Fortalecimento',
-        difficulty: 'Avançado',
-        body_parts: ['Core'],
-        equipment: ['Roda Abdominal'],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-    },
-    {
-        id: 'a4759e6b-2570-49cd-97a7-9b48a8b211bc',
-        name: 'Hollow Rock (Canoa)',
-        description: 'Posição de canoa (lombar no chão, braços e pernas estendidos fora do chão), balançando o corpo em bloco.',
-        category: 'Isometria',
-        difficulty: 'Avançado',
-        body_parts: ['Core'],
+        body_parts: ['Pernas', 'Braços', 'Core'],
         equipment: ['Peso Corporal'],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
     },
     {
-        id: '7ddcb9f0-daf5-4921-b29f-7a81faca8014',
-        name: 'V-Up (Abdominal Canivete)',
-        description: 'Simultaneamente elevar tronco e pernas estendidas, tocando os pés no topo do movimento.',
-        category: 'Fortalecimento',
-        difficulty: 'Avançado',
-        body_parts: ['Abdômen'],
+        id: 'ef9809ab-8ed8-4054-a7a8-126aa530a9dc',
+        name: 'Deslocamento Lateral (Shuffle)',
+        description: 'Mover-se lateralmente com passos rápidos e curtos, mantendo joelhos semiflexionados.',
+        category: 'Agilidade',
+        difficulty: 'Intermediário',
+        body_parts: ['Pernas', 'Quadril'],
         equipment: ['Peso Corporal'],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
     },
     {
-        id: '85cb38c0-d365-41fe-893c-35093cb2d6f8',
-        name: 'L-Sit (Sustentação em L)',
-        description: 'Sustentar o peso do corpo nas mãos (chão ou paralelas) mantendo as pernas estendidas à frente em L.',
-        category: 'Isometria',
-        difficulty: 'Avançado',
-        body_parts: ['Core', 'Tríceps', 'Flexores de Quadril'],
-        equipment: ['Paralelas/Peso Corporal'],
+        id: '45803b1d-30ca-400e-ad2f-df7e266729ce',
+        name: 'Coordenação Cruzada (Cross Crawl)',
+        description: 'Tocar o cotovelo no joelho oposto, alternando os lados. Ótimo para coordenação motora e aquecimento.',
+        category: 'Coordenação',
+        difficulty: 'Iniciante',
+        body_parts: ['Core', 'Cérebro'],
+        equipment: ['Peso Corporal'],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    },
+    {
+        id: '8ff5fa14-835c-4a25-b82c-d642782be9f4',
+        name: 'Escalada na Parede (Wall Climber)',
+        description: 'Apoiado na parede (inclinado), levar alternadamente os joelhos em direção ao peito.',
+        category: 'Cardio',
+        difficulty: 'Iniciante',
+        body_parts: ['Core', 'Pernas'],
+        equipment: ['Parede'],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    },
+    {
+        id: '44df23a0-a4be-4cc3-8e6f-e5aaaefb5d82',
+        name: 'Pular Corda Imaginária',
+        description: 'Simular o movimento de pular corda com pequenos saltos ou apenas elevando os calcanhares.',
+        category: 'Cardio',
+        difficulty: 'Iniciante',
+        body_parts: ['Panturrilha', 'Pernas'],
+        equipment: ['Peso Corporal'],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    },
+    {
+        id: 'ff68b19a-3e01-41fe-aa5a-88b1451f6c7d',
+        name: 'Step Touch com Braços',
+        description: 'Passo lateral tocando a ponta do pé, abrindo e fechando os braços sincronizadamente.',
+        category: 'Coordenação',
+        difficulty: 'Iniciante',
+        body_parts: ['Corpo Todo'],
+        equipment: ['Peso Corporal'],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+    },
+    {
+        id: 'ce4cad36-c3d9-42f6-8a55-82513a6567f1',
+        name: 'Heel Flicks (Calcanhar no Glúteo)',
+        description: 'Marchar ou trotar no lugar levando os calcanhares em direção aos glúteos.',
+        category: 'Cardio',
+        difficulty: 'Iniciante',
+        body_parts: ['Posterior da Coxa', 'Cardio'],
+        equipment: ['Peso Corporal'],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
     }
 ];
 
 async function insertdata() {
-    console.log('Inserting new exercises (Batch 21)...');
+    console.log('Inserting new exercises (Batch 22)...');
     for (const exercise of newExercises) {
         const { error } = await supabase.from('exercises').upsert(exercise);
         if (error) {
