@@ -130,3 +130,42 @@ eslint_results.txt
 test-results/
 playwright-report/
 blob-report/
+
+# iOS (Capacitor)
+ios/
+!.ios/placeholders
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Xcode
+*.xcworkspace
+!default.xcworkspace
+*.xcuserstate
+xcuserdata/
+*.xcuserdatad
+DerivedData/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+xcuserdata/
+
+# CocoaPods
+ios/Pods/
+ios/Podfile.lock
+
+# Carthage
+Carthage/Build/
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Code Injection
+iOSInjectionProject/
+iOSInjectionProject/
