@@ -279,7 +279,16 @@ const images = [
     { id: 'befcc012-1f46-4252-b429-a56e0c1ed8ca', file: 'slr_strength_post_op_1768920800735.png' }, // Elevação de Perna Retificada (SLR)
     { id: '797ac2aa-583d-41a6-a73e-2aa200e4d304', file: 'short_arc_quads_post_op_1768921154515.png' }, // Quadríceps Arco Curto
     { id: '53a9efd3-2290-4422-8714-d80ce013d2b9', file: 'single_leg_hop_landing_sports_1768921171501.png' }, // Salto Unipodal com Aterrissagem
-    { id: '3aa3a675-8e0a-45c2-9675-f4eece5ee8d9', file: 'lateral_bound_sports_1768921190178.png' } // Salto Lateral (Lateral Bound)
+    { id: '3aa3a675-8e0a-45c2-9675-f4eece5ee8d9', file: 'lateral_bound_sports_1768921190178.png' }, // Salto Lateral (Lateral Bound)
+
+    // Phase 20 - Upper Extremity & Cervical (Final Batch)
+    { id: '1e4bbe8d-ac6e-4639-bc74-5d0de50998b0', file: 'wrist_extension_dumbbell_ortho_1768923874460.png' }, // Extensão de Punho com Halter
+    { id: 'e7d2ae17-25cf-4142-9ec3-603faea6a7cf', file: 'wrist_flexion_dumbbell_ortho_1768923890420.png' }, // Flexão de Punho com Halter
+    { id: 'a2d12c5a-8098-42e0-ba8e-6e8689248620', file: 'wrist_supination_pronation_hammer_1768923911585.png' }, // Pronação e Supinação com Peso
+    { id: 'a53d2a2e-90df-4e12-99d9-c34a687445ef', file: 'towel_twist_exercise_ortho_1768923977270.png' }, // Torção de Toalha (Grip)
+    { id: '02b467a9-564e-4a18-bbf5-8150154f50e0', file: 'cervical_isometric_extension_ortho_1768924022945.png' }, // Isometria Cervical (Extensão)
+    { id: 'd83ab396-b53a-4983-8dd9-ba91994453ad', file: 'cervical_isometric_side_flexion_ortho_1768924046187.png' }, // Isometria Cervical (Inclinção Lateral)
+    { id: '13b4fac7-40e7-44d7-878d-d7613a9468bf', file: 'chin_tuck_head_lift_ortho_1768924061527.png' } // Chin Tuck com Elevação (Head Lift)
 ];
 
 async function upload() {

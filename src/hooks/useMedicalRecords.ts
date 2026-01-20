@@ -24,7 +24,7 @@ export function useMedicalRecords(patientId?: string) {
     queryFn: async () => {
       let query = supabase
         .from('medical_records')
-        .select('*')
+        .select('id, patient_id, chief_complaint, medical_history, current_medications, allergies, previous_surgeries, family_history, lifestyle_habits, record_date, created_by, created_at, updated_at')
         .order('record_date', { ascending: false });
 
       if (patientId) {
