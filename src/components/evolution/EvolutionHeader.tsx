@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -39,7 +39,7 @@ interface EvolutionHeaderProps {
     onShowKeyboardHelp: () => void;
 }
 
-export function EvolutionHeader({
+export const EvolutionHeader = memo(({
     patient,
     appointment,
     treatmentDuration,
@@ -56,7 +56,7 @@ export function EvolutionHeader({
     toggleInsights,
     onShowTemplateModal,
     onShowKeyboardHelp
-}: EvolutionHeaderProps) {
+}: EvolutionHeaderProps) => {
     const navigate = useNavigate();
 
     return (
@@ -192,4 +192,6 @@ export function EvolutionHeader({
             <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-bl from-primary/10 to-transparent rounded-full blur-2xl -z-0" />
         </div>
     );
-}
+});
+
+EvolutionHeader.displayName = 'EvolutionHeader';

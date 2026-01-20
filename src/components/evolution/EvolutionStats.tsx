@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { FileText, Target, TrendingUp, Activity, BarChart3, CheckCircle2 } from 'lucide-react';
 
 interface EvolutionStatsProps {
@@ -13,7 +13,7 @@ interface EvolutionStatsProps {
     };
 }
 
-export function EvolutionStats({ stats }: EvolutionStatsProps) {
+export const EvolutionStats = memo(({ stats }: EvolutionStatsProps) => {
     return (
         <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-2 sm:gap-4">
             {[
@@ -40,4 +40,6 @@ export function EvolutionStats({ stats }: EvolutionStatsProps) {
             ))}
         </div>
     );
-}
+});
+
+EvolutionStats.displayName = 'EvolutionStats';
