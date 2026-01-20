@@ -15,7 +15,7 @@ type AppointmentWithRelations = {
   time: string;
   patient: {
     id: string;
-    name: string;
+    full_name: string;
     email?: string;
     phone?: string;
     notification_preferences?: { email?: boolean; whatsapp?: boolean };
@@ -55,7 +55,7 @@ export const appointmentReminderWorkflow = inngest.createFunction(
         .from('appointments')
         .select(`
           *,
-          patient:patients(id, name, email, phone, notification_preferences),
+          patient:patients(id, full_name, email, phone, notification_preferences),
           organization:organizations(id, name, settings)
         `)
         .eq('status', 'agendado')
@@ -95,7 +95,7 @@ export const appointmentReminderWorkflow = inngest.createFunction(
                 to: patient.email,
                 subject: 'Lembrete de Consulta - FisioFlow',
                 html: `
-                  <h2>Olá, ${patient.name}!</h2>
+                  <h2>Olá, ${patient.full_name}!</h2>
                   <p>Gostaríamos de lembrá-lo da sua consulta agendada para amanhã.</p>
                   <p><strong>Data:</strong> ${new Date(appointment.date).toLocaleDateString('pt-BR')}</p>
                   <p><strong>Horário:</strong> ${appointment.time}</p>
@@ -111,7 +111,7 @@ export const appointmentReminderWorkflow = inngest.createFunction(
               name: 'whatsapp/appointment.reminder',
               data: {
                 to: patient.phone,
-                patientName: patient.name,
+                patientName: patient.full_name,
                 therapistName: 'Fisioterapeuta', // TODO: Fetch therapist name if possible, or generic
                 date: new Date(appointment.date).toLocaleDateString('pt-BR'),
                 time: appointment.time,
@@ -170,7 +170,7 @@ export const appointmentCreatedWorkflow = inngest.createFunction(
     const appointment = await step.run('get-appointment-details', async () => {
       const { data, error } = await supabase
         .from('appointments')
-        .select('*, patient:patients(id, name, email, phone, notification_preferences), organization:organizations(id, name, settings), therapist:profiles!therapist_id(full_name)')
+        .select('*, patient:patients(id, full_name, email, phone, notification_preferences), organization:organizations(id, name, settings), therapist:profiles!therapist_id(full_name)')
         .eq('id', appointmentId)
         .single();
 
@@ -200,7 +200,7 @@ export const appointmentCreatedWorkflow = inngest.createFunction(
           name: 'whatsapp/appointment.confirmation',
           data: {
             to: patient.phone,
-            patientName: patient.name,
+            patientName: patient.full_name,
             therapistName: therapist?.full_name || 'Fisioterapeuta',
             date: new Date(appointment.start_time).toLocaleDateString('pt-BR'),
             time: new Date(appointment.start_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),

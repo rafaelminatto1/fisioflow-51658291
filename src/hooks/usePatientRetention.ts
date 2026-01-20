@@ -217,7 +217,7 @@ export function usePatientsAtRisk(minRiskScore: number = 30) {
 
       const { data: patients, error: patientsError } = await supabase
         .from('patients')
-        .select('id, name, email, phone, status')
+        .select('id, full_name, email, phone, status')
         .eq('status', 'ativo');
 
       if (patientsError) throw patientsError;
@@ -510,7 +510,7 @@ export function useSendReactivationCampaign() {
       // Get patient details for sending
       const { data: patients, error: patientsError } = await supabase
         .from('patients')
-        .select('id, name, phone, email')
+        .select('id, full_name, phone, email')
         .in('id', patientIds);
 
       if (patientsError) throw patientsError;

@@ -10,10 +10,12 @@ import { format, isSameDay, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Appointment } from '@/types/appointment';
 import { cn } from '@/lib/utils';
-import { SLOT_HEIGHT, BUSINESS_HOURS } from '@/lib/calendar/constants';
-import { parseAppointmentDate, normalizeTime, calculateAppointmentHeight } from '@/lib/calendar/utils';
+import { BUSINESS_HOURS } from '@/lib/calendar/constants';
+import { parseAppointmentDate, normalizeTime } from '@/lib/calendar/utils';
 import { CalendarAppointmentCard } from '../CalendarAppointmentCard';
 import { TimeSlotCell } from '../TimeSlotCell';
+import { useCardSize } from '@/hooks/useCardSize';
+import { useDynamicSlotHeight } from '@/lib/calendar/dynamicConstants';
 
 // =====================================================================
 // TYPES
@@ -62,6 +64,7 @@ interface ItemData {
   appointments: Appointment[];
   timeSlots: string[];
   appointmentsByTimeSlot: Record<string, Appointment[]>;
+  heightMultiplier: number;
   onTimeSlotClick?: (date: Date, time: string) => void;
   onEditAppointment?: (appointment: Appointment) => void;
   onDeleteAppointment?: (appointment: Appointment) => void;
@@ -139,7 +142,8 @@ const TimeSlotRow: React.FC<ListChildComponentProps<ItemData>> = memo(({ index, 
         if (dayIndex === -1) return null;
 
         const duration = apt.duration || 60;
-        const height = calculateAppointmentHeight(duration);
+        const slotHeight = data.heightMultiplier * 80; // BASE_SLOT_HEIGHT (80) * multiplier
+        const height = (duration / BUSINESS_HOURS.DEFAULT_SLOT_DURATION) * slotHeight;
 
         // Calcular posicionamento
         const sameTimeAppointments = appointmentsByTimeSlot[time] || [];
@@ -218,6 +222,8 @@ export const VirtualWeekGrid: React.FC<VirtualWeekGridProps> = memo(({
   onToggleSelection,
 }) => {
   const listRef = useRef<List>(null);
+  const { heightMultiplier } = useCardSize();
+  const slotHeight = Math.round(80 * heightMultiplier); // BASE_SLOT_HEIGHT * multiplier
 
   // Agrupar appointments por time slot
   const appointmentsByTimeSlot = useMemo(() => {
@@ -247,6 +253,7 @@ export const VirtualWeekGrid: React.FC<VirtualWeekGridProps> = memo(({
       timeSlots,
       appointments,
       appointmentsByTimeSlot,
+      heightMultiplier,
       onTimeSlotClick,
       onEditAppointment,
       onDeleteAppointment,
@@ -271,6 +278,7 @@ export const VirtualWeekGrid: React.FC<VirtualWeekGridProps> = memo(({
       timeSlots,
       appointments,
       appointmentsByTimeSlot,
+      heightMultiplier,
       onTimeSlotClick,
       onEditAppointment,
       onDeleteAppointment,
@@ -364,7 +372,7 @@ export const VirtualWeekGrid: React.FC<VirtualWeekGridProps> = memo(({
         ref={listRef}
         height={600} // Altura visível
         itemCount={timeSlots.length}
-        itemSize={SLOT_HEIGHT}
+        itemSize={slotHeight}
         width="100%"
         itemData={itemData}
         overscanCount={2} // Renderizar 2 slots extras acima/abaixo

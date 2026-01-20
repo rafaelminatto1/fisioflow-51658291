@@ -1,5 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import {
+    PATIENT_SELECT,
+    devValidate as devValidatePatient,
+    type PatientDBStandard
+} from '@/lib/constants/patient-queries';
+import {
+    APPOINTMENT_SELECT,
+    devValidateAppointment,
+    type AppointmentDBStandard
+} from '@/lib/constants/appointment-queries';
 
 export const useAppointmentData = (appointmentId: string | undefined) => {
     // Buscar dados do agendamento do Supabase com retry e timeout
@@ -8,17 +18,15 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
         queryFn: async () => {
             if (!appointmentId) throw new Error('ID do agendamento não fornecido');
 
-            // Buscar agendamento sem relacionamento para evitar problemas de RLS
+            devValidateAppointment(APPOINTMENT_SELECT.standard);
+
             const result = await supabase
                 .from('appointments')
-                .select('*')
+                .select<string, AppointmentDBStandard>(APPOINTMENT_SELECT.standard)
                 .eq('id', appointmentId)
                 .maybeSingle();
 
-            // Se encontrou o agendamento, verificar se há patient_id
-            if (result.data && !result.error) {
-                // Não precisamos buscar o paciente aqui, pois já temos uma query dedicada para isso abaixo
-            }
+            if (result.error) throw result.error;
 
             // Retornar null em vez de undefined para evitar erro do React Query
             return result.data ?? null;
@@ -37,11 +45,15 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
         queryFn: async () => {
             if (!patientId) throw new Error('ID do paciente não fornecido');
 
+            devValidatePatient(PATIENT_SELECT.standard);
+
             const result = await supabase
                 .from('patients')
-                .select('id, full_name, phone, email, created_at')
+                .select<string, PatientDBStandard>(PATIENT_SELECT.standard)
                 .eq('id', patientId)
                 .maybeSingle();
+
+            if (result.error) throw result.error;
 
             // Retornar null em vez de undefined para evitar erro do React Query
             return result.data ?? null;

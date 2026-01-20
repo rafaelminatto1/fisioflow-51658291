@@ -95,8 +95,9 @@ export function useDashboardMetrics(options: DashboardMetricsOptions = {}) {
           .select('id, created_at, full_name, status')
           .order('created_at', { ascending: false }),
         supabase
-          .from('therapists')
-          .select('id, name, status'),
+          .from('profiles')
+          .select('id, full_name, status')
+          .not('status', 'is', null),
         supabase
           .from('payments')
           .select('id, date, amount, status, appointment_id')
@@ -433,7 +434,7 @@ export function useTopPerformers(metric: 'appointments' | 'revenue' = 'appointme
       if (metric === 'appointments') {
         const { data, error } = await supabase
           .from('appointments')
-          .select('therapist_id, therapists(name)')
+          .select('therapist_id, profiles!appointments_therapist_id_fkey(full_name)')
           .gte('date', start.toISOString())
           .lte('date', end.toISOString())
           .eq('status', 'completed');
@@ -443,7 +444,7 @@ export function useTopPerformers(metric: 'appointments' | 'revenue' = 'appointme
         const counts = new Map<string, { name: string; count: number }>();
         (data || []).forEach(apt => {
           const therapistId = apt.therapist_id;
-          const name = apt.therapists?.name || 'Unknown';
+          const name = (apt as any)['profiles!appointments_therapist_id_fkey']?.full_name || 'Unknown';
           const current = counts.get(therapistId) || { name, count: 0 };
           counts.set(therapistId, { ...current, count: current.count + 1 });
         });
@@ -461,7 +462,7 @@ export function useTopPerformers(metric: 'appointments' | 'revenue' = 'appointme
         // Revenue by therapist
         const { data, error } = await supabase
           .from('payments')
-          .select('amount, appointment_id, appointments(therapist_id, therapists(name))')
+          .select('amount, appointment_id, appointments(therapist_id, profiles!appointments_therapist_id_fkey(full_name))')
           .gte('date', start.toISOString())
           .lte('date', end.toISOString())
           .eq('status', 'paid');
@@ -471,7 +472,7 @@ export function useTopPerformers(metric: 'appointments' | 'revenue' = 'appointme
         const totals = new Map<string, { name: string; total: number }>();
         (data || []).forEach(payment => {
           const therapistId = payment.appointments?.therapist_id;
-          const name = payment.appointments?.therapists?.name || 'Unknown';
+          const name = (payment.appointments as any)?.['profiles!appointments_therapist_id_fkey']?.full_name || 'Unknown';
           if (!therapistId) return;
 
           const current = totals.get(therapistId) || { name, total: 0 };
