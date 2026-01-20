@@ -32,7 +32,7 @@ export function useLeads(estagio?: string) {
   return useQuery({
     queryKey: ['leads', estagio],
     queryFn: async () => {
-      let query = supabase.from('leads').select('*').order('created_at', { ascending: false });
+      let query = supabase.from('leads').select('id, nome, estagio, origem, responsavel_id, data_ultimo_contato').order('created_at', { ascending: false });
       if (estagio) query = query.eq('estagio', estagio);
       const { data, error } = await query;
       if (error) throw error;
@@ -131,7 +131,7 @@ export function useLeadMetrics() {
     queryFn: async () => {
       const { data, error } = await supabase.from('leads').select('estagio, origem');
       if (error) throw error;
-      
+
       const leads = data as Pick<Lead, 'estagio' | 'origem'>[];
       const total = leads.length;
       const porEstagio = {
@@ -143,7 +143,7 @@ export function useLeadMetrics() {
         nao_efetivado: leads.filter(l => l.estagio === 'nao_efetivado').length,
       };
       const taxaConversao = total > 0 ? (porEstagio.efetivado / total * 100).toFixed(1) : '0';
-      
+
       return { total, porEstagio, taxaConversao };
     },
   });
