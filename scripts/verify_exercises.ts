@@ -35,7 +35,7 @@ async function verifyExercises() {
     }
 
     // Take screenshot
-    const screenshotPath = '/home/rafael/.gemini/antigravity/brain/b1607313-7708-411e-9f8f-607debc7c869/exercises_verification.png';
+    const screenshotPath = '/home/rafael/.gemini/antigravity/brain/b1607313-7708-411e-9f8f-607debc7c869/exercises_verification.avif';
     await page.screenshot({ path: screenshotPath, fullPage: false });
     console.log(`Screenshot saved to: ${screenshotPath}`);
 

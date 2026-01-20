@@ -92,7 +92,7 @@ export async function uploadFile(
   const { data, error } = await supabase.storage
     .from(options.bucket)
     .upload(filePath, file, {
-      cacheControl: '3600',
+      cacheControl: '31536000', // 1 ano para imagens públicas
       upsert: options.bucket === 'avatars',
     });
 
