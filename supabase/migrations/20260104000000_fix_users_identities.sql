@@ -1,21 +1,4 @@
-// Script para corrigir usuários criados via SQL adicionando entries em auth.identities
-// NOTA: Esta é uma solução alternativa. O ideal é usar Admin API para criar usuários.
-
-import { createClient } from '@supabase/supabase-js';
-
-const SUPABASE_URL = "https://ycvbtjfrchcyvmkvuocu.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljdmJ0amZyY2hjeXZta3Z1b2N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTA5OTQsImV4cCI6MjA3NTE2Njk5NH0.L5maWG2hc3LVHEUMOzfTRTjYwIAJFXx3zan3G-Y1zAA";
-
-console.log('⚠️  ATENÇÃO: Este script tenta corrigir usuários criados via SQL.');
-console.log('   A solução RECOMENDADA é usar Admin API para criar usuários.\n');
-console.log('   Este script requer permissões de service role para criar identities.\n');
-console.log('   Se não tiver service role key, use create-test-users-admin.mjs\n');
-
-// Este script não pode criar identities diretamente sem service role
-// Vamos criar uma migration SQL para isso
-console.log('📝 Criando migration SQL para adicionar identities...\n');
-
-const migrationSQL = `-- Migration para adicionar entries em auth.identities para usuários criados via SQL
+-- Migration para adicionar entries em auth.identities para usuários criados via SQL
 -- NOTA: Esta migration deve ser executada com permissões de service role
 
 DO $$
@@ -140,15 +123,3 @@ BEGIN
 
   RAISE NOTICE 'Identities processadas';
 END $$;
-`;
-
-import { writeFileSync } from 'fs';
-writeFileSync('supabase/migrations/20260104000000_fix_users_identities.sql', migrationSQL);
-
-console.log('✅ Migration criada: supabase/migrations/20260104000000_fix_users_identities.sql\n');
-console.log('📋 Próximos passos:');
-console.log('   1. Execute: supabase db push');
-console.log('   2. Ou aplique a migration via MCP do Supabase');
-console.log('   3. Teste login novamente\n');
-console.log('💡 Alternativa: Use create-test-users-admin.mjs com service role key\n');
-

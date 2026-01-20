@@ -39,7 +39,7 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
 
             const result = await supabase
                 .from('patients')
-                .select('*')
+                .select('id, nome, whatsapp, email')
                 .eq('id', patientId)
                 .maybeSingle();
 
