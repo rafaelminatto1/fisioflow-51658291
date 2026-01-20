@@ -530,7 +530,10 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
             <div className="flex-1 min-h-0 overflow-y-auto">
               <form id="appointment-form" onSubmit={(e) => {
                 e.preventDefault();
-                handleSubmit(handleSave)(e);
+                handleSubmit(handleSave, (errors) => {
+                  console.error('Form validation errors:', errors);
+                  toast.error('Verifique os campos obrigatórios do formulário');
+                })(e);
               }} className="px-4 sm:px-6 py-3">
                 <TabsContent value="info" className="mt-0 space-y-2.5 sm:space-y-3">
                   <PatientSelectionSection

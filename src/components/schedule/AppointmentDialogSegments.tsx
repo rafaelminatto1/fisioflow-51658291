@@ -108,7 +108,8 @@ export const DateTimeSection = ({
                                 variant="outline"
                                 className={cn(
                                     "w-full justify-start text-left font-normal h-9 sm:h-10 text-xs sm:text-sm",
-                                    !watchedDate && "text-muted-foreground"
+                                    !watchedDate && "text-muted-foreground",
+                                    errors.appointment_date && "border-destructive text-destructive"
                                 )}
                                 disabled={disabled}
                             >
@@ -130,6 +131,9 @@ export const DateTimeSection = ({
                             />
                         </PopoverContent>
                     </Popover>
+                    {errors.appointment_date && (
+                        <p className="text-[10px] text-destructive font-medium">{(errors.appointment_date as any)?.message}</p>
+                    )}
                 </div>
 
                 <div className="space-y-1.5 sm:space-y-2 relative">
@@ -153,7 +157,10 @@ export const DateTimeSection = ({
                         onValueChange={(value) => setValue('appointment_time', value)}
                         disabled={disabled}
                     >
-                        <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
+                        <SelectTrigger className={cn(
+                            "h-9 sm:h-10 text-xs sm:text-sm",
+                            errors.appointment_time && "border-destructive text-destructive"
+                        )}>
                             <SelectValue placeholder="Hora" />
                         </SelectTrigger>
                         <SelectContent className="max-h-60">
@@ -162,6 +169,9 @@ export const DateTimeSection = ({
                             ))}
                         </SelectContent>
                     </Select>
+                    {errors.appointment_time && (
+                        <p className="text-[10px] text-destructive font-medium">{(errors.appointment_time as any)?.message}</p>
+                    )}
                 </div>
 
                 <div className="space-y-1.5 sm:space-y-2 col-span-2 sm:col-span-1">
@@ -225,7 +235,7 @@ export const DateTimeSection = ({
 };
 
 export const TypeAndStatusSection = ({ disabled }: { disabled: boolean }) => {
-    const { watch, setValue } = useFormContext<AppointmentFormData>();
+    const { watch, setValue, formState: { errors } } = useFormContext<AppointmentFormData>();
 
     return (
         <div className="grid grid-cols-2 gap-2 sm:gap-3">
@@ -236,7 +246,10 @@ export const TypeAndStatusSection = ({ disabled }: { disabled: boolean }) => {
                     onValueChange={(value) => setValue('type', value as AppointmentType)}
                     disabled={disabled}
                 >
-                    <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
+                    <SelectTrigger className={cn(
+                        "h-9 sm:h-10 text-xs sm:text-sm",
+                        errors.type && "border-destructive text-destructive"
+                    )}>
                         <SelectValue placeholder="Tipo" />
                     </SelectTrigger>
                     <SelectContent>
@@ -245,6 +258,9 @@ export const TypeAndStatusSection = ({ disabled }: { disabled: boolean }) => {
                         ))}
                     </SelectContent>
                 </Select>
+                {errors.type && (
+                    <p className="text-[10px] text-destructive font-medium">{(errors.type as any)?.message}</p>
+                )}
             </div>
 
             <div className="space-y-1.5 sm:space-y-2">
