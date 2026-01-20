@@ -45,6 +45,7 @@ import {
   Shield,
   Gift,
   Flame,
+  Lightbulb,
 } from 'lucide-react';
 import {
   Collapsible,
@@ -105,6 +106,7 @@ const financeiroSubmenu = [
 
 const relatoriosSubmenu = [
   { icon: BarChart3, label: 'Dashboard', href: '/reports' },
+  { icon: Lightbulb, label: 'Analytics Estratégico', href: '/analytics/strategic' },
   { icon: Users, label: 'Aniversariantes', href: '/relatorios/aniversariantes' },
   { icon: TrendingUp, label: 'Taxa de Comparecimento', href: '/relatorios/comparecimento' },
   { icon: Trophy, label: 'Performance da Equipe', href: '/performance-equipe' },
@@ -124,6 +126,7 @@ const dashboardIaSubmenu = [
   { icon: Sparkles, label: 'Dashboard IA', href: '/smart-dashboard' },
   { icon: Brain, label: 'Planos IA', href: '/smart-ai' },
   { icon: BarChart3, label: 'Analytics Avançado', href: '/analytics' },
+  { icon: Lightbulb, label: 'Analytics Estratégico', href: '/analytics/strategic' },
 ];
 
 const adminSubmenu = [

@@ -1,12 +1,26 @@
 import { useState, useEffect } from 'react';
 import type { CardSize } from '@/types/agenda';
-import { DEFAULT_CARD_SIZE } from '@/lib/config/agenda';
+import { DEFAULT_CARD_SIZE, CARD_SIZE_CONFIGS } from '@/lib/config/agenda';
 import { toast } from '@/hooks/use-toast';
 
 const CARD_SIZE_STORAGE_KEY = 'agenda_card_size';
 const CARD_HEIGHT_KEY = 'agenda_card_height_multiplier';
+const FONT_SIZES_KEY = 'agenda_custom_font_sizes';
 
 const DEFAULT_HEIGHT_MULTIPLIER = 5; // 0-10 scale, 5 is default (1.0x)
+
+// Default font sizes based on medium card size
+const DEFAULT_FONT_SIZES = {
+  timeFontSize: 10,
+  nameFontSize: 11,
+  typeFontSize: 9,
+};
+
+export interface CustomFontSizes {
+  timeFontSize: number;
+  nameFontSize: number;
+  typeFontSize: number;
+}
 
 /**
  * Convert 0-10 scale to height multiplier (0.5 to 2.0)
@@ -50,6 +64,27 @@ export function useCardSize() {
     return DEFAULT_HEIGHT_MULTIPLIER;
   });
 
+  const [customFontSizes, setCustomFontSizesState] = useState<CustomFontSizes>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(FONT_SIZES_KEY);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed === 'object') {
+            return {
+              timeFontSize: parsed.timeFontSize ?? DEFAULT_FONT_SIZES.timeFontSize,
+              nameFontSize: parsed.nameFontSize ?? DEFAULT_FONT_SIZES.nameFontSize,
+              typeFontSize: parsed.typeFontSize ?? DEFAULT_FONT_SIZES.typeFontSize,
+            };
+          }
+        } catch {
+          return DEFAULT_FONT_SIZES;
+        }
+      }
+    }
+    return DEFAULT_FONT_SIZES;
+  });
+
   const setCardSize = (size: CardSize) => {
     setCardSizeState(size);
     if (typeof window !== 'undefined') {
@@ -72,9 +107,24 @@ export function useCardSize() {
     }
   };
 
+  const setCustomFontSizes = (fontSizes: CustomFontSizes) => {
+    setCustomFontSizesState(fontSizes);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(FONT_SIZES_KEY, JSON.stringify(fontSizes));
+    }
+  };
+
   const resetToDefault = () => {
     setCardSize(DEFAULT_CARD_SIZE);
     setHeightScale(DEFAULT_HEIGHT_MULTIPLIER);
+    setCustomFontSizes(DEFAULT_FONT_SIZES);
+  };
+
+  // Get effective font sizes - use custom sizes if set, otherwise use preset sizes
+  const getEffectiveFontSizes = (): CustomFontSizes => {
+    // Always use custom font sizes since they are user-configurable
+    // The UI allows users to customize font sizes independently of card size presets
+    return customFontSizes;
   };
 
   return {
@@ -83,6 +133,9 @@ export function useCardSize() {
     heightScale,
     setHeightScale,
     heightMultiplier: scaleToMultiplier(heightScale),
+    customFontSizes,
+    setCustomFontSizes,
+    getEffectiveFontSizes,
     resetToDefault,
   };
 }
