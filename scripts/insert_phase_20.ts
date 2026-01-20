@@ -19,43 +19,43 @@ const newExercises = [
         name: 'Extensão de Punho com Halter',
         category: 'Cotovelo/Punho',
         description: 'Fortalecimento de extensores do punho com peso livre. Apoie o antebraço e levante a mão para cima.',
-        image_key: 'wrist_extension_dumbbell_ortho_1768923874460.png'
+        image_key: 'wrist_extension_dumbbell_ortho_1768923874460.avif'
     },
     {
         name: 'Flexão de Punho com Halter',
         category: 'Cotovelo/Punho',
         description: 'Fortalecimento de flexores do punho. Apoie o antebraço com a palma para cima e flexione o punho.',
-        image_key: 'wrist_flexion_dumbbell_ortho_1768923890420.png'
+        image_key: 'wrist_flexion_dumbbell_ortho_1768923890420.avif'
     },
     {
         name: 'Pronação e Supinação com Peso',
         category: 'Cotovelo/Punho',
         description: 'Rotação do antebraço segurando um peso assimétrico (ex: martelo) para fortalecer pronadores e supinadores.',
-        image_key: 'wrist_supination_pronation_hammer_1768923911585.png'
+        image_key: 'wrist_supination_pronation_hammer_1768923911585.avif'
     },
     {
         name: 'Torção de Toalha (Grip)',
         category: 'Cotovelo/Punho',
         description: 'Fortalecimento de preensão manual e estabilização de punho através da torção de uma toalha.',
-        image_key: 'towel_twist_exercise_ortho_1768923977270.png'
+        image_key: 'towel_twist_exercise_ortho_1768923977270.avif'
     },
     {
         name: 'Isometria Cervical (Extensão)',
         category: 'Coluna Cervical',
         description: 'Empurrar a cabeça para trás contra a resistência das próprias mãos, sem realizar movimento.',
-        image_key: 'cervical_isometric_extension_ortho_1768924022945.png'
+        image_key: 'cervical_isometric_extension_ortho_1768924022945.avif'
     },
     {
         name: 'Isometria Cervical (Inclinção Lateral)',
         category: 'Coluna Cervical',
         description: 'Empurrar a cabeça lateralmente contra a mão, mantendo o pescoço alinhado.',
-        image_key: 'cervical_isometric_side_flexion_ortho_1768924046187.png'
+        image_key: 'cervical_isometric_side_flexion_ortho_1768924046187.avif'
     },
     {
         name: 'Chin Tuck com Elevação (Head Lift)',
         category: 'Coluna Cervical',
         description: 'Fortalecimento dos flexores profundos do pescoço. Realizar o "queixo duplo" e elevar levemente a cabeça.',
-        image_key: 'chin_tuck_head_lift_ortho_1768924061527.png'
+        image_key: 'chin_tuck_head_lift_ortho_1768924061527.avif'
     }
 ];
 

@@ -82,7 +82,7 @@ async function autoScreenshot() {
             console.log('✅ Already on evolution page!');
         } else {
             console.log('⚠️  Not on evolution page, taking screenshot of current state...');
-            await page.screenshot({ path: 'screenshots/00-current-state.png', fullPage: true });
+            await page.screenshot({ path: 'screenshots/00-current-state.avif', fullPage: true });
         }
 
         // Click Evolução tab if needed
@@ -116,10 +116,10 @@ async function autoScreenshot() {
 
             // Screenshot 1: Full page - Current state
             await page.screenshot({
-                path: 'screenshots/03-grid-current-state.png',
+                path: 'screenshots/03-grid-current-state.avif',
                 fullPage: true
             });
-            console.log('✅ Saved: screenshots/03-grid-current-state.png');
+            console.log('✅ Saved: screenshots/03-grid-current-state.avif');
 
             // Get widget positions
             const items = await page.locator('.react-grid-item').all();
@@ -174,10 +174,10 @@ async function autoScreenshot() {
 
                 // Screenshot 2: Full page - Expanded state
                 await page.screenshot({
-                    path: 'screenshots/04-grid-expanded.png',
+                    path: 'screenshots/04-grid-expanded.avif',
                     fullPage: true
                 });
-                console.log('✅ Saved: screenshots/04-grid-expanded.png');
+                console.log('✅ Saved: screenshots/04-grid-expanded.avif');
             } else {
                 console.log('⚠️  Could not find expand button');
             }
@@ -193,7 +193,7 @@ async function autoScreenshot() {
     } catch (error) {
         console.error('❌ Error:', error.message);
         console.error(error.stack);
-        await page.screenshot({ path: 'screenshots/error.png' });
+        await page.screenshot({ path: 'screenshots/error.avif' });
     } finally {
         await browser.close();
     }

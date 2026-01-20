@@ -9,6 +9,7 @@ import { FolderKanban, Plus, Search, Calendar, Folder, MoreVertical, Pencil, Tra
 import { format } from 'date-fns';
 import { Link, useNavigate } from 'react-router-dom';
 import { ProjectModal } from '@/components/projects/ProjectModal';
+import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -184,7 +185,7 @@ export default function ProjectsPage() {
                                     <CardFooter className="pt-3 border-t flex justify-between items-center text-sm text-muted-foreground">
                                         <div className="flex items-center gap-2">
                                             {project.manager?.avatar_url ? (
-                                                <img src={project.manager.avatar_url} alt={project.manager.full_name} className="w-6 h-6 rounded-full" />
+                                                <OptimizedImage src={project.manager.avatar_url} alt={project.manager.full_name || ''} className="w-6 h-6 rounded-full" aspectRatio="1:1" />
                                             ) : (
                                                 <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary">
                                                     {project.manager?.full_name?.charAt(0) || '?'}

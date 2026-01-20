@@ -19,37 +19,37 @@ const newExercises = [
         name: 'Ankle Pumps (Bombinha)',
         category: 'Pós-Operatório',
         description: 'Movimentação ativa do tornozelo para cima e para baixo. Essencial para prevenção de TVP.',
-        image_key: 'ankle_pumps_post_op_1768920762499.png'
+        image_key: 'ankle_pumps_post_op_1768920762499.avif'
     },
     {
         name: 'Isometria de Quadríceps (Quad Sets)',
         category: 'Pós-Operatório',
         description: 'Contrair o músculo da coxa pressionando o joelho contra a cama/rolo.',
-        image_key: 'quad_sets_isometric_post_op_1768920780872.png'
+        image_key: 'quad_sets_isometric_post_op_1768920780872.avif'
     },
     {
         name: 'Elevação de Perna Retificada (SLR)',
         category: 'Pós-Operatório',
         description: 'Elevar a perna estendida até 45 graus, mantendo o joelho travado.',
-        image_key: 'slr_strength_post_op_1768920800735.png'
+        image_key: 'slr_strength_post_op_1768920800735.avif'
     },
     {
         name: 'Quadríceps Arco Curto',
         category: 'Pós-Operatório',
         description: 'Extensão terminal do joelho sobre um rolo.',
-        image_key: 'short_arc_quads_post_op_1768921154515.png'
+        image_key: 'short_arc_quads_post_op_1768921154515.avif'
     },
     {
         name: 'Salto Unipodal com Aterrissagem',
         category: 'Esportivo',
         description: 'Saltar e aterrissar em uma perna só, focando no alinhamento do joelho.',
-        image_key: 'single_leg_hop_landing_sports_1768921171501.png'
+        image_key: 'single_leg_hop_landing_sports_1768921171501.avif'
     },
     {
         name: 'Salto Lateral (Lateral Bound)',
         category: 'Esportivo',
         description: 'Saltar lateralmente de uma perna para a outra com estabilização.',
-        image_key: 'lateral_bound_sports_1768921190178.png'
+        image_key: 'lateral_bound_sports_1768921190178.avif'
     }
 ];
 

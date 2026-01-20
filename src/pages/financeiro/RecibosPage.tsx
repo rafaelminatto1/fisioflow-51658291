@@ -17,6 +17,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ReciboPreview, ReciboPDF, ReciboData } from '@/components/financial/ReciboPDF';
 import { useRecibos, useCreateRecibo, valorPorExtenso } from '@/hooks/useRecibos';
+import { OptimizedImage } from '@/components/ui/OptimizedImage';
 
 export default function RecibosPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -388,7 +389,7 @@ export default function RecibosPage() {
                   <div className="col-span-2">
                     <Label className="text-muted-foreground">Logo</Label>
                     {clinicaConfig?.org?.logo_url ? (
-                      <img src={clinicaConfig.org.logo_url} alt="Logo" className="h-16 mt-2" />
+                      <OptimizedImage src={clinicaConfig.org.logo_url} alt="Logo" className="h-16 mt-2" aspectRatio="auto" />
                     ) : (
                       <p className="text-muted-foreground">Não configurado</p>
                     )}

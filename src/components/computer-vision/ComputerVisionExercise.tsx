@@ -359,7 +359,7 @@ const ComputerVisionExercise: React.FC<ComputerVisionExerciseProps> = ({ onSessi
     const screenshot = takeScreenshot();
     if (screenshot) {
       const link = document.createElement('a');
-      link.download = `exercise-screenshot-${Date.now()}.png`;
+      link.download = `exercise-screenshot-${Date.now()}.avif`;
       link.href = screenshot;
       link.click();
     }

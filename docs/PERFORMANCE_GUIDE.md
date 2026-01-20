@@ -154,7 +154,7 @@ import { LazyImage } from '@/components/ui/virtual-list';
   alt={patient.name}
   width={100}
   height={100}
-  placeholder="/placeholder-avatar.png"
+  placeholder="/placeholder-avatar.avif"
 />
 ```
 

@@ -115,7 +115,7 @@ test.describe('Agenda - Novo Design dos Cards', () => {
 
   test('deve manter grid alinhado na view de semana', async ({ page }) => {
     // Capturar screenshot antes
-    await page.screenshot({ path: 'screenshots/week-view-before.png' });
+    await page.screenshot({ path: 'screenshots/week-view-before.avif' });
 
     // Mudar para view de semana se não estiver
     const weekButton = page.locator('button:has-text("Semana")');
@@ -141,7 +141,7 @@ test.describe('Agenda - Novo Design dos Cards', () => {
     }
 
     // Capturar screenshot após
-    await page.screenshot({ path: 'screenshots/week-view-after.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/week-view-after.avif', fullPage: true });
   });
 
   test('deve aplicar hover state nos cards', async ({ page }) => {
@@ -231,7 +231,7 @@ test.describe('Agenda - Novo Design dos Cards', () => {
     }
 
     // Screenshot mobile
-    await page.screenshot({ path: 'screenshots/mobile-calendar.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/mobile-calendar.avif', fullPage: true });
   });
 
   test('deve indicar status com border colorida', async ({ page }) => {
@@ -301,7 +301,7 @@ test.describe('Agenda - Screenshots Comparativos', () => {
 
   test('screenshot - view de semana', async ({ page }) => {
     await page.waitForTimeout(2000);
-    await page.screenshot({ path: 'screenshots/calendar-week-view.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/calendar-week-view.avif', fullPage: true });
   });
 
   test('screenshot - view de dia', async ({ page }) => {
@@ -310,7 +310,7 @@ test.describe('Agenda - Screenshots Comparativos', () => {
       await dayButton.click();
     }
     await page.waitForTimeout(1000);
-    await page.screenshot({ path: 'screenshots/calendar-day-view.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/calendar-day-view.avif', fullPage: true });
   });
 
   test('screenshot - view de mês', async ({ page }) => {
@@ -319,7 +319,7 @@ test.describe('Agenda - Screenshots Comparativos', () => {
       await monthButton.click();
     }
     await page.waitForTimeout(1000);
-    await page.screenshot({ path: 'screenshots/calendar-month-view.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/calendar-month-view.avif', fullPage: true });
   });
 
   test('screenshot - cards em destaque', async ({ page }) => {
@@ -334,7 +334,7 @@ test.describe('Agenda - Screenshots Comparativos', () => {
       await firstCard.scrollIntoViewIfNeeded();
       await page.waitForTimeout(500);
 
-      await page.screenshot({ path: 'screenshots/calendar-card-closeup.png' });
+      await page.screenshot({ path: 'screenshots/calendar-card-closeup.avif' });
     }
   });
 });

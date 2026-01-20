@@ -15,7 +15,7 @@ test('testar iniciar atendimento - debug', async ({ page }) => {
   await page.waitForTimeout(3000);
 
   // Capturar screenshot da agenda
-  await page.screenshot({ path: 'screenshots/test-01-agenda-carregada.png' });
+  await page.screenshot({ path: 'screenshots/test-01-agenda-carregada.avif' });
   console.log('Screenshot da agenda salva');
 
   // Tentar encontrar agendamentos
@@ -34,7 +34,7 @@ test('testar iniciar atendimento - debug', async ({ page }) => {
     console.log(`Botão iniciar visível: ${isVisible}`);
 
     if (isVisible) {
-      await page.screenshot({ path: 'screenshots/test-02-modal-aberto.png' });
+      await page.screenshot({ path: 'screenshots/test-02-modal-aberto.avif' });
       console.log('Screenshot do modal salva');
 
       // Clicar no botão
@@ -49,7 +49,7 @@ test('testar iniciar atendimento - debug', async ({ page }) => {
       console.log(`URL atual: ${currentUrl}`);
 
       // Capturar screenshot final
-      await page.screenshot({ path: 'screenshots/test-03-apos-click.png', fullPage: true });
+      await page.screenshot({ path: 'screenshots/test-03-apos-click.avif', fullPage: true });
       console.log('Screenshot após clicar salva');
 
       // Verificar se há erros na página
@@ -63,11 +63,11 @@ test('testar iniciar atendimento - debug', async ({ page }) => {
       expect(isEvolutionPage).toBe(true);
     } else {
       console.log('Botão Iniciar não encontrado ou não visível');
-      await page.screenshot({ path: 'screenshots/test-erro-botao-nao-visivel.png', fullPage: true });
+      await page.screenshot({ path: 'screenshots/test-erro-botao-nao-visivel.avif', fullPage: true });
     }
   } else {
     console.log('Nenhum agendamento encontrado');
-    await page.screenshot({ path: 'screenshots/test-erro-sem-agendamentos.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/test-erro-sem-agendamentos.avif', fullPage: true });
   }
 
   // Manter página aberta para inspeção manual

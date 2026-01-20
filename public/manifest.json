@@ -41,16 +41,16 @@
   "shortcuts": [],
   "screenshots": [
     {
-      "src": "/screenshots/dashboard.png",
+      "src": "/screenshots/dashboard.avif",
       "sizes": "1280x720",
-      "type": "image/png",
+      "type": "image/avif",
       "platform": "wide",
       "label": "Dashboard principal com estatísticas de progresso"
     },
     {
-      "src": "/screenshots/achievements.png",
+      "src": "/screenshots/achievements.avif",
       "sizes": "750x1334",
-      "type": "image/png",
+      "type": "image/avif",
       "platform": "narrow",
       "label": "Tela de conquistas e badges"
     }

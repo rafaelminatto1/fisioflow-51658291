@@ -11,7 +11,7 @@ import { BulkActionsBar } from '@/components/schedule/BulkActionsBar';
 import { useAppointments, useRescheduleAppointment } from '@/hooks/useAppointments';
 import { useBulkActions } from '@/hooks/useBulkActions';
 import { logger } from '@/lib/errors/logger';
-import { AlertTriangle, Plus, Settings as SettingsIcon, ChevronLeft, ChevronRight, CheckSquare } from 'lucide-react';
+import { AlertTriangle, Plus, Settings as SettingsIcon, ChevronLeft, ChevronRight, CheckSquare, Calendar, Sparkles } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { EmptyState } from '@/components/ui';
@@ -411,67 +411,168 @@ const Schedule = () => {
           dataSource={dataSource}
         />
 
-        {/* Header Section - Kept simple/clean to match design */}
-        <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Agenda</h1>
-            <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-2" />
+        {/* Header Section - Enhanced with better visual hierarchy */}
+        <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+          <div className="px-4 sm:px-6 py-4">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              {/* Left Section - Title, Navigation, Today Button */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-1">
+                {/* Title with icon */}
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-sm">
+                    <Calendar className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+                      Agenda
+                    </h1>
+                    <p className="text-xs text-muted-foreground hidden sm:block">
+                      Gerencie seus atendimentos
+                    </p>
+                  </div>
+                </div>
 
-            <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5">
-              <Button variant="ghost" size="sm" onClick={() => setCurrentDate(date => addDays(date, -7))}>
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <span className="w-32 text-center text-sm font-medium text-slate-700 dark:text-slate-200">
-                {formattedMonth}
-              </span>
-              <Button variant="ghost" size="sm" onClick={() => setCurrentDate(date => addDays(date, 7))}>
-                <ChevronRight className="w-4 h-4" />
-              </Button>
+                {/* Navigation Controls - Enhanced */}
+                <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setCurrentDate(date => addDays(date, -7))}
+                    className="h-8 w-8 p-0 rounded-lg hover:bg-white dark:hover:bg-slate-700 shadow-sm transition-all"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <div className="px-3 min-w-[140px] text-center">
+                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                      {formattedMonth}
+                    </span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setCurrentDate(date => addDays(date, 7))}
+                    className="h-8 w-8 p-0 rounded-lg hover:bg-white dark:hover:bg-slate-700 shadow-sm transition-all"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                {/* Today Button - Enhanced */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentDate(new Date())}
+                  className="h-9 px-4 rounded-lg border-slate-200 dark:border-slate-700 font-medium transition-all hover:shadow-md"
+                >
+                  Hoje
+                </Button>
+              </div>
+
+              {/* Right Section - View Switcher, Filters, Actions */}
+              <div className="flex flex-wrap items-center gap-2 lg:gap-3">
+                {/* View Type Switcher - Enhanced Design */}
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                  <Button
+                    size="sm"
+                    variant={viewType === 'day' ? 'white' : 'ghost'}
+                    onClick={() => setViewType('day')}
+                    className="h-8 text-xs px-4 rounded-lg font-medium transition-all"
+                  >
+                    <Calendar className="w-3.5 h-3.5 mr-1.5" />
+                    <span className="hidden sm:inline">Dia</span>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={viewType === 'week' ? 'white' : 'ghost'}
+                    onClick={() => setViewType('week')}
+                    className="h-8 text-xs px-4 rounded-lg font-medium transition-all"
+                  >
+                    <Calendar className="w-3.5 h-3.5 mr-1.5" />
+                    Semana
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={viewType === 'month' ? 'white' : 'ghost'}
+                    onClick={() => setViewType('month')}
+                    className="h-8 text-xs px-4 rounded-lg font-medium transition-all"
+                  >
+                    <Calendar className="w-3.5 h-3.5 mr-1.5" />
+                    Mês
+                  </Button>
+                </div>
+
+                {/* Selection Mode Toggle */}
+                <Button
+                  variant={isSelectionMode ? "default" : "outline"}
+                  size="icon"
+                  className={`h-9 w-9 rounded-lg transition-all ${
+                    isSelectionMode
+                      ? 'bg-blue-600 hover:bg-blue-700 shadow-md'
+                      : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                  onClick={toggleSelectionMode}
+                  title="Modo de Seleção (atalho: A)"
+                >
+                  <CheckSquare className="w-4 h-4" />
+                </Button>
+
+                {/* Advanced Filters */}
+                <AdvancedFilters
+                  filters={filters}
+                  onChange={setFilters}
+                  onClear={() => setFilters({ status: [], types: [], therapists: [] })}
+                />
+
+                {/* Settings */}
+                <Link to="/schedule/settings">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                    title="Configurações da Agenda"
+                  >
+                    <SettingsIcon className="w-4 h-4" />
+                  </Button>
+                </Link>
+
+                {/* Primary CTA - Enhanced */}
+                <Button
+                  onClick={handleCreateAppointment}
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white gap-2 shadow-md hover:shadow-lg rounded-lg px-4 transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">{isMobile ? 'Novo' : 'Novo Agendamento'}</span>
+                  <span className="sm:hidden">Novo</span>
+                </Button>
+              </div>
             </div>
-
-            <Button variant="outline" size="sm" onClick={() => setCurrentDate(new Date())} className="text-xs">
-              Hoje
-            </Button>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg">
-              <Button size="sm" variant={viewType === 'day' ? 'white' : 'ghost'} onClick={() => setViewType('day')} className="h-7 text-xs px-3 shadow-none">Dia</Button>
-              <Button size="sm" variant={viewType === 'week' ? 'white' : 'ghost'} onClick={() => setViewType('week')} className="h-7 text-xs px-3 shadow-none">Semana</Button>
-              <Button size="sm" variant={viewType === 'month' ? 'white' : 'ghost'} onClick={() => setViewType('month')} className="h-7 text-xs px-3 shadow-none">Mês</Button>
+          {/* Quick Stats Bar - New Addition */}
+          <div className="px-4 sm:px-6 pb-3">
+            <div className="flex items-center gap-4 text-xs">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                <span className="font-medium text-blue-900 dark:text-blue-100">
+                  {appointments.length} agendamentos
+                </span>
+              </div>
+              {filteredAppointments.length !== appointments.length && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800">
+                  <span className="font-medium text-amber-900 dark:text-amber-100">
+                    {filteredAppointments.length} visíveis (filtros ativos)
+                  </span>
+                </div>
+              )}
+              {isSelectionMode && selectedIds.size > 0 && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 dark:bg-purple-950/30 rounded-lg border border-purple-200 dark:border-purple-800">
+                  <CheckSquare className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                  <span className="font-medium text-purple-900 dark:text-purple-100">
+                    {selectedIds.size} selecionados
+                  </span>
+                </div>
+              )}
             </div>
-
-            <Button
-              variant={isSelectionMode ? "default" : "outline"}
-              size="icon"
-              className="h-9 w-9"
-              onClick={toggleSelectionMode}
-              title="Modo de Seleção"
-            >
-              <CheckSquare className="w-4 h-4" />
-            </Button>
-
-            <AdvancedFilters
-              filters={filters}
-              onChange={setFilters}
-              onClear={() => setFilters({ status: [], types: [], therapists: [] })}
-            />
-
-            <Link to="/schedule/settings">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-9 w-9"
-                title="Configurações da Agenda"
-              >
-                <SettingsIcon className="w-4 h-4" />
-              </Button>
-            </Link>
-
-            <Button onClick={handleCreateAppointment} className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm">
-              <Plus className="w-4 h-4" />
-              {isMobile ? 'Novo' : 'Novo Agendamento'}
-            </Button>
           </div>
         </div>
 

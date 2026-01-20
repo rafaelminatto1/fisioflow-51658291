@@ -131,7 +131,7 @@ export default defineConfig(({ mode }) => {
       VitePWA({
         registerType: 'prompt',
         disable: !isProduction,
-        includeAssets: ['icons/*.svg', 'icons/*.png', 'favicon.ico'],
+        includeAssets: ['icons/*.svg', 'icons/*.avif', 'favicon.ico'],
         manifest: {
           name: 'FisioFlow - Sistema de Gestão',
           short_name: 'FisioFlow',
@@ -159,7 +159,7 @@ export default defineConfig(({ mode }) => {
           categories: ['health', 'medical', 'productivity'],
         },
         workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff2}'],
+          globPatterns: ['**/*.{js,css,html,ico,avif,svg,json,woff2}'],
           globIgnores: ['**/node_modules/**/*'],
           navigateFallback: null,
           skipWaiting: true,
@@ -186,7 +186,7 @@ export default defineConfig(({ mode }) => {
               }
             },
             {
-              urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+              urlPattern: /\.(?:avif|svg|gif)$/,
               handler: 'CacheFirst',
               options: {
                 cacheName: 'images-cache',
@@ -338,7 +338,6 @@ export default defineConfig(({ mode }) => {
         '@radix-ui/react-tabs',
         // Bibliotecas de animação que dependem de React
         'framer-motion',
-        'motion/react', // Nova versão do framer-motion
         // Utilitários pesados que se beneficiam de pre-bundling
         'date-fns',
         'date-fns/locale', // Locale imports
@@ -354,7 +353,6 @@ export default defineConfig(({ mode }) => {
         'react-resizable',
         // Supabase
         '@supabase/supabase-js',
-        '@supabase/auth-helpers-react',
       ],
       exclude: [
         '@cornerstonejs/dicom-image-loader',

@@ -92,6 +92,10 @@ const CohortAnalysis = lazy(() => import(/* webpackChunkName: "analytics-cohorts
 // Gamification
 const PatientGamificationPage = lazy(() => import(/* webpackChunkName: "gamification-patient" */ "./pages/PatientGamificationPage"));
 const AdminGamificationPage = lazy(() => import(/* webpackChunkName: "gamification-admin" */ "./pages/admin/gamification/AdminGamificationPage"));
+const GamificationAchievementsPage = lazy(() => import(/* webpackChunkName: "gamification-achievements" */ "./pages/gamification/GamificationAchievementsPage"));
+const GamificationQuestsPage = lazy(() => import(/* webpackChunkName: "gamification-quests" */ "./pages/gamification/GamificationQuestsPage"));
+const GamificationShopPage = lazy(() => import(/* webpackChunkName: "gamification-shop" */ "./pages/gamification/GamificationShopPage"));
+const GamificationLeaderboardPage = lazy(() => import(/* webpackChunkName: "gamification-leaderboard" */ "./pages/gamification/GamificationLeaderboardPage"));
 
 // Goals
 const GoalProfileListPage = lazy(() => import(/* webpackChunkName: "goals-list" */ "./pages/admin/goals/GoalProfileListPage"));
@@ -231,6 +235,10 @@ export function AppRoutes() {
             <Route path="/smart-dashboard" element={<ProtectedRoute><SmartDashboard /></ProtectedRoute>} />
             <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
             <Route path="/gamification" element={<ProtectedRoute><PatientGamificationPage /></ProtectedRoute>} />
+            <Route path="/gamification/achievements" element={<ProtectedRoute><GamificationAchievementsPage /></ProtectedRoute>} />
+            <Route path="/gamification/quests" element={<ProtectedRoute><GamificationQuestsPage /></ProtectedRoute>} />
+            <Route path="/gamification/shop" element={<ProtectedRoute><GamificationShopPage /></ProtectedRoute>} />
+            <Route path="/gamification/leaderboard" element={<ProtectedRoute><GamificationLeaderboardPage /></ProtectedRoute>} />
             <Route path="/chatbot" element={<ProtectedRoute><MedicalChatbot userId="current-user" /></ProtectedRoute>} />
             <Route path="/computer-vision" element={<ProtectedRoute><ComputerVisionExercise patientId="current-patient" /></ProtectedRoute>} />
             <Route path="/intelligent-reports" element={<ProtectedRoute><IntelligentReports patientId="demo-patient" patientName="Paciente Demo" /></ProtectedRoute>} />

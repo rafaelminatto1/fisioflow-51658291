@@ -8,7 +8,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { CalendarAppointmentCard } from './CalendarAppointmentCard';
 import { TimeSlotCell } from './TimeSlotCell';
 import { useCardSize } from '@/hooks/useCardSize';
-import { useDynamicSlotHeight } from '@/lib/calendar/dynamicConstants';
+import { calculateAppointmentCardHeight, calculateSlotHeightFromCardSize } from '@/lib/calendar/cardHeightCalculator';
 
 // =====================================================================
 // TYPES
@@ -17,6 +17,7 @@ import { useDynamicSlotHeight } from '@/lib/calendar/dynamicConstants';
 interface CalendarWeekViewProps {
     currentDate: Date;
     appointments: Appointment[];
+    savingAppointmentId: string | null;
     onTimeSlotClick: (date: Date, time: string) => void;
     onEditAppointment?: (appointment: Appointment) => void;
     onDeleteAppointment?: (appointment: Appointment) => void;
@@ -45,7 +46,6 @@ interface CalendarWeekViewProps {
 const START_HOUR = 7;
 const END_HOUR = 21;
 const SLOT_DURATION_MINUTES = 30;
-const SLOT_HEIGHT = 50; // px per slot (reduzido de 80px para 60px -> agora 50px)
 
 // =====================================================================
 // HELPER FUNCTIONS
@@ -68,6 +68,7 @@ const parseAppointmentDate = (date: string | Date | null | undefined): Date | nu
 export const CalendarWeekView = memo(({
     currentDate,
     appointments,
+    savingAppointmentId,
     onTimeSlotClick,
     onEditAppointment,
     onDeleteAppointment,
@@ -87,9 +88,9 @@ export const CalendarWeekView = memo(({
     selectedIds = new Set(),
     onToggleSelection
 }: CalendarWeekViewProps) => {
-    // Get card height multiplier from user preferences
-    const { heightMultiplier } = useCardSize();
-    const slotHeight = useDynamicSlotHeight();
+    // Get card size configuration from user preferences
+    const { cardSize, heightScale } = useCardSize();
+    const slotHeight = calculateSlotHeightFromCardSize(cardSize, heightScale);
 
     const weekDays = useMemo(() => {
         const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
@@ -114,14 +115,14 @@ export const CalendarWeekView = memo(({
             }
 
             const totalMinutesFromStart = (currentHour - START_HOUR) * 60 + currentMinute;
-            const position = (totalMinutesFromStart / SLOT_DURATION_MINUTES) * SLOT_HEIGHT;
+            const position = (totalMinutesFromStart / SLOT_DURATION_MINUTES) * slotHeight;
             setCurrentTimePosition(position);
         };
 
         updatePosition();
         const interval = setInterval(updatePosition, 60000);
         return () => clearInterval(interval);
-    }, []);
+    }, [slotHeight]);
 
     // Filter appointments for this week
     const weekAppointments = useMemo(() => {
@@ -187,8 +188,9 @@ export const CalendarWeekView = memo(({
         const startRowIndex = timeSlots.findIndex(t => t === time);
         if (startRowIndex === -1) return null;
 
+        // Duration-based height calculation
         const duration = apt.duration || 60;
-        const heightInPixels = (duration / SLOT_DURATION_MINUTES) * slotHeight;
+        const heightInPixels = calculateAppointmentCardHeight(cardSize, duration, heightScale);
 
         // Check for collisions
         const key = `${dayIndex}-${time}`;
@@ -208,7 +210,7 @@ export const CalendarWeekView = memo(({
             top: '0px',
             zIndex: 10 + index
         };
-    }, [weekDays, timeSlots, appointmentsByTimeSlot]);
+    }, [weekDays, timeSlots, appointmentsByTimeSlot, cardSize, heightScale]);
 
     const isDraggable = !!onAppointmentReschedule;
     const isDraggingThis = useCallback((aptId: string) =>
@@ -220,9 +222,9 @@ export const CalendarWeekView = memo(({
             <div className="flex flex-col bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-slate-900 dark:text-slate-100 font-display h-full relative overflow-hidden">
                 {/* Wrap everything in a scroll container (both X and Y) */}
                 <div className="overflow-auto w-full h-full custom-scrollbar">
-                    <div className="min-w-[800px] md:min-w-0">
+                    <div className="w-full">
                         {/* Header Row */}
-                        <div className="grid grid-cols-[60px_repeat(6,1fr)] bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 shadow-sm">
+                        <div className="grid grid-cols-[60px_repeat(6,1fr)] bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 shadow-sm min-w-[600px]">
                             {/* Time icon - Sticky Left */}
                             <div className="h-14 border-r border-slate-200 dark:border-slate-800 flex items-center justify-center sticky left-0 z-50 bg-white dark:bg-slate-950">
                                 <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-400">
@@ -262,31 +264,24 @@ export const CalendarWeekView = memo(({
 
                         {/* Scrollable Grid Area */}
                         <div className="relative bg-white dark:bg-slate-950" id="calendar-grid">
-                            <div className="grid grid-cols-[60px_repeat(6,1fr)] relative min-h-0" style={{
-                                gridTemplateRows: `repeat(${timeSlots.length}, ${SLOT_HEIGHT}px)`
+                            <div className="grid grid-cols-[60px_repeat(6,1fr)] relative min-h-0 min-w-[600px]" style={{
+                                gridTemplateRows: `repeat(${timeSlots.length}, ${slotHeight}px)`
                             }}>
 
-                                {/* Current Time Indicator Line */}
-                                {/* Current Time Indicator Line */}
-                                {currentTimePosition !== null && (() => {
-                                    const todayIndex = weekDays.findIndex(d => isSameDay(d, new Date()));
-                                    if (todayIndex === -1) return null;
-
-                                    return (
-                                        <div
-                                            className="absolute z-20 pointer-events-none flex items-center w-full"
-                                            style={{
-                                                top: `${currentTimePosition}px`,
-                                                gridColumn: `${todayIndex + 2}`, // +2 because column 1 is time labels
-                                                left: 0,
-                                                right: 0
-                                            }}
-                                        >
-                                            <div className="w-2 h-2 rounded-full bg-red-500 -ml-1 flex-shrink-0"></div>
-                                            <div className="h-px bg-red-500 w-full shadow-sm"></div>
-                                        </div>
-                                    );
-                                })()}
+                                {/* Current Time Indicator Line - Spans all days */}
+                                {currentTimePosition !== null && (
+                                    <div
+                                        className="absolute z-20 pointer-events-none flex items-center w-full"
+                                        style={{
+                                            top: `${currentTimePosition}px`,
+                                            left: '60px',
+                                            right: 0
+                                        }}
+                                    >
+                                        <div className="w-2 h-2 rounded-full bg-red-500 -ml-1 flex-shrink-0"></div>
+                                        <div className="h-px bg-red-500 flex-1 shadow-sm"></div>
+                                    </div>
+                                )}
 
                                 {/* Time Labels Column - Sticky Left */}
                                 {timeSlots.map((time, index) => {
@@ -370,6 +365,7 @@ export const CalendarWeekView = memo(({
                                             style={style}
                                             isDraggable={isDraggable}
                                             isDragging={isDraggingThis(apt.id)}
+                                            isSaving={apt.id === savingAppointmentId}
                                             isDropTarget={!!isDropTarget}
                                             onDragStart={handleDragStart}
                                             onDragEnd={handleDragEnd}

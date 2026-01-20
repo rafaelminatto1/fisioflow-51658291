@@ -5,40 +5,40 @@
 INSERT INTO notification_templates (type, title_template, body_template, actions) 
 SELECT * FROM (VALUES
 ('appointment_reminder', 'Lembrete de Consulta', 'Você tem uma consulta agendada para {{date}} às {{time}} com {{therapist}}.', '[
-    {"action": "confirm", "title": "Confirmar", "icon": "/icons/check.png"},
-    {"action": "reschedule", "title": "Reagendar", "icon": "/icons/calendar.png"}
+    {"action": "confirm", "title": "Confirmar", "icon": "/icons/check.avif"},
+    {"action": "reschedule", "title": "Reagendar", "icon": "/icons/calendar.avif"}
 ]'::JSONB),
 
 ('appointment_change', 'Consulta Reagendada', 'Sua consulta foi reagendada para {{date}} às {{time}}.', '[
-    {"action": "view", "title": "Ver Detalhes", "icon": "/icons/eye.png"}
+    {"action": "view", "title": "Ver Detalhes", "icon": "/icons/eye.avif"}
 ]'::JSONB),
 
 ('exercise_reminder', 'Hora dos Exercícios! 💪', 'Não esqueça de fazer seus exercícios de {{exercise_type}}. Mantenha sua sequência!', '[
-    {"action": "start", "title": "Iniciar Agora", "icon": "/icons/play.png"},
-    {"action": "later", "title": "Mais Tarde", "icon": "/icons/clock.png"}
+    {"action": "start", "title": "Iniciar Agora", "icon": "/icons/play.avif"},
+    {"action": "later", "title": "Mais Tarde", "icon": "/icons/clock.avif"}
 ]'::JSONB),
 
 ('exercise_milestone', 'Parabéns! 🎉', 'Você completou {{milestone}} exercícios! Continue assim!', '[
-    {"action": "share", "title": "Compartilhar", "icon": "/icons/share.png"},
-    {"action": "continue", "title": "Continuar", "icon": "/icons/arrow-right.png"}
+    {"action": "share", "title": "Compartilhar", "icon": "/icons/share.avif"},
+    {"action": "continue", "title": "Continuar", "icon": "/icons/arrow-right.avif"}
 ]'::JSONB),
 
 ('progress_update', 'Progresso Atualizado', 'Seu fisioterapeuta atualizou seu plano de tratamento. Confira as novidades!', '[
-    {"action": "view", "title": "Ver Progresso", "icon": "/icons/chart.png"}
+    {"action": "view", "title": "Ver Progresso", "icon": "/icons/chart.avif"}
 ]'::JSONB),
 
 ('system_alert', 'Alerta do Sistema', '{{message}}', '[
-    {"action": "dismiss", "title": "Dispensar", "icon": "/icons/x.png"}
+    {"action": "dismiss", "title": "Dispensar", "icon": "/icons/x.avif"}
 ]'::JSONB),
 
 ('therapist_message', 'Mensagem do Fisioterapeuta', '{{therapist}} enviou uma mensagem: {{message}}', '[
-    {"action": "reply", "title": "Responder", "icon": "/icons/reply.png"},
-    {"action": "view", "title": "Ver Conversa", "icon": "/icons/chat.png"}
+    {"action": "reply", "title": "Responder", "icon": "/icons/reply.avif"},
+    {"action": "view", "title": "Ver Conversa", "icon": "/icons/chat.avif"}
 ]'::JSONB),
 
 ('payment_reminder', 'Lembrete de Pagamento', 'Você tem um pagamento pendente de R$ {{amount}} com vencimento em {{due_date}}.', '[
-    {"action": "pay", "title": "Pagar Agora", "icon": "/icons/credit-card.png"},
-    {"action": "view", "title": "Ver Detalhes", "icon": "/icons/eye.png"}
+    {"action": "pay", "title": "Pagar Agora", "icon": "/icons/credit-card.avif"},
+    {"action": "view", "title": "Ver Detalhes", "icon": "/icons/eye.avif"}
 ]'::JSONB)
 ) AS v(type, title_template, body_template, actions)
 ON CONFLICT (type) DO NOTHING;

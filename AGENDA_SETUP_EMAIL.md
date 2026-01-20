@@ -244,7 +244,7 @@ SELECT cron.unschedule('daily-appointment-reminders');
 Os templates HTML estão em `send-appointment-email/index.ts`. Para personalizar:
 
 1. **Cores**: Ajuste gradientes e cores inline
-2. **Logo**: Adicione `<img src="https://seu-dominio.com/logo.png" />`
+2. **Logo**: Adicione `<img src="https://seu-dominio.com/logo.avif" />`
 3. **Rodapé**: Atualize informações de contato
 4. **Textos**: Modifique mensagens conforme preferência
 
@@ -252,7 +252,7 @@ Os templates HTML estão em `send-appointment-email/index.ts`. Para personalizar
 ```html
 <div style="background: ...; text-align: center;">
   <img 
-    src="https://activityfisioterapia.com.br/logo.png" 
+    src="https://activityfisioterapia.com.br/logo.avif" 
     alt="Activity Fisioterapia" 
     style="width: 150px; margin-bottom: 15px;"
   />

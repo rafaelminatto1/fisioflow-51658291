@@ -1,0 +1,60 @@
+# ========================================
+# Docker Compose - macOS com Xcode
+# Para desenvolvimento FisioFlow iOS
+# ========================================
+
+services:
+  macos-xcode:
+    image: sickcodes/docker-osx:latest
+    container_name: fisioflow-macos
+
+    # Configurações de hardware necessárias para Docker-OSX
+    privileged: true
+    pid: "host"
+
+    # Variáveis de ambiente
+    environment:
+      # VNC
+      - VNC_PASSWORD=${VNC_PASSWORD:-fisioflow123}
+      - DISPLAY=${DISPLAY:-:1}
+
+      # Configurações do macOS
+      - OS=ventura
+      - ARCH=x86_64
+
+      # CPU e RAM (ajuste conforme seu sistema)
+      - RAM_SIZE=${RAM_SIZE:-8}
+      - CPU_CORES=${CPU_CORES:-4}
+      - DISK_SIZE=${DISK_SIZE:-128G}
+
+      # Resolução
+      - RESOLUTION=${RESOLUTION:-1920x1080}
+
+    # Portas
+    ports:
+      - "${VNC_PORT:-8888}:8888"   # VNC Web (navegador)
+      - "${VNC_NATIVE:-5900}:5900" # VNC Nativo (Remmina/VNC Viewer)
+      - "8006:8006"                 # Interface web alternativa
+
+    # Volumes
+    volumes:
+      # Persistir disco do macOS
+      - macos-storage:/home/arch/OSX-KVM/mac_hdd_ng.img.nosparse
+
+      # Montar projeto FisioFlow
+      - ../../:/root/fisioflow
+
+    # Dispositivos necessários para KVM
+    devices:
+      - /dev/kvm:/dev/kvm
+      - /dev/net/tun:/dev/net/tun
+
+    # Rede
+    network_mode: bridge
+
+    # Reiniciar automaticamente
+    restart: unless-stopped
+
+volumes:
+  macos-storage:
+    driver: local

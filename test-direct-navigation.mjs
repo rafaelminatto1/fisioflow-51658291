@@ -48,8 +48,8 @@ import { chromium } from 'playwright';
     await page.waitForTimeout(5000);
 
     // Screenshot
-    await page.screenshot({ path: 'screenshots/direct-navigation.png', fullPage: true });
-    console.log('Screenshot salvo: screenshots/direct-navigation.png');
+    await page.screenshot({ path: 'screenshots/direct-navigation.avif', fullPage: true });
+    console.log('Screenshot salvo: screenshots/direct-navigation.avif');
 
     // Verificar URL
     console.log(`URL atual: ${page.url()}`);
@@ -103,7 +103,7 @@ import { chromium } from 'playwright';
 
   } catch (error) {
     console.error('\n❌ ERRO NO TESTE:', error);
-    await page.screenshot({ path: 'screenshots/erro-crash.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/erro-crash.avif', fullPage: true });
   } finally {
     await browser.close();
   }

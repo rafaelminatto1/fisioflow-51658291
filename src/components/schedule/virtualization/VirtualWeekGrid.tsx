@@ -15,7 +15,7 @@ import { parseAppointmentDate, normalizeTime } from '@/lib/calendar/utils';
 import { CalendarAppointmentCard } from '../CalendarAppointmentCard';
 import { TimeSlotCell } from '../TimeSlotCell';
 import { useCardSize } from '@/hooks/useCardSize';
-import { useDynamicSlotHeight } from '@/lib/calendar/dynamicConstants';
+import { calculateAppointmentCardHeight, calculateSlotHeightFromCardSize } from '@/lib/calendar/cardHeightCalculator';
 
 // =====================================================================
 // TYPES
@@ -64,7 +64,8 @@ interface ItemData {
   appointments: Appointment[];
   timeSlots: string[];
   appointmentsByTimeSlot: Record<string, Appointment[]>;
-  heightMultiplier: number;
+  cardSize: string;
+  heightScale: number;
   onTimeSlotClick?: (date: Date, time: string) => void;
   onEditAppointment?: (appointment: Appointment) => void;
   onDeleteAppointment?: (appointment: Appointment) => void;
@@ -141,9 +142,13 @@ const TimeSlotRow: React.FC<ListChildComponentProps<ItemData>> = memo(({ index, 
         const dayIndex = weekDays.findIndex(d => isSameDay(d, aptDate));
         if (dayIndex === -1) return null;
 
+        // Duration-based height calculation
         const duration = apt.duration || 60;
-        const slotHeight = data.heightMultiplier * 80; // BASE_SLOT_HEIGHT (80) * multiplier
-        const height = (duration / BUSINESS_HOURS.DEFAULT_SLOT_DURATION) * slotHeight;
+        const height = calculateAppointmentCardHeight(
+          data.cardSize as any,
+          duration,
+          data.heightScale
+        );
 
         // Calcular posicionamento
         const sameTimeAppointments = appointmentsByTimeSlot[time] || [];
@@ -222,8 +227,24 @@ export const VirtualWeekGrid: React.FC<VirtualWeekGridProps> = memo(({
   onToggleSelection,
 }) => {
   const listRef = useRef<List>(null);
-  const { heightMultiplier } = useCardSize();
-  const slotHeight = Math.round(80 * heightMultiplier); // BASE_SLOT_HEIGHT * multiplier
+  const { cardSize, heightScale } = useCardSize();
+  const slotHeight = calculateSlotHeightFromCardSize(cardSize, heightScale);
+
+  // Dynamic height calculation for virtual list
+  const [containerHeight, setContainerHeight] = useState(600);
+
+  useEffect(() => {
+    const updateHeight = () => {
+      // Calculate available height: viewport - header - footer - padding
+      const headerHeight = 200; // Approximate header height
+      const newHeight = window.innerHeight - headerHeight;
+      setContainerHeight(Math.max(400, newHeight)); // Minimum 400px
+    };
+
+    updateHeight();
+    window.addEventListener('resize', updateHeight);
+    return () => window.removeEventListener('resize', updateHeight);
+  }, []);
 
   // Agrupar appointments por time slot
   const appointmentsByTimeSlot = useMemo(() => {
@@ -253,7 +274,8 @@ export const VirtualWeekGrid: React.FC<VirtualWeekGridProps> = memo(({
       timeSlots,
       appointments,
       appointmentsByTimeSlot,
-      heightMultiplier,
+      cardSize,
+      heightScale,
       onTimeSlotClick,
       onEditAppointment,
       onDeleteAppointment,
@@ -278,7 +300,8 @@ export const VirtualWeekGrid: React.FC<VirtualWeekGridProps> = memo(({
       timeSlots,
       appointments,
       appointmentsByTimeSlot,
-      heightMultiplier,
+      cardSize,
+      heightScale,
       onTimeSlotClick,
       onEditAppointment,
       onDeleteAppointment,
@@ -370,12 +393,12 @@ export const VirtualWeekGrid: React.FC<VirtualWeekGridProps> = memo(({
       {/* Virtual Grid */}
       <List
         ref={listRef}
-        height={600} // Altura visível
+        height={containerHeight}
         itemCount={timeSlots.length}
         itemSize={slotHeight}
         width="100%"
         itemData={itemData}
-        overscanCount={2} // Renderizar 2 slots extras acima/abaixo
+        overscanCount={3} // Render more slots for smoother scrolling
       >
         {TimeSlotRow}
       </List>

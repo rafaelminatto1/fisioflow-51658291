@@ -510,30 +510,127 @@ export const PainScaleWidget: React.FC<PainScaleWidgetProps> = ({
                         </div>
                     </div>
 
-                    {/* Color Scale Bar - Using optimized segments */}
-                    <div className="space-y-2.5 sm:space-y-3">
-                        <div
-                            className="flex rounded-full overflow-hidden h-4 sm:h-5 bg-muted shadow-inner"
-                            role="group"
-                            aria-label="Escala visual de dor de 0 a 10. Clique para selecionar o nível."
-                        >
-                            {PAIN_LEVELS.map((levelInfo) => (
-                                <PainScaleSegment
-                                    key={levelInfo.level}
-                                    levelInfo={levelInfo}
-                                    currentLevel={value.level}
-                                    disabled={disabled}
-                                    onClick={() => handleLevelChange(levelInfo.level)}
-                                />
-                            ))}
+                    {/* Pain Scale Grid 2x5 + Botão 10 */}
+                    <div className="space-y-2">
+                        {/* Grid 2x5 (0-9) */}
+                        <div className="grid grid-cols-5 gap-1.5">
+                            {PAIN_LEVELS.slice(0, 10).map((levelInfo) => {
+                                const isSelected = value.level === levelInfo.level;
+                                return (
+                                    <motion.button
+                                        key={levelInfo.level}
+                                        type="button"
+                                        onClick={() => handleLevelChange(levelInfo.level)}
+                                        disabled={disabled}
+                                        whileHover={!disabled ? { scale: 1.03 } : {}}
+                                        whileTap={!disabled ? { scale: 0.97 } : {}}
+                                        animate={isSelected ? { scale: 1.03 } : { scale: 1 }}
+                                        transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                                        className={cn(
+                                            'relative rounded-lg overflow-hidden',
+                                            'h-12 sm:h-14 shadow-sm',
+                                            'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1',
+                                            disabled && 'opacity-40 cursor-not-allowed',
+                                            !disabled && 'cursor-pointer'
+                                        )}
+                                        aria-label={`Nível ${levelInfo.level} - ${levelInfo.label}`}
+                                        aria-pressed={isSelected}
+                                    >
+                                        {/* Background */}
+                                        <div className={cn(
+                                            'absolute inset-0 transition-transform',
+                                            isSelected && 'scale-105'
+                                        )} style={{ backgroundColor: levelInfo.color.replace('bg-', '').replace('-500', '').replace('-400', '').replace('-600', '') === 'green' ? '#22c55e' :
+                                            levelInfo.color.includes('green-400') ? '#4ade80' :
+                                            levelInfo.color.includes('lime-400') ? '#bef264' :
+                                            levelInfo.color.includes('lime-500') ? '#84cc16' :
+                                            levelInfo.color.includes('yellow-400') ? '#fde047' :
+                                            levelInfo.color.includes('yellow-500') ? '#facc15' :
+                                            levelInfo.color.includes('orange-400') ? '#fb923c' :
+                                            levelInfo.color.includes('orange-500') ? '#f97316' :
+                                            levelInfo.color.includes('red-400') ? '#ef4444' :
+                                            levelInfo.color.includes('red-500') ? '#dc2626' : '#991b1b'
+                                        }} />
+
+                                        {/* Borda de seleção */}
+                                        {isSelected && (
+                                            <motion.div
+                                                className="absolute inset-0 border-2 border-white rounded-lg"
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                            />
+                                        )}
+
+                                        {/* Conteúdo */}
+                                        <div className="relative z-10 flex flex-col items-center justify-center h-full">
+                                            <span className={cn(
+                                                'text-lg sm:text-xl font-bold leading-tight',
+                                                levelInfo.level <= 4 ? 'text-green-950' :
+                                                levelInfo.level <= 5 ? 'text-yellow-900' : 'text-white'
+                                            )}>
+                                                {levelInfo.level}
+                                            </span>
+                                            <span className="text-xs">{levelInfo.emoji}</span>
+                                        </div>
+                                    </motion.button>
+                                );
+                            })}
                         </div>
-                        <div
-                            className="flex justify-between text-[9px] sm:text-[10px] uppercase tracking-wider text-muted-foreground font-medium px-1 sm:px-1.5"
-                            aria-hidden="true"
+
+                        {/* Botão 10 full-width */}
+                        <motion.button
+                            type="button"
+                            onClick={() => handleLevelChange(10)}
+                            disabled={disabled}
+                            whileHover={!disabled ? { scale: 1.01 } : {}}
+                            whileTap={!disabled ? { scale: 0.99 } : {}}
+                            animate={value.level === 10 ? { scale: 1.01 } : { scale: 1 }}
+                            transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                            className={cn(
+                                'relative w-full rounded-lg overflow-hidden',
+                                'h-12 sm:h-14 shadow-sm',
+                                'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1',
+                                disabled && 'opacity-40 cursor-not-allowed',
+                                !disabled && 'cursor-pointer'
+                            )}
+                            aria-label="Nível 10 - Insuportável"
+                            aria-pressed={value.level === 10}
                         >
-                            <span>Sem dor</span>
-                            <span>Moderada</span>
-                            <span>Insuportável</span>
+                            <div className={cn(
+                                'absolute inset-0 bg-red-700 transition-transform',
+                                value.level === 10 && 'scale-[1.02]'
+                            )} />
+
+                            {value.level === 10 && (
+                                <motion.div
+                                    className="absolute inset-0 border-2 border-white rounded-lg"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                />
+                            )}
+
+                            <div className="relative z-10 flex items-center justify-center gap-2 h-full">
+                                <span className="text-lg sm:text-xl font-bold leading-tight text-white">
+                                    10
+                                </span>
+                                <span className="text-xs">🤯</span>
+                            </div>
+                        </motion.button>
+
+                        {/* Labels inferiores */}
+                        <div className="flex items-center justify-between px-1 pt-1">
+                            <div className="flex items-center gap-1">
+                                <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                                <span className="text-[9px] text-muted-foreground">Leve</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <div className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
+                                <span className="text-[9px] text-muted-foreground">Moderada</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <div className="w-1.5 h-1.5 rounded-full bg-red-600" />
+                                <span className="text-[9px] text-muted-foreground">Intensa</span>
+                            </div>
                         </div>
                     </div>
 

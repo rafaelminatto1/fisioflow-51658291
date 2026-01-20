@@ -35,7 +35,7 @@ async function testGridLayout() {
         await page.goto('http://localhost:8080');
 
         // Take initial screenshot
-        await page.screenshot({ path: 'test-results/01-homepage.png', fullPage: true });
+        await page.screenshot({ path: 'test-results/01-homepage.avif', fullPage: true });
         console.log('✅ Homepage screenshot saved');
 
         // Try to find a way to access evolution page
@@ -197,7 +197,7 @@ async function testGridLayout() {
 
         // Take final screenshot
         console.log('\n📸 Taking final screenshot...');
-        await page.screenshot({ path: 'test-results/02-final-layout.png', fullPage: true });
+        await page.screenshot({ path: 'test-results/02-final-layout.avif', fullPage: true });
         console.log('✅ Screenshot saved');
 
         // Generate report
@@ -217,7 +217,7 @@ async function testGridLayout() {
 
     } catch (error) {
         console.error('❌ Error during test:', error.message);
-        await page.screenshot({ path: 'test-results/error-screenshot.png' });
+        await page.screenshot({ path: 'test-results/error-screenshot.avif' });
     } finally {
         console.log('\n⏳ Keeping browser open for 5 seconds for manual verification...');
         await page.waitForTimeout(5000);

@@ -370,7 +370,7 @@ export const exerciseVideosService = {
       if (!thumbnailFile) {
         try {
           const thumbnailBlob = await this.generateThumbnail(data.file);
-          thumbnailFile = new File([thumbnailBlob], 'thumbnail.jpg', { type: 'image/jpeg' });
+          thumbnailFile = new File([thumbnailBlob], 'thumbnail.avif', { type: 'image/avif' });
         } catch (error) {
           console.warn('[exerciseVideosService] Failed to generate thumbnail:', error);
         }
@@ -391,7 +391,7 @@ export const exerciseVideosService = {
       const { error: videoUploadError } = await supabase.storage
         .from('exercise-videos')
         .upload(videoPath, data.file, {
-          cacheControl: '3600',
+          cacheControl: '31536000', // 1 ano - vídeos não mudam
           upsert: false,
         });
 
@@ -414,7 +414,7 @@ export const exerciseVideosService = {
         const { error: thumbUploadError } = await supabase.storage
           .from('exercise-videos')
           .upload(thumbnailPath, thumbnailFile, {
-            cacheControl: '3600',
+            cacheControl: '31536000', // 1 ano - thumbnails estáticas
             upsert: false,
           });
 

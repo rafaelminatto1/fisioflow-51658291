@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ import {
   TooltipProps,
 } from 'recharts';
 import {
-  TrendingUp, Users, Target, Flame, Award,
+  TrendingUp, Users, Target, Flame, Award, Star,
   AlertTriangle, Calendar, CheckCircle2, Download
 } from 'lucide-react';
 import { useGamificationAdmin } from '@/hooks/useGamificationAdmin';

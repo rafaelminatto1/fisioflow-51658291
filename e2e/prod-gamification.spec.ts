@@ -38,5 +38,5 @@ test('Verificar Admin Gamification em Produção', async ({ page }) => {
   await expect(page.locator('.animate-pulse')).toHaveCount(0, { timeout: 15000 }).catch(() => console.log('Timeout aguardando loading, prosseguindo...'));
 
   console.log('Tirando screenshot...');
-  await page.screenshot({ path: 'prod-gamification-result.png', fullPage: true });
+  await page.screenshot({ path: 'prod-gamification-result.avif', fullPage: true });
 });

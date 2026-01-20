@@ -168,7 +168,13 @@
       "Bash(__NEW_LINE_8bfebeaa56d537b8__ echo \"=== TESTE 1: Query CORRETA \\(sem coluna ''name'' que não existe\\) ===\")",
       "Bash(__NEW_LINE_8bfebeaa56d537b8__ echo \"=== TESTE 2: Query INCORRETA \\(com coluna ''name'' que NÃO existe na tabela\\) ===\")",
       "Bash(__NEW_LINE_9a21685000f249af__ echo \"=== TESTE FINAL: Verificando query com constantes centralizadas ===\")",
-      "Bash(__NEW_LINE_f995867e1d99c709__ echo \"=== TESTE FINAL ===\")"
+      "Bash(__NEW_LINE_f995867e1d99c709__ echo \"=== TESTE FINAL ===\")",
+      "mcp__shadcn__get_add_command_for_items",
+      "Bash(npx -y lighthouse:*)",
+      "Bash(docker:*)",
+      "Bash(docker compose:*)",
+      "Bash(sudo chown:*)",
+      "Bash(groups:*)"
     ],
     "deny": [],
     "ask": []

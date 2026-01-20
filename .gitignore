@@ -163,7 +163,7 @@ Carthage/Build/
 # fastlane
 fastlane/report.xml
 fastlane/Preview.html
-fastlane/screenshots/**/*.png
+fastlane/screenshots/**/*.avif
 fastlane/test_output
 
 # Code Injection

@@ -16,7 +16,7 @@ async function screenshotGrid() {
         if (hasLogin) {
             console.log('⚠️  Login required. Please login manually and navigate to evolution page.');
             console.log('📸 Taking screenshot of login page...');
-            await page.screenshot({ path: 'screenshots/01-login.png', fullPage: true });
+            await page.screenshot({ path: 'screenshots/01-login.avif', fullPage: true });
             await browser.close();
             return;
         }
@@ -42,14 +42,14 @@ async function screenshotGrid() {
             // Screenshot 1: Full page (collapsed state)
             console.log('📸 Screenshot 1: Full page (collapsed)');
             await page.screenshot({
-                path: 'screenshots/01-grid-collapsed-full.png',
+                path: 'screenshots/01-grid-collapsed-full.avif',
                 fullPage: true
             });
 
             // Screenshot 2: Just the grid area
             const grid = page.locator('.react-grid-layout');
             await grid.screenshot({
-                path: 'screenshots/02-grid-collapsed.png'
+                path: 'screenshots/02-grid-collapsed.avif'
             });
 
             // Get widget info
@@ -79,7 +79,7 @@ async function screenshotGrid() {
 
                 console.log('📸 Screenshot 3: Grid with Pain Scale expanded');
                 await page.screenshot({
-                    path: 'screenshots/03-grid-expanded.png',
+                    path: 'screenshots/03-grid-expanded.avif',
                     fullPage: true
                 });
 
@@ -106,7 +106,7 @@ async function screenshotGrid() {
         } else {
             console.log('⚠️  No grid layout found on current page');
             console.log('📸 Taking screenshot of current page...');
-            await page.screenshot({ path: 'screenshots/00-current-page.png', fullPage: true });
+            await page.screenshot({ path: 'screenshots/00-current-page.avif', fullPage: true });
         }
 
     } catch (error) {

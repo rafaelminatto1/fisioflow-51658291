@@ -6,6 +6,7 @@ import { logger } from '@/lib/errors/logger';
 interface DragState {
     appointment: Appointment | null;
     isDragging: boolean;
+    savingAppointmentId: string | null;
 }
 
 interface DropTarget {
@@ -15,6 +16,8 @@ interface DropTarget {
 
 interface UseCalendarDragProps {
     onAppointmentReschedule?: (appointment: Appointment, newDate: Date, newTime: string) => Promise<void>;
+    onOptimisticUpdate?: (appointmentId: string, newDate: Date, newTime: string) => void;
+    onRevertUpdate?: (appointmentId: string) => void;
 }
 
 /**
@@ -41,8 +44,8 @@ const createLocalDate = (year: number, month: number, day: number): Date => {
     return new Date(year, month, day, 12, 0, 0); // Meio-dia para evitar edge cases
 };
 
-export const useCalendarDrag = ({ onAppointmentReschedule }: UseCalendarDragProps) => {
-    const [dragState, setDragState] = useState<DragState>({ appointment: null, isDragging: false });
+export const useCalendarDrag = ({ onAppointmentReschedule, onOptimisticUpdate, onRevertUpdate }: UseCalendarDragProps) => {
+    const [dragState, setDragState] = useState<DragState>({ appointment: null, isDragging: false, savingAppointmentId: null });
     const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [pendingReschedule, setPendingReschedule] = useState<{ appointment: Appointment; newDate: Date; newTime: string } | null>(null);
@@ -74,11 +77,11 @@ export const useCalendarDrag = ({ onAppointmentReschedule }: UseCalendarDragProp
         }
 
         logger.info('[useCalendarDrag] Drag iniciado com sucesso', { appointmentId: appointment.id }, 'useCalendarDrag');
-        setDragState({ appointment, isDragging: true });
+        setDragState({ appointment, isDragging: true, savingAppointmentId: null });
     }, [onAppointmentReschedule]);
 
     const handleDragEnd = useCallback(() => {
-        setDragState({ appointment: null, isDragging: false });
+        setDragState({ appointment: null, isDragging: false, savingAppointmentId: null });
         setDropTarget(null);
     }, []);
 
@@ -151,7 +154,7 @@ export const useCalendarDrag = ({ onAppointmentReschedule }: UseCalendarDragProp
         });
 
         // Limpar o estado de drag visualmente antes de abrir o modal para evitar conflitos de sobreposição (z-index)
-        setDragState({ appointment: null, isDragging: false });
+        setDragState({ appointment: null, isDragging: false, savingAppointmentId: null });
         setDropTarget(null);
 
         setShowConfirmDialog(true);
@@ -160,19 +163,41 @@ export const useCalendarDrag = ({ onAppointmentReschedule }: UseCalendarDragProp
     const handleConfirmReschedule = useCallback(async () => {
         if (!pendingReschedule || !onAppointmentReschedule) return;
 
+        const { appointment, newDate, newTime } = pendingReschedule;
+
+        // OPTIMISTIC UPDATE: Atualiza a UI imediatamente
+        // 1. Fecha o diálogo instantaneamente para melhor UX
+        setShowConfirmDialog(false);
+
+        // 2. Marca o appointment como "saving" para mostrar feedback visual
+        setDragState({ appointment: null, isDragging: false, savingAppointmentId: appointment.id });
+
+        // 3. Chama a atualização otimista (move o card visualmente imediatamente)
+        if (onOptimisticUpdate) {
+            onOptimisticUpdate(appointment.id, newDate, newTime);
+        }
+
         try {
-            await onAppointmentReschedule(
-                pendingReschedule.appointment,
-                pendingReschedule.newDate,
-                pendingReschedule.newTime
-            );
-            setShowConfirmDialog(false);
+            // 4. Faz a chamada API em background
+            await onAppointmentReschedule(appointment, newDate, newTime);
+
+            // 5. Limpa o estado de saving após sucesso
+            setDragState({ appointment: null, isDragging: false, savingAppointmentId: null });
             setPendingReschedule(null);
         } catch (error) {
             logger.error('Erro ao reagendar', { error }, 'useCalendarDrag');
-            // Manter o dialog aberto para que o usuário veja o erro
+
+            // 6. Reverte a atualização otimista em caso de erro
+            if (onRevertUpdate) {
+                onRevertUpdate(appointment.id);
+            }
+
+            setDragState({ appointment: null, isDragging: false, savingAppointmentId: null });
+
+            // 7. Reabre o diálogo para mostrar o erro
+            setShowConfirmDialog(true);
         }
-    }, [pendingReschedule, onAppointmentReschedule]);
+    }, [pendingReschedule, onAppointmentReschedule, onOptimisticUpdate, onRevertUpdate]);
 
     const handleCancelReschedule = useCallback(() => {
         setShowConfirmDialog(false);

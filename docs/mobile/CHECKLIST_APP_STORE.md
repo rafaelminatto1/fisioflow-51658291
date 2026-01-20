@@ -68,7 +68,7 @@ Este é um checklist completo para publicar o aplicativo **FisioFlow** na App St
 - Sem bordas arredondadas (iOS adiciona automaticamente)
 
 **Versões necessárias**:
-- [ ] Icon_1024x1024.png (principal)
+- [ ] Icon_1024x1024.avif (principal)
 
 **Ferramentas recomendadas**:
 - [AppIcon Generator](https://appicon.co/)
@@ -133,7 +133,7 @@ Este é um checklist completo para publicar o aplicativo **FisioFlow** na App St
 
 - [ ] Todas as screenshots criadas
 - [ ] Screenshots testadas em dispositivos reais
-- [ ] Nomes das screenshots: `iPhone_6.7_01.png`, etc.
+- [ ] Nomes das screenshots: `iPhone_6.7_01.avif`, etc.
 
 ### 3. App Preview Videos (Opcional)
 

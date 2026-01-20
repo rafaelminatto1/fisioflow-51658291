@@ -143,7 +143,7 @@ const ImageAnalysisDashboard = () => {
                                     <h3 className="text-xl font-semibold mb-2">Arraste e solte seus arquivos aqui</h3>
                                     <p className="text-sm text-muted-foreground max-w-sm mx-auto">
                                         Suporta Imagens DICOM (.dcm), Vídeos de Postura (.mp4, .webm)
-                                        e Imagens Clínicas (.jpg, .png).
+                                        e Imagens Clínicas (.avif, .avif).
                                     </p>
                                 </div>
                                 <div className="flex gap-4 mt-4">

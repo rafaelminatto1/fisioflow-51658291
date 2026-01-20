@@ -161,8 +161,8 @@ serve(async (req) => {
     const pushPayload = {
       title: payload.title,
       body: payload.body,
-      icon: '/icons/icon-192x192.png',
-      badge: '/icons/badge-72x72.png',
+      icon: '/icons/icon-192x192.avif',
+      badge: '/icons/badge-72x72.avif',
       data: {
         ...payload.data,
         notificationId: notificationRecord,

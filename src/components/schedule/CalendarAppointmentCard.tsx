@@ -2,7 +2,7 @@ import React, { memo, useState } from 'react';
 import { Appointment, AppointmentStatus } from '@/types/appointment';
 import { STATUS_CONFIG, CARD_SIZE_CONFIGS } from '@/lib/config/agenda';
 import { cn } from '@/lib/utils';
-import { MoreVertical, GripVertical, CheckCircle2, Circle, Clock } from 'lucide-react';
+import { MoreVertical, GripVertical, CheckCircle2, Circle, Clock, Loader2 } from 'lucide-react';
 import { AppointmentQuickView } from './AppointmentQuickView';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -17,6 +17,7 @@ interface CalendarAppointmentCardProps {
     style: React.CSSProperties;
     isDraggable: boolean;
     isDragging: boolean;
+    isSaving: boolean;
     onDragStart: (e: React.DragEvent, appointment: Appointment) => void;
     onDragEnd: () => void;
     onEditAppointment?: (appointment: Appointment) => void;
@@ -52,8 +53,8 @@ const getStatusStyles = (status: string) => {
             border: 'border-emerald-500',
             bg: 'bg-emerald-100/90 dark:bg-emerald-500/20',
             hoverBg: 'hover:bg-emerald-200/90 dark:hover:bg-emerald-500/30',
-            text: 'text-emerald-900 dark:text-emerald-50',
-            subtext: 'text-emerald-800/80 dark:text-emerald-200/80',
+            text: 'text-emerald-900 dark:text-emerald-400',
+            subtext: 'text-emerald-800/80 dark:text-emerald-300/80',
             accent: 'bg-emerald-600',
             indicator: 'text-emerald-700'
         },
@@ -61,8 +62,8 @@ const getStatusStyles = (status: string) => {
             border: 'border-blue-500',
             bg: 'bg-blue-100/90 dark:bg-blue-500/20',
             hoverBg: 'hover:bg-blue-200/90 dark:hover:bg-blue-500/30',
-            text: 'text-blue-900 dark:text-blue-50',
-            subtext: 'text-blue-800/80 dark:text-blue-200/80',
+            text: 'text-blue-900 dark:text-blue-400',
+            subtext: 'text-blue-800/80 dark:text-blue-300/80',
             accent: 'bg-blue-600',
             indicator: 'text-blue-700'
         },
@@ -70,8 +71,8 @@ const getStatusStyles = (status: string) => {
             border: 'border-amber-500',
             bg: 'bg-amber-100/90 dark:bg-amber-500/20',
             hoverBg: 'hover:bg-amber-200/90 dark:hover:bg-amber-500/30',
-            text: 'text-amber-900 dark:text-amber-50',
-            subtext: 'text-amber-800/80 dark:text-amber-200/80',
+            text: 'text-amber-900 dark:text-amber-400',
+            subtext: 'text-amber-800/80 dark:text-amber-300/80',
             accent: 'bg-amber-600',
             indicator: 'text-amber-700'
         },
@@ -80,8 +81,8 @@ const getStatusStyles = (status: string) => {
             border: 'border-red-500',
             bg: 'bg-red-100/90 dark:bg-red-500/20',
             hoverBg: 'hover:bg-red-200/90 dark:hover:bg-red-500/30',
-            text: 'text-red-900 dark:text-red-50',
-            subtext: 'text-red-800/80 dark:text-red-200/80',
+            text: 'text-red-900 dark:text-red-400',
+            subtext: 'text-red-800/80 dark:text-red-300/80',
             accent: 'bg-red-600',
             indicator: 'text-red-700'
         },
@@ -89,8 +90,8 @@ const getStatusStyles = (status: string) => {
             border: 'border-red-500', // Same vibrant red
             bg: 'bg-red-100/90 dark:bg-red-500/20',
             hoverBg: 'hover:bg-red-200/90 dark:hover:bg-red-500/30',
-            text: 'text-red-900 dark:text-red-50',
-            subtext: 'text-red-800/80 dark:text-red-200/80',
+            text: 'text-red-900 dark:text-red-400',
+            subtext: 'text-red-800/80 dark:text-red-300/80',
             accent: 'bg-red-600',
             indicator: 'text-red-700'
         },
@@ -98,8 +99,8 @@ const getStatusStyles = (status: string) => {
             border: 'border-indigo-500',
             bg: 'bg-indigo-100/90 dark:bg-indigo-500/20',
             hoverBg: 'hover:bg-indigo-200/90 dark:hover:bg-indigo-500/30',
-            text: 'text-indigo-900 dark:text-indigo-50',
-            subtext: 'text-indigo-800/80 dark:text-indigo-200/80',
+            text: 'text-indigo-900 dark:text-indigo-400',
+            subtext: 'text-indigo-800/80 dark:text-indigo-300/80',
             accent: 'bg-indigo-600',
             indicator: 'text-indigo-700'
         },
@@ -107,8 +108,8 @@ const getStatusStyles = (status: string) => {
             border: 'border-violet-500',
             bg: 'bg-violet-100/90 dark:bg-violet-500/20',
             hoverBg: 'hover:bg-violet-200/90 dark:hover:bg-violet-500/30',
-            text: 'text-violet-900 dark:text-violet-50',
-            subtext: 'text-violet-800/80 dark:text-violet-200/80',
+            text: 'text-violet-900 dark:text-violet-400',
+            subtext: 'text-violet-800/80 dark:text-violet-300/80',
             accent: 'bg-violet-600',
             indicator: 'text-violet-700'
         },
@@ -116,8 +117,8 @@ const getStatusStyles = (status: string) => {
             border: 'border-slate-500',
             bg: 'bg-slate-100/90 dark:bg-slate-500/20',
             hoverBg: 'hover:bg-slate-200/90 dark:hover:bg-slate-500/30',
-            text: 'text-slate-900 dark:text-slate-50',
-            subtext: 'text-slate-700/80 dark:text-slate-300/80',
+            text: 'text-slate-900 dark:text-slate-300',
+            subtext: 'text-slate-700/80 dark:text-slate-400/80',
             accent: 'bg-slate-600',
             indicator: 'text-slate-700'
         }
@@ -130,6 +131,7 @@ const CalendarAppointmentCardBase = ({
     style,
     isDraggable,
     isDragging,
+    isSaving,
     onDragStart,
     onDragEnd,
     onEditAppointment,
@@ -168,7 +170,6 @@ const CalendarAppointmentCardBase = ({
     const draggable = isDraggable && !selectionMode && !isTouch;
 
     const handleClick = (e: React.MouseEvent) => {
-        // Always stop propagation to prevent parent handlers (like calendar slot click) from firing
         e.stopPropagation();
 
         if (selectionMode && onToggleSelection) {
@@ -176,23 +177,48 @@ const CalendarAppointmentCardBase = ({
             return;
         }
 
-        // On touch devices (Mobile/iPad), we trigger the popover manually via click
-        // This ensures reliable opening even if drag/drop logic would otherwise interfere
         if (isTouch) {
             onOpenPopover(appointment.id);
         }
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (selectionMode && onToggleSelection) {
+                onToggleSelection(appointment.id);
+            } else {
+                onOpenPopover(appointment.id);
+            }
+        }
+    };
+
     const cardContent = (
         <motion.div
-            layout // Smooth layout changes
+            layout
+            layoutId={isSaving ? `${appointment.id}-saving` : appointment.id}
+            transition={{
+                layout: {
+                    type: "spring",
+                    stiffness: 350,
+                    damping: 30
+                },
+                opacity: { duration: 0.15 },
+                scale: { duration: 0.15 }
+            }}
             initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            whileHover={{ scale: 1.005, zIndex: 20 }}
+            animate={{
+                opacity: isDragging ? 0.6 : 1,
+                scale: isDragging ? 0.95 : 1
+            }}
+            whileHover={{ scale: isTouch ? 1 : 1.005, zIndex: 20 }}
+            whileTap={{ scale: isTouch ? 0.97 : 1 }}
             draggable={draggable}
             onDragStart={(e) => {
                 if (draggable) {
-                    onOpenPopover(null); // Close popover if open
+                    onOpenPopover(null);
                     onDragStart(e as any, appointment);
                 }
             }}
@@ -206,23 +232,32 @@ const CalendarAppointmentCardBase = ({
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             onClick={handleClick}
+            onKeyDown={handleKeyDown}
             className={cn(
                 "absolute rounded-md flex flex-col overflow-hidden transition-colors border",
                 "shadow-xs hover:shadow-md cursor-pointer",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                 statusStyles.bg,
                 statusStyles.hoverBg,
                 statusStyles.border,
                 draggable && "cursor-grab active:cursor-grabbing",
-                isDragging && "opacity-60 scale-95 z-50 ring-2 ring-blue-400 grayscale",
+                isDragging && "z-50 ring-2 ring-blue-400 grayscale",
+                isSaving && "animate-pulse-subtle ring-2 ring-amber-400/60 ring-offset-1 z-30",
                 !isDragging && isHovered && !selectionMode && "ring-1 ring-black/10 dark:ring-white/10",
-                isDropTarget && !isDragging && "ring-2 ring-primary/60 ring-offset-1 shadow-lg scale-[1.02] z-25",
-                selectionMode && "hover:opacity-90",
-                isSelected && "ring-2 ring-primary ring-offset-1 z-40"
+                isDropTarget && !isDragging && "ring-2 ring-primary/60 ring-offset-1 shadow-lg z-25",
+                selectionMode && "hover:opacity-90 active:scale-95",
+                isSelected && "ring-2 ring-primary ring-offset-1 z-40",
+                isTouch && "active:scale-95 transition-transform"
             )}
             style={{
                 ...style,
-                backgroundColor: undefined, // Override calculator styles
+                backgroundColor: undefined,
             }}
+            role="button"
+            tabIndex={0}
+            aria-label={`${appointment.patientName} - ${normalizeTime(appointment.time)} - ${appointment.status}`}
+            aria-selected={isSelected}
+            aria-pressed={isSelected}
         >
             <div className={cn(
                 "flex flex-col h-full relative",
@@ -261,7 +296,11 @@ const CalendarAppointmentCardBase = ({
                             </div>
 
                             {/* Selection or Icon */}
-                            {selectionMode ? (
+                            {isSaving ? (
+                                <div className="flex-shrink-0">
+                                    <Loader2 className="w-3.5 h-3.5 text-amber-500 animate-spin" />
+                                </div>
+                            ) : selectionMode ? (
                                 <div className="flex-shrink-0">
                                     {isSelected ? (
                                         <CheckCircle2 className="w-3.5 h-3.5 text-primary fill-background" />
@@ -379,6 +418,7 @@ function appointmentCardAreEqual(prev: CalendarAppointmentCardProps, next: Calen
     if (
         prev.isDragging !== next.isDragging ||
         prev.isDraggable !== next.isDraggable ||
+        prev.isSaving !== next.isSaving ||
         prev.isDropTarget !== next.isDropTarget ||
         prev.selectionMode !== next.selectionMode ||
         prev.isSelected !== next.isSelected ||

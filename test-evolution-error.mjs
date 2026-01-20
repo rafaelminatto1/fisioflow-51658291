@@ -45,8 +45,8 @@ import { chromium } from 'playwright';
     await page.waitForTimeout(2000);
 
     // Screenshot da agenda
-    await page.screenshot({ path: 'screenshots/test-agenda.png' });
-    console.log('📸 Screenshot salvo: screenshots/test-agenda.png');
+    await page.screenshot({ path: 'screenshots/test-agenda.avif' });
+    console.log('📸 Screenshot salvo: screenshots/test-agenda.avif');
 
     // Procurar botões "Iniciar"
     console.log('5. Procurando botão "Iniciar Atendimento"...');
@@ -65,8 +65,8 @@ import { chromium } from 'playwright';
       console.log(`6. URL após clique: ${currentUrl}`);
 
       // Screenshot após clicar
-      await page.screenshot({ path: 'screenshots/test-after-click.png', fullPage: true });
-      console.log('📸 Screenshot salvo: screenshots/test-after-click.png');
+      await page.screenshot({ path: 'screenshots/test-after-click.avif', fullPage: true });
+      console.log('📸 Screenshot salvo: screenshots/test-after-click.avif');
 
       // Verificar se há erro
       const hasError = await page.locator('text=Ops! Algo deu errado, text=INFO DEV').count();
@@ -86,7 +86,7 @@ import { chromium } from 'playwright';
 
   } catch (error) {
     console.error('\n❌ ERRO NO TESTE:', error.message);
-    await page.screenshot({ path: 'screenshots/test-error.png' });
+    await page.screenshot({ path: 'screenshots/test-error.avif' });
   } finally {
     await browser.close();
   }

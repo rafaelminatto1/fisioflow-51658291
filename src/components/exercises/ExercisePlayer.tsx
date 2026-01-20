@@ -3,9 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Play, Plus, Heart, Share2, ExternalLink, 
-  Clock, Repeat, Dumbbell, FileText, Video, Image as ImageIcon 
+import { OptimizedImage } from '@/components/ui/OptimizedImage';
+import {
+  Play, Plus, Heart, Share2, ExternalLink,
+  Clock, Repeat, Dumbbell, FileText, Video, Image as ImageIcon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';
@@ -203,10 +204,11 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
           {exercise.image_url && (
             <TabsContent value="image" className="mt-4">
               <div className="rounded-lg overflow-hidden bg-muted">
-                <img 
-                  src={exercise.image_url} 
-                  alt={exercise.name}
-                  className="w-full max-h-[500px] object-contain"
+                <OptimizedImage
+                  src={exercise.image_url}
+                  alt={exercise.name || ''}
+                  className="w-full max-h-[500px]"
+                  aspectRatio="auto"
                 />
               </div>
             </TabsContent>

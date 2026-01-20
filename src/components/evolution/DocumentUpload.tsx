@@ -135,7 +135,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({ patientId }) => 
                   <Input
                     id="file"
                     type="file"
-                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    accept=".pdf,.avif,.avif,.avif,.doc,.docx"
                     onChange={handleFileSelect}
                   />
                   {selectedFile && (

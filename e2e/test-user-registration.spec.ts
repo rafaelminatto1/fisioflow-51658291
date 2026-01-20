@@ -16,7 +16,7 @@ test.describe('Registro de Usuário - Produção', () => {
     await page.waitForLoadState('networkidle');
 
     // Capturar screenshot para verificar estado
-    await page.screenshot({ path: 'screenshots/auth-page.png' });
+    await page.screenshot({ path: 'screenshots/auth-page.avif' });
 
     // Verificar se formulário de login está visível
     await expect(page.locator('input[type="email"]')).toBeVisible();
@@ -66,7 +66,7 @@ test.describe('Registro de Usuário - Produção', () => {
     await page.fill('input#register-confirm-password', randomPassword);
 
     // Capturar screenshot antes de submeter
-    await page.screenshot({ path: 'screenshots/before-register.png' });
+    await page.screenshot({ path: 'screenshots/before-register.avif' });
 
     // Submeter formulário
     await page.click('button:has-text("Criar Conta Gratuita")');
@@ -75,7 +75,7 @@ test.describe('Registro de Usuário - Produção', () => {
     await page.waitForTimeout(5000);
 
     // Capturar screenshot após
-    await page.screenshot({ path: 'screenshots/after-register.png' });
+    await page.screenshot({ path: 'screenshots/after-register.avif' });
 
     // Verificar se houve mensagem (sucesso ou erro)
     const pageContent = await page.content();
@@ -208,6 +208,6 @@ test.describe('Registro de Usuário - Produção', () => {
     }
 
     // Capturar screenshot final
-    await page.screenshot({ path: 'screenshots/after-login.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/after-login.avif', fullPage: true });
   });
 });

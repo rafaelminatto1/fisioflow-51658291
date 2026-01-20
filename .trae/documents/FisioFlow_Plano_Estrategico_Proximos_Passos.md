@@ -236,7 +236,7 @@ vite-plugin-pwa configuration
   "start_url": "/",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "icon-192.avif",
       "sizes": "192x192",
       "type": "image/png"
     }
