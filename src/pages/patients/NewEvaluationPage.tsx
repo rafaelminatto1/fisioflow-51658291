@@ -8,10 +8,10 @@ import { PatientDashboard360 } from '@/components/patient/dashboard/PatientDashb
 import { PhysicalExamForm } from '@/components/patient/forms/PhysicalExamForm';
 import { PainMapManager } from '@/components/evolution/PainMapManager';
 import {
-  EvaluationTemplateSelector,
-  DynamicFieldRenderer,
-  AddCustomFieldDialog,
-  SaveAsTemplateDialog,
+    EvaluationTemplateSelector,
+    DynamicFieldRenderer,
+    AddCustomFieldDialog,
+    SaveAsTemplateDialog,
 } from '@/components/evaluation';
 import type { EvaluationTemplate, TemplateField } from '@/components/evaluation';
 import { Button } from '@/components/ui/button';
@@ -58,7 +58,7 @@ export default function NewEvaluationPage() {
                 supabase.from('patient_goals').select('*').eq('patient_id', patientId),
                 supabase.from('patient_pathologies').select('*').eq('patient_id', patientId),
                 supabase.from('patient_surgeries').select('*').eq('patient_id', patientId),
-                supabase.from('appointments').select('*').eq('patient_id', patientId).order('appointment_date', { ascending: false }).limit(5)
+                supabase.from('appointments').select('*').eq('patient_id', patientId).order('appointment_date', { ascending: false }).limit(20)
             ]);
 
             if (patientRes.error) throw patientRes.error;
@@ -212,6 +212,7 @@ export default function NewEvaluationPage() {
                                 <PatientDashboard360
                                     patient={patient}
                                     appointments={patient.appointments}
+                                    currentAppointmentId={appointmentId || undefined}
                                     activeGoals={patient.goals?.filter((g: { status?: string }) => g.status === 'em_andamento') || []}
                                     activePathologies={patient.pathologies?.filter((p: { status?: string }) => p.status !== 'resolvido') || []}
                                     surgeries={patient.surgeries || []}

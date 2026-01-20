@@ -138,3 +138,30 @@ export interface WeeklyCalendarData {
   appointments: Appointment[];
   timeSlots: string[]; // Array of time slots (e.g., ['07:00', '07:30', ...])
 }
+
+// Card size options for calendar display
+export type CardSize = 'extra_small' | 'small' | 'medium' | 'large';
+
+// Card size configuration
+export interface CardSizeConfig {
+  value: CardSize;
+  label: string;
+  description: string;
+  icon: string;
+  // Font sizes (px)
+  timeFontSize: number;
+  nameFontSize: number;
+  typeFontSize: number;
+  // Padding (rem)
+  padding: string;
+  // Avatar size (px)
+  avatarSize: number;
+  // Show avatar
+  showAvatar: boolean;
+  // Show type
+  showType: boolean;
+  // Show status icon
+  showStatusIcon: boolean;
+  // Height multiplier (0.5 to 2.0) - affects card height in calendar
+  heightMultiplier: number;
+}
