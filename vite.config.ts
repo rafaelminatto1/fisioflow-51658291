@@ -19,15 +19,44 @@ function htmlPlugin(appVersion: string, buildTime: string, isProduction: boolean
         .replace(/%BUILD_TIME%/g, buildTime);
 
       // Em produção, move react-vendor para ser o primeiro script carregado
-      // Isso garante que o scheduler esteja disponível antes de outros vendors
+      // Isso garante que o scheduler e outras dependências críticas do React estejam disponíveis
+      // antes de outros vendors que dependem deles (como @radix-ui, framer-motion, etc)
       if (isProduction) {
+        // Prioridade 1: React + scheduler (DEVE ser sempre o primeiro)
         const reactVendorMatch = transformed.match(/<script type="module"[^>]*src="\/assets\/js\/react-vendor-[^"]*"[^>]*><\/script>/);
+        // Prioridade 2: React Router (depende de React)
+        const routerVendorMatch = transformed.match(/<script type="module"[^>]*src="\/assets\/js\/router-vendor-[^"]*"[^>]*><\/script>/);
+        // Prioridade 3: Query library (React Query depende de React)
+        const queryVendorMatch = transformed.match(/<script type="module"[^>]*src="\/assets\/js\/query-vendor-[^"]*"[^>]*><\/script>/);
+        // Prioridade 4: Supabase client (necessário para inicialização)
+        const supabaseVendorMatch = transformed.match(/<script type="module"[^>]*src="\/assets\/js\/supabase-vendor-[^"]*"[^>]*><\/script>/);
+
+        const priorityScripts: string[] = [];
+
         if (reactVendorMatch) {
-          const reactScript = reactVendorMatch[0];
-          // Remove o script da posição original
-          transformed = transformed.replace(reactScript, '');
-          // Insere o script do React logo após o <head>
-          transformed = transformed.replace('<head>', `<head>\n    ${reactScript}`);
+          priorityScripts.push(reactVendorMatch[0]);
+          transformed = transformed.replace(reactVendorMatch[0], '');
+        }
+
+        if (routerVendorMatch) {
+          priorityScripts.push(routerVendorMatch[0]);
+          transformed = transformed.replace(routerVendorMatch[0], '');
+        }
+
+        if (queryVendorMatch) {
+          priorityScripts.push(queryVendorMatch[0]);
+          transformed = transformed.replace(queryVendorMatch[0], '');
+        }
+
+        if (supabaseVendorMatch) {
+          priorityScripts.push(supabaseVendorMatch[0]);
+          transformed = transformed.replace(supabaseVendorMatch[0], '');
+        }
+
+        // Insere os scripts prioritários logo após o <head>, em ordem de dependência
+        if (priorityScripts.length > 0) {
+          const scriptsHtml = priorityScripts.join('\n    ');
+          transformed = transformed.replace('<head>', `<head>\n    ${scriptsHtml}`);
         }
       }
 
@@ -215,21 +244,72 @@ export default defineConfig(({ mode }) => {
           assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
           manualChunks: (id) => {
             if (id.includes('node_modules')) {
-              // Agrupamento mais granular para melhor caching
-              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router') || id.includes('scheduler')) return 'react-vendor';
-              if (id.includes('@supabase')) return 'supabase-vendor';
-              if (id.includes('@tanstack/react-query')) return 'query-vendor';
-              if (id.includes('@radix-ui')) return 'ui-vendor';
-              if (id.includes('recharts')) return 'chart-vendor';
-              if (id.includes('date-fns')) return 'date-vendor';
-              if (id.includes('framer-motion')) return 'animation-vendor';
-              if (id.includes('jspdf') || id.includes('@react-pdf')) return 'pdf-vendor';
-              if (id.includes('xlsx')) return 'xlsx-vendor';
-              if (id.includes('@cornerstonejs')) return 'cornerstone-vendor';
-              if (id.includes('@mediapipe')) return 'mediapipe-vendor';
-              if (id.includes('konva')) return 'konva-vendor';
-              if (id.includes('lucide-react')) return 'icons-vendor';
-              if (id.includes('zustand')) return 'zustand-vendor';
+              // CRITICAL: React + Scheduler deve ser sempre o primeiro chunk carregado
+              // Scheduler é necessário para React 18 funcionar corretamente
+              if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
+                return 'react-vendor';
+              }
+              // Router depende de React, carregar após
+              if (id.includes('react-router')) {
+                return 'router-vendor';
+              }
+              // Bibliotecas de consulta que dependem de React
+              if (id.includes('@tanstack/react-query')) {
+                return 'query-vendor';
+              }
+              // Supabase para inicialização
+              if (id.includes('@supabase')) {
+                return 'supabase-vendor';
+              }
+              // Componentes UI que dependem de React
+              if (id.includes('@radix-ui')) {
+                return 'ui-vendor';
+              }
+              // Gráficos
+              if (id.includes('recharts')) {
+                return 'chart-vendor';
+              }
+              // Utilitários de data
+              if (id.includes('date-fns')) {
+                return 'date-vendor';
+              }
+              // Animações - pode ser lazy loaded
+              if (id.includes('framer-motion') || id.includes('motion')) {
+                return 'animation-vendor';
+              }
+              // Bibliotecas PDF
+              if (id.includes('jspdf') || id.includes('@react-pdf')) {
+                return 'pdf-vendor';
+              }
+              // Excel
+              if (id.includes('xlsx')) {
+                return 'xlsx-vendor';
+              }
+              // Cornerstone DICOM
+              if (id.includes('@cornerstonejs')) {
+                return 'cornerstone-vendor';
+              }
+              // MediaPipe
+              if (id.includes('@mediapipe')) {
+                return 'mediapipe-vendor';
+              }
+              // Konva canvas
+              if (id.includes('konva')) {
+                return 'konva-vendor';
+              }
+              // Ícones
+              if (id.includes('lucide-react')) {
+                return 'icons-vendor';
+              }
+              // State management
+              if (id.includes('zustand')) {
+                return 'zustand-vendor';
+              }
+              // Bibliotecas de drag & drop
+              if (id.includes('@dnd-kit') || id.includes('@hello-pangea/dnd')) {
+                return 'dnd-vendor';
+              }
+              // Demais dependências
               return 'vendor';
             }
           },
@@ -244,23 +324,37 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: {
       holdUntilCrawlEnd: false,
       include: [
+        // React core - CRITICAL: deve ser sempre o primeiro
         'react',
         'react-dom/client',
         'scheduler',
+        // React libraries que dependem do scheduler
         'react-router-dom',
-        '@supabase/supabase-js',
         '@tanstack/react-query',
-        'date-fns',
-        'zod',
+        // Bibliotecas UI que usam React hooks internamente
+        '@radix-ui/react-dialog',
+        '@radix-ui/react-dropdown-menu',
+        '@radix-ui/react-select',
+        '@radix-ui/react-tabs',
+        // Bibliotecas de animação que dependem de React
         'framer-motion',
+        'motion/react', // Nova versão do framer-motion
+        // Utilitários pesados que se beneficiam de pre-bundling
+        'date-fns',
+        'date-fns/locale', // Locale imports
+        'zod',
         'recharts',
         'lucide-react',
         'lodash-es',
+        // Bibliotecas gráficas
         'konva',
         'react-konva',
         'react-grid-layout',
         'react-draggable',
         'react-resizable',
+        // Supabase
+        '@supabase/supabase-js',
+        '@supabase/auth-helpers-react',
       ],
       exclude: [
         '@cornerstonejs/dicom-image-loader',
