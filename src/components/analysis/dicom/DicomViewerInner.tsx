@@ -11,6 +11,7 @@ import {
     StackViewport,
     getRenderingEngine,
 } from '@cornerstonejs/core';
+import { supabase } from '@/integrations/supabase/client';
 import {
     ToolGroupManager,
     PanTool,
@@ -131,7 +132,6 @@ export const DicomViewerInner: React.FC<DicomViewerProps> = ({
                 console.warn("DICOM Loader disabled for build verification");
             } else if (studyInstanceUid && seriesInstanceUid && wadoUrl) {
                 try {
-                    const { supabase } = await import('@/integrations/supabase/client');
                     const path = `studies/${studyInstanceUid}/series/${seriesInstanceUid}/instances`;
                     const { data: instances, error } = await supabase.functions.invoke('dicom-proxy', {
                         method: 'GET',

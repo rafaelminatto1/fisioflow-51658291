@@ -48,7 +48,7 @@ export function AdvancedReportGenerator() {
     const startDate = dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : null;
     const endDate = dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : null;
 
-    let query = supabase.from('appointments').select('*, patients(name, email, phone)');
+    let query = supabase.from('appointments').select('*, patients(full_name, email, phone)');
 
     if (startDate) query = query.gte('appointment_date', startDate);
     if (endDate) query = query.lte('appointment_date', endDate);
@@ -62,7 +62,7 @@ export function AdvancedReportGenerator() {
   // Define interface for appointment data from database
   interface AppointmentData {
     appointment_date: string | Date;
-    patients?: { name: string; email?: string; phone?: string } | null;
+    patients?: { full_name: string; email?: string; phone?: string } | null;
     type?: string;
     status?: string;
     payment_amount?: number;
@@ -101,7 +101,7 @@ export function AdvancedReportGenerator() {
     if (sections.find(s => s.id === 'details')?.enabled) {
       const tableData = formattedData.map(d => [
         format(new Date(d.appointment_date), 'dd/MM/yyyy'),
-        d.patients?.name || 'N/A',
+        d.patients?.full_name || 'N/A',
         d.type || 'N/A',
         d.status || 'N/A',
         `R$ ${d.payment_amount?.toFixed(2) || '0,00'}`,
@@ -124,7 +124,7 @@ export function AdvancedReportGenerator() {
     const headers = ['Data', 'Paciente', 'Email', 'Telefone', 'Tipo', 'Status', 'Valor'];
     const rows = formattedData.map(d => [
       format(new Date(d.appointment_date), 'dd/MM/yyyy'),
-      d.patients?.name || '',
+      d.patients?.full_name || '',
       d.patients?.email || '',
       d.patients?.phone || '',
       d.type || '',

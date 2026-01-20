@@ -6,8 +6,9 @@ import { NotificationSettingsManager } from '@/components/schedule/settings/Noti
 import { BlockedTimesManager } from '@/components/schedule/settings/BlockedTimesManager';
 import { StatusColorManager } from '@/components/schedule/settings/StatusColorManager';
 import { StatusColorSettingsModal } from '@/components/schedule/settings/StatusColorSettingsModal';
+import { CardSizeManager } from '@/components/schedule/settings/CardSizeManager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Clock, Users, Bell, AlertTriangle, CalendarOff, Palette } from 'lucide-react';
+import { Settings, Clock, Users, Bell, AlertTriangle, CalendarOff, Palette, Frame } from 'lucide-react';
 import { useState } from 'react';
 
 export default function ScheduleSettings() {
@@ -25,7 +26,7 @@ export default function ScheduleSettings() {
         </div>
 
         <Tabs defaultValue="capacity" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 h-auto gap-2 bg-transparent p-0">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-7 h-auto gap-2 bg-transparent p-0">
             <TabsTrigger
               value="capacity"
               className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center gap-2"
@@ -68,6 +69,13 @@ export default function ScheduleSettings() {
               <Palette className="h-4 w-4" />
               <span className="hidden sm:inline">Status</span>
             </TabsTrigger>
+            <TabsTrigger
+              value="cardsize"
+              className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex items-center gap-2"
+            >
+              <Frame className="h-4 w-4" />
+              <span className="hidden sm:inline">Tamanho</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="capacity">
@@ -92,6 +100,10 @@ export default function ScheduleSettings() {
 
           <TabsContent value="status">
             <StatusColorManager />
+          </TabsContent>
+
+          <TabsContent value="cardsize">
+            <CardSizeManager />
           </TabsContent>
         </Tabs>
       </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -57,9 +58,6 @@ export function CreateTemplateFromSelectionModal({
 
             if (newTemplate?.id) {
                 // 2. Add Selected Exercises to Template
-                // We need to import supabase here.
-                const { supabase } = await import('@/integrations/supabase/client');
-
                 const items = selectedExerciseIds.map((exerciseId, index) => ({
                     template_id: newTemplate.id,
                     exercise_id: exerciseId,

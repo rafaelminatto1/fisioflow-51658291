@@ -1,4 +1,4 @@
-import type { StatusConfig, RolePermissions, UserRole, SessionStatus } from "@/types/agenda";
+import type { StatusConfig, RolePermissions, UserRole, SessionStatus, CardSize, CardSizeConfig } from "@/types/agenda";
 
 // Status configuration for visual representation and allowed actions
 import { CheckCircle, Clock, AlertCircle, XCircle } from 'lucide-react';
@@ -390,3 +390,69 @@ export const calculateSessionDuration = (startTime: string, endTime: string): nu
 
   return endMinutes - startMinutes;
 };
+
+// Card size configurations for calendar display
+export const CARD_SIZE_CONFIGS: Record<CardSize, CardSizeConfig> = {
+  extra_small: {
+    value: 'extra_small',
+    label: 'Extra Pequeno',
+    description: 'Cards compactos - apenas hora e nome',
+    icon: 'XS',
+    timeFontSize: 8,
+    nameFontSize: 9,
+    typeFontSize: 0,
+    padding: '0.25rem',
+    avatarSize: 0,
+    showAvatar: false,
+    showType: false,
+    showStatusIcon: false,
+    heightMultiplier: 1.0,
+  },
+  small: {
+    value: 'small',
+    label: 'Pequeno',
+    description: 'Cards pequenos - essencial',
+    icon: 'S',
+    timeFontSize: 9,
+    nameFontSize: 10,
+    typeFontSize: 0,
+    padding: '0.5rem',
+    avatarSize: 0,
+    showAvatar: false,
+    showType: false,
+    showStatusIcon: false,
+    heightMultiplier: 1.0,
+  },
+  medium: {
+    value: 'medium',
+    label: 'Médio',
+    description: 'Cards médios - equilibrado',
+    icon: 'M',
+    timeFontSize: 10,
+    nameFontSize: 11,
+    typeFontSize: 9,
+    padding: '0.75rem',
+    avatarSize: 16,
+    showAvatar: true,
+    showType: true,
+    showStatusIcon: true,
+    heightMultiplier: 1.0,
+  },
+  large: {
+    value: 'large',
+    label: 'Grande',
+    description: 'Cards grandes - todos os detalhes',
+    icon: 'L',
+    timeFontSize: 11,
+    nameFontSize: 12,
+    typeFontSize: 10,
+    padding: '1rem',
+    avatarSize: 20,
+    showAvatar: true,
+    showType: true,
+    showStatusIcon: true,
+    heightMultiplier: 1.0,
+  },
+};
+
+export const DEFAULT_CARD_SIZE: CardSize = 'medium';

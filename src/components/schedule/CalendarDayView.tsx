@@ -6,6 +6,8 @@ import { cn } from '@/lib/utils';
 import { Appointment } from '@/types/appointment';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { CalendarAppointmentCard } from './CalendarAppointmentCard';
+import { useCardSize } from '@/hooks/useCardSize';
+import { useDynamicSlotHeight } from '@/lib/calendar/dynamicConstants';
 
 interface CalendarDayViewProps {
     currentDate: Date;
@@ -70,6 +72,12 @@ const CalendarDayView = memo(({
     selectedIds = new Set(),
     onToggleSelection
 }: CalendarDayViewProps) => {
+    // Get card height multiplier from user preferences
+    const { heightMultiplier } = useCardSize();
+    const slotHeight = useDynamicSlotHeight();
+
+    // Calculate mobile slot height (48px is 96% of 50px desktop)
+    const slotHeightMobile = Math.round(slotHeight * 0.96);
 
     // Logic inconsistency fix: usage of helper passed from parent
     const dayAppointments = getAppointmentsForDate(currentDate);
@@ -106,8 +114,13 @@ const CalendarDayView = memo(({
                     <Clock className="h-4 md:h-5 w-4 md:w-5 text-muted-foreground" />
                 </div>
                 <div className="flex-1 overflow-hidden">
-                    {timeSlots.map(time => (
-                        <div key={time} className="h-12 md:h-[50px] border-b border-border/50 p-1 md:p-3 text-[11px] md:text-sm font-medium text-muted-foreground flex items-center justify-center md:justify-start" role="listitem">
+                    {timeSlots.map((time, slotIndex) => (
+                        <div
+                            key={time}
+                            className="border-b border-border/50 p-1 md:p-3 text-[11px] md:text-sm font-medium text-muted-foreground flex items-center justify-center md:justify-start"
+                            role="listitem"
+                            style={{ height: `${slotHeightMobile}px`, minHeight: `${slotHeightMobile}px` }}
+                        >
                             {time}
                         </div>
                     ))}
@@ -126,7 +139,7 @@ const CalendarDayView = memo(({
 
                 {/* Time slots */}
                 <div className="relative">
-                    {timeSlots.map(time => {
+                    {timeSlots.map((time, slotIndex) => {
                         const hour = parseInt(time.split(':')[0]);
                         const isCurrentHour = hour === currentTime.getHours();
                         const isDropTarget = dropTarget && isSameDay(dropTarget.date, currentDate) && dropTarget.time === time;
@@ -152,6 +165,7 @@ const CalendarDayView = memo(({
                                                 // Show drag hint when dragging
                                                 dragState.isDragging && !blocked && !isDropTarget && "bg-primary/5"
                                             )}
+                                            style={{ height: `${slotHeightMobile}px`, minHeight: `${slotHeightMobile}px` }}
                                             onClick={() => !blocked && onTimeSlotClick(currentDate, time)}
                                             onDragOver={(e) => !blocked && handleDragOver(e, currentDate, time)}
                                             onDragLeave={handleDragLeave}
@@ -243,12 +257,12 @@ const CalendarDayView = memo(({
                             const widthPercent = stackCount > 1 ? (100 / stackCount) - 2 : 100;
                             const leftOffset = stackCount > 1 ? (stackIndex * (100 / stackCount)) + 1 : 0;
 
-                            // Calculate height based on duration (each slot = 50px desktop, 48px mobile, each slot = 30min)
+                            // Calculate height based on duration using dynamic slot height
                             const duration = apt.duration || 60;
-                            const heightMobile = (duration / 30) * 48;
-                            const heightDesktop = (duration / 30) * 50;
-                            const topMobile = slotIndex * 48;
-                            const topDesktop = slotIndex * 50;
+                            const heightMobile = (duration / 30) * slotHeightMobile;
+                            const heightDesktop = (duration / 30) * slotHeight;
+                            const topMobile = slotIndex * slotHeightMobile;
+                            const topDesktop = slotIndex * slotHeight;
                             const isDraggable = !!onAppointmentReschedule;
                             const isDraggingThis = dragState.isDragging && dragState.appointment?.id === apt.id;
 

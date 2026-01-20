@@ -1,6 +1,6 @@
 import React, { memo, useState } from 'react';
 import { Appointment, AppointmentStatus } from '@/types/appointment';
-import { STATUS_CONFIG } from '@/lib/config/agenda';
+import { STATUS_CONFIG, CARD_SIZE_CONFIGS } from '@/lib/config/agenda';
 import { cn } from '@/lib/utils';
 import { MoreVertical, GripVertical, CheckCircle2, Circle, Clock } from 'lucide-react';
 import { AppointmentQuickView } from './AppointmentQuickView';
@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useIsTouch } from '@/hooks/use-touch';
+import { useCardSize } from '@/hooks/useCardSize';
 
 interface CalendarAppointmentCardProps {
     appointment: Appointment;
@@ -145,11 +146,15 @@ const CalendarAppointmentCardBase = ({
     const isMobile = useIsMobile();
     const isTouch = useIsTouch();
     const [isHovered, setIsHovered] = useState(false);
+    const { cardSize } = useCardSize();
 
     // Status visual config
     const statusStyles = getStatusStyles(appointment.status);
     const config = STATUS_CONFIG[appointment.status as AppointmentStatus] || STATUS_CONFIG.agendado;
     const StatusIcon = config.icon;
+
+    // Get card size configuration
+    const sizeConfig = CARD_SIZE_CONFIGS[cardSize];
 
     const duration = appointment.duration || 60;
     const isSmall = duration <= 30; // 30 min or less
@@ -221,7 +226,8 @@ const CalendarAppointmentCardBase = ({
         >
             <div className={cn(
                 "flex flex-col h-full relative",
-                isTiny ? "p-0.5 justify-center items-center" : "p-1.5"
+                // Use dynamic padding based on card size, but still respect tiny cards
+                isTiny ? "p-0.5 justify-center items-center" : sizeConfig.padding
             )}>
                 {/* 1. Tiny View (< 30m): Minimal indicator */}
                 {isTiny ? (
@@ -243,11 +249,13 @@ const CalendarAppointmentCardBase = ({
                                 {/* Accent Bar logic instead of dot for cleaner look */}
                                 <div className={cn("w-1 h-3 rounded-full shrink-0 opacity-80", statusStyles.accent)} />
 
-                                <span className={cn(
-                                    "font-mono font-semibold truncate leading-none tracking-tight",
-                                    statusStyles.text,
-                                    isSmall ? "text-[10px]" : "text-[11px]"
-                                )}>
+                                <span
+                                    className={cn(
+                                        "font-mono font-semibold truncate leading-none tracking-tight",
+                                        statusStyles.text,
+                                    )}
+                                    style={{ fontSize: `${sizeConfig.timeFontSize}px` }}
+                                >
                                     {normalizeTime(appointment.time)}
                                 </span>
                             </div>
@@ -262,7 +270,7 @@ const CalendarAppointmentCardBase = ({
                                     )}
                                 </div>
                             ) : (
-                                StatusIcon && !isSmall && (
+                                sizeConfig.showStatusIcon && StatusIcon && (
                                     <StatusIcon className={cn("w-3 h-3 opacity-50", statusStyles.indicator)} />
                                 )
                             )}
@@ -270,11 +278,17 @@ const CalendarAppointmentCardBase = ({
 
                         {/* Patient Name & Details */}
                         <div className="flex items-start gap-1.5 mt-0.5 min-h-0 w-full">
-                            {/* Avatar only for regular cards (> 30m) */}
-                            {!isSmall && (
+                            {/* Avatar based on card size config */}
+                            {sizeConfig.showAvatar && (
                                 <div className="hidden sm:block shrink-0 mt-0.5">
-                                    <Avatar className="h-5 w-5 border border-white/40 shadow-sm">
-                                        <AvatarFallback className={cn("text-[8px] font-bold", statusStyles.accent, "text-white")}>
+                                    <Avatar
+                                        className="border border-white/40 shadow-sm"
+                                        style={{ width: `${sizeConfig.avatarSize}px`, height: `${sizeConfig.avatarSize}px` }}
+                                    >
+                                        <AvatarFallback
+                                            className={cn("font-bold", statusStyles.accent, "text-white")}
+                                            style={{ fontSize: `${sizeConfig.avatarSize * 0.4}px` }}
+                                        >
                                             {getInitials(appointment.patientName)}
                                         </AvatarFallback>
                                     </Avatar>
@@ -282,20 +296,24 @@ const CalendarAppointmentCardBase = ({
                             )}
 
                             <div className="min-w-0 flex-1">
-                                <span className={cn(
-                                    "block font-bold leading-tight line-clamp-2 tracking-tight",
-                                    statusStyles.text,
-                                    // Responsive text sizing
-                                    isSmall ? "text-[11px]" : "text-[12px]"
-                                )}>
+                                <span
+                                    className={cn(
+                                        "block font-bold leading-tight line-clamp-2 tracking-tight",
+                                        statusStyles.text,
+                                    )}
+                                    style={{ fontSize: `${sizeConfig.nameFontSize}px` }}
+                                >
                                     {appointment.patientName}
                                 </span>
 
-                                {!isSmall && (
-                                    <span className={cn(
-                                        "block text-[10px] truncate opacity-70 mt-0.5 font-medium",
-                                        statusStyles.subtext
-                                    )}>
+                                {sizeConfig.showType && (
+                                    <span
+                                        className={cn(
+                                            "block truncate opacity-70 mt-0.5 font-medium",
+                                            statusStyles.subtext
+                                        )}
+                                        style={{ fontSize: `${sizeConfig.typeFontSize}px` }}
+                                    >
                                         {appointment.type}
                                     </span>
                                 )}

@@ -18,6 +18,7 @@
 import { getDB, type FisioFlowDB } from '@/hooks/useOfflineStorage';
 import { toast } from 'sonner';
 import type { IDBPDatabase } from 'idb';
+import { supabase } from '@/integrations/supabase/client';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -492,7 +493,6 @@ class OfflineSyncService {
     try {
       console.log('[OfflineSyncService] Starting critical data caching...');
       const db = await getDB();
-      const { supabase } = await import('@/integrations/supabase/client');
 
       // 1. Cache upcoming appointments (next 24 hours)
       const today = new Date();

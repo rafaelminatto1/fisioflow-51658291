@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -14,14 +14,16 @@ import {
     Target,
     DollarSign,
     Sparkles,
-    Loader2
+    Loader2,
+    Clock,
+    ClipboardList,
+    Stethoscope
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import ReactMarkdown from 'react-markdown';
 import { PatientHelpers } from '@/types';
 import { usePatientInsight } from '@/hooks/usePatientInsight';
-import { useState } from 'react';
 
 interface PatientDashboardProps {
     patient: {
@@ -58,6 +60,7 @@ interface PatientDashboardProps {
         notes?: string;
     }>;
     onAction: (action: string) => void;
+    currentAppointmentId?: string;
 }
 
 export const PatientDashboard360 = ({
@@ -66,10 +69,48 @@ export const PatientDashboard360 = ({
     activeGoals = [],
     activePathologies = [],
     surgeries = [],
-    onAction
+    onAction,
+    currentAppointmentId
 }: PatientDashboardProps) => {
     const alerts = patient?.alerts || [];
-    const nextAppointment = appointments?.find(a => new Date(a.date) > new Date());
+
+    // Memoized data processing
+    const { nextAppointment, currentSession, calculatedAge, patientName } = useMemo(() => {
+        const name = PatientHelpers.getName(patient);
+        const birthDate = (patient as any).birth_date || (patient as any).birthDate;
+
+        const age = patient.age || (birthDate ?
+            Math.floor((new Date().getTime() - new Date(birthDate).getTime()) / (1000 * 60 * 60 * 24 * 365.25))
+            : undefined);
+
+        const current = appointments?.find(a => (a as any).id === currentAppointmentId);
+
+        const next = appointments
+            ? [...appointments]
+                .filter(a => {
+                    const date = a.date || (a as any).appointment_date;
+                    const status = (a as any).status;
+                    return (
+                        new Date(date) > new Date() &&
+                        (a as any).id !== currentAppointmentId &&
+                        status !== 'cancelado' &&
+                        status !== 'falta'
+                    );
+                })
+                .sort((a, b) => {
+                    const dateA = new Date(a.date || (a as any).appointment_date).getTime();
+                    const dateB = new Date(b.date || (b as any).appointment_date).getTime();
+                    return dateA - dateB;
+                })[0]
+            : null;
+
+        return {
+            nextAppointment: next,
+            currentSession: current,
+            calculatedAge: age,
+            patientName: name
+        };
+    }, [appointments, currentAppointmentId, patient]);
 
     const [insightResult, setInsightResult] = useState<string | null>(null);
     const { mutate: generateInsight, isPending: isGeneratingInsight } = usePatientInsight();
@@ -79,8 +120,8 @@ export const PatientDashboard360 = ({
 
     const handleGenerateInsight = () => {
         const patientData = {
-            name: patient.name,
-            age: patient.age,
+            name: patientName,
+            age: calculatedAge,
             mainCondition: patient.mainCondition,
             goals: activeGoals.map(g => g.description),
             pathologies: activePathologies.map(p => p.name),
@@ -118,31 +159,57 @@ export const PatientDashboard360 = ({
                             <div className="flex-1 space-y-2">
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <h2 className="text-2xl font-bold tracking-tight text-foreground">{PatientHelpers.getName(patient)}</h2>
-                                        <p className="text-muted-foreground flex items-center gap-2 mt-1">
-                                            <User className="w-4 h-4" />
-                                            {patient.age} anos • {patient.profession || 'Profissão não informada'}
+                                        <h2 className="text-2xl font-bold tracking-tight text-foreground">{patientName}</h2>
+                                        <p className="text-muted-foreground flex items-center gap-2 mt-1 font-medium">
+                                            <User className="w-4 h-4 text-primary" />
+                                            {calculatedAge || 'Idade não inf.'} anos • {patient.profession || (patient as any).occupation || 'Profissão não informada'}
                                         </p>
                                     </div>
-                                    <Badge variant={patient.isActive ? "default" : "secondary"}>
-                                        {patient.isActive ? 'Ativo' : 'Inativo'}
+                                    <Badge variant={(patient.isActive || patient.status === 'active' || (patient as any).status === 'active') ? "default" : "secondary"} className="h-6">
+                                        {(patient.isActive || patient.status === 'active' || (patient as any).status === 'active') ? 'Ativo' : 'Inativo'}
                                     </Badge>
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 text-sm">
-                                    <div className="flex items-center gap-2 text-muted-foreground">
-                                        <Phone className="w-4 h-4 text-primary" />
-                                        {patient.phone}
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Contato</span>
+                                        <div className="flex items-center gap-2 text-sm">
+                                            <Phone className="w-3.5 h-3.5 text-primary" />
+                                            {patient.phone || 'Sem telefone'}
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-2 text-muted-foreground">
-                                        <Mail className="w-4 h-4 text-primary" />
-                                        {patient.email || 'Sem email'}
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Email</span>
+                                        <div className="flex items-center gap-2 text-sm truncate">
+                                            <Mail className="w-3.5 h-3.5 text-primary" />
+                                            {patient.email || 'Sem email'}
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-2 text-muted-foreground">
-                                        <MapPin className="w-4 h-4 text-primary" />
-                                        {patient.address?.city || 'Cidade não inf.'} - {patient.address?.state || 'UF'}
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Localização</span>
+                                        <div className="flex items-center gap-2 text-sm">
+                                            <MapPin className="w-3.5 h-3.5 text-primary" />
+                                            {patient.address?.city || (patient as any).city || 'Cidade não inf.'}
+                                        </div>
                                     </div>
                                 </div>
+
+                                {(patient.allergies || (patient as any).allergies || patient.mainCondition) && (
+                                    <div className="mt-6 flex flex-wrap gap-2 pt-4 border-t border-primary/5">
+                                        {patient.mainCondition && (
+                                            <Badge variant="outline" className="bg-primary/5 border-primary/20 text-primary gap-1.5 py-1">
+                                                <Activity className="w-3.5 h-3.5" />
+                                                {patient.mainCondition}
+                                            </Badge>
+                                        )}
+                                        {(patient.allergies || (patient as any).allergies) && (
+                                            <Badge variant="outline" className="bg-rose-500/5 border-rose-500/20 text-rose-600 gap-1.5 py-1">
+                                                <AlertTriangle className="w-3.5 h-3.5" />
+                                                Alergia: {patient.allergies || (patient as any).allergies}
+                                            </Badge>
+                                        )}
+                                    </div>
+                                )}
 
                                 {alerts.length > 0 && (
                                     <div className="mt-4 flex flex-wrap gap-2">
@@ -161,39 +228,64 @@ export const PatientDashboard360 = ({
 
                 {/* Quick Stats / Actions */}
                 <div className="grid grid-cols-1 gap-4">
-                    <Card className="bg-primary text-primary-foreground shadow-lg">
-                        <CardContent className="p-6">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="font-semibold flex items-center gap-2">
-                                    <Calendar className="w-5 h-5" />
-                                    Próximo Agendamento
-                                </h3>
+                    {currentSession && (
+                        <Card className="bg-emerald-600 text-white shadow-lg border-none overflow-hidden relative group">
+                            <div className="absolute right-[-20px] top-[-20px] opacity-10 group-hover:scale-110 transition-transform">
+                                <Clock className="w-24 h-24" />
                             </div>
-                            {nextAppointment ? (
-                                <div>
-                                    <div className="text-2xl font-bold">
-                                        {format(new Date(nextAppointment.date), "dd 'de' MMM", { locale: ptBR })}
-                                    </div>
-                                    <div className="opacity-90 mt-1">
-                                        {format(new Date(nextAppointment.date), "HH:mm", { locale: ptBR })} - {nextAppointment.type || 'Sessão'}
-                                    </div>
+                            <CardContent className="p-5 relative z-10">
+                                <div className="flex justify-between items-center mb-3">
+                                    <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2 opacity-90">
+                                        <Activity className="w-4 h-4" />
+                                        Sessão em Curso
+                                    </h3>
+                                    <div className="h-2 w-2 rounded-full bg-white animate-pulse" />
                                 </div>
-                            ) : (
-                                <div className="opacity-90">Nenhum agendamento futuro</div>
-                            )}
-                        </CardContent>
-                    </Card>
+                                <div className="text-xl font-bold">
+                                    {currentSession.type || 'Sessão de Fisioterapia'}
+                                </div>
+                                <div className="text-white/80 text-sm mt-1 flex items-center gap-2">
+                                    <Clock className="w-3.5 h-3.5" />
+                                    {format(new Date(currentSession.date || (currentSession as any).appointment_date), "HH:mm", { locale: ptBR })}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
 
-                    <Card>
-                        <CardContent className="p-6 flex items-center justify-between">
+                    {!currentSession && nextAppointment && (
+                        <Card className="bg-primary text-primary-foreground shadow-lg border-none overflow-hidden relative group">
+                            <div className="absolute right-[-20px] top-[-20px] opacity-10 group-hover:scale-110 transition-transform">
+                                <Calendar className="w-24 h-24" />
+                            </div>
+                            <CardContent className="p-5 relative z-10">
+                                <div className="flex justify-between items-center mb-3">
+                                    <h3 className="text-sm font-bold uppercase tracking-widest flex items-center gap-2 opacity-90">
+                                        <Calendar className="w-4 h-4" />
+                                        Próxima Sessão
+                                    </h3>
+                                </div>
+                                <div className="text-xl font-bold">
+                                    {format(new Date(nextAppointment.date || (nextAppointment as any).appointment_date), "dd 'de' MMMM", { locale: ptBR })}
+                                </div>
+                                <div className="text-primary-foreground/80 text-sm mt-1 flex items-center gap-2">
+                                    <Clock className="w-3.5 h-3.5" />
+                                    {format(new Date(nextAppointment.date || (nextAppointment as any).appointment_date), "HH:mm", { locale: ptBR })} • {nextAppointment.type || 'Sessão'}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    <Card className="shadow-md border-primary/5 hover:border-primary/20 transition-colors">
+                        <CardContent className="p-5 flex items-center justify-between">
                             <div>
-                                <p className="text-muted-foreground text-sm font-medium">Saldo de Sessões</p>
-                                <div className="text-3xl font-bold mt-1 text-primary">
-                                    {patient.balance || 0} <span className="text-xs text-muted-foreground font-normal">restantes</span>
+                                <p className="text-muted-foreground text-[10px] uppercase tracking-wider font-bold">Saldo de Sessões</p>
+                                <div className={`text-3xl font-bold mt-1 ${(patient.balance ?? (patient as any).sessions_available ?? 0) <= 1 ? 'text-rose-500' : 'text-primary'}`}>
+                                    {patient.balance ?? (patient as any).sessions_available ?? 0}
+                                    <span className="text-xs text-muted-foreground font-normal ml-2">disponíveis</span>
                                 </div>
                             </div>
-                            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                <DollarSign className="w-6 h-6 text-primary" />
+                            <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${(patient.balance ?? (patient as any).sessions_available ?? 0) <= 1 ? 'bg-rose-50' : 'bg-primary/10'}`}>
+                                <DollarSign className={`w-6 h-6 ${(patient.balance ?? (patient as any).sessions_available ?? 0) <= 1 ? 'text-rose-500' : 'text-primary'}`} />
                             </div>
                         </CardContent>
                     </Card>
