@@ -15,8 +15,8 @@ export default defineConfig({
     exclude: [
       'node_modules/',
       'dist/',
-      'supabase/functions/**',
-      '**/supabase/functions/**',
+      'supabase/functions/!(__tests__)/**',
+      '**/supabase/functions/!(__tests__)/**',
       // Exclude test files that have React 18 concurrent rendering issues
       '**/AIAssistantPanel.test.tsx',
       '**/PatientAnalytics.test.tsx',

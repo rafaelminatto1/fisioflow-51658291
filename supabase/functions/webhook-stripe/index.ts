@@ -79,22 +79,23 @@ serve(async (req: Request) => {
 
 // ========== HANDLERS ==========
 
-async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+export async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const metadata = session.metadata || {};
-  const patientId = metadata.patient_id;
+  const userId = metadata.user_id || metadata.patient_id;
+  const voucherId = metadata.voucher_id;
   const packageId = metadata.package_id;
   const organizationId = metadata.organization_id;
 
-  if (!patientId) {
-    console.error('Missing patient_id in checkout metadata');
+  if (!userId) {
+    console.error('Missing user_id or patient_id in checkout metadata');
     return;
   }
 
-  // Criar registro de pagamento
+  // Criar registro de pagamento genérico
   const { data: payment, error: paymentError } = await supabase
     .from('payments')
     .insert({
-      patient_id: patientId,
+      patient_id: userId, // Assumindo que user_id é o mesmo que patient_id
       amount: (session.amount_total || 0) / 100,
       status: 'completed',
       method: 'credit_card',
@@ -103,16 +104,52 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       paid_at: new Date().toISOString(),
       organization_id: organizationId,
     })
-    .select()
+    .select('id')
     .single();
 
   if (paymentError) {
-    console.error('Error creating payment:', paymentError);
+    console.error('Error creating payment record:', paymentError);
     return;
   }
 
-  // Se for compra de pacote
-  if (packageId) {
+  let description = 'Pagamento de sessão';
+
+  // Se for compra de VOUCHER
+  if (voucherId) {
+    description = 'Compra de voucher';
+    const { data: voucher, error: voucherError } = await supabase
+      .from('vouchers')
+      .select('validity_days')
+      .eq('id', voucherId)
+      .single();
+
+    if (voucherError || !voucher) {
+      console.error(`Voucher with ID ${voucherId} not found.`, voucherError);
+      return;
+    }
+
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + (voucher.validity_days || 30));
+
+    const { error: purchaseError } = await supabase
+      .from('vouchers_purchases')
+      .insert({
+        user_id: userId,
+        voucher_id: voucherId,
+        stripe_checkout_session_id: session.id,
+        purchased_at: new Date().toISOString(),
+        expires_at: expiresAt.toISOString(),
+      });
+
+    if (purchaseError) {
+      console.error('Error creating voucher purchase record:', purchaseError);
+      return;
+    }
+     console.log(`Voucher purchase recorded for user ${userId}, voucher ${voucherId}`);
+  }
+  // Se for compra de PACOTE
+  else if (packageId) {
+    description = 'Compra de pacote de sessões';
     const { data: pkg } = await supabase
       .from('session_packages')
       .select('*')
@@ -124,7 +161,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       expiresAt.setDate(expiresAt.getDate() + pkg.validity_days);
 
       await supabase.from('patient_packages').insert({
-        patient_id: patientId,
+        patient_id: userId,
         package_id: packageId,
         sessions_purchased: pkg.sessions_count,
         sessions_used: 0,
@@ -139,15 +176,15 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   // Criar transação financeira
   await supabase.from('transactions').insert({
     payment_id: payment.id,
-    patient_id: patientId,
+    patient_id: userId,
     type: 'income',
     amount: (session.amount_total || 0) / 100,
     method: 'credit_card',
-    description: packageId ? 'Compra de pacote de sessões' : 'Pagamento de sessão',
+    description: description,
     organization_id: organizationId,
   });
 
-  console.log(`Checkout completed for patient ${patientId}`);
+  console.log(`Checkout completed for user ${userId}`);
 }
 
 async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
