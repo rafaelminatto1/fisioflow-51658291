@@ -619,7 +619,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     </div>
                 </GridWidget>
             ),
-            defaultLayout: { w: 6, h: 9, x: 0, y: gridLayouts.measurementsYOffset, minW: 6, minH: 6 }
+            defaultLayout: { w: 6, h: 12, x: 0, y: gridLayouts.measurementsYOffset, minW: 6, minH: 6 }
         },
         // Home Care (direita)
         {

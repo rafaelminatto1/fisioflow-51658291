@@ -227,8 +227,36 @@ export interface StreakFreezeCost {
 }
 
 // ============================================================================
-// HOOK RETURN TYPES
+// SHOP & INVENTORY TYPES
 // ============================================================================
+
+export type ShopItemType = 'consumable' | 'cosmetic' | 'feature';
+
+export interface ShopItem {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  cost: number;
+  type: ShopItemType;
+  icon?: string;
+  metadata?: Record<string, any>;
+  is_active: boolean;
+}
+
+export interface UserInventoryItem {
+  id: string;
+  user_id: string;
+  item_id: string;
+  quantity: number;
+  is_equipped: boolean;
+  item?: ShopItem; // Joined data
+}
+
+export interface BuyItemParams {
+  itemId: string;
+  cost: number;
+}
 
 /**
  * Return type for useGamification hook
@@ -240,6 +268,8 @@ export interface UseGamificationReturn {
   currentXp: number;
   totalPoints: number;
   xpPerLevel: number;
+  progressToNextLevel: number;
+  progressPercentage: number;
 
   // Quests
   dailyQuests: QuestItem[];
@@ -247,6 +277,15 @@ export interface UseGamificationReturn {
   // Achievements
   allAchievements: Achievement[];
   unlockedAchievements: UnlockedAchievement[];
+  lockedAchievements: Achievement[];
+
+  // Shop & Inventory
+  shopItems: ShopItem[];
+  userInventory: UserInventoryItem[];
+  buyItem: {
+    mutateAsync: (params: BuyItemParams) => Promise<void>;
+    isPending: boolean;
+  };
 
   // Loading state
   isLoading: boolean;
@@ -366,4 +405,111 @@ export function parseAchievementRequirements(requirements: AchievementRequiremen
     }
   }
   return achievementRequirementSchema.parse(requirements);
+}
+
+// ============================================================================
+// ADMIN & LEADERBOARD TYPES
+// ============================================================================
+
+/**
+ * Leaderboard entry for ranking patients
+ */
+export interface LeaderboardEntry {
+  patient_id: string;
+  patient_name: string;
+  email?: string;
+  level: number;
+  total_xp: number;
+  current_streak: number;
+  longest_streak: number;
+  achievements_count: number;
+  last_activity: string;
+  rank?: number;
+}
+
+/**
+ * Filters for leaderboard queries
+ */
+export interface LeaderboardFilters {
+  period: 'week' | 'month' | 'all';
+  category: 'level' | 'xp' | 'streak' | 'achievements';
+  search?: string;
+  sortBy: 'level' | 'total_xp' | 'current_streak' | 'achievements_count';
+  order: 'asc' | 'desc';
+  page: number;
+  pageSize: number;
+}
+
+/**
+ * Engagement data aggregated by date
+ */
+export interface EngagementData {
+  date: string;
+  activePatients: number;
+  questsCompleted: number;
+  xpAwarded: number;
+  achievementsUnlocked: number;
+}
+
+/**
+ * Patient at risk of churn
+ */
+export interface AtRiskPatient {
+  patient_id: string;
+  patient_name: string;
+  email?: string;
+  level: number;
+  lastActivity: string;
+  daysInactive: number;
+}
+
+/**
+ * Level progression type
+ */
+export type ProgressionType = 'linear' | 'exponential' | 'custom';
+
+/**
+ * Level configuration with optional custom title and rewards
+ */
+export interface LevelConfig {
+  level: number;
+  title?: string;
+  xpRequired: number;
+  icon?: string;
+  rewards?: LevelReward[];
+}
+
+/**
+ * Reward granted when reaching a level
+ */
+export interface LevelReward {
+  type: 'xp_bonus' | 'points' | 'achievement' | 'unlock';
+  value: string | number;
+  description?: string;
+}
+
+/**
+ * Overall gamification statistics for admin dashboard
+ */
+export interface GamificationStats {
+  totalPatients: number;
+  totalXpAwarded: number;
+  averageLevel: number;
+  averageStreak: number;
+  activeLast30Days: number;
+  activeLast7Days: number;
+  achievementsUnlocked: number;
+  engagementRate: number;
+  atRiskPatients: number;
+}
+
+/**
+ * Popular achievement with unlock statistics
+ */
+export interface PopularAchievement {
+  id: string;
+  title: string;
+  unlockedCount: number;
+  totalPatients: number;
+  unlockRate: number;
 }

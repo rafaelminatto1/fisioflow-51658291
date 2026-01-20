@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,9 +19,14 @@ import { useGamification, type Achievement } from '@/hooks/useGamification';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-import * as Icons from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useGamificationSound } from '@/hooks/useGamificationSound';
 import { JourneyMap } from './JourneyMap';
 import { DailyQuests } from './DailyQuests';
+import { RewardsShop } from './RewardsShop';
+import { UserInventory } from './UserInventory';
+import { LevelUpModal } from './LevelUpModal';
+import { Leaderboard } from './Leaderboard';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -30,6 +35,7 @@ interface PatientGamificationProps {
 }
 
 export function PatientGamification({ patientId }: PatientGamificationProps) {
+  const { playSound } = useGamificationSound();
   const {
     profile,
     allAchievements,
@@ -43,10 +49,30 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
     recentTransactions,
     dailyQuests,
     completeQuest,
-    totalSessions
+    totalSessions,
+    userInventory,
+    totalPoints
   } = useGamification(patientId);
 
   const [isGivingXp, setIsGivingXp] = useState(false);
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [prevLevel, setPrevLevel] = useState<number>(1);
+
+  // Track level changes
+  useEffect(() => {
+    if (profile?.level && prevLevel > 0) {
+      if (profile.level > prevLevel) {
+        setShowLevelUp(true);
+        playSound('levelUp');
+      }
+      setPrevLevel(profile.level);
+    } else if (profile?.level) {
+      setPrevLevel(profile.level);
+    }
+  }, [profile?.level, prevLevel, playSound]);
+
+  // Calculate if streak freeze is active (has item > 0)
+  const hasFreeze = userInventory?.some(i => i.item?.code === 'streak_freeze' && i.quantity > 0);
 
   // Helper to dynamically get icon component
   const getIcon = (iconName: string, defaultIcon: React.ComponentType) => {
@@ -60,11 +86,13 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
     try {
       await awardXp.mutateAsync({
         amount: 50,
-        reason: 'manual_award',
+        reason: 'manual_adjustment',
         description: 'Recompensa manual do terapeuta'
       });
+      playSound('coin');
     } catch {
       // Toast handled in hook
+      playSound('error');
     } finally {
       setIsGivingXp(false);
     }
@@ -143,9 +171,14 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
             <div className="flex items-center gap-4">
               <div className="relative">
                 <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 blur opacity-40 animate-pulse" />
-                <div className="p-4 bg-gradient-to-br from-yellow-100 to-yellow-50 dark:from-yellow-900/40 dark:to-yellow-800/20 rounded-full border border-yellow-200 dark:border-yellow-700/50 shadow-inner relative">
+                <motion.div 
+                  initial={{ scale: 0.8 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                  className="p-4 bg-gradient-to-br from-yellow-100 to-yellow-50 dark:from-yellow-900/40 dark:to-yellow-800/20 rounded-full border border-yellow-200 dark:border-yellow-700/50 shadow-inner relative"
+                >
                   <Trophy className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
-                </div>
+                </motion.div>
                 <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full border-2 border-background">
                   {currentLevel}
                 </div>
@@ -163,10 +196,8 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
             </div>
             <div className="flex flex-col items-end gap-2">
               <Badge className="text-sm px-3 py-1 bg-primary/10 text-primary hover:bg-primary/20 transition-colors border-primary/20">
-                Total: {profile?.total_points || 0} pts
+                Total: {totalPoints} pts
               </Badge>
-              {/* Only show manual award for therapists - assuming parent controls visibility or we check role here. 
-                  For now, we just show it as a feature. */}
               <Button
                 size="sm"
                 variant="outline"
@@ -187,12 +218,14 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
               <span>{Math.round(currentXp)} / {xpPerLevel} XP</span>
             </div>
             <div className="h-4 w-full bg-secondary/50 rounded-full overflow-hidden p-1 shadow-inner">
-              <div
-                className="h-full bg-gradient-to-r from-primary to-primary/80 rounded-full transition-all duration-1000 ease-out shadow-sm relative group"
-                style={{ width: `${Math.min(100, xpProgress)}%` }}
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min(100, xpProgress)}%` }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                className="h-full bg-gradient-to-r from-primary to-primary/80 rounded-full shadow-sm relative group"
               >
                 <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-              </div>
+              </motion.div>
             </div>
             <p className="text-xs text-center text-muted-foreground pt-1">
               Faltam <span className="font-bold text-primary">{Math.max(0, xpPerLevel - currentXp)} XP</span> para o próximo nível
@@ -200,9 +233,14 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
           </div>
 
           <div className="grid grid-cols-3 gap-4 pt-2">
-            <div className="text-center p-4 bg-background/50 backdrop-blur-sm rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-shadow">
+            <div className="text-center p-4 bg-background/50 backdrop-blur-sm rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+              {hasFreeze && (
+                <div className="absolute top-1 right-1 text-blue-400 animate-pulse" title="Streak Protegido">
+                  <Icons.Shield className="h-4 w-4" />
+                </div>
+              )}
               <div className="bg-orange-100 dark:bg-orange-900/20 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2">
-                <Flame className="h-5 w-5 text-orange-500" />
+                <Flame className={cn("h-5 w-5", hasFreeze ? "text-blue-500" : "text-orange-500")} />
               </div>
               <p className="text-2xl font-bold text-foreground">{profile?.current_streak || 0}</p>
               <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide">Dias Seguidos</p>
@@ -225,72 +263,99 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
         </CardContent>
       </Card>
 
-      {/* Daily Quests Section */}
-      <div className="h-[400px]">
-        <DailyQuests
-          quests={dailyQuests}
-          onComplete={(id) => completeQuest.mutate({ questId: id })}
-        />
-      </div>
-
-      {/* Journey Map Section */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-bold flex items-center gap-2 px-1">
-          <Icons.Map className="h-5 w-5 text-primary" />
-          Sua Jornada
-        </h3>
-        <JourneyMap totalSessions={totalSessions} currentLevel={currentLevel} />
-      </div>
-
-      {/* Achievements Grid */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-bold flex items-center gap-2 px-1">
-          <Award className="h-5 w-5 text-primary" />
-          Conquistas
-        </h3>
-        
-        <Tabs defaultValue="all" className="w-full">
+      <Tabs defaultValue="overview" className="w-full space-y-6">
           <TabsList className="w-full justify-start overflow-x-auto h-auto p-1 bg-muted/50">
-            <TabsTrigger value="all" className="rounded-full px-4 text-xs sm:text-sm">Todas</TabsTrigger>
-            <TabsTrigger value="streak" className="rounded-full px-4 text-xs sm:text-sm">Consistência</TabsTrigger>
-            <TabsTrigger value="milestone" className="rounded-full px-4 text-xs sm:text-sm">Marcos</TabsTrigger>
-            <TabsTrigger value="timing" className="rounded-full px-4 text-xs sm:text-sm">Horários</TabsTrigger>
-            <TabsTrigger value="recovery" className="rounded-full px-4 text-xs sm:text-sm">Saúde</TabsTrigger>
-            <TabsTrigger value="level" className="rounded-full px-4 text-xs sm:text-sm">Níveis</TabsTrigger>
+            <TabsTrigger value="overview" className="rounded-full px-4 text-xs sm:text-sm">Visão Geral</TabsTrigger>
+            <TabsTrigger value="ranking" className="rounded-full px-4 text-xs sm:text-sm">Ranking</TabsTrigger>
+            <TabsTrigger value="achievements" className="rounded-full px-4 text-xs sm:text-sm">Conquistas</TabsTrigger>
+            <TabsTrigger value="shop" className="rounded-full px-4 text-xs sm:text-sm flex gap-2">
+              Loja 
+              <Badge variant="secondary" className="px-1 py-0 h-4 text-[9px]">{totalPoints} pts</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="inventory" className="rounded-full px-4 text-xs sm:text-sm">Inventário</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="all" className="mt-4 animate-in fade-in-50 duration-500 slide-in-from-bottom-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {allAchievements.map(renderAchievementCard)}
-              {allAchievements.length === 0 && (
-                <div className="col-span-full text-center py-8 text-muted-foreground text-sm">
-                   Nenhuma conquista disponível.
-                </div>
-              )}
-            </div>
+
+          <TabsContent value="overview" className="space-y-6 mt-0 animate-in fade-in-50">
+             <div className="h-[400px]">
+                <DailyQuests
+                  quests={dailyQuests}
+                  onComplete={(id) => completeQuest.mutate({ questId: id })}
+                />
+             </div>
+
+             <div className="space-y-4">
+                <h3 className="text-lg font-bold flex items-center gap-2 px-1">
+                  <Icons.Map className="h-5 w-5 text-primary" />
+                  Sua Jornada
+                </h3>
+                <JourneyMap totalSessions={totalSessions} currentLevel={currentLevel} />
+             </div>
           </TabsContent>
 
-          {['streak', 'milestone', 'timing', 'recovery', 'level'].map(tab => {
-             const filtered = allAchievements.filter(a => a.category === tab);
-             return (
-              <TabsContent key={tab} value={tab} className="mt-4 animate-in fade-in-50 duration-500 slide-in-from-bottom-2">
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                   {filtered.map(renderAchievementCard)}
-                   {filtered.length === 0 && (
-                      <div className="col-span-full text-center py-8 text-muted-foreground text-sm border border-dashed rounded-lg">
-                          Nenhuma conquista nesta categoria ainda.
-                      </div>
-                   )}
-                 </div>
-              </TabsContent>
-             );
-          })}
-        </Tabs>
-      </div>
+          <TabsContent value="ranking" className="mt-0 animate-in fade-in-50">
+             <Leaderboard currentPatientId={patientId} />
+          </TabsContent>
+
+          <TabsContent value="achievements" className="mt-0 animate-in fade-in-50">
+             <div className="space-y-4">
+                <div className="flex items-center justify-between px-1">
+                   <h3 className="text-lg font-bold flex items-center gap-2">
+                     <Award className="h-5 w-5 text-primary" />
+                     Todas Conquistas
+                   </h3>
+                </div>
+                
+                <Tabs defaultValue="all" className="w-full">
+                  <TabsList className="w-full justify-start overflow-x-auto h-auto p-1 bg-muted/30 mb-4">
+                    <TabsTrigger value="all" className="rounded-full px-3 text-xs">Todas</TabsTrigger>
+                    <TabsTrigger value="streak" className="rounded-full px-3 text-xs">Consistência</TabsTrigger>
+                    <TabsTrigger value="milestone" className="rounded-full px-3 text-xs">Marcos</TabsTrigger>
+                    <TabsTrigger value="timing" className="rounded-full px-3 text-xs">Horários</TabsTrigger>
+                    <TabsTrigger value="recovery" className="rounded-full px-3 text-xs">Saúde</TabsTrigger>
+                    <TabsTrigger value="level" className="rounded-full px-3 text-xs">Níveis</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="all" className="mt-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {allAchievements.map(renderAchievementCard)}
+                      {allAchievements.length === 0 && (
+                        <div className="col-span-full text-center py-8 text-muted-foreground text-sm">
+                           Nenhuma conquista disponível.
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                  
+                  {['streak', 'milestone', 'timing', 'recovery', 'level'].map(tab => {
+                     const filtered = allAchievements.filter(a => a.category === tab);
+                     return (
+                      <TabsContent key={tab} value={tab} className="mt-0">
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                           {filtered.length > 0 ? filtered.map(renderAchievementCard) : (
+                              <div className="col-span-full py-8 text-center text-muted-foreground text-sm border-2 border-dashed rounded-lg">
+                                Nenhuma conquista nesta categoria ainda.
+                              </div>
+                           )}
+                         </div>
+                      </TabsContent>
+                     );
+                  })}
+                </Tabs>
+             </div>
+          </TabsContent>
+
+          <TabsContent value="shop" className="mt-0 animate-in fade-in-50">
+             <RewardsShop patientId={patientId} />
+          </TabsContent>
+
+          <TabsContent value="inventory" className="mt-0 animate-in fade-in-50">
+             <UserInventory patientId={patientId} />
+          </TabsContent>
+      </Tabs>
 
       {/* Recent Rewards / History */}
       {recentTransactions && recentTransactions.length > 0 && (
-        <Card className="border-none shadow-none bg-transparent">
+        <Card className="border-none shadow-none bg-transparent mt-8">
           <CardHeader className="px-0 pt-0 pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
               <Icons.History className="h-5 w-5 text-muted-foreground/70" />
@@ -309,8 +374,12 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
                       <Star className="h-4 w-4" />
                     </div>
                     <div>
-                      <p className="font-medium">{tx.reason === 'manual_award' ? 'Bônus do Terapeuta' : 'Atividade Realizada'}</p>
-                      <p className="text-xs text-muted-foreground">{tx.description || 'XP ganho por atividade'}</p>
+                      <p className="font-medium">
+                        {tx.reason === 'manual_adjustment' ? 'Bônus do Terapeuta' : 
+                         tx.reason === 'daily_quest' ? 'Missão Diária' :
+                         tx.reason === 'achievement_unlocked' ? 'Conquista' : 'Atividade'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{tx.description || 'XP ganho'}</p>
                     </div>
                   </div>
                   <div className="text-right">

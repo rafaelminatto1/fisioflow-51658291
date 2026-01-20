@@ -65,7 +65,36 @@ export function useTarefas() {
 
       if (error) throw error;
       return (data || []) as Tarefa[];
-    }
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutos - dados considerados frescos
+    gcTime: 1000 * 60 * 30, // 30 minutos - tempo para garbage collection
+    refetchOnWindowFocus: false, // Evita recargas ao mudar de aba
+  });
+}
+
+/**
+ * Hook otimizado para buscar tarefas de um projeto específico
+ * Filtra no backend para reduzir transferência de dados
+ */
+export function useProjectTarefas(projectId: string | undefined) {
+  return useQuery({
+    queryKey: ['tarefas', 'project', projectId],
+    queryFn: async () => {
+      if (!projectId) return [];
+
+      const { data, error } = await supabase
+        .from('tarefas')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('order_index', { ascending: true });
+
+      if (error) throw error;
+      return (data || []) as Tarefa[];
+    },
+    enabled: !!projectId, // Só executa se projectId for fornecido
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -101,13 +130,55 @@ export function useCreateTarefa() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tarefas'] });
+    onMutate: async (newTarefa) => {
+      // Cancelar queries em andamento
+      await queryClient.cancelQueries({ queryKey: ['tarefas'] });
+
+      // Salvar estado anterior para rollback
+      const previousTarefas = queryClient.getQueryData(['tarefas']);
+
+      // Criar tarefa temporária para atualização otimista
+      const tempTarefa: Tarefa = {
+        id: `temp-${Date.now()}`,
+        titulo: newTarefa.titulo!,
+        descricao: newTarefa.descricao,
+        status: newTarefa.status || 'A_FAZER',
+        prioridade: newTarefa.prioridade || 'MEDIA',
+        data_vencimento: newTarefa.data_vencimento,
+        start_date: newTarefa.start_date,
+        project_id: newTarefa.project_id,
+        order_index: newTarefa.order_index || 0,
+        tags: newTarefa.tags || [],
+        checklist: newTarefa.checklist,
+        attachments: newTarefa.attachments,
+        dependencies: newTarefa.dependencies,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      // Adicionar temporariamente ao cache
+      queryClient.setQueryData(['tarefas'], (old: Tarefa[] | undefined) => {
+        if (!old) return old;
+        return [...old, tempTarefa];
+      });
+
+      return { previousTarefas, tempTarefa };
+    },
+    onSuccess: (data, _variables, context) => {
+      // Substituir tarefa temporária pela real
+      queryClient.setQueryData(['tarefas'], (old: Tarefa[] | undefined) => {
+        if (!old) return old;
+        return old.map(t => t.id === context?.tempTarefa.id ? data : t);
+      });
       toast.success('Tarefa criada com sucesso!');
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _variables, context) => {
+      // Rollback em caso de erro
+      if (context?.previousTarefas) {
+        queryClient.setQueryData(['tarefas'], context.previousTarefas);
+      }
       toast.error('Erro ao criar tarefa: ' + error.message);
-    }
+    },
   });
 }
 
@@ -126,12 +197,30 @@ export function useUpdateTarefa() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tarefas'] });
+    onMutate: async (updatedTarefa) => {
+      // Cancelar queries em andamento para evitar conflitos
+      await queryClient.cancelQueries({ queryKey: ['tarefas'] });
+
+      // Salvar estado anterior para rollback em caso de erro
+      const previousTarefas = queryClient.getQueryData(['tarefas']);
+
+      // Atualização otimista - atualiza o cache imediatamente
+      queryClient.setQueryData(['tarefas'], (old: Tarefa[] | undefined) => {
+        if (!old) return old;
+        return old.map((t) => (t.id === updatedTarefa.id ? { ...t, ...updatedTarefa } : t));
+      });
+
+      return { previousTarefas };
     },
-    onError: (error: Error) => {
-      toast.error('Erro ao atualizar tarefa: ' + error.message);
-    }
+    onError: (err, _updatedTarefa, context) => {
+      // Rollback para o estado anterior em caso de erro
+      if (context?.previousTarefas) {
+        queryClient.setQueryData(['tarefas'], context.previousTarefas);
+      }
+      toast.error('Erro ao atualizar tarefa: ' + err.message);
+    },
+    // Removido onSettled - a atualização otimista já mantém o cache sincronizado
+    // Invalidação não é mais necessária pois confiamos na resposta do servidor
   });
 }
 
@@ -146,14 +235,33 @@ export function useDeleteTarefa() {
         .eq('id', id);
 
       if (error) throw error;
+      return id;
+    },
+    onMutate: async (deletedId) => {
+      // Cancelar queries em andamento
+      await queryClient.cancelQueries({ queryKey: ['tarefas'] });
+
+      // Salvar estado anterior para rollback
+      const previousTarefas = queryClient.getQueryData(['tarefas']);
+
+      // Remover do cache otimistamente
+      queryClient.setQueryData(['tarefas'], (old: Tarefa[] | undefined) => {
+        if (!old) return old;
+        return old.filter(t => t.id !== deletedId);
+      });
+
+      return { previousTarefas, deletedId };
+    },
+    onError: (error: Error, _variables, context) => {
+      // Rollback em caso de erro
+      if (context?.previousTarefas) {
+        queryClient.setQueryData(['tarefas'], context.previousTarefas);
+      }
+      toast.error('Erro ao excluir tarefa: ' + error.message);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tarefas'] });
       toast.success('Tarefa excluída com sucesso!');
     },
-    onError: (error: Error) => {
-      toast.error('Erro ao excluir tarefa: ' + error.message);
-    }
   });
 }
 
@@ -172,12 +280,34 @@ export function useBulkUpdateTarefas() {
       if (errors.length > 0) {
         throw new Error('Erro ao atualizar algumas tarefas');
       }
+      return tarefas;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tarefas'] });
+    onMutate: async (updatedTarefas) => {
+      // Cancelar queries em andamento
+      await queryClient.cancelQueries({ queryKey: ['tarefas'] });
+
+      // Salvar estado anterior para rollback
+      const previousTarefas = queryClient.getQueryData(['tarefas']);
+
+      // Atualizar cache otimistamente
+      queryClient.setQueryData(['tarefas'], (old: Tarefa[] | undefined) => {
+        if (!old) return old;
+        const updatedMap = new Map(updatedTarefas.map(t => [t.id, t]));
+        return old.map(t => {
+          const updates = updatedMap.get(t.id);
+          return updates ? { ...t, ...updates } : t;
+        });
+      });
+
+      return { previousTarefas };
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _variables, context) => {
+      // Rollback em caso de erro
+      if (context?.previousTarefas) {
+        queryClient.setQueryData(['tarefas'], context.previousTarefas);
+      }
       toast.error('Erro ao reordenar tarefas: ' + error.message);
-    }
+    },
+    // Removido onSuccess - atualização otimista já mantém cache sincronizado
   });
 }

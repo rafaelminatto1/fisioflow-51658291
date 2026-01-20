@@ -10,7 +10,7 @@ interface LevelUpModalProps {
   newLevel: number;
 }
 
-const LevelUpModal = ({ isOpen, onClose, newLevel }: LevelUpModalProps) => {
+export const LevelUpModal = ({ isOpen, onClose, newLevel }: LevelUpModalProps) => {
   React.useEffect(() => {
     if (isOpen) {
       const duration = 3 * 1000;
