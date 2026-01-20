@@ -90,7 +90,7 @@ import { writeFileSync } from 'fs';
     await page.goto(`${baseUrl}/schedule`);
     await page.waitForTimeout(3000);
     
-    await page.screenshot({ path: 'screenshots/debug-agenda.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/debug-agenda.avif', fullPage: true });
     console.log('5. Agenda carregada, procurando agendamentos...');
     
     // Procurar botão "Iniciar atendimento" de várias formas
@@ -142,7 +142,7 @@ import { writeFileSync } from 'fs';
     
     if (!found) {
       console.error('❌ Botão não encontrado!');
-      await page.screenshot({ path: 'screenshots/debug-not-found.png', fullPage: true });
+      await page.screenshot({ path: 'screenshots/debug-not-found.avif', fullPage: true });
     } else {
       console.log('6. Botão clicado! Aguardando navegação...');
       await page.waitForTimeout(5000);
@@ -150,7 +150,7 @@ import { writeFileSync } from 'fs';
       const currentUrl = page.url();
       console.log(`7. URL atual: ${currentUrl}`);
       
-      await page.screenshot({ path: 'screenshots/debug-after-click.png', fullPage: true });
+      await page.screenshot({ path: 'screenshots/debug-after-click.avif', fullPage: true });
       
       // Aguardar mais para carregar
       await page.waitForTimeout(5000);
@@ -167,7 +167,7 @@ import { writeFileSync } from 'fs';
       console.log(`   - Ainda carregando? ${hasLoading}`);
       console.log(`   - URL: ${currentUrl}`);
       
-      await page.screenshot({ path: 'screenshots/debug-final.png', fullPage: true });
+      await page.screenshot({ path: 'screenshots/debug-final.avif', fullPage: true });
       
       // Filtrar logs relevantes
       const relevantLogs = logs.filter(log => 
@@ -214,7 +214,7 @@ import { writeFileSync } from 'fs';
     
   } catch (error) {
     console.error('❌ Erro:', error);
-    await page.screenshot({ path: 'screenshots/debug-error.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/debug-error.avif', fullPage: true });
     
     const errorData = {
       error: error.message,

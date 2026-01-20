@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import {
     User,
     MapPin,
@@ -17,16 +18,23 @@ import {
     Loader2,
     Clock,
     ClipboardList,
-    Stethoscope
+    Stethoscope,
+    Trophy,
+    Flame,
+    Star,
+    Award
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import ReactMarkdown from 'react-markdown';
 import { PatientHelpers } from '@/types';
 import { usePatientInsight } from '@/hooks/usePatientInsight';
+import { useGamification } from '@/hooks/useGamification';
+import { Link } from 'react-router-dom';
 
 interface PatientDashboardProps {
     patient: {
+        id?: string;
         name?: string;
         age?: number;
         profession?: string;
@@ -38,6 +46,13 @@ interface PatientDashboardProps {
         isActive?: boolean;
         balance?: number;
         mainCondition?: string;
+        status?: string;
+        allergies?: string;
+        birth_date?: string;
+        birthDate?: string;
+        occupation?: string;
+        city?: string;
+        sessions_available?: number;
     };
     appointments: Array<{
         date: Date | string;
@@ -73,6 +88,15 @@ export const PatientDashboard360 = ({
     currentAppointmentId
 }: PatientDashboardProps) => {
     const alerts = patient?.alerts || [];
+    const patientId = patient?.id;
+
+    // Gamification hook
+    const {
+        profile,
+        unlockedAchievements,
+        allAchievements,
+        xpPerLevel
+    } = useGamification(patientId || '');
 
     // Memoized data processing
     const { nextAppointment, currentSession, calculatedAge, patientName } = useMemo(() => {
@@ -331,6 +355,105 @@ export const PatientDashboard360 = ({
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Gamification Section */}
+            {patientId && profile && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Level Progress */}
+                    <Card className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-950/30 dark:to-indigo-950/30 border-purple-200 dark:border-purple-900/50">
+                        <CardContent className="p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="font-semibold flex items-center gap-2 text-purple-700 dark:text-purple-400">
+                                    <Trophy className="w-5 h-5" />
+                                    Nível {profile.level}
+                                </h3>
+                                <Badge variant="secondary" className="bg-purple-100 text-purple-700">
+                                    {profile.current_xp || 0} XP
+                                </Badge>
+                            </div>
+                            <Progress
+                                value={xpPerLevel > 0 ? ((profile.current_xp || 0) % xpPerLevel) / xpPerLevel * 100 : 0}
+                                className="h-2 mb-2"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                {xpPerLevel - ((profile.current_xp || 0) % xpPerLevel)} XP para o próximo nível
+                            </p>
+                            <Link to="/gamification" className="mt-3 block">
+                                <Button variant="outline" size="sm" className="w-full text-purple-700 border-purple-200 hover:bg-purple-100">
+                                    Ver Progresso Completo
+                                </Button>
+                            </Link>
+                        </CardContent>
+                    </Card>
+
+                    {/* Streak */}
+                    <Card className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 border-orange-200 dark:border-orange-900/50">
+                        <CardContent className="p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="font-semibold flex items-center gap-2 text-orange-700 dark:text-orange-400">
+                                    <Flame className="w-5 h-5" />
+                                    Sequência Atual
+                                </h3>
+                                <Badge variant="secondary" className="bg-orange-100 text-orange-700">
+                                    {profile.current_streak || 0} dias
+                                </Badge>
+                            </div>
+                            <div className="flex items-center gap-2 mt-3">
+                                <div className="flex-1">
+                                    <div className="flex gap-1">
+                                        {[...Array(Math.min(7, 3))].map((_, i) => (
+                                            <div
+                                                key={i}
+                                                className={`h-8 flex-1 rounded ${i < (profile.current_streak || 0) ? 'bg-orange-500' : 'bg-orange-200'}`}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-3">
+                                {profile.current_streak >= 3
+                                    ? 'Ótimo! Continue mantendo a sequência!'
+                                    : 'Complete exercícios diários para aumentar sua sequência'}
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    {/* Recent Achievements */}
+                    <Card className="bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-950/30 dark:to-amber-950/30 border-yellow-200 dark:border-yellow-900/50">
+                        <CardContent className="p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="font-semibold flex items-center gap-2 text-yellow-700 dark:text-yellow-400">
+                                    <Award className="w-5 h-5" />
+                                    Conquistas
+                                </h3>
+                                <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">
+                                    {unlockedAchievements.length}/{allAchievements.length}
+                                </Badge>
+                            </div>
+                            <div className="grid grid-cols-4 gap-2 mb-3">
+                                {allAchievements.slice(0, 4).map((achievement) => {
+                                    const isUnlocked = unlockedAchievements.some(ua => ua.achievement_id === achievement.id);
+                                    return (
+                                        <div
+                                            key={achievement.id}
+                                            className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                                                isUnlocked ? 'bg-yellow-400 text-white' : 'bg-gray-200 text-gray-400'
+                                            }`}
+                                        >
+                                            <Star className="w-5 h-5" />
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            <Link to="/gamification/achievements" className="block">
+                                <Button variant="outline" size="sm" className="w-full text-yellow-700 border-yellow-200 hover:bg-yellow-100">
+                                    Ver Todas as Conquistas
+                                </Button>
+                            </Link>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
 
             {/* Middle Section: Goals & Pathologies */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

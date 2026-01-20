@@ -67,7 +67,7 @@ import { chromium } from 'playwright';
     await page.waitForTimeout(2000);
 
     // Screenshot da agenda
-    await page.screenshot({ path: 'screenshots/test-iniciar-01-agenda.png' });
+    await page.screenshot({ path: 'screenshots/test-iniciar-01-agenda.avif' });
     console.log('   📸 Screenshot salvo');
 
     // 6. Procurar botões na agenda
@@ -98,7 +98,7 @@ import { chromium } from 'playwright';
       console.log(`   URL após clique: ${currentUrl}`);
 
       // Screenshot após clique
-      await page.screenshot({ path: 'screenshots/test-iniciar-02-apos-clique.png', fullPage: true });
+      await page.screenshot({ path: 'screenshots/test-iniciar-02-apos-clique.avif', fullPage: true });
       console.log('   📸 Screenshot salvo');
 
       // Verificar se há INFO DEV
@@ -135,7 +135,7 @@ import { chromium } from 'playwright';
 
   } catch (error) {
     console.error('\n❌ ERRO NO TESTE:', error.message);
-    await page.screenshot({ path: 'screenshots/test-iniciar-erro.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/test-iniciar-erro.avif', fullPage: true });
   } finally {
     await browser.close();
   }
