@@ -102,7 +102,7 @@ export function useDashboardKPIs(period: string = 'month') {
     queryKey: ['reports', 'dashboard', period],
     queryFn: async () => {
       const { startDate, endDate } = getPeriodDates(period);
-      
+
       // Pacientes ativos
       const { count: activePatients } = await supabase
         .from('patients')
@@ -189,7 +189,7 @@ export function useFinancialReport(startDate: string, endDate: string) {
         .from('sessions')
         .select(`
           therapist_id,
-          therapist:profiles(id, name)
+          therapist:profiles(id, full_name)
         `)
         .eq('status', 'completed')
         .gte('started_at', startDate)
@@ -198,7 +198,7 @@ export function useFinancialReport(startDate: string, endDate: string) {
       const therapistMap: Record<string, { name: string; revenue: number; sessions: number }> = {};
       (sessions || []).forEach((s: { therapist_id?: string; therapist?: { name?: string } }) => {
         const id = s.therapist_id || 'unassigned';
-        const name = s.therapist?.name || 'Não atribuído';
+        const name = s.therapist?.full_name || 'Não atribuído';
         if (!therapistMap[id]) {
           therapistMap[id] = { name, revenue: 0, sessions: 0 };
         }
@@ -229,8 +229,8 @@ export function useFinancialReport(startDate: string, endDate: string) {
         .lte('created_at', endDate + 'T23:59:59');
 
       const totalPending = (pendingPayments || []).reduce((sum: number, p: { amount?: number }) => sum + (p.amount || 0), 0);
-      const delinquencyRate = (totalRevenue + totalPending) > 0 
-        ? (totalPending / (totalRevenue + totalPending)) * 100 
+      const delinquencyRate = (totalRevenue + totalPending) > 0
+        ? (totalPending / (totalRevenue + totalPending)) * 100
         : 0;
 
       return {
@@ -257,7 +257,7 @@ export function usePatientEvolution(patientId: string | undefined) {
       // Dados do paciente
       const { data: patient, error: patientError } = await supabase
         .from('patients')
-        .select('id, name')
+        .select('id, full_name')
         .eq('id', patientId)
         .single();
 
@@ -287,7 +287,7 @@ export function usePatientEvolution(patientId: string | undefined) {
         const firstSession = new Date(sessions[0].started_at);
         const lastSession = new Date(sessions[sessions.length - 1].started_at);
         const diffDays = Math.ceil((lastSession.getTime() - firstSession.getTime()) / (1000 * 60 * 60 * 24));
-        
+
         if (diffDays >= 30) {
           treatmentDuration = `${Math.round(diffDays / 30)} meses`;
         } else {
@@ -351,7 +351,7 @@ export function useOccupancyReport(startDate: string, endDate: string) {
       (appointments || []).forEach(apt => {
         const date = new Date(apt.start_time);
         const dayName = dayNames[date.getDay()];
-        
+
         if (dayOccupancy[dayName]) {
           dayOccupancy[dayName].total += 1;
           if (apt.status !== 'cancelled') {
@@ -458,14 +458,14 @@ export function useExportReport() {
 
     // Adicionar dados baseado no tipo
     let y = 50;
-    
+
     if (reportType === 'Financeiro' && data as FinancialReport) {
       const report = data as FinancialReport;
       doc.text(`Receita Total: R$ ${report.totalRevenue.toFixed(2)}`, 20, y);
       y += 10;
       doc.text(`Taxa de Inadimplência: ${report.delinquencyRate}%`, 20, y);
       y += 20;
-      
+
       doc.text('Receita por Método:', 20, y);
       y += 10;
       Object.entries(report.revenueByMethod).forEach(([method, value]) => {

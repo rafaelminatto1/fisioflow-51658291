@@ -7,6 +7,8 @@ import { cn } from '@/lib/utils';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { CalendarAppointmentCard } from './CalendarAppointmentCard';
 import { TimeSlotCell } from './TimeSlotCell';
+import { useCardSize } from '@/hooks/useCardSize';
+import { useDynamicSlotHeight } from '@/lib/calendar/dynamicConstants';
 
 // =====================================================================
 // TYPES
@@ -85,6 +87,10 @@ export const CalendarWeekView = memo(({
     selectedIds = new Set(),
     onToggleSelection
 }: CalendarWeekViewProps) => {
+    // Get card height multiplier from user preferences
+    const { heightMultiplier } = useCardSize();
+    const slotHeight = useDynamicSlotHeight();
+
     const weekDays = useMemo(() => {
         const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
         return Array.from({ length: 6 }, (_, i) => addDays(weekStart, i));
@@ -182,7 +188,7 @@ export const CalendarWeekView = memo(({
         if (startRowIndex === -1) return null;
 
         const duration = apt.duration || 60;
-        const heightInPixels = (duration / SLOT_DURATION_MINUTES) * SLOT_HEIGHT;
+        const heightInPixels = (duration / SLOT_DURATION_MINUTES) * slotHeight;
 
         // Check for collisions
         const key = `${dayIndex}-${time}`;
