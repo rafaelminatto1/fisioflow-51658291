@@ -13,7 +13,7 @@ class Logger {
   private sessionId: string;
   private logs: LogEntry[] = [];
   private maxLogs = 1000;
-  private isDevelopment = import.meta.env.DEV;
+  private isDevelopment = (import.meta as any).env.DEV;
 
   constructor() {
     this.sessionId = this.generateSessionId();
@@ -101,7 +101,7 @@ class Logger {
 
   error(message: string, error?: unknown, component?: string) {
     this.addLog(this.createLogEntry('error', message, error, component));
-    if (import.meta.env.PROD && typeof window !== 'undefined' && (window as any).Sentry) {
+    if ((import.meta as any).env.PROD && typeof window !== 'undefined' && (window as any).Sentry) {
       (window as any).Sentry.captureException(error instanceof Error ? error : new Error(message), {
         extra: { component, message, data: error }
       });
@@ -110,7 +110,7 @@ class Logger {
 
   warn(message: string, data?: unknown, component?: string) {
     this.addLog(this.createLogEntry('warn', message, data, component));
-    if (import.meta.env.PROD && typeof window !== 'undefined' && (window as any).Sentry) {
+    if ((import.meta as any).env.PROD && typeof window !== 'undefined' && (window as any).Sentry) {
       (window as any).Sentry.captureMessage(message, {
         level: 'warning',
         extra: { component, data }
