@@ -62,8 +62,8 @@ const SOAP_SECTIONS: Readonly<SOAPSection[]> = [
         icon: User,
         placeholder: 'Queixa principal, relato do paciente, sintomas, dor, desconforto, sono, estresse...',
         color: 'text-blue-600 dark:text-blue-400',
-        bgColor: 'bg-blue-500/10',
-        borderColor: 'border-blue-500/30',
+        bgColor: 'bg-gradient-to-r from-blue-500/20 to-blue-400/15',
+        borderColor: 'border-blue-500/50',
     },
     {
         key: 'objective',
@@ -72,8 +72,8 @@ const SOAP_SECTIONS: Readonly<SOAPSection[]> = [
         icon: Eye,
         placeholder: 'Achados do exame físico, amplitude de movimento, força, testes especiais...',
         color: 'text-green-600 dark:text-green-400',
-        bgColor: 'bg-green-500/10',
-        borderColor: 'border-green-500/30',
+        bgColor: 'bg-gradient-to-r from-green-500/20 to-emerald-400/15',
+        borderColor: 'border-green-500/50',
     },
     {
         key: 'assessment',
@@ -82,8 +82,8 @@ const SOAP_SECTIONS: Readonly<SOAPSection[]> = [
         icon: Brain,
         placeholder: 'Análise do progresso, resposta ao tratamento, correlações clínicas...',
         color: 'text-purple-600 dark:text-purple-400',
-        bgColor: 'bg-purple-500/10',
-        borderColor: 'border-purple-500/30',
+        bgColor: 'bg-gradient-to-r from-purple-500/20 to-violet-400/15',
+        borderColor: 'border-purple-500/50',
     },
     {
         key: 'plan',
@@ -92,8 +92,8 @@ const SOAP_SECTIONS: Readonly<SOAPSection[]> = [
         icon: ClipboardList,
         placeholder: 'Conduta, exercícios prescritos, orientações para casa, plano para próxima visita...',
         color: 'text-amber-600 dark:text-amber-400',
-        bgColor: 'bg-amber-500/10',
-        borderColor: 'border-amber-500/30',
+        bgColor: 'bg-gradient-to-r from-amber-500/20 to-orange-400/15',
+        borderColor: 'border-amber-500/50',
     },
 ];
 
@@ -490,8 +490,8 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     title="Nível de dor (EVA)"
                     icon={<Activity className="h-4 w-4 text-rose-600" />}
                     isDraggable={isEditable}
-                    className="h-full border-t-4 border-rose-500/30"
-                    headerClassName="bg-rose-500/10"
+                    className="h-full border-t-4 border-rose-500/60"
+                    headerClassName="bg-gradient-to-r from-rose-500/25 to-pink-400/20"
                     extraHeaderContent={
                         <div className="flex items-center gap-2">
                             {showPainTrend && trend && (
@@ -554,8 +554,8 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     title="Exercícios da Sessão"
                     icon={<Dumbbell className="h-4 w-4 text-purple-600" />}
                     isDraggable={isEditable}
-                    className="h-full border-t-4 border-purple-500/30"
-                    headerClassName="bg-purple-500/10"
+                    className="h-full border-t-4 border-purple-500/60"
+                    headerClassName="bg-gradient-to-r from-purple-500/25 to-fuchsia-400/20"
                 >
                     <div className="h-full overflow-hidden">
                         <ExerciseBlockWidget
@@ -599,8 +599,8 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     title="Registro de Medições"
                     icon={<Activity className="h-4 w-4 text-teal-600" />}
                     isDraggable={isEditable}
-                    className="h-full border-t-4 border-teal-500/30"
-                    headerClassName="bg-teal-500/10"
+                    className="h-full border-t-4 border-teal-500/60"
+                    headerClassName="bg-gradient-to-r from-teal-500/25 to-cyan-400/20"
                 >
                     <div className="h-full overflow-auto p-0">
                         {patientId ? (
@@ -629,8 +629,8 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     title="Home Care"
                     icon={<House className="h-4 w-4 text-green-600" />}
                     isDraggable={isEditable}
-                    className="h-full border-t-4 border-green-500/30"
-                    headerClassName="bg-green-500/10"
+                    className="h-full border-t-4 border-green-500/60"
+                    headerClassName="bg-gradient-to-r from-green-500/25 to-emerald-400/20"
                 >
                     <div className="h-full overflow-hidden">
                         <HomeCareWidget
@@ -653,8 +653,8 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     title="Sessões Anteriores"
                     icon={<History className="h-4 w-4 text-amber-600" />}
                     isDraggable={isEditable}
-                    className="h-full border-t-4 border-amber-500/30"
-                    headerClassName="bg-amber-500/10"
+                    className="h-full border-t-4 border-amber-500/60"
+                    headerClassName="bg-gradient-to-r from-amber-500/25 to-yellow-400/20"
                     extraHeaderContent={
                         previousEvolutions.length > 0 && onCopyLastEvolution ? (
                             <Tooltip>
@@ -762,8 +762,8 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                     title="Anexos"
                     icon={<ImageIcon className="h-4 w-4 text-indigo-600" />}
                     isDraggable={isEditable}
-                    className="h-full border-t-4 border-indigo-500/30"
-                    headerClassName="bg-indigo-500/10"
+                    className="h-full border-t-4 border-indigo-500/60"
+                    headerClassName="bg-gradient-to-r from-indigo-500/25 to-blue-400/20"
                 >
                     <div className="h-full overflow-auto p-0">
                         {patientId ? (
