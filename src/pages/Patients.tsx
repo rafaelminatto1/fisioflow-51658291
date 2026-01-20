@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDebounce } from '@/hooks/performance/useDebounce';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -62,15 +63,7 @@ const Patients = () => {
   const [isNewPatientModalOpen, setIsNewPatientModalOpen] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState<PatientFilters>({});
   const [showAnalytics, setShowAnalytics] = useState(false);
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-
-  // Debounce search to avoid excessive API calls
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchTerm);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
+  const debouncedSearch = useDebounce(searchTerm, 300);
 
   // Use paginated query with server-side filtering
   const {
