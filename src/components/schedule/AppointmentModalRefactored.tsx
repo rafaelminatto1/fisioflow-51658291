@@ -13,6 +13,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle
 } from '@/components/ui/dialog';
+import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle
 } from '@/components/ui/sheet';
@@ -384,11 +385,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       onClose();
 
     } catch (error: unknown) {
-      console.error('Erro ao salvar (catch):', error);
-      // O hook já deve ter exibido toast de erro, mas se foi erro síncrono antes da mutation:
-      if (error instanceof Error && !error.message.includes('permission') && !error.message.includes('fetch')) {
-        toast.error('Erro inesperado: ' + error.message);
-      }
+      ErrorHandler.handle(error, 'AppointmentModalRefactored:handleSave');
     }
   };
 
