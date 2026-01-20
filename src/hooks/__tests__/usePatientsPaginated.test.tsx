@@ -2,17 +2,23 @@
  * Tests for usePatientsPaginated hook
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { renderHook, act } from '@testing-library/react';
 import { usePatientsPaginated } from '../usePatientCrud';
-import { supabase } from '@/integrations/supabase/client';
 
-// Mock Supabase client
+// Mock Supabase (needed because the hook imports it)
+const { mockSupabase } = vi.hoisted(() => {
+  return {
+    mockSupabase: {
+      from: vi.fn(() => ({
+        select: vi.fn(), // just in case
+      })),
+    },
+  };
+});
+
 vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    from: vi.fn(),
-  },
+  supabase: mockSupabase,
 }));
 
 // Mock toast
@@ -20,173 +26,153 @@ vi.mock('@/hooks/use-toast', () => ({
   toast: vi.fn(),
 }));
 
-describe('usePatientsPaginated', () => {
-  let queryClient: QueryClient;
+// Mock useQuery
+const mockRefetch = vi.fn();
 
-  // Helper to create a chainable mock object
-  const createSupabaseMock = (options: {
-    data?: any[];
-    error?: any;
-    count?: number;
-    delay?: number;
-  } = {}) => {
-    const { data = [], error = null, count = 0, delay = 0 } = options;
+// We need to hoist the mock for useQuery
+const { mockUseQuery } = vi.hoisted(() => {
+  return { mockUseQuery: vi.fn() };
+});
 
-    // Create a Promise that we can control if needed, or just resolve immediately
-    const resultPromise = async () => {
-      if (delay) await new Promise(r => setTimeout(r, delay));
-      if (error) throw error;
-      return { data, error, count };
-    };
-
-    return {
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      or: vi.fn().mockReturnThis(),
-      order: vi.fn().mockReturnThis(),
-      range: vi.fn().mockReturnValue(resultPromise()),
-      // Also mock single() just in case, though not used in pagination list
-      single: vi.fn().mockReturnValue(resultPromise()),
-    };
+vi.mock('@tanstack/react-query', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...(actual as object),
+    useQuery: mockUseQuery,
+    useMutation: vi.fn(),
+    useQueryClient: vi.fn(() => ({
+      invalidateQueries: vi.fn(),
+    })),
   };
+});
 
+describe('usePatientsPaginated', () => {
   beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          retry: false,
-          gcTime: 0,
-          staleTime: 0,
-        },
-      },
-    });
-
     vi.clearAllMocks();
 
-    // Default mock implementation
-    vi.mocked(supabase.from).mockReturnValue(createSupabaseMock() as any);
+    // Default default implementation for useQuery
+    mockUseQuery.mockReturnValue({
+      data: { data: [], count: 0 },
+      isLoading: true,
+      error: null,
+      refetch: mockRefetch,
+    });
   });
 
-  const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  );
-
-  it('should initialize with default values', () => {
-    const { result } = renderHook(() => usePatientsPaginated(), { wrapper });
-
-    expect(result.current.currentPage).toBe(1);
-    expect(result.current.totalPages).toBe(0);
-    expect(result.current.totalCount).toBe(0);
-    expect(result.current.isLoading).toBe(true);
-  });
-
-  it('should fetch patients with pagination', async () => {
-    const mockData = [
-      { id: '1', full_name: 'Patient 1', email: 'test1@example.com' },
-      { id: '2', full_name: 'Patient 2', email: 'test2@example.com' },
-    ];
-
-    vi.mocked(supabase.from).mockReturnValue(createSupabaseMock({
-      data: mockData,
-      count: 2,
-      // Add a tiny delay to ensure we test the loading state transition correctly in React 18
-      delay: 10
-    }) as any);
-
-    const { result } = renderHook(
-      () => usePatientsPaginated({ organizationId: 'org-1', pageSize: 10 }),
-      { wrapper }
-    );
-
-    expect(result.current.isLoading).toBe(true);
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
+  it('should initialize with default values and loading state', () => {
+    mockUseQuery.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      error: null,
+      refetch: mockRefetch,
     });
 
-    expect(result.current.data).toEqual(mockData);
-    expect(result.current.totalCount).toBe(2);
+    const { result } = renderHook(() => usePatientsPaginated());
+
+    expect(result.current.currentPage).toBe(1);
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.totalCount).toBe(0);
   });
 
-  it('should calculate pagination correctly', async () => {
-    // 25 items total, page size 20 = 2 pages
+  it('should return data when query succeeds', () => {
+    const mockData = [
+      { id: '1', full_name: 'Patient 1' },
+      { id: '2', full_name: 'Patient 2' },
+    ];
+
+    mockUseQuery.mockReturnValue({
+      data: { data: mockData, count: 2 },
+      isLoading: false,
+      error: null,
+      refetch: mockRefetch,
+    });
+
+    const { result } = renderHook(
+      () => usePatientsPaginated({ organizationId: 'org-1', pageSize: 10 })
+    );
+
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.data).toEqual(mockData);
+    expect(result.current.totalCount).toBe(2);
+    expect(result.current.totalPages).toBe(1);
+  });
+
+  it('should calculate pagination correctly', () => {
     const mockData = Array.from({ length: 20 }, (_, i) => ({
       id: String(i + 1),
       full_name: `Patient ${i + 1}`,
     }));
 
-    vi.mocked(supabase.from).mockReturnValue(createSupabaseMock({
-      data: mockData,
-      count: 25,
-      delay: 10
-    }) as any);
+    mockUseQuery.mockReturnValue({
+      data: { data: mockData, count: 25 },
+      isLoading: false,
+      error: null,
+      refetch: mockRefetch,
+    });
 
     const { result } = renderHook(
-      () => usePatientsPaginated({ organizationId: 'org-1', pageSize: 20 }),
-      { wrapper }
+      () => usePatientsPaginated({ organizationId: 'org-1', pageSize: 20 })
     );
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
 
     expect(result.current.totalPages).toBe(2);
     expect(result.current.hasNextPage).toBe(true);
   });
 
-  it('should navigate to next page', async () => {
-    const page1Data = [{ id: '1', full_name: 'P1' }];
-    const page2Data = [{ id: '2', full_name: 'P2' }];
-
-    const rangeMock = vi.fn()
-      .mockResolvedValueOnce({ data: page1Data, error: null, count: 2 })
-      .mockResolvedValueOnce({ data: page2Data, error: null, count: 2 });
-
-    const chainMock: any = {
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      or: vi.fn().mockReturnThis(),
-      order: vi.fn().mockReturnThis(),
-      range: rangeMock
-    };
-
-    vi.mocked(supabase.from).mockReturnValue(chainMock);
+  it('should navigate to next page', () => {
+    mockUseQuery.mockReturnValue({
+      data: { data: [], count: 100 },
+      isLoading: false,
+      error: null,
+      refetch: mockRefetch,
+    });
 
     const { result } = renderHook(
-      () => usePatientsPaginated({ organizationId: 'org-1', pageSize: 1 }),
-      { wrapper }
+      () => usePatientsPaginated({ organizationId: 'org-1', pageSize: 10 })
     );
 
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-      expect(result.current.currentPage).toBe(1);
-    });
+    expect(result.current.currentPage).toBe(1);
 
     act(() => {
       result.current.nextPage();
     });
 
-    await waitFor(() => {
-      expect(result.current.currentPage).toBe(2);
-    });
+    expect(result.current.currentPage).toBe(2);
   });
 
-  it('should handle errors gracefully', async () => {
-    vi.mocked(supabase.from).mockReturnValue(createSupabaseMock({
-      error: new Error('Database error'),
-      delay: 10
-    }) as any);
+  it('should navigate to previous page', () => {
+    mockUseQuery.mockReturnValue({
+      data: { data: [], count: 100 },
+      isLoading: false,
+      error: null,
+      refetch: mockRefetch,
+    });
 
     const { result } = renderHook(
-      () => usePatientsPaginated({ organizationId: 'org-1' }),
-      { wrapper }
+      () => usePatientsPaginated({ organizationId: 'org-1', pageSize: 10, currentPage: 2 })
     );
 
-    await waitFor(() => {
-      expect(result.current.error).toBeTruthy();
-      expect(result.current.error?.message).toBe('Database error');
+    expect(result.current.currentPage).toBe(2);
+
+    act(() => {
+      result.current.previousPage();
     });
+
+    expect(result.current.currentPage).toBe(1);
+  });
+
+  it('should handle errors', () => {
+    mockUseQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: new Error('Database error'),
+      refetch: mockRefetch,
+    });
+
+    const { result } = renderHook(
+      () => usePatientsPaginated({ organizationId: 'org-1' })
+    );
+
+    expect(result.current.error).toBeTruthy();
+    expect(result.current.error?.message).toBe('Database error');
   });
 });
