@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import { valorPorExtenso } from '@/hooks/useRecibos';
 
 // Registrar fontes
@@ -344,7 +345,7 @@ export const ReciboPreview: React.FC<{ data: ReciboData }> = ({ data }) => {
       {/* Logo e Empresa */}
       <div className="flex items-start gap-4 mb-6">
         {data.logoUrl ? (
-          <img src={data.logoUrl} alt="Logo" className="w-20 h-20 rounded-lg object-cover" />
+          <OptimizedImage src={data.logoUrl} alt="Logo" className="w-20 h-20 rounded-lg" aspectRatio="1:1" />
         ) : (
           <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
             <span className="text-xs text-gray-400">Logo</span>

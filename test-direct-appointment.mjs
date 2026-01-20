@@ -83,8 +83,8 @@ import { chromium } from 'playwright';
     await page.waitForTimeout(3000);
 
     // Tirar screenshot da agenda
-    await page.screenshot({ path: 'screenshots/agenda-atual.png', fullPage: true });
-    console.log('Screenshot salvo: screenshots/agenda-atual.png');
+    await page.screenshot({ path: 'screenshots/agenda-atual.avif', fullPage: true });
+    console.log('Screenshot salvo: screenshots/agenda-atual.avif');
 
     // Verificar se há agendamentos na página
     console.log('\n3. Procurando agendamentos...');
@@ -188,8 +188,8 @@ import { chromium } from 'playwright';
     console.log(`\n4. URL final: ${finalUrl}`);
 
     // Screenshot final
-    await page.screenshot({ path: 'screenshots/final-state.png', fullPage: true });
-    console.log('Screenshot salvo: screenshots/final-state.png');
+    await page.screenshot({ path: 'screenshots/final-state.avif', fullPage: true });
+    console.log('Screenshot salvo: screenshots/final-state.avif');
 
     // Verificar se há erro na página
     const errorSelectors = [
@@ -225,7 +225,7 @@ import { chromium } from 'playwright';
 
   } catch (error) {
     console.error('\n❌ ERRO NO TESTE:', error);
-    await page.screenshot({ path: 'screenshots/erro-crash.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/erro-crash.avif', fullPage: true });
   } finally {
     await browser.close();
   }

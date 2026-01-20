@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import { Eye, Download, FileText, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -61,7 +62,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ files, bucketName }) => 
                             onClick={() => setSelectedIndex(idx)}
                         >
                             {isImage ? (
-                                <img src={url} alt={file.file_name} className="w-full h-full object-cover transition-transform group-hover/file:scale-105" />
+                                <OptimizedImage src={url} alt={file.file_name} className="w-full h-full transition-transform group-hover/file:scale-105" aspectRatio="auto" />
                             ) : (
                                 <div className="flex flex-col items-center justify-center h-full p-2 text-center bg-gray-50">
                                     <FileText className="w-8 h-8 mb-1 text-muted-foreground" />

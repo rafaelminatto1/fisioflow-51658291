@@ -54,8 +54,8 @@ import { chromium } from 'playwright';
     console.log(`URL na agenda: ${page.url()}`);
 
     // Screenshot da agenda
-    await page.screenshot({ path: 'screenshots/agenda-debug.png' });
-    console.log('Screenshot salvo: screenshots/agenda-debug.png');
+    await page.screenshot({ path: 'screenshots/agenda-debug.avif' });
+    console.log('Screenshot salvo: screenshots/agenda-debug.avif');
 
     // Procurar agendamentos
     console.log('5. Procurando agendamentos...');
@@ -131,8 +131,8 @@ import { chromium } from 'playwright';
     console.log(`7. URL após click: ${currentUrl}`);
 
     // Screenshot final
-    await page.screenshot({ path: 'screenshots/apos-iniciar-debug.png', fullPage: true });
-    console.log('Screenshot salvo: screenshots/apos-iniciar-debug.png');
+    await page.screenshot({ path: 'screenshots/apos-iniciar-debug.avif', fullPage: true });
+    console.log('Screenshot salvo: screenshots/apos-iniciar-debug.avif');
 
     // Verificar se há mensagem de erro
     const hasErrorTitle = await page.locator('text=Ops! Algo deu errado').count();
@@ -156,7 +156,7 @@ import { chromium } from 'playwright';
 
   } catch (error) {
     console.error('\n❌ ERRO NO TESTE:', error);
-    await page.screenshot({ path: 'screenshots/erro-teste.png' });
+    await page.screenshot({ path: 'screenshots/erro-teste.avif' });
   } finally {
     // Não fechar o navegador para inspeção manual
     // await browser.close();

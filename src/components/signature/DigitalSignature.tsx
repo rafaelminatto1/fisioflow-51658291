@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import {
   Pen,
   Eraser,
@@ -175,7 +176,7 @@ export function DigitalSignature({
     if (!canvas) return;
 
     const link = document.createElement('a');
-    link.download = `assinatura-${name.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.png`;
+    link.download = `assinatura-${name.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.avif`;
     link.href = canvas.toDataURL('image/png');
     link.click();
   };
@@ -193,7 +194,7 @@ export function DigitalSignature({
               <p className="text-xs text-muted-foreground">Assinatura digital verificada</p>
             </div>
           </div>
-          <img src={existingSignature} alt="Assinatura" className="border rounded-lg max-h-24" />
+          <OptimizedImage src={existingSignature} alt="Assinatura" className="border rounded-lg max-h-24" aspectRatio="auto" />
         </CardContent>
       </Card>
     );

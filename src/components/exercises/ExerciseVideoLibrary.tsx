@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import {
   Search, Video, Upload, Trash2, Play,
   X, Clock, Edit, AlertCircle, Check,
@@ -1080,7 +1081,7 @@ function VideoListItem({
       {/* Thumbnail */}
       <div className="relative w-32 h-20 flex-shrink-0 rounded overflow-hidden bg-muted cursor-pointer" onClick={isBulkMode ? onToggleSelect : onPlay}>
         {video.thumbnail_url ? (
-          <img src={video.thumbnail_url} alt={video.title} className="w-full h-full object-cover" />
+          <OptimizedImage src={video.thumbnail_url} alt={video.title} className="w-full h-full" aspectRatio="16:9" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <Video className="h-8 w-8 text-primary/30" />

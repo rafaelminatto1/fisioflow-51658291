@@ -8,6 +8,8 @@ interface OptimizedImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 
   blur?: boolean;
   aspectRatio?: '1:1' | '4:3' | '16:9' | '3:2' | 'auto';
   priority?: boolean;
+  srcset?: string;
+  sizes?: string;
   onLoad?: () => void;
   onError?: () => void;
 }
@@ -26,6 +28,7 @@ const aspectRatioClasses = {
  * - Placeholder blur
  * - Fallback em caso de erro
  * - Aspect ratio mantido
+ * - Suporte a srcset/sizes para responsive images
  */
 export function OptimizedImage({
   src,
@@ -34,6 +37,8 @@ export function OptimizedImage({
   blur = true,
   aspectRatio = 'auto',
   priority = false,
+  srcset,
+  sizes,
   className,
   onLoad,
   onError,
@@ -77,6 +82,8 @@ export function OptimizedImage({
       <img
         ref={imgRef}
         src={imageSrc}
+        srcSet={srcset}
+        sizes={sizes}
         alt={alt}
         loading={priority ? 'eager' : 'lazy'}
         decoding={priority ? 'sync' : 'async'}
@@ -119,7 +126,7 @@ export function useImagesPreload(srcs: string[]): boolean {
 
   useEffect(() => {
     let isMounted = true;
-    
+
     srcs.forEach((src) => {
       const img = new Image();
       img.onload = () => {
@@ -158,7 +165,7 @@ const sizeClasses = {
 
 export function AvatarImage({ src, name, size = 'md', className }: AvatarImageProps) {
   const [hasError, setHasError] = useState(false);
-  
+
   const initials = name
     .split(' ')
     .map((n) => n[0])

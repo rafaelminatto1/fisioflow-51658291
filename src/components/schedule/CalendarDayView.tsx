@@ -7,7 +7,7 @@ import { Appointment } from '@/types/appointment';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { CalendarAppointmentCard } from './CalendarAppointmentCard';
 import { useCardSize } from '@/hooks/useCardSize';
-import { useDynamicSlotHeight } from '@/lib/calendar/dynamicConstants';
+import { calculateAppointmentCardHeight, calculateSlotHeightFromCardSize } from '@/lib/calendar/cardHeightCalculator';
 
 interface CalendarDayViewProps {
     currentDate: Date;
@@ -15,6 +15,7 @@ interface CalendarDayViewProps {
     currentTimePosition: number;
     // appointments, // We will use getAppointmentsForDate instead for consistency
     getAppointmentsForDate: (date: Date) => Appointment[];
+    savingAppointmentId: string | null;
 
     timeSlots: string[];
     isDayClosed: boolean;
@@ -49,6 +50,7 @@ const CalendarDayView = memo(({
     currentTimePosition,
     // appointments, // We will use getAppointmentsForDate instead for consistency
     getAppointmentsForDate,
+    savingAppointmentId,
     timeSlots,
     isDayClosed,
     onTimeSlotClick,
@@ -72,11 +74,9 @@ const CalendarDayView = memo(({
     selectedIds = new Set(),
     onToggleSelection
 }: CalendarDayViewProps) => {
-    // Get card height multiplier from user preferences
-    const { heightMultiplier } = useCardSize();
-    const slotHeight = useDynamicSlotHeight();
-
-    // Calculate mobile slot height (48px is 96% of 50px desktop)
+    // Get card size configuration from user preferences
+    const { cardSize, heightScale } = useCardSize();
+    const slotHeight = calculateSlotHeightFromCardSize(cardSize, heightScale);
     const slotHeightMobile = Math.round(slotHeight * 0.96);
 
     // Logic inconsistency fix: usage of helper passed from parent
@@ -95,9 +95,12 @@ const CalendarDayView = memo(({
         );
     }
 
+    // Calculate total grid height for proper scroll container
+    const totalGridHeight = timeSlots.length * slotHeightMobile;
+
     return (
-        <div className="flex bg-gradient-to-br from-background to-muted/20 h-[calc(100vh-240px)] md:h-full overflow-y-auto custom-scrollbar">
-            {/* Styles for responsive positioning */}
+        <div className="flex flex-col flex-1 overflow-hidden bg-gradient-to-br from-background to-muted/20">
+            {/* Styles for responsive positioning and custom scrollbar */}
             <style dangerouslySetInnerHTML={{
                 __html: `
                   @media (min-width: 768px) {
@@ -106,40 +109,91 @@ const CalendarDayView = memo(({
                       height: var(--height-desktop) !important;
                     }
                   }
+                  .custom-scrollbar::-webkit-scrollbar {
+                    width: 6px;
+                    height: 6px;
+                  }
+                  .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
+                  }
+                  .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: hsl(var(--border) / 0.5);
+                    border-radius: 3px;
+                  }
+                  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: hsl(var(--border) / 0.8);
+                  }
+                  .scroll-indicator {
+                    position: absolute;
+                    left: 0;
+                    right: 0;
+                    height: 24px;
+                    pointer-events: none;
+                    z-index: 50;
+                    transition: opacity 300ms ease;
+                  }
+                  .scroll-indicator-top {
+                    top: 0;
+                    background: linear-gradient(to bottom, hsl(var(--background) / 0.95), transparent);
+                  }
+                  .scroll-indicator-bottom {
+                    bottom: 0;
+                    background: linear-gradient(to top, hsl(var(--background) / 0.95), transparent);
+                  }
                 `}} />
 
-            {/* Time column com design melhorado */}
-            <div className="w-16 md:w-24 border-r bg-muted/30 backdrop-blur-sm flex-shrink-0" role="columnheader" aria-label="Horários">
-                <div className="h-14 md:h-20 border-b flex items-center justify-center sticky top-0 bg-muted/30 z-10 backdrop-blur-sm shadow-sm" aria-hidden="true">
-                    <Clock className="h-4 md:h-5 w-4 md:w-5 text-muted-foreground" />
-                </div>
-                <div className="flex-1 overflow-hidden">
-                    {timeSlots.map((time, slotIndex) => (
-                        <div
-                            key={time}
-                            className="border-b border-border/50 p-1 md:p-3 text-[11px] md:text-sm font-medium text-muted-foreground flex items-center justify-center md:justify-start"
-                            role="listitem"
-                            style={{ height: `${slotHeightMobile}px`, minHeight: `${slotHeightMobile}px` }}
-                        >
-                            {time}
+            {/* Scrollable content area with indicators */}
+            <div className="flex flex-1 overflow-hidden relative">
+                {/* Top scroll indicator */}
+                <div id="scroll-indicator-top" className="scroll-indicator scroll-indicator-top opacity-0" aria-hidden="true" />
+
+                {/* Main scroll container */}
+                <div
+                    id="day-view-scroll-container"
+                    className="flex flex-1 overflow-y-auto custom-scrollbar scroll-smooth"
+                    onScroll={(e) => {
+                        const target = e.currentTarget;
+                        const topIndicator = document.getElementById('scroll-indicator-top');
+                        const bottomIndicator = document.getElementById('scroll-indicator-bottom');
+                        if (topIndicator && bottomIndicator) {
+                            topIndicator.style.opacity = target.scrollTop > 10 ? '1' : '0';
+                            const isNearBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 10;
+                            bottomIndicator.style.opacity = isNearBottom ? '0' : '1';
+                        }
+                    }}
+                >
+                    {/* Time column com design melhorado */}
+                    <div className="w-16 md:w-24 border-r bg-muted/30 backdrop-blur-sm flex-shrink-0 sticky left-0 z-20" role="columnheader" aria-label="Horários">
+                        <div className="h-14 md:h-20 border-b flex items-center justify-center sticky top-0 bg-muted/30 z-30 backdrop-blur-sm shadow-sm" aria-hidden="true">
+                            <Clock className="h-4 md:h-5 w-4 md:w-5 text-muted-foreground" />
                         </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* Day column com hover states */}
-            <div className="flex-1 relative bg-background/50 min-w-0">
-                <div className="h-16 md:h-20 border-b bg-gradient-to-r from-primary/10 to-primary/5 p-2 md:p-4 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
-                    <div className="font-semibold text-center flex items-center justify-center gap-2 text-sm md:text-base">
-                        <Calendar className="h-3.5 md:h-4 w-3.5 md:w-4" />
-                        <span className="hidden sm:inline">{format(currentDate, "EEEE, d 'de' MMMM", { locale: ptBR })}</span>
-                        <span className="sm:hidden">{format(currentDate, "EEE, d/M", { locale: ptBR })}</span>
+                        <div className="flex-1 overflow-hidden">
+                            {timeSlots.map((time, slotIndex) => (
+                                <div
+                                    key={time}
+                                    className="border-b border-border/50 p-1 md:p-3 text-[11px] md:text-sm font-medium text-muted-foreground flex items-center justify-center md:justify-start"
+                                    role="listitem"
+                                    style={{ height: `${slotHeightMobile}px`, minHeight: `${slotHeightMobile}px` }}
+                                >
+                                    {time}
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                </div>
 
-                {/* Time slots */}
-                <div className="relative">
-                    {timeSlots.map((time, slotIndex) => {
+                    {/* Day column com hover states */}
+                    <div className="flex-1 relative bg-background/50 min-w-0">
+                        <div className="h-16 md:h-20 border-b bg-gradient-to-r from-primary/10 to-primary/5 p-2 md:p-4 backdrop-blur-sm sticky top-0 z-30 shadow-sm">
+                            <div className="font-semibold text-center flex items-center justify-center gap-2 text-sm md:text-base">
+                                <Calendar className="h-3.5 md:h-4 w-3.5 md:w-4" />
+                                <span className="hidden sm:inline">{format(currentDate, "EEEE, d 'de' MMMM", { locale: ptBR })}</span>
+                                <span className="sm:hidden">{format(currentDate, "EEE, d/M", { locale: ptBR })}</span>
+                            </div>
+                        </div>
+
+                        {/* Time slots */}
+                        <div className="relative">
+                            {timeSlots.map((time, slotIndex) => {
                         const hour = parseInt(time.split(':')[0]);
                         const isCurrentHour = hour === currentTime.getHours();
                         const isDropTarget = dropTarget && isSameDay(dropTarget.date, currentDate) && dropTarget.time === time;
@@ -257,10 +311,12 @@ const CalendarDayView = memo(({
                             const widthPercent = stackCount > 1 ? (100 / stackCount) - 2 : 100;
                             const leftOffset = stackCount > 1 ? (stackIndex * (100 / stackCount)) + 1 : 0;
 
-                            // Calculate height based on duration using dynamic slot height
+                            // Calculate height based on duration (respects time slots)
                             const duration = apt.duration || 60;
-                            const heightMobile = (duration / 30) * slotHeightMobile;
-                            const heightDesktop = (duration / 30) * slotHeight;
+
+                            // Duration-based card height calculation
+                            const heightMobile = calculateAppointmentCardHeight(cardSize, duration, heightScale);
+                            const heightDesktop = heightMobile; // Same content, same height
                             const topMobile = slotIndex * slotHeightMobile;
                             const topDesktop = slotIndex * slotHeight;
                             const isDraggable = !!onAppointmentReschedule;
@@ -286,6 +342,7 @@ const CalendarDayView = memo(({
                                     style={style}
                                     isDraggable={isDraggable}
                                     isDragging={isDraggingThis}
+                                    isSaving={apt.id === savingAppointmentId}
                                     isDropTarget={isDropTarget}
                                     onDragStart={handleDragStart}
                                     onDragEnd={handleDragEnd}
@@ -312,7 +369,11 @@ const CalendarDayView = memo(({
                             );
                         });
                     })()}
+                    </div>
                 </div>
+                </div>
+                {/* Bottom scroll indicator */}
+                <div id="scroll-indicator-bottom" className="scroll-indicator scroll-indicator-bottom opacity-0" aria-hidden="true" />
             </div>
         </div>
     );
