@@ -6,6 +6,8 @@ import { cn } from '@/lib/utils';
 import { CheckCircle2, Circle, Trophy } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { DailyQuestItem } from '@/hooks/useGamification';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useGamificationSound } from '@/hooks/useGamificationSound';
 
 interface DailyQuestsProps {
     quests: DailyQuestItem[];
@@ -14,9 +16,15 @@ interface DailyQuestsProps {
 }
 
 export function DailyQuests({ quests, onComplete, isLoading }: DailyQuestsProps) {
+    const { playSound } = useGamificationSound();
     const completedCount = quests.filter(q => q.completed).length;
     const totalQuests = quests.length;
     const progress = totalQuests > 0 ? (completedCount / totalQuests) * 100 : 0;
+
+    const handleComplete = (id: string) => {
+        playSound('success');
+        onComplete(id);
+    };
 
     if (isLoading) {
         return (
@@ -50,9 +58,11 @@ export function DailyQuests({ quests, onComplete, isLoading }: DailyQuestsProps)
                 </div>
                 {/* Progress Bar */}
                 <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden mt-2">
-                    <div
-                        className="h-full bg-yellow-500 rounded-full transition-all duration-500"
-                        style={{ width: `${progress}%` }}
+                    <motion.div
+                        className="h-full bg-yellow-500 rounded-full"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progress}%` }}
+                        transition={{ duration: 0.8, ease: "circOut" }}
                     />
                 </div>
             </CardHeader>
@@ -64,76 +74,89 @@ export function DailyQuests({ quests, onComplete, isLoading }: DailyQuestsProps)
                                 Nenhuma missão disponível para hoje.
                             </p>
                         ) : (
-                            quests.map((quest) => {
-                                const IconComponent = (Icons as any)[quest.icon] || Icons.Star;
+                            <AnimatePresence mode='popLayout'>
+                                {quests.map((quest) => {
+                                    const IconComponent = (Icons as any)[quest.icon] || Icons.Star;
 
-                                return (
-                                    <div
-                                        key={quest.id}
-                                        className={cn(
-                                            "group flex items-center justify-between p-3 rounded-lg border transition-all duration-300",
-                                            quest.completed
-                                                ? "bg-primary/5 border-primary/20"
-                                                : "bg-card hover:bg-muted/50 border-border/50 hover:border-border"
-                                        )}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className={cn(
-                                                "p-2 rounded-full transition-colors",
-                                                quest.completed ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:bg-muted/80"
-                                            )}>
-                                                <IconComponent className="h-4 w-4" />
-                                            </div>
-                                            <div className="space-y-0.5">
-                                                <p className={cn(
-                                                    "text-sm font-medium transition-colors",
-                                                    quest.completed && "text-muted-foreground line-through"
+                                    return (
+                                        <motion.div
+                                            key={quest.id}
+                                            layout
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, scale: 0.9 }}
+                                            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                                            className={cn(
+                                                "group flex items-center justify-between p-3 rounded-lg border transition-colors duration-300",
+                                                quest.completed
+                                                    ? "bg-primary/5 border-primary/20"
+                                                    : "bg-card hover:bg-muted/50 border-border/50 hover:border-border"
+                                            )}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className={cn(
+                                                    "p-2 rounded-full transition-colors",
+                                                    quest.completed ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:bg-muted/80"
                                                 )}>
-                                                    {quest.title}
-                                                </p>
-                                                {quest.description && (
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {quest.description}
+                                                    <IconComponent className="h-4 w-4" />
+                                                </div>
+                                                <div className="space-y-0.5">
+                                                    <p className={cn(
+                                                        "text-sm font-medium transition-colors",
+                                                        quest.completed && "text-muted-foreground line-through"
+                                                    )}>
+                                                        {quest.title}
                                                     </p>
-                                                )}
+                                                    {quest.description && (
+                                                        <p className="text-xs text-muted-foreground">
+                                                            {quest.description}
+                                                        </p>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
 
-                                        <div className="flex items-center gap-3">
-                                            <div className="text-xs font-bold text-yellow-600 bg-yellow-500/10 px-2 py-1 rounded-full">
-                                                +{quest.xp} XP
+                                            <div className="flex items-center gap-3">
+                                                <div className="text-xs font-bold text-yellow-600 bg-yellow-500/10 px-2 py-1 rounded-full">
+                                                    +{quest.xp} XP
+                                                </div>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                disabled={quest.completed}
+                                                                onClick={() => handleComplete(quest.id)}
+                                                                className={cn(
+                                                                    "h-8 w-8 rounded-full transition-all",
+                                                                    quest.completed
+                                                                        ? "text-primary hover:text-primary hover:bg-transparent"
+                                                                        : "text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                                                )}
+                                                            >
+                                                                {quest.completed ? (
+                                                                    <motion.div
+                                                                        initial={{ scale: 0 }}
+                                                                        animate={{ scale: 1 }}
+                                                                        transition={{ type: "spring", stiffness: 500, damping: 20 }}
+                                                                    >
+                                                                        <CheckCircle2 className="h-5 w-5" />
+                                                                    </motion.div>
+                                                                ) : (
+                                                                    <Circle className="h-5 w-5" />
+                                                                )}
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>{quest.completed ? "Concluída" : "Completar Missão"}</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
                                             </div>
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            disabled={quest.completed}
-                                                            onClick={() => onComplete(quest.id)}
-                                                            className={cn(
-                                                                "h-8 w-8 rounded-full transition-all",
-                                                                quest.completed
-                                                                    ? "text-primary hover:text-primary hover:bg-transparent"
-                                                                    : "text-muted-foreground hover:text-primary hover:bg-primary/10"
-                                                            )}
-                                                        >
-                                                            {quest.completed ? (
-                                                                <CheckCircle2 className="h-5 w-5" />
-                                                            ) : (
-                                                                <Circle className="h-5 w-5" />
-                                                            )}
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p>{quest.completed ? "Concluída" : "Completar Missão"}</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
-                                        </div>
-                                    </div>
-                                );
-                            })
+                                        </motion.div>
+                                    );
+                                })}
+                            </AnimatePresence>
                         )}
                     </div>
                 </ScrollArea>
