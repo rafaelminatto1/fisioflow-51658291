@@ -43,8 +43,8 @@ import { chromium } from 'playwright';
     console.log(`   URL atual: ${currentUrl}`);
 
     // Screenshot
-    await page.screenshot({ path: 'screenshots/test-error-boundary-01.png', fullPage: true });
-    console.log('   📸 Screenshot: test-error-boundary-01.png');
+    await page.screenshot({ path: 'screenshots/test-error-boundary-01.avif', fullPage: true });
+    console.log('   📸 Screenshot: test-error-boundary-01.avif');
 
     // Verificar elementos na tela
     const hasInfoDev = await page.locator('text=INFO DEV, text=DEBUG INFO, text=DEV (Debug)').count();
@@ -75,7 +75,7 @@ import { chromium } from 'playwright';
 
   } catch (error) {
     console.error('\n❌ ERRO NO TESTE:', error.message);
-    await page.screenshot({ path: 'screenshots/test-error-boundary-erro.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/test-error-boundary-erro.avif', fullPage: true });
   } finally {
     await browser.close();
   }

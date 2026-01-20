@@ -34,7 +34,7 @@ import { chromium } from 'playwright';
     await page.waitForTimeout(2000);
 
     // Screenshot
-    await page.screenshot({ path: 'screenshots/test-forcar-error.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/test-forcar-error.avif', fullPage: true });
     console.log('   📸 Screenshot salvo');
 
     // 3. Verificar se o ErrorBoundary apareceu
@@ -55,7 +55,7 @@ import { chromium } from 'playwright';
     console.log(`   URL atual: ${currentUrl}`);
 
     // Screenshot
-    await page.screenshot({ path: 'screenshots/test-rota-invalida.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/test-rota-invalida.avif', fullPage: true });
 
     const pageText2 = await page.locator('body').textContent();
     const hasInfoDev2 = pageText2.includes('INFO DEV') || pageText2.includes('DEBUG INFO');
@@ -70,7 +70,7 @@ import { chromium } from 'playwright';
 
   } catch (error) {
     console.error('\n❌ ERRO:', error.message);
-    await page.screenshot({ path: 'screenshots/test-forcar-erro-exception.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/test-forcar-erro-exception.avif', fullPage: true });
   } finally {
     await browser.close();
   }

@@ -282,9 +282,9 @@ vercel promote <url> --prod  # promover anterior
 - `TESTES_IMPLEMENTADOS.md`: Detalhes dos testes
 
 ### Diagramas de Arquitetura
-- `minatto/ref_dashboard_fisioflow.png`: Dashboard
-- `minatto/ref_patient_management.png`: Gestão de pacientes
-- `minatto/ref_appointment_calendar.png`: Agenda
+- `minatto/ref_dashboard_fisioflow.avif`: Dashboard
+- `minatto/ref_patient_management.avif`: Gestão de pacientes
+- `minatto/ref_appointment_calendar.avif`: Agenda
 - E outros...
 
 ---

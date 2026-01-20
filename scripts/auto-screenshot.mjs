@@ -86,10 +86,10 @@ async function autoScreenshot() {
 
         // Screenshot 1: Full page - Collapsed state
         await page.screenshot({
-            path: 'screenshots/01-grid-collapsed-full.png',
+            path: 'screenshots/01-grid-collapsed-full.avif',
             fullPage: true
         });
-        console.log('✅ Saved: screenshots/01-grid-collapsed-full.png');
+        console.log('✅ Saved: screenshots/01-grid-collapsed-full.avif');
 
         // Get widget positions
         const items = await page.locator('.react-grid-item').all();
@@ -142,10 +142,10 @@ async function autoScreenshot() {
 
             // Screenshot 2: Full page - Expanded state
             await page.screenshot({
-                path: 'screenshots/02-grid-expanded-full.png',
+                path: 'screenshots/02-grid-expanded-full.avif',
                 fullPage: true
             });
-            console.log('✅ Saved: screenshots/02-grid-expanded-full.png');
+            console.log('✅ Saved: screenshots/02-grid-expanded-full.avif');
 
             // Get widget positions after expansion
             const expandedItems = await page.locator('.react-grid-item').all();
@@ -172,7 +172,7 @@ async function autoScreenshot() {
 
     } catch (error) {
         console.error('❌ Error:', error.message);
-        await page.screenshot({ path: 'screenshots/error.png' });
+        await page.screenshot({ path: 'screenshots/error.avif' });
     } finally {
         await browser.close();
     }

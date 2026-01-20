@@ -22,6 +22,8 @@ import { MedicalReportSuggestions } from './MedicalReportSuggestions';
 import { MandatoryTestAlertService, type AlertCheckResult } from '@/lib/services/mandatoryTestAlertService';
 import { SessionExercisesPanel, type SessionExercise } from './SessionExercisesPanel';
 import { PatientHelpers } from '@/types';
+import { GamificationTriggerService } from '@/lib/services/gamificationTriggers';
+import { GamificationNotificationService } from '@/lib/services/gamificationNotifications';
 
 interface SessionEvolutionContainerProps {
   appointmentId?: string;
@@ -371,6 +373,30 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
       }
 
       logger.info('Evolução salva com sucesso', { soapRecordId: soapRecord.id, patientId }, 'SessionEvolutionContainer');
+
+      // Award XP for session completion
+      if (patientId) {
+        try {
+          const xpResult = await GamificationTriggerService.awardSessionCompletion(patientId, {
+            sessionNumber,
+            exercisesCount: sessionExercises.length,
+            completionTime: new Date(),
+          });
+
+          if (xpResult.success && xpResult.xpAwarded > 0) {
+            const description = `Sessão ${sessionNumber} concluída${sessionExercises.length > 0 ? ` com ${sessionExercises.length} exercício(s)` : ''}`;
+
+            if (xpResult.newLevel && xpResult.newLevel > 1) {
+              GamificationNotificationService.levelUp(xpResult.newLevel);
+            }
+
+            GamificationNotificationService.xpAwarded(xpResult.xpAwarded, description, !!xpResult.newLevel);
+          }
+        } catch (xpError) {
+          console.warn('Failed to award XP:', xpError);
+          // Don't fail the save if XP award fails
+        }
+      }
 
       toast({
         title: 'Evolução salva',

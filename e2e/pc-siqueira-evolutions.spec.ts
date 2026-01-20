@@ -430,7 +430,7 @@ test.describe('PC Siqueira - Criar 10 Evoluções Completas', () => {
 
       // Tirar screenshot para evidência
       await page.screenshot({
-        path: `screenshots/evolucao-${evolution.session}-pc-siqueira.png`,
+        path: `screenshots/evolucao-${evolution.session}-pc-siqueira.avif`,
         fullPage: true
       });
 
@@ -457,7 +457,7 @@ test.describe('PC Siqueira - Criar 10 Evoluções Completas', () => {
 
     // Screenshot final do histórico
     await page.screenshot({
-      path: 'screenshots/historico-completo-pc-siqueira.png',
+      path: 'screenshots/historico-completo-pc-siqueira.avif',
       fullPage: true
     });
 
@@ -532,7 +532,7 @@ test.describe('PC Siqueira - Criar 10 Evoluções Completas', () => {
 
     // Screenshot do grid de exercícios
     await page.screenshot({
-      path: 'screenshots/grid-exercicios-pc-siqueira.png',
+      path: 'screenshots/grid-exercicios-pc-siqueira.avif',
       fullPage: true
     });
   });

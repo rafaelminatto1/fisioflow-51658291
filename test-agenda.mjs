@@ -31,7 +31,7 @@ import { chromium } from 'playwright';
     console.log(`   URL: ${url}`);
 
     // Screenshot
-    await page.screenshot({ path: 'screenshots/test-agenda-01.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/test-agenda-01.avif', fullPage: true });
     console.log('   📸 Screenshot salvo');
 
     // Verificar se estamos na agenda ou no login
@@ -64,7 +64,7 @@ import { chromium } from 'playwright';
       console.log(`   Nova URL: ${newUrl}`);
 
       // Screenshot após login
-      await page.screenshot({ path: 'screenshots/test-agenda-02.png', fullPage: true });
+      await page.screenshot({ path: 'screenshots/test-agenda-02.avif', fullPage: true });
 
       // Se ainda no login, o Supabase está com problema
       if (newUrl.includes('/auth/login')) {
@@ -75,7 +75,7 @@ import { chromium } from 'playwright';
         await page.goto('http://localhost:8080/schedule', { waitUntil: 'domcontentloaded' });
         await page.waitForTimeout(2000);
 
-        await page.screenshot({ path: 'screenshots/test-agenda-03.png', fullPage: true });
+        await page.screenshot({ path: 'screenshots/test-agenda-03.avif', fullPage: true });
 
         // Procurar botões
         const allButtons = await page.locator('button:visible').all();
@@ -100,7 +100,7 @@ import { chromium } from 'playwright';
           await iniciarButtons[0].element.click();
           await page.waitForTimeout(3000);
 
-          await page.screenshot({ path: 'screenshots/test-agenda-04.png', fullPage: true });
+          await page.screenshot({ path: 'screenshots/test-agenda-04.avif', fullPage: true });
 
           const finalUrl = page.url();
           console.log(`   URL final: ${finalUrl}`);
@@ -122,7 +122,7 @@ import { chromium } from 'playwright';
 
   } catch (error) {
     console.error('\n❌ ERRO:', error.message);
-    await page.screenshot({ path: 'screenshots/test-agenda-erro.png', fullPage: true });
+    await page.screenshot({ path: 'screenshots/test-agenda-erro.avif', fullPage: true });
   } finally {
     await browser.close();
   }
