@@ -217,6 +217,8 @@ export const VALID_PATIENT_COLUMNS = new Set<PatientColumn>([
  */
 export const INVALID_PATIENT_COLUMNS = new Set([
   'name', // Use 'full_name' instead
+  'nome', // Use 'full_name' instead
+  'whatsapp', // Use 'phone' instead
   'first_name',
   'last_name',
   'patient_name'
