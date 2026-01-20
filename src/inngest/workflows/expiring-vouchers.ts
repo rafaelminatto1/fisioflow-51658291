@@ -31,10 +31,10 @@ export const expiringVouchersWorkflow = inngest.createFunction(
     name: 'Expiring Vouchers Reminders',
     retries: retryConfig.email.maxAttempts,
   },
-  {
-    event: Events.CRON_EXPIRING_VOUCHERS,
-    cron: '0 10 * * *', // 10:00 AM daily
-  },
+  [
+    { event: Events.CRON_EXPIRING_VOUCHERS },
+    { cron: '0 10 * * *' }, // 10:00 AM daily
+  ],
   async ({ step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL!,

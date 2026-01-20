@@ -1,14 +1,15 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Trophy, Target, Flame, Star, Users, TrendingUp, AlertTriangle,
-  Award, Zap, Activity, TrendingDown
+  Award, Zap, Activity, TrendingDown, Calendar
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, TooltipProps } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, TooltipProps, AreaChart, Area } from 'recharts';
 import { useGamificationAdmin } from '@/hooks/useGamificationAdmin';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 
@@ -16,7 +17,7 @@ import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 const CustomChartTooltip = React.memo(({ active, payload, label }: TooltipProps<any, any>) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-lg border border-border bg-card p-3 shadow-md">
+      <div className="rounded-lg border border-border bg-card p-3 shadow-md animate-in fade-in-0 zoom-in-95 duration-200">
         <p className="text-sm font-medium mb-2">{label}</p>
         <div className="space-y-1.5">
           {payload.map((entry: any, index: number) => (
@@ -67,6 +68,8 @@ AnimatedCard.displayName = 'AnimatedCard';
  */
 export const GamificationDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const [period, setPeriod] = useState<string>("30");
+  
   const {
     stats,
     statsLoading,
@@ -74,7 +77,7 @@ export const GamificationDashboard: React.FC = () => {
     engagementLoading,
     atRiskPatients,
     popularAchievements,
-  } = useGamificationAdmin();
+  } = useGamificationAdmin(parseInt(period));
 
   const loading = statsLoading || engagementLoading;
 
@@ -82,27 +85,24 @@ export const GamificationDashboard: React.FC = () => {
   const chartData = useMemo(() => {
     if (!engagementData || engagementData.length === 0) return [];
 
-    return engagementData.slice(-7).map(d => ({
-      dia: new Date(d.date).toLocaleDateString('pt-BR', { weekday: 'short' }),
+    // Filter/Slice based on period for smoother rendering if too many points
+    const dataToDisplay = engagementData; 
+
+    return dataToDisplay.map(d => ({
+      dia: new Date(d.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+      fullDate: new Date(d.date).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }),
       xp: d.xpAwarded,
       quests: d.questsCompleted,
     }));
   }, [engagementData]);
-
-  const maxWeeklyXp = useMemo(() => {
-    return Math.max(...chartData.map(d => d.xp), 1);
-  }, [chartData]);
-
-  const maxQuests = useMemo(() => {
-    return Math.max(...chartData.map(d => d.quests), 1);
-  }, [chartData]);
 
   // Popular achievements for chart
   const popularAchievementsData = useMemo(() => {
     if (!popularAchievements || popularAchievements.length === 0) return [];
 
     return popularAchievements.slice(0, 5).map(a => ({
-      name: a.title.length > 20 ? a.title.substring(0, 20) + '...' : a.title,
+      name: a.title.length > 25 ? a.title.substring(0, 25) + '...' : a.title,
+      fullName: a.title,
       count: a.unlockedCount,
     }));
   }, [popularAchievements]);
@@ -113,176 +113,108 @@ export const GamificationDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6 md:space-y-8 animate-fade-in">
+      {/* Header & Filters */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-bold tracking-tight">Visão Geral</h2>
+          <p className="text-sm text-muted-foreground">Métricas de engajamento e performance.</p>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Selecione o período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">Últimos 7 dias</SelectItem>
+              <SelectItem value="30">Últimos 30 dias</SelectItem>
+              <SelectItem value="90">Últimos 90 dias</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       {/* Main Statistics Cards */}
       {loading ? (
         <LoadingSkeleton type="stats" rows={4} />
       ) : (
         <section aria-label="Métricas principais de gamificação">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
             <AnimatedCard delay={0}>
-              <Card className="rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-200">
-                <CardHeader className="pb-3 px-4 sm:px-5 lg:px-6 pt-4 sm:pt-5 lg:pt-6">
-                  <CardTitle className="flex items-center justify-between text-sm sm:text-base font-medium">
-                    <span className="text-muted-foreground">Pacientes Ativos</span>
-                    <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+              <Card className="rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-card to-primary/5">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center justify-between text-sm font-medium text-muted-foreground">
+                    Pacientes Ativos
+                    <Users className="h-4 w-4 text-primary" />
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="px-4 sm:px-5 lg:px-6 pb-4 sm:pb-5 lg:pb-6">
-                  <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
-                    <p className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight">
-                      {stats?.totalPatients || 0}
-                    </p>
-                    <Badge variant="secondary" className="text-xs sm:text-sm font-medium bg-success/10 text-success">
-                      {stats?.activeLast30Days || 0} ativos
-                    </Badge>
+                <CardContent>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-bold">{stats?.activeLast30Days || 0}</span>
+                    <span className="text-xs text-muted-foreground">de {stats?.totalPatients || 0}</span>
+                  </div>
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    Taxa de engajamento: <span className="font-medium text-primary">{stats?.engagementRate?.toFixed(1)}%</span>
                   </div>
                 </CardContent>
               </Card>
             </AnimatedCard>
 
             <AnimatedCard delay={50}>
-              <Card className="rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-200">
-                <CardHeader className="pb-3 px-4 sm:px-5 lg:px-6 pt-4 sm:pt-5 lg:pt-6">
-                  <CardTitle className="flex items-center justify-between text-sm sm:text-base font-medium">
-                    <span className="text-muted-foreground">XP Total Distribuído</span>
-                    <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" />
+              <Card className="rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-card to-yellow-500/5">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center justify-between text-sm font-medium text-muted-foreground">
+                    XP Distribuído
+                    <Star className="h-4 w-4 text-yellow-500" />
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="px-4 sm:px-5 lg:px-6 pb-4 sm:pb-5 lg:pb-6">
+                <CardContent>
                   <div className="flex items-baseline gap-2">
-                    <p className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight">
-                      {stats?.totalXpAwarded?.toLocaleString() || 0}
-                    </p>
-                    <Badge variant="outline" className="text-xs sm:text-sm font-medium">
-                      XP total
-                    </Badge>
+                    <span className="text-2xl font-bold">{stats?.totalXpAwarded?.toLocaleString() || 0}</span>
+                    <span className="text-xs text-muted-foreground">pontos</span>
                   </div>
+                  <Progress value={75} className="h-1 mt-3 bg-yellow-500/20" indicatorClassName="bg-yellow-500" />
                 </CardContent>
               </Card>
             </AnimatedCard>
 
             <AnimatedCard delay={100}>
-              <Card className="rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-200">
-                <CardHeader className="pb-3 px-4 sm:px-5 lg:px-6 pt-4 sm:pt-5 lg:pt-6">
-                  <CardTitle className="flex items-center justify-between text-sm sm:text-base font-medium">
-                    <span className="text-muted-foreground">Nível Médio</span>
-                    <Trophy className="h-4 w-4 sm:h-5 sm:w-5 text-orange-500" />
+              <Card className="rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-card to-orange-500/5">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center justify-between text-sm font-medium text-muted-foreground">
+                    Nível Médio
+                    <Trophy className="h-4 w-4 text-orange-500" />
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="px-4 sm:px-5 lg:px-6 pb-4 sm:pb-5 lg:pb-6">
+                <CardContent>
                   <div className="flex items-baseline gap-2">
-                    <p className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight">
-                      {stats?.averageLevel?.toFixed(1) || 0}
-                    </p>
+                    <span className="text-2xl font-bold">{stats?.averageLevel?.toFixed(1) || 0}</span>
+                    <span className="text-xs text-muted-foreground">nível</span>
+                  </div>
+                  <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                    <TrendingUp className="h-3 w-3 text-green-500" />
+                    <span>Crescimento constante</span>
                   </div>
                 </CardContent>
               </Card>
             </AnimatedCard>
 
             <AnimatedCard delay={150}>
-              <Card className="rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-200">
-                <CardHeader className="pb-3 px-4 sm:px-5 lg:px-6 pt-4 sm:pt-5 lg:pt-6">
-                  <CardTitle className="flex items-center justify-between text-sm sm:text-base font-medium">
-                    <span className="text-muted-foreground">Streak Médio</span>
-                    <Flame className="h-4 w-4 sm:h-5 sm:w-5 text-red-500" />
+              <Card className="rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 bg-gradient-to-br from-card to-red-500/5">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center justify-between text-sm font-medium text-muted-foreground">
+                    Streak Médio
+                    <Flame className="h-4 w-4 text-red-500" />
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="px-4 sm:px-5 lg:px-6 pb-4 sm:pb-5 lg:pb-6">
+                <CardContent>
                   <div className="flex items-baseline gap-2">
-                    <p className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight">
-                      {stats?.averageStreak?.toFixed(1) || 0}
-                    </p>
-                    <Badge variant="outline" className="text-xs sm:text-sm font-medium">
-                      dias
-                    </Badge>
+                    <span className="text-2xl font-bold">{stats?.averageStreak?.toFixed(1) || 0}</span>
+                    <span className="text-xs text-muted-foreground">dias</span>
                   </div>
-                </CardContent>
-              </Card>
-            </AnimatedCard>
-          </div>
-        </section>
-      )}
-
-      {/* Secondary Statistics */}
-      {!loading && (
-        <section aria-label="Métricas secundárias">
-          <div className="grid gap-4 md:gap-5 grid-cols-2 lg:grid-cols-4">
-            <AnimatedCard delay={200}>
-              <Card className="rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-200">
-                <CardHeader className="pb-3 px-4 sm:px-5 lg:px-6 pt-4 sm:pt-5 lg:pt-6">
-                  <CardTitle className="flex items-center justify-between text-sm sm:text-base font-medium">
-                    <span className="text-muted-foreground">Taxa de Engajamento</span>
-                    <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-4 sm:px-5 lg:px-6 pb-4 sm:pb-5 lg:pb-6">
-                  <div className="space-y-3">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight">
-                        {stats?.engagementRate?.toFixed(1) || 0}%
-                      </span>
-                    </div>
-                    <div className="space-y-2">
-                      <Progress value={stats?.engagementRate || 0} className="h-2.5" />
-                      <CardDescription className="text-xs">
-                        {stats?.engagementRate >= 70 ? 'Alto engajamento' : stats?.engagementRate >= 40 ? 'Engajamento moderado' : 'Baixo engajamento'}
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </AnimatedCard>
-
-            <AnimatedCard delay={250}>
-              <Card className="rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-200">
-                <CardHeader className="pb-3 px-4 sm:px-5 lg:px-6 pt-4 sm:pt-5 lg:pt-6">
-                  <CardTitle className="flex items-center justify-between text-sm sm:text-base font-medium">
-                    <span className="text-muted-foreground">Conquistas Desbloqueadas</span>
-                    <Award className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" />
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-4 sm:px-5 lg:px-6 pb-4 sm:pb-5 lg:pb-6">
-                  <span className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight">
-                    {stats?.achievementsUnlocked || 0}
-                  </span>
-                </CardContent>
-              </Card>
-            </AnimatedCard>
-
-            <AnimatedCard delay={300}>
-              <Card className="rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-200">
-                <CardHeader className="pb-3 px-4 sm:px-5 lg:px-6 pt-4 sm:pt-5 lg:pt-6">
-                  <CardTitle className="flex items-center justify-between text-sm sm:text-base font-medium">
-                    <span className="text-muted-foreground">Ativos (7 dias)</span>
-                    <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-4 sm:px-5 lg:px-6 pb-4 sm:pb-5 lg:pb-6">
-                  <span className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight">
-                    {stats?.activeLast7Days || 0}
-                  </span>
-                </CardContent>
-              </Card>
-            </AnimatedCard>
-
-            <AnimatedCard delay={350}>
-              <Card className="rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-200">
-                <CardHeader className="pb-3 px-4 sm:px-5 lg:px-6 pt-4 sm:pt-5 lg:pt-6">
-                  <CardTitle className="flex items-center justify-between text-sm sm:text-base font-medium">
-                    <span className="text-muted-foreground">Pacientes em Risco</span>
-                    <AlertTriangle className={`h-4 w-4 sm:h-5 sm:w-5 ${(stats?.atRiskPatients || 0) > 0 ? 'text-warning' : 'text-muted-foreground'}`} />
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-4 sm:px-5 lg:px-6 pb-4 sm:pb-5 lg:pb-6">
-                  <div className="flex items-baseline gap-2">
-                    <span className={`text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight ${(stats?.atRiskPatients || 0) > 0 ? 'text-warning' : ''}`}>
-                      {stats?.atRiskPatients || 0}
-                    </span>
-                    {(stats?.atRiskPatients || 0) > 0 && (
-                      <Badge variant="secondary" className="text-xs sm:text-sm font-medium bg-warning/10 text-warning">
-                        Atenção
-                      </Badge>
-                    )}
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    Consistência dos pacientes
                   </div>
                 </CardContent>
               </Card>
@@ -294,109 +226,105 @@ export const GamificationDashboard: React.FC = () => {
       {/* Charts */}
       {!loading && (
         <section aria-label="Gráficos de engajamento">
-          <div className="grid gap-4 md:gap-5 md:grid-cols-2">
-            {/* Weekly Engagement Trend */}
-            <AnimatedCard delay={400}>
-              <Card className="rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-200">
-                <CardHeader className="pb-3 px-4 sm:px-5 lg:px-6 pt-4 sm:pt-5 lg:pt-6">
-                  <CardTitle className="flex items-center gap-2.5 sm:gap-3 text-base sm:text-lg font-medium">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                    </div>
-                    Tendência de Engajamento (7 dias)
+          <div className="grid gap-4 md:gap-5 md:grid-cols-3">
+            {/* Engagement Trend */}
+            <AnimatedCard delay={200} className="md:col-span-2">
+              <Card className="rounded-xl border border-border/50 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Activity className="h-4 w-4 text-primary" />
+                    Atividade Recente
                   </CardTitle>
+                  <CardDescription>
+                    XP ganho e missões completadas nos últimos {period} dias
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="px-4 sm:px-5 lg:px-6 pb-4 sm:pb-5 lg:pb-6">
-                  {chartData.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-                      <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-muted flex items-center justify-center">
-                        <Activity className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                      <h3 className="text-base font-semibold text-foreground mb-2">
-                        Sem dados para exibir
-                      </h3>
-                      <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                        Os dados de engajamento aparecerão após a primeira atividade
-                      </p>
-                    </div>
-                  ) : (
-                    <ResponsiveContainer width="100%" height={180}>
-                      <BarChart data={chartData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
-                        <XAxis
-                          dataKey="dia"
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                          interval={0}
-                        />
-                        <YAxis
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
-                          width={28}
-                        />
-                        <Tooltip content={<CustomChartTooltip />} cursor={{ fill: 'hsl(var(--accent))', opacity: 0.3 }} />
-                        <Bar dataKey="xp" name="XP Distribuído" radius={[4, 4, 0, 0]}>
-                          {chartData.map((_, index) => (
-                            <Cell key={`xp-${index}`} fill="hsl(var(--primary))" opacity={0.7} />
-                          ))}
-                        </Bar>
-                        <Bar dataKey="quests" name="Missões" radius={[4, 4, 0, 0]}>
-                          {chartData.map((_, index) => (
-                            <Cell key={`quest-${index}`} fill="hsl(var(--success))" />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  )}
+                <CardContent className="pl-0">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorXp" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <XAxis 
+                        dataKey="dia" 
+                        stroke="#888888" 
+                        fontSize={12} 
+                        tickLine={false} 
+                        axisLine={false}
+                        minTickGap={30}
+                      />
+                      <YAxis 
+                        stroke="#888888" 
+                        fontSize={12} 
+                        tickLine={false} 
+                        axisLine={false} 
+                        tickFormatter={(value) => `${value}`} 
+                      />
+                      <Tooltip content={<CustomChartTooltip />} />
+                      <Area 
+                        type="monotone" 
+                        dataKey="xp" 
+                        name="XP Ganho"
+                        stroke="hsl(var(--primary))" 
+                        fillOpacity={1} 
+                        fill="url(#colorXp)" 
+                        strokeWidth={2}
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="quests" 
+                        name="Missões"
+                        stroke="hsl(var(--success))" 
+                        fill="transparent" 
+                        strokeWidth={2}
+                        strokeDasharray="5 5"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
                 </CardContent>
               </Card>
             </AnimatedCard>
 
             {/* Popular Achievements */}
-            <AnimatedCard delay={450}>
-              <Card className="rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-200">
-                <CardHeader className="pb-3 px-4 sm:px-5 lg:px-6 pt-4 sm:pt-5 lg:pt-6">
-                  <CardTitle className="flex items-center gap-2.5 sm:gap-3 text-base sm:text-lg font-medium">
-                    <div className="p-2 bg-yellow-500/10 rounded-lg">
-                      <Trophy className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" />
-                    </div>
-                    Conquistas Mais Populares
+            <AnimatedCard delay={300}>
+              <Card className="rounded-xl border border-border/50 shadow-sm h-full">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Award className="h-4 w-4 text-yellow-500" />
+                    Top Conquistas
                   </CardTitle>
+                  <CardDescription>
+                    As conquistas mais desbloqueadas
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="px-4 sm:px-5 lg:px-6 pb-4 sm:pb-5 lg:pb-6">
-                  {popularAchievementsData.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-                      <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-muted flex items-center justify-center">
-                        <Award className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                      <h3 className="text-base font-semibold text-foreground mb-2">
-                        Nenhuma conquista desbloqueada
-                      </h3>
-                      <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                        As conquistas aparecerão aqui quando os pacientes começarem a desbloqueá-las
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {popularAchievementsData.map((achievement, index) => (
-                        <div key={index} className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium truncate pr-2" title={achievement.name}>
-                              {achievement.name}
-                            </span>
-                            <span className="text-sm font-bold text-primary">
-                              {achievement.count}
-                            </span>
-                          </div>
-                          <Progress
-                            value={(achievement.count / maxAchievements) * 100}
-                            className="h-2"
-                          />
+                <CardContent>
+                  <div className="space-y-5">
+                    {popularAchievementsData.map((achievement, index) => (
+                      <div key={index} className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-medium truncate" title={achievement.fullName}>
+                            {achievement.name}
+                          </span>
+                          <span className="font-bold text-muted-foreground">
+                            {achievement.count}
+                          </span>
                         </div>
-                      ))}
-                    </div>
-                  )}
+                        <Progress
+                          value={(achievement.count / maxAchievements) * 100}
+                          className="h-2"
+                          indicatorClassName={index === 0 ? "bg-yellow-500" : index === 1 ? "bg-gray-400" : index === 2 ? "bg-orange-600" : "bg-primary/50"}
+                        />
+                      </div>
+                    ))}
+                    {popularAchievementsData.length === 0 && (
+                      <div className="text-center py-10 text-muted-foreground text-sm">
+                        Nenhuma conquista registrada ainda.
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </AnimatedCard>
@@ -407,36 +335,27 @@ export const GamificationDashboard: React.FC = () => {
       {/* Alerts Section */}
       {!loading && (stats?.atRiskPatients || 0) > 0 && (
         <section aria-label="Alertas de pacientes em risco">
-          <AnimatedCard delay={500}>
-            <Card className="rounded-xl border border-warning/20 bg-warning/5">
-              <CardHeader className="pb-3 px-4 sm:px-5 lg:px-6 pt-4 sm:pt-5 lg:pt-6">
-                <CardTitle className="flex items-center gap-2.5 text-base sm:text-lg font-medium text-warning">
-                  <AlertTriangle className="h-5 w-5" />
-                  Pacientes em Risco
-                </CardTitle>
-                <CardDescription className="text-xs sm:text-sm">
-                  Pacientes sem atividade há mais de 7 dias
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="px-4 sm:px-5 lg:px-6 pb-4 sm:pb-5 lg:pb-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <AnimatedCard delay={400}>
+            <Card className="rounded-xl border-l-4 border-l-warning bg-warning/5 border-t border-r border-b border-warning/20">
+              <CardContent className="p-4 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="p-2 bg-warning/20 rounded-full text-warning shrink-0">
+                    <AlertTriangle className="h-5 w-5" />
+                  </div>
                   <div>
-                    <p className="text-sm font-semibold">
-                      {stats?.atRiskPatients} {stats?.atRiskPatients === 1 ? 'paciente' : 'pacientes'} sem atividade recente
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Considere entrar em contato para reengajá-los
+                    <h4 className="font-semibold text-foreground">Atenção Necessária</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {stats?.atRiskPatients} pacientes não interagem com a plataforma há mais de 7 dias.
                     </p>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full sm:w-auto"
-                    onClick={() => navigate('/admin/gamification?tab=ranking')}
-                  >
-                    Ver Ranking Completo
-                  </Button>
                 </div>
+                <Button 
+                  variant="outline" 
+                  className="border-warning/30 text-warning hover:bg-warning/10 hover:text-warning-foreground"
+                  onClick={() => navigate('/admin/gamification?tab=ranking')}
+                >
+                  Ver Lista
+                </Button>
               </CardContent>
             </Card>
           </AnimatedCard>

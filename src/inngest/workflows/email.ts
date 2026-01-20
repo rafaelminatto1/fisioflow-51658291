@@ -60,7 +60,7 @@ export const sendAppointmentConfirmationWorkflow = inngest.createFunction(
 
     const result = (await step.run('send-confirmation', async (): Promise<{ success: boolean; messageId?: string; error?: any }> => {
       return await ResendService.sendAppointmentConfirmation(
-        to,
+        to as string,
         {
           patientName,
           therapistName,
@@ -101,7 +101,7 @@ export const sendAppointmentReminderEmailWorkflow = inngest.createFunction(
 
     const result = (await step.run('send-reminder', async (): Promise<{ success: boolean; messageId?: string; error?: any }> => {
       return await ResendService.sendAppointmentReminder(
-        to,
+        to as string,
         {
           patientName,
           therapistName,
@@ -141,7 +141,7 @@ export const sendBirthdayGreetingWorkflow = inngest.createFunction(
 
     const result = (await step.run('send-birthday-greeting', async (): Promise<{ success: boolean; messageId?: string; error?: any }> => {
       return await ResendService.sendBirthdayGreeting(
-        to,
+        to as string,
         {
           patientName,
           organizationName,
@@ -178,7 +178,7 @@ export const sendReactivationEmailWorkflow = inngest.createFunction(
 
     const result = (await step.run('send-reactivation', async (): Promise<{ success: boolean; messageId?: string; error?: any }> => {
       return await ResendService.sendReactivationEmail(
-        to,
+        to as string,
         {
           patientName,
           organizationName,
@@ -222,7 +222,7 @@ export const sendDailyReportWorkflow = inngest.createFunction(
 
     const result = (await step.run('send-daily-report', async (): Promise<{ success: boolean; messageId?: string; error?: any }> => {
       return await ResendService.sendDailyReport(
-        to,
+        to as string,
         {
           therapistName,
           organizationName,

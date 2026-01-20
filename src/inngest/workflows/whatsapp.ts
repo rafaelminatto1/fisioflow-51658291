@@ -27,6 +27,7 @@ export const sendWhatsAppWorkflow = inngest.createFunction(
     const result = await step.run('send-whatsapp', async () => {
       switch (type) {
         case 'media':
+          // @ts-expect-error - WhatsAppService dynamic method
           return await WhatsAppService.sendMedia(to, {
             url: mediaUrl || '',
             caption: message,
@@ -70,7 +71,7 @@ export const sendAppointmentConfirmationWhatsAppWorkflow = inngest.createFunctio
     const { to, patientName, therapistName, date, time, location, organizationName } = event.data;
 
     const result = await step.run('send-confirmation', async () => {
-      return await WhatsAppService.sendAppointmentConfirmation(to, {
+      return await WhatsAppService.sendAppointmentConfirmation(to as string, {
         patientName,
         therapistName,
         date,
@@ -106,7 +107,7 @@ export const sendAppointmentReminderWhatsAppWorkflow = inngest.createFunction(
     const { to, patientName, therapistName, date, time, location, organizationName } = event.data;
 
     const result = await step.run('send-reminder', async () => {
-      return await WhatsAppService.sendAppointmentReminder(to, {
+      return await WhatsAppService.sendAppointmentReminder(to as string, {
         patientName,
         therapistName,
         date,
@@ -142,7 +143,7 @@ export const sendBirthdayGreetingWhatsAppWorkflow = inngest.createFunction(
     const { to, patientName, organizationName, therapistName } = event.data;
 
     const result = await step.run('send-birthday-greeting', async () => {
-      return await WhatsAppService.sendBirthdayGreeting(to, {
+      return await WhatsAppService.sendBirthdayGreeting(to as string, {
         patientName,
         organizationName,
         therapistName,
@@ -176,7 +177,7 @@ export const sendReactivationWhatsAppWorkflow = inngest.createFunction(
 
     const result = await step.run('send-reactivation', async () => {
       // @ts-expect-error - WhatsAppService dynamic method
-      return await WhatsAppService.sendReactivation(to, {
+      return await WhatsAppService.sendReactivation(to as string, {
         patientName,
         organizationName,
       });
