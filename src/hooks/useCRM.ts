@@ -72,9 +72,9 @@ export function useCRMTarefas(leadId?: string) {
         .from('crm_tarefas')
         .select('*')
         .order('data_vencimento', { ascending: true, nullsFirst: false });
-      
+
       if (leadId) query = query.eq('lead_id', leadId);
-      
+
       const { data, error } = await query;
       if (error) throw error;
       return data as CRMTarefa[];
@@ -92,7 +92,7 @@ export function useTarefasPendentes() {
         .in('status', ['pendente', 'em_andamento'])
         .order('data_vencimento', { ascending: true, nullsFirst: false })
         .limit(20);
-      
+
       if (error) throw error;
       return data;
     },
@@ -298,8 +298,9 @@ export function useNPSPesquisas() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('crm_pesquisas_nps')
-        .select('*, leads(nome), patients(name)')
+        .select('*, leads(nome), patients(full_name)')
         .order('respondido_em', { ascending: false });
+
       if (error) throw error;
       return data;
     },
@@ -312,14 +313,14 @@ export function useNPSMetrics() {
     queryFn: async () => {
       const { data, error } = await supabase.from('crm_pesquisas_nps').select('nota, categoria');
       if (error) throw error;
-      
+
       const total = data.length;
       const promotores = data.filter(d => d.nota >= 9).length;
       const neutros = data.filter(d => d.nota >= 7 && d.nota <= 8).length;
       const detratores = data.filter(d => d.nota <= 6).length;
-      
+
       const nps = total > 0 ? Math.round(((promotores - detratores) / total) * 100) : 0;
-      
+
       return { total, promotores, neutros, detratores, nps };
     },
   });
@@ -354,9 +355,9 @@ export function useCRMAnalytics() {
       const { data: leads, error: leadsError } = await supabase
         .from('leads')
         .select('estagio, origem, score, temperatura, created_at, updated_at, data_ultimo_contato');
-      
+
       if (leadsError) throw leadsError;
-      
+
       // Conversion by source
       const conversionBySource = Object.entries(
         leads.reduce((acc, lead) => {
@@ -372,14 +373,14 @@ export function useCRMAnalytics() {
         convertidos: data.convertidos,
         taxa: data.total > 0 ? Math.round((data.convertidos / data.total) * 100) : 0,
       }));
-      
+
       // Temperature distribution
       const temperatureDistribution = leads.reduce((acc, lead) => {
         const temp = lead.temperatura || 'morno';
         acc[temp] = (acc[temp] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);
-      
+
       // Leads by stage with avg time
       const stageAnalysis = Object.entries(
         leads.reduce((acc, lead) => {
@@ -393,7 +394,7 @@ export function useCRMAnalytics() {
         count: data.count,
         avgScore: Math.round(data.scores.reduce((a, b) => a + b, 0) / data.scores.length),
       }));
-      
+
       // Cold leads (no contact in 7+ days)
       const coldLeads = leads.filter(l => {
         if (!l.data_ultimo_contato) return true;
@@ -401,7 +402,7 @@ export function useCRMAnalytics() {
         const daysAgo = (Date.now() - lastContact.getTime()) / (1000 * 60 * 60 * 24);
         return daysAgo > 7;
       }).length;
-      
+
       return {
         conversionBySource,
         temperatureDistribution,
@@ -445,7 +446,7 @@ export function useImportLeads() {
         estagio: 'aguardando',
         data_primeiro_contato: new Date().toISOString().split('T')[0],
       })).filter(l => l.nome);
-      
+
       const { data, error } = await supabase.from('leads').insert(formattedLeads).select();
       if (error) throw error;
       return data;
