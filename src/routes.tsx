@@ -85,6 +85,7 @@ const OrganizationSettings = lazy(() => import(/* webpackChunkName: "admin-organ
 const Admin = lazy(() => import(/* webpackChunkName: "admin-analytics" */ "./pages/Admin"));
 const AdvancedAnalytics = lazy(() => import(/* webpackChunkName: "analytics-advanced" */ "./pages/AdvancedAnalytics"));
 const CohortAnalysis = lazy(() => import(/* webpackChunkName: "analytics-cohorts" */ "./pages/CohortAnalysis"));
+const StrategicAnalyticsPage = lazy(() => import(/* webpackChunkName: "analytics-strategic" */ "./pages/analytics/StrategicAnalyticsPage"));
 // const ApiDocs = lazy(() => import(/* webpackChunkName: "api-docs" */ "./pages/ApiDocs"));
 
 // <Route path="/api-docs" element={<ProtectedRoute><ApiDocs /></ProtectedRoute>} />
@@ -232,6 +233,7 @@ export function AppRoutes() {
 
             <Route path="/tarefas" element={<ProtectedRoute><Tarefas /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute><AdvancedAnalytics /></ProtectedRoute>} />
+            <Route path="/analytics/strategic" element={<ProtectedRoute><StrategicAnalyticsPage /></ProtectedRoute>} />
             <Route path="/smart-dashboard" element={<ProtectedRoute><SmartDashboard /></ProtectedRoute>} />
             <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
             <Route path="/gamification" element={<ProtectedRoute><PatientGamificationPage /></ProtectedRoute>} />

@@ -1,0 +1,9 @@
+FROM sickcodes/docker-osx:latest
+
+# Modificar o script para usar VNC em vez de GTK
+RUN sed -i 's/-vga vmware/-vnc :0 -display none/g' /home/arch/OSX-KVM/run-qemu.sh 2>/dev/null || \
+    sed -i 's/-vga vmware/-vnc :0 -display none/g' /run.sh 2>/dev/null || \
+    find / -name "*.sh" -type f -exec sed -i 's/-vga vmware/-vnc :0 -display none/g' {} \;
+
+ENTRYPOINT ["/bin/bash", "-c"]
+CMD ["'!' [[ -z \"${VNC_PASSWORD}\" ]] && echo \"VNC enabled\" || true; ./run.sh"]

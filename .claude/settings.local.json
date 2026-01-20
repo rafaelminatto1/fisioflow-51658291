@@ -174,7 +174,18 @@
       "Bash(docker:*)",
       "Bash(docker compose:*)",
       "Bash(sudo chown:*)",
-      "Bash(groups:*)"
+      "Bash(groups:*)",
+      "mcp__zai-mcp-server__analyze_video",
+      "Bash(/home/rafael/cursor/fisiolovable/fisioflow-51658291/macos-status.sh:*)",
+      "Bash(/home/rafael/cursor/fisiolovable/fisioflow-51658291/macos-monitor.sh:*)",
+      "Bash(sudo apt:*)",
+      "Bash(timeout:*)",
+      "Bash(remmina --help:*)",
+      "Bash(fromjson:*)",
+      "Bash(length)",
+      "Bash(dpkg:*)",
+      "Bash(sudo:*)",
+      "Bash(sqlite3:*)"
     ],
     "deny": [],
     "ask": []
