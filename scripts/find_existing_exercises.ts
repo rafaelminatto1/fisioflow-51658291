@@ -17,7 +17,7 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function findExercises() {
-    const keywords = ['pump', 'isometric', 'slide', 'pulley', 'table', 'post', 'surg', 'patella', 'menisc', 'acl', 'lca'];
+    const keywords = ['agachamento', 'squat', 'cadeira'];
     console.log(`Searching for exercises with keywords: ${keywords.join(', ')}...`);
 
     const { data: exercises, error } = await supabase
