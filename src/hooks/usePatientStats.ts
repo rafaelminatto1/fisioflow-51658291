@@ -331,9 +331,10 @@ export const usePatientStats = (patientId: string | undefined) => {
       }
 
       // Fetch all patient appointments
+      // Select only necessary columns to reduce payload size
       const { data: appointments, error: appointmentsError } = await supabase
         .from('appointments')
-        .select('*')
+        .select('id, patient_id, appointment_date, status, payment_status')
         .eq('patient_id', patientId)
         .order('appointment_date', { ascending: false });
 
@@ -342,9 +343,10 @@ export const usePatientStats = (patientId: string | undefined) => {
       }
 
       // Fetch finalized SOAP records
+      // Select only necessary columns to reduce payload size
       const { data: soapRecords, error: soapError } = await supabase
         .from('soap_records')
-        .select('*')
+        .select('id, patient_id, created_at, status')
         .eq('patient_id', patientId)
         .eq('status', 'finalized');
 
@@ -384,9 +386,10 @@ export const useMultiplePatientStats = (patientIds: string[]) => {
       }
 
       // Fetch all appointments for the patients in one query
+      // Select only necessary columns to reduce payload size
       const { data: appointments, error: appointmentsError } = await supabase
         .from('appointments')
-        .select('*')
+        .select('id, patient_id, appointment_date, status, payment_status')
         .in('patient_id', patientIds);
 
       if (appointmentsError) {
@@ -394,9 +397,10 @@ export const useMultiplePatientStats = (patientIds: string[]) => {
       }
 
       // Fetch all SOAP records for the patients in one query
+      // Select only necessary columns to reduce payload size
       const { data: soapRecords, error: soapError } = await supabase
         .from('soap_records')
-        .select('*')
+        .select('id, patient_id, created_at, status')
         .in('patient_id', patientIds)
         .eq('status', 'finalized');
 
