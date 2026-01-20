@@ -21,26 +21,29 @@ import {
   type BuyItemParams,
 } from '@/types/gamification';
 
-// Level Calculation Constants
+// Level Calculation Constants - buscar do banco se disponível
 const LEVEL_BASE_XP = 1000;
 const LEVEL_MULTIPLIER = 1.2;
 
-const calculateLevel = (totalXp: number) => {
+const calculateLevel = (totalXp: number, settings?: { base_xp?: number; multiplier?: number }) => {
+  const baseXP = settings?.base_xp || LEVEL_BASE_XP;
+  const multiplier = settings?.multiplier || LEVEL_MULTIPLIER;
+
   let level = 1;
-  let xpForNextLevel = LEVEL_BASE_XP;
+  let xpForNextLevel = baseXP;
   let accumulatedXp = 0;
 
   while (totalXp >= accumulatedXp + xpForNextLevel) {
     accumulatedXp += xpForNextLevel;
     level++;
-    xpForNextLevel = Math.floor(xpForNextLevel * LEVEL_MULTIPLIER);
+    xpForNextLevel = Math.floor(xpForNextLevel * multiplier);
   }
 
   return {
     level,
     currentLevelXp: totalXp - accumulatedXp,
     xpForNextLevel,
-    progress: ((totalXp - accumulatedXp) / xpForNextLevel) * 100
+    progress: xpForNextLevel > 0 ? ((totalXp - accumulatedXp) / xpForNextLevel) * 100 : 100
   };
 };
 
