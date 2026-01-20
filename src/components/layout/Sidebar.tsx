@@ -40,7 +40,11 @@ import {
   LinkIcon,
   ScanFace,
   Footprints,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Mail,
+  Database,
+  Eye,
+  BookOpen,
 } from 'lucide-react';
 import {
   Collapsible,
@@ -52,24 +56,17 @@ const menuItems = [
   { icon: Calendar, label: 'Agenda', href: '/' },
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
   { icon: TrendingUp, label: 'Ocupação', href: '/ocupacao-fisioterapeutas' },
-  { icon: Sparkles, label: 'Dashboard IA', href: '/smart-dashboard' },
   { icon: Users, label: 'Pacientes', href: '/patients' },
   { icon: Activity, label: 'Exercícios', href: '/exercises' },
   { icon: Target, label: 'Protocolos', href: '/protocols' },
   { icon: FileText, label: 'Prontuário', href: '/medical-record' },
-  { icon: Brain, label: 'Planos IA', href: '/smart-ai' },
   { icon: MessageSquare, label: 'Comunicação', href: '/communications' },
   { icon: LayoutGrid, label: 'Tarefas', href: '/tarefas' },
   { icon: Clock, label: 'Lista de Espera', href: '/waitlist' },
-  { icon: Calendar, label: 'Eventos', href: '/eventos' },
   { icon: ShoppingCart, label: 'Treinos', href: '/vouchers' },
   { icon: Package, label: 'Estoque', href: '/inventory' },
-  { icon: Trophy, label: 'Gamificação', href: '/gamification' },
   { icon: Video, label: 'Telemedicina', href: '/telemedicine' },
   { icon: LinkIcon, label: 'Pré-Cadastro', href: '/pre-cadastro-admin' },
-  { icon: BarChart3, label: 'Analytics Avançado', href: '/analytics' },
-  { icon: Lock, label: 'Segurança & LGPD', href: '/security-settings' },
-  { icon: Shield, label: 'Monitoramento', href: '/security-monitoring' },
 ];
 
 const avaliacoesSubmenu = [
@@ -114,6 +111,46 @@ const configuracoesSubmenu = [
   { icon: Calendar, label: 'Google Calendar', href: '/configuracoes/calendario' },
 ];
 
+const gamificacaoSubmenu = [
+  { icon: Trophy, label: 'Minha Gamificação', href: '/gamification' },
+  { icon: Settings, label: 'Gerenciar Gamificação', href: '/admin/gamification' },
+];
+
+const dashboardIaSubmenu = [
+  { icon: Sparkles, label: 'Dashboard IA', href: '/smart-dashboard' },
+  { icon: Brain, label: 'Planos IA', href: '/smart-ai' },
+  { icon: BarChart3, label: 'Analytics Avançado', href: '/analytics' },
+];
+
+const adminSubmenu = [
+  { icon: BarChart3, label: 'Analytics', href: '/admin/analytics' },
+  { icon: Users, label: 'Usuários', href: '/admin/users' },
+  { icon: Shield, label: 'Segurança', href: '/admin/security' },
+  { icon: FileText, label: 'Logs de Auditoria', href: '/admin/audit-logs' },
+  { icon: Mail, label: 'Convites', href: '/admin/invitations' },
+  { icon: Building2, label: 'Organização', href: '/admin/organization' },
+  { icon: Database, label: 'CRUD Admin', href: '/admin/crud' },
+  { icon: Users, label: 'Cohorts', href: '/admin/cohorts' },
+  { icon: Target, label: 'Metas', href: '/admin/goals' },
+];
+
+const eventosSubmenu = [
+  { icon: Calendar, label: 'Eventos', href: '/eventos' },
+  { icon: BarChart3, label: 'Analytics', href: '/eventos/analytics' },
+];
+
+const segurancaSubmenu = [
+  { icon: Lock, label: 'Configurações', href: '/security-settings' },
+  { icon: Shield, label: 'Monitoramento', href: '/security-monitoring' },
+  { icon: Eye, label: 'Segurança Admin', href: '/admin/security' },
+];
+
+const exerciciosSubmenu = [
+  { icon: Activity, label: 'Exercícios', href: '/exercises' },
+  { icon: BookOpen, label: 'Biblioteca', href: '/exercise-library' },
+  { icon: Target, label: 'Protocolos', href: '/protocols' },
+];
+
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [cadastrosOpen, setCadastrosOpen] = useState(false);
@@ -122,6 +159,12 @@ export function Sidebar() {
   const [relatoriosOpen, setRelatoriosOpen] = useState(false);
   const [crmOpen, setCrmOpen] = useState(false);
   const [configuracoesOpen, setConfiguracoesOpen] = useState(false);
+  const [gamificacaoOpen, setGamificacaoOpen] = useState(false);
+  const [dashboardIaOpen, setDashboardIaOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
+  const [eventosOpen, setEventosOpen] = useState(false);
+  const [segurancaOpen, setSegurancaOpen] = useState(false);
+  const [exerciciosOpen, setExerciciosOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -133,6 +176,12 @@ export function Sidebar() {
   const isRelatoriosActive = location.pathname.startsWith('/relatorios') || location.pathname === '/reports';
   const isCrmActive = location.pathname.startsWith('/crm');
   const isConfiguracoesActive = location.pathname.startsWith('/configuracoes') || location.pathname === '/settings';
+  const isGamificacaoActive = location.pathname.startsWith('/gamification');
+  const isDashboardIaActive = location.pathname.startsWith('/smart-dashboard') || location.pathname.startsWith('/smart-ai') || location.pathname === '/analytics';
+  const isAdminActive = location.pathname.startsWith('/admin');
+  const isEventosActive = location.pathname.startsWith('/eventos');
+  const isSegurancaActive = location.pathname.startsWith('/security');
+  const isExerciciosActive = location.pathname.startsWith('/exercises') || location.pathname.startsWith('/exercise-library') || location.pathname === '/protocols';
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -571,6 +620,366 @@ export function Sidebar() {
           >
             <Settings className="h-5 w-5" />
             {isConfiguracoesActive && (
+              <div className="absolute left-0 w-1 h-8 bg-primary rounded-r-lg" />
+            )}
+          </Link>
+        )}
+
+        {/* Exercícios Submenu */}
+        {!collapsed && (
+          <Collapsible open={exerciciosOpen || isExerciciosActive} onOpenChange={setExerciciosOpen}>
+            <CollapsibleTrigger asChild>
+              <button
+                className={cn(
+                  "flex items-center justify-between w-full px-4 py-2.5 rounded-lg transition-all group",
+                  isExerciciosActive
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <Activity className="h-5 w-5" />
+                  <span className="text-sm">Exercícios</span>
+                </div>
+                <ChevronDown className={cn(
+                  "h-4 w-4 transition-transform",
+                  (exerciciosOpen || isExerciciosActive) && "rotate-180"
+                )} />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-8 space-y-1 mt-1">
+              {exerciciosSubmenu.map((item) => {
+                const isSubActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className={cn(
+                      "block px-4 py-2 rounded-lg text-sm transition-all",
+                      isSubActive
+                        ? "bg-primary text-primary-foreground font-medium"
+                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+        {collapsed && (
+          <Link
+            to="/exercises"
+            className={cn(
+              "flex items-center justify-center px-2 py-2.5 rounded-lg transition-all group relative",
+              isExerciciosActive
+                ? "bg-primary text-primary-foreground font-medium shadow-sm"
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+            )}
+          >
+            <Activity className="h-5 w-5" />
+            {isExerciciosActive && (
+              <div className="absolute left-0 w-1 h-8 bg-primary rounded-r-lg" />
+            )}
+          </Link>
+        )}
+
+        {/* Dashboard IA Submenu */}
+        {!collapsed && (
+          <Collapsible open={dashboardIaOpen || isDashboardIaActive} onOpenChange={setDashboardIaOpen}>
+            <CollapsibleTrigger asChild>
+              <button
+                className={cn(
+                  "flex items-center justify-between w-full px-4 py-2.5 rounded-lg transition-all group",
+                  isDashboardIaActive
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <Sparkles className="h-5 w-5" />
+                  <span className="text-sm">Dashboard IA</span>
+                </div>
+                <ChevronDown className={cn(
+                  "h-4 w-4 transition-transform",
+                  (dashboardIaOpen || isDashboardIaActive) && "rotate-180"
+                )} />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-8 space-y-1 mt-1">
+              {dashboardIaSubmenu.map((item) => {
+                const isSubActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className={cn(
+                      "block px-4 py-2 rounded-lg text-sm transition-all",
+                      isSubActive
+                        ? "bg-primary text-primary-foreground font-medium"
+                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+        {collapsed && (
+          <Link
+            to="/smart-dashboard"
+            className={cn(
+              "flex items-center justify-center px-2 py-2.5 rounded-lg transition-all group relative",
+              isDashboardIaActive
+                ? "bg-primary text-primary-foreground font-medium shadow-sm"
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+            )}
+          >
+            <Sparkles className="h-5 w-5" />
+            {isDashboardIaActive && (
+              <div className="absolute left-0 w-1 h-8 bg-primary rounded-r-lg" />
+            )}
+          </Link>
+        )}
+
+        {/* Eventos Submenu */}
+        {!collapsed && (
+          <Collapsible open={eventosOpen || isEventosActive} onOpenChange={setEventosOpen}>
+            <CollapsibleTrigger asChild>
+              <button
+                className={cn(
+                  "flex items-center justify-between w-full px-4 py-2.5 rounded-lg transition-all group",
+                  isEventosActive
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <Calendar className="h-5 w-5" />
+                  <span className="text-sm">Eventos</span>
+                </div>
+                <ChevronDown className={cn(
+                  "h-4 w-4 transition-transform",
+                  (eventosOpen || isEventosActive) && "rotate-180"
+                )} />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-8 space-y-1 mt-1">
+              {eventosSubmenu.map((item) => {
+                const isSubActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className={cn(
+                      "block px-4 py-2 rounded-lg text-sm transition-all",
+                      isSubActive
+                        ? "bg-primary text-primary-foreground font-medium"
+                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+        {collapsed && (
+          <Link
+            to="/eventos"
+            className={cn(
+              "flex items-center justify-center px-2 py-2.5 rounded-lg transition-all group relative",
+              isEventosActive
+                ? "bg-primary text-primary-foreground font-medium shadow-sm"
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+            )}
+          >
+            <Calendar className="h-5 w-5" />
+            {isEventosActive && (
+              <div className="absolute left-0 w-1 h-8 bg-primary rounded-r-lg" />
+            )}
+          </Link>
+        )}
+
+        {/* Segurança Submenu */}
+        {!collapsed && (
+          <Collapsible open={segurancaOpen || isSegurancaActive} onOpenChange={setSegurancaOpen}>
+            <CollapsibleTrigger asChild>
+              <button
+                className={cn(
+                  "flex items-center justify-between w-full px-4 py-2.5 rounded-lg transition-all group",
+                  isSegurancaActive
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <Shield className="h-5 w-5" />
+                  <span className="text-sm">Segurança</span>
+                </div>
+                <ChevronDown className={cn(
+                  "h-4 w-4 transition-transform",
+                  (segurancaOpen || isSegurancaActive) && "rotate-180"
+                )} />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-8 space-y-1 mt-1">
+              {segurancaSubmenu.map((item) => {
+                const isSubActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className={cn(
+                      "block px-4 py-2 rounded-lg text-sm transition-all",
+                      isSubActive
+                        ? "bg-primary text-primary-foreground font-medium"
+                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+        {collapsed && (
+          <Link
+            to="/security-settings"
+            className={cn(
+              "flex items-center justify-center px-2 py-2.5 rounded-lg transition-all group relative",
+              isSegurancaActive
+                ? "bg-primary text-primary-foreground font-medium shadow-sm"
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+            )}
+          >
+            <Shield className="h-5 w-5" />
+            {isSegurancaActive && (
+              <div className="absolute left-0 w-1 h-8 bg-primary rounded-r-lg" />
+            )}
+          </Link>
+        )}
+
+        {/* Admin Submenu */}
+        {!collapsed && (
+          <Collapsible open={adminOpen || isAdminActive} onOpenChange={setAdminOpen}>
+            <CollapsibleTrigger asChild>
+              <button
+                className={cn(
+                  "flex items-center justify-between w-full px-4 py-2.5 rounded-lg transition-all group",
+                  isAdminActive
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <Settings className="h-5 w-5" />
+                  <span className="text-sm">Administração</span>
+                </div>
+                <ChevronDown className={cn(
+                  "h-4 w-4 transition-transform",
+                  (adminOpen || isAdminActive) && "rotate-180"
+                )} />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-8 space-y-1 mt-1">
+              {adminSubmenu.map((item) => {
+                const isSubActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className={cn(
+                      "block px-4 py-2 rounded-lg text-sm transition-all",
+                      isSubActive
+                        ? "bg-primary text-primary-foreground font-medium"
+                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+        {collapsed && (
+          <Link
+            to="/admin/analytics"
+            className={cn(
+              "flex items-center justify-center px-2 py-2.5 rounded-lg transition-all group relative",
+              isAdminActive
+                ? "bg-primary text-primary-foreground font-medium shadow-sm"
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+            )}
+          >
+            <Settings className="h-5 w-5" />
+            {isAdminActive && (
+              <div className="absolute left-0 w-1 h-8 bg-primary rounded-r-lg" />
+            )}
+          </Link>
+        )}
+
+        {/* Gamificação Submenu */}
+        {!collapsed && (
+          <Collapsible open={gamificacaoOpen || isGamificacaoActive} onOpenChange={setGamificacaoOpen}>
+            <CollapsibleTrigger asChild>
+              <button
+                className={cn(
+                  "flex items-center justify-between w-full px-4 py-2.5 rounded-lg transition-all group",
+                  isGamificacaoActive
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <Trophy className="h-5 w-5" />
+                  <span className="text-sm">Gamificação</span>
+                </div>
+                <ChevronDown className={cn(
+                  "h-4 w-4 transition-transform",
+                  (gamificacaoOpen || isGamificacaoActive) && "rotate-180"
+                )} />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pl-8 space-y-1 mt-1">
+              {gamificacaoSubmenu.map((item) => {
+                const isSubActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className={cn(
+                      "block px-4 py-2 rounded-lg text-sm transition-all",
+                      isSubActive
+                        ? "bg-primary text-primary-foreground font-medium"
+                        : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+        {collapsed && (
+          <Link
+            to="/gamification"
+            className={cn(
+              "flex items-center justify-center px-2 py-2.5 rounded-lg transition-all group relative",
+              isGamificacaoActive
+                ? "bg-primary text-primary-foreground font-medium shadow-sm"
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+            )}
+          >
+            <Trophy className="h-5 w-5" />
+            {isGamificacaoActive && (
               <div className="absolute left-0 w-1 h-8 bg-primary rounded-r-lg" />
             )}
           </Link>
