@@ -271,7 +271,15 @@ const images = [
     { id: '3329d2c0-8d1e-46be-9490-c14b2e5fa280', file: 'glute_bridge_bilateral_variant_1768917629658.png' }, // Ponte de Glúteo Bilateral
     { id: '3541df60-9b9e-4038-85d8-409c0d5304f5', file: 'calf_raise_standing_variant_1768917650017.png' }, // Elevação de Panturrilha em Pé
     { id: 'c59164bc-13a1-41af-89c0-a4d13efc489e', file: 'forward_lunge_variant_1768917715699.png' }, // Afundo Frontal
-    { id: '9a6d787c-9975-4b28-81f6-797dbe7ae58c', file: 'wall_shoulder_retraction_1768917741557.png' } // Mobilização de Escápula (Wall Slides)
+    { id: '9a6d787c-9975-4b28-81f6-797dbe7ae58c', file: 'wall_shoulder_retraction_1768917741557.png' }, // Mobilização de Escápula (Wall Slides)
+
+    // Batch 24 - Post-Op & Sports (User Request)
+    { id: '1bc9cced-333a-45fe-a1b6-b6cf7d286b83', file: 'ankle_pumps_post_op_1768920762499.png' }, // Ankle Pumps (Bombinha)
+    { id: 'cbd26ac9-91ed-43a6-81fc-f32eae722cfe', file: 'quad_sets_isometric_post_op_1768920780872.png' }, // Isometria de Quadríceps (Quad Sets)
+    { id: 'befcc012-1f46-4252-b429-a56e0c1ed8ca', file: 'slr_strength_post_op_1768920800735.png' }, // Elevação de Perna Retificada (SLR)
+    { id: '797ac2aa-583d-41a6-a73e-2aa200e4d304', file: 'short_arc_quads_post_op_1768921154515.png' }, // Quadríceps Arco Curto
+    { id: '53a9efd3-2290-4422-8714-d80ce013d2b9', file: 'single_leg_hop_landing_sports_1768921171501.png' }, // Salto Unipodal com Aterrissagem
+    { id: '3aa3a675-8e0a-45c2-9675-f4eece5ee8d9', file: 'lateral_bound_sports_1768921190178.png' } // Salto Lateral (Lateral Bound)
 ];
 
 async function upload() {

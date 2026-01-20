@@ -2,10 +2,10 @@
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 
-dotenv.config({ path: '.env.local' });
+dotenv.config({ path: '.env' });
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
     console.error('Missing env vars');
@@ -15,130 +15,84 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const newExercises = [
-    // Batch 22 - Cardio Adaptado & Agilidade
     {
-        id: 'fdf0361a-b2f6-48ef-8be3-b35f51be3b6f',
-        name: 'Polichinelo Adaptado',
-        description: 'Variação de baixo impacto do polichinelo, dando passos laterais alternados em vez de saltar.',
-        category: 'Cardio',
-        difficulty: 'Iniciante',
-        body_parts: ['Corpo Todo'],
-        equipment: ['Peso Corporal'],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        name: 'Ankle Pumps (Bombinha)',
+        category: 'Pós-Operatório',
+        description: 'Movimentação ativa do tornozelo para cima e para baixo. Essencial para prevenção de TVP.',
+        image_key: 'ankle_pumps_post_op_1768920762499.png'
     },
     {
-        id: 'd25f2891-9c91-4b06-b5d5-a965ca657350',
-        name: 'Marcha Estacionária Alta',
-        description: 'Marchar no lugar elevando bem os joelhos, mantendo o abdômen contraído. Cardio leve e equilíbrio.',
-        category: 'Cardio',
-        difficulty: 'Iniciante',
-        body_parts: ['Pernas', 'Core'],
-        equipment: ['Peso Corporal'],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        name: 'Isometria de Quadríceps (Quad Sets)',
+        category: 'Pós-Operatório',
+        description: 'Contrair o músculo da coxa pressionando o joelho contra a cama/rolo.',
+        image_key: 'quad_sets_isometric_post_op_1768920780872.png'
     },
     {
-        id: 'a1545d00-8aed-4ba7-812a-83470b38edc8',
-        name: 'Boxe de Sombra (Shadow Boxing)',
-        description: 'Simular socos (jab, direto) no ar, mantendo base ativa. Pode ser feito em pé ou sentado.',
-        category: 'Cardio',
-        difficulty: 'Iniciante',
-        body_parts: ['Braços', 'Ombros', 'Core'],
-        equipment: ['Peso Corporal'],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        name: 'Elevação de Perna Retificada (SLR)',
+        category: 'Pós-Operatório',
+        description: 'Elevar a perna estendida até 45 graus, mantendo o joelho travado.',
+        image_key: 'slr_strength_post_op_1768920800735.png'
     },
     {
-        id: '75f5f09d-3010-4615-9a15-73f41f0c05a5',
-        name: 'Agachamento com Soco',
-        description: 'Realizar um agachamento e, ao subir, desferir um soco cruzado. Coordenação e força.',
-        category: 'Funcional',
-        difficulty: 'Intermediário',
-        body_parts: ['Pernas', 'Braços', 'Core'],
-        equipment: ['Peso Corporal'],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        name: 'Quadríceps Arco Curto',
+        category: 'Pós-Operatório',
+        description: 'Extensão terminal do joelho sobre um rolo.',
+        image_key: 'short_arc_quads_post_op_1768921154515.png'
     },
     {
-        id: 'ef9809ab-8ed8-4054-a7a8-126aa530a9dc',
-        name: 'Deslocamento Lateral (Shuffle)',
-        description: 'Mover-se lateralmente com passos rápidos e curtos, mantendo joelhos semiflexionados.',
-        category: 'Agilidade',
-        difficulty: 'Intermediário',
-        body_parts: ['Pernas', 'Quadril'],
-        equipment: ['Peso Corporal'],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        name: 'Salto Unipodal com Aterrissagem',
+        category: 'Esportivo',
+        description: 'Saltar e aterrissar em uma perna só, focando no alinhamento do joelho.',
+        image_key: 'single_leg_hop_landing_sports_1768921171501.png'
     },
     {
-        id: '45803b1d-30ca-400e-ad2f-df7e266729ce',
-        name: 'Coordenação Cruzada (Cross Crawl)',
-        description: 'Tocar o cotovelo no joelho oposto, alternando os lados. Ótimo para coordenação motora e aquecimento.',
-        category: 'Coordenação',
-        difficulty: 'Iniciante',
-        body_parts: ['Core', 'Cérebro'],
-        equipment: ['Peso Corporal'],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-    },
-    {
-        id: '8ff5fa14-835c-4a25-b82c-d642782be9f4',
-        name: 'Escalada na Parede (Wall Climber)',
-        description: 'Apoiado na parede (inclinado), levar alternadamente os joelhos em direção ao peito.',
-        category: 'Cardio',
-        difficulty: 'Iniciante',
-        body_parts: ['Core', 'Pernas'],
-        equipment: ['Parede'],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-    },
-    {
-        id: '44df23a0-a4be-4cc3-8e6f-e5aaaefb5d82',
-        name: 'Pular Corda Imaginária',
-        description: 'Simular o movimento de pular corda com pequenos saltos ou apenas elevando os calcanhares.',
-        category: 'Cardio',
-        difficulty: 'Iniciante',
-        body_parts: ['Panturrilha', 'Pernas'],
-        equipment: ['Peso Corporal'],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-    },
-    {
-        id: 'ff68b19a-3e01-41fe-aa5a-88b1451f6c7d',
-        name: 'Step Touch com Braços',
-        description: 'Passo lateral tocando a ponta do pé, abrindo e fechando os braços sincronizadamente.',
-        category: 'Coordenação',
-        difficulty: 'Iniciante',
-        body_parts: ['Corpo Todo'],
-        equipment: ['Peso Corporal'],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-    },
-    {
-        id: 'ce4cad36-c3d9-42f6-8a55-82513a6567f1',
-        name: 'Heel Flicks (Calcanhar no Glúteo)',
-        description: 'Marchar ou trotar no lugar levando os calcanhares em direção aos glúteos.',
-        category: 'Cardio',
-        difficulty: 'Iniciante',
-        body_parts: ['Posterior da Coxa', 'Cardio'],
-        equipment: ['Peso Corporal'],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        name: 'Salto Lateral (Lateral Bound)',
+        category: 'Esportivo',
+        description: 'Saltar lateralmente de uma perna para a outra com estabilização.',
+        image_key: 'lateral_bound_sports_1768921190178.png'
     }
 ];
 
-async function insertdata() {
-    console.log('Inserting new exercises (Batch 22)...');
-    for (const exercise of newExercises) {
-        const { error } = await supabase.from('exercises').upsert(exercise);
+async function insertExercises() {
+    console.log('Inserting new exercises...');
+
+    // Check if they exist first to avoid duplicates (by name)
+    const { data: existing } = await supabase
+        .from('exercises')
+        .select('name');
+
+    const existingNames = new Set(existing?.map(e => e.name));
+
+    const toInsert = newExercises.filter(e => !existingNames.has(e.name)).map(e => ({
+        name: e.name,
+        category: e.category,
+        description: e.description,
+        video_url: '' // placeholder
+    }));
+
+    if (toInsert.length === 0) {
+        console.log('All exercises already exist.');
+    } else {
+        const { data, error } = await supabase
+            .from('exercises')
+            .insert(toInsert)
+            .select();
+
         if (error) {
-            console.error('Error inserting', exercise.name, error);
+            console.error('Error inserting:', error);
         } else {
-            console.log('Inserted:', exercise.name);
+            console.log('Inserted:', data.length);
         }
     }
-    console.log('Done inserting.');
+
+    // Now get IDs for specific image mapping
+    console.log('\n--- ID Mapping for Upload Script ---');
+    for (const ex of newExercises) {
+        const { data } = await supabase.from('exercises').select('id').eq('name', ex.name).single();
+        if (data) {
+            console.log(`{ id: '${data.id}', file: '${ex.image_key}' }, // ${ex.name}`);
+        }
+    }
 }
 
-insertdata();
+insertExercises();
